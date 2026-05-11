@@ -1,0 +1,32 @@
+id: 311
+title: "L1 light-path code-review: adopt verification-agent as single-reviewer alternative"
+status: superseded
+superseded_by: 306
+milestone: cc-patterns-advanced
+blocked_by: []
+created: 2026-05-10
+updated: 2026-05-10
+effort: M
+area: framework/code-review
+assignee: buddy
+spec_ref: null
+readiness: raw
+summary: >
+  Add a "light path" to the code-review-board that uses a single
+  verification-agent (CC pattern) instead of the standard multi-
+  perspective board (4-13 reviewers + chief). Light path triggers on
+  small-scope, low-risk changes; standard path remains the default
+  for substantial work. Adopts upstream verification-agent's
+  anti-rationalization heuristics, evidence-required output format,
+  and explicit VERDICT: PASS | FAIL | PARTIAL contract.
+intent_chain:
+  domain: framework/code-review
+  objective: cc-patterns-advanced
+  action: >
+    Mirror the upstream verification-agent persona for small-scope
+    code-review work where multi-perspective review is overkill.
+    Two-path code-review-board: light path (single verification-agent)
+    + standard path (existing multi-perspective board). Trigger
+    table chooses the path based on substantial-work signals.
+sub_tasks: []
+parent_task: null

@@ -1,0 +1,210 @@
+name: spec-board
+description: "Multi-Perspektiven Spec Review + Fix — Dispatch-Workflow (2 Modi, 2 Tiefen)"
+trigger: ["spec-board", "spec_board", "board"]
+derived_from: "SKILL.md@d6c73bc"
+
+steps:
+  - id: plan-review
+    name: "Plan + Review (Pflicht wenn ohne frame)"
+    category: content
+    instruction: >
+      Bei direktem Board-Dispatch ohne vorheriges frame:
+      Plan-Block (Scope/Tool/Alternativen) + Self-Review + Dispatch an plan-adversary.
+      Bei bestehendem Frame-Report: Referenz statt Re-Run.
+      Ref: SKILL.md SS0, _protocols/plan-review.md.
+    completion:
+      type: manual
+    commit_gate: false
+    required: true
+
+  - id: tiefenmodus-check
+    name: "Tiefenmodus-Klassifikation (Standard vs. Deep)"
+    category: classification
+    instruction: >
+      Scoped Pre-Check: board_result pass UND Aenderung <=3 Sektionen -> Standard.
+      Sonst 4 Checks (Cross-Layer, Interface, Full Path, Security).
+      >=1 JA -> Deep. Alle NEIN -> Standard.
+      Ref: SKILL.md SS1.
+    completion:
+      type: manual
+    routes:
+      standard:
+        - team-selection
+        - agent-dispatch
+        - chief-consolidation
+        - post-convergence-check
+        - post-pass-checklist
+        - fix-findings
+        - task-yaml-update
+        - push-board
+      deep:
+        - team-selection
+        - agent-dispatch
+        - chief-consolidation
+        - discourse
+        - post-convergence-check
+        - post-pass-checklist
+        - fix-findings
+        - delta-verify
+        - task-yaml-update
+        - push-board
+
+  - id: team-selection
+    name: "Team-Zusammensetzung bestimmen"
+    category: content
+    instruction: >
+      Standard: Chief + Adversary + Implementer + Impact (Opus).
+      Deep Pass 1: alle 7 (+ Adv-2, Adv-3, Consumer Sonnet).
+      Deep Pass 2+: 4 (Adv + Adv2 + Impl + Impact).
+      Deep Final: 2 (Adv + Impl).
+      Spezialisten je Inhalt: Schema/API -> code-api-contract, Readability -> board-consumer,
+      First-Principles -> board-adversary-2. Auswahl + Begruendung dokumentieren.
+      Ref: SKILL.md SS2 + SS4.6.
+    completion:
+      type: manual
+    commit_gate: false
+    required: true
+
+  - id: agent-dispatch
+    name: "Agents parallel dispatchen (Context-Isolated)"
+    category: deterministic
+    instruction: >
+      Prompt assemblieren: reviewer-base + spec-reviewer-protocol + Persona + dispatch-template.
+      Agents parallel dispatchen. Jeder Agent NUR die Spec (Context-Isolated).
+      Ref: SKILL.md SS4.7 + SS4.8.
+    completion:
+      type: file_created_matching
+      pattern: "docs/reviews/board/*-pass*.md"
+    commit_gate: false
+    required: true
+
+  - id: chief-consolidation
+    name: "Chief konsolidiert Findings"
+    category: content
+    instruction: >
+      Chief spawnen mit consolidation-preservation + piebald-budget.
+      Analysis-Mode-Gate vor Findings-Klassifikation anwenden.
+      Chief-Signal lesen -> SAVE (NON-NEGOTIABLE).
+      Ref: SKILL.md SS3 + SS4.8.
+    completion:
+      type: file_created_matching
+      pattern: "docs/reviews/board/*-consolidated-*.md"
+    commit_gate: false
+    required: true
+
+  - id: discourse
+    name: "Discourse (Deep: IMMER nach Chief)"
+    category: content
+    instruction: >
+      Deep: IMMER nach Chief. Standard: Buddy-Entscheidung (proportional).
+      Mechanik: _protocols/discourse.md.
+      Ref: SKILL.md SS5.
+    guard:
+      type: route_active
+      step_id: tiefenmodus-check
+      route: deep
+    completion:
+      type: file_modified_after
+      path: "docs/reviews/board/*-consolidated-*.md"
+    commit_gate: false
+    required: true
+
+  - id: post-convergence-check
+    name: "Post-Convergence-Check"
+    category: content
+    instruction: >
+      Chief beantwortet im Consolidated:
+      (1) Schwaechster Punkt im PASS — was kippt?
+      (2) Welches Single-Agent-Finding am staerksten heruntergewichtet — zu Recht?
+      Ref: SKILL.md SS3 (Post-Convergence-Check).
+    completion:
+      type: file_content_check
+      path: "{artifact_path}"
+      condition: has_match
+      pattern: "Schwaechster Punkt"
+    commit_gate: false
+    required: true
+
+  - id: post-pass-checklist
+    name: "Post-Pass Checkliste (NON-NEGOTIABLE)"
+    category: content
+    instruction: >
+      SKILL.md SS6 Checkliste abarbeiten:
+      - Chief-Consolidated hat Tracking-Tabelle
+      - Verifikations-Gleichung stimmt (Raw = Kept + Merged + Related + Removed)
+      - Merge-Stichprobe: 2-3 MERGED-Findings pruefen
+      - Minority Re-Check: REMOVED + Low-Severity scannen
+      - Piebald-Budget-Check bei Skill/Runbook/Persona-Reviews
+      - ALLE Findings gefixt (C+H+M+L)
+    completion:
+      type: manual
+    commit_gate: false
+    required: true
+
+  - id: fix-findings
+    name: "Findings fixen"
+    category: content
+    instruction: >
+      NEEDS-WORK: alle Findings fixen (C+H+M+L).
+      MCA fixt, Buddy dispatcht + committed.
+      CONVERGED: DONE. Ref: SKILL.md SS4.9.
+    completion:
+      type: file_modified_after
+      path: "{artifact_path}"
+    commit_gate: false
+    required: true
+
+  - id: delta-verify
+    name: "Delta-Verify Mini-Board"
+    category: content
+    instruction: >
+      Trigger: >=10 normative Zeilen ODER >=3 ganze Dateien ODER >=1 MAJOR-Finding gefixt
+      ODER Meta-Kritisch (Fix beruehrt Gate-Komposition / Severity-Definition / Enforcement-Logik).
+      Team: 2 Agents Context-Isolated (board-adversary + board-implementer).
+      Beide MUESSEN Drill liefern (first-principles-check.md).
+      Acceptance: 0 neue BLOCKER + 0 neue MAJOR.
+      Ref: SKILL.md SS3a.
+    guard:
+      type: script
+      command: "python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --guard delta-needed {task_id}"
+    completion:
+      type: file_created_matching
+      pattern: "docs/reviews/board/*-delta-*.md"
+    on_fail: escalate
+    commit_gate: false
+    required: false
+
+  - id: task-yaml-update
+    name: "Task-YAML board_result + readiness + Commit"
+    category: deterministic
+    instruction: >
+      Task-YAML board_result + readiness aktualisieren.
+      Nur via task_status_update Skill (CLAUDE.md TASK-SYNC).
+      Dann: git add + commit (Review-Files + Fixes + Task-YAML).
+      Commit-Guard aus CLAUDE.md durchgehen.
+    completion:
+      type: exit_code
+      command: "python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --guard task-yaml-ok {task_id}"
+    commit_gate: true
+    required: true
+
+  - id: push-board
+    name: "Git Push"
+    category: deterministic
+    instruction: "git push"
+    completion:
+      type: exit_code
+      command: "git push"
+    on_fail: escalate
+    required: true
+
+  - id: deploy-board
+    name: "Dashboard Deploy"
+    category: deterministic
+    instruction: "bash $FRAMEWORK_DIR/scripts/deploy-docs.sh"
+    completion:
+      type: exit_code
+      command: "bash $FRAMEWORK_DIR/scripts/deploy-docs.sh"
+    depends_on: [push-board]
+    on_fail: warn
+    required: true

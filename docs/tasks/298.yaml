@@ -1,0 +1,38 @@
+id: 298
+title: "OpenCode Adapter — Hook-Discipline-Layer Parity"
+status: in_progress
+milestone: opencode-compat
+blocked_by: []
+blocked_by_external: []
+created: '2026-04-06'
+updated: '2026-05-03'  # bookkeeping pass post-public-release
+effort: M
+area: framework
+assignee: null
+readiness: raw
+spec_ref: null
+intent_chain:
+  domain: system/framework
+  objective: >
+    Framework hook-discipline-layer parity auf OpenCode (nicht nur
+    methodology — agents/skills/workflows laden bereits).
+  action: >
+    Hook-Config-Translator + OpenCode-Lifecycle-Mapping + boot.md adapter.
+summary: >
+  Methodology-side laeuft das Framework auf OpenCode (agents/, skills/,
+  workflows/ load identisch). Hook-driven discipline NICHT (path-whitelist
+  BLOCK, frozen-zone BLOCK, workflow-commit-gate, pre-commit 11 Checks,
+  mca-return-stop-condition, board-output-check, engine-bypass-block,
+  plan-adversary-reminder feuern nur auf Claude Code).
+
+  Sub-tasks:
+  (1) Hook-Lifecycle-Mapping: CC PreToolUse/PostToolUse/UserPromptSubmit ↔
+      OpenCode-Aequivalente (Stand 2026-05: OpenCode hook-API noch im Wandel).
+  (2) JSON-Payload-Translator: CC's tool_input.file_path Format ↔ OC.
+  (3) settings.json-Translator (CC) ↔ opencode.jsonc (OC).
+  (4) Smoke-Tests: alle 14 Hooks fire-conditions auf OC verifizieren.
+  (5) README-Disclaimer "adapter parity is uneven" entfernen wenn parity erreicht.
+status_notes: >
+  2026-04 Public-Release: orchestrators/opencode/ scaffolded but
+  hook-translator pending. Framework laeuft auf OC im methodology-only
+  mode (kein mechanical drift-catching).

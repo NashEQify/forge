@@ -1,0 +1,35 @@
+id: 300
+title: "OSS-Translation des intentic-framework Repos (DE → EN)"
+status: done
+milestone: oss-public-surface
+blocked_by: []
+blocked_by_external: []
+created: '2026-05-05'
+updated: '2026-05-10'
+effort: L
+area: framework
+assignee: null
+readiness: raw
+spec_ref: null
+intent_chain:
+  domain: system/framework
+  objective: >
+    OSS-Push-Surface erreichbar machen — intent.md Saeule "framework/skills/
+    workflows/agents als orchestrator-neutrale OSS-Methodology" verlangt
+    Sprache die fuer externe Beitragende konsumierbar ist. Aktuell ~178 MD +
+    25500 LOC + 27 non-MD-Files (yaml/py/sh) mit DE-Strings. pyflue-Vergleich
+    (docs/research/2026-05-05-pyflue-vs-intentic.md) zeigt OSS-Mature-Surface
+    als distinktes pyflue-Asset und intentic-Engpass.
+  action: >
+    Glossar-Setup (DE→EN Fachbegriffe) + Critical Path (~30 OSS-readable
+    Files) + optional Full Pass. Phase A 30min, Phase B 3-4h, Phase C 5-8h.
+summary: >
+  Folgetask zu Build 299 (Fabrication-Mitigation) und Vorbedingung fuer
+  OSS-Push-Aktivitaeten (CONTRIBUTING.md, SECURITY.md, Mkdocs-Site, PyPI).
+  3-Phasen-Plan: Glossar, Critical Path, Full Pass. Backlog-Kandidaten BL-2
+  (Mkdocs Public Site) und BL-3 (CONTRIBUTING + SECURITY) aus pyflue-
+  comparison werden danach unblocked. Volumen aus Session-Handoff 2026-05-04
+  (Thema A): 178 MD + 25500 LOC + 27 nicht-MD mit DE-Strings.
+status_notes: >
+  Deferred bis 299 done (blocked_by). Translation ist nicht zeit-kritisch,
+  aber Voraussetzung fuer jede externe-Beitragenden-Aktivitaet.

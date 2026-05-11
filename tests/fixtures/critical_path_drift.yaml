@@ -1,0 +1,38 @@
+# plan.yaml mit critical_path: der von DAG-Topo-Sort abweicht.
+# Tests fuer Konsistenz-Validation in compute_critical_path (Locks-File §1):
+# WARN CRITICAL_PATH_MISMATCH erwartet, Boot bleibt gruen.
+
+target: M2
+
+feature_milestones:
+  M1:
+    name: "Test-M1"
+    feature: "Test"
+    capabilities: [X]
+    specs: [t.md]
+    blocked_by: []
+    fallback_strategy: ["fb"]
+    requires: []
+    gate: [{type: task, id: 1, desc: "t"}]
+    app_status_post_milestone: "test"
+  M2:
+    name: "Test-M2"
+    feature: "Test"
+    capabilities: [Y]
+    specs: [t.md]
+    blocked_by: [M1]
+    fallback_strategy: ["fb"]
+    requires: [M1]
+    gate: [{type: task, id: 2, desc: "t"}]
+    app_status_post_milestone: "test"
+
+# Drift: deklariert M2 vor M1, aber DAG-requires sagt M1 -> M2
+# Erwartung: WARN CRITICAL_PATH_MISMATCH, Boot bleibt gruen, explicit gewinnt
+critical_path:
+  - 1
+  - M2
+  - M1
+
+implementation_tasks:
+  1: "test impl"
+  2: "test impl 2"

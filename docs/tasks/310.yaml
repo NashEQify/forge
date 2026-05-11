@@ -1,0 +1,32 @@
+id: 310
+title: "Rename architect-roots personas → pattern-reviewer + drop -roots suffix"
+status: pending
+milestone: cc-patterns-advanced
+blocked_by: []
+created: 2026-05-10
+updated: 2026-05-10
+effort: M
+area: framework/personas
+assignee: buddy
+spec_ref: null
+readiness: raw
+summary: >
+  Rename `board-architect-roots` and `code-architect-roots` to
+  `board-pattern-reviewer` and `code-pattern-reviewer` respectively.
+  Drop the `-roots` suffix entirely (intent-driven naming — the
+  suffix is semantically opaque). The function ("structural-pattern-
+  purity reviewer in spec / code review board") is preserved; only
+  the name changes. Cross-cutting cascade across persona files,
+  protocols, skills, workflow.yaml refs, and any in-flight specs.
+intent_chain:
+  domain: framework/personas
+  objective: cc-patterns-advanced
+  action: >
+    Align persona naming with the upstream agentic-CLI vocabulary:
+    "architect" denotes an author role (Plan Agent shape), "reviewer"
+    denotes a critic role. The framework's existing architect-roots
+    personas are functionally reviewers, so rename clarifies. Drop
+    `-roots` suffix because it adds no semantic clarity for new
+    readers — intent-driven naming.
+sub_tasks: []
+parent_task: null

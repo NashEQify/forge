@@ -1,0 +1,375 @@
+name: build
+description: "Implement a feature / task — specify → prepare → execute → verify → close."
+trigger: ["build"]
+derived_from: "WORKFLOW.md@2026-05-09"
+
+# Engine-state-machine version of `runbooks/build/WORKFLOW.md`. The markdown
+# is the human-prose SoT for narrative; this yaml is engine-readable for
+# state tracking + cross-session continuity.
+
+# Named gates (the user-decided steps): interview, spec-write, board,
+# test-design, brief-author, brief-signoff, mca-implementation, code-review-board,
+# spec-drift-check, close-bookkeeping, commit-deploy. Phase-status transitions
+# happen automatically when the engine advances between steps; they are NOT
+# user-visible gates.
+
+routes:
+  standard:
+    # 10 named gates; phase-status updates are engine-internal.
+    - phase-specify
+    - interview
+    - spec-write
+    - board
+    - phase-prepare
+    - test-design
+    - brief-author
+    - brief-signoff
+    - phase-execute
+    - mca-implementation
+    - phase-verify
+    - code-review-board
+    - spec-drift-check
+    - phase-close
+    - close-bookkeeping
+    - commit-deploy
+  authority-only:
+    # Spec / ADR / plan authority without code implementation.
+    - phase-specify
+    - interview
+    - spec-write
+    - board
+    - phase-close
+    - close-bookkeeping
+    - commit-deploy
+  full:
+    # Same gate set as standard; reserved for extra board passes on
+    # foundation-spec L3 depth (currently identical to standard).
+    - phase-specify
+    - interview
+    - spec-write
+    - board
+    - phase-prepare
+    - test-design
+    - brief-author
+    - brief-signoff
+    - phase-execute
+    - mca-implementation
+    - phase-verify
+    - code-review-board
+    - spec-drift-check
+    - phase-close
+    - close-bookkeeping
+    - commit-deploy
+  sub-build:
+    # Nested build on a parent's locked spec — skips Specify entirely, parent
+    # owns task-level status.
+    - phase-prepare
+    - test-design
+    - brief-author
+    - brief-signoff
+    - phase-execute
+    - mca-implementation
+    - phase-verify
+    - code-review-board
+    - spec-drift-check
+
+steps:
+  # ============================================================================
+  # Phase: Specify
+  # ============================================================================
+
+  - id: phase-specify
+    name: "workflow_phase=specify (engine-internal)"
+    category: deterministic
+    instruction: >
+      task_status_update workflow_phase=specify and create the state file
+      docs/build/YYYY-MM-DD-task-NNN-slug.md (Standard / Full only).
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: interview
+    name: "Spec interview via frame skill"
+    category: content
+    instruction: >
+      Open the solution space via frame/SKILL.md (8 sub-steps). The frame report
+      is the basis for the spec. Pre-interview: cross-spec-consistency-check is
+      a frame sub-step (frame step 4 source-grounding) — high-severity conflicts
+      must be resolved BEFORE the interview proceeds. Skip-eligible on greenfield
+      spec without a source-grounding set.
+
+      Deep-mode trigger (all 4 must hold): foundation spec, cross-layer impact,
+      new subsystem, schema change. On hit → bedrock_drill via frame deep mode.
+    skill_ref: skills/frame/SKILL.md
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: spec-write
+    name: "Spec write (5 primitives) + source-spec-reduce"
+    category: content
+    instruction: >
+      6 required elements + schema SoT (spec-engineering.md §Spec). On external
+      library API references: get_api_docs skill BEFORE AC formulation.
+
+      Source-spec-reduce is a final sub-step — when a source spec is overlaid:
+      3-way triage (existing-task / new-task / delete) → source patches +
+      docs/build/{build_id}/drift-items.yaml. Skip-eligible on greenfield NEW.
+
+      Amendment path (per spec 306 §14.2): when this step operates on an
+      EXISTING spec (mid-build mechanism shift, class rename, contract
+      retraction) AND the substantial-amendment threshold fires (cross-ref
+      cascade ≥3 OR cross-spec coupling OR semantic-change OR Buddy-heuristic
+      "more than 1 edit-round anticipated"), Buddy dispatches
+      brief-architect mode=spec_amendment via Agent tool rather than
+      authoring inline. Architect returns prose + cross-ref edit-list +
+      spec_version bump + §Changelog inline; Buddy integrates and dispatches
+      spec_amendment_verification. Sub-threshold: Buddy-direct.
+    skill_ref: skills/spec_authoring/SKILL.md
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: board
+    name: "Spec board review (Standard or Deep)"
+    category: content
+    instruction: >
+      spec_board/SKILL.md. Convergence_loop max 3 passes. Output:
+      docs/reviews/board/{spec_name}-consolidated*.md with 0C+0H = PASS.
+    skill_ref: skills/spec_board/SKILL.md
+    completion:
+      type: compound
+      checks:
+        - type: pointer_check
+          source_file: "docs/reviews/board/{spec_name}-consolidated-pass1.md"
+        - type: manual
+    on_fail: block
+
+  # ============================================================================
+  # Phase: Prepare
+  # ============================================================================
+
+  - id: phase-prepare
+    name: "workflow_phase=prepare (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update workflow_phase=prepare"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: test-design
+    name: "Test design (with optional adversary augmentation)"
+    category: content
+    instruction: >
+      tester.md §Design — TC-Plan based on the board-approved spec.
+
+      Optional adversary mode: on substantial dispatch (≥3 ACs OR schema change
+      OR cross-module impact OR sub-build), run adversary_test_plan to extend
+      the plan with edge-case TCs (NEW-V-001, Compensation-Bug, Cycle-Entry-
+      Point, Smart-but-Wrong, Stale-State, Race-Condition). Then test-skeleton-
+      writer agent writes RED skeletons (context-isolated) — all tests MUST
+      FAIL via pytest before MCA dispatch. MCA brief includes "all ADV-TC-*
+      MUST pass post-implementation".
+
+      Below threshold or skipped adversary mode: skip with one-line rationale.
+    skill_ref: skills/testing/SKILL.md
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: brief-author
+    name: "Brief authoring (architect-authored when substantial; Buddy-inline on DIRECT)"
+    category: content
+    instruction: >
+      Per spec 306 §4.3 + §4.1 trigger evaluation:
+      - On DIRECT path (≤3 files, no spec, no new behaviour): Buddy
+        authors brief inline as today (legacy delegation-artefact
+        path, preserved for trivial work).
+      - On STANDARD or FULL path with §4.1 trigger fired AND below
+        §4.2 escalation: dispatch `agents/brief-architect.md` (single)
+        via Agent tool with perspective=generalist.
+      - On FULL path with §4.2 escalation triggers fired: dispatch
+        `agents/brief-architect.md` three times in parallel via Agent
+        tool calls in one message, each with perspective parameter
+        pattern | integration | scope.
+      - On AUTHORITY-ONLY path: skip via skip_when clause (no MCA
+        boundary at this path).
+      The architect's brief covers required sections per spec 306
+      §5.1 (qualitative content guidance, not strict schema). MCA
+      input validation per main-code-agent.md is "delegation input
+      exists" only.
+    skill_ref: agents/brief-architect.md
+    completion:
+      type: manual
+    skip_when: "path == AUTHORITY-ONLY"
+    on_fail: block
+
+  - id: brief-signoff
+    name: "Brief sign-off (user approval before MCA dispatch)"
+    category: gate
+    instruction: >
+      Per spec 306 §4.4 (mirrors upstream Plan Mode Step 4).
+      Multi-mode: Buddy synthesizes the candidate briefs first per
+      spec 306 §6 (synthesis is the coordinator's load-bearing job,
+      not delegated). Single mode: brief is the architect's direct
+      output, no synthesis.
+
+      Then in BOTH modes (STANDARD and FULL paths), present the
+      synthesized brief to the user for approval before MCA
+      dispatch. In multi-mode, also surface the §Divergence
+      Rationale block alongside the synthesized brief — user
+      approval is for the synthesized brief in light of the
+      divergence-rationale.
+
+      User approves: dispatch MCA. User rejects with comments:
+      Buddy decides — re-dispatch brief-architect with comments
+      folded in, or escalate to spec amendment, or file separate
+      task.
+
+      On architect output `escalate: <reason>`: synthesis is
+      skipped; Buddy escalates to user with the reason; resolution
+      may be pull-in-scope, file-separate-task, amend-spec, or
+      council. MCA does NOT dispatch until escalation is resolved.
+
+      DIRECT path (Buddy-inline brief): no architect dispatched, no
+      sign-off needed; legacy direct path applies.
+    completion:
+      type: manual
+    skip_when: "path == DIRECT or path == AUTHORITY-ONLY"
+    on_fail: escalate
+
+  # ============================================================================
+  # Phase: Execute
+  # ============================================================================
+
+  - id: phase-execute
+    name: "workflow_phase=execute (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update workflow_phase=execute"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: mca-implementation
+    name: "MCA implementation (Plan → [Plan-Review] → Implement → L0)"
+    category: content
+    instruction: >
+      main-code-agent inline. Plan + impl_plan_review (conditional: ≥3 ACs OR
+      schema change OR cross-module impact) + Implement + L0 (ruff/mypy).
+    completion:
+      type: manual
+    commit_gate: true
+    on_fail: block
+
+  # ============================================================================
+  # Phase: Verify
+  # ============================================================================
+
+  - id: phase-verify
+    name: "workflow_phase=verify (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update workflow_phase=verify"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: code-review-board
+    name: "Code review board (light / L1 / L2 per spec 306 §4.4a)"
+    category: content
+    instruction: >
+      Level (per spec 306 §4.4a + skills/code_review_board/SKILL.md §1):
+      - light: ≤2 files mechanical-trigger AND ≤30 net LOC AND no schema
+        AND no cross-spec AND no new top-level symbol → single
+        agents/code-verification.md persona; VERDICT: PASS|FAIL|PARTIAL
+        per upstream contract; chief-consolidation NOT required.
+      - L1: ≤5 files AND no new module AND no schema → 2-3 reviewers;
+        chief-consolidation NOT required (N ≤ 2 typical; Buddy reads
+        directly per "Never delegate substantive understanding" with
+        L1's small reviewer count).
+      - L2: >5 files OR new module OR cross-spec OR schema OR effort=L|XL
+        → 5-7 reviewers + chief-consolidation REQUIRED (N ≥ 3 triggers
+        chief tool-use per spec 306 §4.6.a).
+      When in doubt: L2.
+
+      On post-board FAIL with `target: spec_text` entries in
+      remaining_findings (per spec 306 §4.7 + §4.8): Buddy dispatches
+      MCA fix-pass + spec-text-drift-batch agent in parallel via two
+      Agent tool calls in ONE message. Both return → block-commit
+      both diffs (MCA src/+tests/ + batch agent docs/specs/) per
+      spec 306 §4.8 partial-failure-rollback semantics.
+    skill_ref: skills/code_review_board/SKILL.md
+    completion:
+      type: compound
+      checks:
+        - type: pointer_check
+          source_file: "docs/reviews/code/{spec_name}-verdict.md"
+        - type: pointer_check
+          source_file: "docs/reviews/code/{spec_name}-consolidated.md"
+          when: "level == L2"
+        - type: manual
+    commit_gate: true
+    on_fail: block
+
+  - id: spec-drift-check
+    name: "Spec drift check (amendment-verify + co-evolve, merged)"
+    category: content
+    instruction: >
+      Implementation-decision drift to spec body — did MCA's diff change
+      behaviour defined in a spec (Cypher templates, state machines, schemas,
+      interface contracts, pipeline phases)? Yes → spec patch in the SAME
+      block-commit, then re-verify with spec_amendment_verification.
+
+      No spec-defined behaviour touched: skip with one-line rationale.
+    skill_ref: skills/spec_amendment_verification/SKILL.md
+    required: false
+    completion:
+      type: manual
+    on_fail: warn
+
+  # ============================================================================
+  # Phase: Close
+  # ============================================================================
+
+  - id: phase-close
+    name: "workflow_phase=close (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update workflow_phase=close"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: close-bookkeeping
+    name: "Close bookkeeping (ADR + risk follow-up + knowledge process)"
+    category: content
+    instruction: >
+      Three close-phase sub-checks, each one-liner-skippable:
+
+      (a) ADR-discipline triple — was an architecture decision made that meets
+      hard-to-reverse + surprising-without-context + result-of-real-trade-off?
+      Yes → write ADR via documentation_and_adrs/SKILL.md. Otherwise: one-line
+      skip ("ephemeral / self-evident / reversible").
+
+      (b) Risk follow-up — for every verdict file in this build's Verify phase,
+      check `remaining_findings:` block. Non-empty → file ONE follow-up task
+      via task_creation. No remaining: skip with rationale.
+
+      (c) Knowledge process — extract findings into the context system via
+      knowledge_processor mode=process.
+    completion:
+      type: manual
+    on_fail: warn
+
+  - id: commit-deploy
+    name: "Commit + deploy"
+    category: deterministic
+    instruction: >
+      git commit (pre-commit hooks run: PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE
+      BLOCK; remaining checks WARN). git push. Dashboard deploy conditional.
+
+      Engine auto-advances workflow_phase=done when this step completes;
+      task-status=done is conditional on whether the workflow closes the WHOLE
+      task (skip on sub-build — parent owns task status).
+    completion:
+      type: manual
+    commit_gate: true
+    on_fail: block

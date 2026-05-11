@@ -1,0 +1,109 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+!framework/workflows/runbooks/build/
+!workflows/runbooks/build/
+dist/
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Runtime state
+.workflow-state/
+.session-buffer/
+*.log
+
+# Sub-agent observability output (transient, per-run)
+workspace/
+
+# Build / generator output (ephemeral, regenerated via scripts/generate-*.py + deploy-docs.sh)
+_site/
+
+# Session-handoff .bak safety copy (save/quicksave writes this before overwrite)
+# save/WORKFLOW.md Step 4 schreibt <path>.bak ohne leading dot — beide Varianten abfangen.
+.session-handoff.md.bak
+.session-handoff-*.md.bak
+session-handoff.md.bak
+session-handoff-*.md.bak
+context/session-handoff.md.bak
+context/session-handoff-*.md.bak
+
+# Local CC overrides
+.claude/settings.local.json
+
+# User-specific generated configs (Templates: *.example.jsonc/*.example.txt)
+orchestrators/opencode/opencode.jsonc
+.claude/path-whitelist.txt
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+launch/
+
+# Session-state (operational, not for public-repo)
+context/session-handoff.md
+context/session-handoff*.md.bak
+context/session-log.md
+context/history/*.md
+
+# Internal review-process artefacts (board reviews, adversary outputs, audits)
+# These are operational discipline-tools, not framework-content. Public repo
+# stays framework-only.
+docs/reviews/
+docs/audits/
+docs/audit/
+
+# Internal scoping/research artefacts (one-off documents, not framework-content)
+research.md
+docs/research/
+
+# Internal workflow-state files (per-session audit trail, not framework-content)
+# These mirror the workflow_engine state but in human-readable form.
+# Convention: singular per workflow-name (docs/<workflow>/).
+docs/build/
+docs/solve/
+docs/fix/
+docs/review/
+docs/docs-rewrite/
+
+# Internal spec-drafts (intermediate edit-plans + transient specs from solve/build)
+# Specs that are framework-relevant move to a tracked location explicitly.
+docs/specs/
+
+# Internal handover-bundles (cross-repo handoffs, dogfooding-reports)
+docs/handovers/
+
+# Internal cross-repo discovery logs — TRACKED (not gitignored).
+# Pre-OSS-Squash 2026-05-04: this dir was gitignored, content lost in
+# 14f8fab squash (recovered via dangling-commit 681ac03). Removed-from-
+# gitignore so engineering substance persists across future squashes.
+# Future OSS-prep: exclude via squash-config or branch-strategy, not
+# .gitignore. See docs/discoveries/README.md for policy.
+# docs/discoveries/  ← intentionally NOT ignored anymore
+
+# Auxiliary task-files (per-task audit trail: gates, delegation, test-plan)
+# Tasks themselves stay tracked under docs/tasks/<NNN>.{md,yaml}.
+# Auxiliary files are operational state, not historical work-record.
+docs/tasks/*-gates.yaml
+docs/tasks/*-gates.md
+docs/tasks/*-delegation.md
+docs/tasks/*-delegation.yaml
+docs/tasks/*-test-plan.md
+docs/tasks/*-test-plan.yaml
+
+# Scheduled-task lock (CC scheduling, runtime-only)
+.claude/scheduled_tasks.lock
+
+# Hook + agent runtime state (per-machine, ephemeral)
+.claude/state/
+
+# Session-runtime markers (board-runs, plan-adversary, ephemeral)
+.session/

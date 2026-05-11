@@ -1,0 +1,24 @@
+# feature_milestones-Block mit unbekannten Feldern.
+# Tests fuer Type-Whitelist-Verhalten: WARN fuer unbekannte Felder, kein ERR,
+# load_plan kommt durch.
+
+target: M1
+
+feature_milestones:
+  M1:
+    name: "Test-M1"
+    feature: "Test"
+    capabilities: [TestX]
+    specs: [test.md]
+    blocked_by: []
+    fallback_strategy: ["fb"]
+    requires: []
+    gate:
+      - {type: task, id: 1001, desc: "test"}
+    app_status_post_milestone: "test"
+    # Unbekannte Felder — sollen WARN, nicht ERR ausloesen
+    unknown_optional_field: foo
+    another_unknown: [bar, baz]
+
+implementation_tasks:
+  1001: "test"

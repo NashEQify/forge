@@ -1,0 +1,31 @@
+id: 308
+title: "Explore upstream CC repo for spec-authoring patterns"
+status: done
+milestone: cc-patterns-advanced
+blocked_by: []
+created: 2026-05-10
+updated: 2026-05-10
+audit_output: docs/audit/2026-05-10-task-308-cc-spec-authoring.md
+delta: "spec_authoring SKILL.md +29 lines (M4 Implementation surface as 5th artifact, M7 anti-pattern against meta-validation question, M8 Verify-before-recommend section). Other inventory items already absorbed during spec 306 (synthesis discipline, brief-architect read-only enforcement, AgentTool brief-quality)."
+effort: S
+area: framework/spec-engineering
+assignee: buddy
+spec_ref: null
+readiness: raw
+summary: >
+  Audit the upstream Claude Code repo for patterns relevant to spec /
+  requirement authoring (Plan Mode workflow, AskUserQuestion patterns,
+  Memory hierarchy, Plan Agent's "Understand Requirements" phase, etc.).
+  Identify what the framework's spec_authoring skill could adopt or
+  improve based on findings. Research-only — no implementation in
+  this task.
+intent_chain:
+  domain: framework/spec-engineering
+  objective: cc-patterns-advanced
+  action: >
+    Locate spec-authoring-relevant primitives in the upstream agentic-
+    CLI source + related documentation, map them onto the framework's
+    spec_authoring skill, and propose targeted adoption items as a
+    follow-up task.
+sub_tasks: []
+parent_task: null

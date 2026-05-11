@@ -1,0 +1,54 @@
+id: 313
+title: "Codex Plugin Export — skills + workflow_engine als Codex-Plugin distributable"
+status: pending
+milestone: codex-plugin-export
+blocked_by: []
+blocked_by_external: []
+created: '2026-05-10'
+updated: '2026-05-10'
+effort: L
+area: framework/orchestrator
+assignee: null
+readiness: raw
+spec_ref: null
+intent_chain:
+  domain: framework/runtime-distribution
+  objective: codex-plugin-exportability
+  action: >
+    Package skills + workflow_engine + adapter as a Codex-compatible plugin
+    bundle (plugin.json manifest + .mcp.json wrap of workflow_engine + optional
+    .app.json + marketplace.json), so the framework's discipline+skill layer
+    is installable on the Codex CLI alongside the existing CC + OpenCode
+    adapters.
+summary: >
+  Codex CLI ships a manifest-driven plugin format (`.codex-plugin/plugin.json`
+  + `skills/<name>/SKILL.md` + optional `.mcp.json` + `.app.json` +
+  marketplace.json). Skills are SKILL.md+Frontmatter — *identisch* zu unserem
+  Format. Pivotal Codex-Quote: "Skills are the authoring format; plugins are
+  the distribution format." Wir produzieren bereits im Authoring-Format,
+  ohne Plugin-Wrapping.
+
+  Gaps für vollständigen Export:
+  (1) plugin.json Manifest-Generator (Mapping über Skill-Inventar + Metadata)
+  (2) workflow_engine.py als MCP-Server wrapbar (`--mcp` flag oder separater
+      Entry-Point) — sonst keine Discipline-Mechanik im Plugin transportabel
+  (3) marketplace.json an Repo-Scope (`.agents/plugins/marketplace.json`)
+      und/oder Personal-Scope (`~/.agents/plugins/marketplace.json`)
+  (4) Adapter `orchestrators/codex/` (analog zu opencode/, claude-code/)
+  (5) Skill-Frontmatter-Audit: gibt's CC-spezifische Felder, die Codex nicht
+      parst? Falls ja, abstrahieren oder dokumentieren als CC-only.
+  (6) Hook-Audit: PreToolUse-Hooks sind Claude-Code-spezifisch — was lässt
+      sich als MCP-Tool ausdrücken (validate-X), was bleibt CC-only, was
+      könnte als pre-commit-script (harness-unabhängig) ausgedrückt werden?
+
+  Roadmap-Item, NICHT 1.0-Blocker. Priorität bleibt Discipline-Tightening +
+  Skill-Inventar erweitern.
+sub_tasks: []
+parent_task: null
+status_notes: >
+  Soft sequence dependency to 298 (OpenCode adapter): 298 produces
+  harness-agnostic-primitive learnings useful for Codex. NOT a hard blocker
+  — Codex distribution is structurally different (plugin-bundle, not
+  hook-translation). Could run in parallel; preferred sequence is 298 first.
+  Spec'ing the engine-as-MCP-server primitive could unlock value for OC
+  too (cross-runtime portable discipline).

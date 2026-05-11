@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BUDDYAI_DIR="/home/xxx/BuddyAI"
+PROJECTS_DIR="$HOME/projects"
+
+# Scope-Routing: erster Arg bestimmt Working Directory.
+scope="${1:-}"
+session_name=""
+if [ "$scope" = "life" ]; then
+  cd "$BUDDYAI_DIR/workspaces"
+  session_name="life"
+  shift
+elif [ "$scope" = "sysadmin" ]; then
+  cd "$BUDDYAI_DIR/workspaces/infra"
+  session_name="sysadmin"
+  shift
+elif [[ "$scope" == --* ]]; then
+  # Claude-Flag (--resume etc.): Default CWD = BuddyAI Root.
+  cd "$BUDDYAI_DIR"
+  session_name="buddyai"
+elif [ -z "$scope" ]; then
+  # Kein Scope: CWD-Fallback — intent.md im aktuellen Verzeichnis?
+  if [ -f "$(pwd)/intent.md" ] && [ "$(pwd)" != "$BUDDYAI_DIR" ]; then
+    session_name="$(basename "$(pwd)")"
+  else
+    cd "$BUDDYAI_DIR"
+    session_name="buddyai"
+  fi
+else
+  # Dynamischer Projekt-Lookup unter $PROJECTS_DIR.
+  # Case-insensitiver Exact-Match auf Verzeichnisnamen + intent.md vorhanden.
+  matched_dirs=()
+  available_projects=""
+  if [ -d "$PROJECTS_DIR" ]; then
+    for dir in "$PROJECTS_DIR"/*/; do
+      [ -d "$dir" ] || continue
+      dname="$(basename "$dir")"
+      [ -f "${dir}intent.md" ] && available_projects="${available_projects:+$available_projects, }$dname"
+      if [ "${dname,,}" = "${scope,,}" ] && [ -f "${dir}intent.md" ]; then
+        matched_dirs+=("${dir%/}")
+      fi
+    done
+  fi
+  if [ "${#matched_dirs[@]}" -eq 0 ]; then
+    echo "Unbekannter Scope: $scope" >&2
+    echo "Verfuegbar: life, sysadmin${available_projects:+, $available_projects}" >&2
+    exit 1
+  elif [ "${#matched_dirs[@]}" -gt 1 ]; then
+    echo "Mehrdeutiger Scope '$scope' — mehrere Verzeichnisse matchen:" >&2
+    for d in "${matched_dirs[@]}"; do echo "  $d" >&2; done
+    echo "Bitte exakten Verzeichnisnamen verwenden." >&2
+    exit 1
+  fi
+  cd "${matched_dirs[0]}"
+  session_name="$(basename "${matched_dirs[0]}")"
+  shift
+fi
+
+# .claude/ im WD einrichten wenn noetig (Agents + Settings).
+# Claude Code loest .claude/ nur im Working Directory auf.
+if [ "$(pwd)" != "$BUDDYAI_DIR" ]; then
+  mkdir -p .claude
+  if [ -e ".claude/agents" ] && [ ! -L ".claude/agents" ]; then
+    echo "WARNUNG: .claude/agents existiert und ist kein Symlink auf BuddyAI." >&2
+    echo "         --agent buddy koennte fehlschlagen." >&2
+  elif [ -L ".claude/agents" ] && [ "$(readlink .claude/agents)" != "$BUDDYAI_DIR/.claude/agents" ]; then
+    echo "WARNUNG: .claude/agents ist Symlink auf $(readlink .claude/agents), nicht auf BuddyAI." >&2
+  else
+    [ ! -e ".claude/agents" ] && ln -s "$BUDDYAI_DIR/.claude/agents" .claude/agents
+  fi
+  [ ! -e ".claude/settings.json" ] && ln -s "$BUDDYAI_DIR/.claude/settings.json" .claude/settings.json
+fi
+
+# Terminal-Titel: Scope-Name anzeigen. Immer gesetzt (session_name nie leer).
+name_args=(-n "$session_name")
+
+if [ $# -eq 0 ]; then
+  exec claude --add-dir "$BUDDYAI_DIR" --agent buddy "${name_args[@]}" "hi"
+else
+  exec claude --add-dir "$BUDDYAI_DIR" --agent buddy "${name_args[@]}" "$@"
+fi

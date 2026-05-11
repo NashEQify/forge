@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# oc — OpenCode launcher for forge
+#
+# Auto-detects FRAMEWORK_DIR from script location (analog to cc), points
+# OpenCode at the framework's opencode.jsonc config. Override via env vars
+# if needed.
+#
+# Usage:
+#   oc                # OpenCode with framework config
+#   oc <opencode-args>
+
+set -euo pipefail
+
+# Auto-detect FRAMEWORK_DIR from script location (env-overridable).
+if [ -z "${FRAMEWORK_DIR:-}" ]; then
+  FRAMEWORK_DIR="$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)"
+fi
+export FRAMEWORK_DIR
+
+OC_CONFIG_DIR="$FRAMEWORK_DIR/orchestrators/opencode/.opencode"
+OC_CONFIG="$FRAMEWORK_DIR/orchestrators/opencode/opencode.jsonc"
+
+# Verify config exists. If not, hint at setup-oc.sh.
+if [ ! -f "$OC_CONFIG" ]; then
+  echo "oc: ERROR — $OC_CONFIG not found." >&2
+  echo "    Run: bash $FRAMEWORK_DIR/scripts/setup-oc.sh" >&2
+  exit 1
+fi
+
+export OPENCODE_CONFIG_DIR="$OC_CONFIG_DIR"
+export OPENCODE_CONFIG="$OC_CONFIG"
+
+if ! command -v opencode &>/dev/null; then
+  echo "oc: WARNUNG — 'opencode' nicht im PATH." >&2
+fi
+
+exec opencode "$@"

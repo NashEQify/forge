@@ -1,0 +1,42 @@
+// OpenCode config template for forge.
+//
+// Setup: bash $FRAMEWORK_DIR/scripts/setup-oc.sh
+// The setup script substitutes ${FRAMEWORK_DIR} below with the absolute path
+// detected at install-time and writes the result to opencode.jsonc.
+//
+// Manual fallback: copy this file to opencode.jsonc and replace ${FRAMEWORK_DIR}
+// with the absolute path to your forge checkout.
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["${FRAMEWORK_DIR}/AGENTS.md"],
+  "default_agent": "buddy",
+  "model": "anthropic/claude-opus-4-6",
+  "small_model": "anthropic/claude-sonnet-4-6",
+  "permission": {
+    "bash": "ask",
+    "edit": "ask",
+    "write": "ask",
+    "task": "ask",
+    "external_directory": {
+      // Framework + projects + standard system paths. Adjust as needed.
+      "${FRAMEWORK_DIR}/**": "allow",
+      "${HOME}/projects/**": "allow",
+      "${HOME}/.ssh/**": "allow",
+      "/etc/**": "allow",
+      "/usr/**": "allow",
+      "/var/**": "allow",
+    },
+  },
+  "agent": {
+    "build": {
+      "description": "Built-in build override: keep available, but pinned to codex.",
+      "mode": "primary",
+      "model": "openai/gpt-5.3-codex",
+    },
+    "plan": {
+      "description": "Disabled: use coding + your main-code-agent instead.",
+      "mode": "primary",
+      "disable": true,
+    },
+  },
+}

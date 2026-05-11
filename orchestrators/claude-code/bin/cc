@@ -1,0 +1,190 @@
+#!/usr/bin/env bash
+# cc — Claude Code launcher for forge
+#
+# Model: forge is the Framework-Lead (SoT for CLAUDE.md, AGENTS.md,
+# agents/*, framework/*, scripts/*). Consumer repos pull this layer in via
+# FRAMEWORK_DIR + --add-dir. User-level discovery happens via a single
+# symlink ~/.claude/agents -> $FRAMEWORK_DIR/.claude/agents (Claude Code
+# discovers sub-agents via walk-up from CWD or ~/.claude/agents).
+#
+# FRAMEWORK_DIR resolution priority:
+#   1. env var (override, e.g. testing alternate checkout)
+#   2. install-time substitution (FRAMEWORK_DIR_INSTALLED below — set by
+#      setup-cc.sh when this file is copied to ~/.local/bin/cc)
+#   3. autodetect from $0 location (works only when run from source tree;
+#      $0/../../../ resolves to /home for the installed copy, which is
+#      wrong — that's why install-time substitution exists)
+# PROJECTS_DIR (consumer repos location) defaults to $HOME/projects.
+#
+# Usage:
+#   cc                        # use current CWD (must have intent.md)
+#   cc framework              # cd to $FRAMEWORK_DIR
+#   cc <project-name>         # dynamic lookup under $PROJECTS_DIR/<name>/
+
+set -euo pipefail
+
+# --- Core directories (auto-detect, env var overridable) ---
+# Install-time substitution marker. Empty value = source-tree run; setup-cc.sh
+# overwrites this line when it installs cc to ~/.local/bin/. Do not edit by
+# hand — change it via setup-cc.sh re-run.
+FRAMEWORK_DIR_INSTALLED=""  # SUBSTITUTED-BY-SETUP-CC
+
+if [ -z "${FRAMEWORK_DIR:-}" ]; then
+  if [ -n "$FRAMEWORK_DIR_INSTALLED" ]; then
+    FRAMEWORK_DIR="$FRAMEWORK_DIR_INSTALLED"
+  else
+    FRAMEWORK_DIR="$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)"
+  fi
+fi
+
+# PROJECTS_DIR: where consumer repos live. Default $HOME/projects, env-overridable.
+: "${PROJECTS_DIR:=$HOME/projects}"
+
+export FRAMEWORK_DIR PROJECTS_DIR
+
+# --- Pre-flight: User-level agents symlink for framework SoT ---
+# Claude Code discovers subagents via walk-up from CWD or ~/.claude/agents/.
+# We use the user-level location so framework agents are available in every
+# working directory, regardless of consumer repo. Idempotent.
+USER_AGENTS_DIR="$HOME/.claude/agents"
+FRAMEWORK_AGENTS_DIR="$FRAMEWORK_DIR/.claude/agents"
+if [ -d "$FRAMEWORK_AGENTS_DIR" ]; then
+  if [ ! -e "$USER_AGENTS_DIR" ]; then
+    mkdir -p "$HOME/.claude"
+    ln -s "$FRAMEWORK_AGENTS_DIR" "$USER_AGENTS_DIR"
+    echo "cc: angelegt $USER_AGENTS_DIR -> $FRAMEWORK_AGENTS_DIR" >&2
+  elif [ -L "$USER_AGENTS_DIR" ]; then
+    current_target="$(readlink -f "$USER_AGENTS_DIR" 2>/dev/null || true)"
+    expected_target="$(readlink -f "$FRAMEWORK_AGENTS_DIR" 2>/dev/null || true)"
+    if [ "$current_target" != "$expected_target" ]; then
+      echo "WARNUNG: $USER_AGENTS_DIR zeigt auf $current_target," >&2
+      echo "         nicht auf Framework ($expected_target)." >&2
+    fi
+  elif [ -d "$USER_AGENTS_DIR" ]; then
+    echo "WARNUNG: $USER_AGENTS_DIR ist ein echtes Verzeichnis (kein Symlink)." >&2
+    echo "         Framework-Agents koennen divergieren — pruefen oder ersetzen." >&2
+  fi
+else
+  echo "WARNUNG: $FRAMEWORK_AGENTS_DIR nicht gefunden." >&2
+  echo "         forge clonen nach $FRAMEWORK_DIR oder FRAMEWORK_DIR env var setzen." >&2
+fi
+
+# --- Pre-flight: User-level skills symlink for framework SoT ---
+# Claude Code injectet user-level Skills (~/.claude/skills/) in die
+# available-skills System-Reminder fuer proaktive Discovery — analog
+# zur Agents-Logik oben. Idempotent.
+USER_SKILLS_DIR="$HOME/.claude/skills"
+FRAMEWORK_SKILLS_DIR="$FRAMEWORK_DIR/.claude/skills"
+if [ -d "$FRAMEWORK_SKILLS_DIR" ]; then
+  if [ ! -e "$USER_SKILLS_DIR" ]; then
+    mkdir -p "$HOME/.claude"
+    ln -s "$FRAMEWORK_SKILLS_DIR" "$USER_SKILLS_DIR"
+    echo "cc: angelegt $USER_SKILLS_DIR -> $FRAMEWORK_SKILLS_DIR" >&2
+  elif [ -L "$USER_SKILLS_DIR" ]; then
+    current_target="$(readlink -f "$USER_SKILLS_DIR" 2>/dev/null || true)"
+    expected_target="$(readlink -f "$FRAMEWORK_SKILLS_DIR" 2>/dev/null || true)"
+    if [ "$current_target" != "$expected_target" ]; then
+      echo "WARNUNG: $USER_SKILLS_DIR zeigt auf $current_target," >&2
+      echo "         nicht auf Framework ($expected_target)." >&2
+    fi
+  elif [ -d "$USER_SKILLS_DIR" ]; then
+    echo "WARNUNG: $USER_SKILLS_DIR ist ein echtes Verzeichnis (kein Symlink)." >&2
+    echo "         Framework-Skills koennen divergieren — pruefen oder ersetzen." >&2
+  fi
+else
+  echo "WARNUNG: $FRAMEWORK_SKILLS_DIR nicht gefunden." >&2
+  echo "         CC-Skill-Wrapper unter \$FRAMEWORK_DIR/.claude/skills/ erwartet." >&2
+fi
+
+# --- Scope routing: first arg selects working directory ---
+# Built-in scope: 'framework' → $FRAMEWORK_DIR. All other scopes resolve
+# dynamically under $PROJECTS_DIR/<scope>/ (case-insensitive, requires intent.md).
+scope="${1:-}"
+session_name=""
+
+if [ "$scope" = "framework" ] || [ "$scope" = "forge" ]; then
+  cd "$FRAMEWORK_DIR"
+  session_name="framework"
+  shift
+elif [[ "$scope" == --* ]]; then
+  # Claude-Flag (--resume etc.) without scope: stay in CWD.
+  session_name="$(basename "$(pwd)")"
+elif [ -z "$scope" ]; then
+  # Kein Scope: CWD wird verwendet. intent.md-Check + ggf. Anlage liegt
+  # bei Buddy (boot.md Step 4 RESOLVE). Kein Silent-Fallback —
+  # das wuerde Cross-Wiring erzeugen wenn User in projekt-Dir ohne intent.md
+  # arbeitet (Bug Session 18.04.2026, Task 372).
+  session_name="$(basename "$(pwd)")"
+else
+  # Dynamischer Projekt-Lookup unter $PROJECTS_DIR.
+  # Case-insensitiver Exact-Match auf Verzeichnisnamen + intent.md vorhanden.
+  matched_dirs=()
+  available_projects=""
+  if [ -d "$PROJECTS_DIR" ]; then
+    for dir in "$PROJECTS_DIR"/*/; do
+      [ -d "$dir" ] || continue
+      dname="$(basename "$dir")"
+      [ -f "${dir}intent.md" ] && available_projects="${available_projects:+$available_projects, }$dname"
+      if [ "${dname,,}" = "${scope,,}" ] && [ -f "${dir}intent.md" ]; then
+        matched_dirs+=("${dir%/}")
+      fi
+    done
+  fi
+  if [ "${#matched_dirs[@]}" -eq 0 ]; then
+    echo "Unbekannter Scope: $scope" >&2
+    echo "Built-in: framework" >&2
+    echo "Dynamisch (Projekt-Dirs unter $PROJECTS_DIR mit intent.md)${available_projects:+: $available_projects}" >&2
+    exit 1
+  elif [ "${#matched_dirs[@]}" -gt 1 ]; then
+    echo "Mehrdeutiger Scope '$scope' — mehrere Verzeichnisse matchen:" >&2
+    for d in "${matched_dirs[@]}"; do echo "  $d" >&2; done
+    echo "Bitte exakten Verzeichnisnamen verwenden." >&2
+    exit 1
+  fi
+  cd "${matched_dirs[0]}"
+  session_name="$(basename "${matched_dirs[0]}")"
+  shift
+fi
+
+# --- Terminal title ---
+name_args=(-n "$session_name")
+
+# --- Build --add-dir args ---
+# FRAMEWORK_DIR is always added (if it exists) so CLAUDE.md/AGENTS.md/docs
+# from forge land in the context. CWD is the active scope.
+CWD="$(pwd)"
+ADD_DIR_ARGS=()
+if [ -d "$FRAMEWORK_DIR" ]; then
+  ADD_DIR_ARGS+=(--add-dir "$FRAMEWORK_DIR")
+fi
+# Avoid duplicate --add-dir if CWD == FRAMEWORK_DIR (framework session).
+if [ "$CWD" != "$FRAMEWORK_DIR" ]; then
+  ADD_DIR_ARGS+=(--add-dir "$CWD")
+fi
+
+# Workflow-Engine project-scope: workflow_engine.py reads BUDDY_PROJECT_ROOT
+# to find .workflow-state/, docs/tasks/, etc. Setting it explicitly here
+# avoids ambiguity when the engine is called from a sub-process / hook
+# whose CWD might not match the user-intended project-root.
+export BUDDY_PROJECT_ROOT="$CWD"
+
+# --- Launch ---
+# CC_DEBUG=1 prints the resolved invocation without calling claude. Useful
+# for verifying scope routing + add-dir logic without consuming API credits.
+if [ "${CC_DEBUG:-}" = "1" ]; then
+  echo "cc DEBUG:" >&2
+  echo "  FRAMEWORK_DIR = $FRAMEWORK_DIR" >&2
+  echo "  PROJECTS_DIR  = $PROJECTS_DIR" >&2
+  echo "  CWD           = $CWD" >&2
+  echo "  session_name  = $session_name" >&2
+  echo "  add-dir args  = ${ADD_DIR_ARGS[*]}" >&2
+  echo "  trailing args = $*" >&2
+  echo "  would exec: claude ${ADD_DIR_ARGS[*]} --agent buddy ${name_args[*]} ${*:-hi}" >&2
+  exit 0
+fi
+
+if [ $# -eq 0 ]; then
+  exec claude "${ADD_DIR_ARGS[@]}" --agent buddy "${name_args[@]}" "hi"
+else
+  exec claude "${ADD_DIR_ARGS[@]}" --agent buddy "${name_args[@]}" "$@"
+fi

@@ -1,0 +1,267 @@
+name: solve
+description: "Problem-driven workflow: frame → refine → artifact → validate → execute"
+trigger: ["solve"]
+derived_from: "WORKFLOW.md@2026-05-09"
+
+# Named gates: frame, refine, write-artifact, validate, apply-artifact,
+# close-bookkeeping, commit-deploy
+# (7 user-decided steps + 5 engine-internal phase transitions).
+
+routes:
+  standard: &solve_steps
+    - phase-frame
+    - frame-report
+    - phase-refine
+    - refine
+    - phase-artifact
+    - write-artifact
+    - phase-validate
+    - validate
+    - phase-execute
+    - apply-artifact
+    - close-bookkeeping
+    - commit-deploy
+  full: *solve_steps
+
+steps:
+
+  - id: phase-frame
+    name: "workflow_phase=frame (engine-internal)"
+    category: deterministic
+    instruction: >
+      task_status_update status=in_progress, workflow_phase=frame.
+      Create state file: docs/solve/YYYY-MM-DD-<slug>.md with
+      frontmatter (phase: frame, status: active, artefacts: []).
+      Format detail: REFERENCE.md.
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: frame-report
+    name: "Frame report (frame skill, 8 sub-steps)"
+    category: content
+    instruction: >
+      Problem framing via frame skill: reformulate, plan + review,
+      first-principles, repo-check, constraints, SOTA, solution-space,
+      evaluate + recommend. Result is a connected frame report in the
+      state file.
+    skill_ref: skills/frame/SKILL.md
+    completion:
+      type: compound
+      checks:
+        - type: manual
+        - type: file_content_check
+          path: "{state_file}"
+          condition: has_match
+          pattern: "Problem reformul"
+        - type: file_content_check
+          path: "{state_file}"
+          condition: has_match
+          pattern: "First.Principles"
+    commit_gate: false
+    on_fail: block
+    context_refs:
+      - skills/frame/SKILL.md
+
+  - id: phase-refine
+    name: "workflow_phase=refine (engine-internal)"
+    category: deterministic
+    instruction: >
+      Update state-file frontmatter: phase=refine. Commit with
+      "solve(frame): frame report [Task-{task_id}]".
+    completion:
+      type: file_content_check
+      path: "{state_file}"
+      condition: has_match
+      pattern: "phase: refine"
+    commit_gate: true
+    on_fail: block
+
+  - id: refine
+    name: "Refine (user dialog + optional council + refinement notes)"
+    category: content
+    instruction: >
+      Three sub-steps:
+      (a) user-dialog — present the frame report, discuss the
+          recommendation, sharpen the direction. Purely dialogic, no
+          file output required.
+      (b) council — INVOKE only if >1 path AND hard-to-reverse.
+          Council result under docs/reviews/council/. Skip with
+          one-line rationale otherwise.
+      (c) refinement notes — summarize chosen approach, rationale,
+          open points as a "Phase 2" section in the state file.
+    guard:
+      type: script
+      command: "python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --guard council-needed {task_id}"
+    completion:
+      type: compound
+      checks:
+        - type: manual
+        - type: file_content_check
+          path: "{state_file}"
+          condition: has_match
+          pattern: "Phase 2"
+    on_fail: block
+    context_refs:
+      - workflows/templates/council.yaml
+
+  - id: phase-artifact
+    name: "workflow_phase=artifact (engine-internal)"
+    category: deterministic
+    instruction: >
+      Update state-file frontmatter: phase=artifact. User-confirm
+      required. Commit with "solve(refine): refinement [Task-{task_id}]".
+    completion:
+      type: file_content_check
+      path: "{state_file}"
+      condition: has_match
+      pattern: "phase: artifact"
+    commit_gate: true
+    on_fail: block
+
+  - id: write-artifact
+    name: "Write artefact (with registration plan)"
+    category: content
+    instruction: >
+      Create the artefact based on the sharpened frame + chosen approach.
+      Type is context-dependent (spec, workflow, protocol, code plan).
+      Must be self-contained and within the piebald budget. For specs:
+      use spec_authoring skill. For code: MCA via the build sub-workflow.
+
+      Sub-step — registration plan: write a "Registration" section into
+      the state file describing how the artefact lands in process-map,
+      STRUCTURE.md, etc. For specs with handoff fields: target_spec_path,
+      problem_statement, scope_summary, frame_report_ref.
+    completion:
+      type: file_created_matching
+      pattern:
+        - "docs/specs/*.md"
+        - "framework/**/*.md"
+        - "framework/**/*.yaml"
+    commit_gate: false
+    on_fail: block
+    context_refs:
+      - skills/_protocols/piebald-budget.md
+      - framework/spec-authoring.md
+
+  - id: phase-validate
+    name: "workflow_phase=validate (engine-internal)"
+    category: deterministic
+    instruction: >
+      Update state-file frontmatter: phase=validate. Artefact +
+      registration plan must exist. Commit with "solve(artifact):
+      artefact draft [Task-{task_id}]".
+    completion:
+      type: file_content_check
+      path: "{state_file}"
+      condition: has_match
+      pattern: "phase: validate"
+    commit_gate: true
+    on_fail: block
+
+  - id: validate
+    name: "Validate (classify → board → convergence → delta-verify)"
+    category: content
+    instruction: >
+      Classify the artefact (Pattern 7 reader-facing-surface detection):
+        - "code"              → code_review_board
+        - "spec"              → spec_board (Standard)
+        - "impl-plan"         → impl_plan_review
+        - "ui-spec"           → spec_board (mode=ux)
+        - "reader-facing-doc" → spec_board (mode=ux) + board-ux-ia + board-ux-heuristic
+
+      Trigger is NOT file-extension-based — primary consumer decides.
+      Default OUT on doubt. Set artifact_class via `--set artifact_class <class>`.
+
+      Then run the sub-flow internally:
+      (a) dispatch the routed board; chief consolidates.
+      (b) Buddy reads ONLY the chief signal (CLAUDE.md §1).
+      (c) post-convergence check (chief answers: weakest point in
+          PASS — what tips it? which finding got the largest
+          downweight — rightly so?).
+      (d) post-pass checklist (spec_board §6: tracking table,
+          verification equation, merge spot-check, minority re-check,
+          piebald budget on skill/runbook reviews).
+      (e) on NEEDS-WORK: fix findings → iterate (convergence_loop,
+          max 3 passes). 0C+0H = PASS.
+      (f) delta-verify on PASS when triggered (≥10 normative lines OR
+          ≥3 files OR ≥1 MAJOR fixed OR meta-critical change). Team:
+          board-adversary + board-implementer, both first-principles
+          drill required, no chief.
+      (g) update task-YAML board_result + readiness via task_status_update.
+    completion:
+      type: file_created_matching
+      pattern: "docs/reviews/board/*-pass*.md"
+    commit_gate: true
+    on_fail: block
+    context_refs:
+      - skills/spec_board/SKILL.md
+      - skills/code_review_board/SKILL.md
+      - skills/impl_plan_review/SKILL.md
+      - skills/_protocols/consolidation-preservation.md
+      - framework/agent-patterns.md
+
+  - id: phase-execute
+    name: "workflow_phase=execute (engine-internal)"
+    category: deterministic
+    instruction: >
+      Update state-file frontmatter: phase=execute. Board verdict must
+      be PASS (0C+0H). Commit with "solve(validate): board PASS
+      [Task-{task_id}]". Push + dashboard deploy.
+    completion:
+      type: file_content_check
+      path: "{state_file}"
+      condition: has_match
+      pattern: "phase: execute"
+    commit_gate: true
+    on_fail: block
+
+  - id: apply-artifact
+    name: "Apply artefact"
+    category: content
+    instruction: >
+      Activate the artefact. Variants: direct (register in process-map +
+      stale cleanup + deploy), handoff to build (spec/plan → build
+      workflow), handoff to docs-rewrite, self-apply. Follow autonomy
+      rules in framework/agent-autonomy.md.
+    completion:
+      type: manual
+    on_fail: block
+    context_refs:
+      - framework/process-map.md
+      - framework/agent-autonomy.md
+
+  - id: close-bookkeeping
+    name: "Close bookkeeping (ADR + knowledge processor)"
+    category: content
+    instruction: >
+      Two skip-eligible sub-checks:
+      (a) ADR-discipline triple — was an architecture decision made that
+          meets hard-to-reverse + surprising-without-context + result-
+          of-real-trade-off? Yes → write ADR via documentation_and_adrs.
+          Solve is the workflow most likely to hit this trigger
+          (open-solution shape → real trade-off decisions).
+      (b) knowledge processor wrap-up — write a history entry with
+          frame-report-ref + IMPACT CHAIN under context/history/.
+    skill_ref: skills/knowledge_processor/SKILL.md
+    completion:
+      type: file_created_matching
+      pattern: "context/history/*"
+    on_fail: warn
+
+  - id: commit-deploy
+    name: "Commit + push + deploy"
+    category: deterministic
+    instruction: >
+      Update state-file frontmatter: phase=done, status=done. Set task
+      status=done via task_status_update. git commit + push. Dashboard
+      deploy.
+
+      Engine auto-advances workflow_phase=done; task-level status=done
+      is set unconditionally on standard route (solve closes its own
+      task by definition).
+    completion:
+      type: exit_code
+      command: "grep -q 'status: done' docs/tasks/{task_id}.yaml"
+    commit_gate: true
+    on_fail: block

@@ -1,0 +1,28 @@
+name: decision
+description: >
+  Workflow for Entscheidungs-Tasks. Vom Problem bis zur dokumentierten Entscheidung.
+steps:
+  - id: frame
+    title: Problem framen
+    description: Was genau wird entschieden? Welche Constraints gelten? Done-Kriterium.
+    exit_criteria: Framing schriftlich in Task.md, Done-Kriterium definiert
+  - id: options
+    title: Optionen erheben
+    description: Alle realistischen Optionen mit Pros/Cons. Keine Vorentscheidung.
+    exit_criteria: Mindestens 2 Optionen dokumentiert mit Trade-offs
+  - id: evaluate
+    title: Evaluieren gegen Constraints
+    description: >
+      Optionen gegen values.md, Domain-Constraints, Impact auf andere Objectives pruefen.
+      Cross-Domain Impact Check wenn betroffen (LIFE-004).
+    exit_criteria: Jede Option gegen alle relevanten Constraints geprueft
+  - id: decide
+    title: Entscheidung treffen
+    description: Eine Option waehlen, rationale schreiben.
+    exit_criteria: Entscheidung dokumentiert mit rationale
+  - id: document
+    title: Entscheidung einarbeiten
+    description: >
+      Ergebnis in relevante Context-Dateien schreiben (Brain, Domain-Datei, decisions.md
+      wenn architektonisch relevant). IMPACT CHAIN ausfuehren.
+    exit_criteria: Alle betroffenen Context-Dateien upgedated

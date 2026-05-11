@@ -1,0 +1,27 @@
+id: 303
+title: "Audit: API-check + eval step coverage in workflows (DR-12)"
+status: done
+milestone: tier2-harness
+blocked_by: []
+created: 2026-05-10
+updated: 2026-05-10
+audit_output: docs/audit/2026-05-10-task-303-api-eval-coverage.md
+followup_task: 312
+effort: S
+area: framework/source-grounding
+assignee: buddy
+spec_ref: null
+readiness: raw
+summary: >
+  Verify that the get_api_docs invocation step (build/fix workflows) and the
+  eval step (spec_authoring + spec_amendment_verification) are still present
+  and content-sufficient. Audit-only — no redesign.
+intent_chain:
+  domain: framework/source-grounding
+  objective: fabrication-mitigation-followup
+  action: >
+    Mechanically and content-wise verify that the framework's primary defences
+    against API-version-drift and amendment-drift (DR-12) are still wired into
+    the workflows they should fire in.
+sub_tasks: []
+parent_task: null

@@ -1,0 +1,33 @@
+id: 307
+title: "OSS-Cleanup Sweep — strip forensic refs across framework"
+status: done
+milestone: oss-public-surface
+blocked_by: []
+created: 2026-05-10
+updated: 2026-05-10
+completion_note: "Surface much smaller than estimated — prior cleanup sessions (2026-05-09 OSS-scrub, 2026-05-10 Spec-306 post-corrections) had already absorbed ~25 forensic refs. Real residue: 5 edits across 4 files (brief-architect description, agent-patterns pattern title, fix/WORKFLOW.md gate-count + path-agnostic, build/WORKFLOW.md gate-count). Invariant 7 in CLAUDE.md is now the standing SoT rule."
+effort: M
+area: framework/oss-readiness
+assignee: buddy
+spec_ref: null
+readiness: raw
+summary: >
+  Audit + sanitize all framework-canonical files (skills/, agents/,
+  framework/, workflows/, _protocols/, docs/specs/) for forensic
+  references that violate OSS-readability: BuddyAI task IDs, internal
+  session numbers, dated session-handoff refs, commit hashes,
+  project-specific module names embedded in worked examples.
+  Replace with generic pattern-illustrations or remove. Keep
+  legitimate upstream references (Plan Agent, TeamCreate, etc.) and
+  framework's own task IDs (300+ which are public framework tasks).
+intent_chain:
+  domain: framework/oss-readiness
+  objective: oss-public-surface
+  action: >
+    Bring framework-canonical files in line with the OSS-readability
+    constraint by replacing forensic references with generic pattern
+    illustrations. Targets identified by initial sweep: ~10 files
+    with consumer-repo task refs, ~15 files with session/date/Task-
+    NNN refs.
+sub_tasks: []
+parent_task: null

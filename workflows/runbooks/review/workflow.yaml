@@ -1,0 +1,115 @@
+name: review
+description: "Review / validate spec(s). No code — only spec quality."
+trigger: ["review"]
+derived_from: "WORKFLOW.md@2026-05-09"
+
+# Named gates: routing, board-dispatch, convergence-loop, close-bookkeeping, commit
+# (5 user-decided steps + 3 engine-internal phase transitions).
+
+steps:
+
+  - id: phase-specify
+    name: "workflow_phase=specify (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update + create state file docs/review/YYYY-MM-DD-<slug>.md"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: routing
+    name: "Review routing (depth + type)"
+    category: classification
+    routes:
+      standard: [phase-execute, board-dispatch, phase-verify, convergence-loop, phase-close, close-bookkeeping, commit]
+      sectional: [phase-execute, board-dispatch, phase-verify, convergence-loop, phase-close, close-bookkeeping, commit]
+      architecture: [phase-execute, board-dispatch, phase-verify, convergence-loop, phase-close, close-bookkeeping, commit]
+    instruction: >
+      Pick the review skill based on the spec set:
+      - 1 spec, standard / deep                         → spec_board (Standard or Deep)
+      - 1 spec >1000 lines, foundation                  → sectional_deep_review
+      - 2+ specs sharing contracts (API / NATS / models) → architecture_coherence_review
+      - UI spec after functional PASS                   → spec_board (mode=ux)
+      Pick mid-flow via `--complete routing --route <key>`.
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: phase-execute
+    name: "workflow_phase=execute (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update workflow_phase=execute"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: board-dispatch
+    name: "Board dispatch (per routing) → chief consolidates"
+    category: content
+    instruction: >
+      Dispatch the routed skill (spec_board / sectional_deep_review /
+      architecture_coherence_review). Chief consolidates findings into
+      the verdict file. Buddy reads ONLY the chief signal (CLAUDE.md §1).
+      Output paths:
+      - spec_board               → docs/reviews/board/{spec_name}-consolidated-pass1.md
+      - sectional_deep_review    → docs/reviews/sectional/{spec_name}-deep.md
+      - architecture_coherence_review → docs/reviews/architecture/{spec_name}-coherence.md
+    skill_ref: skills/spec_board/SKILL.md
+    completion:
+      type: compound
+      checks:
+        - type: pointer_check
+          source_file: "docs/reviews/board/{spec_name}-consolidated-pass1.md"
+        - type: manual
+    on_fail: block
+
+  - id: phase-verify
+    name: "workflow_phase=verify (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update workflow_phase=verify"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: convergence-loop
+    name: "Convergence loop on NEEDS-WORK (max 3 passes)"
+    category: content
+    instruction: >
+      On NEEDS-WORK: fix-loop via convergence_loop, max 3 passes, rising
+      severity threshold. PASS at 0C+0H. Skip-eligible if first pass was
+      already PASS.
+    skill_ref: skills/convergence_loop/SKILL.md
+    required: false
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: phase-close
+    name: "workflow_phase=close (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update workflow_phase=close + board_result + readiness in task YAML"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: close-bookkeeping
+    name: "Risk carry-forward (file follow-up task for unfixed findings)"
+    category: content
+    instruction: >
+      For every verdict file written during this review, check the
+      top-level YAML block `remaining_findings:`. Non-empty → file ONE
+      follow-up task via task_creation/SKILL.md with the consolidated
+      list. No remaining findings: skip with one-line rationale.
+    skill_ref: skills/task_creation/SKILL.md
+    required: false
+    completion:
+      type: manual
+    on_fail: warn
+
+  - id: commit
+    name: "Commit + push"
+    category: deterministic
+    instruction: "git commit + push"
+    completion:
+      type: manual
+    commit_gate: true
+    on_fail: block

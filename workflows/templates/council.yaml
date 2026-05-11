@@ -1,0 +1,240 @@
+# Architecture Council — Multi-Perspective Deliberation Sub-Workflow
+#
+# Referenziert von build/WORKFLOW.md (Specify-Phase) + gates-template.yaml.
+# Tier 1 SoT: workflows/runbooks/build/WORKFLOW.md.
+# Diese YAML ist die Tier 2 (Harness) Repraesentation.
+# Auch eigenstaendig nutzbar: "buddy: architecture council for {Fragestellung}"
+#
+# Kern-Idee: Min 3 unabhaengige Members, Context-Isolation (CC Sub-Agents),
+# sehen gegenseitig NICHTS bis Deliberation. Bei Dissens: Rebuttal (nur Full).
+# Sub-Agent-MD: .claude/agents/council-member/
+
+version: "2.1"
+
+# ============================================================
+# Trigger-Check: Council noetig?
+# ============================================================
+
+trigger_check:
+  description: >
+    Buddy prueft 4 binaere Trigger BEVOR Council startet.
+    Kein Trigger → dokumentierter Skip ("Council nicht noetig: [rationale]").
+    Min 1 Trigger → Council starten, dann Modus waehlen.
+  triggers:
+    - id: multi_path
+      question: ">1 valider Loesungsweg UND schwer umkehrbar?"
+    - id: multi_layer
+      question: ">1 Schicht/Agent betroffen?"
+    - id: high_impact
+      question: "Substanzieller Impact auf Security/Sovereignty/Simplicity/Experience/Compatibility/Scale?"
+    - id: uncertainty
+      question: "Buddy ist unsicher?"
+  escalation_path: >
+    Council kann auch waehrend/nach Board feuern wenn Board eine
+    Architektur-Frage entdeckt (sekundaerer Eintrittspunkt).
+    Gilt auch zwischen Spec-Ebenen im Full Path (E1/E2/E3):
+    Board entdeckt Arch-Frage → Council → Spec-Update → Board Re-Review.
+    Dokumentation: workflows/runbooks/build/WORKFLOW.md §Phase Specify (Full Path, Council Step).
+
+# ============================================================
+# Council-Output
+# ============================================================
+
+output_definition:
+  description: >
+    Council kartiert den Loesungsraum and gibt dem Spec-Autor Leitplanken.
+    Council-Output wird direkt zu Spec-Input.
+  fields:
+    loesungsraum:
+      description: "Viable Approaches + Trade-offs"
+      flows_into: "Spec: Loesungswahl-rationale"
+    constraints:
+      description: "Grenzen die Council identifiziert hat"
+      flows_into: "Spec: Constraint Architecture (MUST/MUST NOT)"
+    dimensionen:
+      description: "Aspekte die die Spec abdecken MUSS"
+      flows_into: "Spec: AC-Struktur, Scope"
+    input_quellen:
+      description: "Wo noch Fakten/Perspektiven gebraucht werden"
+      flows_into: "Discovery/Recherche"
+    decision:
+      description: "Konvergiert → Empfehlung. Offen → Trade-off-Matrix for User"
+      flows_into: "User/Buddy entscheiden"
+    adr:
+      description: "Bei schwer umkehrbaren Entscheidungen"
+      flows_into: "decisions.md"
+
+# ============================================================
+# Modus-Auswahl (nach Trigger-Check)
+# ============================================================
+
+mode_selection:
+  description: >
+    Buddy bestimmt den Modus BEVOR der Council startet.
+    Zwei binaere Fragen:
+    
+    Frage 1: ">2 Council-Dimensionen betroffen?"
+      → Ja: full
+      → Nein: Frage 2
+    
+    Frage 2: "Schwer umkehrbar?"
+      → Ja: standard
+      → Nein: light
+    
+    Kein Council noetig? Dokumentierter Skip:
+    "Council nicht noetig: [rationale]."
+
+# ============================================================
+# Modi — IMMER min 3 Members (Entscheidung aus Design-Session)
+# ============================================================
+
+modes:
+
+  light:
+    description: >
+      Schnelle Einschaetzung for umkehrbare Entscheidungen.
+      3 Members (2×Opus + 1×Sonnet). Moderator (Buddy) entscheidet.
+    members: 3
+    member_config:
+      - model: opus   # Wichtigste Perspektive
+      - model: opus   # Kontraerste Perspektive
+      - model: sonnet # Weitere Perspektive
+    deliberation: moderator_decides
+    output: inline  # Kein separates Decision-File
+    adr_required: false
+    expected_cc_calls: 4  # 3 Members + 1 Deliberation
+
+  standard:
+    description: >
+      Gruendliche Analyse for schwer umkehrbare Entscheidungen.
+      3 Members (2×Opus + 1×Sonnet), Context-Isolation.
+      Buddy aggregiert and entscheidet.
+    members: 3
+    member_config:
+      - model: opus
+      - model: opus
+      - model: sonnet
+    deliberation: moderator_decides
+    output: decision_file
+    adr_required: true
+    expected_cc_calls: 4
+
+  full:
+    description: >
+      Volle Deliberation for Entscheidungen die >2 Dimensionen betreffen.
+      4-6 Members. Rebuttal bei Patt. Opus als Final Arbiter.
+    members: "4-6"
+    member_config:
+      - model: opus   # Min 2×Opus
+      - model: opus
+      - model: sonnet
+      # + optionale weitere je nach Dimensionen
+    deliberation: rebuttal_on_dissent  # Max 1 Runde
+    output: decision_file
+    adr_required: true
+    expected_cc_calls: "5-12"
+
+# ============================================================
+# Perspektiven-Profile
+# ============================================================
+
+profiles:
+
+  architecture:
+    description: "Default for ARCH-XXX Entscheidungen."
+    perspectives:
+      security:
+        focus: "Angriffsvektoren, Datenfluss, Credentials. Angriffsflaeche groesser/kleiner?"
+      sovereignty:
+        focus: "Datensouveraenitaet, Selfhosting, Vendor-Lock-in. Kontrolle ueber Daten?"
+      simplicity:
+        focus: "Komplexitaet, Wartbarkeit, DR-7. Einfachste Loesung die funktioniert?"
+      experience:
+        focus: "User/Developer Experience. Verbessert die Loesung den Alltag?"
+      compatibility:
+        focus: "Integration, Migration, Abwaertskompatibilitaet. Passt zum Stack?"
+      scale:
+        focus: "Performance, Zukunftsfaehigkeit. Haelt bei 10x Volumen?"
+
+  life_domain:
+    description: "Fuer nicht-technische Entscheidungen."
+    perspectives:
+      pragmatist:
+        focus: "Schnellster Weg zum Ergebnis. Kosten-Nutzen."
+      risk_analyst:
+        focus: "Was kann schiefgehen? Worst Case? Reversibilitaet?"
+      long_term_thinker:
+        focus: "Wie sieht das in 2/5/10 Jahren aus?"
+      devils_advocate:
+        focus: "Warum ist die bevorzugte Loesung FALSCH?"
+
+# ============================================================
+# Prozess
+# ============================================================
+
+process:
+
+  phase_1_briefing:
+    title: Briefing erstellen
+    agent: buddy
+    description: >
+      Self-contained Briefing-File: Fragestellung, Optionen, Context,
+      Kriterien, Constraints. Members sollen NUR anhand des Briefings
+      urteilen koennen.
+    output: "docs/tasks/{task_id}-council-brief.md"
+
+  phase_2_independent_analysis:
+    title: Unabhaengige Analyse
+    description: >
+      Buddy spawnt N council-member Sub-Agents PARALLEL via Task tool.
+      Jeder bekommt: Perspektive + Briefing-Pfad + Output-Pfad.
+      Context-Isolation durch CC Sub-Agent-Mechanismus.
+    sub_agent: council-member
+    output_per_member: "docs/tasks/{task_id}-council-{perspective}.md"
+
+  phase_3_deliberation:
+    title: Deliberation
+    agent: buddy
+    description: >
+      Buddy liest ALLE Member-Analysen.
+      Konsens? Dissens? Blinde Flecken? Perspektiven-Gewichtung?
+      Bei Konsens → Phase 4. Bei Dissens (Full): → Phase 3b.
+      Bei Dissens (Standard/Light): Buddy entscheidet.
+    output: "docs/tasks/{task_id}-council-deliberation.md"
+
+  phase_3b_rebuttal:
+    title: Rebuttal (nur Full, nur bei Dissens)
+    description: >
+      Members im Dissens bekommen eigene + Gegen-Analyse + Deliberation.
+      "Widerlege X or passe deine Empfehlung an."
+      Max 1 Runde. Kein Ping-Pong.
+    max_iterations: 1
+
+  phase_4_decision:
+    title: Finale Entscheidung
+    agent: buddy
+    description: >
+      Entscheidung mit rationale. Bei ueberstimmten Perspektiven:
+      explizit warum. ADR in decisions.md wenn adr_required.
+    output: "docs/tasks/{task_id}-council-decision.md"
+    gate_update: "council.status: pass"
+
+# ============================================================
+# Tier-Verhalten
+# ============================================================
+
+tier_behavior:
+  tier_1:
+    description: >
+      CC-basiert. Buddy spawnt N council-member Sub-Agents parallel.
+      Jeder schreibt sein Analysis-File. Buddy liest alle, deliberiert.
+    execution: >
+      Buddy spawnt parallel:
+        council-member "Perspektive: {X}. Briefing: {path}. Output: {output_path}."
+      (wiederholt for jede Perspektive)
+      Wartet auf alle. Liest Files. Deliberation + Decision.
+
+  tier_2:
+    description: >
+      Harness dispatcht N CC-Instanzen parallel.
+      Wartet auf alle Outputs. Dispatcht Buddy for Deliberation.

@@ -1,0 +1,196 @@
+name: save
+description: "End-of-session persistence. The context window is the primary source. Parallel where possible."
+trigger: ["save"]
+derived_from: "WORKFLOW.md@2026-05-09"
+
+steps:
+  # ==========================================================================
+  # Group A: pre-write (sequential)
+  # ==========================================================================
+
+  - id: dispatcher-final
+    name: "Dispatcher final run (inline)"
+    category: deterministic
+    instruction: >
+      Buddy inline: triage PENDING entries from docs/session-buffer.md
+      (act / defer / drop). Skip when the buffer is empty. The dispatcher
+      skill is retired — the mechanic now runs inline.
+    completion:
+      type: manual
+    required: false
+    on_fail: skip
+
+  - id: validate-reconciliation
+    name: "Validate + reconciliation"
+    category: content
+    instruction: >
+      Two checks against the context window (no reads):
+      (1) Gap check: is there information in the context window that is
+          not on disk? → write it immediately.
+      (2) Task-status reconciliation: every status change made this session
+          MUST be reflected in the task YAMLs.
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: workflow-handoff-context
+    name: "Workflow-engine handoff context"
+    category: deterministic
+    instruction: >
+      When active workflows exist:
+      `python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --handoff-context`.
+      The output is embedded into the handoff-write step. No active
+      workflow → skip.
+    completion:
+      type: manual
+    required: false
+    on_fail: skip
+
+  # ==========================================================================
+  # Group B: content writes (PARALLEL — one tool-call batch)
+  # ==========================================================================
+
+  - id: handoff-write
+    name: "Write the session handoff (merge-default)"
+    category: content
+    group: parallel-writes
+    instruction: >
+      The primary artefact for session continuity.
+
+      Path (CWD-based; see boot.md §Context routing):
+        CWD under <consumer>/workspaces/<name>/ → <consumer>/context/session-handoff-<name>.md
+        CWD under <consumer>/ root              → <consumer>/context/session-handoff.md
+        CWD external with context/              → <CWD>/context/session-handoff.md
+        CWD external without context/           → <CWD>/context/session-handoff.md (auto-create)
+
+      Structure: (1) meta-summary 3-5 sentences, (2) open topics each as a
+      9-point block (Intent, Key Concepts, Files, Decisions, Errors,
+      User Statements, Open Points, State, Next Step), (3) one-line
+      deploy status when relevant. Embed the workflow-state output from
+      the previous step. Closed topics go in the meta-summary only, not
+      as a 9-point block.
+
+      MERGE-DEFAULT (NOT overwrite):
+      (1) `.bak` copy before write: cp <handoff-path> <handoff-path>.bak.
+      (2) Read the existing handoff in full.
+      (3) Per 9-point block:
+          - Closed in this session (task done/closed, user "fertig", PR
+            merged) → drop the block, add a one-liner to meta-summary.
+          - Open, not touched → block unchanged.
+          - Open, worked on → update the block (refresh State / Next Step,
+            append new decisions / files / quotes).
+          - When in doubt: keep the block. Overkeep beats overkill.
+      (4) New open topics from this session: append as new 9-point blocks.
+      (5) Meta-summary rewrite from the old + new sessions.
+      (6) Write (the file is newly written but the content is the merged
+          result).
+
+      Parallel sessions: if the file changed between read and write,
+      re-read, do a second merge, then write.
+    completion:
+      type: file_content_check
+      path: "context/session-handoff.md"
+      condition: has_match
+      pattern: "(?i)session.handoff|## "
+    commit_gate: false
+    on_fail: block
+
+  - id: history-entry
+    name: "History entry"
+    category: content
+    group: parallel-writes
+    instruction: >
+      Write the history entry: context/history/YYYY-MM-DD-<slug>.md.
+      Guard: the active context path must support history; otherwise skip.
+      Workspace sessions: history always lives under
+      <consumer>/context/history/ (global); the filename includes the
+      workspace name.
+    completion:
+      type: file_created_matching
+      pattern: "context/history/*"
+    commit_gate: false
+    required: true
+    on_fail: block
+
+  # ==========================================================================
+  # Group C: post-write (sequential)
+  # ==========================================================================
+
+  - id: tc-recognition
+    name: "Test-case recognition (opportunistic)"
+    category: deterministic
+    instruction: >
+      One grep call: UNTESTED in tests/TESTCASES.md. From the output,
+      check whether a TC was naturally exercised this session. Match →
+      record PASS / FAIL. No match → skip. 0 UNTESTED → skip. Max one
+      call; do not retry.
+    completion:
+      type: manual
+    required: false
+    on_fail: skip
+
+  - id: convoy
+    name: "Convoy update"
+    category: deterministic
+    instruction: >
+      Update the convoy file when an objective-level task was active this
+      session. Otherwise skip.
+    completion:
+      type: manual
+    required: false
+    on_fail: skip
+
+  - id: commit-push
+    name: "Commit + push"
+    category: deterministic
+    instruction: >
+      git add relevant files + git commit + git push. If push fails on an
+      SSH passphrase prompt, ask the user to push manually. Push MUST
+      happen BEFORE deploy (deploy-docs.sh runs `git pull` on the
+      remote).
+    completion:
+      type: exit_code
+      command: "git log -1 --oneline"
+    commit_gate: false
+    on_fail: escalate
+
+  - id: deploy-async
+    name: "Deploy docs (background)"
+    category: deterministic
+    instruction: >
+      Run `$FRAMEWORK_DIR/scripts/deploy-docs.sh` via run_in_background.
+      Buddy reports "deploy running in the background" and closes save.
+      The deploy result arrives as a notification. On error: handoff note.
+      Requirement: push must succeed. Without push: deploy skip.
+    completion:
+      type: exit_code
+      command: "bash $FRAMEWORK_DIR/scripts/deploy-docs.sh"
+    depends_on: [commit-push]
+    required: false
+    on_fail: warn
+
+  - id: buffer-cleanup
+    name: "Session-buffer cleanup"
+    category: deterministic
+    instruction: >
+      Remove entries with `status: PROCESSED` from docs/session-buffer.md.
+      Keep the header. Empty buffer → skip.
+    completion:
+      type: manual
+    required: false
+    on_fail: skip
+
+# ==========================================================================
+# quicksave variant
+# ==========================================================================
+variants:
+  quicksave:
+    trigger: ["quicksave"]
+    description: "Mid-session checkpoint without a full persistence cycle"
+    steps: [dispatcher-final, validate-reconciliation, handoff-write]
+    notes: >
+      No history entry, no TC recognition, no convoy update, no deploy,
+      no session-buffer cleanup. quicksave is NOT a substitute for save
+      at session end. quicksave uses the same handoff-write step as save
+      — meaning the .bak copy + merge-default apply identically (no blind
+      overwrite, even on quicksave).

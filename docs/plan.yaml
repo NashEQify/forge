@@ -1,0 +1,142 @@
+# forge Plan — own project SoT (post-public-release).
+#
+# Note: this file is the FRAMEWORK's own plan. Consumer repos using
+# forge as a tool keep their plan.yaml in their own repo
+# (e.g. BuddyAI/docs/plan.yaml is BuddyAI's plan, not this one). For a
+# minimal starting template see docs/plan.example.yaml.
+#
+# scripts/plan_engine.py reads this file + docs/tasks/*.yaml. Archived
+# tasks live under docs/tasks/archive/ — not picked up by plan_engine
+# (glob is non-recursive). They serve as audit-trail.
+
+target: forge
+
+north_star: >
+  Skill + Discipline Layer between human and LLM — opinionated workflows
+  + codified discipline patterns enabling vibe-at-complexity and sustained
+  quality on complex projects. Single-dev primary, small teams secondary.
+  Tier-0/1/2 model, pre-delegation non-negotiable, persistent workflow_engine
+  state across sessions. Mechanical prevention is Claude-Code-coupled (PreToolUse-
+  class hooks) and degrades gracefully on non-CC harnesses; methodology +
+  skill format + state engine + git pre-commit are standards-portable.
+  Sweet-spot: long-running complex multi-session work where coherence and
+  trust-of-the-system are the bottleneck.
+
+operational_intent:
+  goal: >
+    Steady-state post-public-release. Active focus: OpenCode adapter
+    parity (Task 298 — methodology runs, hook-discipline-layer doesn't).
+    Pattern-evolution (agent-patterns.md) + discipline-evolution
+    (arch-doc/04 §1-§27) happens rolling, no per-task tracking — each
+    incident may add a Pattern or Discipline.
+  done: >
+    OpenCode adapter reaches feature-parity for hook-driven discipline
+    (workflow-gate, pre-commit checks, engine-bypass-block, plan-adversary-
+    reminder, board-output-check). README "adapter parity is uneven"
+    disclaimer can be removed.
+
+phases:
+  foundation:
+    title: "Foundation"
+    desc: "Framework extraction + stabilization (DONE 2026-04)"
+  harness:
+    title: "Harness Refactor"
+    desc: "Tier-2 hook-based enforcement + rule reduction (DONE 2026-04, rolling)"
+  opencode-compat:
+    title: "OpenCode Compatibility"
+    desc: "Adapter parity for second runtime (PARTIAL — Task 298 active)"
+  oss-public:
+    title: "OSS Public Surface"
+    desc: "Public-readable surface for external contributors (translation, CONTRIBUTING/SECURITY, mkdocs site)."
+
+milestones:
+  - key: tier2-harness
+    title: "Tier-2 Harness"
+    desc: >
+      Hook-externalised enforcement: ~12 active hooks, slim CLAUDE.md
+      (soul/operational/boot split), workflow-engine + 12 pre-commit
+      checks. Status: DONE (rolling — new patterns close gaps as they
+      emerge empirically).
+    phases: [harness]
+    gate: []
+    requires: []
+
+  - key: cc-patterns-advanced
+    title: "Advanced CC Patterns"
+    desc: >
+      Agent spawning / isolation / back-channel patterns. Institutionalized
+      as rolling pattern-library in framework/agent-patterns.md.
+      Status: DONE-ROLLING.
+    phases: [harness]
+    gate: []
+    requires: [tier2-harness]
+
+  - key: opencode-compat
+    title: "OpenCode Compatibility"
+    desc: >
+      Hook-driven discipline-layer parity for OpenCode runtime. Methodology
+      already loads (agents/, skills/, workflows/), but hook-lifecycle
+      events (PreToolUse, PostToolUse, UserPromptSubmit) don't trigger
+      framework hooks on OpenCode. Status: PARTIAL — orchestrators/opencode/
+      scaffolded, hook-translator pending.
+    phases: [opencode-compat]
+    gate: []
+    requires: [tier2-harness]
+
+  - key: doc-taxonomy-rationalization
+    title: "Doc-Folder Taxonomy Rationalization"
+    desc: >
+      Skills produzieren Output in auseinandergezogenem Folder-Set
+      (docs/specs, docs/reviews/board, docs/audits, docs/build,
+      docs/decisions, docs/solve, docs/research, docs/tasks,
+      docs/dashboard, docs/<workflow>/, ...). Aufhaenger: ADR-Landing-Path
+      bei documentation_and_adrs konkurriert/kollidiert mit docs/specs etc.
+      Ziel: solve-workflow zur Klaerung (clean directory taxonomy + skills
+      schreiben in die richtigen Pfade + Konsistenz zwischen framework +
+      consumer-repos). Status: pending.
+    phases: [harness]
+    gate: []
+    requires: []
+
+  - key: phase-366-g-wave-2
+    title: "Skill-Lifts + ADR Workflow-Embedding"
+    desc: >
+      Folge-Wave zu Skill-Lifts aus externen Catalogs. Eingebaut: 2 NEW
+      skills (security_and_hardening als skill-form complement zu security
+      agent, frontend_ui_engineering als Code-Side complement zu spec_board
+      mode=ux), Pattern-Lift in root_cause_fix (Stop-the-line, Reproduce-Tree,
+      Layer-Localization, Reduce, Untrusted-Error-Output). Plus
+      ADR-Workflow-Embedding: documentation_and_adrs wird mechanisch in
+      decision-heavy workflow phases verkabelt (build/Close, solve/Close,
+      audit/Close).
+    phases: [harness]
+    gate: []
+    requires: [tier2-harness]
+
+  - key: oss-public-surface
+    title: "OSS Public Surface"
+    desc: >
+      Public-readable surface for external contributors. Groups translation
+      (DE→EN, Task 300), CONTRIBUTING.md + SECURITY.md, mkdocs-material
+      public site, and follow-up OSS-push tasks. Translation is the
+      precondition: every other surface item assumes English source.
+      Status: pending (Task 300 active after 299).
+    phases: [oss-public]
+    gate: []
+    requires: [tier2-harness]
+
+  - key: codex-plugin-export
+    title: "Codex Plugin Export"
+    desc: >
+      Skills + workflow_engine + workflows als Codex-Plugin exportierbar
+      machen (manifest-driven bundle per developers.openai.com/codex/plugins).
+      Skill format ist bereits SKILL.md+Frontmatter-kompatibel (Codex und CC
+      teilen das Format). Gaps: plugin.json manifest generator, workflow_engine.py
+      als MCP-Server-Wrapper (sonst keine Discipline-Mechanik im Plugin),
+      marketplace.json, orchestrators/codex/ adapter, Frontmatter-Audit auf
+      CC-Spezifika, Hook-Audit (PreToolUse ist CC-only). Roadmap, NICHT
+      1.0-Blocker — Priorität bleibt Discipline-Tightening + Skill-Inventar
+      erweitern.
+    phases: [harness]
+    gate: []
+    requires: [tier2-harness]

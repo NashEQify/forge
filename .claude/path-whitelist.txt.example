@@ -1,0 +1,18 @@
+# forge write whitelist (template)
+#
+# Setup: bash $FRAMEWORK_DIR/scripts/setup-cc.sh — substitutes ${FRAMEWORK_DIR}
+# and ${HOME} with detected absolute paths, writes the result to
+# .claude/path-whitelist.txt (gitignored).
+#
+# The hook orchestrators/claude-code/hooks/path-whitelist-guard.sh blocks
+# Edit/Write/NotebookEdit on paths that don't match any pattern below.
+# Glob: ** matches across directories, * matches one segment.
+
+# Framework repo itself
+${FRAMEWORK_DIR}/**
+
+# All consumer projects under PROJECTS_DIR
+${HOME}/projects/**
+
+# User-level CC config (settings.json, agents/skills symlinks)
+${HOME}/.claude/settings.json

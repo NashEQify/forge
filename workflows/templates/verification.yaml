@@ -1,0 +1,46 @@
+name: verification
+description: >
+  L3+ Verification Suite. Separat vom Standard-Build.
+  Wird aufgerufen nach Implementation or bei Deploy.
+steps:
+  - id: contract_tests
+    title: Contract Tests (L3)
+    description: >
+      API-Schemas and Event-Contracts validieren.
+      Tools: schemathesis (OpenAPI), pydantic Model-Validation,
+      NATS Event-Schema-Validation.
+    trigger: API-Endpoint or Event-Schema geaendert
+    exit_criteria: Alle Contracts eingehalten
+
+  - id: api_e2e
+    title: API E2E Tests (L4)
+    description: >
+      Volle Workflows gegen echten Server.
+      Tools: pytest + httpx.
+    trigger: Workflow-change
+    exit_criteria: Alle Workflow-Tests gruen
+
+  - id: browser_e2e
+    title: Browser E2E Tests (L4)
+    description: >
+      User-Flows im Browser automatisiert.
+      Tools: playwright.
+    trigger: UI-Feature-change
+    optional: true
+    exit_criteria: Alle Browser-Tests gruen
+
+  - id: property_based
+    title: Property-Based Tests (L5)
+    description: >
+      Automatische Edge-Case-Generierung.
+      Tools: hypothesis.
+    trigger: Schema-/Query-Logik-change
+    exit_criteria: Keine Property-Verletzungen
+
+  - id: smoke
+    title: Smoke Tests (L4, Post-Deploy)
+    description: >
+      Kritische Pfade nach Deploy.
+      Tools: pytest + httpx.
+    trigger: Jeder Deploy
+    exit_criteria: Alle Smoke Checks gruen

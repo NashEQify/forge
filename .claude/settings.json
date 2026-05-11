@@ -1,0 +1,97 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/path-whitelist-guard.sh",
+            "timeout": 3
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/frozen-zone-guard.sh",
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/state-write-block.sh",
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/engine-bypass-block.sh",
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/plan-adversary-reminder.sh",
+            "timeout": 3
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/workflow-commit-gate.sh",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/delegation-prompt-quality.sh",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/workflow-reminder.sh",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/mca-return-stop-condition.sh",
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/board-output-check.sh",
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/evidence-pointer-check.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+id: 304
+title: "Multi-workflow Buddy-mode via TeamCreate-pattern adoption"
+status: pending
+milestone: cc-patterns-advanced
+blocked_by: []
+created: 2026-05-10
+updated: 2026-05-10
+effort: L
+area: framework/orchestrator
+assignee: buddy
+spec_ref: null
+readiness: raw
+summary: >
+  Adopt the upstream TeamCreate pattern (persistent team config + shared
+  task list + file-based mailbox + async inter-agent SendMessage) to enable
+  Buddy to manage multiple concurrent workflows within a single session
+  (e.g., parallel builds on different specs, each with its own MCA dispatch
+  and workflow_engine state). Currently Buddy runs one workflow at a time;
+  this task lifts that constraint.
+intent_chain:
+  domain: framework/orchestrator
+  objective: concurrent-multi-workflow-session
+  action: >
+    Adapt the upstream persistent-team primitive (team config directory,
+    shared task list, mailbox semantics) to the framework's workflow_engine
+    + session-handoff infrastructure, so a single Buddy session can host
+    multiple long-running workflows in parallel.
+sub_tasks: []
+parent_task: null

@@ -1,0 +1,34 @@
+id: 301
+title: "Fabrication-Mitigation — Pass-2/3 Backlog (10 Findings post-299)"
+status: done
+workflow_phase: done
+milestone: tier2-harness
+blocked_by: [299]
+blocked_by_external: []
+created: '2026-05-05'
+updated: '2026-05-05'
+effort: M
+area: framework
+assignee: null
+readiness: raw
+spec_ref: docs/specs/299-fabrication-mitigation.md
+intent_chain:
+  domain: system/framework/fabrication-mitigation
+  objective: >
+    Reste-Fixes aus 299-Build die per User-Override (Cherry-Pick Pass 2 + L1
+    Pass 3 NEW) ins Backlog verschoben wurden. Plus 2 NEW Engine-Issues die
+    waehrend code-review-board Step-Completion sichtbar wurden.
+  action: >
+    10 Findings adressieren in Reihenfolge HIGH → MEDIUM → LOW. Substantiell
+    weniger Aufwand als Pass-1-Fix (kein Architektur-Eingriff). Pruefen ob
+    Findings konvergieren oder unabhaengig.
+summary: >
+  Folge-Task zu 299 nach 3-Pass Code-Review-Board-Cycle. Pass 1 hatte
+  26 Cluster (2C/3H/9M/12L), Full-Scope-Fix; Pass 2 fand 7 NEW (1H REGRESSION
+  + 3M + 3L), User-Override Cherry-Pick auf 2 Blocker; Pass 3 L1 fand 2 NEW
+  (1M + 1L). Plus 2 NEW Engine-Issues bei code-review-board --complete
+  (F-ENGINE-001/002). Total 10 Findings bleiben offen.
+status_notes: >
+  299 Pass-3-Verdict war PASS_WITH_RISKS, Workflow ist mit --force-Override
+  fortgesetzt (1/2 Force-Counter verbraucht). 301 ist post-299-close zu
+  starten — kein paralleler Cycle.

@@ -1,0 +1,89 @@
+name: research
+description: "Research / evaluate / spike. Result = knowledge, not code."
+trigger: ["research"]
+derived_from: "WORKFLOW.md@2026-05-09"
+
+# Named gates: scope, research, synthesis, knowledge-capture, commit
+# (5 user-decided steps + 2 engine-internal phase transitions).
+
+steps:
+
+  - id: phase-start
+    name: "workflow_phase=specify (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update if standalone task; skip on sub-workflow."
+    required: false
+    completion:
+      type: manual
+    on_fail: skip
+
+  - id: scope
+    name: "Frame: load existing artefacts + scope + quality level"
+    category: classification
+    routes:
+      standard: [research, synthesis, knowledge-capture, phase-close, commit]
+      high: [research, synthesis, knowledge-capture, phase-close, commit]
+    instruction: >
+      Read existing research artefacts (max ~5 files, judgment-based) under
+      <active-context>/research/sota-*.md and docs/research/. Set quality
+      level: standard (1 agent, web synthesis is enough) or high (evidence
+      required, ≥3 sources, adversary check). Pick mid-flow via
+      `--complete scope --route <key>`. Default: standard.
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: research
+    name: "WebSearch / WebFetch / get_api_docs"
+    category: content
+    instruction: >
+      Research per quality level. Skills: WebSearch, WebFetch, get_api_docs
+      for library docs.
+    skill_ref: skills/get_api_docs/SKILL.md
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: synthesis
+    name: "Synthesis / SOTA map"
+    category: content
+    instruction: >
+      Consensus + matrix + position. High-quality: adversary check via
+      board-adversary on weaknesses of the research.
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: knowledge-capture
+    name: "Knowledge capture + impact check"
+    category: content
+    instruction: >
+      Three sub-checks (each skip-eligible with one-line rationale):
+      (a) persist findings via knowledge_capture (SOTA maps to
+          <active-context>/research/ or docs/research/);
+      (b) context-gap check — do findings close documented context gaps?
+          If yes, update context files;
+      (c) impact — does the research affect open tasks / specs? If yes,
+          add to session-buffer PENDING.
+    skill_ref: skills/knowledge_capture/SKILL.md
+    completion:
+      type: manual
+    on_fail: warn
+
+  - id: phase-close
+    name: "workflow_phase=done (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update status=done if standalone task; skip on sub-workflow."
+    required: false
+    completion:
+      type: manual
+    on_fail: skip
+
+  - id: commit
+    name: "Commit + push"
+    category: deterministic
+    instruction: "git commit + push"
+    completion:
+      type: manual
+    commit_gate: true
+    on_fail: block

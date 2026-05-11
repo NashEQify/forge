@@ -1,0 +1,35 @@
+# plan.yaml mit BEIDEN critical_path: UND legacy_critical_path_sequence:
+# Tests fuer Locks-File §1 4-stufigen Lookup (F-C-002):
+# erste-existierende-gewinnt → critical_path: gewinnt.
+
+target: M1
+
+feature_milestones:
+  M1:
+    name: "Test"
+    feature: "Test"
+    capabilities: [X]
+    specs: [t.md]
+    blocked_by: []
+    fallback_strategy: ["fb"]
+    requires: []
+    gate: [{type: task, id: 1, desc: "t"}]
+    app_status_post_milestone: "test"
+
+# Greenfield-Authority — soll gewinnen
+critical_path:
+  - 1
+  - M1
+
+# Pre-Greenfield-Zwischenformat — sollte geskippt werden
+critical_path_feature_view:
+  - 999
+  - "should not appear"
+
+# Legacy — sollte geskippt werden
+legacy_critical_path_sequence:
+  - 998
+  - "legacy fallback unused"
+
+implementation_tasks:
+  1: "test impl"

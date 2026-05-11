@@ -1,0 +1,22 @@
+name: research
+description: >
+  Workflow for Recherche-Tasks. Von Frage bis zu verwertbarem Ergebnis.
+steps:
+  - id: scope
+    title: Recherche-Scope definieren
+    description: Was genau wird gesucht? Was ist out of scope? Welches Format soll das Ergebnis haben?
+    exit_criteria: Scope and Output-Format schriftlich definiert
+  - id: gather
+    title: Informationen sammeln
+    description: Quellen suchen, lesen, relevante Fakten extrahieren
+    exit_criteria: Rohnotizen vorhanden
+  - id: synthesize
+    title: Synthese
+    description: Rohnotizen zu verwertbarer Zusammenfassung verdichten
+    exit_criteria: Synthese-Dokument im definierten Format
+  - id: store
+    title: In Brain/Context einarbeiten
+    description: >
+      Verwertbare Fakten ins Brain schreiben (wenn live), in relevante
+      Context-Dateien einarbeiten. IMPACT CHAIN ausfuehren.
+    exit_criteria: Brain/Context upgedated

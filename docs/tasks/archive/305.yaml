@@ -1,0 +1,30 @@
+id: 305
+title: "Audit + refactor: MCA discipline (trim cognition, hook-ify hygiene)"
+status: done
+milestone: cc-patterns-advanced
+blocked_by: []
+created: 2026-05-10
+updated: 2026-05-10
+audit_output: docs/audit/2026-05-10-task-305-mca-discipline.md
+delta: "agents/main-code-agent.md 240→158 lines; CLAUDE.md +Invariant 7 (no forensic refs); 312 applied inline (fix-workflow API-doc-check)"
+effort: M
+area: framework/personas
+assignee: buddy
+spec_ref: null
+readiness: raw
+summary: >
+  Audit `agents/main-code-agent.md` against the upstream general-purpose
+  Agent baseline. Discriminate three classes: SDD contract (keep),
+  cognition prescription (trim — LLM does this internally), operational
+  hygiene (hook-ify — mechanical pre/post-action enforcement). Goal:
+  trust the LLM where prescription is cargo-culted, keep mechanical
+  enforcement only where it differentiates the framework.
+intent_chain:
+  domain: framework/personas
+  objective: persona-discipline-alignment-with-LLM-trust
+  action: >
+    Bring the main-code-agent persona file in line with the upstream
+    minimalist baseline along the cognition axis, while preserving the
+    spec-driven contract that legitimately differentiates the framework.
+sub_tasks: []
+parent_task: null

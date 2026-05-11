@@ -1,0 +1,63 @@
+id: 314
+title: "build_retro gate — distill phase + close-bookkeeping consolidation (autoDream 4-stage lift)"
+status: pending
+milestone: cc-patterns-advanced
+blocked_by: []
+blocked_by_external: []
+created: '2026-05-10'
+updated: '2026-05-10'
+effort: L
+area: framework/workflow
+assignee: null
+readiness: raw
+spec_ref: null
+intent_chain:
+  domain: framework/workflow-discipline
+  objective: cross-build-lessons-pipeline + close-phase-coherence
+  action: >
+    Insert a new build_retro gate in the build workflow (between
+    spec-drift-check and close-bookkeeping) that lifts the autoDream
+    4-stage pattern (orient/gather/consolidate/prune) from upstream cc
+    to distill build artifacts into a structured retro 1-pager. Use the
+    retro output as the consolidated input for the existing close-
+    bookkeeping sub-steps (ADR-discipline / risk-followup-routing /
+    knowledge-process), restructuring close as distill→emit rather than
+    three independent sub-checks.
+summary: >
+  Build-468 surfaced a real friction-and-lessons-pipeline gap: lessons
+  emerging across a build's whole arc (patterns, stale decisions,
+  framework-feed candidates) are captured ad-hoc (build-468-learnings.md
+  is the proof artifact, but user-initiated, not gate-driven). The
+  existing close-bookkeeping sub-steps are emission-shaped (write ADR,
+  file follow-up, knowledge-process) — they don't produce the distilled
+  signal that they emit; that distill step is missing.
+
+  Upstream cc has memory-consolidation patterns (extractMemories,
+  autoDream/DreamTask) but NO build-completion gate — cc has no build
+  lifecycle. autoDream's 4-stage prompt structure (orient/gather/
+  consolidate/prune) is liftable as the methodology for forge's
+  build_retro gate; the gate itself is framework-original because the
+  underlying primitive (build-as-discrete-work-unit) doesn't exist
+  upstream.
+
+  Close-bookkeeping consolidation: the existing 3 sub-steps (ADR /
+  risk-followup-routing / knowledge-process) are natural consumers of
+  retro output — distill→emit shape. Restructure close as a single
+  phase with build_retro as the distill front-half, existing sub-steps
+  as the emit back-half consuming structured retro output.
+sub_tasks: []
+parent_task: null
+status_notes: >
+  Originated 2026-05-10 in same session as spec 306 §14 amendment
+  (brief-architect spec_amendment + retro_spec_update modes). The §14
+  amendment closed a fresh-context-author gap at the spec corpus boundary;
+  task 314 closes a fresh-context-distill gap at the build closing boundary.
+  Same lift-pattern (cc methodology, framework-shaped extension).
+
+  Open question to resolve in spec phase: persona placement — extend
+  brief-architect with a 4th mode (mode=build_retro) for pattern
+  consistency, or introduce a separate retro persona. Pro-extension:
+  read-only, fresh-context, structured-prose-return — same shape as
+  existing 3 modes. Anti-extension: brief-architect is getting fat;
+  naming-collision risk (mode=retro_spec_update vs mode=build_retro
+  both have "retro" in them).

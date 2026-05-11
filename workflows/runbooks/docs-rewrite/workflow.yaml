@@ -1,0 +1,126 @@
+name: docs-rewrite
+description: "Rewrite architecture documentation. Reader-journey-first — structure follows the audience, not the system."
+trigger: ["docs-rewrite"]
+derived_from: "WORKFLOW.md@2026-05-09"
+
+steps:
+  # ==========================================================================
+  # Phase: Research
+  # ==========================================================================
+
+  - id: task-status-research
+    name: "workflow_phase=research (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update + create state file docs/docs-rewrite/YYYY-MM-DD-<slug>.md"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: explore
+    name: "Repo exploration via Explore subagent"
+    category: content
+    instruction: >
+      Dispatch the Explore subagent (thoroughness: very thorough). Read
+      the repo deeply — structure, layouts, recent commits, intent.md,
+      agent definitions. Output: research notes.
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: research-artefact
+    name: "Write the research artefact"
+    category: content
+    instruction: >
+      Either `research.md` at the repo root (public-OSS variant) or
+      `<active-context>/research/<slug>.md` (internal). Capture findings,
+      module overview, open questions, structural decision.
+    completion:
+      type: manual
+    on_fail: block
+
+  # ==========================================================================
+  # Phase: Audience
+  # ==========================================================================
+
+  - id: audience-define
+    name: "Define the audience (reader-journey-first)"
+    category: content
+    instruction: >
+      Who reads the docs? Which reader journey? Structure follows
+      audience, not the system shape.
+    completion:
+      type: manual
+    on_fail: block
+
+  # ==========================================================================
+  # Phase: Update
+  # ==========================================================================
+
+  - id: intent-update
+    name: "intent.md update (post-rewrite state)"
+    category: content
+    instruction: "Update intent.md to reflect the post-rewrite state."
+    completion:
+      type: manual
+    on_fail: block
+
+  # ==========================================================================
+  # Phase: Write
+  # ==========================================================================
+
+  - id: write-docs
+    name: "Write the architecture documentation"
+    category: content
+    instruction: >
+      `architecture-documentation/` folder with README + N structured
+      files. Reader journey in the README. Source-grounded — every
+      technical claim has a file path.
+    completion:
+      type: manual
+    on_fail: block
+
+  # ==========================================================================
+  # Phase: Verify
+  # ==========================================================================
+
+  - id: verify
+    name: "Verification"
+    category: content
+    instruction: >
+      Source-grounding check: are all claims about file paths traceable?
+      Is the reader journey clear? No invented features?
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: deploy
+    name: "Deploy (conditional)"
+    category: deterministic
+    instruction: >
+      If a docs site exists: run `$FRAMEWORK_DIR/scripts/deploy-docs.sh`
+      (env required: DEPLOY_REMOTE + DEPLOY_REMOTE_PATH).
+    required: false
+    completion:
+      type: manual
+    on_fail: warn
+
+  # ==========================================================================
+  # Phase: Close
+  # ==========================================================================
+
+  - id: task-status-done
+    name: "task_status_update status=done"
+    category: deterministic
+    instruction: "task_status_update status=done, workflow_phase=done"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: commit
+    name: "Commit + push"
+    category: deterministic
+    instruction: "git commit + push"
+    completion:
+      type: manual
+    commit_gate: true
+    on_fail: block

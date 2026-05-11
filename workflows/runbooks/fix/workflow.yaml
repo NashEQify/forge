@@ -1,0 +1,219 @@
+name: fix
+description: "Fix a bug / handle an incident — root-cause-first, no symptom patching."
+trigger: ["fix"]
+derived_from: "WORKFLOW.md@2026-05-09"
+
+# Named gates: root-cause, test-plan, fix-brief, brief-signoff,
+# fix-execute, code-review, spec-drift-check, close-bookkeeping,
+# commit-deploy (9 user-decided steps + 4 engine-internal phase
+# transitions). fix-implement was split into fix-brief +
+# brief-signoff + fix-execute per spec 306 §4.5 + §12 sub-task 4.
+#
+# Routes:
+# - standard (default): root-cause → fix → L1 review → close, sets task status=done
+# - full: same step set; reserved for future L2 review on schema-impact
+# - sub-fix: nested fix-iteration in parent build — close-bookkeeping
+#   excluded since parent owns task-level status
+
+routes:
+  standard: &fix_steps
+    - phase-specify
+    - root-cause
+    - test-plan
+    - phase-execute
+    - fix-brief
+    - brief-signoff
+    - fix-execute
+    - phase-verify
+    - code-review
+    - spec-drift-check
+    - phase-close
+    - close-bookkeeping
+    - commit-deploy
+  full: *fix_steps
+  sub-fix:
+    # parent owns task-level status; close-bookkeeping +
+    # commit-deploy excluded. Per spec 306 §12 sub-task 4, also
+    # excludes brief-signoff (parent already user-approved at
+    # parent-scope brief-signoff; no nested approval).
+    - phase-specify
+    - root-cause
+    - test-plan
+    - phase-execute
+    - fix-brief
+    - fix-execute
+    - phase-verify
+    - code-review
+    - spec-drift-check
+
+steps:
+
+  - id: phase-specify
+    name: "workflow_phase=specify (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update + create state file docs/fix/YYYY-MM-DD-<slug>.md"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: root-cause
+    name: "Root-cause drill (Phase A)"
+    category: content
+    instruction: >
+      Symptoms → hypotheses → drill until root cause. Do NOT patch symptoms.
+      Output: hypothesis + test plan that reproduces the bug.
+    skill_ref: skills/root_cause_fix/SKILL.md
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: test-plan
+    name: "Failing test reproducing the bug"
+    category: content
+    instruction: "Write a test that triggers the bug symptom. MUST be RED before the fix."
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: phase-execute
+    name: "workflow_phase=execute (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update workflow_phase=execute"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: fix-brief
+    name: "Fix brief authoring (architect-authored when substantial; Buddy-inline on DIRECT)"
+    category: content
+    instruction: >
+      Per spec 306 §4.5 (fix-row split). Mirrors build's brief-author
+      step at fix scope. Architect authors a focused fix-brief
+      covering: root-cause hypothesis (from prior root-cause step),
+      fix-implementation plan, scope-focused test/verification,
+      RETURN-SUMMARY structure, sign-off field per spec 306 §5.2.
+      DIRECT path (trivial fix): Buddy authors inline as today.
+
+      On external library API references in the fix scope: invoke
+      `get_api_docs` BEFORE writing the fix plan (DR-12 source-
+      grounding, mirrors build's spec-write hook).
+    skill_ref: agents/brief-architect.md
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: brief-signoff
+    name: "Brief sign-off (user approval; same step ID as build's, path-agnostic)"
+    category: gate
+    instruction: >
+      Per spec 306 §4.4. Buddy presents the fix-brief to user for
+      approval before fix-execute (DIRECT path skips). On
+      `escalate:` from architect: surface to user, do not proceed
+      to fix-execute. Sub-fix route omits this step (parent
+      already approved at parent-scope brief-signoff per
+      spec 306 §12 sub-task 4).
+    completion:
+      type: manual
+    skip_when: "path == DIRECT or path == sub-fix"
+    on_fail: escalate
+
+  - id: fix-execute
+    name: "Fix implementation (Phase B) + retest"
+    category: content
+    instruction: >
+      MCA inline OR Buddy direct (orchestrator path). Fix-diff
+      makes the RED test green per the architect-authored fix-
+      brief. Add regression coverage where it makes sense. Verify
+      regression suite is still green before completing.
+    skill_ref: skills/root_cause_fix/SKILL.md
+    completion:
+      type: manual
+    commit_gate: true
+    on_fail: block
+
+  - id: phase-verify
+    name: "workflow_phase=verify (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update workflow_phase=verify"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: code-review
+    name: "Code review (light / L1 / L2 per spec 306 §4.4a)"
+    category: content
+    instruction: >
+      Level (per spec 306 §4.4a + skills/code_review_board/SKILL.md §1):
+      - light: ≤2 files mechanical-trigger → single
+        agents/code-verification.md persona (VERDICT: PASS|FAIL|PARTIAL).
+      - L1: small-scope fixes effort S-M (default for fixes) → 2-3
+        reviewers, no chief-consolidation needed.
+      - L2: schema / cross-spec / larger fix scope → 5-7 reviewers +
+        chief-consolidation REQUIRED.
+
+      On post-board FAIL with `target: spec_text` entries: Buddy
+      dispatches MCA fix-execute + spec-text-drift-batch agent in
+      parallel via two Agent tool calls in ONE message; block-commit
+      both diffs on return per spec 306 §4.8.
+    skill_ref: skills/code_review_board/SKILL.md
+    completion:
+      type: compound
+      checks:
+        - type: pointer_check
+          source_file: "docs/reviews/code/{spec_name}-verdict.md"
+        - type: pointer_check
+          source_file: "docs/reviews/code/{spec_name}-consolidated.md"
+          when: "level == L2"
+        - type: manual
+    on_fail: block
+
+  - id: spec-drift-check
+    name: "Spec drift check (post-fix)"
+    category: content
+    instruction: >
+      Post-fix check: did the fix change behaviour defined in a spec
+      (Cypher templates / state machines / schemas / interface contracts)?
+      Yes → spec patch in the SAME block-commit. No spec-defined behaviour
+      touched: skip with one-line rationale.
+    skill_ref: skills/spec_amendment_verification/SKILL.md
+    required: false
+    completion:
+      type: manual
+    on_fail: warn
+
+  - id: phase-close
+    name: "workflow_phase=close (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update workflow_phase=close"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: close-bookkeeping
+    name: "Close bookkeeping (lessons + risk follow-up)"
+    category: content
+    instruction: >
+      Two skip-eligible sub-checks:
+      (a) lessons-learned via knowledge_processor — what was the root
+          cause? what pattern-lesson applies? Persist to context.
+      (b) risk follow-up — read code-review verdict file; non-empty
+          `remaining_findings:` → file ONE follow-up task via
+          task_creation. No remaining: skip with rationale.
+    skill_ref: skills/knowledge_processor/SKILL.md
+    completion:
+      type: manual
+    on_fail: warn
+
+  - id: commit-deploy
+    name: "Commit + deploy"
+    category: deterministic
+    instruction: >
+      git commit + push. Deploy conditional on docs/ changes.
+
+      Engine auto-advances workflow_phase=done when this step completes;
+      task-level status=done is conditional on whether the fix closes the
+      WHOLE task (sub-fix route skips — parent owns task status).
+    completion:
+      type: manual
+    commit_gate: true
+    on_fail: block

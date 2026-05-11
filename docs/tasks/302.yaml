@@ -1,0 +1,30 @@
+id: 302
+title: "Fabrication-Mitigation Pass-3 Backlog (15 Findings post-301)"
+status: done
+milestone: tier2-harness
+blocked_by: [301]
+blocked_by_external: []
+created: '2026-05-05'
+updated: '2026-05-05'
+effort: M
+area: framework
+assignee: null
+readiness: raw
+spec_ref: docs/specs/299-fabrication-mitigation.md
+intent_chain:
+  domain: system/framework/fabrication-mitigation
+  objective: >
+    Reste-Fixes aus 301 L1 Pass-1 Code-Review-Board (PASS_WITH_RISKS).
+    2 HIGH (workflow.yaml-Drift + spec_ref=null edge), 7 MEDIUM, 5 LOW.
+  action: >
+    15 Findings adressieren in Severity-Reihenfolge. Effort M
+    (kleiner als 301 da viele LOW). Single-MCA-Run + L1 reicht.
+summary: >
+  Folge-Task zu 301 nach L1 Pass-1 Code-Review-Cycle. 301 hat 10 Cluster
+  aus 299 Pass-2/3 adressiert; Pass-1 fand 2 NEU-Cluster + viele
+  MEDIUM/LOW-Schulden in den 4 neuen compound pointer_check Workflow-
+  Yamls + im Layer-Refactor.
+status_notes: >
+  301 Verdict war PASS_WITH_RISKS, 302 ist Folgetask. Touch-Surface
+  ueberschneidet mit 301 (workflow_engine.py + 4 workflow.yaml + scripts/lib/
+  evidence_pointers.py).

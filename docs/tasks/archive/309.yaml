@@ -1,0 +1,34 @@
+id: 309
+title: "Audit: framework workflows vs upstream coordinator-mode 4-phase"
+status: done
+milestone: cc-patterns-advanced
+blocked_by: []
+created: 2026-05-10
+updated: 2026-05-10
+audit_output: docs/audit/2026-05-10-task-309-cc-coordinator-mode-4-phase.md
+delta: "G7 concurrency rule applied inline to framework/workflow-engine-cookbook.md (+17 lines). G2 already tracked via Task 304. G3/G4/G5 absorbed via spec 306. G1 considered + dropped (institutional-memory rationale outweighs parallel-dispatch benefit). G6 deferred until 304. ID-1/ID-2/ID-3 intentional divergences confirmed load-bearing."
+effort: M
+area: framework/workflows
+assignee: buddy
+spec_ref: null
+readiness: raw
+summary: >
+  Audit the framework's build / fix / solve workflow structure against
+  the upstream coordinator-mode 4-phase model (Research / Synthesis /
+  Implementation / Verification with parallel Worker dispatches).
+  Identify where the framework's 5-phase Specify-Prepare-Execute-Verify-
+  Close model has equivalent coverage, where it has gaps (notably:
+  Research as a parallel Worker phase before Specify), and where it
+  intentionally diverges. Output: gap-map + recommendation. No
+  implementation in this task.
+intent_chain:
+  domain: framework/workflows
+  objective: cc-patterns-advanced
+  action: >
+    Map build/fix/solve runbooks onto the upstream coordinator-mode
+    4-phase model, surface gaps where the framework lacks an equivalent
+    or splits the pattern across multiple skills (spec_authoring Phase 1,
+    frame skill Steps 4+6, standalone research workflow), and produce
+    an adoption-vs-divergence recommendation.
+sub_tasks: []
+parent_task: null

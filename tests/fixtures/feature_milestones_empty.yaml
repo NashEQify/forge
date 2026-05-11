@@ -1,0 +1,13 @@
+# plan.yaml ohne feature_milestones-Block.
+# Tests fuer F-C-010a graceful degradation: kein Crash, kein WARN bei legitimem
+# Fehlen. Use-Case: framework-eigenes plan.yaml.
+
+target: tier2-harness
+
+milestones:
+  - key: tier2-harness
+    id: 100
+    title: "Test legacy milestone (no feature_milestones)"
+
+# KEIN feature_milestones-Block.
+# load_plan(this) muss (a) clean run ohne Crash, (b) kein WARN/ERR.

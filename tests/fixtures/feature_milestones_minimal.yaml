@@ -1,0 +1,182 @@
+# Test-Fixture fuer plan_engine.load_plan feature_milestones-Schema
+# Anweisung 434.7 §5.2 Sub-Step 9, post-2026-05-03 Greenfield
+# Deckt ab: alle Pflicht-Felder + alle Optional-Felder pro Schema-File §1
+# Locks-File §4 §2 Update: target:M2 + M3-M7 + Pre-Set-Gates fuer alle 8 +
+# app_status_post_milestone in alle Fixtures (Pflicht post-Locks-File §3 F-C-017)
+
+target: M2
+
+feature_milestones:
+  M1:
+    # Pflicht-Felder (alle 9 inkl. app_status_post_milestone)
+    name: "Test-Pure-Chat"
+    feature: "Test-feature description"
+    capabilities: [TestHarness, TestLLM]
+    specs: [test-spec-1.md, test-spec-2.md]
+    blocked_by: []
+    fallback_strategy:
+      - "Test fallback strategy"
+    requires: []
+    gate:
+      - {type: task, id: 1001, desc: "Test-task done"}
+      - {type: validate, ref: "plan_engine clean", preliminary: true}
+      - {type: coverage, ref: "frontmatter >= 80%", preliminary: true}
+      - {type: spec_review, ref: "Capability-Foundation §1.6", preliminary: true}
+    app_status_post_milestone: "Test app nutzbar"
+    # Optional-Felder
+    cross_cutting: [test-multi-tenancy, "test-compliance-hooks (Hook-Points only)"]
+    frontend_components:
+      - "Test Chat-UI"
+      - "Test Tenant-Switcher"
+    backend_refactor_components:
+      - "Test API-Pfad-Migration"
+
+  M1.5:
+    # Pflicht-Felder (alle 9)
+    name: "Test-IaC"
+    feature: "Test IaC formalization"
+    capabilities: [TestIaC]
+    specs: [test-iac-cap.md]
+    blocked_by: []
+    fallback_strategy:
+      - "Test fallback IaC"
+    requires: []
+    gate:
+      - {type: task, id: 1015, desc: "Test-IaC-task done"}
+      - {type: validate, ref: "plan_engine clean", preliminary: true}
+      - {type: coverage, ref: "frontmatter >= 80%", preliminary: true}
+      - {type: spec_review, ref: "Capability-Foundation §1.6", preliminary: true}
+    app_status_post_milestone: "Test IaC formalized"
+    # M1.5-spezifische Optional-Felder (Schema-Coverage-kritisch)
+    parallel_to: [M1]
+    sysadmin_methodology_import: "/test/sysadmin/path"
+    buddyai_infra_audit: "test/audit/path.md"
+    gap_ownership_anchor_task: 9999
+
+  M2:
+    name: "Test-Memory"
+    feature: "Test-feature 2"
+    capabilities: [TestBrain]
+    specs: [test-brain.md]
+    blocked_by: [M1, M1.5]
+    fallback_strategy:
+      - "Test fallback 2"
+    requires: [M1, M1.5]
+    gate:
+      - {type: task, id: 1002, desc: "Test-task 2 done"}
+      - {type: validate, ref: "plan_engine clean", preliminary: true}
+      - {type: coverage, ref: "frontmatter >= 80%", preliminary: true}
+      - {type: spec_review, ref: "Capability-Foundation §1.6", preliminary: true}
+    app_status_post_milestone: "Test memory active"
+
+  M3:
+    name: "Test-Memory-Full"
+    feature: "Test M3"
+    capabilities: [TestBrain]
+    specs: [test-brain-full.md]
+    blocked_by: [M2]
+    fallback_strategy:
+      - "Test fallback 3"
+    requires: [M2]
+    gate:
+      - {type: task, id: 1003, desc: "Test-task 3 done"}
+      - {type: validate, ref: "plan_engine clean", preliminary: true}
+      - {type: coverage, ref: "frontmatter >= 80%", preliminary: true}
+      - {type: spec_review, ref: "Capability-Foundation §1.6", preliminary: true}
+    app_status_post_milestone: "Test full memory"
+
+  M4:
+    name: "Test-Intake"
+    feature: "Test M4"
+    capabilities: [TestIntake]
+    specs: [test-intake.md]
+    blocked_by: [M3]
+    fallback_strategy:
+      - "Test fallback 4"
+    requires: [M3]
+    gate:
+      - {type: task, id: 1004, desc: "Test-task 4 done"}
+      - {type: validate, ref: "plan_engine clean", preliminary: true}
+      - {type: coverage, ref: "frontmatter >= 80%", preliminary: true}
+      - {type: spec_review, ref: "Capability-Foundation §1.6", preliminary: true}
+    app_status_post_milestone: "Test intake active"
+
+  M5:
+    name: "Test-Context-Assembly"
+    feature: "Test M5"
+    capabilities: [TestContextAssembly]
+    specs: [test-context.md]
+    blocked_by: [M4]
+    fallback_strategy:
+      - "Test fallback 5"
+    requires: [M4]
+    gate:
+      - {type: task, id: 1005, desc: "Test-task 5 done"}
+      - {type: validate, ref: "plan_engine clean", preliminary: true}
+      - {type: coverage, ref: "frontmatter >= 80%", preliminary: true}
+      - {type: spec_review, ref: "Capability-Foundation §1.6", preliminary: true}
+    app_status_post_milestone: "Test context assembled"
+
+  M6:
+    name: "Test-Surfacing"
+    feature: "Test M6"
+    capabilities: [TestSurfacing]
+    specs: [test-surfacing.md]
+    blocked_by: [M5]
+    fallback_strategy:
+      - "Test fallback 6"
+    requires: [M5]
+    gate:
+      - {type: task, id: 1006, desc: "Test-task 6 done"}
+      - {type: validate, ref: "plan_engine clean", preliminary: true}
+      - {type: coverage, ref: "frontmatter >= 80%", preliminary: true}
+      - {type: spec_review, ref: "Capability-Foundation §1.6", preliminary: true}
+    app_status_post_milestone: "Test surfacing active"
+
+  M7:
+    name: "Test-Compliance"
+    feature: "Test M7"
+    capabilities: [TestCompliance]
+    specs: [test-compliance.md]
+    blocked_by: [M6]
+    fallback_strategy:
+      - "Test fallback 7"
+    requires: [M6]
+    gate:
+      - {type: task, id: 1007, desc: "Test-task 7 done"}
+      - {type: validate, ref: "plan_engine clean", preliminary: true}
+      - {type: coverage, ref: "frontmatter >= 80%", preliminary: true}
+      - {type: spec_review, ref: "Capability-Foundation §1.6", preliminary: true}
+    app_status_post_milestone: "Test compliance full"
+
+post_mvp_backlog:
+  POST-MVP:
+    name: "Test-POST-MVP"
+    feature: "Test post-mvp"
+    desc: "Test desc"
+    sub_categories:
+      - "test-cat-1 (3001)"
+      - "test-cat-2 (3002)"
+    blocked_by: [M7]
+    parallelizability: "Per Sub-Kategorie eigene Sequence"
+
+critical_path:
+  - 1001
+  - [M1, M1.5]
+  - M2
+  - M3
+  - M4
+  - M5
+  - M6
+  - M7
+  - "POST-MVP"
+
+implementation_tasks:
+  1001: "Test-impl-1"
+  1002: "Test-impl-2"
+  1003: "Test-impl-3"
+  1004: "Test-impl-4"
+  1005: "Test-impl-5"
+  1006: "Test-impl-6"
+  1007: "Test-impl-7"
+  1015: "Test-iac-impl"

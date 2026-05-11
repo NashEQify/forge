@@ -1,0 +1,3 @@
+# forge frozen zones — append-only / historical content
+# Files matching these globs are read-only to Buddy (require explicit user override).
+context/history/**

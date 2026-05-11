@@ -1,0 +1,8 @@
+# Demonstriert legacy_milestone_key Sub-Tag-Pattern
+# plan_engine MUSS das ohne WARN/ERR akzeptieren (AC-A.9 in Anweisung)
+
+id: 9999
+status: pending
+milestone: POST-MVP
+legacy_milestone_key: tax-vertical
+migration_note: "Test migration note"

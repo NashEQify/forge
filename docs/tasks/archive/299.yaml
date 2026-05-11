@@ -1,0 +1,46 @@
+id: 299
+title: "Fabrication-Mitigation — Evidence-Pointer-Schema + Engine-Step-Gate"
+status: done
+workflow_phase: done
+milestone: tier2-harness
+blocked_by: []
+blocked_by_external: []
+created: '2026-05-04'
+updated: '2026-05-10'
+effort: L
+area: framework
+assignee: null
+readiness: ready
+spec_ref: null
+intent_chain:
+  domain: framework/source-verification
+  objective: >
+    Mechanische, orchestrator-neutrale Mitigation der Klasse "Persona schreibt
+    Source-Behauptung ohne pruefbaren Pointer". Loesung muss deterministisch
+    sein (kein LLM-Audit als primary mechanism).
+  action: >
+    Pfad E aus Council-Synthesis 2026-05-04: (1) Evidence-Pointer-Schema in
+    skills/_protocols/evidence-pointer-schema.md + Migration von
+    reviewer-base.md, (2) workflow_engine.py pointer_check
+    Completion-Type + completion.compound am --complete-Boundary, (3)
+    optional CC-PostToolUse-Hook fuer Tier-1-Skills als Adapter-Bonus.
+summary: >
+  Personas (Buddy/MCA/Sub-Agents/Reviewer-Personas) koennen in Skill-Outputs
+  Source-Behauptungen mit fabrizierten Tool-Outputs untermauern.
+  Reviewer-Personas koennen fabricated Source-Verifikation nicht von realer
+  unterscheiden — fabricated Authority propagiert.
+
+  Mitigation per Pfad E (gelockt nach Council-Synthesis 2026-05-04):
+  Pointer-Schema mit `quote:`-Field, Engine-Check via grep -F Quote-Match
+  am Workflow-Step-Boundary, optional CC-PostToolUse-Hook fuer Tier-1.
+
+  Schicht 1 (Schema) + Schicht 2 (Engine-Check) gelten ueberall wo die
+  Fehlerklasse zutrifft (alle 13 Source-Verifikations-Skills + alle
+  Reviewer-Personas via reviewer-base.md-Vererbung). Schicht 3 (CC-Hook)
+  nur fuer Tier-1: spec_board, code_review_board,
+  architecture_coherence_review, sectional_deep_review, adversary_test_plan,
+  spec_amendment_verification.
+
+  Nicht in Phase 1: Reviewer-Audit-Discipline (M2-Lean) — User-Constraint
+  mechanisch-only filtert LLM-getriebene Audit-Schichten als primary
+  mechanism aus.
