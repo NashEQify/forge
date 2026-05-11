@@ -97,9 +97,12 @@ Multi-session work doesn't restart from scratch:
 
 ## Get `cc` running in your repo
 
-End state: type `cc` in any of your project repos and forge boots there.
-`cc forge` always works from anywhere — drops you into the framework
-itself, no per-project setup needed.
+End state: type `cc` inside any of your project repos and a Claude Code
+session opens there with the full forge framework (agents, skills, hooks,
+workflows) attached — your repo is the working scope, forge is loaded
+alongside via `--add-dir` plus `~/.claude/{agents,skills}` symlinks.
+`cc forge` always works from anywhere — opens a session in the framework
+repo itself, no per-project setup needed.
 
 Two stable steps to get there. Both are owned by forge — `setup-cc.sh`
 is the install script, Buddy's intent interview is the per-repo
