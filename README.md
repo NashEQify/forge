@@ -95,122 +95,33 @@ Multi-session work doesn't restart from scratch:
   active intent, session-handoff, and in-flight workflows, then tells
   you where you left off. No manual context reconstruction.
 
-## Get `cc` running in your repo
+## Get `cc` running
 
-End state: type `cc` inside any of your project repos and a Claude Code
-session opens there with the full forge framework (agents, skills, hooks,
-workflows) attached — your repo is the working scope, forge is loaded
-alongside via `--add-dir` plus `~/.claude/{agents,skills}` symlinks.
-`cc forge` always works from anywhere — opens a session in the framework
-repo itself, no per-project setup needed.
+End state: type `cc` inside any directory and a Claude Code session
+opens there with the full forge framework (agents, skills, hooks,
+workflows) attached — your directory is the working scope, forge is
+loaded alongside via `--add-dir` plus `~/.claude/{agents,skills}`
+symlinks. `cc forge` always works from anywhere — opens a session in
+the framework repo itself, no per-project setup needed.
 
-Two stable steps to get there. Both are owned by forge — `setup-cc.sh`
-is the install script, Buddy's intent interview is the per-repo
-onboarding.
-
-### Prerequisites
-
-| Tool | Why |
-|---|---|
-| **Claude Code** | the harness forge runs on. [Install guide](https://docs.anthropic.com/en/docs/claude-code) |
-| **git** | repo + pre-commit hook |
-| **bash + jq** | hook scripts + payload parsing |
-| **Python 3.10+ + PyYAML** | `workflow_engine.py`, `plan_engine.py`, generators |
-
-### Step 1 — install once per machine
+### Setup
 
 ```bash
 git clone https://github.com/NashEQify/forge ~/projects/forge
 cd ~/projects/forge
 python3 -m venv .venv && .venv/bin/pip install pyyaml
-bash scripts/setup-cc.sh    # the stable install script
-cc forge                    # smoke-test — drops you into the framework
+bash scripts/setup-cc.sh    # idempotent install + symlinks
+cc forge                    # smoke-test — opens the framework
 ```
 
-`setup-cc.sh` is idempotent. Re-run any time forge updates or something
-looks off. Details: [What `setup-cc.sh` does](#what-setup-ccsh-does)
-below.
+Once installed, `cc` works in any directory on your machine — it
+doesn't matter where your project repos live. If the directory has no
+`intent.md`, Buddy offers a 5-10 min interview to create one;
+afterwards `cc` there boots straight into Buddy with active workflows
+and session-handoff loaded.
 
-### Step 2 — onboard each of your repos
-
-```bash
-cd ~/projects/my-app
-cc                          # no intent.md? Buddy walks you through one
-```
-
-Every project that uses forge needs an `intent.md` at its root —
-forge's per-project anchor (vision, done-criteria, non-goals, context).
-The first time you run `cc` in a repo without one, Buddy notices the
-missing anchor and offers to create it through a short interview
-(usually 5-10 minutes). That interview is forge's stable per-repo
-onboarding: intent comes from a conversation about what the project IS,
-not from a template.
-
-After intent.md exists, `cc` in that repo boots Buddy directly — picks
-up active workflows, session-handoff, project backlog. The intent
-format is documented in
-[`framework/intent-tree.md`](framework/intent-tree.md); you can also
-write it by hand if you prefer.
-
-`cc forge` keeps working from anywhere, regardless of which project
-repo you're in. The framework has its own `intent.md`; you never need
-to onboard forge itself.
-
-### What `setup-cc.sh` does
-
-Load-bearing — without it, `cc` doesn't exist on your `$PATH` and
-Claude Code can't find the framework personas. Four steps, all
-idempotent:
-
-1. **Installs the `cc` launcher to `~/.local/bin/cc`**, with the
-   absolute install-time path to forge substituted into the script. The
-   launcher needs to know where forge lives without an env var; the
-   substitution bakes that in once.
-2. **Creates two user-level symlinks** — `~/.claude/agents` and
-   `~/.claude/skills` — pointing into forge. Claude Code discovers
-   personas and skills via these paths, so framework agents are
-   available from every working directory regardless of which repo
-   you're in.
-3. **Generates `.claude/path-whitelist.txt`** from `.example`,
-   substituting `${FRAMEWORK_DIR}` and `${HOME}`. The PreToolUse
-   `path-whitelist-guard` hook reads this file and blocks writes
-   outside the declared paths — first line of mechanical defense
-   against drift.
-4. **Warns** if `~/.local/bin` isn't on your `$PATH`. Fix with
-   `export PATH="$HOME/.local/bin:$PATH"` in your shell rc.
-
-### How `cc` resolves scope
-
-| Invocation | Effect |
-|---|---|
-| `cc forge` (or `cc framework`) | always works — `cd $FRAMEWORK_DIR`, mount forge |
-| `cc` (no scope, in your repo) | use current CWD, require `intent.md` (Buddy offers to create if missing) |
-| `cc <project>` | look up `$PROJECTS_DIR/<project>/` (default `~/projects/`), require `intent.md` |
-
-`cc` mounts both forge and your CWD via `--add-dir`, so every session
-sees the framework rules (CLAUDE.md, agents, skills) on top of the
-local repo content.
-
-**Debug:** `CC_DEBUG=1 cc forge` prints the resolved invocation
-without launching Claude — useful for verifying scope routing or
-`--add-dir` paths.
-
-### Common gotchas
-
-- `cc: command not found` → `~/.local/bin` not in `$PATH`. Add to shell
-  rc: `export PATH="$HOME/.local/bin:$PATH"`
-- `intent.md not found` → that's expected on first `cc` in a new repo;
-  Buddy will offer to create one. Or hand-write per
-  [`framework/intent-tree.md`](framework/intent-tree.md).
-- `framework_dir resolution failed` → set explicitly:
-  `export FRAMEWORK_DIR=$HOME/projects/forge`
-- agents-Symlink warnings → re-run `bash scripts/setup-cc.sh`
-  (idempotent)
-- pre-commit blocks → see
-  [`12-troubleshooting.md`](architecture-documentation/12-troubleshooting.md)
-
-Full setup (per-repo pre-commit hook, multi-machine, OpenCode adapter):
-[`05-installation.md`](architecture-documentation/05-installation.md).
+Details — prerequisites, what `setup-cc.sh` does, scope resolution,
+gotchas: [`docs/cc-launcher.md`](docs/cc-launcher.md).
 
 ## Quick Start
 
