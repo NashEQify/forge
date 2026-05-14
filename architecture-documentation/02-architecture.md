@@ -261,8 +261,9 @@ policy, persisted state.
 
 ### State-File Layout
 
-`.workflow-state/<workflow>-<task-id>-<timestamp>.json` (gitignored, per
-checkout). Schema:
+`.workflow-state/<workflow>-<task-id>-<timestamp>.json` (git-tracked content
+since 2026-05-14; only `.workflow-state/_lock` process-mutex stays local).
+Schema:
 
 ```json
 {
@@ -314,18 +315,31 @@ Enforcement: pre-commit Check 8 (ENGINE-USE) WARNs for feat/fix/refactor with
 
 ### Multi-Machine Constraint
 
-`.workflow-state/` is gitignored — per checkout, per machine. If you start a task
-on laptop A and continue on laptop B:
+`.workflow-state/<id>.json` + `.workflow-state/archive/` are **git-tracked**
+(policy change 2026-05-14, replacing the prior gitignore-all). State survives
+a laptop-hop via push/pull. Only `.workflow-state/_lock` (0-byte process
+mutex) stays gitignored.
 
-- The state file is NOT on laptop B
-- Buddy on laptop B sees no active workflow
-- Corrections: either start over (`--start <wf> --task <id>`, current_step=0)
-  or transfer the state file manually via a sync mechanism (rsync/scp)
+Patterns:
 
-This is a deliberate constraint — it prevents conflicts on concurrent state
-writes from two CC sessions at the same time. Cross-repo: the `BUDDY_PROJECT_ROOT`
-env var (set by the `cc` launcher) determines which `.workflow-state/`
-applies — for `cc framework` the framework repo, for `cc <project>` the project repo.
+- **Sequential (safe):** finish a session on laptop A → save + commit +
+  push → `git pull` on laptop B → continue. State, step-history, and the
+  `docs/<wf>/<slug>.md` state-file all sync.
+- **Parallel (lossy):** two laptops run `--complete` on the same workflow
+  → both rewrite `.workflow-state/<id>.json` and the docs state-file.
+  Push from the second machine produces a merge conflict. The engine has
+  no distributed locking — resolve manually (pick the leading state-file,
+  re-derive the loser's progress from evidence-text).
+- **Pre-policy detection (still relevant):** on `--start`, Buddy MUST
+  warn the user when `docs/<workflow>/` files with a matching `parent_task`
+  exist but there's no local `.workflow-state/<id>.json`. Pre-2026-05-14
+  this was the classic multi-machine symptom; post-policy the more common
+  cause is a workflow that predates the policy or a manually deleted
+  state-file — investigate before re-starting.
+
+Cross-repo: the `BUDDY_PROJECT_ROOT` env var (set by the `cc` launcher)
+determines which `.workflow-state/` applies — for `cc framework` the
+framework repo, for `cc <project>` the project repo.
 
 ### Three-SoT Reconciliation
 

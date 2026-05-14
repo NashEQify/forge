@@ -55,7 +55,8 @@ What you see as a user:
   the commit (workflow-commit-gate.sh hook)
 - **Cross-session resume:** if you close the session mid-flow and reopen
   later — the engine puts you on the same step. State lives in
-  `.workflow-state/<id>.json` (gitignored, per checkout)
+  `.workflow-state/<id>.json` (git-tracked content since 2026-05-14 —
+  syncs across machines via push/pull; `_lock` mutex stays local)
 
 Skip list (engine NOT active):
 

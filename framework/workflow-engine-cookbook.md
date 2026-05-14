@@ -104,21 +104,30 @@ injects the current step into every turn context.
 Pattern is implicit in workflow.yaml step structure — this section
 documents the rule so deviation is recognizable.
 
-## Multi-machine constraint (CRITICAL)
+## Multi-machine constraint
 
-`.workflow-state/` is `.gitignored` — per repo checkout, not synced
-across the repo. **A workflow belongs to ONE hostname per repo.**
+`.workflow-state/<id>.json` + `.workflow-state/archive/` are
+**git-tracked** (policy change 2026-05-14): state survives a laptop-hop
+when the repo is pushed/pulled. Only `.workflow-state/_lock` (0-byte
+process mutex) stays gitignored.
 
 Working on the same repo across two machines:
-- DON'T run the same workflow active in parallel on both machines.
-- Switching from machine A to B: either `--abort` on A, or wait for
-  the workflow to finish. Otherwise state diverges with concurrent
-  writes to `docs/<workflow>/<slug>.md` (git-committed) — merge
-  conflicts or lost-update.
-- On `--start`, Buddy MUST warn the user when `docs/<workflow>/`
-  files with a matching `parent_task` exist but there's no local
-  `.workflow-state/<id>.json` — that's the classic multi-machine
-  symptom.
+- **Sequential pattern (safe):** finish a session on machine A, save +
+  commit + push, then `git pull` on machine B and continue. State,
+  history, and the `docs/<workflow>/<slug>.md` state-file all sync.
+- **Parallel pattern (lossy):** two machines run `--complete` on the
+  same workflow → both rewrite `.workflow-state/<id>.json` and
+  `docs/<workflow>/<slug>.md`. Result is a merge conflict on the
+  next push from the second machine. The engine has no distributed
+  locking — the conflict resolution is manual (pick the leading
+  state file, re-derive the loser's progress from evidence text).
+- **Pre-existing safeguard:** on `--start`, Buddy MUST warn the user
+  when `docs/<workflow>/` files with a matching `parent_task` exist
+  but there's no local `.workflow-state/<id>.json` — historically
+  the multi-machine symptom (pre-2026-05-14 gitignore policy).
+  Post-policy-change, the more common cause is a deleted state-file
+  or a workflow predating the policy. Either way: investigate before
+  re-starting.
 
 ## Cross-repo scope
 

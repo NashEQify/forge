@@ -382,9 +382,12 @@ is the runtime layer:
 forces the path mechanically — forgetting is impossible because every turn
 begins with the current step and every commit-gate step pre-commit blocks.
 
-**Constraint:** multi-machine constraint — `.workflow-state/` is gitignored,
-per checkout. Cross-machine resume = manual sync or restart. A deliberate
-choice against concurrent-state conflicts.
+**Constraint:** multi-machine — `.workflow-state/` content is git-tracked
+(policy 2026-05-14); cross-machine resume works via push/pull when used
+sequentially. Parallel runs on the same workflow from two machines
+produce merge conflicts on `.workflow-state/<id>.json` + `docs/<wf>/<slug>.md`
+and require manual resolution; the engine has no distributed locking.
+Only `.workflow-state/_lock` (process mutex) stays local.
 
 Detail: arch-doc 02 §Workflow Engine + `agents/buddy/operational.md`
 §Workflow Engine + `architecture-documentation/13-operational-handbook.md`.

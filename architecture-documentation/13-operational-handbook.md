@@ -203,10 +203,11 @@ definitions live alongside their runbooks: `workflows/runbooks/<name>/workflow.y
 Each definition has steps with `id`, `instruction`, `completion`-check,
 `on_fail`-policy, optional `skill_ref` and `context_refs`.
 
-State persists in `.workflow-state/<workflow-id>.json` (gitignored — runtime
-state per local checkout). The workflow-state JSON contains: workflow-id,
-current step, step-history (completed/skipped/failed), variables, parent
-linkage for sub-workflows.
+State persists in `.workflow-state/<workflow-id>.json` (git-tracked content,
+policy 2026-05-14 — synced across machines via push/pull; only
+`.workflow-state/_lock` process-mutex stays local). The workflow-state
+JSON contains: workflow-id, current step, step-history (completed/skipped/
+failed), variables, parent linkage for sub-workflows.
 
 ### Why it exists
 
@@ -291,7 +292,7 @@ The two are **complementary**:
 
 | Mechanism | What it tracks | Persistence |
 |---|---|---|
-| `workflow_engine` `.workflow-state/<id>.json` | Step-pointer (which step is current) | Local-only, gitignored |
+| `workflow_engine` `.workflow-state/<id>.json` | Step-pointer (which step is current) | Git-tracked (policy 2026-05-14); `_lock` mutex local |
 | State-File `docs/<workflow>/<slug>.md` | Phase content (findings, decisions, outputs) | Git-committed, version-controlled |
 | Task-YAML `workflow_phase` field | Atomic phase status (specify/prepare/...) | Git-committed |
 

@@ -14,9 +14,13 @@ venv/
 env/
 
 # Runtime state
-.workflow-state/
 .session-buffer/
 *.log
+
+# Workflow-engine process-lock (0-byte mutex, machine-local — content
+# files .workflow-state/*.json + archive/ are TRACKED for laptop-hop
+# survival; see framework/workflow-engine-cookbook.md §Multi-machine).
+.workflow-state/_lock
 
 # Sub-agent observability output (transient, per-run)
 workspace/
