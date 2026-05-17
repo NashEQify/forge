@@ -120,8 +120,11 @@ Mechanical, not a per-turn gate:
   (code does not exist yet) → `spec_authoring/SKILL.md` (Phase 1
   source grounding + interview + solution-space exploration is
   required, then Phase 2 spec writing). Sync an existing spec to the
-  as-is code state → `retroactive_spec_update/SKILL.md`. Theory + 5
-  primitives: `framework/spec-engineering.md`. Read
+  as-is code state → `retroactive_spec_update/SKILL.md`. Amend an
+  existing locked spec → `skills/_protocols/spec-amendment-discipline.md`
+  (pre-edit code-source-grounding gate + architect-dispatch threshold);
+  sub-threshold amendments stay Buddy-direct, the gate still applies.
+  Theory + 5 primitives: `framework/spec-engineering.md`. Read
   `framework/agentic-design-principles.md` first.
 - **Transparency header:** on delegation and on task start →
   `transparency_header/SKILL.md`.

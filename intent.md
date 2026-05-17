@@ -104,6 +104,25 @@ ceiling on complex systems.
 | Cursor | rules + persona wrapper | minimum viable, no hook parity |
 | Codex | plugin export (skills + engine-as-MCP-server) | planned, post-1.0 (Task 313) |
 
+## Repository topology
+
+Two repos, one direction:
+
+- **`forge_dev`** — private dev SoT. All development, tasks
+  (`docs/tasks/`), programme plan (`docs/plan.yaml`), and operational
+  context (`context/`) live here.
+- **`forge`** — public OSS mirror. Produced **solely** by
+  `scripts/release-sync.sh` (forge_dev → forge, rsync `--delete`,
+  explicit exclude list). Never hand-edited except one-time release
+  hygiene. Internal operational state is excluded by the sync; public
+  carries only `docs/tasks/.gitkeep` + a `docs/plan.yaml` north_star
+  stub.
+
+Enforcement + rationale: `docs/STRUCTURE.md` and `CLAUDE.md`
+Invariant 8. This is the substrate under the Claude Code adapter row
+above — the framework root the launcher binds to depends on which
+repo the session runs in.
+
 ## Non-Goals
 
 - **No generic AI-agent-framework clone** (no LangChain, no Autogen,

@@ -14,6 +14,20 @@
 #   3. autodetect from $0 location (works only when run from source tree;
 #      $0/../../../ resolves to /home for the installed copy, which is
 #      wrong — that's why install-time substitution exists)
+#   4. ROLE-AWARE re-bind (applied AFTER scope-routing cd, below): if the
+#      session's working directory is itself a forge framework checkout,
+#      FRAMEWORK_DIR is re-bound to that checkout — UNLESS priority 1 (an
+#      explicit env override) was set. Rationale: a framework-dev session
+#      (e.g. CWD = the dev-SoT checkout) must run boot scripts + resolve
+#      agent files against the tree it is editing, not against the
+#      installed release tree. Consumer sessions (no framework markers in
+#      CWD) are unaffected and keep the installed release path.
+#
+# Cross-harness note: OpenCode/Codex inject the framework root through
+# their own adapter layer (see orchestrators/{opencode,...}; Task 298/313).
+# This role-aware + injected-value binding is the Claude Code adapter's
+# mechanism; the principle (hand the agent the concrete root before its
+# first read) is cross-harness, the mechanism is not.
 # PROJECTS_DIR (consumer repos location) defaults to $HOME/projects.
 #
 # Usage:
@@ -28,6 +42,14 @@ set -euo pipefail
 # overwrites this line when it installs cc to ~/.local/bin/. Do not edit by
 # hand — change it via setup-cc.sh re-run.
 FRAMEWORK_DIR_INSTALLED=""  # SUBSTITUTED-BY-SETUP-CC
+
+# Did the user explicitly set FRAMEWORK_DIR via env (resolution priority 1)?
+# Captured BEFORE any internal assignment so the role-aware re-bind (below,
+# post-cd) can preserve an explicit override.
+FRAMEWORK_DIR_ENV_EXPLICIT=0
+if [ -n "${FRAMEWORK_DIR:-}" ]; then
+  FRAMEWORK_DIR_ENV_EXPLICIT=1
+fi
 
 if [ -z "${FRAMEWORK_DIR:-}" ]; then
   if [ -n "$FRAMEWORK_DIR_INSTALLED" ]; then
@@ -153,6 +175,23 @@ name_args=(-n "$session_name")
 # FRAMEWORK_DIR is always added (if it exists) so CLAUDE.md/AGENTS.md/docs
 # from forge land in the context. CWD is the active scope.
 CWD="$(pwd)"
+
+# --- Role-aware FRAMEWORK_DIR re-bind (resolution priority 4) ---
+# If the session's working directory is itself a forge framework checkout
+# (markers: agents/buddy/boot.md + CLAUDE.md), the framework root for THIS
+# session IS that checkout — boot scripts ($FRAMEWORK_DIR/scripts/...) and
+# agent-file resolution must target the tree being edited, not the installed
+# release tree. Skipped when an explicit env override was given (priority 1).
+# Consumer repos lack the markers → unchanged (keep installed release path).
+if [ "$FRAMEWORK_DIR_ENV_EXPLICIT" -eq 0 ] \
+   && [ -f "$CWD/agents/buddy/boot.md" ] \
+   && [ -f "$CWD/CLAUDE.md" ] \
+   && [ "$CWD" != "$FRAMEWORK_DIR" ]; then
+  echo "cc: framework checkout detected in CWD — FRAMEWORK_DIR re-bound $FRAMEWORK_DIR -> $CWD" >&2
+  FRAMEWORK_DIR="$CWD"
+  export FRAMEWORK_DIR
+fi
+
 ADD_DIR_ARGS=()
 if [ -d "$FRAMEWORK_DIR" ]; then
   ADD_DIR_ARGS+=(--add-dir "$FRAMEWORK_DIR")
@@ -168,6 +207,24 @@ fi
 # whose CWD might not match the user-intended project-root.
 export BUDDY_PROJECT_ROOT="$CWD"
 
+# --- Authoritative framework-root injection ---
+# Hand the agent the CONCRETE resolved FRAMEWORK_DIR before turn 1, so the
+# boot sequence reads its files by absolute path with zero failed rounds.
+# This is the structural fix for the wrapper footgun: a static agent file
+# cannot shell-expand $FRAMEWORK_DIR, so the launcher (the only component
+# that knows the resolved value) must inject it. The corrected mental model
+# is stated here too — --add-dir is a read-access grant, not relative-path
+# resolution — so the false claim cannot creep back via the prose.
+FRAMEWORK_INJECT="forge launcher context (authoritative, overrides any \
+relative-path assumption in the agent file): FRAMEWORK_DIR=${FRAMEWORK_DIR}. \
+Read the boot files by ABSOLUTE path: ${FRAMEWORK_DIR}/agents/buddy/soul.md, \
+${FRAMEWORK_DIR}/agents/buddy/operational.md, \
+${FRAMEWORK_DIR}/agents/buddy/boot.md. Note: --add-dir grants read access \
+to a directory; it does NOT change relative-path resolution. The Read tool \
+resolves relative paths against the session CWD (${CWD}), not against any \
+--add-dir root — so relative agent-file paths would fail in consumer \
+sessions. Use the absolute paths above."
+
 # --- Launch ---
 # CC_DEBUG=1 prints the resolved invocation without calling claude. Useful
 # for verifying scope routing + add-dir logic without consuming API credits.
@@ -179,12 +236,13 @@ if [ "${CC_DEBUG:-}" = "1" ]; then
   echo "  session_name  = $session_name" >&2
   echo "  add-dir args  = ${ADD_DIR_ARGS[*]}" >&2
   echo "  trailing args = $*" >&2
-  echo "  would exec: claude ${ADD_DIR_ARGS[*]} --agent buddy ${name_args[*]} ${*:-hi}" >&2
+  echo "  FRAMEWORK_INJECT = $FRAMEWORK_INJECT" >&2
+  echo "  would exec: claude ${ADD_DIR_ARGS[*]} --append-system-prompt <inject> --agent buddy ${name_args[*]} ${*:-hi}" >&2
   exit 0
 fi
 
 if [ $# -eq 0 ]; then
-  exec claude "${ADD_DIR_ARGS[@]}" --agent buddy "${name_args[@]}" "hi"
+  exec claude "${ADD_DIR_ARGS[@]}" --append-system-prompt "$FRAMEWORK_INJECT" --agent buddy "${name_args[@]}" "hi"
 else
-  exec claude "${ADD_DIR_ARGS[@]}" --agent buddy "${name_args[@]}" "$@"
+  exec claude "${ADD_DIR_ARGS[@]}" --append-system-prompt "$FRAMEWORK_INJECT" --agent buddy "${name_args[@]}" "$@"
 fi

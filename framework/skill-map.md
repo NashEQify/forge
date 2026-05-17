@@ -203,9 +203,11 @@ briefs (above). `mode=spec_amendment` is dispatched from
 `spec_authoring` "## Amendments to existing specs" when the
 substantial-amendment threshold fires (cross-ref cascade ≥3 OR
 cross-spec coupling OR class-rename / mechanism-shift /
-contract-retraction). `mode=retro_spec_update` is the default Phase
-2 path of `retroactive_spec_update` — the architect walks each
-spec section against the source code and returns findings inline.
+contract-retraction; detail in
+`_protocols/spec-amendment-discipline.md`).
+`mode=retro_spec_update` is the default Phase 2 path of
+`retroactive_spec_update` — the architect walks each spec section
+against the source code and returns findings inline.
 In all three modes the architect is read-only (no Write target in
 `spec_amendment` and `retro_spec_update`; brief mode keeps the
 single brief-output Write exception); the orchestrator integrates

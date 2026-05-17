@@ -115,8 +115,8 @@ No automated CI today. Pre-commit-hook is the primary quality gate.
 
 ## What we don't accept
 
-- **PRs that delete frozen zones** (`context/history/**`) without explicit
-  user mandate.
+- **PRs that delete frozen zones** — the append-only / historical paths
+  listed in `.claude/frozen-zones.txt` — without explicit user mandate.
 - **PRs that disable hooks** (`--no-verify`, hook deletion) without
   replacement.
 - **PRs that add new skill classes** beyond the Single-Class model. The

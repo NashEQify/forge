@@ -202,6 +202,33 @@ training-data memory. The same discipline applies when the
 recommendation evolves: re-verify, do not re-assume. SoT for the
 underlying principle: `framework/agentic-design-principles.md` DR-12.
 
+### Mediator pass-through audit (when state captured at proxy / aggregator boundary)
+
+When the spec captures state downstream of a proxy / aggregator /
+broker / wrapper SDK, run the 3-question audit BEFORE locking the
+capture contract: (1) what does the mediator forward, on what
+conditions; (2) what does the mediator compute vs pass through; (3)
+at what timing does each forwarded element arrive. Document answers
+in the §-section that defines the capture contract.
+
+Unverified → mark the §-section with `[mediator-audit-pending]`.
+The marker MUST be resolved before requesting `spec_board` review;
+the board chief checks for the marker during consolidation and
+raises a finding if present (no mechanical enforcer yet — see
+`docs/tasks/321.{yaml,md}` for the workflow.yaml grep check / pre-commit
+hook follow-up).
+
+**DONE for this audit:** either the 3 questions are answered in
+the §-section AND no `[mediator-audit-pending]` marker remains, OR
+the marker is present AND linked to an open verification task.
+
+The mediator forwards what it forwards, not what you assume —
+invisible state stays invisible until production. Recurrence shape:
+two adjacent capture contracts (response-cost during streaming +
+upstream rate-limit headers) sharing one upstream-pass-through
+assumption — both ship as production bugs until the mediator is
+bypassed at the relevant capture point.
+
 ### Apply the 5 primitives (from spec-engineering.md)
 
 While writing each section, treat the 5 primitives as
@@ -259,80 +286,21 @@ that translates the spec into MCA-ready instructions.
 
 ---
 
-## Amendments to existing specs (architect-dispatched on substantial threshold)
+## Amendments to existing specs
 
 This skill covers **greenfield new specs** and **new sections that
 need an interview** (Phase 1). It does NOT cover mechanism-shift /
 class-rename / contract-retraction amendments to already-locked
-specs — those are authored via `brief-architect` in `mode=spec_amendment`
-when the substantial-amendment threshold per spec 306 §14.2 fires.
+specs — those are authored via `brief-architect` in
+`mode=spec_amendment` when the substantial-amendment threshold fires.
 
-### When the architect dispatches (spec 306 §14.2 threshold — Variante B)
+**Amendment discipline (pre-edit gate, dispatch threshold, dispatch
+shape, what stays here vs what dispatches out, greenfield-direct
+rationale):** `_protocols/spec-amendment-discipline.md`.
 
-Dispatch `brief-architect mode=spec_amendment` when **any** of:
-
-- Cross-reference cascade ≥3 in one spec (e.g. a class rename
-  touches ≥3 active-text occurrences).
-- Cross-spec coupling — ≥2 specs need coordinated amendment.
-- Class-rename / mechanism-shift / contract-retraction (semantic
-  change, not just wording).
-- Buddy-heuristic: "interactively more than 1 edit-round with
-  cross-ref-sights anticipated".
-
-Sub-threshold amendments (1-line correction, typo, §Changelog-only
-append, single-sentence rewording without cross-ref impact) stay
-Buddy-direct — no architect dispatch, no spec_authoring entry.
-
-### Dispatch shape
-
-Buddy dispatches via the `Agent` tool:
-
-- `subagent_type: brief-architect`
-- prompt sets `mode: spec_amendment`
-- prompt provides: target spec file(s) + change-trigger description
-  (mechanism shift / class rename / contract retraction) + affected
-  ACs/sections + cross-spec references that need coordination +
-  `intent_chain`. Architect explores freely from there — no
-  whitelist on what it reads.
-
-The architect returns amendment prose + cross-ref edit-list +
-spec_version bump suggestion + §Changelog entry, **inline** (no
-Write target — orchestrator writes per spec 306 §14.4). Buddy
-integrates the prose into the spec file(s), bumps `spec_version`,
-and dispatches `spec_amendment_verification` (= `skills/spec_amendment_verification/SKILL.md`)
-for cross-spec coherence.
-
-### What stays in this skill
-
-- Phase 1 (interview) for greenfield + new sections needing
-  interview.
-- Phase 2 (collaborative writing) for greenfield + new sections.
-- Phase 3 (intent_chain validation) — applies to any artifact this
-  skill produces.
-- 5-primitives discipline + artifact checklist + verify-before-
-  recommend.
-
-### What dispatches out of this skill
-
-- Mechanism-shift / class-rename / contract-retraction amendments
-  → `brief-architect mode=spec_amendment` per the threshold above.
-- Code-as-evidence catch-up of an existing spec →
-  `retroactive_spec_update/SKILL.md` (which itself dispatches
-  `brief-architect mode=retro_spec_update` for Phase 2 walkthrough
-  per spec 306 §14.5).
-- MCA delegation brief from a locked spec → `brief-architect`
-  default `mode=brief`.
-
-### Why greenfield stays Buddy-direct (per spec 306 §14.1)
-
-Phase 1 interview is collaborative-iterative with the user
-(grilling-mode, one-question-at-a-time, recommended-answer-first).
-The information source is the user, not the corpus. A pass-through-
-via-architect pattern would add round-trip cost (User → Buddy →
-Architect → Buddy → User per question) without a corresponding
-fresh-context win. Architect dispatch makes sense where the
-information source is the corpus (existing specs + source code) —
-i.e., amendments and retro updates, not new-spec interviews.
+Pointer-only here. Detail in the protocol so this skill stays
+scan-able at edit-time. Anti-patterns and Lessons-table entries
+below retain the imperative shape for quick reference.
 
 ---
 
@@ -443,6 +411,20 @@ i.e., amendments and retro updates, not new-spec interviews.
   a broken design — the implementation is correct per spec,
   the spec is wrong.
 
+- **NOT** generate two-option questions from handoff / spec
+  disagreement without code-grounding first. INSTEAD code-ground
+  first, ask only the questions that survive grounding. Because:
+  false dichotomies generated from incomplete grounding send the
+  user to choose between two paths neither of which represents
+  reality.
+
+- **NOT** assume mediator pass-through; verify it. INSTEAD run
+  the 3-question audit (forward-what / compute-vs-pass / timing)
+  before locking a capture contract on data downstream of a proxy
+  / aggregator / broker. Because: the mediator forwards what it
+  forwards, not what you assume — invisible state is invisible
+  until production.
+
 ---
 
 ## Lessons-table
@@ -456,3 +438,5 @@ rule.
 | **Single-cycle-focus misses transitive cycles** | Brief examines a visible import cycle (A ↔ B), locks the decision to break it, MCA implements per spec. Post-implementation a *different* test entry-point fails with ImportError because a back-edge elsewhere in the transitive graph was never inspected. The brief's reasoning was correct for the visible cycle, but the visible cycle was not the whole graph. | Pre-lock checklist for any brief mentioning import / cycle / extraction / move-module: walk transitive imports from every entry-point that touches the affected module, run baseline `pytest --collect-only` on those entry-points, document any prior workarounds with rationale. SoT: `_protocols/mca-brief-template.md` §Structural-refactor pre-lock checklist. |
 | **MCA scope-creep on adjacent identical patterns** | Brief locks decision X for field A. MCA implements X for A and "helpfully" applies X to adjacent fields B, C in the same file because the pattern looks identical. The brief had described the deferral descriptively, not prescriptively. | Briefs MUST forbid adjacent scope-changes by name when the migration pattern is reusable. Post-implementation grep: `git diff --name-only` vs brief-named files; anything outside is scope-creep. SoT: `_protocols/mca-brief-template.md` §Anti-patterns + §Structural-refactor pre-lock checklist post-impl grep. |
 | **Full-suite tests per fix-pass instead of scope-focused** | Convergence-loop runs `pytest tests/` after every fix-phase, burning 2-3× wallclock without surfacing new signal. The fix touched a documented `file:line` scope; re-testing untouched modules adds noise, not safety. | Brief DoD encodes scope-focused tests + L0 on touched files. ONE full-suite run at convergence-end + pre-deploy + cross-cutting refactor. Re-review on FAIL = single-reviewer pass-1.5 of the finding cluster, not full-board redo. SoT: `convergence_loop/SKILL.md` §Test scope between passes + `code_review_board/SKILL.md` §5 Re-review composition + `_protocols/mca-brief-template.md` §Test/Verification scope. |
+| **§-section-amendment without code-grounding** | Amendment drafted from session-handoff text disagreeing with current spec text — both sources stale relative to the code. A two-option question generated from the disagreement became a false dichotomy when code-grounding would have surfaced a third state. Adjacent §-sections (e.g. layout diagrams describing the moved component) also carried drift; the amendment cluster grew to absorb those as stale-cleanup strands. | Pre-edit gate: before amending a §-section that describes code-observable state, grep + read the relevant code. If diverged, reconcile in same commit (CLAUDE.md §Stale cleanup invariant). Architect-dispatched amendments inherit the gate via dispatch contract. SoT: `_protocols/spec-amendment-discipline.md` §Pre-edit code-source-grounding gate. |
+| **Implicit mediator pass-through assumption** | Spec captures state at a proxy / aggregator / wrapper-SDK boundary, assumes the mediator forwards upstream state to downstream. The mediator strips / doesn't-compute / doesn't-emit silently. Bug is structurally invisible until production. Concrete recurrence shape: two adjacent capture contracts (response-cost during streaming + upstream rate-limit headers) sharing one upstream-pass-through assumption — both fixable only by bypassing the mediator at the relevant capture point. | Mediator pass-through audit: 3-question probe (forward-what / compute-vs-pass / timing) on every spec capturing state downstream of proxy / aggregator / broker. Unverified → `[mediator-audit-pending]` marker; the marker MUST be resolved before requesting board review (chief checks during consolidation, raises a finding if present; mechanical enforcer follow-up: Task 321). SoT: this skill §Mediator pass-through audit. |

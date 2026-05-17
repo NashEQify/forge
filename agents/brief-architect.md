@@ -106,6 +106,19 @@ outputs differ. Mode-specific notes are inline.
      reference (e.g. "see X.md §Y v2.3") binds an amendment that
      actually exists or that you're authoring in this same dispatch.
      Dangling cross-refs are an invalid amendment.
+     **Code-source grounding (required, pre-draft):** for each
+     §-section being amended, grep the code roots
+     (`src/`, `frontend/src/`, `agents/`, `skills/`, `scripts/` —
+     adjust per `docs/STRUCTURE.md §Code zones`) for the
+     identifiers named in the §-section (backticked symbols +
+     CapitalizedWord class/component/module names). Read matching
+     code paths. Compare actual code state against the §-section
+     prose. **Pre-edit code-source-grounding gate per
+     `skills/_protocols/spec-amendment-discipline.md` applies.**
+     If grounding surfaces drift (named-symbol mismatch OR
+     structural change with semantic load), the amendment edit-list
+     MUST include a §spec-drift-fix strand for the diverged
+     §-section(s) in the same dispatch.
    - **`mode=retro_spec_update`:** read every relevant source file
      **completely** (not just the diff hunks). For files >300 lines,
      read the whole bounded function/component. The lines that
@@ -134,6 +147,11 @@ outputs differ. Mode-specific notes are inline.
      bump (semver per spec_engineering convention: behaviour
      change → minor; clarification → patch; contract retraction →
      minor at minimum). Author a §Changelog entry.
+     **If Explore Thoroughly surfaced code-spec drift:** add a
+     §spec-drift-fix strand to the edit-list per diverged
+     §-section, per
+     `skills/_protocols/spec-amendment-discipline.md`
+     §Same-commit reconciliation rule.
    - **`mode=retro_spec_update`:** classify each finding per the
      four-category model from `retroactive_spec_update/SKILL.md`
      §Phase 2d: MATCH (no change), SPEC-GAP (extend spec),
@@ -221,6 +239,10 @@ For each occurrence in active-text (historical §Changelog and v-blocks excluded
     <proposed prose>
   Rationale:
     <one sentence>
+  Strand: amendment | spec-drift-fix
+    (spec-drift-fix entries are added when code-source-grounding
+    surfaced divergence per `_protocols/spec-amendment-discipline.md`
+    §Same-commit reconciliation; default is amendment)
 
 (repeat per occurrence)
 
