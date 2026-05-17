@@ -3,6 +3,7 @@ name: root-cause-fix
 description: >
   5-step root-cause analysis and fix. Structured fix lifecycle
   for every defect, no matter how small.
+  Triggers when expectation does not match reality (any defect or incident, however small); NOT for planned feature work (use build).
 status: active
 relevant_for: ["main-code-agent"]
 invocation:

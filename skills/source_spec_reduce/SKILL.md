@@ -5,6 +5,7 @@ description: >
   + leave a pointer stub. Required output: drift-items.yaml with
   3-way triage (existing-task / new-task / die). When the source
   is fully dissolved: archive it.
+  Triggers when a source spec's sections have been absorbed post-authoring and need pointer-stub reduction (build specify); NOT for greenfield specs with no source predecessor.
 status: active
 relevant_for: ["main-code-agent", "buddy"]
 invocation:

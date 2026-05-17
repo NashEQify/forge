@@ -8,6 +8,7 @@ description: >
   extraction, phase 3 triage (MATCH / MVP-INTEGRATE /
   NEW-METHODOLOGY / POST-MVP-VISION / PRE-MVP-DROPPED), phase 4
   conditional council.
+  Triggers when pre-MVP / pre-build specs may carry methodology or architecture ideas relevant to the current build scope; NOT a compliance check against old specs.
 status: active
 invocation:
   primary: workflow-step

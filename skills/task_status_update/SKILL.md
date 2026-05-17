@@ -3,6 +3,7 @@ name: task-status-update
 description: >
   Atomic task-status change. The only allowed way to change
   `status` in task YAMLs. Writes YAML + backlog in one operation.
+  Triggers when a task's status must change (the only allowed path); NOT for content edits to task bodies.
 status: active
 relevant_for: ["main-code-agent"]
 invocation:

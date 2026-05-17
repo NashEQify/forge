@@ -4,6 +4,7 @@ description: >
   Multi-perspective review of the implementation plan BEFORE
   coding. Closes the code-synthesis gap: MCA's interpretation of
   the spec is validated before code is written.
+  Triggers when an MCA implementation plan must be validated before coding (build execute, conditional); NOT for spec review (use spec_board) or code review (use code_review_board).
 status: active
 relevant_for: ["main-code-agent"]
 invocation:

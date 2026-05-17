@@ -5,6 +5,7 @@ description: >
   council-member subagents in parallel, context isolation, Buddy
   consolidates. (b) Interactive — Buddy moderates a user dialog
   with perspectives (phase 1-2-3).
+  Triggers when an architecture/strategy decision has more than one viable path and is hard to reverse; NOT for single-path or easily-reversible decisions (decide directly).
 status: active
 relevant_for: ["solution-expert"]
 invocation:

@@ -6,6 +6,7 @@ description: >
   Decomposes problems down to axiom level (physics / logic /
   values), then builds answers from the bottom up.
   Domain-independent.
+  Triggers when a problem must be decomposed to axiom level before synthesis (frame step 2, solve override); NOT for routine analysis with a known frame.
 status: active
 relevant_for: ["solution-expert"]
 invocation:

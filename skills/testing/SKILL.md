@@ -4,6 +4,7 @@ description: >
   Methodology and formats for test-case design and execution
   across the entire SSDLC. Code tests, logic, processes, specs,
   constraints. Domain-specific eval patterns: testing/eval_patterns/.
+  Triggers when test cases must be designed or executed (build prepare test-design, fix verify); NOT for ad-hoc manual checks without a test plan.
 status: active
 relevant_for: ["tester"]
 invocation:

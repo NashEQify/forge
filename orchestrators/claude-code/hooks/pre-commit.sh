@@ -26,6 +26,8 @@ set -euo pipefail
 #                                  gitleaks is not installed.
 #  12. SOURCE-VERIFICATION (WARN) — board/council reviews must cite source
 #                                   files (line-numbered evidence pointers).
+#  13. PIEBALD-BUDGET   (WARN)  — staged active skills/**/SKILL.md over the
+#                                  piebald-budget.md threshold (C2 / WI-5).
 
 FRAMEWORK_ROOT="$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)"
 PLAN_ENGINE="${FRAMEWORK_ROOT}/scripts/plan_engine.py"
@@ -512,6 +514,87 @@ if [ -f "$VALIDATOR" ]; then
     fi
   fi
 fi
+
+# ---------- Check 13: PIEBALD-BUDGET (WARN) — Task 324 WI-5 / C2 ----------
+#
+# Length-budget ratchet for staged skills/**/SKILL.md. Threshold SoT is
+# skills/_protocols/piebald-budget.md — its documented rule is applied
+# verbatim, no invented single number:
+#   - legacy `type: workflow`   → 180
+#   - legacy `type: capability` → 120
+#   - legacy `type: protocol`   → 100
+#   - legacy `type: utility`    → 100
+#   - single-class v2 (no `type:`): new skills must be <120; existing
+#     (originally workflow-authored) skills tolerated in the 120–180
+#     grandfather band → WARN only above 180 on modify, above 120 on add.
+# Active-status filtered; _archived excluded. WARN-only (calibrate
+# before any BLOCK) — fires only on staged files, so it is a ratchet,
+# not a corpus-wide sweep.
+
+# set +e fence (sibling-check convention, pre-commit.sh:309/407/429/500)
+# — Check 13 must never abort the suite; it is WARN-only. F-CR-001/002/005.
+# Carry-forward (pre-WARN→BLOCK calibration, see 324-verdict.md):
+#  - F-CA-001: this awk frontmatter parser is independent of
+#    skill_fm_validate.py's PyYAML parser; only top-level `status:` /
+#    `type:` are read. Indented keys diverge — acceptable while WARN-
+#    only; unify into one FM emitter before any WARN→BLOCK promotion.
+#  - F-CA-004: TRIGGER_MARKERS substring match (C3) must be fixture-
+#    locked before WARN→BLOCK.
+set +e
+PIEBALD_STAGED=$(git diff --cached --name-only -- 'skills/*/SKILL.md' 2>/dev/null \
+  | grep -v '/_archived/')
+if [ -n "$PIEBALD_STAGED" ]; then
+  PIEBALD_ADDED=$(git diff --cached --name-only --diff-filter=A -- 'skills/*/SKILL.md' 2>/dev/null)
+  PIEBALD_HITS=()
+  while IFS= read -r sf; do
+    [ -z "$sf" ] && continue
+    [ ! -f "${FRAMEWORK_ROOT}/$sf" ] && continue
+    # F-CA-003: parse only a well-formed `---`…`---` fence. awk emits
+    # "STATUS|TYPE" iff the closing fence exists; malformed / absent
+    # frontmatter → empty → skip (Check 7 owns malformed-FM as BLOCK).
+    # awk always exits 0 → no grep-in-substitution + set-e/pipefail
+    # abort (F-CR-001/002 root cause eliminated, fence is defence #2).
+    FM_PARSED=$(awk '
+      NR==1 && /^---[[:space:]]*$/ {inb=1; next}
+      inb && /^---[[:space:]]*$/   {closed=1; exit}
+      inb && /^status:/ {s=$0}
+      inb && /^type:/   {t=$0}
+      END {
+        if (closed) {
+          sub(/^status:[[:space:]]*/,"",s); sub(/^type:[[:space:]]*/,"",t)
+          gsub(/["'"'"'[:space:]]/,"",s); gsub(/["'"'"'[:space:]]/,"",t)
+          print s "|" t
+        }
+      }' "${FRAMEWORK_ROOT}/$sf")
+    [ -z "$FM_PARSED" ] && continue
+    SK_STATUS="${FM_PARSED%%|*}"
+    SK_TYPE="${FM_PARSED#*|}"
+    [ "$SK_STATUS" != "active" ] && continue
+    # F-CR-004/F-CA-002: awk NR counts the final line even with no
+    # trailing newline (wc -l undercounts no-EOL by one).
+    LC=$(awk 'END{print NR+0}' "${FRAMEWORK_ROOT}/$sf")
+    case "$SK_TYPE" in
+      workflow)            BUD=180 ;;
+      capability)          BUD=120 ;;
+      protocol|utility)    BUD=100 ;;
+      "")
+        # single-class v2: strict <120 when newly added, else 120–180
+        # grandfather band (WARN above 180).
+        if echo "$PIEBALD_ADDED" | grep -qxF "$sf"; then BUD=120; else BUD=180; fi
+        ;;
+      *)                   BUD=120 ;;  # unknown legacy type → tightest sane default
+    esac
+    if [ "$LC" -gt "$BUD" ]; then
+      PIEBALD_HITS+=("${sf} — ${LC} lines, budget ≤${BUD} (over by $((LC - BUD)))")
+    fi
+  done <<< "$PIEBALD_STAGED"
+  if [ ${#PIEBALD_HITS[@]} -gt 0 ]; then
+    PB_RENDERED=""
+    for h in "${PIEBALD_HITS[@]}"; do PB_RENDERED+=$'\n    '"$h"; done
+    WARNINGS+=("PIEBALD-BUDGET: ${#PIEBALD_HITS[@]} staged SKILL.md over budget (SoT: skills/_protocols/piebald-budget.md):${PB_RENDERED}"$'\n'"    Resolve: split SKILL.md + REFERENCE.md, trim prose, or document a Piebald exception.")
+  fi
+fi
+set -e
 
 # ---------- Output ----------
 

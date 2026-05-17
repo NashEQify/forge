@@ -5,6 +5,7 @@ description: >
   thinking before solutions are developed. Output: a structured
   frame report with reformulated problem, solution space, and
   recommendation in one turn.
+  Triggers when a problem needs multi-perspective analysis before solutioning (solve phase 1, build specify interview); NOT when the solution shape is already clear.
 status: active
 relevant_for: ["solution-expert"]
 invocation:

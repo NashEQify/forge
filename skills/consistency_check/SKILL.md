@@ -3,6 +3,7 @@ name: consistency-check
 description: >
   Checks the structural integrity of the repo. Dead references,
   orphan files, adapter SoT drift, navigation desync.
+  Triggers when structural repo integrity must be validated after structural changes or before commit (dead refs, orphans, adapter drift); NOT for content/logic review.
 status: active
 invocation:
   primary: cross-cutting

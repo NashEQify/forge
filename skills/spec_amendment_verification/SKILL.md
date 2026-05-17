@@ -4,6 +4,7 @@ description: >
   Read-only cross-spec verification after spec amendments.
   Checks whether the changes are consistent with the referenced
   specs.
+  Triggers when a spec amendment lands and cross-spec consistency must be checked read-only (build verify, conditional); NOT for full spec quality review (use spec_board).
 status: active
 verification_tier: 1
 evidence_layout: per_finding

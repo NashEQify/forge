@@ -26,6 +26,12 @@ PRIMARY_ALLOW = frozenset(
 )
 SECONDARY_PATH_ALLOW = PRIMARY_ALLOW
 
+# WI-4 / C3 — description must carry a situational trigger marker so the
+# model can decide *when* to invoke (not just *what* the skill is). Closed
+# set, exact substring, case-insensitive. No grammar, no LLM, no
+# open-ended "or equivalent" — deterministic ratchet, WARN-first.
+TRIGGER_MARKERS = ("use when", "triggers when", "trigger:")
+
 
 def repo_root(start: Path) -> Path:
     cur = start.resolve()
@@ -174,6 +180,22 @@ def validate_file(path: Path, root: Path, is_new: bool) -> tuple[list[str], list
                     warns.append(
                         f"{rel}: invocation.secondary unknown path '{path_name}' (from {token!r})"
                     )
+
+    # WI-4 / C3 — active-status filter applied here so the trigger-marker
+    # ratchet covers any active skill that gets staged, regardless of
+    # whether it is newly added or merely modified. Definitional-only
+    # `description` (no `Use when` / `Triggers when` / `Trigger:`) → WARN.
+    status_val = data.get("status")
+    desc_val = data.get("description")
+    if status_val == "active" and isinstance(desc_val, str) and desc_val.strip():
+        low = desc_val.lower()
+        if not any(m in low for m in TRIGGER_MARKERS):
+            warns.append(
+                f"{rel}: description has no situational trigger marker "
+                f"(expected one of: Use when / Triggers when / Trigger:). "
+                f"C3 ratchet (WI-4) — definitional-only descriptions misfire "
+                f"at invocation time."
+            )
 
     dmi = data.get("disable-model-invocation")
     if dmi is not None and not isinstance(dmi, bool):

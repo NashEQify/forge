@@ -114,11 +114,14 @@ UserPromptSubmit:
 - `workflow-reminder` — injects active workflow + next step into every
   turn context.
 
-git pre-commit (12 checks, 3 BLOCK + 9 WARN):
-- BLOCK: PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE.
+git pre-commit (13 checks, 3 BLOCK + 10 WARN):
+- BLOCK: PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE. SKILL-FM-VALIDATE
+  also emits the C3 description trigger-marker WARN (active skills
+  must carry `Use when`/`Triggers when`/`Trigger:`).
 - WARN: TASK-SYNC, OBLIGATIONS, STALE-CLEANUP, PERSIST-GATE,
   ENGINE-USE, RUNBOOK-DRIFT, AGENT-SKILL-DRIFT, SECRET-SCAN,
-  SOURCE-VERIFICATION.
+  SOURCE-VERIFICATION, PIEBALD-BUDGET (staged active SKILL.md over
+  the `skills/_protocols/piebald-budget.md` threshold).
 
 git post-commit:
 - `post-commit-dashboard` — dashboard refresh.

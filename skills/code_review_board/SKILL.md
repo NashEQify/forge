@@ -3,6 +3,7 @@ name: code-review-board
 description: >
   Multi-perspective code review. 2 levels: L1 (focused) + L2 (full
   board).
+  Triggers when a code diff needs multi-perspective review before merge (build verify, fix L1); NOT for PR-level checks (use /review) and NOT for spec review (use spec_board).
 status: active
 verification_tier: 1
 evidence_layout: per_finding
