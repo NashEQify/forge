@@ -9,6 +9,7 @@ description: >
   retroactive code sync — those are spec_authoring and
   retroactive_spec_update. The board is the quality check AFTER
   writing.
+  Triggers when an existing spec must be checked for rebuild-readiness AFTER writing; NOT for spec authoring (use spec_authoring) or retroactive code sync (use retroactive_spec_update).
 status: active
 verification_tier: 1
 evidence_layout: per_finding

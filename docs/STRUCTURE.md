@@ -44,6 +44,7 @@ below is forge_dev-only — excluded by the sync.
 | `docs/reviews/` | Review-persona output (sub-folders `board/` + `council/`) — cross-workflow, hence plural |
 | `docs/specs/` | Intermediate spec drafts (edit plans, transient specs from solve / build) |
 | `docs/handovers/` | Cross-repo handover bundles, dogfooding reports |
+| `docs/dogfood-learnings/` | Live session-dogfooding observations (internal forensics) — forge_dev-only, excluded from the public mirror |
 | `docs/discoveries/` | Cross-repo discovery logs |
 | `docs/tasks/<NNN>-{gates,delegation,test-plan}.*` | Per-task audit trail files |
 

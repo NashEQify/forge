@@ -4,6 +4,7 @@ description: >
   Fetch current API documentation for external libraries before
   coding against them. Prevents hallucinated parameters and stale
   interfaces.
+  Triggers when about to write code against an unfamiliar or version-sensitive external API/library; NOT for the stdlib or well-known stable APIs.
 status: active
 relevant_for: ["main-code-agent"]
 invocation:

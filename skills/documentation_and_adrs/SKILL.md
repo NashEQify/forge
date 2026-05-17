@@ -5,6 +5,7 @@ description: >
   trade-offs. ADR discipline, README / changelog, API docs,
   agent-ready rules (CLAUDE.md). Adapted from
   addyosmani/agent-skills; MIT, see ## Source.
+  Triggers when an architecture/API decision needs capturing (ADR / README / changelog) after the decision or before save; NOT for inline code comments.
 status: active
 invocation:
   primary: workflow-step

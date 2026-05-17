@@ -5,6 +5,7 @@ description: >
   as hostile, secrets as sacrosanct, authorization checks as
   required. Methodology layer for the security / code-security
   agent personas.
+  Triggers when handling external input, secrets, or authorization, or during pre-production hardening; NOT a substitute for the offensive security agent (pentest) or static code-security review.
 status: active
 invocation:
   primary: workflow-step

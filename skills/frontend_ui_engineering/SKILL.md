@@ -5,6 +5,7 @@ description: >
   design-system adherence (no AI aesthetic), a11y (WCAG 2.1 AA), responsive,
   meaningful empty/loading/error states. Code-side methodology paired with
   spec_board mode=ux (spec side) and code_review_board (diff side).
+  Triggers when building or refactoring production UI code (build execute, frontend); NOT for UX spec review (use spec_board mode=ux) and NOT for TTY-style tokens (use frontend_design_tty).
 status: active
 invocation:
   primary: workflow-step

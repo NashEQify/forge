@@ -7,6 +7,7 @@ description: >
   compare, update. Prevents feature creep by never asking "what could be
   added" — only "what does the code already do that the spec does not
   describe".
+  Triggers when an existing spec must be synced to the as-is code state (code = evidence); NOT for authoring new specs (use spec_authoring) or amending locked specs by intent (use spec-amendment-discipline).
 status: active
 invocation:
   primary: workflow-step

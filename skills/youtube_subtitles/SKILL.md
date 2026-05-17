@@ -3,6 +3,7 @@ name: youtube-subtitles
 description: >
   Read YouTube videos via subtitles instead of watching them.
   For research, references, and knowledge extraction.
+  Triggers when a YouTube URL is shared with intent to extract or summarize its content; NOT for non-YouTube video or audio transcription.
 status: active
 invocation:
   primary: user-facing

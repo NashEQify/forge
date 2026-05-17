@@ -3,6 +3,8 @@ name: transparency-header
 description: >
   Header formats for delegation, execution, and direct
   conversation. Print on every delegation and task start. No opt-in.
+  Triggers when a delegation or task start occurs (every time, no
+  opt-in); NOT a conditional or skippable step.
 status: active
 relevant_for: ["*"]
 invocation:

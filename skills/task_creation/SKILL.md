@@ -4,6 +4,7 @@ description: >
   Structured task creation. Self-contained tasks with ACs,
   intent_chain, and a duplicate check. Task quality determines
   downstream quality.
+  Triggers when actionable work needs tracking as a new task (intake ACTIONABLE, root-cause fix-task, spec decomposition); NOT for direct YAML edits or sofort-fixes.
 status: active
 invocation:
   primary: user-facing

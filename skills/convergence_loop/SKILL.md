@@ -3,6 +3,7 @@ name: convergence-loop
 description: >
   Intra-gate iteration protocol. Bounded convergence with a rising
   severity threshold and narrowing scope. Max 3 passes.
+  Triggers when a fix-then-review cycle needs bounded iteration with a rising severity threshold (review verify, spec_board internal); NOT for one-shot reviews.
 status: active
 relevant_for: ["main-code-agent", "tester"]
 invocation:

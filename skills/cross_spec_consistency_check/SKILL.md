@@ -5,6 +5,7 @@ description: >
   of the current build run. Four pattern classes (API naming drift, concept
   double authority, schema drift, authority overlap). Output: drift-list-
   cross.md with severity triage. Block on high severity.
+  Triggers when a build run has a source-grounding set of 2+ specs to check pre-authoring (build specify); NOT for greenfield specs with no source set.
 status: active
 relevant_for: ["main-code-agent", "buddy"]
 invocation:

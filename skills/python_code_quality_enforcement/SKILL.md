@@ -4,6 +4,7 @@ description: >
   Python code quality and conventions for BuddyAI. Tooling,
   layouts, coding standards, and security checks for all
   Python code.
+  Triggers when writing or modifying Python code in this codebase (MCA during coding); NOT for non-Python code or design-level decisions.
 status: active
 relevant_for: ["main-code-agent"]
 invocation:
@@ -388,3 +389,29 @@ Buddy verifies on every code delegation to main-code-agent:
 - [ ] Async patterns correct (no `asyncio.run` in libraries)?
 - [ ] Structured logging (structlog, not print / logging)?
 - [ ] `user_id` in Neo4j queries?
+
+---
+
+## Common rationalizations
+
+The scan-layer for this discipline skill: the excuses that talk an
+implementer out of the conventions above. Reject each on sight.
+
+- *"It's just a script / one-off — typing and Ruff are overkill."*
+  One-offs become imports. Type + lint from line one; the cost is
+  zero, the later retrofit is not.
+- *"Mypy noise — I'll add `# type: ignore` to move on."* An ignore
+  without a code and a reason is silent debt. Narrow it
+  (`# type: ignore[code]`) or fix the type; never blanket-ignore.
+- *"`print` is faster to debug than structlog."* `print` ships to
+  prod and loses context. Structured logging is non-negotiable in
+  library/service code.
+- *"Tests later, the feature first."* "Later" is the drift the
+  whole framework exists to prevent. Red test before the fix
+  (per `adversary_test_plan` / `testing`).
+- *"`asyncio.run` inside the library is fine for now."* It breaks
+  the moment a caller already has a loop. Libraries expose
+  coroutines; only the entrypoint runs the loop.
+- *"Secret in a constant just for local dev."* Local secrets leak
+  via git history and `--cached` diffs. Env / secret store only —
+  detect-secrets is a backstop, not a license.

@@ -6,6 +6,7 @@ description: >
   watch_item / absorb_next / closes_with / re_review). Replaces
   the legacy `risk-followup-task` step which mechanically created
   one task per finding regardless of finding type.
+  Triggers when a chief verdict carries remaining_findings: entries to route by their target: annotation; NOT for creating tasks directly (use task_creation).
 status: active
 invocation:
   primary: workflow-step

@@ -3,6 +3,7 @@ name: return-summary
 description: >
   Format and rules for sub-agent return summaries. Load before
   step 8 (return).
+  Triggers when a sub-agent is about to return (load before step 8); NOT for user-facing output formatting.
 status: active
 relevant_for: ["main-code-agent", "tester", "security", "solution-expert"]
 invocation:

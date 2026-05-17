@@ -5,9 +5,9 @@ when to dispatch to `brief-architect mode=spec_amendment`, when to
 stay Buddy-direct, and the pre-edit gate that applies in both cases.
 
 **Consumed by:** `skills/spec_authoring/SKILL.md` §Amendments to
-existing specs (pointer). `agents/brief-architect.md` §Mode
-`spec_amendment` (dispatch contract — see §Explore Thoroughly +
-§Required Output blocks). `docs/specs/306-brief-architect.md §14.2`
+existing specs (pointer). `agents/brief-architect.md` §Modes
+(`mode=spec_amendment`) — dispatch contract; see §Your Process +
+§Required Output. `docs/specs/306-brief-architect.md §14.2`
 (threshold authority).
 
 **Why a protocol, not skill prose:** the discipline is reference

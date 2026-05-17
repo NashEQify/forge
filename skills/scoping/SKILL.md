@@ -4,6 +4,7 @@ description: >
   Translate a high-level intent into an approved spec hierarchy
   (L0-L3). Buddy guides the user progressively through every
   level.
+  Triggers when a high-level intent has no spec and must be split into an L0-L3 hierarchy; NOT when a spec already exists (use spec_authoring / spec_board).
 status: active
 invocation:
   primary: user-facing

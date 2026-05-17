@@ -6,6 +6,7 @@ description: >
   alignment validation. For updating existing specs: spec_update
   skill. For review: spec_board. For brief authoring at
   delegation time: agents/brief-architect.
+  Triggers when a NEW spec or a new spec section is needed (the code does not exist yet); NOT for syncing specs to code (use retroactive_spec_update) or review (use spec_board).
 status: active
 relevant_for: ["main-code-agent"]
 invocation:

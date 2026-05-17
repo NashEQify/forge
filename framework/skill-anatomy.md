@@ -80,8 +80,14 @@ Convention (Pass 1 / F-C-002 option A): allow `lower_snake_case` or
 Must match directory name under normalization (`-`/`_` harmonized).
 
 #### `description`
-Short description with `Use when` triggers for discovery.
-This is discovery hint, not body content.
+Short description with a situational trigger for discovery. This is a
+discovery hint, not body content. **Enforced (not advisory):** for
+`status: active` skills the `description` MUST contain one of
+`Use when` / `Triggers when` / `Trigger:` (closed set, case-
+insensitive substring). Mechanical surface: C3 WARN in
+`scripts/skill_fm_validate.py` (pre-commit Check 7). Definitional-only
+descriptions misfire at invocation time — the trigger string is the
+load-bearing factor for `P(invoked)` (no background loader).
 
 #### `status`
 - `active`
@@ -344,7 +350,11 @@ name: task_creation
 - `framework/boot-navigation.md` (boot index)
 - `agents/buddy/operational.md` (operational anti-inflation behavior)
 - `framework/spec-engineering.md` (5 primitives spirit)
-- `skills/_protocols/piebald-budget.md` (budget axis migration needed after `type:` removal)
+- `skills/_protocols/piebald-budget.md` (length-budget SoT —
+  **enforced, not advisory**: C2 WARN as pre-commit Check 13
+  PIEBALD-BUDGET fires on staged active `SKILL.md` over the
+  documented per-type / single-class-v2 threshold; WARN-first,
+  calibrate before any BLOCK)
 
 ---
 
