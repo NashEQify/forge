@@ -57,6 +57,19 @@ content (§ + topic), not when they smuggle session history.
 Session-internal context lives in `context/`, `docs/audit/`,
 `docs/build/` — those are not public surface.
 
+### 8. Public forge = read-only OSS mirror
+Two repos: `forge_dev` is the private dev SoT — all development,
+tasks, plan, and context live here. Public `forge` is the OSS mirror,
+produced **solely** by `scripts/release-sync.sh` (forge_dev → forge,
+rsync `--delete`, explicit exclude list). Public forge is never
+hand-edited except one-time release hygiene. No internal operational
+state reaches it: `context/` (whole tree), `docs/tasks/*.{yaml,md}`,
+`docs/tasks/archive/`, and a live `docs/plan.yaml` are excluded by
+the sync. Public forge carries only `docs/tasks/.gitkeep` and a
+hand-maintained `docs/plan.yaml` north_star stub. Topology and
+enforcement: `docs/STRUCTURE.md`; sync mechanism: the exclude list
+in `scripts/release-sync.sh`.
+
 ## Observability
 For state-changing actions, leave a one-liner:
 `{action} → {target} ({reason})` — e.g. `→ main-code-agent (src/-scope)`,
@@ -112,5 +125,3 @@ git post-commit:
 
 Buddy acts, hooks catch the misses. Don't simulate hook logic up front;
 react when one fires.
-
-# allow:engine-bypass pre-OSS-cleanup sprint — meta-recursion removal, no engine

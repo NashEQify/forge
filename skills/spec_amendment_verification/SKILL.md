@@ -25,17 +25,28 @@ only findings.
 
 ## Trigger
 
-Buddy spawns this skill when the MCA return contains
-`SPEC_VERIFICATION: NEEDED`. Buddy does NOT spawn it on its own
-judgment — the field in the return is the trigger.
+Buddy spawns this skill on **either** of:
+
+1. MCA return contains `SPEC_VERIFICATION: NEEDED` (original
+   trigger — code-side amendment).
+2. Architect-amendment integration completes per
+   `_protocols/spec-amendment-discipline.md` §Dispatch shape (Buddy
+   has just integrated `mode=spec_amendment` prose into the target
+   spec(s) and bumped `spec_version`).
+
+Buddy does NOT spawn on own judgment — one of the two triggers
+above must fire.
 
 ## Input
 
 Buddy passes:
-- `changed_files`: list of changed spec files (from the MCA
-  return).
-- `change_summary`: per-item status from the MCA return (what was
-  changed).
+- `changed_files`: list of changed spec files (from MCA return OR
+  from the architect-amendment integration set).
+- `change_summary`: per-item status of what changed. Source:
+  - MCA-trigger: MCA return's per-item status block.
+  - Architect-trigger: the architect's returned edit-list (cross-ref
+    sweep per `agents/brief-architect.md` Required Output
+    `mode=spec_amendment`).
 - `task_context`: task ID + wave / item reference (for
   traceability).
 
@@ -99,13 +110,17 @@ a fix is needed or acceptable.
 
 ### INPUT
 - **Required:** changed_files — list of changed spec files (from
-  the MCA return).
-- **Required:** change_summary — per-item status from the MCA
-  return (what was changed).
+  the MCA return OR from the architect-amendment integration set).
+- **Required:** change_summary — per-item status of what changed.
+  Source: MCA return's per-item status block, OR the architect's
+  returned edit-list (cross-ref sweep per `agents/brief-architect.md`
+  Required Output `mode=spec_amendment`).
 - **Required:** task_context — task ID + wave / item reference
   (for traceability).
-- **Required:** MCA return with `SPEC_VERIFICATION: NEEDED` —
-  the only trigger.
+- **Required (one of):** MCA return with `SPEC_VERIFICATION: NEEDED`,
+  OR Buddy's post-architect-amendment integration completion per
+  `_protocols/spec-amendment-discipline.md` §Dispatch shape — the
+  two valid triggers (see §Trigger above).
 - **Context:** `docs/specs/SPEC-MAP.md` — the agent determines
   the scope autonomously.
 

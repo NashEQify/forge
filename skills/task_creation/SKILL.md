@@ -242,3 +242,14 @@ Validate: plan_engine --validate PASS
 - **NOT** filling required fields with "see above" or "current
   conversation". **INSTEAD** make them self-contained. Because:
   tasks are picked up later without the session context.
+
+- **NOT** embedding build-workflow route decisions in task notes
+  (e.g. `Trigger Build-Workflow: ... --route sub-build`).
+  **INSTEAD** leave route-decision to workflow-start time;
+  path-determination per `workflows/runbooks/build/WORKFLOW.md`
+  wins based on current task properties (effort, schema, AC count,
+  parent-build relationship). Because: route-hints in task notes
+  go stale (effort grows, ACs added, schema-change introduced)
+  and anchor the start-time decision toward an outdated path. The
+  correct action when a stale hint disagrees with current properties
+  is to ignore the hint, not to honor it.

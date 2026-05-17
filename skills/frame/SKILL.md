@@ -42,8 +42,14 @@ preparation (solution-candidate input).
 
 - **Inside solve:** the frame report goes into the state-file body
   under `## Phase 1: Frame`.
-- **Outside solve** (build, scoping, council): the frame report is
-  inline in the chat.
+- **Inside build:** the frame report is inline in the chat AND a
+  compact summary (8-12 bullets — decisions + rationales, no full
+  prose) is logged to the build state-file phase-log at
+  `docs/build/<slug>.md` under `## Gate 1 — interview`. Build has
+  a state-file; the chat is transient. Persistent state belongs in
+  the state-file. SoT: `workflows/runbooks/build/WORKFLOW.md` gate 1.
+- **Outside solve and build** (scoping, council, standalone): the
+  frame report is inline in the chat.
 
 ## Flow — 8 sub-steps (binding order)
 

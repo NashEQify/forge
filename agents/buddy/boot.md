@@ -79,9 +79,17 @@ guaranteed by the `cc` script). `values.md` + `profile.md` +
    active CWD in parallel (deduped). 5-second network timeout. Output:
    one line per non-clean repo, `<path> [ahead N | behind N | ahead M,
    behind N]`. Empty output = everything in sync.
-   Buddy parses: on non-empty output, surface the result in GREET
+
+   In the same round: `bash $FRAMEWORK_DIR/scripts/chub-status-check.sh`
+   — presence check for the `chub` CLI (get_api_docs prerequisite).
+   Empty output = chub installed. Non-empty = single advisory line
+   (install hint). Converts the runtime-surprise — get_api_docs
+   silently falls back to WebFetch when chub is missing — into a
+   boot-time nudge.
+
+   Buddy parses both outputs: surface non-empty results in GREET
    ("Note: $FRAMEWORK_DIR is behind by 3 commits — `git pull`
-   recommended before substantial work"). Never BLOCK — just a hint.
+   recommended"). Never BLOCK — just a hint.
 
 6. **RESUME:** load session state.
    - `session-buffer.md`: always `BuddyAI/docs/session-buffer.md`
@@ -150,7 +158,8 @@ Finish boot in at most 2 tool-call rounds:
    parallel (needed to determine round 2).
 2. **Round 2:** EVERYTHING ELSE in parallel — ORIENT
    (`date/hostname/pwd`), RESOLVE (`ls intent.md`), STATUS-CHECK
-   (`bash $FRAMEWORK_DIR/scripts/git-status-check.sh`), ALL
+   (`bash $FRAMEWORK_DIR/scripts/git-status-check.sh` AND
+   `bash $FRAMEWORK_DIR/scripts/chub-status-check.sh`), ALL
    always-load files (`values.md`, `profile.md`,
    `boot-navigation.md`), intent-load files (`context-rules.md`,
    `session-buffer.md`, backlog if applicable),
@@ -182,6 +191,7 @@ CWD-independent.
 | boot-navigation.md | `$FRAMEWORK_DIR/framework/boot-navigation.md` | always-load (skill + workflow index, scope-independent). Explicit-absolute because consumer sessions (CWD≠FRAMEWORK_DIR) resolve relative `framework/` paths through `--add-dir` — the explicit form is more fail-safe. 421-finding B-2. |
 | session-buffer.md | `docs/session-buffer.md` | Always (Buddy-global) |
 | plan_engine --boot | `$FRAMEWORK_DIR/scripts/plan_engine.py --boot` | Root sessions only (bash call) |
+| chub-status-check | `$FRAMEWORK_DIR/scripts/chub-status-check.sh` | Always (bash call; parallel with git-status-check). Empty stdout = chub installed; non-empty = single advisory line surfaced in GREET. |
 | session-handoff | `<context>/session-handoff[-<workspace>].md` | CWD-based (see Context routing) |
 | companions.yaml (optional, user-scope) | `~/projects/personal/context/user/companions.yaml` | only when present |
 | companion soul+memory (optional, user-scope) | path per registry entry | only when companions.yaml exists |

@@ -3,16 +3,31 @@
 Rule doc for the `docs/` hierarchy. SoT for "where does
 what go".
 
-## Tracked (in the OSS repo)
+## Repo topology (read first)
 
-| Path | Purpose | Content |
-|------|---------|---------|
-| `docs/plan.yaml` | Programme SoT | north_star, operational_intent, phases, milestones |
-| `docs/STRUCTURE.md` | This file | Folder-taxonomy rule |
-| `docs/tasks/<NNN>.{md,yaml}` | Active tasks | Task spec + YAML metadata |
-| `docs/tasks/archive/<NNN>.{md,yaml}` | Done tasks | Auto-moved by `task_status_update` step 5. WORM (frozen zone). |
-| `docs/decisions/ADR-<NNN>.md` | ADRs | Architecture decision records — status, context, decision, alternatives, consequences |
-| `docs/architecture/` | Architecture notes | Hand-written architecture reflections (e.g. `build-workflow-structural-gap.md`) |
+Two repos, one-way sync. **`forge_dev`** = private dev SoT (this
+table describes its `docs/`). **`forge`** = public OSS mirror,
+produced solely by `scripts/release-sync.sh`. The sync's exclude
+list is the enforcement mechanism for "no internal operational
+state in public" — it is not advisory.
+
+What the **public mirror** carries from `docs/`: framework content
+only (`docs/STRUCTURE.md`, `docs/decisions/`, `docs/architecture/`),
+plus `docs/tasks/.gitkeep` and a hand-maintained `docs/plan.yaml`
+**north_star stub** (no live milestones/tasks). Everything else
+below is forge_dev-only — excluded by the sync.
+
+## Tracked (in forge_dev — the dev SoT)
+
+| Path | Purpose | Content | Public mirror |
+|------|---------|---------|---------------|
+| `docs/plan.yaml` | Programme SoT | north_star, operational_intent, phases, milestones | north_star **stub** only |
+| `docs/STRUCTURE.md` | This file | Folder-taxonomy rule | yes (framework content) |
+| `docs/tasks/<NNN>.{md,yaml}` | Active tasks | Task spec + YAML metadata | no — excluded |
+| `docs/tasks/archive/<NNN>.{md,yaml}` | Done tasks | Auto-moved by `task_status_update` step 5. WORM (frozen zone). | no — excluded |
+| `docs/tasks/.gitkeep` | Convention marker | keeps the dir + convention visible | yes |
+| `docs/decisions/ADR-<NNN>.md` | ADRs | Architecture decision records — status, context, decision, alternatives, consequences | yes (framework content) |
+| `docs/architecture/` | Architecture notes | Hand-written architecture reflections (e.g. `build-workflow-structural-gap.md`) | yes (framework content) |
 
 ## Gitignored (local-only, no OSS trace)
 
@@ -66,8 +81,14 @@ the framework default.
 
 ## Rationale
 
-- **Minimal-tracked:** the OSS repo shows framework
-  content, not internal operational state.
+- **Minimal-tracked:** the public OSS mirror shows
+  framework content, not internal operational state.
+  This is enforced, not aspirational: the exclude list
+  in `scripts/release-sync.sh` is the mechanism
+  (`context/`, `docs/tasks/*.{yaml,md}`,
+  `docs/tasks/archive/`, `docs/plan.yaml`). Public
+  keeps only `docs/tasks/.gitkeep` + a `docs/plan.yaml`
+  north_star stub. Topology: `CLAUDE.md` Invariant 8.
 - **Auto-discoverable:** `docs/STRUCTURE.md` is the only
   lookup for "where does what go".
 - **Drift-robust:** consistency_check check 9 catches

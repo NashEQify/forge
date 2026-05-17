@@ -88,6 +88,33 @@ a new library inside a task. Exception: the library is trivial
 Existing annotations are appended automatically — watch for
 `[ANNOTATION]` blocks.
 
+## WebFetch fallback (edge-case behavior questions)
+
+chub returns curated SDK overviews — good for "what is the API
+surface" questions: which methods, which parameters, which shapes.
+
+For **specific behavior questions** chub typically does NOT have
+the answer:
+
+- Header emission (does `GET /v1/models` return rate-limit headers?)
+- Parameter shapes at edge cases (what does `stream_options=` emit
+  on the final chunk vs intermediate chunks?)
+- Per-endpoint version-specific changes
+- Per-mediator pass-through behavior (does the proxy forward
+  upstream's `x-ratelimit-*` headers?)
+
+For these, fall back to `WebFetch` on canonical first-party docs
+(`console.<vendor>.com/docs/...`, `docs.<lib>.ai/...`). chub is a
+layer above first-party docs — it trades depth for curation, and
+the depth is where edge-case answers live.
+
+When in doubt: chub first (cheap), then WebFetch if the chub
+answer is generic. Concrete recurrence shape: chub returns a
+generalized SDK overview; specific behavior questions
+(per-endpoint rate-limit-header emission, streaming-cost-header
+trailing behavior, mediator-side pass-through) only resolve from
+canonical first-party docs via WebFetch.
+
 ## Boundary
 
 - No research workflow → research/WORKFLOW.md (`get_api_docs` is
