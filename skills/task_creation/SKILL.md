@@ -101,9 +101,13 @@ life variants): `framework/intent-tree.md` §intent_chain.
 Format: `docs/tasks/NNN.yaml` + `NNN.md` (see
 `framework/task-format.md`).
 
-**Required YAML fields:** `id`, `title`, `status`, `milestone`,
-`blocked_by`, `created`, `updated`, `effort` (S/M/L/XL, required
-when status=pending or in_progress).
+**Required YAML fields** (SoT: `framework/task-schema.yaml`):
+`id`, `title`, `status`, `milestone`, `blocked_by`, `created`,
+`updated`; plus `effort` (`S|M|L|XL`, strict) and `priority`
+(`high|medium|low`, write-strict) — both required on open
+(non-terminal) tasks. New tasks are open, so a new task MUST carry
+`effort` + `priority`. Field names + vocab live in the schema SoT,
+not here.
 
 **`milestone` MUST** be a key from `docs/plan.yaml` milestones.
 
@@ -134,7 +138,11 @@ fields (ACs, constraints, deps) when known.
 
 `python3 $FRAMEWORK_DIR/scripts/plan_engine.py --validate`. The
 new task must appear without an ERROR. Checks: milestone exists in
-plan.yaml, blocked_by references existing tasks, no cycle.
+plan.yaml, blocked_by references existing tasks, no cycle, **plus
+schema conformance against `framework/task-schema.yaml`** (field
+names, required-when-open `effort`+`priority`, value vocab).
+Calibration is `warn_first` until the backfill lands; a new task
+should be schema-clean on creation regardless.
 **FAIL →** correct the task file (milestone vs `docs/plan.yaml`,
 blocked_by IDs vs `docs/tasks/`) and re-validate. Repeated FAIL →
 delete the task files; escalate to the user (NNN is reused).

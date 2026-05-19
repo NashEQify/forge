@@ -36,7 +36,7 @@ Buddy, who runs this skill. Post-harness: NATS event handler.
 | task_id | int | yes | Task ID (NNN) |
 | new_status | enum | yes | Target status: pending, in_progress, done, blocked, superseded, wontfix, absorbed |
 | board_result | string | no | Board result: APPROVED, APPROVED_WITH_RISKS, REJECTED, PASS_WITH_RISKS, null. Written to YAML when given. |
-| readiness | enum | no | Spec readiness: raw, reviewed, ready, impl_ready. Written to YAML when given. |
+| readiness | enum | no | Spec readiness (schema SoT): raw, specced, reviewed, implementing, done. Written to YAML when given. |
 | reason | string | no | Free text; not stored — kept for traceability in chat. |
 | workflow_phase | string (soft-validated) | no | Current workflow phase. Written to YAML when given. Values: workflow-specific (e.g. specify, prepare, execute, verify, close, done; solve: frame, refine, artifact, validate, execute, done). |
 | spec_phase_update | object | no | Spec-phase update (see below). |
@@ -75,6 +75,14 @@ not in the known list — typo?"), still write (no hard block —
 future workflows can define new phases).
 
 Do not change other fields.
+
+**Schema conformance (SoT: `framework/task-schema.yaml`).** Values
+written here must conform to the schema vocab (`status`, `readiness`).
+After the write, the touched task is validated against the schema via
+`plan_engine --validate <id>`; on a schema FAIL, fix before reporting.
+Calibration is `warn_first` until the backfill lands (the schema's
+`strict_after_backfill` switch) — a WARN does not block the status
+change, a post-backfill BLOCK does.
 
 ### Step 3: convoy update (conditional)
 
@@ -194,8 +202,8 @@ Status update: [{task_id}] {title}
   done, blocked, superseded, wontfix, absorbed).
 - **Optional:** board_result — board result (APPROVED,
   APPROVED_WITH_RISKS, REJECTED, PASS_WITH_RISKS, null).
-- **Optional:** readiness — spec readiness (raw, reviewed,
-  ready, impl_ready).
+- **Optional:** readiness — spec readiness (schema SoT:
+  raw, specced, reviewed, implementing, done).
 - **Optional:** reason — free text for traceability.
 - **Optional:** workflow_phase — current workflow phase.
 - **Optional:** spec_phase_update — spec-phase transition
@@ -211,7 +219,7 @@ Status update: [{task_id}] {title}
 
 **DOES NOT DELIVER:**
 - No new tasks — that is `task_creation`.
-- No changes to title, area, prio, spec_ref — only
+- No changes to title, area, priority, spec_ref — only
   status-relevant fields.
 - No backlog writes — `plan_engine` computes overviews.
 
@@ -239,7 +247,7 @@ Status update: [{task_id}] {title}
 
 ## Boundary
 
-- **Limited field scope.** Title, area, prio, spec_ref, etc. are
+- **Limited field scope.** Title, area, priority, spec_ref, etc. are
   still edited directly. This skill writes: status, updated
   (always) + board_result, readiness, workflow_phase,
   spec_states (optional, when given).
