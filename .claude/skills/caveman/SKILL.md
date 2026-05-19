@@ -1,9 +1,9 @@
 ---
-name: frontend-design-tty
-description: Design system for dark, terminal-inspired web UIs (monospace, mint/sage on dark blue-grey, box drawing, hex labels, no rounded corners). Provides concrete CSS custom properties + component patterns + anti-patterns. Use when a new web UI is built or extended in TTY aesthetic (Huddle, BuddyAI dashboards, comparable apps), or when an existing element needs a conformance check.
+name: caveman
+description: Ultra-compressed communication mode. ~75% token reduction by dropping filler / articles / pleasantries while keeping full technical accuracy. Use when the user says "caveman mode", "talk like caveman", "use caveman", "less tokens", "be brief", or invokes /caveman.
 ---
 
-# Skill: frontend-design-tty (Wrapper)
+# Skill: caveman (Wrapper)
 
 <!-- generated-by: scripts/generate_skill_wrappers.py (do not hand-edit) -->
 
@@ -11,7 +11,7 @@ This is the Claude-Code-discoverable wrapper. The full
 orchestrator-neutral protocol — methodology, contract, modes,
 red flags — lives in the SoT:
 
-**SoT:** `skills/frontend_design_tty/SKILL.md`
+**SoT:** `skills/caveman/SKILL.md`
 
 Read the SoT and follow it. This wrapper is a generated derived
 artifact (`scripts/generate_skill_wrappers.py`); it exists only so

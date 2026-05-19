@@ -67,6 +67,8 @@ invocation:
 
 disable-model-invocation: true | false    # default false
 
+cc_wrapper: true | false    # OPTIONAL, override-only (see below)
+
 modes: [<mode-name>, ...]    # omit if monomodal
 ---
 ```
@@ -116,6 +118,22 @@ Vocabulary is strict for `primary`; extend only via spec update + hook allowlist
 - `false` default: in discovery pool
 
 Even if runtime ignores it, pre-commit + generators + Buddy logic use it.
+
+#### `cc_wrapper` (optional)
+Override-only bool for the CC skill-wrapper inclusion predicate
+(see §Wrapper — required derived artifact). **Absent ⇒ the implicit
+rule decides** — do not set it just to restate the implicit result.
+
+- `cc_wrapper: true` — force a wrapper even when the implicit rule
+  would not emit one (e.g. a `workflow-step` skill that still
+  benefits from proactive discovery, like `code_review_board` /
+  `get_api_docs`).
+- `cc_wrapper: false` — suppress a wrapper the implicit rule would
+  emit (opt a `user-facing`/`cross-cutting` skill out of CC
+  discovery / out of the public mirror).
+
+Type-strict: any non-bool value is a hard generator error
+(non-zero exit, no wrapper written).
 
 #### `modes`
 Optional for multimodal skills. Monomodal: omit field.
@@ -268,6 +286,52 @@ Post phase-G additions and archive moves are additive updates.
 
 ---
 
+## Wrapper — required derived artifact
+
+The Claude-Code skill-wrapper (`.claude/skills/<kebab>/SKILL.md`) is a
+**mechanically generated derived artifact**, never hand-authored. It is
+the thin, CC-discoverable proxy that lets Claude Code inject a skill
+into the available-skills system-reminder for proactive discovery; it
+carries no methodology — the SoT is `skills/<dir>/SKILL.md`.
+
+- **Generator (sole SoT writer):**
+  `scripts/generate_skill_wrappers.py`. Reads `skills/*/SKILL.md`
+  frontmatter, writes only under `.claude/skills/`. Byte-identical
+  on re-run (idempotent); orphan wrappers (source skill gone or no
+  longer eligible) are removed. Mirrors the
+  `generate_skill_map.py` generator+validator split. CLI:
+  default = write, `--check` = verify-only, non-zero exit on drift.
+- **Validator:** `consistency_check` check 10 (wrapper drift) —
+  mechanically `generate_skill_wrappers.py --check`.
+- **Inclusion predicate** (frontmatter-derived, no hand list).
+  A skill is wrapper-eligible iff:
+  - `status` not in {archived, deprecated}, AND
+  - `disable-model-invocation` != true, AND
+  - ( `invocation.primary` in {user-facing, cross-cutting}
+    OR `cc_wrapper: true` ), AND
+  - `cc_wrapper` != false.
+
+  `cc_wrapper` is the override-only escape hatch (see field
+  definition); absent ⇒ the implicit `invocation.primary` rule
+  decides.
+- **Failure modes:** malformed/missing frontmatter ⇒ skip + stderr
+  warning, continue (no crash); two eligible skills normalizing to
+  the same kebab name ⇒ hard error, non-zero exit, NO partial
+  write; `cc_wrapper` non-bool ⇒ hard error, non-zero exit.
+- **Description normalization:** the wrapper `description` is
+  token-normalized, not byte-copied. YAML block scalars (`|`, `>`)
+  are collapsed to a single line and runs of inter-token whitespace
+  are squeezed to one space; the trigger tokens themselves are
+  preserved verbatim, so discovery (which is token-level) is
+  unaffected. This is by design — the contract is token-level
+  preservation, not literal-formatting preservation.
+- **Distribution:** wrappers are committed and reach the public OSS
+  mirror via `scripts/release-sync.sh` (`.claude/skills/` is not in
+  the sync exclude). Hand-edits are reverted on the next generator
+  run and flagged by `consistency_check`.
+
+---
+
 ## Renames
 
 Stale cleanup in the same commit is required (CLAUDE.md §5).
@@ -290,6 +354,10 @@ Pre-commit check 7 (`scripts/skill_fm_validate.py`) over active
 
 `generate_skill_map.py` maintains AUTO block in `framework/skill-map.md`.
 Canonical section names are used by consistency checks.
+
+`generate_skill_wrappers.py` maintains the CC skill-wrapper set under
+`.claude/skills/` (derived artifact, see §Wrapper). Drift is caught by
+`consistency_check` check 10 (`generate_skill_wrappers.py --check`).
 
 ### Generator output strategy
 

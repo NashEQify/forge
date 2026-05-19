@@ -1,9 +1,9 @@
 ---
-name: frontend-design-tty
-description: Design system for dark, terminal-inspired web UIs (monospace, mint/sage on dark blue-grey, box drawing, hex labels, no rounded corners). Provides concrete CSS custom properties + component patterns + anti-patterns. Use when a new web UI is built or extended in TTY aesthetic (Huddle, BuddyAI dashboards, comparable apps), or when an existing element needs a conformance check.
+name: api-and-interface-design
+description: API and interface design discipline. Hyrum's law + one-version rule + contract-first + validate-at-boundaries + prefer-addition-over-modification + predictable-naming. Use when designing new APIs, module boundaries, type contracts between modules, REST / SSE endpoints, schema pipeline boundaries.
 ---
 
-# Skill: frontend-design-tty (Wrapper)
+# Skill: api-and-interface-design (Wrapper)
 
 <!-- generated-by: scripts/generate_skill_wrappers.py (do not hand-edit) -->
 
@@ -11,7 +11,7 @@ This is the Claude-Code-discoverable wrapper. The full
 orchestrator-neutral protocol — methodology, contract, modes,
 red flags — lives in the SoT:
 
-**SoT:** `skills/frontend_design_tty/SKILL.md`
+**SoT:** `skills/api_and_interface_design/SKILL.md`
 
 Read the SoT and follow it. This wrapper is a generated derived
 artifact (`scripts/generate_skill_wrappers.py`); it exists only so

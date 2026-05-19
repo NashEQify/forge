@@ -442,6 +442,7 @@ mechanism (trivially settable). The real failure class: Buddy forgets a skill, n
 | `workflow_engine.py` (~2.5k LoC) | YAML-driven workflow orchestration. --start, --next, --complete, --status, --recover |
 | `generate_skill_map.py` (230 LoC) | Regenerates the AUTO block in `framework/skill-map.md` from disk frontmatter |
 | `generate_navigation.py` (310 LoC) | Regenerates the AUTO block in 8 navigation.md files |
+| `generate_skill_wrappers.py` (~520 LoC) | Regenerates `.claude/skills/<name>/SKILL.md` Claude-Code discovery wrappers from skill frontmatter (Option-C inclusion + `cc_wrapper` override; marker-gated deletion); validator `consistency_check` Check 10 |
 | `generate_agent_skill_map.py` (~270 LoC) | Regenerates the AUTO block in opt-in `agents/<name>.md` + the aggregated `framework/agent-skill-map.md` from skill frontmatter `relevant_for:` |
 | `skill_fm_validate.py` (~280 LoC) | Pre-commit Check 7 — frontmatter validator incl. `relevant_for` |
 | `validate_runbook_consistency.py` (~210 LoC) | Pre-commit Check 9 — workflow.yaml ↔ WORKFLOW.md drift heuristic |

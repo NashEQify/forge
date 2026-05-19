@@ -1,16 +1,21 @@
 ---
 name: youtube-subtitles
-description: Use this skill to fetch and summarize a YouTube video via its subtitle track (no audio download, no transcription). Required path when User shares a YouTube URL and expects content extraction — manual workarounds (asking User for summary, hallucinating from video title) bypass the actual content. Triggers when a YouTube URL appears in User input combined with intent to extract/summarize/discuss content. Examples: "fass das video zusammen [youtube-link]", "was sagt das video über X", "schau dir das video an [youtube-link]", User pastes a YouTube URL with a question about the content.
+description: Read YouTube videos via subtitles instead of watching them. For research, references, and knowledge extraction. Triggers when a YouTube URL is shared with intent to extract or summarize its content; NOT for non-YouTube video or audio transcription.
 ---
 
 # Skill: youtube-subtitles (Wrapper)
 
-This is the Claude-Code-discoverable wrapper. The full protocol (subtitle
-fetch via yt-dlp, language-fallback, summarization format) lives in the
-orchestrator-neutral SoT:
+<!-- generated-by: scripts/generate_skill_wrappers.py (do not hand-edit) -->
+
+This is the Claude-Code-discoverable wrapper. The full
+orchestrator-neutral protocol — methodology, contract, modes,
+red flags — lives in the SoT:
 
 **SoT:** `skills/youtube_subtitles/SKILL.md`
 
-Read the SoT and follow it. This wrapper exists only so Claude Code can
-inject the skill into the available-skills system-reminder for proactive
-discovery — the methodology is unchanged.
+Read the SoT and follow it. This wrapper is a generated derived
+artifact (`scripts/generate_skill_wrappers.py`); it exists only so
+Claude Code can inject the skill into the available-skills
+system-reminder for proactive discovery. Do not hand-edit — edits
+are reverted on the next generator run and flagged by
+`consistency_check`.
