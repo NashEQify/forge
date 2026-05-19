@@ -1,0 +1,38 @@
+# F-CA-007: `terminal_status` corrupted to a scalar string (a single
+# quoting slip on the LOCKED schema). Pre-fix: a string fails the
+# isinstance(val, list) check in _schema_terminal_statuses -> set() ->
+# NO status is terminal -> every done/superseded/wontfix/absorbed task
+# silently reclassified open, NO ERROR, NO ESCALATE. Expected post-fix:
+# SCHEMA_FILE ERROR + ESCALATE (present-but-wrong-type nested key).
+# Minimal but well-formed task-schema fixture (F-CA-005 harness base).
+# Mirrors the structural shape of framework/task-schema.yaml that
+# validate_task_schema_conformance dereferences. The malformed
+# siblings differ from this by exactly ONE corrupted nested key.
+filename:
+  task_basename: '^[0-9]+$'
+  id_matches_basename: true
+required_always: [id, title, status, created, updated, milestone, blocked_by]
+required_when_open: [effort, priority]
+required_when_terminal: [id, status]
+terminal_status: "done"
+fields:
+  id: {type: int}
+  title: {type: str}
+  status:
+    type: enum
+    values: [pending, in_progress, done, superseded, wontfix, absorbed]
+  created: {type: date}
+  updated: {type: date}
+  milestone: {type: str}
+  blocked_by: {type: list_int}
+  effort:
+    type: enum
+    values: [S, M, L, XL]
+  priority:
+    type: enum
+    values: [high, medium, low]
+validator:
+  calibration: warn_first
+  strict_after_backfill: false
+  out_of_vocab: warn_until_strict
+  scope: all_repos

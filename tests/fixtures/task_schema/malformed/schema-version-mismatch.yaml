@@ -1,0 +1,36 @@
+# Version-pin fixture: structurally well-formed, but schema_version is
+# bumped to 2 while _TASK_SCHEMA_VERSION (the version the structural
+# descriptor _TASK_SCHEMA_SHAPE was authored against) is still 1. A
+# future INTENTIONAL schema evolution must FORCE a conscious descriptor
+# revisit rather than silently under-validate against a stale mirror.
+# Expected: SCHEMA_FILE ERROR + ESCALATE (schema_version != descriptor
+# version). This is the §4 version-pin half of the drift defense.
+schema_version: 2
+filename:
+  task_basename: '^[0-9]+$'
+  id_matches_basename: true
+required_always: [id, title, status, created, updated, milestone, blocked_by]
+required_when_open: [effort, priority]
+required_when_terminal: [id, status]
+terminal_status: [done, superseded, wontfix, absorbed]
+fields:
+  id: {type: int}
+  title: {type: str}
+  status:
+    type: enum
+    values: [pending, in_progress, done, superseded, wontfix, absorbed]
+  created: {type: date}
+  updated: {type: date}
+  milestone: {type: str}
+  blocked_by: {type: list_int}
+  effort:
+    type: enum
+    values: [S, M, L, XL]
+  priority:
+    type: enum
+    values: [high, medium, low]
+validator:
+  calibration: warn_first
+  strict_after_backfill: false
+  out_of_vocab: warn_until_strict
+  scope: all_repos
