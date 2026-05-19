@@ -96,6 +96,12 @@ REPO_ROOT = PROJECT_ROOT
 TASKS_DIR = PROJECT_ROOT / "docs" / "tasks"
 PLAN_PATH = PROJECT_ROOT / "docs" / "plan.yaml"
 
+# Task 327: machine-readable task-schema SoT. The validator parses THIS
+# file — field names, required-sets, value vocab, filename grammar and
+# calibration switches are read FROM the parsed dict, never re-encoded
+# in Python. Framework-internal → FRAMEWORK_ROOT (mirror AUTONOMY_SOT_PATH).
+TASK_SCHEMA_PATH = FRAMEWORK_ROOT / "framework" / "task-schema.yaml"
+
 EFFORT_WEIGHTS = {"S": 1, "M": 3, "L": 8, "XL": 20}
 DEFAULT_EFFORT_WEIGHT = 3  # M equivalent
 
@@ -2353,6 +2359,561 @@ def validate(
 
 
 # ---------------------------------------------------------------------------
+# Task-schema conformance (framework/task-schema.yaml SoT)
+# ---------------------------------------------------------------------------
+#
+# Read-only audit layer. It re-reads each docs/tasks/*.yaml via
+# yaml.safe_load — it MUST NOT consume the constructed Task (lossy:
+# status→pending, effort→M defaults, non-int blocked_by filtered,
+# priority not a Task field). Every field name / required-set / value
+# vocabulary / filename rule / calibration switch is dereferenced from
+# the parsed schema dict; zero schema knowledge is hardcoded here.
+#
+# Trust boundary (Task 327 — Approach C). `_load_task_schema` returns
+# `dict | None`; "is a dict" is NOT "is a valid schema". Every `.get()`
+# after the load is otherwise an unenforced trust assumption. Rather
+# than scattering per-site isinstance guards (which provably recurse one
+# nesting level deeper every pass), the document transitions from
+# *untrusted bytes* to *validated structure* at exactly ONE seam:
+# `_validate_schema_structure`, called first thing in
+# `validate_task_schema_conformance` (after the None-check, before any
+# consumer / re.compile). The expected shape is DECLARATIVE DATA
+# (`_TASK_SCHEMA_SHAPE`); a single generic walker interprets it. Adding
+# schema DEPTH later (a deeper node of an already-expressible kind) =
+# adding a data node, no new code branches.
+#
+# Scope of the guarantee — read this before trusting it. This boundary
+# closes exactly ONE class: the structural WRONG-TYPE class, i.e. a
+# key that IS PRESENT but whose value has the wrong Python type, at
+# any nesting depth. It does NOT express CONDITIONAL-REQUIREDNESS: a
+# key that is required only given a sibling's value (e.g. a field-def
+# with `type: enum` but the `values:` key entirely ABSENT) is
+# type-valid by this grammar and passes — the consumer then silently
+# drops that field's vocab. That is a KNOWN, owner-ACCEPTED residual
+# (code-adversary F-CA-009, MEDIUM, accepted): the descriptor grammar
+# below has no "required-because-of-a-sibling" construct, and adding
+# one WOULD be a new code branch. The accepted trigger is human
+# damage to the LOCKED framework/task-schema.yaml, not a code path.
+# Do not "fix" this in a comment pass and do not overstate the
+# guarantee in either direction.
+
+
+# Version this descriptor was authored against. MUST equal
+# `schema_version` in framework/task-schema.yaml. The positive-anchor
+# self-test asserts the real locked schema passes the walker; this pin
+# additionally forces a CONSCIOUS descriptor revisit on any intentional
+# schema evolution (mismatch -> _schema_defect ESCALATE, never silent
+# under-validation).
+_TASK_SCHEMA_VERSION = 1
+
+# Declarative structural mirror of framework/task-schema.yaml — the
+# closed set of nodes validate_task_schema_conformance dereferences
+# (mechanically equal to the `schema.get(...)` / nested-deref set; a
+# reviewer confirms via grep over the schema-consumer functions, not by
+# trusting this comment). Node grammar (all keys optional unless noted):
+#   type      : expected Python type (or tuple) for the value
+#   what      : human label for `type` (defect message)
+#   required  : True -> key MUST be present (default False; absent
+#               optional key != malformed -> no over-fire)
+#   elem_type : list-element expected type (only for type==list)
+#   elem_what : human label for elem_type
+#   children  : {child_key: node} — fixed-key sub-mapping
+#   each_value: node applied to EVERY value of a mapping
+#               (mapping-of-mappings, e.g. fields.<name>)
+#   when      : (sibling_key, sibling_value) — sibling-LOCALITY only:
+#               the node is type-checked ONLY when the sibling key
+#               equals that value (e.g. enum `values`). F-CR-001:
+#               `when` does NOT make the key conditionally REQUIRED —
+#               if the gated key is ABSENT it is simply skipped, never
+#               flagged. Conditional requiredness is not expressible
+#               in this grammar (see F-CA-009 residual note below).
+#
+# Provenance + scope (F-CA-009, accepted residual). _TASK_SCHEMA_SHAPE
+# (and _FIELD_DEF_SHAPE) is the structural MIRROR of
+# framework/task-schema.yaml — a SECOND structural description of the
+# schema in Python that MUST NOT silently drift from the YAML SoT. It
+# validates structural TYPE ONLY (a present key whose value is the
+# wrong type, at any depth); it deliberately does NOT validate
+# conditional-requiredness (a sibling-gated key being entirely
+# absent). That gap is the owner-accepted residual F-CA-009 (MEDIUM):
+# extreme edge case, trigger is human damage to the LOCKED schema, no
+# behavioural fix. A `schema_version` bump REQUIRES revisiting this
+# constant (the version pin enforces it); the self-test positive
+# anchor asserts the real schema passes here.
+_FIELD_DEF_SHAPE: dict = {
+    "type": dict,
+    "what": "a mapping",
+    "children": {
+        "type": {"type": str, "what": "a string"},
+        # enum vocab: a list ONLY when this field-def declares
+        # type==enum. A scalar here pre-fix silently disabled that
+        # field's vocab enforcement (F-CA-008) — now ESCALATE. NOTE
+        # (F-CA-009, accepted): `when` gates only the TYPE check. If
+        # `values` is entirely ABSENT under type==enum this descriptor
+        # does NOT flag it (no conditional-requiredness construct); the
+        # consumer then silently drops that field's vocab. Accepted
+        # residual — trigger is human damage to the LOCKED schema.
+        "values": {
+            "type": list,
+            "what": "a list",
+            "when": ("type", "enum"),
+        },
+        "read_aliases": {"type": dict, "what": "a mapping"},
+    },
+}
+
+_TASK_SCHEMA_SHAPE: dict = {
+    "type": dict,
+    "what": "a mapping",
+    "children": {
+        # Version pin (see _TASK_SCHEMA_VERSION + the exact-match
+        # check in _validate_schema_structure).
+        "schema_version": {"type": int, "what": "an int"},
+        "filename": {
+            "type": dict,
+            "what": "a mapping",
+            "children": {
+                # task_basename feeds re.compile() — a non-str pre-fix
+                # raised an uncaught TypeError (F-CA-008 crash class).
+                "task_basename": {"type": str, "what": "a string"},
+                "id_matches_basename": {"type": bool, "what": "a bool"},
+            },
+        },
+        "required_always": {
+            "type": list, "what": "a list",
+            "elem_type": str, "elem_what": "a string",
+        },
+        "required_when_open": {
+            "type": list, "what": "a list",
+            "elem_type": str, "elem_what": "a string",
+        },
+        "required_when_terminal": {
+            "type": list, "what": "a list",
+            "elem_type": str, "elem_what": "a string",
+        },
+        "terminal_status": {
+            "type": list, "what": "a list",
+            "elem_type": str, "elem_what": "a string",
+        },
+        "fields": {
+            "type": dict,
+            "what": "a mapping",
+            "each_value": _FIELD_DEF_SHAPE,
+        },
+        "validator": {
+            "type": dict,
+            "what": "a mapping",
+            "children": {
+                # F-CA-002 locked: non-bool present -> defect/ESCALATE,
+                # NEVER bool()/string-literal coercion.
+                "strict_after_backfill": {"type": bool, "what": "a bool"},
+            },
+        },
+    },
+}
+
+
+def _walk_schema_shape(node: dict, value: object, path: str) -> str | None:
+    """Generic data-driven checker: walk `node` (a _TASK_SCHEMA_SHAPE
+    descriptor) against `value`. Returns None when conforming, else a
+    single human-readable defect string.
+
+    Pure interpreter of the descriptor DATA — there is NO per-key
+    isinstance ladder here. Adding a schema node = adding a data entry
+    in _TASK_SCHEMA_SHAPE; this function never grows. Absent optional
+    key != malformed (over-fire-safe): a child is only validated when
+    PRESENT, unless its node sets required=True.
+    """
+    expected = node.get("type")
+    if expected is not None and not isinstance(value, expected):
+        # bool is an int subclass — guard would mis-accept True as int.
+        # _TASK_SCHEMA_SHAPE has no int node that may receive a bool,
+        # but be explicit so a future int node is not silently fooled.
+        what = node.get("what", "the expected type")
+        return (f"{path!r} must be {what}, got "
+                f"{type(value).__name__}")
+    if expected is int and isinstance(value, bool):
+        what = node.get("what", "the expected type")
+        return f"{path!r} must be {what}, got bool"
+
+    elem_type = node.get("elem_type")
+    if elem_type is not None and isinstance(value, list):
+        for idx, elem in enumerate(value):
+            if not isinstance(elem, elem_type):
+                elem_what = node.get("elem_what", "the expected type")
+                return (f"{path}[{idx}] must be {elem_what}, got "
+                        f"{type(elem).__name__}")
+
+    children = node.get("children")
+    if children is not None and isinstance(value, dict):
+        for child_key, child_node in children.items():
+            present = child_key in value
+            if not present:
+                if child_node.get("required"):
+                    return (f"{path}.{child_key!r} is required but "
+                            "absent")
+                continue
+            when = child_node.get("when")
+            if when is not None:
+                sib_key, sib_val = when
+                if value.get(sib_key) != sib_val:
+                    continue
+            child_val = value.get(child_key)
+            # Absent optional key != malformed: a YAML null is treated
+            # as absent (parity with the prior `is not None` predicate
+            # the byte-identical bar depends on).
+            if child_val is None and not child_node.get("required"):
+                continue
+            sub = _walk_schema_shape(
+                child_node, child_val, f"{path}.{child_key}")
+            if sub is not None:
+                return sub
+
+    each_value = node.get("each_value")
+    if each_value is not None and isinstance(value, dict):
+        for k, v in value.items():
+            sub = _walk_schema_shape(each_value, v, f"{path}.{k}")
+            if sub is not None:
+                return sub
+
+    return None
+
+
+def _validate_schema_structure(schema: dict) -> str | None:
+    """THE trust boundary. Transition the parsed schema from untrusted
+    bytes to validated structure. Returns None on a conforming schema,
+    else a single human-readable defect string (the caller routes it
+    through `_schema_defect` -> SCHEMA_FILE ERROR + ESCALATE — no
+    divergent error path).
+
+    Two-part drift defense (Task 327's own thesis):
+      1. Generic walk of _TASK_SCHEMA_SHAPE (the structural mirror).
+      2. schema_version pin: the loaded version MUST equal the version
+         the descriptor was authored against, so an intentional schema
+         evolution FORCES a conscious descriptor update instead of
+         silent under-validation.
+    """
+    defect = _walk_schema_shape(_TASK_SCHEMA_SHAPE, schema, "schema")
+    if defect is not None:
+        return defect
+    sv = schema.get("schema_version")
+    if sv is not None and sv != _TASK_SCHEMA_VERSION:
+        return (f"schema_version {sv!r} != descriptor version "
+                f"{_TASK_SCHEMA_VERSION} — the structural descriptor "
+                "_TASK_SCHEMA_SHAPE is out of date relative to "
+                "framework/task-schema.yaml; the descriptor MUST be "
+                "revisited for this schema_version before validation "
+                "can be trusted")
+    return None
+
+
+def _load_task_schema(schema_path: Path | None = None) -> dict | None:
+    """Parse the machine-readable task-schema SoT.
+
+    Returns the parsed dict, or None when the file is missing or
+    unparseable (the caller turns None into a SCHEMA_FILE ERROR and
+    escalates — there is no invented default).
+    """
+    path = schema_path if schema_path is not None else TASK_SCHEMA_PATH
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    try:
+        data = yaml.safe_load(raw)
+    except yaml.YAMLError:
+        return None
+    if not isinstance(data, dict):
+        return None
+    return data
+
+
+def _schema_terminal_statuses(schema: dict) -> set:
+    val = schema.get("terminal_status")
+    return set(val) if isinstance(val, list) else set()
+
+
+def _schema_field_defs(schema: dict) -> dict:
+    fields = schema.get("fields")
+    return fields if isinstance(fields, dict) else {}
+
+
+def _schema_known_field_names(schema: dict) -> set:
+    """Every field name the schema knows: fields map + every required set."""
+    names: set = set(_schema_field_defs(schema).keys())
+    for key in ("required_always", "required_when_open", "required_when_terminal"):
+        val = schema.get(key)
+        if isinstance(val, list):
+            names.update(val)
+    return names
+
+
+def _schema_enum_values(field_def: object) -> list | None:
+    if isinstance(field_def, dict) and field_def.get("type") == "enum":
+        vals = field_def.get("values")
+        if isinstance(vals, list):
+            return vals
+    return None
+
+
+def validate_task_schema_conformance(
+    project_root: Path | None = None,
+    single_id: int | None = None,
+    schema_path: Path | None = None,
+) -> list[ValidationIssue]:
+    """Schema-driven conformance pass over raw task YAML dicts.
+
+    - project_root: repo root (or its docs/tasks dir). None → PROJECT_ROOT.
+    - single_id: when set, only docs/tasks/<id>.yaml is checked (no
+      milestone / cycle / cross-repo — pure schema check).
+    - schema_path: override for the schema SoT (self-test injection).
+
+    Severity is DATA-DRIVEN from validator.* in the schema:
+      * structural (missing id, unparseable pure-numeric YAML,
+        id != int(basename)) → ERROR regardless of calibration.
+      * missing required_when_open / out-of-vocab → WARN while
+        validator.strict_after_backfill is false, else ERROR.
+      * unknown status value → tolerant, classified open, never error.
+    """
+    import re
+
+    issues: list[ValidationIssue] = []
+
+    schema = _load_task_schema(schema_path)
+    if schema is None:
+        target = schema_path if schema_path is not None else TASK_SCHEMA_PATH
+        issues.append(ValidationIssue(
+            "SCHEMA_FILE", "ERROR",
+            detail=(f"task-schema SoT missing/unparseable: {target} — "
+                    "ESCALATE: cannot validate task conformance without the "
+                    "schema; tree NOT silently passed")))
+        return issues
+
+    def _schema_defect(detail: str) -> list[ValidationIssue]:
+        return [ValidationIssue(
+            "SCHEMA_FILE", "ERROR",
+            detail=(f"task-schema SoT structurally invalid: {detail} — "
+                    "ESCALATE: cannot validate task conformance with a "
+                    "malformed schema; tree NOT silently passed"))]
+
+    # THE trust boundary (Task 327 — Approach C). Ordering is
+    # load-bearing: None-check FIRST (above, unchanged), structural
+    # check SECOND, both BEFORE any `_schema_*` consumer or re.compile.
+    # The expected shape is declarative DATA (_TASK_SCHEMA_SHAPE) walked
+    # by a single generic checker — there is no per-site isinstance
+    # ladder here, so a deeper nesting level cannot recur the F-CA-001/
+    # 007/008 defect class (it would be a missing DATA node, caught by
+    # the §4 positive anchor self-test, not a missing code branch). A
+    # present-but-wrong-type node (including filename.task_basename,
+    # fields.<name>.values, validator.strict_after_backfill — the
+    # F-CA-002/008 keys) is fail-safe to the SAME contract as a missing
+    # schema: SCHEMA_FILE ERROR + ESCALATE, never a traceback, never a
+    # silent degrade. Absent optional key != malformed (over-fire-safe).
+    if (d := _validate_schema_structure(schema)) is not None:
+        return _schema_defect(d)
+
+    # Past the boundary the schema is validated structure: `filename`
+    # dict-or-absent, the four list keys lists, `fields` a mapping of
+    # mappings, `validator` dict-or-absent, strict_after_backfill
+    # bool-or-absent. These reads are now trusted (the `_schema_*`
+    # accessors keep their defensive isinstance as a no-op on a
+    # conformant schema — they are trusted-read accessors, NOT the
+    # removed per-site schema guards).
+    filename_raw = schema.get("filename")
+    filename_rules = filename_raw if isinstance(filename_raw, dict) else {}
+    task_basename_re = filename_rules.get("task_basename") or r"^[0-9]+$"
+    id_matches_basename = bool(filename_rules.get("id_matches_basename"))
+
+    field_defs = _schema_field_defs(schema)
+    known_fields = _schema_known_field_names(schema)
+    required_always = list(schema.get("required_always") or [])
+    required_when_open = list(schema.get("required_when_open") or [])
+    terminal_statuses = _schema_terminal_statuses(schema)
+
+    validator_raw = schema.get("validator")
+    validator_cfg = validator_raw if isinstance(validator_raw, dict) else {}
+    # F-CA-002 (locked): the calibration switch is a Python bool by
+    # schema contract. The trust boundary already rejected a present
+    # non-bool (-> SCHEMA_FILE ERROR + ESCALATE, NO bool()/string
+    # coercion). Absent -> warn-first default (False).
+    saf_raw = validator_cfg.get("strict_after_backfill")
+    strict_after_backfill = saf_raw if isinstance(saf_raw, bool) else False
+    # Calibration switch read in FULL — never assume strict. The
+    # required/out-of-vocab severity is WARN until BOTH the backfill is
+    # merged AND the switch is flipped (out_of_vocab/calibration are
+    # advisory while strict_after_backfill is false).
+    soft_severity = "ERROR" if strict_after_backfill else "WARN"
+
+    name_re = re.compile(task_basename_re)
+
+    # Resolve the tasks directory (mirror load_tasks path-resolution).
+    if project_root is None:
+        tasks_dir = TASKS_DIR
+    elif project_root.name == "tasks" and project_root.is_dir():
+        tasks_dir = project_root
+    else:
+        tasks_dir = project_root / "docs" / "tasks"
+
+    if single_id is not None:
+        # F-CA-003b (belt): a single-id target has an explicit name that
+        # MUST resolve or error — it may never silently `continue`. The
+        # negative/zero argv case is rejected at the dispatch boundary
+        # (exit 2); this guard is defence-in-depth for direct callers.
+        if not name_re.match(str(single_id)):
+            issues.append(ValidationIssue(
+                "SCHEMA_FILE", "ERROR", task_id=single_id,
+                detail=(f"invalid single-id target {single_id!r}: fails "
+                        f"task_basename grammar {task_basename_re!r} — "
+                        "ESCALATE: single-id has an explicit target that "
+                        "must resolve or error, never silently skipped")))
+            return issues
+        # F-CA-004: archived terminal tasks live in
+        # docs/tasks/archive/<id>.yaml. In single-id mode, fall back to
+        # the archive when the primary path is absent — an archived task
+        # is terminal (only id+status enforced), NOT a 'file not found'
+        # ERROR.
+        primary = tasks_dir / f"{single_id}.yaml"
+        archived = tasks_dir / "archive" / f"{single_id}.yaml"
+        if primary.exists():
+            candidates = [primary]
+        elif archived.exists():
+            candidates = [archived]
+        else:
+            issues.append(ValidationIssue(
+                "SCHEMA_FILE", "ERROR", task_id=single_id,
+                detail=f"task file not found: {primary}"))
+            return issues
+    else:
+        candidates = sorted(p for p in tasks_dir.glob("*.yaml"))
+
+    # F-CA-005e: zero-pad duplicate-logical-id collision. `327.yaml` and
+    # `0327.yaml` both map to int(basename)=327 — pre-fix BOTH were
+    # silently validated as task 327. Detect as a duplicate-id ERROR
+    # (calibration-independent structural defect).
+    if single_id is None:
+        by_logical: dict[int, list[str]] = {}
+        for p in candidates:
+            bn = p.stem
+            if name_re.match(bn):
+                by_logical.setdefault(int(bn), []).append(p.name)
+        for lid, names in sorted(by_logical.items()):
+            if len(names) > 1:
+                issues.append(ValidationIssue(
+                    "SCHEMA_ID_MISMATCH", "ERROR", task_id=lid,
+                    detail=(f"duplicate logical task id {lid}: "
+                            f"{sorted(names)} all resolve to "
+                            f"int(basename)={lid}")))
+
+    for yaml_path in candidates:
+        basename = yaml_path.stem
+        # Filename grammar: a *task* has a pure-numeric basename. Any
+        # NNN-<suffix> aux file is never a task — never validated/errored.
+        if not name_re.match(basename):
+            continue
+
+        basename_int = int(basename)
+        tid_for_issue: int | None = basename_int
+
+        try:
+            data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
+        except (yaml.YAMLError, OSError):
+            # A pure-numeric file that won't parse is a structural ERROR
+            # (calibration-independent) — it claims to be a task.
+            issues.append(ValidationIssue(
+                "SCHEMA_FILE", "ERROR", task_id=tid_for_issue,
+                detail=f"unparseable task YAML: {yaml_path}"))
+            continue
+
+        if not isinstance(data, dict):
+            issues.append(ValidationIssue(
+                "SCHEMA_FILE", "ERROR", task_id=tid_for_issue,
+                detail=f"task YAML is not a mapping: {yaml_path}"))
+            continue
+
+        raw_id = data.get("id")
+        # Structural: missing id (ERROR regardless of calibration).
+        if raw_id is None:
+            issues.append(ValidationIssue(
+                "SCHEMA_MISSING_REQUIRED", "ERROR", task_id=tid_for_issue,
+                detail=f"required field 'id' missing in {yaml_path.name}"))
+        else:
+            try:
+                id_int = int(raw_id) if not isinstance(raw_id, bool) else None
+            except (TypeError, ValueError):
+                id_int = None
+            if id_int is None:
+                issues.append(ValidationIssue(
+                    "SCHEMA_ID_MISMATCH", "ERROR", task_id=tid_for_issue,
+                    detail=f"'id' is not an int: {raw_id!r} in {yaml_path.name}"))
+            elif id_matches_basename and id_int != basename_int:
+                # Structural: id != int(basename) — ERROR regardless.
+                issues.append(ValidationIssue(
+                    "SCHEMA_ID_MISMATCH", "ERROR", task_id=tid_for_issue,
+                    detail=(f"id {id_int} != int(basename) {basename_int} "
+                            f"in {yaml_path.name}")))
+
+        # Status classification. Unknown value → tolerant-read-as-open,
+        # never silently terminal, never an error.
+        raw_status = data.get("status")
+        is_open = True
+        if isinstance(raw_status, str) and raw_status in terminal_statuses:
+            is_open = False
+        # raw_status not in the schema status enum → unknown → stays open.
+
+        # Required-set checks.
+        for fname in required_always:
+            if data.get(fname) is None:
+                # 'id' already handled structurally above.
+                if fname == "id":
+                    continue
+                issues.append(ValidationIssue(
+                    "SCHEMA_MISSING_REQUIRED", soft_severity,
+                    task_id=tid_for_issue,
+                    detail=(f"required-always field '{fname}' missing in "
+                            f"{yaml_path.name}")))
+        if is_open:
+            for fname in required_when_open:
+                if data.get(fname) is None:
+                    issues.append(ValidationIssue(
+                        "SCHEMA_MISSING_REQUIRED", soft_severity,
+                        task_id=tid_for_issue,
+                        detail=(f"required-when-open field '{fname}' missing "
+                                f"in {yaml_path.name} (status="
+                                f"{raw_status!r}, classified open)")))
+
+        # Unknown field names (forward-compat: WARN, never blocks).
+        for key in data:
+            if key not in known_fields:
+                issues.append(ValidationIssue(
+                    "SCHEMA_UNKNOWN_FIELD", "WARN", task_id=tid_for_issue,
+                    detail=(f"unknown field '{key}' in {yaml_path.name} "
+                            "(not in task-schema.yaml fields/required sets)")))
+
+        # Value-vocabulary checks. Every enum field's vocab is read from
+        # the schema. priority is write-strict: read_aliases are tolerant
+        # on READ-classification only; an alias written into a YAML is
+        # out-of-vocab here.
+        for fname, fdef in field_defs.items():
+            enum_vals = _schema_enum_values(fdef)
+            if enum_vals is None:
+                continue
+            if fname not in data or data.get(fname) is None:
+                continue
+            value = data.get(fname)
+            if value in enum_vals:
+                continue
+            if fname == "status":
+                # Unknown status is tolerant (handled above) — not vocab err.
+                continue
+            issues.append(ValidationIssue(
+                "SCHEMA_VOCAB", soft_severity, task_id=tid_for_issue,
+                detail=(f"field '{fname}' value {value!r} not in schema "
+                        f"vocab {enum_vals} ({yaml_path.name})")))
+
+    return issues
+
+
+# ---------------------------------------------------------------------------
 # Autonomy Consistency (framework/agent-autonomy.md SoT)
 # ---------------------------------------------------------------------------
 
@@ -3411,10 +3972,396 @@ def _run_self_test() -> int:
     else:
         _fail(f"Smoke-7: out_int={out_int!r} out_str={out_str!r} out_list={out_list!r} out_post={out_post!r}")
 
+    # Task 327: task-schema conformance adversary suite (RED-first).
+    schema_rc = _run_task_schema_self_test()
+    if schema_rc != 0:
+        failures.append("task-schema self-test suite")
+
     if failures:
         print(f"\n{len(failures)} self-test failure(s).")
         return 1
     print("\nAll smoke-tests passed.")
+    return 0
+
+
+def _run_task_schema_self_test() -> int:
+    """Task 327: adversary suite for the schema-driven task-conformance pass.
+
+    Fixture-harness pattern (no pytest in framework repo, B-5 Lock).
+    Exercises TC-1..TC-12 from docs/tasks/327-delegation.md against
+    tests/fixtures/task_schema/. Returns 0 on all-PASS, 1 otherwise.
+    """
+    base = FRAMEWORK_ROOT / "tests" / "fixtures" / "task_schema"
+    conformant = base / "conformant"
+    consumer = base / "consumer"
+    single = base / "single"
+    schema_path = FRAMEWORK_ROOT / "framework" / "task-schema.yaml"
+
+    failures: list[str] = []
+
+    def _ok(msg: str) -> None:
+        print(f"  [PASS] {msg}")
+
+    def _fail(msg: str) -> None:
+        print(f"  [FAIL] {msg}")
+        failures.append(msg)
+
+    def _by_task(issues: list[ValidationIssue], tid: int) -> list[ValidationIssue]:
+        return [i for i in issues if i.task_id == tid]
+
+    def _checks(issues: list[ValidationIssue], tid: int) -> set[str]:
+        return {i.check for i in _by_task(issues, tid)}
+
+    print("\nplan_engine --self-test (Task 327 task-schema conformance)")
+
+    # Conformant tree (TC-5 + TC-7): zero issues, aux files never tasks.
+    conf_issues = validate_task_schema_conformance(
+        project_root=conformant, schema_path=schema_path)
+    if conf_issues:
+        _fail(f"TC-5: conformant tree produced issues: "
+              f"{[(i.check, i.task_id, i.detail) for i in conf_issues]}")
+    else:
+        _ok("TC-5: conformant tree -> 0 schema issues")
+    aux_ids = {i.task_id for i in conf_issues}
+    if 327 in aux_ids or 999 in aux_ids:
+        _fail("TC-7: aux file (327-gates/-delegation/999-notes) raised a task issue")
+    else:
+        _ok("TC-7: aux NNN-<suffix> files classified non-task (0 task issues)")
+
+    # Consumer adversary tree (TC-1..4, TC-6, TC-10, TC-11).
+    cons = validate_task_schema_conformance(
+        project_root=consumer, schema_path=schema_path)
+
+    # TC-1: wrong field name 'prioritee' -> UNKNOWN_FIELD WARN + missing-priority WARN
+    c200 = _checks(cons, 200)
+    sev200 = {i.check: i.severity for i in _by_task(cons, 200)}
+    if {"SCHEMA_UNKNOWN_FIELD", "SCHEMA_MISSING_REQUIRED"} <= c200 \
+            and sev200.get("SCHEMA_UNKNOWN_FIELD") == "WARN" \
+            and sev200.get("SCHEMA_MISSING_REQUIRED") == "WARN":
+        _ok("TC-1: 'prioritee' -> UNKNOWN_FIELD WARN + MISSING_REQUIRED(priority) WARN")
+    else:
+        _fail(f"TC-1: task 200 checks={sev200}")
+
+    # TC-2: missing priority on open task -> MISSING_REQUIRED WARN (calibration proof)
+    i201 = _by_task(cons, 201)
+    mr201 = [i for i in i201 if i.check == "SCHEMA_MISSING_REQUIRED"]
+    if mr201 and all(i.severity == "WARN" for i in mr201) \
+            and any("priority" in i.detail for i in mr201):
+        _ok("TC-2: missing priority open -> MISSING_REQUIRED WARN (warn_first calibration)")
+    else:
+        _fail(f"TC-2: task 201 missing-required={[(i.severity, i.detail) for i in mr201]}")
+
+    # TC-3: effort 'S-M' -> VOCAB WARN
+    v202 = [i for i in _by_task(cons, 202) if i.check == "SCHEMA_VOCAB"]
+    if v202 and all(i.severity == "WARN" for i in v202) \
+            and any("effort" in i.detail for i in v202):
+        _ok("TC-3: effort 'S-M' -> SCHEMA_VOCAB WARN")
+    else:
+        _fail(f"TC-3: task 202 vocab={[(i.severity, i.detail) for i in v202]}")
+
+    # TC-4: priority 'mid' written -> VOCAB WARN (write-strict, alias not allowed on write)
+    v203 = [i for i in _by_task(cons, 203) if i.check == "SCHEMA_VOCAB"]
+    if v203 and all(i.severity == "WARN" for i in v203) \
+            and any("priority" in i.detail for i in v203):
+        _ok("TC-4: priority 'mid' written -> SCHEMA_VOCAB WARN (write-strict)")
+    else:
+        _fail(f"TC-4: task 203 vocab={[(i.severity, i.detail) for i in v203]}")
+
+    # TC-6: cross-repo — issues located on the correct consumer task ids.
+    cons_ids = {i.task_id for i in cons}
+    if {200, 201, 202, 203} <= cons_ids and 206 not in cons_ids:
+        _ok("TC-6: cross-repo consumer fixture -> issues located on offenders only")
+    else:
+        _fail(f"TC-6: consumer issue ids={sorted(x for x in cons_ids if x is not None)}")
+
+    # TC-10: status 'deferred' (unknown) -> tolerant-read-as-open, NOT terminal.
+    # Proof: open => required_when_open enforced => missing priority WARN raised.
+    mr204 = [i for i in _by_task(cons, 204)
+             if i.check == "SCHEMA_MISSING_REQUIRED" and "priority" in i.detail]
+    if mr204:
+        _ok("TC-10: status 'deferred' -> classified open (missing-priority raised)")
+    else:
+        _fail("TC-10: status 'deferred' was NOT treated as open")
+
+    # TC-11: id:999 in 205.yaml -> SCHEMA_ID_MISMATCH ERROR (calibration-independent).
+    idm = [i for i in _by_task(cons, 205) if i.check == "SCHEMA_ID_MISMATCH"]
+    if not idm:
+        # task_id may resolve to basename int (205) or yaml id (999) — check both
+        idm = [i for i in cons if i.check == "SCHEMA_ID_MISMATCH"
+               and i.task_id in (205, 999)]
+    if idm and all(i.severity == "ERROR" for i in idm):
+        _ok("TC-11: id:999 in 205.yaml -> SCHEMA_ID_MISMATCH ERROR")
+    else:
+        _fail(f"TC-11: id-mismatch issues={[(i.task_id, i.severity) for i in idm]}")
+
+    # TC-8: single-id mode — --validate <id> reports only that task, exit 0/1.
+    s327 = validate_task_schema_conformance(
+        project_root=single, single_id=327, schema_path=schema_path)
+    s327_ids = {i.task_id for i in s327}
+    if s327_ids <= {327} and 328 not in s327_ids:
+        _ok("TC-8: --validate 327 single-id -> only task 327, no 328 bleed")
+    else:
+        _fail(f"TC-8: single-id 327 reported ids={sorted(x for x in s327_ids if x is not None)}")
+    # exit-code contract: structural ERROR on single id -> non-clean
+    s329 = validate_task_schema_conformance(
+        project_root=single, single_id=329, schema_path=schema_path)
+    has_err_329 = any(i.severity == "ERROR" for i in s329)
+    if has_err_329:
+        _ok("TC-8: single-id structural ERROR -> non-clean (exit 1 path)")
+    else:
+        _fail(f"TC-8: single-id 329 produced no ERROR: {[(i.check, i.severity) for i in s329]}")
+    # vocab-only single id (327, priority mid) is WARN -> clean exit-0 path
+    if not any(i.severity == "ERROR" for i in s327):
+        _ok("TC-8: single-id vocab-only -> WARN, clean (exit 0 path, warn_first)")
+    else:
+        _fail(f"TC-8: single-id 327 unexpectedly ERROR: {[(i.check, i.severity) for i in s327]}")
+
+    # TC-12: schema file missing -> SCHEMA_FILE ERROR + escalation, no silent pass.
+    missing = FRAMEWORK_ROOT / "tests" / "fixtures" / "task_schema" / "__no_such_schema__.yaml"
+    tc12 = validate_task_schema_conformance(
+        project_root=conformant, schema_path=missing)
+    sf = [i for i in tc12 if i.check == "SCHEMA_FILE"]
+    if sf and all(i.severity == "ERROR" for i in sf) \
+            and any("ESCALATE" in i.detail for i in sf):
+        _ok("TC-12: schema file missing -> SCHEMA_FILE ERROR + ESCALATE marker")
+    else:
+        _fail(f"TC-12: missing-schema issues={[(i.check, i.severity, i.detail) for i in sf]}")
+
+    # -------------------------------------------------------------------
+    # Code-adversary fix-pass RED-first cases (F-CA-001..006).
+    # Each was RED against pre-fix code and is GREEN after the
+    # corresponding root-fix. See docs/reviews/code/327-code-adversary.md.
+    # -------------------------------------------------------------------
+    malformed = base / "malformed"
+
+    def _schema_file_escalate(issues: list[ValidationIssue]) -> bool:
+        sfx = [i for i in issues if i.check == "SCHEMA_FILE"]
+        return (bool(sfx)
+                and all(i.severity == "ERROR" for i in sfx)
+                and any("ESCALATE" in i.detail for i in sfx))
+
+    # F-CA-001a: `validator` is a scalar string (truthy non-dict). The
+    # top-level doc is a valid mapping, so this is NOT the missing-file
+    # path — it is the partial-corruption path that pre-fix crashed with
+    # an uncaught AttributeError. Expect SCHEMA_FILE ERROR + ESCALATE.
+    try:
+        ca1a = validate_task_schema_conformance(
+            project_root=conformant,
+            schema_path=malformed / "schema-validator-scalar.yaml")
+        if _schema_file_escalate(ca1a):
+            _ok("F-CA-001a: validator-as-scalar -> SCHEMA_FILE ERROR + ESCALATE (no crash)")
+        else:
+            _fail(f"F-CA-001a: validator-scalar issues="
+                  f"{[(i.check, i.severity) for i in ca1a]}")
+    except Exception as exc:  # noqa: BLE001 — the bug IS an uncaught exc
+        _fail(f"F-CA-001a: validator-as-scalar CRASHED ({exc!r}) — not fail-safe")
+
+    # F-CA-001b: same class on `filename` (the second live instance).
+    try:
+        ca1b = validate_task_schema_conformance(
+            project_root=conformant,
+            schema_path=malformed / "schema-filename-scalar.yaml")
+        if _schema_file_escalate(ca1b):
+            _ok("F-CA-001b: filename-as-scalar -> SCHEMA_FILE ERROR + ESCALATE (no crash)")
+        else:
+            _fail(f"F-CA-001b: filename-scalar issues="
+                  f"{[(i.check, i.severity) for i in ca1b]}")
+    except Exception as exc:  # noqa: BLE001
+        _fail(f"F-CA-001b: filename-as-scalar CRASHED ({exc!r}) — not fail-safe")
+
+    # F-CA-007: the F-CA-001 root cause (no escalate on a malformed
+    # trusted-config nested key) generalized to EVERY sibling
+    # nested-structure key the SAME function reads. A present-but-wrong-
+    # type key must fail-safe to SCHEMA_FILE ERROR + ESCALATE, never a
+    # silent degrade to set()/[] (which reclassifies every terminal task
+    # open / drops the real required-set with NO diagnostic). RED pre-fix
+    # (silent WARN drift, no ESCALATE), GREEN post-fix.
+    for ca7_fix, ca7_label in (
+        ("schema-terminal-scalar.yaml",
+         "terminal_status='done' (scalar) -> not silent set() drift"),
+        ("schema-required-always-scalar.yaml",
+         "required_always='id' (scalar) -> not silent list('id') drift"),
+    ):
+        try:
+            ca7 = validate_task_schema_conformance(
+                project_root=conformant,
+                schema_path=malformed / ca7_fix)
+            if _schema_file_escalate(ca7):
+                _ok(f"F-CA-007: {ca7_label} -> SCHEMA_FILE ERROR + ESCALATE")
+            else:
+                _fail(f"F-CA-007: {ca7_fix} issues="
+                      f"{[(i.check, i.severity) for i in ca7]}")
+        except Exception as exc:  # noqa: BLE001
+            _fail(f"F-CA-007: {ca7_fix} CRASHED ({exc!r}) — not fail-safe")
+
+    # -------------------------------------------------------------------
+    # Task 327 STRUCTURAL trust-boundary (Approach C). The per-site-guard
+    # strategy failed convergence 3x (F-CA-001 -> 007 -> 008, same class
+    # one nesting level deeper each pass). The fix is ONE declarative
+    # trust boundary: _validate_schema_structure walks the DATA constant
+    # _TASK_SCHEMA_SHAPE. Coverage scales with the descriptor by
+    # construction: one corrupt-node fixture PER node.
+    # -------------------------------------------------------------------
+
+    # THE single non-negotiable test (a reviewer checks this FIRST):
+    # the REAL framework/task-schema.yaml must itself PASS the structural
+    # walker. If the locked schema and the descriptor ever disagree this
+    # fails loudly (closes the descriptor-DRIFT failure mode). NOTE: this
+    # does NOT close F-CA-009 (conditional-requiredness — a sibling-gated
+    # key absent); that is an owner-accepted residual, not covered here.
+    real_schema = _load_task_schema(schema_path)
+    if real_schema is not None \
+            and _validate_schema_structure(real_schema) is None:
+        _ok("327-anchor: real framework/task-schema.yaml PASSES "
+            "_validate_schema_structure (positive drift anchor)")
+    else:
+        _fail("327-anchor: real framework/task-schema.yaml does NOT pass "
+              f"_validate_schema_structure: "
+              f"{_validate_schema_structure(real_schema) if real_schema else 'unloadable'}")
+
+    # Version pin: the loaded schema_version MUST equal the version the
+    # descriptor was authored against, so an intentional schema evolution
+    # FORCES a conscious descriptor revisit (not silent under-validation).
+    if real_schema is not None \
+            and real_schema.get("schema_version") == _TASK_SCHEMA_VERSION:
+        _ok(f"327-pin: schema_version pin matches descriptor "
+            f"(_TASK_SCHEMA_VERSION={_TASK_SCHEMA_VERSION})")
+    else:
+        _fail(f"327-pin: schema_version "
+              f"{real_schema.get('schema_version') if real_schema else None} "
+              f"!= _TASK_SCHEMA_VERSION {_TASK_SCHEMA_VERSION}")
+
+    # One corrupt-node fixture PER node in _TASK_SCHEMA_SHAPE: each
+    # corrupts exactly one descriptor node and MUST fail-safe to
+    # SCHEMA_FILE ERROR + ESCALATE (no crash, no silent degrade). This
+    # makes checker coverage proportional to the spec by construction —
+    # adding a schema node = adding a data node = adding a fixture row.
+    # Includes the two F-CA-008 repros explicitly: schema-task-basename-
+    # int (re.compile TypeError class) and schema-enum-values-scalar
+    # (silent vocab-loss class). schema-version-mismatch exercises the
+    # §4 version pin (well-formed, version != descriptor -> ESCALATE).
+    for fx, node_label in (
+        ("schema-version-nonint.yaml", "schema_version (non-int)"),
+        ("schema-version-mismatch.yaml",
+         "schema_version pin (version != descriptor)"),
+        ("schema-task-basename-int.yaml",
+         "filename.task_basename (F-CA-008: re.compile crash class)"),
+        ("schema-id-matches-basename-str.yaml",
+         "filename.id_matches_basename (non-bool)"),
+        ("schema-required-when-open-scalar.yaml",
+         "required_when_open (non-list)"),
+        ("schema-required-when-terminal-scalar.yaml",
+         "required_when_terminal (non-list)"),
+        ("schema-required-always-elem-int.yaml",
+         "required_always[] element (non-str)"),
+        ("schema-fields-scalar.yaml", "fields (non-mapping)"),
+        ("schema-field-def-scalar.yaml",
+         "fields.<name> field-def (non-mapping)"),
+        ("schema-field-type-int.yaml",
+         "fields.<name>.type (non-str)"),
+        ("schema-enum-values-scalar.yaml",
+         "fields.<name>.values (F-CA-008: silent vocab-loss class)"),
+        ("schema-read-aliases-scalar.yaml",
+         "fields.<name>.read_aliases (non-mapping)"),
+    ):
+        try:
+            r = validate_task_schema_conformance(
+                project_root=conformant, schema_path=malformed / fx)
+            if _schema_file_escalate(r):
+                _ok(f"327-node: {node_label} -> SCHEMA_FILE ERROR + ESCALATE")
+            else:
+                _fail(f"327-node: {fx} ({node_label}) NOT fail-safe: "
+                      f"{[(i.check, i.severity) for i in r]}")
+        except Exception as exc:  # noqa: BLE001
+            _fail(f"327-node: {fx} ({node_label}) CRASHED ({exc!r}) "
+                  "— not fail-safe")
+
+    # F-CA-002: strict_after_backfill is the YAML *string* "false".
+    # bool("false") is True -> pre-fix this silently inverted calibration
+    # to strict. Locked decision: non-bool -> SCHEMA_FILE ERROR + ESCALATE
+    # (NOT silent strict, NOT WARN-coerced, NOT bool()-coerced).
+    try:
+        ca2 = validate_task_schema_conformance(
+            project_root=conformant,
+            schema_path=malformed / "schema-strict-string.yaml")
+        if _schema_file_escalate(ca2):
+            _ok("F-CA-002: strict_after_backfill='false' (str) -> SCHEMA_FILE ERROR + ESCALATE")
+        else:
+            _fail(f"F-CA-002: non-bool calibration issues="
+                  f"{[(i.check, i.severity, i.detail) for i in ca2]}")
+    except Exception as exc:  # noqa: BLE001
+        _fail(f"F-CA-002: non-bool calibration CRASHED ({exc!r})")
+
+    # F-CA-003a: `--validate -1` / `--validate 0` at the argv/dispatch
+    # boundary -> exit 2 (same path as a non-int value), NOT CLEAN exit 0.
+    import subprocess
+    engine = str(FRAMEWORK_ROOT / "scripts" / "plan_engine.py")
+    for bad_id in ("-1", "0"):
+        proc = subprocess.run(
+            [sys.executable, engine, "--validate", bad_id],
+            capture_output=True, text=True)
+        if proc.returncode == 2 and "CLEAN" not in proc.stdout:
+            _ok(f"F-CA-003a: --validate {bad_id} -> argv error exit 2 (not CLEAN)")
+        else:
+            _fail(f"F-CA-003a: --validate {bad_id} rc={proc.returncode} "
+                  f"stdout={proc.stdout.strip()!r}")
+
+    # F-CA-003b (belt): single-id mode with a target that fails the name
+    # grammar must NOT silently continue -> SCHEMA_FILE ERROR. Drive via
+    # the function with a negative single_id (defence in depth below argv).
+    ca3b = validate_task_schema_conformance(
+        project_root=single, single_id=-1, schema_path=schema_path)
+    if any(i.check == "SCHEMA_FILE" and i.severity == "ERROR" for i in ca3b):
+        _ok("F-CA-003b: single-id grammar-miss -> SCHEMA_FILE ERROR (no silent continue)")
+    else:
+        _fail(f"F-CA-003b: single_id=-1 issues="
+              f"{[(i.check, i.severity) for i in ca3b]}")
+
+    # F-CA-004: archived single-id. id resolves ONLY in
+    # docs/tasks/archive/<id>.yaml -> clean terminal result, NOT a false
+    # SCHEMA_FILE 'task file not found' ERROR.
+    sa_root = base / "single_archived"
+    ca4 = validate_task_schema_conformance(
+        project_root=sa_root, single_id=299, schema_path=schema_path)
+    if not any(i.severity == "ERROR" for i in ca4):
+        _ok("F-CA-004: archived single-id 299 -> clean terminal (no false ERROR)")
+    else:
+        _fail(f"F-CA-004: archived id 299 issues="
+              f"{[(i.check, i.severity, i.detail) for i in ca4]}")
+
+    # F-CA-005e: zero-pad duplicate-logical-id collision. `327.yaml` and
+    # `0327.yaml` both -> int(basename)=327. Chosen behaviour: detect as
+    # a duplicate-id ERROR (SCHEMA_ID_MISMATCH, calibration-independent),
+    # never silently validate both as task 327.
+    dup_root = base / "dup_id"
+    ca5e = validate_task_schema_conformance(
+        project_root=dup_root, schema_path=schema_path)
+    dup = [i for i in ca5e
+           if i.check == "SCHEMA_ID_MISMATCH" and i.severity == "ERROR"
+           and "duplicate" in i.detail.lower()]
+    if dup:
+        _ok("F-CA-005e: 327.yaml + 0327.yaml -> duplicate-id SCHEMA_ID_MISMATCH ERROR")
+    else:
+        _fail(f"F-CA-005e: dup-id issues="
+              f"{[(i.check, i.severity, i.detail) for i in ca5e]}")
+
+    # F-CA-006: the dead full-tree not-exists guard must be gone.
+    # Source-level assertion: the unreachable `if <none-check> ... :`
+    # statement followed by `continue` no longer exists as code. The
+    # needle is assembled at runtime so this comment cannot self-match.
+    src = (FRAMEWORK_ROOT / "scripts" / "plan_engine.py").read_text(
+        encoding="utf-8")
+    dead_stmt = ("if single_id is None and not yaml_path."
+                 + "exists():\n            continue")
+    if dead_stmt not in src:
+        _ok("F-CA-006: dead full-tree not-exists branch removed")
+    else:
+        _fail("F-CA-006: dead full-tree not-exists branch still present")
+
+    if failures:
+        print(f"\n{len(failures)} task-schema self-test failure(s).")
+        return 1
+    print("\nAll task-schema self-tests passed.")
     return 0
 
 
@@ -3435,7 +4382,13 @@ def main():
     group.add_argument("--after", type=str, help="What unblocks after task ID? "
                        "(int in single-repo, 'repo#id' in aggregate mode)")
     group.add_argument("--dashboard-json", action="store_true", help="JSON for dashboard")
-    group.add_argument("--validate", action="store_true", help="Consistency check")
+    group.add_argument(
+        "--validate", nargs="?", const="__full__", default=None,
+        metavar="TASK_ID",
+        help="Consistency check (no arg = full tree, unchanged exit-code "
+             "contract). With <id>: single-task schema-only check of "
+             "docs/tasks/<id>.yaml (no milestone/cycle/cross-repo), "
+             "exit 0/1 on schema ERROR.")
     group.add_argument("--spec-pipeline", action="store_true",
                        help="Spec review pipeline status")
     group.add_argument("--self-test", action="store_true",
@@ -3481,6 +4434,30 @@ def main():
     if getattr(args, "self_test", False):
         rc = _run_self_test()
         sys.exit(rc)
+
+    # Task 327: single-id schema-only mode. `--validate <id>` short-
+    # circuits BEFORE the full load — no milestone / cycle / cross-repo.
+    # Exit 0/1 strictly on schema ERROR (calibration applies: vocab /
+    # missing-required are WARN while strict_after_backfill is false, so
+    # exit 0). `--validate` without an id stays full-tree (unchanged).
+    if args.validate is not None and args.validate != "__full__":
+        try:
+            single_id = int(args.validate)
+        except (TypeError, ValueError):
+            print(f"ERROR: --validate expects an integer task id, got "
+                  f"{args.validate!r}", file=sys.stderr)
+            sys.exit(2)
+        # F-CA-003a (locked): a task id is a positive int. <= 0 is an
+        # argv error on the SAME path as a non-int value (exit 2) — never
+        # a silent CLEAN exit 0 (the pre-fix false-PASS on `--validate -1`).
+        if single_id <= 0:
+            print(f"ERROR: --validate expects a positive integer task id, "
+                  f"got {single_id}", file=sys.stderr)
+            sys.exit(2)
+        s_issues = validate_task_schema_conformance(single_id=single_id)
+        output, clean = fmt_validate(s_issues)
+        print(output)
+        sys.exit(0 if clean else 1)
 
     # Load
     if args.aggregate:
@@ -3537,6 +4514,25 @@ def main():
         for w in aggregate.warnings:
             issues.append(ValidationIssue(
                 "AGGREGATE_WARN", "WARN", detail=w))
+
+    # Task 327: full-tree task-schema conformance. Additive and scoped
+    # to the --validate full path ONLY. It is intentionally NOT fed into
+    # the shared issue stream that --boot / --dashboard-json render: the
+    # forge_dev + consumer trees are pre-backfill (AC-4), so schema WARNs
+    # would otherwise inject a WARNINGS block into the boot-critical path
+    # before strict_after_backfill is flipped — exactly the repo-brick
+    # the strict-after-backfill ordering exists to prevent. WARN-first
+    # calibration keeps exit-code 0 on --validate (AC-5 PASS) while still
+    # surfacing the drift (AC-3). Per-repo in aggregate mode.
+    if args.validate == "__full__":
+        if args.aggregate:
+            for repo_name, repo_root in discover_projects(args.projects):
+                for si in validate_task_schema_conformance(
+                        project_root=repo_root):
+                    si.detail = f"[{repo_name}] {si.detail}"
+                    issues.append(si)
+        else:
+            issues.extend(validate_task_schema_conformance())
     next_actions = compute_next_actions(tasks, milestones, critical_path, blocking_scores,
                                         target=target, limit=args.limit)
 

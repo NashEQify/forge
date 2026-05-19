@@ -1,0 +1,35 @@
+# Descriptor node `schema_version` corrupted to a string (merge slip on
+# the LOCKED schema). Pre-fix: schema_version was never dereferenced,
+# so a corrupt version was completely invisible — the descriptor could
+# silently under-validate an evolved schema. Expected post-fix: the
+# walker types schema_version as int -> SCHEMA_FILE ERROR + ESCALATE
+# (schema_version present and not an int).
+schema_version: "1"
+filename:
+  task_basename: '^[0-9]+$'
+  id_matches_basename: true
+required_always: [id, title, status, created, updated, milestone, blocked_by]
+required_when_open: [effort, priority]
+required_when_terminal: [id, status]
+terminal_status: [done, superseded, wontfix, absorbed]
+fields:
+  id: {type: int}
+  title: {type: str}
+  status:
+    type: enum
+    values: [pending, in_progress, done, superseded, wontfix, absorbed]
+  created: {type: date}
+  updated: {type: date}
+  milestone: {type: str}
+  blocked_by: {type: list_int}
+  effort:
+    type: enum
+    values: [S, M, L, XL]
+  priority:
+    type: enum
+    values: [high, medium, low]
+validator:
+  calibration: warn_first
+  strict_after_backfill: false
+  out_of_vocab: warn_until_strict
+  scope: all_repos

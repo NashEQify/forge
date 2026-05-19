@@ -1,0 +1,31 @@
+# F-CA-001: `validator` corrupted to a scalar string (truthy non-dict).
+# Top-level doc is still a valid mapping; the crash is in the
+# nested .get() dereference, NOT a YAMLError.
+# Minimal but well-formed task-schema fixture (F-CA-005 harness base).
+# Mirrors the structural shape of framework/task-schema.yaml that
+# validate_task_schema_conformance dereferences. The malformed
+# siblings differ from this by exactly ONE corrupted nested key.
+filename:
+  task_basename: '^[0-9]+$'
+  id_matches_basename: true
+required_always: [id, title, status, created, updated, milestone, blocked_by]
+required_when_open: [effort, priority]
+required_when_terminal: [id, status]
+terminal_status: [done, superseded, wontfix, absorbed]
+fields:
+  id: {type: int}
+  title: {type: str}
+  status:
+    type: enum
+    values: [pending, in_progress, done, superseded, wontfix, absorbed]
+  created: {type: date}
+  updated: {type: date}
+  milestone: {type: str}
+  blocked_by: {type: list_int}
+  effort:
+    type: enum
+    values: [S, M, L, XL]
+  priority:
+    type: enum
+    values: [high, medium, low]
+validator: "broke"

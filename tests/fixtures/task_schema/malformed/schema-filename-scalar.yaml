@@ -1,0 +1,6 @@
+# F-CA-001: `filename` corrupted to a scalar string (truthy non-dict).
+# Minimal but well-formed task-schema fixture (F-CA-005 harness base).
+# Mirrors the structural shape of framework/task-schema.yaml that
+# validate_task_schema_conformance dereferences. The malformed
+# siblings differ from this by exactly ONE corrupted nested key.
+filename: "x"
