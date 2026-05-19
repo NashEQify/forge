@@ -1,8 +1,14 @@
 # Task Format
 
-Purpose: unified format for all tasks in BuddyAI.
-Applies to: all files in `docs/tasks/`.
-SoT: this file.
+Purpose: unified format for all tasks.
+Applies to: all files in `docs/tasks/` (forge_dev + every consumer repo).
+SoT (human): this file — prose + rationale.
+SoT (machine): `framework/task-schema.yaml` — the single artifact the
+validator parses (field names, required-set, value vocab). This prose
+MUST stay in sync with it; `consistency_check` guards the pair.
+Validation: `plan_engine --validate` (post-hoc, SoT) + the task skills
+(`task_creation`, `task_status_update`) validate the touched task
+inline against the same schema.
 
 ## File structure
 
@@ -11,7 +17,13 @@ Each task consists of two files:
 - `NNN.yaml` � metadata, machine-readable, SoT for status/assignment/routing
 - `NNN.md` � prose + workflow checklist, for execution context
 
-NNN is a three-digit number with leading zeros (001, 042, 100+).
+NNN (the file basename) is **pure-numeric** (`^[0-9]+$`). Zero-padding
+is a per-repo cosmetic convention, NOT validated (forge_dev uses `327`,
+some repos use `020` — both valid). Gate/auxiliary files are
+`NNN-<suffix>.{md,yaml}` (non-pure-numeric basename) and are never
+tasks — every reader (`show_open_tasks`, `plan_engine`, workflow-engine
+state files) keys on the pure-numeric rule, so gate-file naming never
+collides with task discovery.
 Next free ID: look up the highest existing ID in `docs/tasks/`.
 
 ## YAML format
@@ -31,9 +43,17 @@ Required fields:
 Optional fields:
 
   effort: [enum]               # S | M | L | XL � t-shirt size for critical-path weighting.
-                               # Required for pending/in_progress tasks.
+                               # REQUIRED on open (non-terminal) tasks.
+                               # Strict vocab: exactly S|M|L|XL (no S-M, no aliases).
                                # S=1, M=3, L=8, XL=20 (engine weights).
                                # XL tasks: plan_engine warns (DECOMPOSE � split into subtasks).
+  priority: [enum]             # high | medium | low � REQUIRED on open
+                               # (non-terminal) tasks. Write-strict (only the
+                               # 3 values). Tolerant READ-aliases (mid|med|
+                               # normal->medium, hi->high, lo->low) live in
+                               # exactly one place (task-schema.yaml), never
+                               # duplicated in a reader. Terminal/archived
+                               # tasks: not required (no history rewrite).
   area: [string]               # thematic area (optional, for dashboard filters).
   assignee: [string]           # buddy | main-code-agent | human | null
   spec_ref: [string|null]      # path to design spec (e.g. "personal-chat-backend.md").

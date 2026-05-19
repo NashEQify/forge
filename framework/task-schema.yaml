@@ -1,0 +1,95 @@
+# Task-schema SoT (machine-readable)
+#
+# THE single machine-readable definition of a task YAML. This file is
+# the artifact the validator parses; `framework/task-format.md` is the
+# human SoT (prose) and MUST stay in sync with it (consistency_check
+# guards the pair). Field names, required-set, and value vocabularies
+# live HERE, in exactly one place.
+#
+# Consumed by:
+#   - scripts/plan_engine.py --validate   (post-hoc tree check, SoT)
+#   - skills/task_creation, skills/task_status_update  (inline: validate
+#     the touched task against this schema on write — same validator)
+#   - skills/show_open_tasks               (open/terminal + priority
+#                                            read-normalization rules)
+#
+# Applies identically in forge_dev and every consumer repo.
+
+schema_version: 1
+
+# --- Filename grammar -------------------------------------------------
+# A *task* is docs/tasks/<NNN>.{yaml,md} where <NNN> is pure-numeric.
+# Gate/auxiliary files are <NNN>-<suffix>.{md,yaml} (non-pure-numeric
+# basename) and are NEVER tasks. Every reader keys on `task_basename`
+# so gate-file naming can never produce show_open_tasks noise anywhere.
+filename:
+  task_basename: '^[0-9]+$'        # pure-numeric; zero-padding is
+                                   # per-repo cosmetic, NOT validated
+  aux_form: '<NNN>-<suffix>'       # e.g. 327-gates.md, 327-delegation.md
+  id_matches_basename: true        # `id` (int) == int(basename)
+
+# --- Required sets ----------------------------------------------------
+# `open`     = status NOT in terminal_status
+# `terminal` = status IN terminal_status (history not rewritten)
+required_always:   [id, title, status, created, updated, milestone, blocked_by]
+required_when_open: [effort, priority]
+required_when_terminal: [id, status]   # terminal: nothing else enforced
+
+terminal_status: [done, superseded, wontfix, absorbed]
+
+# --- Field definitions ------------------------------------------------
+fields:
+  id:        {type: int,    note: "== int(filename basename)"}
+  title:     {type: str,    note: "non-empty, <= ~80 chars"}
+  status:
+    type: enum
+    values: [pending, in_progress, blocked, done, superseded, wontfix, absorbed]
+    unknown_value: tolerant_read_as_open   # never silently terminal
+  created:   {type: date,   format: "YYYY-MM-DD"}
+  updated:   {type: date,   format: "YYYY-MM-DD"}
+  milestone: {type: str,    note: "MUST be a key in docs/plan.yaml milestones"}
+  blocked_by: {type: list_int, note: "ints; empty allowed: []"}
+  effort:
+    type: enum
+    values: [S, M, L, XL]            # strict — no S-M / aliases
+    required_when: open
+  priority:
+    type: enum
+    values: [high, medium, low]
+    required_when: open              # open/non-terminal
+    write: strict                    # only the 3 values may be written
+    read_aliases:                    # tolerant READ only (single place)
+      mid: medium
+      med: medium
+      normal: medium
+      hi: high
+      lo: low
+  readiness:
+    type: enum
+    values: [raw, specced, reviewed, implementing, done]
+    required: false
+  # Optional, not vocab-enforced (presence/shape only if present):
+  area:                {type: str,            required: false}
+  assignee:            {type: str_or_null,    required: false}
+  spec_ref:            {type: str_or_null,    required: false}
+  board_result:        {type: str_or_null,    required: false}
+  summary:             {type: str_or_null,    required: false}
+  intent_chain:        {type: object_or_list, required: false}
+  sub_tasks:           {type: list_int,       required: false}
+  parent_task:         {type: int_or_null,    required: false}
+  blocked_by_external: {type: list,           required: false}
+  spec_version:        {type: str,            required: false}
+  workflow_phase:      {type: str,            required: false}
+  workflow_template:   {type: str,            required: false}
+  # Unlisted keys: passed through, not an error (forward-compatible).
+
+# --- Validator behaviour ---------------------------------------------
+validator:
+  # Load-bearing ordering: a missing required_when_open field (notably
+  # `priority`) is WARN until the backfill is merged, else every
+  # existing task fails and every repo bricks. Flip to BLOCK only
+  # AFTER backfill. This switch is the strict-after-backfill gate.
+  calibration: warn_first
+  strict_after_backfill: false   # set true only post-backfill (AC-4)
+  out_of_vocab: warn_until_strict   # e.g. effort S-M, priority mid-on-write
+  scope: all_repos               # runs against consumer task trees too
