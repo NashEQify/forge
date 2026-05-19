@@ -1,6 +1,6 @@
 ---
 name: show-open-tasks
-description: Render an overview table of the OPEN tasks in a docs/tasks/ tree (status not in a terminal set). Each row shows the task intent (title + summary first sentence), status, the YAML updated date, and the last git change (date + commit subject) that touched the task files. Triggers when the user wants a task list/overview/status table ("liste aller tasks", "zeig offene tasks", "task overview"); NOT for changing task status (use task-status-update) or creating a task (use task-creation).
+description: 'Render a fast terminal overview of the OPEN tasks in a docs/tasks/ tree (status not in a terminal set), grouped by priority and sorted by created date then effort. Script-less: the methodology below is run directly. Triggers when the user wants a task list/overview/ status table ("liste aller tasks", "zeig offene tasks", "task overview"); NOT for changing task status (use task-status-update) or creating a task (use task-creation).'
 ---
 
 # Skill: show-open-tasks (Wrapper)

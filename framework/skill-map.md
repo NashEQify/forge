@@ -70,11 +70,11 @@ Canonical for `consistency_check` §Skill-Map; sub-sections derived from `invoca
 
 ### Direct-Invokable Capabilities (`invocation.primary: user-facing`)
 
-`api_and_interface_design`, `caveman`, `deprecation_and_migration`, `frontend_design_tty`, `improve_codebase_architecture`, `scoping`, `shipping_and_launch`, `task_creation`, `youtube_subtitles`, `zoom_out`
+`api_and_interface_design`, `caveman`, `deprecation_and_migration`, `frontend_design_tty`, `improve_codebase_architecture`, `scoping`, `shipping_and_launch`, `show_open_tasks`, `task_creation`, `youtube_subtitles`, `zoom_out`
 
 ### Workflow-Step / Sub-skill (`workflow-step` | `sub-skill`)
 
-`adversary_test_plan`, `architecture_coherence_review`, `bedrock_drill`, `code_review_board`, `convergence_loop`, `council`, `cross_spec_consistency_check`, `documentation_and_adrs`, `frame`, `frontend_ui_engineering`, `get_api_docs`, `impl_plan_review`, `knowledge_capture`, `pre_build_spec_audit`, `python_code_quality_enforcement`, `retroactive_spec_update`, `return_summary`, `root_cause_fix`, `sectional_deep_review`, `security_and_hardening`, `source_spec_reduce`, `spec_amendment_verification`, `spec_authoring`, `spec_board`, `spec_update`, `testing`
+`adversary_test_plan`, `architecture_coherence_review`, `bedrock_drill`, `code_review_board`, `convergence_loop`, `council`, `cross_spec_consistency_check`, `documentation_and_adrs`, `frame`, `frontend_ui_engineering`, `get_api_docs`, `impl_plan_review`, `knowledge_capture`, `pre_build_spec_audit`, `python_code_quality_enforcement`, `retroactive_spec_update`, `return_summary`, `risk_followup_routing`, `root_cause_fix`, `sectional_deep_review`, `security_and_hardening`, `source_spec_reduce`, `spec_amendment_verification`, `spec_authoring`, `spec_board`, `spec_update`, `testing`
 
 ### Service Skills (`disable-model-invocation: true`)
 
