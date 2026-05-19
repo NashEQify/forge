@@ -173,6 +173,11 @@ Finish boot in at most 2 tool-call rounds:
    `ls docs/backlog.md`) inside round 2. If the result needs further
    reads → round 3 is allowed.
 
+**Probe isolation (MUST).** Result-bearing probes (`workflow_engine
+--boot-context`, `plan_engine --boot`, STATUS-CHECK) = own Bash call,
+never `;`-chained behind an optional `ls` (compound rc = last cmd's →
+ENOENT masks the probe).
+
 No thinking pauses between rounds. Round 1 → straight to round 2 →
 straight to GREET.
 

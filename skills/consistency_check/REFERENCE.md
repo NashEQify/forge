@@ -471,6 +471,99 @@ instead of `docs/reviews/`) → **ERROR**: "drift alias
 exists (SoT requirement). Missing STRUCTURE.md → **ERROR**:
 "consistency_check check 9 needs docs/STRUCTURE.md as SoT".
 
+### 10. Wrapper drift (Task 326)
+
+**Purpose:** prevents re-drift of the Claude-Code skill-wrapper
+layer (`.claude/skills/<kebab>/SKILL.md`). Wrappers were a
+hand-authored side-artifact; skills got built without one (so
+they were invisible to the `Skill` tool) and existing wrappers
+drifted from their source frontmatter. Re-introduction was only
+accepted with a generator + validator together, mirroring the
+skill-map and navigation-layer patterns.
+
+**SoT:**
+- Generator: `scripts/generate_skill_wrappers.py` (sole writer
+  under `.claude/skills/`).
+- Inclusion predicate + wrapper contract:
+  `framework/skill-anatomy.md` §Wrapper — required derived
+  artifact.
+
+**The check (generator idempotency, parallel to check 6's
+skill-map sub-check):**
+Re-running the generator must produce no diff, and `--check`
+must agree.
+
+```bash
+python3 scripts/generate_skill_wrappers.py --check
+```
+
+Non-zero exit → **WARNING**: "wrapper drift in
+`.claude/skills/`". The `--check` output enumerates the drift
+kind per wrapper:
+- `+ missing wrapper: <name>` — an eligible skill has no wrapper.
+- `- orphan wrapper: <name>` — wrapper whose source skill is
+  gone or no longer eligible.
+- `~ stale wrapper: <name>` — wrapper content diverged from
+  generator output (hand-edit or source frontmatter changed).
+
+Auto-repair hint: run `python3 scripts/generate_skill_wrappers.py`
+(no flag) and commit the diff — the generator is the SoT, the
+wrapper is fully derived.
+
+**Scope caveats:**
+- The drift check is **SKILL.md-content-scoped**: it compares each
+  wrapper dir's `SKILL.md` against generator output and detects
+  missing / orphan / stale wrappers. It does NOT flag stray extra
+  files inside an otherwise-present, content-correct wrapper dir
+  (e.g. a leftover `REFERENCE.md` or backup). The generator owns the
+  tree and nothing legitimate writes there, so this is an accepted
+  limitation, not a gap to close here.
+- Check 10 is a **no-op without PyYAML**: the generator returns 0
+  with a `SKIP` when `yaml` is unavailable, so in a PyYAML-less
+  environment `--check` passes vacuously (verifies nothing). Same
+  implicit caveat as the skill-map sub-check (check 6); the repo
+  CI/dev env always has PyYAML.
+
+**Calibration:** WARNING (not ERROR) for now — WARN-first per
+framework convention; escalate to BLOCK after burn-in, same as
+the skill-map sub-check (less critical than boot-navigation:
+wrappers are discovery hints, not load-bearing routing).
+
+**Bash help (minimal):**
+
+```bash
+# Idempotency: a fresh run must leave the tree unchanged.
+python3 scripts/generate_skill_wrappers.py >/dev/null && \
+  git diff --quiet -- .claude/skills/ || echo "wrapper drift"
+
+# Or non-mutating: --check exits non-zero on any drift.
+python3 scripts/generate_skill_wrappers.py --check
+```
+
+**Triggers for check 10:**
+- **Blocking gate:** structural commits that add / remove /
+  archive a skill, or change a skill's `name` / `description` /
+  `invocation.primary` / `disable-model-invocation` /
+  `cc_wrapper` → MUST be drift-free (regenerate + commit).
+- **Check (SHOULD):** any edit under `.claude/skills/`
+  (wrappers are generated — a hand-edit is drift by
+  definition).
+- **Periodic:** every `context_housekeeping` run.
+
+**Self-test:** `consistency_check` itself is `cross-cutting`
+→ wrapper-eligible → `.claude/skills/consistency-check/SKILL.md`
+must exist and match generator output.
+
+**Why generator + check 10 (instead of hand maintenance):**
+
+The wrapper was purely hand-maintained and produced exactly the
+drift class this check now closes (skills with no wrapper; stale
+wrapper descriptions after a source rewrite). The generator
+makes `.claude/skills/` hands-off (skill frontmatter = SoT); the
+validator hook makes idempotency verifiable. Together the
+pattern is self-stabilizing — same rationale as the skill-map
+and navigation-layer patterns; alone neither half is enough.
+
 ## Frozen-zone integrity check
 
 ```bash

@@ -1,9 +1,9 @@
 ---
-name: frontend-design-tty
-description: Design system for dark, terminal-inspired web UIs (monospace, mint/sage on dark blue-grey, box drawing, hex labels, no rounded corners). Provides concrete CSS custom properties + component patterns + anti-patterns. Use when a new web UI is built or extended in TTY aesthetic (Huddle, BuddyAI dashboards, comparable apps), or when an existing element needs a conformance check.
+name: task-status-update
+description: Atomic task-status change. The only allowed way to change `status` in task YAMLs. Writes YAML + backlog in one operation. Triggers when a task's status must change (the only allowed path); NOT for content edits to task bodies.
 ---
 
-# Skill: frontend-design-tty (Wrapper)
+# Skill: task-status-update (Wrapper)
 
 <!-- generated-by: scripts/generate_skill_wrappers.py (do not hand-edit) -->
 
@@ -11,7 +11,7 @@ This is the Claude-Code-discoverable wrapper. The full
 orchestrator-neutral protocol — methodology, contract, modes,
 red flags — lives in the SoT:
 
-**SoT:** `skills/frontend_design_tty/SKILL.md`
+**SoT:** `skills/task_status_update/SKILL.md`
 
 Read the SoT and follow it. This wrapper is a generated derived
 artifact (`scripts/generate_skill_wrappers.py`); it exists only so

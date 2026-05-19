@@ -1,9 +1,9 @@
 ---
-name: frontend-design-tty
-description: Design system for dark, terminal-inspired web UIs (monospace, mint/sage on dark blue-grey, box drawing, hex labels, no rounded corners). Provides concrete CSS custom properties + component patterns + anti-patterns. Use when a new web UI is built or extended in TTY aesthetic (Huddle, BuddyAI dashboards, comparable apps), or when an existing element needs a conformance check.
+name: shipping-and-launch
+description: Production-launch discipline with pre-launch checklist + feature-flag strategy + staged rollout + rollback plan + monitoring. Use when deploying to production, preparing a release, migrating data / infra, opening beta, or any deployment that carries risk.
 ---
 
-# Skill: frontend-design-tty (Wrapper)
+# Skill: shipping-and-launch (Wrapper)
 
 <!-- generated-by: scripts/generate_skill_wrappers.py (do not hand-edit) -->
 
@@ -11,7 +11,7 @@ This is the Claude-Code-discoverable wrapper. The full
 orchestrator-neutral protocol — methodology, contract, modes,
 red flags — lives in the SoT:
 
-**SoT:** `skills/frontend_design_tty/SKILL.md`
+**SoT:** `skills/shipping_and_launch/SKILL.md`
 
 Read the SoT and follow it. This wrapper is a generated derived
 artifact (`scripts/generate_skill_wrappers.py`); it exists only so

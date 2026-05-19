@@ -52,7 +52,7 @@ Gate enforcement: pre-harness via
 (blocking). Post-harness via the pre-commit hook (when
 implemented).
 
-## The 9 checks (short form)
+## The 10 checks (short form)
 
 1. **Dead references** — scan `*.md` for path refs (backticks,
    "load and follow", SoT tables). Miss → ERROR.
@@ -90,9 +90,22 @@ implemented).
    generator target, or a generator target without a disk file
    → **ERROR**. AUTO-block drift → **ERROR**. Placeholder
    manual → **WARNING**.
+9. **Folder-taxonomy drift** — `docs/` subdirs/files vs
+   `docs/STRUCTURE.md`. Undeclared path → **WARNING**; drift
+   alias → **ERROR**. Detail: `REFERENCE.md` §9.
+10. **Wrapper drift** — CC skill-wrappers
+   (`.claude/skills/*/SKILL.md`) vs a fresh
+   `scripts/generate_skill_wrappers.py` run. A missing wrapper
+   for an eligible skill, an orphan wrapper, or a hand-edited /
+   stale wrapper that doesn't match generator output → drift.
+   Mechanically `generate_skill_wrappers.py --check` (non-zero
+   exit on drift). Mirrors the skill-map idempotence sub-check.
+   Drift → **WARNING** (WARN-first calibration; escalate to
+   BLOCK after burn-in). Detail: `REFERENCE.md` §10.
 
-Running checks 3b, 5, 6, 7, and 8 requires `REFERENCE.md` to be
-co-loaded (sub-checks, scan targets, checklist items, bash).
+Running checks 3b, 5, 6, 7, 8, and 10 requires `REFERENCE.md`
+to be co-loaded (sub-checks, scan targets, checklist items,
+bash).
 
 ## Frozen-zone integrity
 

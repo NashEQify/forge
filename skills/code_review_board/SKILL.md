@@ -11,6 +11,7 @@ invocation:
   primary: workflow-step
   secondary: [user-facing]
 disable-model-invocation: false
+cc_wrapper: true
 modes: [l1, l2]
 uses: [_protocols/discourse, _protocols/context-isolation, _protocols/content-preservation, _protocols/dispatch-template, _protocols/consolidation-preservation, _protocols/evidence-pointer-schema]
 ---

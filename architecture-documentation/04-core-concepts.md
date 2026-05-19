@@ -195,6 +195,7 @@ For stale-prone indices:
 |---|---|---|
 | `framework/skill-map.md` AUTO block | `scripts/generate_skill_map.py` | `consistency_check` Check 6 (boot-map drift) |
 | 8 `navigation.md` AUTO blocks | `scripts/generate_navigation.py` | `consistency_check` Check 8 (navigation-layer drift) |
+| `.claude/skills/<name>/SKILL.md` Claude-Code discovery wrappers | `scripts/generate_skill_wrappers.py` | `consistency_check` Check 10 (wrapper drift) |
 
 **Historical anti-pattern:** the navigation-layer pattern was purely
 hand-maintained in early versions and discarded due to drift. Re-introduction

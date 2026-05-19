@@ -86,6 +86,21 @@ block in `framework/skill-map.md`:
 
 Idempotent. Validator: `consistency_check` Check 6 (boot-map drift).
 
+### generate_skill_wrappers.py
+
+Reads all `skills/*/SKILL.md` frontmatter and regenerates the
+Claude-Code discovery wrappers under `.claude/skills/<name>/SKILL.md`
+(thin file: `name` + `description` from the SoT + a fixed pointer
+body carrying a generation marker). A skill is wrapper-eligible iff
+`status ∉ {archived,deprecated}` AND `disable-model-invocation ≠ true`
+AND (`invocation.primary ∈ {user-facing, cross-cutting}` OR
+`cc_wrapper: true`) AND `cc_wrapper ≠ false`. `cc_wrapper` is an
+optional override-only frontmatter field. The generator only deletes
+directories it provably authored (generation-marker check); a
+non-generated/hand-authored directory is left in place with a stderr
+WARN, never removed. Idempotent. Validator: `consistency_check`
+Check 10 (wrapper drift). Decision record: `docs/decisions/ADR-001`.
+
 ### generate_navigation.py
 
 Regenerates the AUTO block in 8 navigation.md files under the top-level
@@ -279,9 +294,10 @@ bash tests/hooks/test-stale-cleanup.sh
 ```bash
 python3 scripts/generate_skill_map.py
 python3 scripts/generate_navigation.py
+python3 scripts/generate_skill_wrappers.py --check
 git diff --name-only -- ':(glob)**/navigation.md'
 git diff --name-only -- 'framework/skill-map.md'
-# Both empty = idempotent
+# navigation/skill-map diff empty + generate_skill_wrappers --check exit 0 = idempotent
 ```
 
 ### Lints
