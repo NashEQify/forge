@@ -49,14 +49,12 @@ before delegating or executing. No asking, no opt-in, just always.
 
 ## Format on a direct response (no active ORIENT block)
 
-Trigger: Buddy answers substantively to a task or question, and no
-ORIENT block is active (no task switch in this session, no
-hook-resume with a manifest).
+Trigger: every turn where no ORIENT block is active (no task switch
+in this session, no hook-resume with a manifest).
 
-Applies to: every boot case (2, 3a, 3b, 1+4) as soon as the user
-works substantively.
-Does NOT apply to: pure greetings, yes/no answers, acknowledgements
-without work content.
+Applies: every turn. No exception, no judgment call — including
+short acknowledgements, yes/no answers, greetings outside the boot
+greeting. Strict-trigger is cheaper than judgment overhead.
 
 Single-line format (inline, before the response):
 
@@ -95,9 +93,9 @@ Examples:
 - Life tasks: `domain (context/life/<domain>.md)` instead of
   `vision`, `objective (workspaces/.../intent.md)` instead of
   `operational` — analogous to `framework/spec-authoring.md`.
-- The DIRECT header is required on substantive work without an
-  active ORIENT block. "Substantive" = more than acknowledgement /
-  greeting. No opt-in, no judgment call.
+- The DIRECT header is required on every turn without an active
+  ORIENT block. No substantive/non-substantive distinction. No
+  opt-in, no judgment call.
 - DIRECT does NOT replace ORIENT — it is the fallback when no
   switch happened.
 - After a context switch (ORIENT printed): DIRECT pauses until the
@@ -114,9 +112,9 @@ Examples:
 
 ## Anti-patterns
 
-- **NOT** dropping the header on a short acknowledgement.
-  INSTEAD: DIRECT on substantive work, even if short. Because:
-  transparency is structural, not proportional.
+- **NOT** dropping the header on a short turn (acknowledgement,
+  yes/no answer, "ok"). INSTEAD: DIRECT on every turn. Because:
+  transparency is structural; every-turn beats judgment.
 - **NOT** inventing the intent tree when boot context is unclear.
   INSTEAD: STOP + ask the user. Because: a wrong tree = wrong
   delegation.
