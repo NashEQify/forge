@@ -2,6 +2,12 @@
 
 Research, evaluate, spike. Result: knowledge, not code.
 
+**Forge-feed trigger (active throughout this workflow):** methodology-
+level friction (cluster scoping, adversary timing, evaluation gap) →
+apply the pre-write filter in `$FRAMEWORK_DIR/learnings/README.md`;
+if it passes, append to `$FRAMEWORK_DIR/learnings/forge-feed.md` on
+notice. Cluster-specific feeds stay in cluster files. Not at close.
+
 ## Trigger
 
 - User asks for SOTA, alternatives, patterns.
@@ -56,13 +62,16 @@ gain). Decide quality level: standard or high. Pick mid-flow via
 **3. synthesis** — consensus + matrix + position. On high quality:
 adversary check via `board-adversary` on weaknesses of the research.
 
-**4. knowledge-capture** — three skip-eligible sub-checks:
+**4. knowledge-capture** — four skip-eligible sub-checks:
 (a) persist findings via `knowledge_capture` (SOTA maps to
 `<active-context>/research/` or `docs/research/`);
 (b) context-gap check — do findings close documented gaps? If yes,
 update context files;
 (c) impact — does the research affect open tasks / specs? If yes, add
-to session-buffer PENDING.
+to session-buffer PENDING;
+(d) workflow-retro (safety net) — primary write is on-notice (see
+preamble). Methodology-level only; cluster-specific feeds stay in
+cluster files. Skip if none.
 
 **5. commit** — `git commit + push`. Sub-workflow: COMMIT must come
 before HANDOFF — on a crash between these steps the parent would

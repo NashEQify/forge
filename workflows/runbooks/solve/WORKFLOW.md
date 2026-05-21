@@ -5,6 +5,11 @@ bug / spec / question) and ends with a **reproducible solution
 artefact**. For cases where the form of the solution itself is part
 of what has to be figured out.
 
+**Forge-feed trigger (active throughout this workflow):** framework-
+relevant friction → apply the pre-write filter in
+`$FRAMEWORK_DIR/learnings/README.md`; if it passes, append to
+`$FRAMEWORK_DIR/learnings/forge-feed.md` on notice. Not at close.
+
 ## Trigger / NOT for
 
 **Trigger:** "solve: [problem]", unclear problem with no clear
@@ -92,11 +97,13 @@ direct (process-map register + stale cleanup + deploy), handoff to
 build (spec/plan → build workflow), handoff to docs-rewrite,
 self-apply.
 
-**6. close-bookkeeping** — two skip-eligible sub-checks:
+**6. close-bookkeeping** — three skip-eligible sub-checks:
 (a) ADR-discipline triple — solve hits this trigger more often than
 build (open-solution shape → real trade-off decisions);
 (b) `knowledge_processor` wrap-up — history entry with
-frame-report-ref + IMPACT CHAIN under `context/history/`.
+frame-report-ref + IMPACT CHAIN under `context/history/`;
+(c) workflow-retro (safety net) — primary write is on-notice (see
+preamble). Capture-now only entries missed. Skip if none.
 
 **7. commit-deploy** — `git commit + push` + dashboard deploy. Engine
 auto-advances `workflow_phase=done`; task-level `status=done` is set

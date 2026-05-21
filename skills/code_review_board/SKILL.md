@@ -122,6 +122,26 @@ race-conditions discipline.
 
 L2 minimum: core + 2 specialists. Maximum: core + all.
 
+**Specialist-name registry-check (NON-NEGOTIABLE):** every
+specialist name in a brief's pre-arranged specialist-set OR in
+Buddy's dispatch list MUST resolve to a real file in
+`agents/code-*.md`. Hallucinated labels (e.g. `code-async`,
+`code-concurrency`) silently fall through at dispatch-time and
+cause specialist-set drift — the risk-area they were meant to
+cover ships unreviewed. Run `ls agents/code-*.md` at
+dispatch-prep to verify; if a name does not match, substitute
+from the canonical table above (Infra/worker → `code-reliability`,
+async/race → `code-adversary` + `code-architect-roots`). Log
+substitutions in the dispatch transparency-header.
+
+**State-vocabulary-property trigger:** when the brief's
+§Implicit-Decisions-Surfaced contains a `structural_invariants`
+LD with pattern-class "state-vocab" OR "smell-transfer" OR
+"cycle-symptom-cause" for ANY LD, `code-architect-roots` is
+REQUIRED on the specialist-set, not optional. The state-vocab
+half-coverage concern is structurally invisible to the other
+specialists.
+
 **`code-architect-roots`** is property-shaped (smell-transfer,
 cycle-symptom-cause, state-vocab-half), distinct from
 `code-review` Architecture-Axis 2 which is module-graph-shaped

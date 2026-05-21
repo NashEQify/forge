@@ -2,6 +2,12 @@
 
 Implement a feature or task. From intent to done.
 
+**Forge-feed trigger (active throughout this workflow):** framework-
+relevant friction (failed assumption, brief drift, tooling gap, agent-
+protocol weakness) → apply the pre-write filter in
+`$FRAMEWORK_DIR/learnings/README.md`; if it passes, append to
+`$FRAMEWORK_DIR/learnings/forge-feed.md` on notice. Not at close.
+
 ## Trigger
 
 - The user defines a feature / task to implement.
@@ -203,12 +209,14 @@ in the SAME block-commit, then re-verify with
 
 ### Close phase
 
-**9. close-bookkeeping** — three skip-eligible sub-checks:
+**9. close-bookkeeping** — four skip-eligible sub-checks:
 (a) ADR-discipline triple (hard-to-reverse + surprising-without-
 context + result-of-real-trade-off → write ADR);
 (b) risk follow-up (file ONE follow-up task per non-empty
 `remaining_findings:` block in verdict files);
-(c) knowledge-process (`knowledge_processor mode=process`).
+(c) knowledge-process (`knowledge_processor mode=process`);
+(d) workflow-retro (safety net) — primary write is on-notice (see
+preamble). Capture-now only entries missed. Skip if none.
 
 **10. commit-deploy** — git commit (pre-commit hooks run), git push,
 optional dashboard deploy. Engine auto-advances `workflow_phase=done`

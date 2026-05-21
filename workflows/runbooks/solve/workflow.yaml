@@ -232,10 +232,10 @@ steps:
       - framework/agent-autonomy.md
 
   - id: close-bookkeeping
-    name: "Close bookkeeping (ADR + knowledge processor)"
+    name: "Close bookkeeping (ADR + knowledge processor + retro)"
     category: content
     instruction: >
-      Two skip-eligible sub-checks:
+      Three skip-eligible sub-checks:
       (a) ADR-discipline triple — was an architecture decision made that
           meets hard-to-reverse + surprising-without-context + result-
           of-real-trade-off? Yes → write ADR via documentation_and_adrs.
@@ -243,6 +243,9 @@ steps:
           (open-solution shape → real trade-off decisions).
       (b) knowledge processor wrap-up — write a history entry with
           frame-report-ref + IMPACT CHAIN under context/history/.
+      (c) workflow retro (safety net) — primary write is on-notice during
+          the work (see workflow preamble). Here: capture-now only entries
+          missed. Skip if none.
     skill_ref: skills/knowledge_processor/SKILL.md
     completion:
       type: file_created_matching
