@@ -58,10 +58,14 @@ Include:
 
 Install before working on this repo:
 ```bash
-ln -sf "$(pwd)/orchestrators/claude-code/hooks/pre-commit.sh" .git/hooks/pre-commit
+bash scripts/install-git-hooks.sh
 ```
 
-(Yes, `claude-code/hooks/` — the hook itself is harness-agnostic.)
+(Or via `bash scripts/setup-cc.sh`, which installs hooks as one of its
+steps.) Idempotent, worktree-safe, includes a self-probe. Both
+`pre-commit` and `commit-msg` are wired — same script, mode-detected
+via `$0` basename. The hook itself is harness-agnostic (lives under
+`orchestrators/claude-code/hooks/` for historical reasons).
 
 12 checks (3 BLOCK + 9 WARN): PLAN-VALIDATE (BLOCK) · TASK-SYNC (WARN) ·
 OBLIGATIONS (WARN) · CG-CONV (BLOCK) · STALE-CLEANUP (WARN) · PERSIST-GATE
@@ -137,10 +141,13 @@ Quickstart:
 git clone https://github.com/NashEQify/forge ~/projects/forge
 cd ~/projects/forge
 python3 -m venv .venv && .venv/bin/pip install pyyaml
-bash scripts/setup-cc.sh   # Claude Code adapter + path-whitelist
+bash scripts/setup-cc.sh   # Claude Code adapter + path-whitelist + git hooks
 bash scripts/setup-oc.sh   # OpenCode adapter (optional)
-ln -sf "$(pwd)/orchestrators/claude-code/hooks/pre-commit.sh" .git/hooks/pre-commit
 ```
+
+(`setup-cc.sh` runs `install-git-hooks.sh` for you. For consumer repos
+outside the framework checkout, run `bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh`
+from inside the consumer repo.)
 
 ## License
 

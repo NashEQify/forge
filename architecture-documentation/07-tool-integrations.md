@@ -134,13 +134,15 @@ Plus git hooks (not in `settings.json` but via symlink in `.git/hooks/`):
 
 ### Install the pre-commit hook
 
-From any repo:
+From any repo (idempotent, worktree-safe, self-probing):
 ```bash
-ln -sf $FRAMEWORK_DIR/orchestrators/claude-code/hooks/pre-commit.sh \
-       .git/hooks/pre-commit
+bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh
 ```
 
-The 12 checks run on the next `git commit`. Detail: [`02-architecture.md`](02-architecture.md) §Pre-Commit 12 Checks.
+Wires `.git/hooks/{pre-commit,commit-msg}` to
+`orchestrators/claude-code/hooks/pre-commit.sh`. The 13 checks run on
+the next `git commit`. Detail:
+[`02-architecture.md`](02-architecture.md) §Pre-Commit 12 Checks.
 
 ### Discovery + tool use
 

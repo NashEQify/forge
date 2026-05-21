@@ -47,8 +47,7 @@ it independently of the agent tool).
 
 2. Install the pre-commit hook (same mechanism as CC/OC):
    ```bash
-   ln -sf "$FRAMEWORK_DIR/orchestrators/claude-code/hooks/pre-commit.sh" \
-          .git/hooks/pre-commit
+   bash "$FRAMEWORK_DIR/scripts/install-git-hooks.sh"
    ```
 
 3. Open the Cursor agent — the rules under `.cursor/rules/` get loaded

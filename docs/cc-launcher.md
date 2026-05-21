@@ -14,7 +14,7 @@ Detail companion to README §Get `cc` running.
 ## What `setup-cc.sh` does
 
 Load-bearing — without it, `cc` doesn't exist on your `$PATH` and
-Claude Code can't find the framework personas. Four steps, all
+Claude Code can't find the framework personas. Five steps, all
 idempotent:
 
 1. **Installs the `cc` launcher to `~/.local/bin/cc`**, with the
@@ -33,6 +33,23 @@ idempotent:
    against drift.
 4. **Warns** if `~/.local/bin` isn't on your `$PATH`. Fix with
    `export PATH="$HOME/.local/bin:$PATH"` in your shell rc.
+5. **Installs git hooks** in the framework repo —
+   `.git/hooks/{pre-commit,commit-msg}` symlinked to
+   `orchestrators/claude-code/hooks/pre-commit.sh`. Activates the
+   13-check pre-commit discipline suite (PLAN-VALIDATE, CG-CONV,
+   SKILL-FM-VALIDATE, …). Includes a self-probe at the end.
+
+For consumer repos (not the framework checkout itself), wire the
+same hooks once per repo:
+
+```bash
+bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh
+```
+
+Modes: `--check` (probe only, no writes), `--uninstall` (remove
+symlinks). Worktree-safe. Full reference:
+[`architecture-documentation/05-installation.md`](../architecture-documentation/05-installation.md)
+§Pre-commit hook.
 
 ## How `cc` resolves scope
 

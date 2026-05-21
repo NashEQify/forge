@@ -61,9 +61,10 @@ runs at every commit and is the primary quality gate:
 
 Install:
 ```bash
-ln -sf "$FRAMEWORK_DIR/orchestrators/claude-code/hooks/pre-commit.sh" \
-       .git/hooks/pre-commit
+bash "$FRAMEWORK_DIR/scripts/install-git-hooks.sh"
 ```
 
 (The hook lives under `claude-code/` historically, but it's harness-agnostic
-— pure bash + git, no Claude-Code specifics. Same hook for all adapters.)
+— pure bash + git, no Claude-Code specifics. Same hook for all adapters.
+The installer wires both `pre-commit` and `commit-msg` and includes a
+self-probe.)
