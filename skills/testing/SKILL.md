@@ -20,8 +20,8 @@ uses: [convergence_loop]
 Methodology and formats for test-case design and execution across
 the entire SSDLC. Not just code tests — also logic, processes,
 specs, constraints.
-Agent: `agents/tester.md`. Infrastructure:
-`skills/test_infrastructure/SKILL.md`.
+Agent: `agents/tester.md`. Infrastructure discipline
+(cross-project): `REFERENCE.md` §Infrastructure.
 
 Detail mechanics (format details, skeleton templates, eval
 methodology, retest gate): `REFERENCE.md`.
@@ -170,8 +170,8 @@ DESIGN → PRE-IMPL EVAL → Decomposition → Delegation`.
 
 - **No linting / syntax check** — that is
   `python_code_quality_enforcement` and the pre-commit hooks.
-- **No infrastructure details** — fixtures, markers,
-  docker-compose → `test_infrastructure`.
+- **No infrastructure details inline** — fixtures, markers,
+  docker-compose conventions → `REFERENCE.md` §Infrastructure.
 - **No structural repo check** — dead refs, orphan files →
   `consistency_check`.
 - **No board review** — multi-perspective spec review →
