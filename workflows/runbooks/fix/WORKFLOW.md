@@ -2,6 +2,11 @@
 
 Fix a bug or handle an incident. Root-cause-first, no symptom patching.
 
+**Forge-feed trigger (active throughout this workflow):** framework-
+relevant friction → apply the pre-write filter in
+`$FRAMEWORK_DIR/learnings/README.md`; if it passes, append to
+`$FRAMEWORK_DIR/learnings/forge-feed.md` on notice. Not at close.
+
 ## Trigger
 
 - User reports a defect (directly or via Buddy's intake-gate INCIDENT).
@@ -78,11 +83,13 @@ regression suite is green.
 defined in a spec? Yes → spec patch in the SAME block-commit. No
 spec-defined behaviour touched: skip with rationale.
 
-**6. close-bookkeeping** — two skip-eligible sub-checks:
+**6. close-bookkeeping** — three skip-eligible sub-checks:
 (a) lessons-learned via `knowledge_processor` (root cause + pattern
 lesson into context);
 (b) risk follow-up — file ONE follow-up task per non-empty
-`remaining_findings:` block in the verdict.
+`remaining_findings:` block in the verdict;
+(c) workflow-retro (safety net) — primary write is on-notice (see
+preamble). Capture-now only entries missed. Skip if none.
 
 **7. commit-deploy** — `git commit + push`. Deploy conditional on
 docs/ changes. Engine auto-advances `workflow_phase=done`; task-level

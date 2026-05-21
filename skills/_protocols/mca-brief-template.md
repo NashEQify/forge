@@ -170,6 +170,21 @@ Format: list of mappings with `klasse + locked + value`.
   apply. **INSTEAD** the brief MUST name forbidden adjacent
   scope-changes prescriptively.
 
+- **DO NOT** prescribe a hardcoded literal at a call-site boundary
+  (e.g. `cost_currency="USD"`, `tenant_id="default-tenant"`,
+  `role="assistant"`) without first grepping the upstream domain
+  object for the same field. **INSTEAD** for every literal in a
+  §code-touch snippet, grep the upstream model (e.g.
+  `grep -n "<field_name>" src/<module>/models.py`). If the field
+  exists upstream and is already validated, the brief MUST
+  prescribe pass-through (`upstream.field`), NOT a re-derived
+  literal. Hardcoding upstream-validated values at boundaries is
+  cycle-symptom-cause: works coincidentally today (when the
+  upstream value happens to equal the literal), latent bug when
+  upstream emits a different value. Briefs ARE code-as-text and
+  carry the same grep-verify-discipline as the §-section
+  amendment gate in `_protocols/spec-amendment-discipline.md`.
+
 ## Bind rule
 
 Subsequent workflow steps must reference the decision locks by

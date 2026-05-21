@@ -355,6 +355,10 @@ steps:
 
       (c) Knowledge process — extract findings into the context system via
       knowledge_processor mode=process.
+
+      (d) Workflow retro (safety net) — primary write is on-notice during
+      the work (see workflow preamble). Here: capture-now only entries
+      missed during the work. Skip if none.
     completion:
       type: manual
     on_fail: warn

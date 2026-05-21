@@ -190,15 +190,18 @@ steps:
     on_fail: block
 
   - id: close-bookkeeping
-    name: "Close bookkeeping (lessons + risk follow-up)"
+    name: "Close bookkeeping (lessons + risk follow-up + retro)"
     category: content
     instruction: >
-      Two skip-eligible sub-checks:
+      Three skip-eligible sub-checks:
       (a) lessons-learned via knowledge_processor — what was the root
           cause? what pattern-lesson applies? Persist to context.
       (b) risk follow-up — read code-review verdict file; non-empty
           `remaining_findings:` → file ONE follow-up task via
           task_creation. No remaining: skip with rationale.
+      (c) workflow retro (safety net) — primary write is on-notice during
+          the work (see workflow preamble). Here: capture-now only entries
+          missed. Skip if none.
     skill_ref: skills/knowledge_processor/SKILL.md
     completion:
       type: manual
