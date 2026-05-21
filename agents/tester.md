@@ -83,20 +83,17 @@ Before any substantive work:
 
 ---
 
-## BuddyAI infra constraints (non-negotiable)
+## Infra constraints
 
-- **No SQLite fallback.** Always `pgvector/pgvector:pg16`
-  (testcontainers or `docker-compose.test.yml`).
-- **Run only locally.** Tests run on the development machine,
-  never on Hetzner (production) or Odroid.
-- **Mock Ollama in L2.** `mock_ollama` fixture (pytest-httpx,
-  768d zero vector). Real only on `# INFRA: Ollama`.
-- **Transaction rollback** for isolation. Never TRUNCATE /
-  DELETE FROM.
-- **Isolated ports.** Postgres: 5433. NATS: 4223.
-- **pytest-asyncio auto mode.** `asyncio_mode = "auto"`.
-- **Marker-based selection.** `@pytest.mark.integration`,
-  `.contract`, `.property`, `.eval`.
+Cross-project discipline (no-SQLite-fallback, transaction-rollback
+isolation, marker-vs-directory selection, INFRA-Header convention,
+fixture-availability preflight): `skills/testing/REFERENCE.md`
+§Infrastructure.
+
+Project-specific concretions (DSN, image tags, ports, mock fixture
+names, host policy): project-side `docs/test-conventions/`. The
+tester treats project-side conventions as non-negotiable for the
+active project — read them before running.
 
 ---
 

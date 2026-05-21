@@ -108,11 +108,14 @@ Files:
   - tests/{spec_name}/conftest.py
 ```
 
-## BuddyAI infra constraints
+## Infra constraints
 
-- No SQLite fallback. Always `pgvector/pgvector:pg16`
-  (testcontainers).
-- Mock Ollama in L2 (`mock_ollama` fixture, 768d zero
-  vector).
-- Transaction rollback for isolation.
-- pytest-asyncio auto mode. `asyncio_mode = "auto"`.
+Cross-project discipline (fixture-availability preflight before STUB,
+INFRA-Header convention, lift-vs-rebuild, no-SQLite-fallback,
+transaction-rollback isolation, marker-vs-directory selection):
+`skills/testing/REFERENCE.md` §Infrastructure.
+
+Project-specific concretions (canonical fixtures, DSN, image tags,
+ports, mock fixture names): project-side `docs/test-conventions/`.
+Read them before deriving fixture needs (§Flow Step 2 + Step 4
+preflight).
