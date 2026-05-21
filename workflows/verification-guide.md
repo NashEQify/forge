@@ -5,7 +5,7 @@ Referenced from `workflows/templates/verification.yaml`.
 
 The tester reads this document when running the Verification Workflow. Each step describes WHAT to do, WHICH tools/commands are needed, and HOW the result is evaluated.
 
-**Prerequisite:** Test infrastructure is up (`make test-infra-up`). See `skills/test_infrastructure/SKILL.md`.
+**Prerequisite:** Test infrastructure is up (`make test-infra-up`). Cross-project discipline (fixture preflight, lift-vs-rebuild, transaction-rollback isolation, docker-compose conventions): `skills/testing/REFERENCE.md` §Infrastructure. Project-specific fixtures (DSN, image tags, ports, mocks): project-side `docs/test-conventions/`.
 
 ---
 

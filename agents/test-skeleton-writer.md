@@ -50,11 +50,50 @@ Without a TC scope: every TC.
 1. Read the test plan. Check the `tc_count`.
 2. Derive the fixture needs (from the declarative TC setup).
 3. Per TC: a test function with real assertions (from the TC
-   block).
+   block). Tag every test with an **INFRA header** (see step 4 ↓).
    File convention: `tests/{spec_name}/test_{tc_group}.py`.
-4. `conftest.py` with shared fixtures.
-5. Run all tests: `python -m pytest tests/{spec_name}/ -v`.
-6. Verify: ALL tests must FAIL (RED).
+4. **Fixture-availability preflight.** Before declaring any fixture
+   as STUB in conftest.py, check whether the fixture (or a canonical
+   equivalent pattern) already lives in the repo. Skill SoT:
+   `skills/testing/REFERENCE.md` §Infrastructure (Fixture-availability
+   preflight). Concrete check:
+   1. `grep -rn '<fixture-name>\|<canonical-pattern>' tests/**/conftest.py tests/**/test_*.py`
+      — does the fixture or an equivalent (`real_pg_pool`, `pgvector`,
+      `testcontainer`, `httpx_mock`, etc.) already exist?
+   2. Repo-root: `ls docker-compose.test*.yml` — is a testcontainer
+      stack the existing fixtures rely on present?
+   3. Project-side: `docs/test-conventions/` — do convention docs
+      declare canonical lift-sources?
+   4. **Found** → write `pytest.skip("STUB — LIFT <fixture> from
+      <path>:<line>")`. MCA / next agent sees the lift-source.
+   5. **Genuinely absent** → flag in the RED-phase return summary
+      with grep-evidence (commands run, zero hits). **Do NOT invent
+      new fixture infrastructure unilaterally** — escalate.
+
+   **INFRA-Header convention (producer-side discipline,
+   complementary to preflight):** every skeleton declares its
+   infrastructure expectation via a comment header so the tester
+   (execution mode) and MCA can choose fixtures or skip:
+
+   ```python
+   # INFRA: none           — runs without external services
+   # INFRA: Postgres       — needs Postgres testcontainer / pool
+   # INFRA: NATS           — needs NATS broker
+   # INFRA: Ollama         — needs running LLM endpoint
+   # INFRA: Postgres,NATS  — needs both
+   ```
+
+   Anti-pattern caught: writing `pytest.skip("STUB — needs <X>")`
+   while a canonical `<X>` already exists in the repo. Pattern class:
+   *cycle-symptom-as-cause / rebuild-vs-reuse*. Origin: BuddyAI
+   Task 468 cost_persistence skeleton-writer skipped with STUB while
+   `real_pg_pool` was production-tested at
+   `tests/chat/test_l3_reaper_postgres.py:44`.
+
+5. `conftest.py` with shared fixtures (only the ones the preflight
+   confirmed as genuinely-needed-new).
+6. Run all tests: `python -m pytest tests/{spec_name}/ -v`.
+7. Verify: ALL tests must FAIL (RED).
    When a test PASSes: the test is wrong (it tests
    triviality instead of behaviour).
 

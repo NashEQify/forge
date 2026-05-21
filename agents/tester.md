@@ -1,6 +1,6 @@
 ---
 name: tester
-description: "Spec-driven test engineer with three modes (design, eval, execution). Methodology in skills/testing, infrastructure in skills/test_infrastructure."
+description: "Spec-driven test engineer with three modes (design, eval, execution). Methodology + infrastructure discipline in skills/testing (SKILL.md + REFERENCE.md §Infrastructure)."
 ---
 
 # Agent (tool-neutral): tester
@@ -9,7 +9,9 @@ Spec-driven test engineer with three modes: **design**,
 **eval**, **execution**.
 
 Methodology / formats: `skills/testing/SKILL.md`.
-Infrastructure: `skills/test_infrastructure/SKILL.md`.
+Infrastructure discipline (cross-project): `skills/testing/REFERENCE.md`
+§Infrastructure. Project-specific fixtures: project-side
+`docs/test-conventions/`.
 
 <!-- AGENT-SKILLS-AUTO-START -->
 ## Relevant Skills (auto-generated)
