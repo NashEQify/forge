@@ -62,14 +62,40 @@ a warning, no auto-fix.
 
 #### 2. Pre-commit hook (per repo)
 
-From every consumer repo:
+`setup-cc.sh` installs the hook in the framework repo itself. For every
+**consumer repo**, run once from inside the repo:
 
 ```bash
-ln -sf $FRAMEWORK_DIR/orchestrators/claude-code/hooks/pre-commit.sh \
-       .git/hooks/pre-commit
+bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh
 ```
 
-On the next `git commit` the 12 pre-commit checks run (see
+Or pass the repo path explicitly:
+
+```bash
+bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh /path/to/consumer-repo
+```
+
+What it does:
+
+- Symlinks `.git/hooks/{pre-commit,commit-msg}` to
+  `orchestrators/claude-code/hooks/pre-commit.sh` (same file serves
+  both hook events — F-102 mode-detection via `$0` basename).
+- Idempotent. Re-running is a no-op with `OK` output. Broken symlinks
+  and wrong-target symlinks are auto-corrected; existing non-symlink
+  files at the hook path are NOT overwritten (operator action
+  required).
+- Worktrees handled — uses `git rev-parse --git-dir`.
+- Self-probe: validator rejects bad input (exit ≠ 0 on
+  `--validate -1`); hook executes via the freshly-installed symlink.
+
+Other modes:
+
+```bash
+bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh --check       # probe only, no writes
+bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh --uninstall   # remove symlinks
+```
+
+On the next `git commit` the pre-commit checks run (see
 [`02-architecture.md`](02-architecture.md) §Pre-Commit 12 Checks).
 
 #### 3. Hook registration (`.claude/settings.json`)
@@ -178,12 +204,13 @@ A consumer repo (e.g. your own project) needs:
 
 3. **Optional `docs/backlog.md` + `docs/tasks/`** when the repo has its own tasks.
 
-4. **Pre-commit hook symlink** when the repo should operate under Buddy's
+4. **Pre-commit hook** when the repo should operate under Buddy's
    engineering discipline:
    ```bash
-   ln -sf $FRAMEWORK_DIR/orchestrators/claude-code/hooks/pre-commit.sh \
-          .git/hooks/pre-commit
+   bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh
    ```
+   Idempotent, worktree-safe, includes a self-probe. See §"Pre-commit
+   hook (per repo)" above for modes and details.
 
 Buddy finds these files automatically via the `ls` boot sequence (`agents/buddy/boot.md`).
 

@@ -394,8 +394,7 @@ that repo, with the same methodology.
 
 ```bash
 # 1. Pre-commit hook — same hook everywhere
-ln -sf "$FRAMEWORK_DIR/orchestrators/claude-code/hooks/pre-commit.sh" \
-       ~/projects/personal/.git/hooks/pre-commit
+bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh ~/projects/personal
 
 # 2. (optional) post-commit dashboard hook
 bash $FRAMEWORK_DIR/scripts/install-dashboard-hooks.sh
