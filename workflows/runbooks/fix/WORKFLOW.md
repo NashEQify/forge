@@ -4,8 +4,8 @@ Fix a bug or handle an incident. Root-cause-first, no symptom patching.
 
 **Forge-feed trigger (active throughout this workflow):** framework-
 relevant friction → apply the pre-write filter in
-`$FRAMEWORK_DIR/learnings/README.md`; if it passes, append to
-`$FRAMEWORK_DIR/learnings/forge-feed.md` on notice. Not at close.
+`$FRAMEWORK_DIR/docs/dogfood-learnings/README.md`; if it passes, append to
+`$FRAMEWORK_DIR/docs/dogfood-learnings/forge-feed.md` on notice. Not at close.
 
 ## Trigger
 

@@ -4,8 +4,8 @@ Research, evaluate, spike. Result: knowledge, not code.
 
 **Forge-feed trigger (active throughout this workflow):** methodology-
 level friction (cluster scoping, adversary timing, evaluation gap) →
-apply the pre-write filter in `$FRAMEWORK_DIR/learnings/README.md`;
-if it passes, append to `$FRAMEWORK_DIR/learnings/forge-feed.md` on
+apply the pre-write filter in `$FRAMEWORK_DIR/docs/dogfood-learnings/README.md`;
+if it passes, append to `$FRAMEWORK_DIR/docs/dogfood-learnings/forge-feed.md` on
 notice. Cluster-specific feeds stay in cluster files. Not at close.
 
 ## Trigger

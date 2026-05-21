@@ -5,8 +5,8 @@ Implement a feature or task. From intent to done.
 **Forge-feed trigger (active throughout this workflow):** framework-
 relevant friction (failed assumption, brief drift, tooling gap, agent-
 protocol weakness) → apply the pre-write filter in
-`$FRAMEWORK_DIR/learnings/README.md`; if it passes, append to
-`$FRAMEWORK_DIR/learnings/forge-feed.md` on notice. Not at close.
+`$FRAMEWORK_DIR/docs/dogfood-learnings/README.md`; if it passes, append to
+`$FRAMEWORK_DIR/docs/dogfood-learnings/forge-feed.md` on notice. Not at close.
 
 ## Trigger
 
