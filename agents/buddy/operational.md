@@ -140,8 +140,7 @@ Mechanical, not a per-turn gate:
   sub-threshold amendments stay Buddy-direct, the gate still applies.
   Theory + 5 primitives: `framework/spec-engineering.md`. Read
   `framework/agentic-design-principles.md` first.
-- **Transparency header:** on delegation and on task start →
-  `transparency_header/SKILL.md`.
+- **Transparency header:** every turn → `transparency_header/SKILL.md`.
 
 ### Workflow engine (required for non-trivial workflows)
 
