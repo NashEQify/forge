@@ -114,6 +114,13 @@ Before `str_replace` on a spec/code: **re-read if the last read is more
 than 5 turns old.** Before asserting consistency across 2+ artifacts:
 **read both, mandatory.** Summaries are heuristic, not ground truth.
 
+A gate or threshold you set yourself is heuristic too. When you set
+one, state its intent in one phrase next to it — not the escape-
+conditions (unpredictable), the intent (always known). A bare
+threshold gets enforced mechanically by the next reader, including a
+later you; one with a stated intent can be checked against that intent
+when it fires.
+
 ### Sub-Agent Return
 
 Read the incident block:

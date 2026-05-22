@@ -105,6 +105,34 @@ migration) — those are cross-cutting by definition.
 This is the test-side analog of the fix-scope rule above: fix all
 findings, but verify each fix at its narrow scope.
 
+### Net-new failures from the full-suite sweep — classify before blocking
+
+A net-new failure (present in the end-of-convergence full-suite run,
+absent from the per-fix narrow scope) MUST be classified BEFORE it is
+folded into a fix-pass as a blocking finding. It is one of three things:
+
+- **(a) Real cross-cutting regression** the fix introduced — blocks
+  the commit, goes into the fix-pass.
+- **(b) Test-pollution artifact** — a new `conftest` fixture / shared
+  test state bleeds into an unrelated test. Does NOT block; route to
+  the task that owns the fixture-pollution class.
+- **(c) Order-dependent latent bug** the new test ordering merely
+  exposed — a real bug, but pre-existing. Route to a fix-task; does
+  not block the current commit unless the current change caused the
+  reorder.
+
+**The isolation-run is one diagnostic input, not the verdict.**
+Running the failing test alone: passing-in-isolation rules OUT (a),
+but does NOT distinguish (b) from (c) — both pass in isolation, both
+fail in-suite. The second step is required: is the bleeding state a
+**test fixture** (→ b) or a **production singleton / global** (→ c)?
+Only that distinction tells you whether to route-and-ship or fix.
+
+A baseline-gate ("0 net-new failures vs predecessor") is a proxy for
+"the change broke nothing real". When the proxy fires, classify what
+fired it — do not enforce the count mechanically. Unclassified
+net-new failures must not be folded into the fix-pass.
+
 ### Termination
 
 | Situation | Decision |
