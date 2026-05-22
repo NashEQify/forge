@@ -24,25 +24,85 @@ Buddy checklist for code-review dispatch. Detail mechanics:
 
 ## 1. Level choice
 
+### 1.0 Proportionality gate (MANDATORY — runs before the table)
+
+The level table below is risky-by-default: every change is escalated
+until proven small. L-032 (forge-feed) surfaced the cost — a ~30-line
+sibling-pattern fix with a green red test landed in L2 because the
+diff included 2 tests + 2 as-built spec amendments. Six reviewers +
+chief + a fix-pass cycle, 1 of 5 convergence clusters added real
+signal, the rest polish. *"Theater"* was the user's word.
+
+Before consulting the table, answer four questions:
+
+1. **Substantive code change ≤~50 net lines in one function** (i.e.
+   one cohesive change site, not splattered across the file)?
+2. **Mirrors a visible sibling pattern in the same module** (the
+   change reads as "another instance of an existing branch", not a
+   new mechanism)?
+3. **Concrete red test going green** (pre-existing failing test now
+   passing) OR a new test that pins the fix?
+4. **Spec touches are only as-built documentation** (Step-alt
+   example, §S8.2 row, amendment-log header entry, version bump) and
+   NOT a contract change (new state in a state-vocabulary, new SSE
+   event type, new public API, breaking schema change)?
+
+**3-of-4 yes → `light` path** (single `code-verification` reviewer),
+regardless of file count or cross-spec triggers in the table. The
+gate authorizes proportionality; the table's mechanical signals do
+not override a green red test on a sibling-pattern fix.
+
+**Override floor (trigger consequence narrowed):** the
+NON-NEGOTIABLE escalation below the table fires only when the change
+is **L/XL effort AND introduces a new subsystem AND changes a named
+public API**. "Spec files appear in the diff" is no longer sufficient
+to override the gate — bookkeeping amendments are not contracts.
+
+**Gate is mandatory, not optional.** Skipping the gate and running
+the table-default IS the L-032 failure mode. If the gate hits 0-2
+yes, fall through to the table normally.
+
+### 1.1 Level-choice table
+
 Three-path table per spec 306 §4.4a:
 
 ```
 light:   ALL of (mechanically testable from `git diff --stat` + `git diff` parse):
-         git diff --stat shows ≤2 files changed
+         git diff --stat shows ≤2 files changed (test files count 0.5×; see §1.2)
          AND ≤30 net lines added
-         AND no docs/specs/*.md touched
+         AND no docs/specs/*.md touched OR all spec touches are bookkeeping (see §1.2)
          AND no Pydantic model / type-alias / NATS subject / public-API signature change
          AND no new top-level symbol (function/class/module) introduced
          → single agents/code-verification.md persona (verbatim
          verification-agent adoption); VERDICT: PASS|FAIL|PARTIAL
          per upstream contract.
-L1 (focused): small-scope but above light threshold AND ≤5 files AND no new module
-              AND no schema change AND effort S-M
+L1 (focused): small-scope but above light threshold AND ≤5 files (tests 0.5×)
+              AND no new module AND no schema change AND effort S-M
               → 2-3 reviewers + chief
-L2 (full):    >5 files OR new module OR cross-spec OR schema change OR effort L-XL
+L2 (full):    >5 files (tests 0.5×) OR new module OR contract-amendment cross-spec
+              OR schema change OR effort L-XL
               → 5-7 reviewers + chief
-When unclear: L2.
+When unclear: L2 — UNLESS §1.0 gate fired light.
 ```
+
+### 1.2 Counting rules (resolves table ambiguity)
+
+**Test files count 0.5× toward the file-count threshold.** Tests
+scale with thoroughness, not with risk surface. A diff that grows
+from 2 files to 5 files because the agent wrote 3 thorough tests
+should not cross the L1→L2 boundary on file-count alone. The 0.5×
+weight is a single number applied to the count, not a sliding scale.
+
+**Spec amendments split into bookkeeping vs contract:**
+
+| Category | Examples | Cross-spec trigger fires? |
+|---|---|---|
+| Bookkeeping | Step-alt example block, §S8.2 table row, amendment-log header entry, version bump, lessons-table row | No |
+| Contract | New state in a state-vocabulary, new SSE event type, new public API, breaking schema change, new invariant | Yes |
+
+Only contract amendments fire the cross-spec L2 trigger.
+Bookkeeping amendments document what landed; the level is decided by
+the code, not the documentation.
 
 **NEW MODULE vs NEW SUBSYSTEM distinction (spec 306 §4.4a):**
 "NEW MODULE" alone is no longer sufficient for L2 escalation. A
@@ -70,13 +130,19 @@ Distribution-as-signal observed: L2 pass-1 producing 5H+12M+10L
 without naming structural roots = heuristic gap, not thorough
 review.
 
-**Trigger consequence (NON-NEGOTIABLE):** after every MCA return
-with `status=done` for L/XL tasks or new modules, Buddy MUST
-check the level. "MCA tested it itself, looks good" is NOT a
-valid skip signal. MCA self-test covers L0+L1+L2 tests, NOT
-architecture drift, cancellation-path bugs, race conditions,
-PII-logging issues, or edge-case data loss — those are caught
-only by multi-reviewer diversity.
+**Trigger consequence (NON-NEGOTIABLE, narrowed by §1.0):** after
+every MCA return with `status=done` for **L/XL tasks AND new
+subsystems AND named public-API changes**, Buddy MUST check the
+level. The earlier blanket "L/XL OR new modules" floor over-fired
+for sibling-pattern fixes that happened to touch many files (tests
++ as-built specs); §1.0's proportionality gate handles those
+correctly. "MCA tested it itself, looks good" is NOT a valid skip
+signal **when the gate did not authorize light**. MCA self-test
+covers L0+L1+L2 tests, NOT architecture drift, cancellation-path
+bugs, race conditions, PII-logging issues, or edge-case data loss —
+those are caught only by multi-reviewer diversity, and they are
+exactly what the §1.0 gate's question 2 ("mirrors a visible sibling
+pattern") screens for.
 
 ## 2. Review brief (MUST — before agent dispatch)
 
@@ -95,7 +161,14 @@ only by multi-reviewer diversity.
 
 ## 3. Team composition
 
-**Core (ALWAYS):** code-review + code-adversary.
+**Level is the input.** Team composition reads from §1 — §1.0 may
+have authorized `light` (single `code-verification`); §1.1 picks
+L1 / L2; §1.2's counting rules (test files 0.5×, bookkeeping
+amendments excluded from cross-spec trigger) decide where the
+file-count threshold lands. If §1.0 fired `light`, none of the
+below applies — `code-verification` is the whole team.
+
+**Core (ALWAYS, L1 + L2):** code-review + code-adversary.
 
 `code-review` covers three quality axes sequentially (correctness
 / architecture / performance) — absorbed `code-quality` +
