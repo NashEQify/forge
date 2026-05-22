@@ -2,8 +2,8 @@
 name: risk-followup-routing
 description: >
   Routes chief-verdict `remaining_findings:` entries per their
-  `target:` annotation (6-value enum: spec_text / new_task /
-  watch_item / absorb_next / closes_with / re_review). Replaces
+  `target:` annotation (7-value enum: spec_text / new_task /
+  watch_item / accept / absorb_next / closes_with / re_review). Replaces
   the legacy `risk-followup-task` step which mechanically created
   one task per finding regardless of finding type.
   Triggers when a chief verdict carries remaining_findings: entries to route by their target: annotation; NOT for creating tasks directly (use task_creation).
@@ -33,7 +33,7 @@ types).
 - Review workflow analogous gate, after chief verdict.
 
 The chief is responsible for annotating every entry with `target:`
-per the 6-value enum (spec 306 §4.7 + `code_review_board/SKILL.md` §5).
+per the 7-value enum (spec 306 §4.7 + `code_review_board/SKILL.md` §5).
 This skill assumes that annotation exists; if any entry has empty
 `target:`, the skill fails with a clear error and surfaces back to
 the chief for re-emit.
@@ -54,6 +54,9 @@ the chief for re-emit.
    - `spec_text`: collect all into a single batch.
    - `new_task`: each entry filed independently.
    - `watch_item`: collect for risk-watch append.
+   - `accept`: collect for chief-verdict-archive log (accepted
+     limitations — distinct from `absorb_next`: no future fix
+     implied).
    - `absorb_next`: collect for chief-verdict-archive log.
    - `closes_with: <id>`: validate referenced finding exists in
      same verdict; collect for assertion log.
@@ -71,6 +74,9 @@ the chief for re-emit.
    - **watch_item:** if `context/risk-watch.md` doesn't exist,
      create from `skills/_protocols/risk-watch-template.md`. Append
      each entry verbatim under `## Entries`.
+   - **accept:** log to `docs/reviews/board/archive/<verdict-id>-accepted.md`
+     (one file per verdict; append within file) as a known
+     accepted limitation. No fix, no task, no trigger.
    - **absorb_next:** log to `docs/reviews/board/archive/<verdict-id>-absorbed.md`
      (one file per verdict; append within file). No further action.
    - **closes_with:** assert the referenced finding exists in the
@@ -82,8 +88,8 @@ the chief for re-emit.
      uncertainty persists, escalate to council per existing
      cross-layer-decision pattern.
 4. Aggregate routing report: `<N> entries routed (<count> spec_text,
-   <count> new_task, <count> watch_item, <count> absorb_next,
-   <count> closes_with, <count> re_review)`.
+   <count> new_task, <count> watch_item, <count> accept,
+   <count> absorb_next, <count> closes_with, <count> re_review)`.
 
 ## Output
 
@@ -92,7 +98,7 @@ DELIVERS:
   return, when spec_text entries exist).
 - Tasks filed (via task_creation per entry).
 - Risk-watch append (one or more entries).
-- Archive log for absorb_next entries.
+- Archive log for accept and absorb_next entries.
 - closes_with assertions logged.
 - Re-review dispatched for re_review entries.
 
