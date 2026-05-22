@@ -28,12 +28,13 @@
 | python-code-quality-enforcement | Python code quality and conventions for BuddyAI. | active |
 | retroactive-spec-update | Retroactively update existing specs to match the as-is code state. | active |
 | return-summary | Format and rules for sub-agent return summaries. | active |
-| risk-followup-routing | Routes chief-verdict `remaining_findings:` entries per their `target:` annotation (6-value enum: spec_text / new_task / watch_item / absorb_next / closes_with / re_review). | active |
+| risk-followup-routing | Routes chief-verdict `remaining_findings:` entries per their `target:` annotation (7-value enum: spec_text / new_task / watch_item / accept / absorb_next / closes_with / re_review). | active |
 | root-cause-fix | 5-step root-cause analysis and fix. | active |
 | scoping | Translate a high-level intent into an approved spec hierarchy (L0-L3). | active |
 | sectional-deep-review | Deep review for large foundation specs (>1000 lines, many subsections). | active |
 | security-and-hardening | Security-first development discipline. | active |
 | shipping-and-launch | Production-launch discipline with pre-launch checklist + feature-flag strategy + staged rollout + rollback plan + monitoring. | active |
+| show-open-tasks | Render a fast terminal overview of the OPEN tasks in a docs/tasks/ tree (status not in a terminal set), grouped by priority and sorted by created date descending (newest first). | active |
 | source-spec-reduce | Post-authoring source-spec reduction: cut each absorbed section + leave a pointer stub. | active |
 | spec-amendment-verification | Read-only cross-spec verification after spec amendments. | active |
 | spec-authoring | Interview-based authoring of a NEW spec. | active |
@@ -46,6 +47,6 @@
 | youtube-subtitles | Read YouTube videos via subtitles instead of watching them. | active |
 | zoom-out | User-triggered: provide a wider context / higher abstraction level for an unfamiliar code area. | active |
 
-Active: 39 | Other: 2
+Active: 40 | Other: 2
 
-*Status: 2026-05-10*
+*Status: 2026-05-22*

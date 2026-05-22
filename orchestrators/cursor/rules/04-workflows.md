@@ -54,10 +54,12 @@ Under Cursor, run via terminal-integration. State-file lives under
 
 ## Pre-Commit Hook (mandatory)
 
-12 checks at git-commit time. Even under Cursor (no PreToolUse-Hook), this
+13 checks at git-commit time. Even under Cursor (no PreToolUse-Hook), this
 runs at every commit and is the primary quality gate:
 - BLOCK: PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE
-- WARN: TASK-SYNC, OBLIGATIONS, STALE-CLEANUP, PERSIST-GATE
+- WARN: TASK-SYNC, OBLIGATIONS, STALE-CLEANUP, PERSIST-GATE, ENGINE-USE,
+  RUNBOOK-DRIFT, AGENT-SKILL-DRIFT, SECRET-SCAN, SOURCE-VERIFICATION,
+  PIEBALD-BUDGET
 
 Install:
 ```bash

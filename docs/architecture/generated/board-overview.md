@@ -8,4 +8,4 @@
 | Code Board | 14 | skills/code_review_board/SKILL.md | Multi-perspective code review. |
 | UX Board | 3 | skills/ux_review/SKILL.md | (not found) |
 
-*Status: 2026-05-10*
+*Status: 2026-05-22*

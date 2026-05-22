@@ -403,7 +403,7 @@ Trigger: >1 path + hard to reverse, >1 layer, substantial impact, Buddy unsure.
 | `delegation-prompt-quality.sh` | PreToolUse(Task) | WARN <200 characters + missing plan-block keyword + (Check C) MCA dispatch without `implicit_decisions_surfaced` section on a substantive dispatch (Item 4 brief-quality gate) |
 | `mca-return-stop-condition.sh` | PostToolUse(Task) | WARN when subagent_type=main-code-agent + the MCA return contains Stop-Condition / ESCALATE / ARCH-CONFLICT / AUTO-FIXED keywords. Pattern-Lesson 388 F-CR-004 (Item 2 mechanical Stop-Condition enforcement). |
 | `board-output-check.sh` | PostToolUse(Task) | WARN on a dispatch prompt with a file-output pattern when the expected file is missing post-task. Pass-through fallback suggestion in the WARN. |
-| `pre-commit.sh` | git pre-commit | 12 checks (see below) |
+| `pre-commit.sh` | git pre-commit | 13 checks (see below) |
 | `state-write-block.sh` | PreToolUse | state-file protection |
 | `workflow-commit-gate.sh` | git pre-commit | workflow-state consistency |
 | `workflow-reminder.sh` | UserPromptSubmit | workflow-engine `additionalContext` injection (NEXT step + task) every turn |

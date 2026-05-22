@@ -13,14 +13,30 @@ Re-run: `python3 scripts/generate-status.py`
 
 ---
 
+## Uncategorized
+
+| Spec | Cat | Spec-Status | Tasks | Task-Status | Deps |
+|------|-----|------------|-------|-------------|------|
+| 299-fabrication-mitigation | imple | ? | [301], [302] | DONE, DONE | 299, 301 |
+| 306-brief-architect | imple | ? | — | — | — |
+| skill-corpus-realism-audit-plan | imple | ? | — | — | — |
+
 ---
 
 ## Summary
 
 | Metric | Count |
 |--------|-------|
-| Total Specs | 0 |
+| Total Specs | 3 |
 | Implemented | 0 |
 | Spec Current (no code yet) | 0 |
 | Proposed | 0 |
-| Other (ready, approved, cond.) | 0 |
+| Other (ready, approved, cond.) | 3 |
+
+## Gaps: Implementation Specs Without Tasks
+
+These specs are categorized as implementation specs but have **no task with `spec_ref`** pointing to them.
+Either create a task with `spec_ref: <spec-name>.md` or recategorize as reference spec.
+
+- **306-brief-architect** — needs a task or reclassification
+- **skill-corpus-realism-audit-plan** — needs a task or reclassification

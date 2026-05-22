@@ -113,7 +113,7 @@ primitives / gates / agent workflows: check against
 · `skills/<name>/REFERENCE.md` (on a split skill, linked from
 SKILL.md) · the agent SoT that uses the skill ·
 `framework/README.md` · **`framework/boot-navigation.md`
-§Skills** · **`framework/skill-map.md` §Active Skills +
+§Skills** · **`framework/skill-map.md` §Skills — AUTO +
 §Maturity Registry** (generator run) · `skills/navigation.md`
 lookup table (manual) · every `uses:` declaration in other
 skills (grep `uses:.*<name>`) · every `Boundary` section in
@@ -191,10 +191,13 @@ Parallel to A) and B), check 6 verifies:
 
 1. **AUTO block:** between `<!-- SKILL-MAP-AUTO-START -->` and
    `<!-- SKILL-MAP-AUTO-END -->` in `framework/skill-map.md`,
-   every active skill (`skills/<name>/SKILL.md`) must appear
+   every skill dir (`skills/<name>/SKILL.md`) must appear
    **exactly once** in one of the sub-sections — direct-
-   invokable, workflow-step, service, cross-cutting, or hook-
-   triggered. Regenerator: `python scripts/generate_skill_map.py`.
+   invokable, workflow-step, service, cross-cutting, hook-
+   triggered, or deprecated. A `status: deprecated` skill is
+   routed to the Deprecated sub-section (in tree, not active);
+   all others route by `invocation.primary`. Regenerator:
+   `python scripts/generate_skill_map.py`.
 
 Drift in skill-map.md → **WARNING** (less critical than
 boot-navigation, since skill-map is loaded only on demand,

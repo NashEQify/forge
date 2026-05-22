@@ -29,7 +29,7 @@ replaces "remember to" rules with mechanical enforcement.
 - A workflow runbook system (9 active workflows, e.g. solve / build / fix /
   review / research / save) with explicit phase models.
 - 13 mechanical enforcement hooks (path-whitelist, frozen-zone, pre-commit
-  with 12 checks, delegation-prompt-quality, workflow-engine-resume).
+  with 13 checks, delegation-prompt-quality, workflow-engine-resume).
 
 It is consumed by other repos (BuddyAI, personal projects, sysadmin/infra
 setups) without re-installation: consumers point at the framework via

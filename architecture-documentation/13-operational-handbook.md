@@ -17,7 +17,7 @@ asks what's up. Whatever you say, he routes through three phases:
 **RECEIVE** (incident? substantive? trivial?), **ACT** (delegate, dispatch
 boards, work skills), **BOUNDARY** (persist context, update task state,
 close the loop). Mechanical hooks block paths that aren't whitelisted,
-freeze WORM zones, and validate every commit against 12 checks. When
+freeze WORM zones, and validate every commit against 13 checks. When
 Buddy needs to do something non-trivial, he writes a Plan-Block before
 acting. When he needs multiple perspectives, he dispatches a Board and
 reads only the chief signal — never the individual reviewer outputs.
@@ -102,7 +102,7 @@ dispatch Personas. Three layers, clear contract.
 | Level | Mechanism | Examples |
 |---|---|---|
 | Tool-use | PreToolUse hooks | `path-whitelist-guard`, `frozen-zone-guard`, `delegation-prompt-quality` |
-| Commit-time | Pre-commit hook | 12 checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE = BLOCK; TASK-SYNC, OBLIGATIONS, STALE-CLEANUP, PERSIST-GATE, ENGINE-USE, RUNBOOK-DRIFT, AGENT-SKILL-DRIFT, SECRET-SCAN, SOURCE-VERIFICATION = WARN) |
+| Commit-time | Pre-commit hook | 13 checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE = BLOCK; TASK-SYNC, OBLIGATIONS, STALE-CLEANUP, PERSIST-GATE, ENGINE-USE, RUNBOOK-DRIFT, AGENT-SKILL-DRIFT, SECRET-SCAN, SOURCE-VERIFICATION, PIEBALD-BUDGET = WARN) |
 | Index-level | Generator + Validator | `generate_skill_map.py` + `consistency_check` Check 6, `generate_navigation.py` + Check 8 |
 
 Vanilla Claude Code has none of these. They are user-installed during

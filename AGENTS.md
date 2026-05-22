@@ -61,7 +61,7 @@ Format and types are enforced by the `pre-commit` hook (CG-CONV).
 The CC adapter ships 13 hooks (PreToolUse path-whitelist + frozen-zone
 guards, delegation-prompt-quality, mca-return-stop-condition, board-
 output-check, plan-adversary-reminder, workflow-reminder, state-write-
-block, engine-bypass-block; pre-commit with 12 checks; post-commit
+block, engine-bypass-block; pre-commit with 13 checks; post-commit
 dashboard). OpenCode runs the methodology layer; only the pre-commit
 hook is wired (the others rely on Claude Code's PreToolUse / PostToolUse
 events, which OpenCode does not surface).

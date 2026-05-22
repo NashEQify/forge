@@ -81,8 +81,8 @@ to a file path. The mapping below is the audit table.
 | Claim | Evidence |
 |---|---|
 | 13 active hooks | `ls orchestrators/claude-code/hooks/*.sh` |
-| Pre-commit 12 checks (PLAN-VALIDATE, TASK-SYNC, OBLIGATIONS, CG-CONV, STALE-CLEANUP, PERSIST-GATE, SKILL-FM-VALIDATE, ENGINE-USE, RUNBOOK-DRIFT, AGENT-SKILL-DRIFT, SECRET-SCAN, SOURCE-VERIFICATION) | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
-| 3 checks BLOCK (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE), 9 checks WARN | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
+| Pre-commit 13 checks (PLAN-VALIDATE, TASK-SYNC, OBLIGATIONS, CG-CONV, STALE-CLEANUP, PERSIST-GATE, SKILL-FM-VALIDATE, ENGINE-USE, RUNBOOK-DRIFT, AGENT-SKILL-DRIFT, SECRET-SCAN, SOURCE-VERIFICATION, PIEBALD-BUDGET) | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
+| 3 checks BLOCK (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE), 10 checks WARN | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
 | Path-whitelist + frozen-zones SoT | [`../.claude/path-whitelist.txt.example`](../.claude/path-whitelist.txt.example) (template; `setup-cc.sh` generates the live `path-whitelist.txt`) + [`../.claude/frozen-zones.txt`](../.claude/frozen-zones.txt) |
 
 ### Adapter
