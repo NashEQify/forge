@@ -76,7 +76,8 @@ Guidance questions: `REFERENCE.md`.
 Between passes, **ALL findings** are fixed — not just those above
 the current threshold. The threshold determines when CONVERGENCE
 is reached, not what gets FIXED. Rationale (Task 191): high-only
-fixes led to stagnating accumulation of M/L findings.
+fixes accumulate M/L debt. Exception: a `code_review_board` FAIL
+fixes only the *fix-now set* per its §5 proportionality triage.
 
 Scope narrowing (pass 2+) refers to the ANALYSIS scope of the next
 pass, not to the FIX scope.
@@ -167,7 +168,8 @@ fix responsibility: `REFERENCE.md`.
 - **NOT** fix only findings above the threshold between passes.
   **INSTEAD** fix ALL findings — the threshold determines
   convergence, not fix scope. Because: MINOR accumulation
-  (Task 191, empirical).
+  (Task 191). Exception: `code_review_board` FAIL fixes the
+  fix-now set per its §5 proportionality triage.
 - **NOT** treat pass 2 / 3 as fix verification. **INSTEAD** every
   pass is a fresh analysis. Because: anchoring bias — tainted
   passes miss high findings a fresh look catches.

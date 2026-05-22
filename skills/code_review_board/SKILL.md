@@ -204,16 +204,18 @@ Make scope-focused testing explicit in the brief.
 ```
 PASS:            0C + 0H
 PASS_WITH_RISKS: 0C + ≤2H (documented + carry-forward MANDATORY)
-FAIL:            ≥1C or >2H → MCA fixes ALL findings → re-review (max 2)
+FAIL:            ≥1C or >2H → proportionality triage → MCA fixes the
+                 fix-now set → re-review (max 2)
 ```
 
-**Risk carry-forward (MANDATORY on PASS_WITH_RISKS, user-override
-cherry-pick, and ESCALATE-with-open-findings):** the verdict file
+**Risk carry-forward (MANDATORY on PASS_WITH_RISKS, FAIL with
+non-fix-now findings, user-override cherry-pick, and
+ESCALATE-with-open-findings):** the verdict file
 MUST contain a YAML block `remaining_findings:` listing every
 unfixed finding (including MEDIUM/LOW where present). Per spec 306
-§4.7, every entry MUST have a `target:` field with one of six
-values (`spec_text` / `new_task` / `watch_item` / `absorb_next` /
-`closes_with` / `re_review`). Schema:
+§4.7, every entry MUST have a `target:` field with one of seven
+values (`spec_text` / `new_task` / `watch_item` / `accept` /
+`absorb_next` / `closes_with` / `re_review`). Schema:
 
 ```yaml
 remaining_findings:
@@ -237,15 +239,24 @@ remaining_findings:
     severity: low
     locator: tests/foo/test_bar.py:123
     ...
+  - id: C2-009
+    target: accept                               # known limitation — no fix, no task
+    severity: medium
+    locator: src/stream.py:88-94
+    title: "Narrow late-release race on the slot pool"
+    rationale_for_carry_over: >
+      Non-blocking — backstopped by the reaper; does not block the
+      reported defect. Default accept per §5 proportionality triage.
 ```
 
-**6-value `target:` enum (spec 306 §4.7):**
+**7-value `target:` enum (spec 306 §4.7):**
 
 | `target` | Action | When to use |
 |---|---|---|
 | `spec_text` | batch-patched in same commit by `agents/spec-text-drift-batch.md` (per spec 306 §4.8) — no task | spec wording, example blocks, cross-ref drift, mirror-line inconsistency |
 | `new_task` | `task_creation` skill dispatched per entry | real follow-up work (≥M effort, new module, new behaviour) |
 | `watch_item` | appended to `context/risk-watch.md` per `skills/_protocols/risk-watch-template.md` | forward-looking risk that fires only on a future trigger |
+| `accept` | recorded in the verdict as a known accepted limitation — no fix, no task, no trigger | non-blocking finding that is narrow + backstopped, latent, or introduced by a prior fix-pass in this chain and narrower than the original defect — the DEFAULT disposition for any non-blocking finding |
 | `absorb_next` | logged to chief-verdict-archive only — no immediate action | LOW finding the next code-touch on the same file will trivially close |
 | `closes_with: <id>` | no action — references another finding's fix | duplicate / convergence — same root, two angles |
 | `re_review: <reviewer>` | dispatch the named reviewer with the finding cluster as scoped focus | chief uncertain, contradiction across reviewers, second specialist look |
@@ -267,25 +278,47 @@ the verdict prose and never became follow-up tasks. Structured
 block + workflow step makes carry-forward mechanically enforced,
 not bookkeeping-dependent.
 
-**On FAIL — fix scope (NON-NEGOTIABLE):**
+**On FAIL — proportionality triage (NON-NEGOTIABLE):**
 
-MCA fixes **ALL consolidated findings** (CRITICAL + HIGH + MEDIUM
-+ LOW + spec drift), not just CRITICAL or the top cluster.
-Rationale:
+A finding's *blocking-ness* is not its isolated severity. Before
+the fix-pass brief is written, the chief assigns every consolidated
+finding exactly ONE disposition. **Only the fix-now set enters the
+fix-pass brief.**
 
-- **Convergence clusters are systematic patterns:** when 4
-  reviewers find the same defect from different angles, a
-  cherry-pick fix is symptom treatment. Architecture drift gets
-  carried forward.
-- **MEDIUM / LOW are follow-up debt, not a free pass:** code
-  hygiene issues accumulate systematically and cost more later
-  than fixing now.
-- **Buddy MUST NOT offer paths A/B/C** ("only CRITICALs now, the
-  rest later") — that undermines the board verdict.
+| Disposition | Criterion | Routing |
+|---|---|---|
+| **fix-now** | blocks a user-facing requirement OR reproduces a reported defect — ALWAYS includes every CRITICAL and every convergence cluster (multiple reviewers converging on one defect = systematic pattern, not a narrow edge) | enters the fix-pass brief |
+| **accept** | non-blocking AND one of: narrow + already backstopped (reaper / retry / higher guard); latent (reachable only on a config / version / scale change that is not current reality); introduced by a prior fix-pass in this chain and narrower than the original defect. **The default for any non-blocking finding.** | `target: accept` — recorded, no fix, no task |
+| **watch** | as `accept`, plus a named concrete future trigger that would re-open the calculus | `target: watch_item` |
+| **fix-later** | promoted out of `accept` only with an explicit cost-justification — not a dumping ground for non-blocking findings | `target: new_task` |
 
-Fix-scope exception only on **explicit user override** (the user
-says "only CRITICALs now, the rest as follow-up tasks"). Default
-is always: fix everything.
+**Hard floor — no cherry-pick:** every CRITICAL and every
+requirement-blocking finding is fix-now, non-negotiable. The triage
+is the distinction between *blocks the requirement* and *hardens a
+narrow edge* — NOT a re-licensing of CRITICAL-only fixing. A
+MEDIUM / LOW finding that reproduces a reported defect is fix-now; a
+HIGH finding that is a narrow latent edge is `accept`. Convergence
+clusters are systematic patterns and stay fix-now — a cherry-pick
+there is symptom treatment.
+
+**No "leanest fix" for non-fix-now findings:** a minimal fix is a
+flavour of fix-now for when a fix IS warranted — never a disposition
+for a finding that did not clear the fix-now gate. `accept` means
+closed: no fix, no task, no follow-up investigation.
+
+**Self-introduced findings:** a finding introduced by a prior
+fix-pass in the same chain, narrower than the original defect, is
+`accept` by default — chasing it ratchets the next pass's scope
+upward (the fix-pass-manufactures-the-next-pass's-finding spiral).
+
+**Buddy MUST NOT offer paths A/B/C** ("only CRITICALs now, the rest
+later") — phased scope negotiation undermines the board verdict. The
+proportionality triage is the chief's principled per-finding
+disposition, not a severity menu offered to the user.
+
+The non-fix-now findings populate the FAIL verdict's
+`remaining_findings:` block (same schema as PASS_WITH_RISKS);
+`risk-followup-routing` processes them.
 
 **Re-review limit (foundation override):**
 
@@ -390,8 +423,8 @@ Verdict: `docs/reviews/code/{task-id}-verdict.md`
 - SAVE executed.
 
 ### FAIL
-- **Retry:** FAIL (≥1C or >2H) → MCA fixes all findings → L0
-  after fix → re-review.
+- **Retry:** FAIL (≥1C or >2H) → proportionality triage → MCA
+  fixes the fix-now set → L0 after fix → re-review.
 - **Re-review limit:** default max 2. Foundation tasks
   (intake-mvp, brain-*, schema-*, harness-*) more on Buddy's
   judgment when severity drops measurably. Non-foundation: strict
