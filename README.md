@@ -58,7 +58,7 @@ refreshes derived views. Mechanical, not prompt-based.
         ┌─────────────┐          ┌─────────────┐         ┌─────────────┐
         │  SKILLS     │          │  BOARDS     │         │  COUNCIL    │
         │  41 active  │          │  spec/UX/   │         │  arch deci- │
-        │  single-    │          │  code, 4-13 │         │  sions, 4-5 │
+        │  single-    │          │  code, 4-14 │         │  sions, 4-5 │
         │  purpose    │          │  personas   │         │  members +  │
         │             │          │  + chief    │         │  adversary  │
         └──────┬──────┘          └──────┬──────┘         └──────┬──────┘
@@ -168,7 +168,7 @@ Adapter-based on top of an existing harness, not a re-implementation.
 ## Inventory (live)
 
 - **Skills:** [`framework/skill-map.md`](framework/skill-map.md) (41 active)
-- **Personas:** [`agents/navigation.md`](agents/navigation.md) (34 + boards)
+- **Personas:** [`agents/navigation.md`](agents/navigation.md) (35, incl. boards)
 - **Workflows + Routing:** [`framework/process-map.md`](framework/process-map.md)
 - **Protocols / References / Hooks:** [`architecture-documentation/02-architecture.md`](architecture-documentation/02-architecture.md)
 

@@ -26,10 +26,10 @@ replaces "remember to" rules with mechanical enforcement.
   with configurable depth and chief-consolidation.
 - An architectural Council with parallel context-isolated members for
   irreversible decisions.
-- A workflow runbook system (9 active workflows, e.g. solve / build / fix /
+- A workflow runbook system (8 active workflows, e.g. solve / build / fix /
   review / research / save) with explicit phase models.
 - 13 mechanical enforcement hooks (path-whitelist, frozen-zone, pre-commit
-  with 13 checks, delegation-prompt-quality, workflow-engine-resume).
+  with 13 checks, delegation-prompt-quality, workflow-reminder).
 
 It is consumed by other repos (BuddyAI, personal projects, sysadmin/infra
 setups) without re-installation: consumers point at the framework via
@@ -87,7 +87,7 @@ supposed to prevent.
 `path-whitelist-guard.sh` blocks Edit/Write outside whitelisted paths at
 PreToolUse time — the agent can't even attempt the unsafe write.
 `frozen-zone-guard.sh` makes `context/history/**` WORM (write-once-read-many).
-Pre-commit hook with 3 BLOCK + 9 WARN checks runs at every commit.
+Pre-commit hook with 3 BLOCK + 10 WARN checks runs at every commit.
 
 For things that can't be hook-enforced (content-quality, methodology
 correctness): mandatory Spec-Board review, with anti-anchoring discipline

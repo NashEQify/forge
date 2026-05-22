@@ -153,7 +153,7 @@ trigger words, defined in `agents/buddy/operational.md §Commands`:
 | `checkpoint` | Save + drift-check + sculpting (deep version) |
 | `sleep` | Forget the session (no persist) |
 | `think!` | THINK-Stance: deeper analysis mode (`agents/buddy/think-operational.md`) |
-| `consistency check` | Invoke `consistency_check` skill (8 checks) |
+| `consistency check` | Invoke `consistency_check` skill (10 checks) |
 | `solve <problem>` | Trigger solve-Workflow (problem with open solution-form) |
 | `build <task>` | Trigger build-Workflow |
 | `fix <bug>` | Trigger fix-Workflow (root-cause-first) |
@@ -459,7 +459,7 @@ If you're used to vanilla Claude Code, here's what changes:
 | Config drift | "let me update the prompt" | Tier-0 invariants + Tier-1 operational + Skill-Anatomy enforced via hook |
 | Skill management | text in prompts | Single-class skills with `invocation` axis, frontmatter mechanically validated |
 | Cross-repo | duplicate everything | Single SoT + adapters; consumers point at framework |
-| Drift detection | none | `consistency_check` skill with 8 checks |
+| Drift detection | none | `consistency_check` skill with 10 checks |
 | Stale cleanup | manual sweep | Stale-Cleanup invariant + pre-commit STALE-CLEANUP warn |
 
 The cost is higher per-task overhead. The win is that work compounds:
@@ -603,7 +603,7 @@ When in doubt: `framework/process-map.md` (workflow routing) or `agents/navigati
 | Code-Review-Board mechanics | [`../skills/code_review_board/SKILL.md`](../skills/code_review_board/SKILL.md) |
 | Council mechanics | [`../skills/council/SKILL.md`](../skills/council/SKILL.md) |
 | Convergence loop | [`../skills/convergence_loop/SKILL.md`](../skills/convergence_loop/SKILL.md) |
-| Consistency check (8 checks) | [`../skills/consistency_check/SKILL.md`](../skills/consistency_check/SKILL.md) |
+| Consistency check (10 checks) | [`../skills/consistency_check/SKILL.md`](../skills/consistency_check/SKILL.md) |
 | Pre-commit hook script | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
 | Workflow-Engine source | [`../scripts/workflow_engine.py`](../scripts/workflow_engine.py) |
 | Workflow-YAML schema example | [`../workflows/runbooks/solve/workflow.yaml`](../workflows/runbooks/solve/workflow.yaml) |
