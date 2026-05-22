@@ -25,7 +25,7 @@ gate; a mechanic inside existing gates (cascade:
 `workflows/runbooks/review/WORKFLOW.md` phase Verify).
 
 Detail mechanics (override, fix responsibility, scope narrowing,
-analysis patterns, DR coverage): `REFERENCE.md`.
+analysis patterns, outer-loop bound): `REFERENCE.md`.
 
 ## Who and when
 
@@ -96,42 +96,23 @@ that weren't touched produces zero new signal at 2-3× wallclock
 | Public-API / spec-defined contract | + 0-1 integration smoke |
 | L0 (ruff + mypy) | only on touched files |
 
-**ONE full-suite sweep at the END** — after the last
-convergence-loop pass converges, ONE full repo run confirms no
-cross-cutting regression. Not per fix-phase. Same for pre-deploy
-and cross-cutting refactors (dependency-injection rewiring, schema
-migration) — those are cross-cutting by definition.
+**ONE full-suite sweep at the END** — after the last pass converges,
+one full repo run confirms no cross-cutting regression. Not per
+fix-phase. Same for pre-deploy and cross-cutting refactors.
 
-This is the test-side analog of the fix-scope rule above: fix all
-findings, but verify each fix at its narrow scope.
+### Net-new failures from the full-suite sweep
 
-### Net-new failures from the full-suite sweep — classify before blocking
+A failure in the end-of-convergence full run but absent from per-fix
+scope MUST be classified before it blocks a commit. Three classes:
+**(a)** real regression the fix introduced — blocks; **(b)**
+test-pollution (`conftest` fixture bleed) — route to the
+fixture-pollution task, no block; **(c)** order-dependent pre-existing
+bug the new ordering exposed — route to a fix-task, no block.
 
-A net-new failure (present in the end-of-convergence full-suite run,
-absent from the per-fix narrow scope) MUST be classified BEFORE it is
-folded into a fix-pass as a blocking finding. It is one of three things:
-
-- **(a) Real cross-cutting regression** the fix introduced — blocks
-  the commit, goes into the fix-pass.
-- **(b) Test-pollution artifact** — a new `conftest` fixture / shared
-  test state bleeds into an unrelated test. Does NOT block; route to
-  the task that owns the fixture-pollution class.
-- **(c) Order-dependent latent bug** the new test ordering merely
-  exposed — a real bug, but pre-existing. Route to a fix-task; does
-  not block the current commit unless the current change caused the
-  reorder.
-
-**The isolation-run is one diagnostic input, not the verdict.**
-Running the failing test alone: passing-in-isolation rules OUT (a),
-but does NOT distinguish (b) from (c) — both pass in isolation, both
-fail in-suite. The second step is required: is the bleeding state a
-**test fixture** (→ b) or a **production singleton / global** (→ c)?
-Only that distinction tells you whether to route-and-ship or fix.
-
-A baseline-gate ("0 net-new failures vs predecessor") is a proxy for
-"the change broke nothing real". When the proxy fires, classify what
-fired it — do not enforce the count mechanically. Unclassified
-net-new failures must not be folded into the fix-pass.
+The isolation-run is one input, not the verdict: passing-in-isolation
+rules out (a) but not (b)-vs-(c) — both pass isolated. Second step: is
+the bleeding state a test fixture (→b) or a production singleton (→c)?
+Never fold an unclassified net-new failure into a fix-pass.
 
 ### Termination
 
@@ -196,11 +177,3 @@ fix responsibility: `REFERENCE.md`.
 - **NOT** set severity abstractly. **INSTEAD** anchor it at the
   next step ("can the next step proceed?"). Because: only that
   is mechanically checkable.
-- **NOT** run `pytest tests/` (full suite) after every fix-phase
-  between passes. **INSTEAD** scope-focused tests on the modules
-  touched by the fix. Because: re-running untouched modules
-  produces zero new signal at 2-3× wallclock + token cost.
-- **NOT** run L0 (ruff + mypy) on the full repo between passes.
-  **INSTEAD** only on touched files. Because: pre-existing errors
-  elsewhere are not a fix-pass concern; treating them as one
-  inflates the pass.
