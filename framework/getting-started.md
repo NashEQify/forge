@@ -157,5 +157,6 @@ Working style: `agents/buddy/operational.md`.
 
 **FACTS check:** in the Claude Code adapter this is mechanical via the
 Stop+SessionEnd hook (user-global in `~/.claude/settings.json`). In the
-OpenCode adapter it is prompt-level (`AGENTS.md` §2) until an equivalent
-hook mechanism exists.
+OpenCode adapter it is prompt-level (`AGENTS.md` §2) — the OC plugin
+wires `tool.execute.{before,after}` to the bash hooks (PreToolUse +
+PostToolUse parity), but no Stop/SessionEnd equivalent for FACTS yet.

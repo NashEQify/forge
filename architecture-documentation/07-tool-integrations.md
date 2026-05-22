@@ -195,7 +195,8 @@ generates the user-specific `opencode.jsonc` (gitignored).
 
 | Aspect | OC behaviour |
 |---|---|
-| Path guard | **missing** — Buddy must delegate mentally |
+| Path guard | **present** via `forge-hooks.ts` plugin (`tool.execute.before` → `path-whitelist-guard.sh`) |
+| Hook parity | PreToolUse + PostToolUse via plugin (Edit/Write/Bash/Task); pre-commit identical (git-side) |
 | BuddyAI context | manual via `--add-dir ~/BuddyAI` |
 | Project AGENTS.md | applies in addition, never instead |
 | Commands | trigger words without prefix (`wakeup`, `save`, `checkpoint`, `think!`) |
@@ -208,13 +209,22 @@ generates the user-specific `opencode.jsonc` (gitignored).
 
 ### Limitations
 
-- No mechanical path guard → user trust that Buddy delegates mentally
-- No FACTS hook → per-turn prompt obligation is costly
-- No workflow-reminder hook → user must trigger `save` actively
+- No `workflow-reminder` hook — OC has no UserPromptSubmit event.
+  Workflow state lives on disk in `.workflow-state/<id>.json`, so the
+  gap is mostly cosmetic (the per-turn nudge is missing, the state is
+  still readable on demand). PLUGIN.md §"UserPromptSubmit gap" lists
+  three workaround options if the gap becomes load-bearing.
+- No FACTS background hook — per-turn FACTS check is prompt-level
+  (`AGENTS.md §2`), no Stop+SessionEnd equivalent wired.
 
-For engineering discipline, Claude Code is currently the more strongly
-mechanised adapter. The OpenCode adapter is functional, but discipline is
-more prompt-driven.
+CC and OC now share the same mechanical-prevention layer for tool
+events. The bash hooks under `orchestrators/claude-code/hooks/` are the
+SoT for both; the OC plugin
+(`orchestrators/opencode/.opencode/plugins/forge-hooks.ts`) is a thin
+adapter that translates `tool.execute.{before,after}` into CC-shaped
+JSON. CC retains the UserPromptSubmit + Stop/SessionEnd hook surfaces
+(workflow-reminder, FACTS check) which have no OC equivalent — those
+remain CC-only.
 
 ## Cursor (planned, not implemented)
 

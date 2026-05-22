@@ -100,7 +100,7 @@ ceiling on complex systems.
 | Harness | Mechanism | Status |
 |---|---|---|
 | Claude Code | `--add-dir $FRAMEWORK_DIR` (bin + hooks) | active, fully mechanized |
-| OpenCode | `OPENCODE_CONFIG_DIR` (bin + opencode.jsonc) | active, hook-translator pending (Task 298) |
+| OpenCode | `OPENCODE_CONFIG_DIR` (bin + opencode.jsonc + `.opencode/plugins/forge-hooks.ts`) | active, hook parity via TS plugin (Task 298: UserPromptSubmit gap residual) |
 | Cursor | rules + persona wrapper | minimum viable, no hook parity |
 | Codex | plugin export (skills + engine-as-MCP-server) | planned, post-1.0 (Task 313) |
 
