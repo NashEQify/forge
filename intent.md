@@ -39,7 +39,7 @@ ceiling on complex systems.
   encode processes (how to build, how to solve, how to fix, how to
   spec, …) that an unsteered LLM wouldn't reliably apply. Have today:
   build, solve, fix, design, spec, review, research, save,
-  docs-rewrite, context_housekeeping (37 active skills total). **Roadmap
+  docs-rewrite, context_housekeeping (42 active skills total). **Roadmap
   gaps:** tool-use, multi-agent / teamwork — explicit, not implicit.
 - **Codified discipline patterns** — mechanical enforcement instead of
   rule text. Hooks fire on tool-call, gates fire on workflow step,

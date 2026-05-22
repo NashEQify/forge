@@ -74,7 +74,7 @@ If you don't hear back within 14 days, follow up via a different channel
   under OpenCode is mental, not mechanical.
 - **Cursor adapter** has no PreToolUse-Hook either (Cursor's API doesn't
   expose one). Pre-commit-hook is the only mechanical gate there.
-- **Pre-commit `--no-verify`** can bypass all 12 checks. Discipline-only
+- **Pre-commit `--no-verify`** can bypass all 13 checks. Discipline-only
   protection.
 
 ## Maintainer commitment

@@ -7,7 +7,7 @@ with persistent state — pulled through stably across sessions, not
 restarted each turn. Mechanical hooks fire at every boundary so drift
 gets prevented before a write, not caught after.
 
-Two halves, equal weight: workflows and their 37 skills carry the
+Two halves, equal weight: workflows and their 42 skills carry the
 craft (procedures an unsteered LLM doesn't reliably apply); hooks and
 gates carry the discipline (path-whitelist, frozen-zones, workflow
 state, pre-commit). Skills without discipline drift. Discipline
@@ -26,7 +26,7 @@ persists per task in `.workflow-state/<id>.json` — pause after spec
 today, resume at code-board tomorrow on a different machine. The
 eight workflows (`build`, `solve`, `fix`, `review`, `research`,
 `docs-rewrite`, `save`, `context-housekeeping`) carry the craft; their
-37 skills carry the moves inside each phase.
+42 skills carry the moves inside each phase.
 
 **The discipline.** A `PreToolUse` hook (`path-whitelist-guard`)
 inspects every file write *before* the tool call lands and blocks
@@ -34,7 +34,7 @@ writes outside the declared whitelist. A `pre-commit` hook would catch
 the same drift after the LLM has already written the file and polluted
 its own context — too late. Pre-tool-use hooks (path-whitelist,
 frozen-zones, state-write-block, engine-bypass) prevent at write-time;
-pre-commit (12 checks) catches what slips through; post-commit
+pre-commit (13 checks) catches what slips through; post-commit
 refreshes derived views. Mechanical, not prompt-based.
 
 ## How it works
@@ -57,7 +57,7 @@ refreshes derived views. Mechanical, not prompt-based.
                ▼                        ▼                        ▼
         ┌─────────────┐          ┌─────────────┐         ┌─────────────┐
         │  SKILLS     │          │  BOARDS     │         │  COUNCIL    │
-        │  37 active  │          │  spec/UX/   │         │  arch deci- │
+        │  42 active  │          │  spec/UX/   │         │  arch deci- │
         │  single-    │          │  code, 4-13 │         │  sions, 4-5 │
         │  purpose    │          │  personas   │         │  members +  │
         │             │          │  + chief    │         │  adversary  │
@@ -75,7 +75,7 @@ refreshes derived views. Mechanical, not prompt-based.
                                     RESULT
 
   ── HOOKS enforce at every boundary ─────────────────────────────────
-     PreToolUse · PostToolUse · UserPromptSubmit · pre-commit (12 checks)
+     PreToolUse · PostToolUse · UserPromptSubmit · pre-commit (13 checks)
      path-whitelist BLOCK · frozen-zone BLOCK · workflow-reminder · CG-CONV · …
 ```
 
@@ -167,7 +167,7 @@ Adapter-based on top of an existing harness, not a re-implementation.
 
 ## Inventory (live)
 
-- **Skills:** [`framework/skill-map.md`](framework/skill-map.md) (37 active)
+- **Skills:** [`framework/skill-map.md`](framework/skill-map.md) (42 active)
 - **Personas:** [`agents/navigation.md`](agents/navigation.md) (34 + boards)
 - **Workflows + Routing:** [`framework/process-map.md`](framework/process-map.md)
 - **Protocols / References / Hooks:** [`architecture-documentation/02-architecture.md`](architecture-documentation/02-architecture.md)

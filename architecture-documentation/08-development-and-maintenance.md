@@ -177,7 +177,7 @@ delegation-prompt-quality.sh   ~170 LoC  PreToolUse(Task) WARN (length + keyword
 frozen-zone-guard.sh           171 LoC  PreToolUse BLOCK
 path-whitelist-guard.sh        203 LoC  PreToolUse BLOCK
 post-commit-dashboard.sh        85 LoC  git post-commit
-pre-commit.sh                  ~400 LoC  git pre-commit, 12 checks (3 BLOCK + 9 WARN)
+pre-commit.sh                  ~400 LoC  git pre-commit, 13 checks (3 BLOCK + 10 WARN)
 state-write-block.sh            25 LoC  PreToolUse, state-file protection (.workflow-state/)
 workflow-commit-gate.sh         68 LoC  git pre-commit, workflow state
 workflow-reminder.sh            ~70 LoC  UserPromptSubmit, additionalContext inject (timeout 2s, 200-char cap)

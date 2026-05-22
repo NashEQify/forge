@@ -46,11 +46,16 @@ has a `navigation.md` with reader-journey sections (`## What lives here?`,
 
 ---
 
-## Skills (37 active, 2026-05-07)
+## Skills (42 in tree, 2026-05-23 — 41 active + 1 deprecated)
 
 Type legend: **Capability** = multi-phase, callable from workflow steps.
 **Utility** = single function, directly callable by Buddy.
 **Protocol** = rule/format loaded by other skills.
+
+The two tables below enumerate all 41 active skills. The
+`spec_board` UX-mode row is the same skill in a different mode, not
+a separate skill. `spec_update` is deprecated (still in tree) —
+see "Retired / deprecated skills" at the end of this section.
 
 ### Capabilities (callable from workflow steps)
 
@@ -66,8 +71,13 @@ Type legend: **Capability** = multi-phase, callable from workflow steps.
 | `sectional_deep_review` | cross-reference-based sectional review | review execute (type: sectional) |
 | `architecture_coherence_review` | cross-spec interface + contracts review | review execute (type: arch) |
 | `spec_amendment_verification` | spec-amendment check after build verify | build verify (conditional) |
+| `spec_authoring` | interview-based authoring of a NEW spec/section — solution-space exploration, artifact checklist, intent_chain alignment | build specify step 2 (spec-write), solve step 3 (write-artifact) |
+| `retroactive_spec_update` | sync EXISTING specs to as-is code state (git = scope, code = evidence); never asks "what to add", only "what code does that spec omits" | spec-drift catch-up — existing spec drifted from code (spec-engineering lifecycle, no dedicated runbook step) |
+| `pre_build_spec_audit` | concept mining from pre-MVP/pre-build specs — methodology/architecture/pattern extraction + 5-way triage, conditional council | build specify (conditional — pre-build source specs in scope) |
 | `cross_spec_consistency_check` | pre-authoring conflict detection in source-grounding set (4 pattern classes, severity triage) | build specify (skip-eligible for greenfield without source-grounding set) |
 | `source_spec_reduce` | post-authoring source-spec section migration with 3-way triage + drift-items.yaml | build specify (skip-eligible for greenfield without source predecessor) |
+| `adversary_test_plan` | adversary-driven test-plan extension before implementation — code-adversary adds edge-case TCs the implementer misses; RED tests as pre-fix gate | build prepare step 4 (test-design, adversary mode: ≥3 ACs / schema change / cross-module / sub-build) |
+| `risk_followup_routing` | routes chief-verdict `remaining_findings:` per `target:` annotation (7-value enum), instead of one-task-per-finding | build close step 10 (close-bookkeeping), fix close |
 | `knowledge_processor` | context-system write mechanism (mode: process/wrap-up) | cross-cutting in all harmonized workflows |
 | `root_cause_fix` | 5-step root-cause analysis (phase A + B) | fix specify + execute |
 | `testing` | test-case design + execution (L0-L5 pyramid) | build prepare test-design, fix verify |
@@ -95,13 +105,23 @@ Type legend: **Capability** = multi-phase, callable from workflow steps.
 | `shipping_and_launch` | production-launch discipline (pre-launch checklist + feature flags + staged rollout + rollback) | before every production deploy |
 | `deprecation_and_migration` | code-as-liability discipline (decision framework + compulsory/advisory + strangler/adapter/feature-flag patterns + churn rule + zombie code) | when removing old systems/APIs/features |
 | `api_and_interface_design` | API authoring discipline (Hyrum's law + one-version rule + contract-first + validate-at-boundaries + Pydantic/SSE patterns) | when designing new APIs/interfaces |
+| `show_open_tasks` | fast terminal overview of OPEN tasks in a `docs/tasks/` tree, grouped by priority, newest first | Buddy directly on task-list/overview request |
+| `zoom_out` | wider context / higher abstraction level for an unfamiliar code area | Buddy directly on "zoom out" / "bigger picture" request |
+| `caveman` | ultra-compressed communication mode (~75% token reduction, technical accuracy kept) | Buddy directly on "caveman mode" / "be brief" / `/caveman` |
 
 **Not listed here:**
 
 - `_protocols/` (skill-level protocols in `skills/_protocols/`): loaded by
   other skills, not called directly. Listed in skill-map.md.
 
-**Retired skills** (removed from tree; available in git history):
+**Retired / deprecated skills:**
+
+Deprecated (still in tree, do not invoke):
+- `spec_update` — split into `spec_authoring` (new spec/section) +
+  `retroactive_spec_update` (code-as-evidence catch-up). Counted in the
+  42 tree files; not an active skill.
+
+Retired (removed from tree; available in git history):
 - `ux_review` — absorbed into `spec_board` as `mode=ux`.
 - `spec_corpus_review` — full-corpus use case never materialized; if needed,
   rebuild or integrate into `spec_board` as a multi-spec mode.

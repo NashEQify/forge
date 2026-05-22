@@ -56,7 +56,7 @@ The framework attempts to anchor every important rule **mechanically**:
 - Path whitelist as a hook (PreToolUse blocks; the agent simply cannot
   write anywhere else).
 - Frozen zones as a hook (history and archive are read-only).
-- Pre-commit hook with 12 checks (plan-validate, skill frontmatter,
+- Pre-commit hook with 13 checks (plan-validate, skill frontmatter,
   commit convention, etc.).
 - Frontmatter validator (a skill-map without the standard frontmatter is rejected).
 - Generator + validator hook for drift-prone indices.
@@ -144,7 +144,7 @@ parallel. `code-chief` consolidates. Buddy reads **only the chief
 signal**.
 
 On PASS: Phase Close with `task_status_update → done`, commit. The
-pre-commit hook runs (12 checks). On BLOCK: Buddy fixes, then makes a
+pre-commit hook runs (13 checks). On BLOCK: Buddy fixes, then makes a
 new commit attempt.
 
 That is what a typical session looks like. The framework gives you the
@@ -189,7 +189,7 @@ solve:
   producer-class workflows.
 - **Mechanical hook layer.** Skill-bag has optional session hooks.
   Intentic has 13 active hooks: PreToolUse BLOCK for path whitelist +
-  frozen zone, pre-commit with 12 checks.
+  frozen zone, pre-commit with 13 checks.
 - **Anti-inflation.** Skill-bag allows "more skills = better". Intentic
   requires a `Standalone-justification` block for every new skill +
   spec-board L1 review + pre-commit validator.
