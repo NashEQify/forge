@@ -62,9 +62,14 @@ The CC adapter ships 13 hooks (PreToolUse path-whitelist + frozen-zone
 guards, delegation-prompt-quality, mca-return-stop-condition, board-
 output-check, evidence-pointer-check, plan-adversary-reminder,
 workflow-reminder, state-write-block, engine-bypass-block; pre-commit
-with 13 checks; workflow-commit-gate; post-commit dashboard). OpenCode runs the methodology layer; only the pre-commit
-hook is wired (the others rely on Claude Code's PreToolUse / PostToolUse
-events, which OpenCode does not surface).
+with 13 checks; workflow-commit-gate; post-commit dashboard). Under
+OpenCode all PreToolUse + PostToolUse hooks fire via a Bun-TS plugin
+(`orchestrators/opencode/.opencode/plugins/forge-hooks.ts`) that
+translates OC's `tool.execute.{before,after}` events into CC-shaped
+JSON and spawns the same bash hooks (`orchestrators/claude-code/hooks/`
+stays the SoT). The pre-commit hook is git-side and runs identically.
+One gap remains: `workflow-reminder` (UserPromptSubmit has no OC
+equivalent — workflow state lives on disk, not load-bearing).
 
 ## OC Constraints
 The consumer repo is the CWD; the framework is mounted via the OpenCode
@@ -73,5 +78,6 @@ launcher (`$FRAMEWORK_DIR/orchestrators/opencode/bin/oc`, with
 A consumer's project-level AGENTS.md (in the consumer repo root) adds
 to this framework AGENTS.md, it doesn't replace it. Commands are
 trigger words without a prefix (wakeup, save, checkpoint, think!).
-OpenCode lacks the CC adapter's path-guard mechanism — the path
-whitelist doesn't apply, so Buddy has to delegate by judgment.
+The OC TS plugin wires `path-whitelist-guard` (and the rest of the
+PreToolUse chain) onto OC's tool events, so the path whitelist applies
+under OC the same as under CC.

@@ -70,10 +70,13 @@ If you don't hear back within 14 days, follow up via a different channel
 
 ## Known weak points
 
-- **OC-Adapter has no PreToolUse-Hook equivalent** — path-write discipline
-  under OpenCode is mental, not mechanical.
-- **Cursor adapter** has no PreToolUse-Hook either (Cursor's API doesn't
-  expose one). Pre-commit-hook is the only mechanical gate there.
+- **OC-Adapter UserPromptSubmit gap** — `workflow-reminder` has no
+  OpenCode equivalent (no per-turn UserPromptSubmit event). All other
+  PreToolUse + PostToolUse hooks fire via the TS plugin, so path-write
+  discipline is mechanical under OC. Workflow state lives on disk
+  (`.workflow-state/<id>.json`), not load-bearing as a prompt injection.
+- **Cursor adapter** has no PreToolUse-Hook (Cursor's API doesn't expose
+  one). Pre-commit-hook is the only mechanical gate there.
 - **Pre-commit `--no-verify`** can bypass all 13 checks. Discipline-only
   protection.
 

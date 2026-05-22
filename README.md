@@ -13,9 +13,10 @@ gates carry the discipline (path-whitelist, frozen-zones, workflow
 state, pre-commit). Skills without discipline drift. Discipline
 without skills builds nothing.
 
-Dogfooded. Opinionated. Pre-1.0. Mechanical-prevention layer is fully
-wired only on Claude Code today; methodology runs on OpenCode and
-Cursor without all hooks.
+Dogfooded. Opinionated. Pre-1.0. Mechanical-prevention layer runs on
+Claude Code and OpenCode (OC via a Bun-TS plugin that forwards tool-
+execute events to the same bash hooks); Cursor is minimum-viable
+(pre-commit only).
 
 ## What's in the workshop
 
@@ -155,11 +156,17 @@ multi-day builds, multi-repo work, anything where context loss costs
 more than the discipline overhead.
 
 **Tool coupling.** Methodology runs on Claude Code, OpenCode, and
-Cursor. Mechanical hooks (path-whitelist, frozen-zones,
-workflow-reminder, full pre-tool-use chain) are fully wired only on
-Claude Code — no cross-runtime `PreToolUse` standard exists. OpenCode
-runs the methodology with partial hook parity; Cursor is
-minimum-viable.
+Cursor. The mechanical-hook layer (path-whitelist, frozen-zones,
+state-write-block, engine-bypass-block, plan-adversary-reminder,
+delegation-prompt-quality, workflow-commit-gate, mca-return-stop-
+condition, board-output-check, evidence-pointer-check) runs on Claude
+Code AND OpenCode — the same bash hooks under `orchestrators/claude-
+code/hooks/` are the SoT; under OC a Bun-TS plugin
+(`orchestrators/opencode/.opencode/plugins/forge-hooks.ts`) translates
+OC's `tool.execute.{before,after}` events into CC-shaped JSON and
+spawns the bash hooks. One gap remains under OC: `workflow-reminder`
+(UserPromptSubmit has no OC equivalent — workflow state lives on disk,
+not load-bearing). Cursor is minimum-viable — only `pre-commit` fires.
 
 **What this isn't.** Not a generic agent framework, not a marketplace,
 not a LangChain-style abstraction, not an onboarding product.
