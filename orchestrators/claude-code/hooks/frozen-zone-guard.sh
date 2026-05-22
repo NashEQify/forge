@@ -80,6 +80,15 @@ fi
 
 REAL_PATH=$(realpath "$TARGET_PATH" 2>/dev/null || echo "$TARGET_PATH")
 
+# Relative-from-project-dir form. Frozen-zones.txt patterns are repo-relative
+# ("context/history/**"), but tool_input.file_path is absolute after realpath
+# — the anchored glob-to-regex match in match_pattern() cannot reach across
+# that. Compute the prefix-stripped form so relative patterns match. If the
+# target is OUTSIDE the project dir, the substitution is a no-op (returns
+# REAL_PATH unchanged), and the relative match correctly does not apply.
+PROJECT_ROOT="${CLAUDE_PROJECT_DIR:-$HOME/projects/forge}"
+RELATIVE_PATH="${REAL_PATH#${PROJECT_ROOT}/}"
+
 # ---------- Special Case: context/history Create-Exception ----------
 #
 # context/history/ is frozen for modification (WORM) but knowledge-processor
@@ -128,7 +137,8 @@ while IFS= read -r pattern || [ -n "$pattern" ]; do
 
   ACTUAL_PATTERN="${pattern#!}"
   if match_pattern "$REAL_PATH" "$ACTUAL_PATTERN" || \
-     { [ "$REAL_PATH" != "$TARGET_PATH" ] && match_pattern "$TARGET_PATH" "$ACTUAL_PATTERN"; }; then
+     { [ "$REAL_PATH" != "$TARGET_PATH" ] && match_pattern "$TARGET_PATH" "$ACTUAL_PATTERN"; } || \
+     { [ "$RELATIVE_PATH" != "$REAL_PATH" ] && match_pattern "$RELATIVE_PATH" "$ACTUAL_PATTERN"; }; then
     if [ "$STDIN_MODE" -eq 0 ]; then
       echo "frozen-zone-guard: PASS — $REAL_PATH is explicit exception ($ACTUAL_PATTERN)"
     fi
@@ -146,7 +156,8 @@ while IFS= read -r pattern || [ -n "$pattern" ]; do
   [[ "$pattern" =~ ^! ]] && continue
 
   if match_pattern "$REAL_PATH" "$pattern" || \
-     { [ "$REAL_PATH" != "$TARGET_PATH" ] && match_pattern "$TARGET_PATH" "$pattern"; }; then
+     { [ "$REAL_PATH" != "$TARGET_PATH" ] && match_pattern "$TARGET_PATH" "$pattern"; } || \
+     { [ "$RELATIVE_PATH" != "$REAL_PATH" ] && match_pattern "$RELATIVE_PATH" "$pattern"; }; then
     MSG="frozen-zone-guard: BLOCK — $REAL_PATH is in frozen zone ($pattern). WORM: no modification allowed. Use Corrections-Addendum pattern (context/history/corrections-addendum.md). See agents/buddy/context-rules.md §Frozen Zone Guard."
     if [ "$STDIN_MODE" -eq 1 ]; then
       SAFE_MSG=$(printf '%s' "$MSG" | sed 's/"/\\"/g' | tr '\n' ' ')

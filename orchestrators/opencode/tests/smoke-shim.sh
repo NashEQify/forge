@@ -99,16 +99,13 @@ JSON
 )
 run_hook frozen-zone-guard.sh "$FZ_BAD_PAYLOAD" out err code
 # frozen-zone-guard returns exit 2 OR exit 0 + deny envelope on BLOCK.
-# NOTE: with absolute file_path + relative frozen-zones.txt patterns, the
-# hook's glob-to-regex match does not catch the BLOCK case as written.
-# This is a pre-existing hook-logic discrepancy, NOT a shim issue — the
-# JSON-on-stdin contract that the OC plugin depends on is intact (the
-# hook reads the payload and returns cleanly). Investigation tracked as a
-# separate concern; soften this assertion to contract-only.
-if [ "$code" = "0" ] || [ "$code" = "2" ]; then
-  ok "frozen-zone-guard accepts CC JSON shape (exit=$code; BLOCK-path TBD)"
+# Both paths honored; the hook also accepts relative-from-project-dir
+# matching so the relative patterns in frozen-zones.txt match the
+# absolute file_path that CC sends.
+if { [ "$code" = "2" ] || echo "$out" | grep -q '"permissionDecision": *"deny"'; }; then
+  ok "frozen Edit → BLOCK (exit=$code)"
 else
-  ko "frozen-zone-guard crashed on CC JSON shape; got exit=$code, stderr=${err:0:120}"
+  ko "frozen Edit expected BLOCK; got exit=$code, stdout=${out:0:120}, stderr=${err:0:120}"
 fi
 
 # Non-frozen path → PASS.
