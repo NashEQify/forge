@@ -14,12 +14,12 @@ to a file path. The mapping below is the audit table.
 
 | Claim | Evidence |
 |---|---|
-| 6 Buddy invariants under Claude Code | [`../CLAUDE.md`](../CLAUDE.md) §1-6 |
-| 7 Buddy invariants under OpenCode (additional FACTS check) | [`../AGENTS.md`](../AGENTS.md) §1-7 |
-| Boot instruction: `Load and follow: agents/buddy/{soul,operational,boot}.md` | [`../CLAUDE.md`](../CLAUDE.md):4-5, [`../AGENTS.md`](../AGENTS.md):4-5 |
-| Frozen-zones SoT: `docs/STRUCTURE.md` (Note: `docs/STRUCTURE.md` does not exist in the repo — see drift notes in §Drift notes) | [`../CLAUDE.md`](../CLAUDE.md):46-47 |
-| Stale-cleanup invariant (all refs in the same commit) | [`../CLAUDE.md`](../CLAUDE.md):29-34 |
-| Pre-delegation non-negotiable | [`../CLAUDE.md`](../CLAUDE.md):18-22 |
+| 8 Buddy invariants under Claude Code | [`../CLAUDE.md`](../CLAUDE.md) §1-8 |
+| 6 Buddy invariants under OpenCode | [`../AGENTS.md`](../AGENTS.md) §1-6 |
+| Boot instruction: `Load and follow: agents/buddy/{soul,operational,boot}.md` | [`../CLAUDE.md`](../CLAUDE.md):5, [`../AGENTS.md`](../AGENTS.md):4-5 |
+| Frozen-zones SoT: `docs/STRUCTURE.md` | [`../CLAUDE.md`](../CLAUDE.md):80 |
+| Stale-cleanup invariant (all refs in the same commit) | [`../CLAUDE.md`](../CLAUDE.md):36-42 |
+| Pre-delegation non-negotiable | [`../CLAUDE.md`](../CLAUDE.md):23-27 |
 
 ### Buddy model
 
@@ -28,7 +28,7 @@ to a file path. The mapping below is the audit table.
 | RECEIVE → ACT → BOUNDARY structure | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):3-5 |
 | Three mental states (incident / substantive / trivial) | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):11-15 |
 | Routing table (code → MCA, architecture → solution-expert, security → security, sysadmin → Buddy) | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):37-42 |
-| Boot sequence ORIENT → RESOLVE → ROUTE → LOAD → STATUS-CHECK → RESUME → GREET | [`../agents/buddy/boot.md`](../agents/buddy/boot.md):22-79 |
+| Boot sequence ORIENT → RESOLVE → ROUTE → LOAD → STATUS-CHECK → RESUME → GREET | [`../agents/buddy/boot.md`](../agents/buddy/boot.md) §Boot sequence |
 | Persist gate blocking on status change | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):99-104 |
 | Source-grounding discipline (>5 turns old → read) | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):54-57 |
 
@@ -49,10 +49,10 @@ to a file path. The mapping below is the audit table.
 
 | Claim | Evidence |
 |---|---|
-| 38 active skills | [`../framework/skill-map.md`](../framework/skill-map.md) AUTO block + `find skills -maxdepth 2 -name SKILL.md \| xargs -I{} grep -l 'status: active' {}` |
-| 13 skill-level protocols | `ls skills/_protocols/` |
-| Direct-invocable capabilities list | [`../framework/skill-map.md`](../framework/skill-map.md):71-73 (AUTO block) |
-| Cross-cutting skills | [`../framework/skill-map.md`](../framework/skill-map.md):85 (AUTO block) |
+| 41 active skills (42 in tree, 1 deprecated) | [`../framework/skill-map.md`](../framework/skill-map.md) AUTO block + `find skills -maxdepth 2 -name SKILL.md \| xargs -I{} grep -l 'status: active' {}` |
+| 15 skill-level protocols | `ls skills/_protocols/*.md \| grep -v navigation` |
+| Direct-invocable capabilities list | [`../framework/skill-map.md`](../framework/skill-map.md) AUTO block §Direct-Invokable |
+| Cross-cutting skills | [`../framework/skill-map.md`](../framework/skill-map.md) AUTO block §Cross-cutting |
 
 ### Workflows
 
@@ -69,11 +69,11 @@ to a file path. The mapping below is the audit table.
 
 | Claim | Evidence |
 |---|---|
-| 34 personas including Buddy + boards + standalone | `ls agents/*.md` plus `agents/buddy/` |
-| Spec-Board: chief, adversary[-2], implementer, impact, consumer (5) | `ls agents/board-*.md` |
+| 35 personas including Buddy + boards + standalone | `ls agents/*.md` plus `agents/buddy/` |
+| Spec-Board: chief, adversary[-2], implementer, impact, consumer, architect-roots (7) | `ls agents/board-*.md \| grep -v ux` |
 | UX-Board: ux-heuristic, ux-ia, ux-interaction (3) | `ls agents/board-ux-*.md` |
-| Code-Review-Board: 13 personas (multi-axis hybrid) | `ls agents/code-*.md` |
-| Standalone: main-code-agent, council-member, solution-expert, security, tester, test-skeleton-writer, plan-adversary | `ls agents/<name>.md` |
+| Code-Review-Board: 14 personas (multi-axis hybrid) | `ls agents/code-*.md` |
+| Standalone: main-code-agent, council-member, solution-expert, security, tester, test-skeleton-writer, plan-adversary, brief-architect, buddy-thinking, spec-text-drift-batch | `ls agents/<name>.md` |
 | Persona token budget ≤70 lines | [`../skills/_protocols/piebald-budget.md`](../skills/_protocols/piebald-budget.md) |
 
 ### Hooks
@@ -100,7 +100,7 @@ to a file path. The mapping below is the audit table.
 
 | Claim | Evidence |
 |---|---|
-| `plan_engine.py` ~3.6k LoC | `wc -l scripts/plan_engine.py` |
+| `plan_engine.py` ~4.6k LoC | `wc -l scripts/plan_engine.py` |
 | `workflow_engine.py` ~2.5k LoC | `wc -l scripts/workflow_engine.py` |
 | `generate_skill_map.py` regenerates the AUTO block | [`../scripts/generate_skill_map.py`](../scripts/generate_skill_map.py) + [`../framework/skill-map.md`](../framework/skill-map.md) marker |
 | `generate_navigation.py` regenerates AUTO blocks in 8 navigation.md files | [`../scripts/generate_navigation.py`](../scripts/generate_navigation.py) |

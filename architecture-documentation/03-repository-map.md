@@ -16,7 +16,7 @@ forge/
 │   ├── _protocols/                # Persona-level cross-cutting protocols
 │   ├── templates/                 # Persona templates
 │   ├── navigation.md              # Reader journey + auto inventory
-│   └── <persona>.md               # 34 personas (board, code, council, etc.)
+│   └── <persona>.md               # 35 personas (board, code, council, etc.)
 │
 ├── framework/                     # Methodology — tier-1 .md files only
 │   ├── README.md
@@ -43,7 +43,7 @@ forge/
 │   ├── models.md
 │   └── workflow-engine-cookbook.md  # CLI cookbook + multi-machine warnings
 │
-├── skills/                        # 38 active skills (+1 deprecated, +1 draft = 40 dirs)
+├── skills/                        # 41 active skills (+1 deprecated = 42 dirs)
 │   ├── _protocols/                # Skill-level cross-cutting protocols
 │   ├── navigation.md              # Reader journey
 │   └── <skill>/SKILL.md           # Per skill: frontmatter + 7 sections
@@ -129,7 +129,7 @@ forge/
 | `agents/` | Persona definitions | "What does persona X look like?" → `<name>.md`. Buddy → `buddy/`. Protocols → `_protocols/` |
 | `agents/buddy/` | Buddy tier 1 | Who-is-Buddy → `soul.md`. How-he-runs → `operational.md`. How-he-boots → `boot.md` |
 | `framework/` | Methodology | Routing → `process-map.md`. Skills → `skill-map.md` (skills live at repo-root `skills/`). Workflows → repo-root `workflows/runbooks/` |
-| `skills/` | 38 active skills (+1 deprecated, +1 draft = 40 dirs) | "Which skill for X?" → see `navigation.md` lookup table |
+| `skills/` | 41 active skills (+1 deprecated = 42 dirs) | "Which skill for X?" → see `navigation.md` lookup table |
 | `skills/_protocols/` | Skill-level mechanisms | "How do I isolate reviewer context?" → `context-isolation.md` |
 | `workflows/runbooks/` | 9 workflows | "What does workflow X do?" → `<name>/WORKFLOW.md` |
 | `references/` | Reference docs | a11y → `accessibility-checklist.md`. Orch pattern → `orchestration-patterns.md` |

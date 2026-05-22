@@ -18,7 +18,7 @@ Tasks under `docs/tasks/<id>.{md,yaml}`. Self-contained format
 
 ## Engines
 
-### plan_engine.py (~3.6k LoC)
+### plan_engine.py (~4.6k LoC)
 
 `scripts/plan_engine.py` — computed planning layer.
 
@@ -173,19 +173,22 @@ WARN-only — drift is heuristic (not every yaml step has to appear in md).
 `orchestrators/claude-code/hooks/`:
 
 ```
+board-output-check.sh          ~145 LoC  PostToolUse(Task) WARN on missing expected file output
 delegation-prompt-quality.sh   ~170 LoC  PreToolUse(Task) WARN (length + keyword + MCA-Brief decision classes)
-frozen-zone-guard.sh           171 LoC  PreToolUse BLOCK
-path-whitelist-guard.sh        203 LoC  PreToolUse BLOCK
-post-commit-dashboard.sh        85 LoC  git post-commit
-pre-commit.sh                  ~400 LoC  git pre-commit, 13 checks (3 BLOCK + 10 WARN)
-state-write-block.sh            25 LoC  PreToolUse, state-file protection (.workflow-state/)
-workflow-commit-gate.sh         68 LoC  git pre-commit, workflow state
-workflow-reminder.sh            ~70 LoC  UserPromptSubmit, additionalContext inject (timeout 2s, 200-char cap)
-mca-return-stop-condition.sh   ~150 LoC  PostToolUse(Task) WARN on MCA-return stop-condition keywords
-board-output-check.sh          ~135 LoC  PostToolUse(Task) WARN on missing expected file output
+engine-bypass-block.sh         ~100 LoC  PreToolUse BLOCK reader-facing Tier-1 writes without active workflow
+evidence-pointer-check.sh      ~195 LoC  PostToolUse(Task) WARN on missing line-numbered evidence pointers
+frozen-zone-guard.sh            171 LoC  PreToolUse BLOCK
+mca-return-stop-condition.sh   ~140 LoC  PostToolUse(Task) WARN on MCA-return stop-condition keywords
+path-whitelist-guard.sh         203 LoC  PreToolUse BLOCK
+plan-adversary-reminder.sh     ~125 LoC  PreToolUse WARN on Tier-1 edit cluster without plan-adversary spawn
+post-commit-dashboard.sh         85 LoC  git post-commit
+pre-commit.sh                  ~600 LoC  git pre-commit, 13 checks (3 BLOCK + 10 WARN)
+state-write-block.sh             25 LoC  PreToolUse, state-file protection (.workflow-state/)
+workflow-commit-gate.sh          68 LoC  git pre-commit, workflow state
+workflow-reminder.sh            ~55 LoC  UserPromptSubmit, additionalContext inject (timeout 2s, 200-char cap)
 ```
 
-Total ~1210 LoC bash. Each hook is self-contained with:
+Total ~2100 LoC bash. Each hook is self-contained with:
 - Header doc block
 - Spec reference
 - Exit-code convention

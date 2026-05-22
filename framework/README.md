@@ -37,7 +37,7 @@ through wrappers.
 
 ## Skills (`../skills/`)
 
-38 active skills. Full inventory + composition:
+41 active skills (42 in tree, 1 deprecated). Full inventory + composition:
 [`skill-map.md`](skill-map.md). Reader-journey lookup:
 [`../skills/navigation.md`](../skills/navigation.md).
 
@@ -52,9 +52,9 @@ cross-cutting mechanics inlined by skills via the `uses:` list.
 
 ## Workflows (`../workflows/runbooks/`)
 
-9 active workflows. Producer class (5-phase standard):
-`build`, `fix`, `review`, `solve`. Others: `audit`, `research`,
-`docs-rewrite`, `save`, `context_housekeeping`. Routing:
+8 active workflows. Producer class (5-phase standard):
+`build`, `fix`, `review`, `solve`. Others: `research`, `docs-rewrite`,
+`save`, `context_housekeeping`. Routing:
 [`process-map.md`](process-map.md). Reader journey:
 [`../workflows/runbooks/navigation.md`](../workflows/runbooks/navigation.md).
 

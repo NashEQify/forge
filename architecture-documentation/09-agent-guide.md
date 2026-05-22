@@ -11,7 +11,7 @@ reading before any actions are taken against the repo.
 When you see this repo for the first time:
 
 1. **Read Tier 0:** [`../CLAUDE.md`](../CLAUDE.md) (Claude Code) or
-   [`../AGENTS.md`](../AGENTS.md) (OpenCode). 6-7 invariants — never override.
+   [`../AGENTS.md`](../AGENTS.md) (OpenCode). 6-8 invariants — never override.
 2. **Read Buddy Tier 1:** [`../agents/buddy/soul.md`](../agents/buddy/soul.md)
    + [`../agents/buddy/operational.md`](../agents/buddy/operational.md)
    + [`../agents/buddy/boot.md`](../agents/buddy/boot.md).

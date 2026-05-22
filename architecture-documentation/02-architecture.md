@@ -19,7 +19,7 @@
 ┌─────────────────────────────────────────────────────────────────────┐
 │  TIER 0 — INVARIANTS                                                │
 │  CLAUDE.md (CC) | AGENTS.md (OC)                                    │
-│  6-7 invariants, never overridden                                   │
+│  6-8 invariants, never overridden                                   │
 └──────────────────────────────┬──────────────────────────────────────┘
                                │ "Load and follow"
                                ▼
@@ -35,13 +35,13 @@
 ┌─────────────────────────────────────────────────────────────────────┐
 │  WORKFLOWS (workflows/runbooks/)                                    │
 │  solve | build | fix | review | research | docs-rewrite |          │
-│  save | audit | context_housekeeping                                │
+│  save | context_housekeeping                                        │
 └──────────────────────────────┬──────────────────────────────────────┘
                                │ composes
                                ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │  SKILLS (skills/<name>/SKILL.md)                                    │
-│  38 active skills, single-class                                     │
+│  41 active skills, single-class                                     │
 │  invocation.primary: user-facing | workflow-step | sub-skill |      │
 │                       hook | cross-cutting                          │
 │                                                                     │
@@ -56,11 +56,12 @@
 │  Buddy (Orchestrator)                                               │
 │  Spec-Board (chief, adversary[-2], implementer, impact, consumer)   │
 │  UX-Board (ux-heuristic, ux-ia, ux-interaction)                     │
-│  Code-Review-Board (13: chief, review, adversary,                   │
-│    security, data, reliability, domain-logic, api-contract, ai-llm, │
-│    spec-fit, spec-drift, docs-consumer, architect-roots)            │
+│  Code-Review-Board (14: chief, review, adversary, security, data,   │
+│    reliability, domain-logic, api-contract, ai-llm, spec-fit,       │
+│    spec-drift, docs-consumer, architect-roots, verification)        │
 │  Standalone (main-code-agent, council-member, solution-expert,      │
-│    security, tester, test-skeleton-writer, plan-adversary)          │
+│    security, tester, test-skeleton-writer, plan-adversary,          │
+│    brief-architect, buddy-thinking, spec-text-drift-batch)          │
 │                                                                     │
 │  Persona-Level Protocols (agents/_protocols/)                       │
 │  - reviewer-base, reasoning-trace, first-principles-check,          │
@@ -162,28 +163,31 @@ Detail: [`../framework/skill-anatomy.md`](../framework/skill-anatomy.md).
 
 ### Skill Inventory (as of May 2026)
 
-38 active skills under `skills/<name>/`. The live inventory (canonical)
-is the AUTO block in [`../framework/skill-map.md`](../framework/skill-map.md):
+42 skill dirs under `skills/<name>/` — 41 active + 1 deprecated. The
+live inventory (canonical) is the AUTO block in
+[`../framework/skill-map.md`](../framework/skill-map.md):
 
-- **Direct-invokable** (`invocation.primary: user-facing`): `api_and_interface_design`,
-  `caveman`, `deprecation_and_migration`, `improve_codebase_architecture`, `scoping`,
-  `shipping_and_launch`, `task_creation`, `youtube_subtitles`, `zoom_out`.
+- **Direct-invokable** (`invocation.primary: user-facing`):
+  `api_and_interface_design`, `caveman`, `deprecation_and_migration`,
+  `frontend_design_tty`, `improve_codebase_architecture`, `scoping`,
+  `shipping_and_launch`, `show_open_tasks`, `task_creation`,
+  `youtube_subtitles`, `zoom_out`.
 - **Workflow-step / sub-skill**: `adversary_test_plan`,
   `architecture_coherence_review`, `bedrock_drill`, `code_review_board`,
   `convergence_loop`, `council`, `cross_spec_consistency_check`,
-  `documentation_and_adrs`, `frame`, `frontend_design_tty`,
-  `frontend_ui_engineering`, `get_api_docs`, `impl_plan_review`,
+  `documentation_and_adrs`, `frame`, `frontend_ui_engineering`,
+  `get_api_docs`, `impl_plan_review`, `knowledge_capture`,
   `pre_build_spec_audit`, `python_code_quality_enforcement`,
-  `retroactive_spec_update`, `return_summary`, `root_cause_fix`,
-  `sectional_deep_review`, `security_and_hardening`,
+  `retroactive_spec_update`, `return_summary`, `risk_followup_routing`,
+  `root_cause_fix`, `sectional_deep_review`, `security_and_hardening`,
   `source_spec_reduce`, `spec_amendment_verification`, `spec_authoring`,
-  `spec_board`, `task_status_update`, `testing`.
+  `spec_board`, `testing`.
 - **Cross-cutting**: `consistency_check`, `knowledge_processor`,
-  `transparency_header`.
-- **Draft / deprecated** (kept for back-compat, not part of the 38
-  active count): `knowledge_capture` (draft), `spec_update` (deprecated).
+  `task_status_update`, `transparency_header`.
+- **Deprecated** (in tree, `status: deprecated`, not part of the 41
+  active count): `spec_update`.
 
-Plus 13 `_protocols/` (skill-level cross-cutting mechanisms).
+Plus 15 `_protocols/` (skill-level cross-cutting mechanisms).
 
 ### Modes Convention
 
@@ -400,16 +404,19 @@ Trigger: >1 path + hard to reverse, >1 layer, substantial impact, Buddy unsure.
 |---|---|---|
 | `path-whitelist-guard.sh` | PreToolUse(Edit/Write/NotebookEdit/Bash) | BLOCK writes outside `.claude/path-whitelist.txt` |
 | `frozen-zone-guard.sh` | PreToolUse | BLOCK writes inside `.claude/frozen-zones.txt` |
+| `engine-bypass-block.sh` | PreToolUse(Edit/Write/MultiEdit/NotebookEdit) | BLOCK reader-facing Tier-1 writes (2+ reader-facing files modified/staged) without an active workflow in `.workflow-state/`. Override: `# allow:engine-bypass <reason>` in CLAUDE.md scratch (Pattern 7) |
 | `delegation-prompt-quality.sh` | PreToolUse(Task) | WARN <200 characters + missing plan-block keyword + (Check C) MCA dispatch without `implicit_decisions_surfaced` section on a substantive dispatch (Item 4 brief-quality gate) |
+| `plan-adversary-reminder.sh` | PreToolUse(Edit/Write/MultiEdit) | WARN on non-trivial Tier-1 edit cluster (N>2 distinct Tier-1 files OR single-file delta ≥80 lines) without a plan-adversary spawn in the last 60min. Override: `# allow:no-plan-adversary <reason>` |
 | `mca-return-stop-condition.sh` | PostToolUse(Task) | WARN when subagent_type=main-code-agent + the MCA return contains Stop-Condition / ESCALATE / ARCH-CONFLICT / AUTO-FIXED keywords. Pattern-Lesson 388 F-CR-004 (Item 2 mechanical Stop-Condition enforcement). |
 | `board-output-check.sh` | PostToolUse(Task) | WARN on a dispatch prompt with a file-output pattern when the expected file is missing post-task. Pass-through fallback suggestion in the WARN. |
+| `evidence-pointer-check.sh` | PostToolUse(Task) | WARN when Tier-1 skill sub-agent output lacks line-numbered evidence pointers (Spec 299 Phase E). |
 | `pre-commit.sh` | git pre-commit | 13 checks (see below) |
 | `state-write-block.sh` | PreToolUse | state-file protection |
 | `workflow-commit-gate.sh` | git pre-commit | workflow-state consistency |
 | `workflow-reminder.sh` | UserPromptSubmit | workflow-engine `additionalContext` injection (NEXT step + task) every turn |
 | `post-commit-dashboard.sh` | git post-commit | dashboard refresh |
 
-### Pre-Commit 12 Checks
+### Pre-Commit 13 Checks
 
 `orchestrators/claude-code/hooks/pre-commit.sh`:
 
@@ -427,8 +434,9 @@ Trigger: >1 path + hard to reverse, >1 layer, substantial impact, Buddy unsure.
 | 10 | AGENT-SKILL-DRIFT | WARN | `generate_agent_skill_map.py --check` — `agents/<name>.md` AUTO block out of sync with skill `relevant_for:` frontmatter |
 | 11 | SECRET-SCAN | WARN | `gitleaks protect --staged` (skipped when gitleaks is not installed, 24h-suppressed note WARN) |
 | 12 | SOURCE-VERIFICATION | WARN | board/council reviews must cite source files (line-numbered evidence pointers) |
+| 13 | PIEBALD-BUDGET | WARN | staged active `SKILL.md` over `skills/_protocols/piebald-budget.md` threshold |
 
-The 9 WARN checks are deliberately not BLOCK — trace markers would be faux
+The 10 WARN checks are deliberately not BLOCK — trace markers would be faux
 mechanism (trivially settable). The real failure class: Buddy forgets a skill, not
 "actively bypasses". WARN is enough and does not disturb pure cosmetic commits.
 
@@ -438,14 +446,14 @@ mechanism (trivially settable). The real failure class: Buddy forgets a skill, n
 
 | Script | Role |
 |---|---|
-| `plan_engine.py` (~3.6k LoC) | Computed planning layer. DAG, critical path, validate, --boot, --status, --check |
+| `plan_engine.py` (~4.6k LoC) | Computed planning layer. DAG, critical path, validate, --boot, --status, --check |
 | `workflow_engine.py` (~2.5k LoC) | YAML-driven workflow orchestration. --start, --next, --complete, --status, --recover |
 | `generate_skill_map.py` (230 LoC) | Regenerates the AUTO block in `framework/skill-map.md` from disk frontmatter |
 | `generate_navigation.py` (310 LoC) | Regenerates the AUTO block in 8 navigation.md files |
 | `generate_skill_wrappers.py` (~520 LoC) | Regenerates `.claude/skills/<name>/SKILL.md` Claude-Code discovery wrappers from skill frontmatter (Option-C inclusion + `cc_wrapper` override; marker-gated deletion); validator `consistency_check` Check 10 |
-| `generate_agent_skill_map.py` (~270 LoC) | Regenerates the AUTO block in opt-in `agents/<name>.md` + the aggregated `framework/agent-skill-map.md` from skill frontmatter `relevant_for:` |
-| `skill_fm_validate.py` (~280 LoC) | Pre-commit Check 7 — frontmatter validator incl. `relevant_for` |
-| `validate_runbook_consistency.py` (~210 LoC) | Pre-commit Check 9 — workflow.yaml ↔ WORKFLOW.md drift heuristic |
+| `generate_agent_skill_map.py` (~360 LoC) | Regenerates the AUTO block in opt-in `agents/<name>.md` + the aggregated `framework/agent-skill-map.md` from skill frontmatter `relevant_for:` |
+| `skill_fm_validate.py` (~300 LoC) | Pre-commit Check 7 — frontmatter validator incl. `relevant_for` |
+| `validate_runbook_consistency.py` (~300 LoC) | Pre-commit Check 9 — workflow.yaml ↔ WORKFLOW.md drift heuristic |
 | `generate-architecture.py` (475 LoC) | architecture-doc generator |
 | `generate-control.py` / `generate-dashboard.py` / `generate-status.py` | dashboard + control + status generation |
 

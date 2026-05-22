@@ -165,32 +165,32 @@ solve:
 
 - **Anchoring during multi-perspective review.** When the user calls the
   N reviewers themselves one after another and reads along, every
-  output read colours the next ones. Intentic solves this via the
+  output read colours the next ones. forge solves this via the
   Buddy = dispatcher invariant (CLAUDE.md §1) plus
   `_protocols/dispatch-template.md` and `_protocols/context-isolation.md`.
 - **Pre-delegation leaks.** Skill-bag puts discipline on the user's
-  shoulders. Intentic makes it a Tier-0 invariant (CLAUDE.md §3) plus
+  shoulders. forge makes it a Tier-0 invariant (CLAUDE.md §3) plus
   the `delegation-prompt-quality.sh` hook (which warns at <200
   characters).
-- **Cross-repo drift.** Skill-bag gets installed per repo. Intentic
+- **Cross-repo drift.** Skill-bag gets installed per repo. forge
   exports via `--add-dir $FRAMEWORK_DIR` — one SoT, N adapters, nothing
   vendored.
-- **Long-running coherence.** Skill-bag thinks per skill call. Intentic
+- **Long-running coherence.** Skill-bag thinks per skill call. forge
   has `session-handoff` + `plan_engine` + `workflow_engine` as a
   persistence layer across sessions.
-- **Orchestrator persona.** Skill-bag has none. Intentic has **Buddy**
+- **Orchestrator persona.** Skill-bag has none. forge has **Buddy**
   with a RECEIVE/ACT/BOUNDARY phase model, routing table, persist gate.
-- **Architectural Council.** Skill-bag has none. Intentic spawns 3-4
+- **Architectural Council.** Skill-bag has none. forge spawns 3-4
   council members in parallel, context-isolated, with a briefing file
   and a synthesis output.
 - **Multi-stage workflow phases.** Skill-bag has the lifecycle implicit
-  (the slash-commands are the stages). Intentic has an explicit
+  (the slash-commands are the stages). forge has an explicit
   five-phase model (specify / prepare / execute / verify / close) for
   producer-class workflows.
 - **Mechanical hook layer.** Skill-bag has optional session hooks.
-  Intentic has 13 active hooks: PreToolUse BLOCK for path whitelist +
+  forge has 13 active hooks: PreToolUse BLOCK for path whitelist +
   frozen zone, pre-commit with 13 checks.
-- **Anti-inflation.** Skill-bag allows "more skills = better". Intentic
+- **Anti-inflation.** Skill-bag allows "more skills = better". forge
   requires a `Standalone-justification` block for every new skill +
   spec-board L1 review + pre-commit validator.
 
