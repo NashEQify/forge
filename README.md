@@ -1,42 +1,35 @@
 # forge
 
-forge is the rebar in your process for multi-session work with coding
-agents. Eight opinionated workflows (build, solve, fix, review,
-research, docs-rewrite, save, context-housekeeping) run end-to-end
-with persistent state — pulled through stably across sessions, not
-restarted each turn. Mechanical hooks fire at every boundary so drift
-gets prevented before a write, not caught after.
+forge is an opinionated workflow engine and discipline layer for solo
+devs and vibe coders doing complex multi-session work with coding
+agents. Eight workflows (`build`, `solve`, `fix`, `review`, `research`,
+`docs-rewrite`, `save`, `context-housekeeping`) walk the same arc every
+time — phase models with persistent state per task, gates at the
+boundaries, procedures an unsteered LLM doesn't reliably apply.
 
-Two halves, equal weight: workflows and their 41 skills carry the
-craft (procedures an unsteered LLM doesn't reliably apply); hooks and
-gates carry the discipline (path-whitelist, frozen-zones, workflow
-state, pre-commit). Skills without discipline drift. Discipline
-without skills builds nothing.
+The point: when the work outgrows a single session — multi-day builds,
+multi-repo refactors, anything where coherence across context loss is
+the bottleneck — vibe-coding alone stops scaling. forge gives you
+structure for the work without ceremony for trivial fixes.
 
-Dogfooded. Opinionated. Pre-1.0. Mechanical-prevention layer runs on
-Claude Code and OpenCode (OC via a Bun-TS plugin that forwards tool-
-execute events to the same bash hooks); Cursor is minimum-viable
-(pre-commit only).
+Dogfooded. Opinionated. Pre-1.0.
 
 ## What's in the workshop
 
-**The craft.** A `build` walks the same arc every time: scoping → spec
-interview → spec-board (4-7 reviewer personas in parallel + chief
-consolidator) → MCA implements → code-review-board → close. State
-persists per task in `.workflow-state/<id>.json` — pause after spec
-today, resume at code-board tomorrow on a different machine. The
-eight workflows (`build`, `solve`, `fix`, `review`, `research`,
-`docs-rewrite`, `save`, `context-housekeeping`) carry the craft; their
-41 skills carry the moves inside each phase.
+**Eight opinionated workflows.** A `build` walks the same arc every
+time: scoping → spec interview → spec-board (4-7 reviewer personas in
+parallel + chief consolidator) → MCA implements → code-review-board →
+close. State persists per task in `.workflow-state/<id>.json` — pause
+after spec today, resume at code-board tomorrow on a different
+machine, with full phase history. The eight workflows carry the
+methodology; their 41 skills carry the moves inside each phase.
 
-**The discipline.** A `PreToolUse` hook (`path-whitelist-guard`)
-inspects every file write *before* the tool call lands and blocks
-writes outside the declared whitelist. A `pre-commit` hook would catch
-the same drift after the LLM has already written the file and polluted
-its own context — too late. Pre-tool-use hooks (path-whitelist,
-frozen-zones, state-write-block, engine-bypass) prevent at write-time;
-pre-commit (13 checks) catches what slips through; post-commit
-refreshes derived views. Mechanical, not prompt-based.
+**Discipline at the boundaries.** Workflow state gates each phase
+transition. Path-whitelist + frozen-zones keep writes inside the
+declared scope at tool-call time. Pre-commit checks (13) catch
+convention drift before it ships. The combination is the same arc
+plus the same guardrails on every task — so the methodology survives a
+multi-day build, a context switch, or a fresh session next week.
 
 ## How it works
 
@@ -155,18 +148,17 @@ for the work where coherence across sessions is the bottleneck — long
 multi-day builds, multi-repo work, anything where context loss costs
 more than the discipline overhead.
 
-**Tool coupling.** Methodology runs on Claude Code, OpenCode, and
-Cursor. The mechanical-hook layer (path-whitelist, frozen-zones,
-state-write-block, engine-bypass-block, plan-adversary-reminder,
+**Adapters.** Skills are markdown + YAML, workflows are runbooks —
+portable to any harness that loads MD files with frontmatter. forge
+ships adapters for Claude Code, OpenCode, and Cursor. On Claude Code
+and OpenCode the mechanical discipline (path-whitelist, frozen-zones,
+state-write-block, engine-bypass, plan-adversary-reminder,
 delegation-prompt-quality, workflow-commit-gate, mca-return-stop-
-condition, board-output-check, evidence-pointer-check) runs on Claude
-Code AND OpenCode — the same bash hooks under `orchestrators/claude-
-code/hooks/` are the SoT; under OC a Bun-TS plugin
-(`orchestrators/opencode/.opencode/plugins/forge-hooks.ts`) translates
-OC's `tool.execute.{before,after}` events into CC-shaped JSON and
-spawns the bash hooks. One gap remains under OC: `workflow-reminder`
-(UserPromptSubmit has no OC equivalent — workflow state lives on disk,
-not load-bearing). Cursor is minimum-viable — only `pre-commit` fires.
+condition, board-output-check, evidence-pointer-check) wires into the
+harness's tool-event API and blocks drift at write-time. Under Cursor
+(and any harness without a tool-event API) the same workflows run, the
+git pre-commit checks fire, and discipline is workflow-driven — drift
+gets caught at commit instead of at write.
 
 **What this isn't.** Not a generic agent framework, not a marketplace,
 not a LangChain-style abstraction, not an onboarding product.
