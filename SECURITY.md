@@ -75,8 +75,10 @@ If you don't hear back within 14 days, follow up via a different channel
   PreToolUse + PostToolUse hooks fire via the TS plugin, so path-write
   discipline is mechanical under OC. Workflow state lives on disk
   (`.workflow-state/<id>.json`), not load-bearing as a prompt injection.
-- **Cursor adapter** has no PreToolUse-Hook (Cursor's API doesn't expose
-  one). Pre-commit-hook is the only mechanical gate there.
+- **Cursor adapter** (and any harness without a tool-event API): the
+  workflow phase model + git pre-commit checks are the mechanical
+  layer there; path-write discipline is workflow-driven rather than
+  blocked at the tool call.
 - **Pre-commit `--no-verify`** can bypass all 13 checks. Discipline-only
   protection.
 
