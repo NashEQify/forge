@@ -2333,18 +2333,26 @@ def validate(
                                           milestone_key=m.key,
                                           detail=f"{open_count} open tasks (of {len(m.tasks)} total)"))
         # GATE_TASK_DRIFT: gate passes but tasks still pending AND none in progress
-        # (if tasks are in_progress, gate PASS is expected — prerequisites met)
+        # (if tasks are in_progress, gate PASS is expected — prerequisites met).
+        # Skip when the milestone has no "hard" gates — preliminary + manual gates
+        # don't encode prerequisites, so their PASS state carries no implication
+        # about whether member tasks should be done. A manual gate explicitly
+        # delegates closure to human judgement; firing DRIFT against it is
+        # structurally noise.
         if m.gate and not m.is_group:
-            all_gate_pass = all(g.check(tasks)[0] for g in m.gate)
-            non_done = [tid for tid in m.tasks
-                        if tid in tasks and not tasks[tid].is_terminal and not tasks[tid].is_done]
-            has_active = any(tasks[tid].status == "in_progress"
-                             for tid in m.tasks if tid in tasks)
-            if all_gate_pass and non_done and not has_active:
-                ids = ", ".join(str(t) for t in non_done[:5])
-                issues.append(ValidationIssue("GATE_TASK_DRIFT", "WARN",
-                                              milestone_key=m.key,
-                                              detail=f"gate PASS but {len(non_done)} tasks pending: {ids}"))
+            hard_gates = [g for g in m.gate
+                          if not g.preliminary and g.type != "manual"]
+            if hard_gates:
+                all_gate_pass = all(g.check(tasks)[0] for g in m.gate)
+                non_done = [tid for tid in m.tasks
+                            if tid in tasks and not tasks[tid].is_terminal and not tasks[tid].is_done]
+                has_active = any(tasks[tid].status == "in_progress"
+                                 for tid in m.tasks if tid in tasks)
+                if all_gate_pass and non_done and not has_active:
+                    ids = ", ".join(str(t) for t in non_done[:5])
+                    issues.append(ValidationIssue("GATE_TASK_DRIFT", "WARN",
+                                                  milestone_key=m.key,
+                                                  detail=f"gate PASS but {len(non_done)} tasks pending: {ids}"))
         # Gate scripts
         for g in m.gate:
             if g.type == "script" and not (PROJECT_ROOT / g.path).exists():
