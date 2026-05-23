@@ -50,6 +50,61 @@ references the plan; deviation = rationale. Templates + triggers:
 
 ## 1. Depth mode
 
+### 1.0 Proportionality gate (MANDATORY — runs before the scoped pre-check + 4 checks)
+
+The §1.1 step is risky-by-default: any single YES across four checks
+escalates a fresh-spec review to Deep (7 reviewers + chief +
+discourse). L-033 (forge-feed) surfaced the cost — a bookkeeping
+spec edit (amendment-log row that names an API, Step-alt example
+near a schema list, clarification near a state-machine section,
+lessons-table row, version bump) fires the `interface` or `cross-
+layer` check and burns a Deep pass for what is effectively an as-
+built note. The existing Scoped pre-check (in §1.1) only fires
+after a prior clean board pass; on a first-pass or after a prior
+NEEDS-WORK, the bookkeeping case falls through.
+
+Before consulting the scoped pre-check or the 4 checks, answer four
+questions:
+
+1. **Substantive spec edit ≤~30 net lines AND ≤2 sections** (single
+   change site, not a sweep across the spec)?
+2. **Mirrors a visible sibling pattern in the same spec** (new
+   amendment-log row alongside existing rows, new Step-alt block
+   alongside existing alts, new lessons-table entry, clarification
+   near an existing clarification)?
+3. **Descriptive, not prescriptive** — documents what already
+   landed in code OR a clarification / rewording of an existing
+   rule, NOT introduction of a new rule / state / contract?
+4. **No new state-vocabulary entry, no new public-API contract,
+   no new SSE event, no new schema field, no new normative rule**
+   (the cross-spec-impact lens — if neighbour specs need to learn
+   the change, it's contract)?
+
+**3-of-4 yes → standard mode** regardless of the §1.1 4-check
+signals. spec_board has no `light` tier (`standard` is the
+lightest); the gate authorizes *staying-in-standard*, not skipping
+the board.
+
+**Override floor (hard escalation regardless of the gate):**
+- A YES on the **security** check (auth / consent / crypto) ALWAYS
+  escalates to Deep — bookkeeping or not. Auth / consent / crypto
+  errors do not become safe because the diff is small.
+- A YES on **full-path** (`dev_path: full`) ALWAYS escalates to
+  Deep — the trigger fires on task-shape, not on section.
+
+The **cross-layer** and **interface** triggers DO yield to the gate
+when the bookkeeping criteria are met — questions 3 + 4 screen the
+contract concern those triggers were meant to catch.
+
+The standard→Deep escalation on ≥1C or ≥3H still applies post-fact
+and is unaffected.
+
+**Gate is mandatory, not optional.** Skipping the gate and running
+§1.1 directly IS the L-033 failure mode. If the gate hits 0-2 yes,
+fall through to §1.1 normally.
+
+### 1.1 Scoped pre-check + 4 checks
+
 - **Scoped pre-check:** `board_result pass` AND change ≤3
   sections → standard (3 agents, no chief discovery). Otherwise
   → step 1.
@@ -57,6 +112,9 @@ references the plan; deviation = rationale. Templates + triggers:
   in another layer), interface (API / Pydantic / schema), full
   path (`dev_path: full`), security (auth / consent / crypto).
 - All NO → standard. Standard escalates to Deep on ≥1C or ≥3H.
+- §1.0 may have authorized standard despite a YES on the cross-
+  layer or interface check; security + full-path YES are hard
+  overrides per §1.0.
 
 ## 2. Team composition
 
@@ -151,7 +209,8 @@ carried in the same consolidated.
 
 1. Determine spec path + output paths.
 2. Operating mode: review or synthesize.
-3. Depth mode: steps 0+1 above.
+3. Depth mode: §1.0 (proportionality gate, MANDATORY) then §1.1
+   (scoped pre-check + 4 checks).
 4. Check the foundation flag (→ chief receives the DR
    scorecard).
 5. **Engine context** (conditional): when the spec references
@@ -365,3 +424,11 @@ block from `5-dimensions-review.md` in the dispatch."
   tokens.
 - **NOT** dispatch agents without context isolation. INSTEAD
   every agent gets ONLY the spec. Because: anchoring bias.
+- **NOT** run §1.1's 4 checks before answering §1.0's
+  proportionality gate. INSTEAD §1.0 first; 3-of-4 yes →
+  standard regardless of cross-layer / interface triggers.
+  Because: any YES → Deep is risky-by-default; bookkeeping
+  edits (amendment-log row, Step-alt example, clarification)
+  systematically fire the cross-layer / interface checks
+  without justifying a Deep board (L-033). Security and
+  full-path remain hard overrides.

@@ -540,6 +540,10 @@ _FEATURE_MILESTONE_KNOWN_FIELDS = {
     "buddyai_infra_audit", "gap_ownership_anchor_task",
     # Doku-only (akzeptiert ohne WARN)
     "title", "desc",
+    # Dashboard-cluster assignment (2026-05-23): allow phases on feature_milestones
+    # entries so view-buckets like council-mod can opt out of the feature-milestones
+    # pseudo-phase and cluster under a normal phase (e.g. post-mvp-backlog).
+    "phases",
 }
 
 
@@ -1109,7 +1113,9 @@ def load_plan(project_root: Path | None = None) -> PlanResult:
             type="milestone",
             gate=feature_gates,
             requires=requires,
-            phases=[],
+            phases=_coerce_str_list(
+                fdata.get("phases"), f"feature_milestones[{fkey}].phases"
+            ),
             id=synthetic_id,
             name=_coerce_str(fdata.get("name"), "name"),
             feature=_coerce_str(fdata.get("feature"), "feature"),

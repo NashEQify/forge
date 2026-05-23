@@ -1538,8 +1538,8 @@ def build_phase_data(per_repo: dict[str, dict]) -> tuple[list, dict, set]:
             ns_id = f"{slug}::feature-milestones"
             if ns_id not in phase_info:
                 phase_info[ns_id] = {
-                    "title": "Feature Milestones",
-                    "desc": "M1-M7+M1.5 Feature-Milestones (Greenfield-Authority)",
+                    "title": "MVP and brain oss",
+                    "desc": "M0-M8 MVP path (Greenfield-Authority) + brain-oss release",
                     "status": "",
                     "type": "implementation",
                     "repo": slug,
