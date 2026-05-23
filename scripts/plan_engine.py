@@ -408,6 +408,12 @@ class GateCondition:
             # haben aktuell keine Default-Logik; sie sind nur als preliminary
             # spezifiziert. Nicht-preliminary => no-op pass mit Hinweis-Detail.
             return True, f"{self.type}: noop (non-preliminary fallback)"
+        elif self.type == "manual":
+            # `manual` gates are soft markers — they signal human-judgement
+            # bucket-closure rather than an auto-checkable condition. Engine
+            # treats them as pass; the milestone closes when the listed
+            # member-tasks reach done OR a human decides to fold the bucket.
+            return True, "manual: soft marker (human-judgement)"
         else:
             # Unknown type: WARN UNKNOWN_GATE_TYPE, return fail
             # warnings via _emit_warn
@@ -425,6 +431,8 @@ class GateCondition:
             return f"script:{self.path}"
         if self.type in ("validate", "coverage", "spec_review"):
             return f"{self.type}:{self.ref or self.desc}"
+        if self.type == "manual":
+            return f"manual:{self.desc or self.ref or '?'}"
         return f"{self.type}:?"
 
 
@@ -2188,9 +2196,11 @@ def validate(
                                           detail="task has no milestone field"))
         elif not t.milestone and t.is_terminal:
             pass  # terminal tasks without milestone are fine
-        elif t.milestone not in milestones:
-            severity = "WARN" if t.is_terminal else "ERROR"
-            issues.append(ValidationIssue("UNKNOWN_MILESTONE", severity, task_id=tid_for_issue,
+        elif t.milestone not in milestones and not t.is_terminal:
+            # Terminal tasks (done/superseded) get a free pass — symmetric with the
+            # NO_MILESTONE branch above. Archived/done tasks may point at retired
+            # milestone keys after a reorg; that is audit-trail, not a defect.
+            issues.append(ValidationIssue("UNKNOWN_MILESTONE", "ERROR", task_id=tid_for_issue,
                                           detail=f"milestone '{t.milestone}' not in plan.yaml"))
         # BROKEN_DEP (Task 435 Variante c Silent-Pass: archived Tasks skipped)
         for dep in t.blocked_by:
