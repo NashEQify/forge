@@ -1,11 +1,12 @@
 # forge
 
-forge is an opinionated workflow engine and discipline layer for solo
-devs and vibe coders doing complex multi-session work with coding
-agents. Eight workflows (`build`, `solve`, `fix`, `review`, `research`,
-`docs-rewrite`, `save`, `context-housekeeping`) walk the same arc every
-time — phase models with persistent state per task, gates at the
-boundaries, procedures an unsteered LLM doesn't reliably apply.
+forge is the rebar in your process for complex multi-session work with
+coding agents: an opinionated workflow engine and discipline layer for
+solo devs and vibe coders. Eight workflows (`build`, `solve`, `fix`,
+`review`, `research`, `docs-rewrite`, `save`, `context-housekeeping`)
+walk the same arc every time — phase models with persistent state per
+task, gates at the boundaries, procedures an unsteered LLM doesn't
+reliably apply.
 
 The point: when the work outgrows a single session — multi-day builds,
 multi-repo refactors, anything where coherence across context loss is
