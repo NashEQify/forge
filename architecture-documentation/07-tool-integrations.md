@@ -6,31 +6,39 @@ harnesses.
 ## Architecture principle
 
 The framework is **harness-agnostic**. The methodology (`agents/`,
-`framework/`) does not know whether it runs under Claude Code or
-OpenCode. Adapter layers (`orchestrators/<harness>/`) translate between
-harness-specific discovery / hook mechanics / tool vocabulary and the
-harness-neutral methodology.
+`framework/`, `skills/`, `workflows/`) does not know which harness it
+runs under. Adapter layers (`orchestrators/<harness>/`) translate
+between harness-specific discovery / hook mechanics / tool vocabulary
+and the harness-neutral methodology.
 
 ```
-        ┌──────────────────────────────────────────┐
-        │       agents/, framework/ (SoT)          │
-        │       harness-agnostic                   │
-        └────────────┬─────────────────────────────┘
-                     │
-       ┌─────────────┴──────────────┐
-       │                            │
-       ▼                            ▼
-┌──────────────┐            ┌──────────────┐
-│ Claude Code  │            │ OpenCode     │
-│ Adapter      │            │ Adapter      │
-│              │            │              │
-│ orchestrators│            │ orchestrators│
-│ /claude-code/│            │ /opencode/   │
-└──────┬───────┘            └──────┬───────┘
-       │                           │
-       ▼                           ▼
-   Claude Code CLI             OpenCode CLI
+        ┌──────────────────────────────────────────────────┐
+        │   agents/, framework/, skills/, workflows/ (SoT) │
+        │   harness-agnostic                               │
+        └────────────────────┬─────────────────────────────┘
+                             │
+       ┌─────────────────────┼──────────────────────┐
+       │                     │                      │
+       ▼                     ▼                      ▼
+┌──────────────┐      ┌──────────────┐       ┌──────────────┐
+│ Claude Code  │      │ OpenCode     │       │ Cursor       │
+│ Adapter      │      │ Adapter      │       │ Adapter      │
+│              │      │              │       │ (IDE, no     │
+│ orchestrators│      │ orchestrators│       │  tool-event  │
+│ /claude-code/│      │ /opencode/   │       │  API)        │
+└──────┬───────┘      └──────┬───────┘       └──────┬───────┘
+       │                     │                      │
+       ▼                     ▼                      ▼
+   Claude Code CLI       OpenCode CLI           Cursor IDE
 ```
+
+An adapter delivers three things: persona / skill discovery,
+tier-0-anchor loading, and — where the harness exposes a tool-event
+API — wiring of forge's PreToolUse / PostToolUse hooks. The bash
+hooks under `orchestrators/claude-code/hooks/` are the SoT for all
+adapters; CC fires them natively, OC fires them via a thin TS
+translator plugin, Cursor has no event API so they only fire via the
+git pre-commit symlink (drift catches at commit instead of at write).
 
 ## Claude Code
 
@@ -226,38 +234,52 @@ JSON. CC retains the UserPromptSubmit + Stop/SessionEnd hook surfaces
 (workflow-reminder, FACTS check) which have no OC equivalent — those
 remain CC-only.
 
-## Cursor (planned, not implemented)
+## Cursor
 
-`README.md` lists Cursor inspiration but no active adapter under
-`orchestrators/cursor/`. Extension point:
+Cursor is an IDE (not a CLI agent like CC / OC), so the adapter has a
+different shape: no launcher script, but **project rules** that align
+Cursor's agent mode with the framework behaviour. Full readme:
+`orchestrators/cursor/README.md`.
 
-### Pattern template
-
-Analogous to `orchestrators/claude-code/`:
+### Adapter files
 
 ```
 orchestrators/cursor/
-├── bin/
-│   └── cur            # launcher with Cursor-specific scope routing
-├── hooks/             # Cursor hook equivalents (or workflow-engine CLI)
-└── .cursorrules       # Cursor-specific Tier 0 file (analogous to CLAUDE.md)
+├── README.md               # adapter doc + setup
+└── rules/                  # auto-loaded into Cursor composer/chat
+    ├── 00-tier-0.md
+    ├── 01-buddy-orchestrator.md
+    ├── 02-personas.md
+    ├── 03-skills.md
+    └── 04-workflows.md
 ```
 
-### Open questions for the Cursor adapter
+Tier-0 anchor reuses the `AGENTS.md` convention (same as OC). Personas
+are invoked via `@<name>` mentions; the Cursor agent reads
+`agents/<name>.md` and follows it.
 
-1. **Discovery mechanics:** how does Cursor discover personas? If via
-   `.cursor/agents/` analogous to Claude Code: adopt the symlink pattern.
-2. **Hook equivalent:** does Cursor support PreToolUse hooks? If not:
-   alternative mechanic anchor (pre-action confirmation, custom wrapper).
-3. **Tier 0 file:** `.cursorrules` as the Cursor standard. Content
-   analogous to `CLAUDE.md`, with Cursor-specific constraints in their
-   own section.
-4. **Tool vocabulary:** Cursor's Composer/Chat have their own tool names.
-   The adapter must adapt persona wrappers accordingly or cross-reference
-   to neutral tool descriptions.
+### Limitations vs. CC / OC
 
-The implementation plan is not in the repo; it is a pending extension
-task.
+| Aspect | CC | OC | Cursor |
+|---|---|---|---|
+| Sub-agent discovery | `~/.claude/agents/` | `.opencode/agent/` | project rules + `@`-mention |
+| PreToolUse hooks | native | translator plugin | **none** |
+| Pre-commit hook | git symlink | git symlink | git symlink |
+| Workflow-engine trigger | mechanical | mechanical | manual (terminal) |
+
+**Consequence:** the mechanical write-time discipline (path-whitelist,
+frozen-zone, delegation-prompt-quality, …) does not fire under Cursor.
+The pre-commit hook remains mechanical (git triggers it independent of
+the agent), so drift catches at commit instead of at write. Skills,
+workflows, runbooks, the workflow engine, personas, task / plan YAMLs
+all run identically.
+
+### Status
+
+**Minimal-viable adapter.** Sufficient to apply forge methodology
+under Cursor. Full mechanical parity with CC requires a Cursor
+PreToolUse-equivalent (open, depends on Cursor) and a sub-agent
+spawn API (open, depends on Cursor's composer roadmap).
 
 ## Adding a new adapter
 
@@ -285,14 +307,19 @@ General approach:
 
 ## Cross-adapter consistency
 
-Skills and workflows must run identically under both active adapters
-(CC + OC). `consistency_check` Check 3 (Adapter-SoT-Sync) verifies:
+Skills and workflows must run identically under all shipped adapters.
+For CC + OC `consistency_check` Check 3 (Adapter-SoT-Sync) verifies the
+persona-wrapper chain:
 
 ```
 agents/<name>.md                              <- SoT
 .claude/agents/<name>.md                      <- CC wrapper, "load SoT"
 orchestrators/opencode/.opencode/agent/<name>.md  <- OC wrapper, "load SoT"
 ```
+
+Cursor has no per-persona wrapper file (personas resolve via
+`@`-mention into `agents/<name>.md` directly), so Check 3 does not
+apply there.
 
 When a wrapper points at a different path than the SoT, that is an ERROR.
 The pre-commit hook + `consistency_check` skill catch it.

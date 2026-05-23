@@ -280,11 +280,13 @@ For external contributions the setup would have to be extended:
 - Issue templates
 - PR template with a pre-commit-check list
 
-### Cursor adapter missing
+### Cursor: write-time hooks don't fire
 
-`README.md` mentions Cursor inspiration but no active adapter.
-Extension point: see [`07-tool-integrations.md`](07-tool-integrations.md)
-§Cursor (planned).
+Expected. Cursor has no PreToolUse-hook API, so the mechanical
+write-time discipline (path-whitelist, frozen-zone, …) does not run
+under the Cursor adapter. Only the git pre-commit hook fires (commit-
+time enforcement). Full adapter shape + limitations:
+[`07-tool-integrations.md`](07-tool-integrations.md) §Cursor.
 
 ## When nothing helps
 

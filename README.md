@@ -149,17 +149,24 @@ for the work where coherence across sessions is the bottleneck — long
 multi-day builds, multi-repo work, anything where context loss costs
 more than the discipline overhead.
 
-**Adapters.** Skills are markdown + YAML, workflows are runbooks —
-portable to any harness that loads MD files with frontmatter. forge
-ships adapters for Claude Code, OpenCode, and Cursor. On Claude Code
-and OpenCode the mechanical discipline (path-whitelist, frozen-zones,
-state-write-block, engine-bypass, plan-adversary-reminder,
-delegation-prompt-quality, workflow-commit-gate, mca-return-stop-
-condition, board-output-check, evidence-pointer-check) wires into the
-harness's tool-event API and blocks drift at write-time. Under Cursor
-(and any harness without a tool-event API) the same workflows run, the
-git pre-commit checks fire, and discipline is workflow-driven — drift
-gets caught at commit instead of at write.
+**Adapters.** forge's discipline is layered: skills (markdown + YAML),
+workflow runbooks, the workflow engine (Python + YAML state), persona
+definitions, task / plan YAMLs, and a hook layer (PreToolUse +
+pre-commit). Most of that is harness-neutral — any harness that loads
+MD + YAML and can spawn sub-agents can run it. forge ships adapters
+for Claude Code, OpenCode, and Cursor; an adapter handles three
+things: persona / skill discovery, tier-0 anchor loading, and — where
+the harness exposes a tool-event API — wiring forge's PreToolUse
+hooks (path-whitelist, frozen-zones, state-write-block, engine-
+bypass, plan-adversary-reminder, delegation-prompt-quality, workflow-
+commit-gate, mca-return-stop-condition, board-output-check, evidence-
+pointer-check) into it. Claude Code and OpenCode have such an API
+and block drift at write-time. Cursor doesn't, so those same hooks
+only fire via git pre-commit — drift catches at commit instead of at
+write, everything else runs identically. Any harness without a
+dedicated adapter can still load the skills and run the workflows;
+discovery is just less mechanical and write-time hook enforcement is
+off.
 
 **What this isn't.** Not a generic agent framework, not a marketplace,
 not a LangChain-style abstraction, not an onboarding product.

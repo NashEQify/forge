@@ -34,7 +34,9 @@ Three layers, clearly separated:
 2. **Adapter (`orchestrators/<name>/`)** — a thin layer per agent
    harness that translates between harness-specific discovery / hook
    mechanics / tool vocabulary and the harness-neutral methodology.
-   Today: Claude Code in full, OpenCode reduced, Cursor planned.
+   Today: Claude Code in full, OpenCode at hook parity via translator
+   plugin, Cursor as minimal-viable IDE adapter (project rules + git
+   pre-commit; no tool-event API, so no write-time hooks).
 
 3. **Consumer repositories** (e.g. `~/projects/BuddyAI`,
    `~/projects/personal`) — they use the methodology via
