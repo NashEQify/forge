@@ -2066,12 +2066,12 @@ def _render_gantt(tasks: list, milestones: list, phase_order: list,
             phase_iter.append(p)
             seen_phases.add(p)
 
-    def _is_default_hidden(phase_id: str) -> bool:
-        info = phase_info.get(phase_id, {})
-        title = (info.get("title") or phase_id).lower()
-        pk = (info.get("phase_key") or
-              (phase_id.split("::", 1)[1] if "::" in phase_id else phase_id)).lower()
-        return title == "foundation" or pk == "foundation"
+    def _is_default_hidden(phase_id: str) -> bool:  # noqa: ARG001
+        # Historical rule auto-hid any phase named/keyed "foundation" — removed
+        # 2026-05-23 when "Foundation" became a first-class cluster for legacy
+        # archived milestones (chat-e2e, design-prototype, ...) that the user
+        # explicitly wants to expand. Use the manual X button to hide phases.
+        return False
 
     # Partition: visible first, default-hidden at the bottom of their repo
     # group. Repo grouping is implicit in phase_order (all of repo A, then
@@ -2305,8 +2305,14 @@ def _render_gantt(tasks: list, milestones: list, phase_order: list,
                 f'style="{wrap_style}">'
             )
             # Header row (above the bar): icon + key + title + progress%.
+            # Header is also a toggle target — for done milestones the bar
+            # background gets covered by segments after expand, so the header
+            # is the only reliable click affordance to collapse again.
             html_parts.append(
-                f'      <div class="milestone-header-row">'
+                f'      <div class="milestone-header-row" '
+                f'onclick="toggleMilestoneDisplay(\'{_esc(m_key)}\')" '
+                f'tabindex="0" role="button" '
+                f'title="Click to expand / collapse milestone">'
                 f'<span class="ms-icon mono">{ms_icon}</span>'
                 f'<span class="bar-key mono">{_esc(m["raw_key"])}</span>'
                 f'<span class="bar-title">{_esc(m["title"])}</span>'
@@ -2442,7 +2448,6 @@ def generate_html(tasks, slices, north_star, hook, mermaid_code, gen_time,
         -int(t.get("blocking_score", 0) or 0), t["id"]
     ))
     done_tasks.sort(key=lambda t: t["id"], reverse=True)
-    done_tasks = done_tasks[:30]
 
     def _group_by_ms(col_tasks: list) -> list:
         groups: dict = {}
@@ -3088,7 +3093,10 @@ a:hover {{ text-decoration: underline; }}
   display: flex; align-items: flex-start; gap: 6px;
   min-height: 22px; padding: 2px 8px;
   font-size: 10px;
+  cursor: pointer;
+  border-radius: 3px;
 }}
+.milestone-header-row:hover {{ background: rgba(255,255,255,0.04); }}
 .ms-icon {{
   font-size: 11px; width: 14px; text-align: center;
   opacity: 0.8; margin-right: 4px;
@@ -3124,31 +3132,38 @@ a:hover {{ text-decoration: underline; }}
 .milestone-bar[data-display-state="expanded"]:not([data-ms-done="true"]) {{
   border-color: var(--border-active);
 }}
-/* Task rows only visible in 'expanded' state. */
-.gantt-milestone-wrap .milestone-tasks-expanded {{ display: none; }}
-.gantt-milestone-wrap:has(.milestone-bar[data-display-state="expanded"]) .milestone-tasks-expanded {{
-  display: block;
+/* Popover task-row list is retired. Both done and non-done milestones now
+   expose their tasks INLINE as bar segments — done milestones grow their
+   bar when expanded; non-done milestones already had the done-stack/
+   done-individual inline mechanism. The hidden element stays in the DOM
+   for backwards-compat (some downstream tooling may target it) but never
+   renders. */
+.gantt-milestone-wrap .milestone-tasks-expanded {{ display: none !important; }}
+
+/* Done milestone expanded: bar grows to fit segments inline; chip styling
+   gives way to natural segment colors. Overflow allowed so segments stay
+   visible even if the wrap (DONE_CHIP_WIDTH_PX = 100px) is narrower than
+   the segment row. */
+.milestone-bar[data-ms-done="true"][data-display-state="expanded"] {{
+  width: auto !important;
+  min-width: 40px;
+  background: transparent;
+  opacity: 1;
+  overflow: visible;
 }}
-/* Expand-Drop-down-Popup: position-absolute unter dem Chip, ueberlagert
-   alles darunter. Loest den User-Bug "expanded done-tasks ueberlagern
-   Phasen drunter" + verhindert horizontalen Layout-Shift. Click auf
-   Chip schliesst Popup wieder. */
-.gantt-milestone-wrap:has(.milestone-bar[data-display-state="expanded"]) {{
-  z-index: 100;
+.milestone-bar[data-ms-done="true"][data-display-state="expanded"] .bar-segments {{
+  display: flex !important;
+  width: auto;
+  overflow: visible;
 }}
-.gantt-milestone-wrap:has(.milestone-bar[data-display-state="expanded"]) .milestone-tasks-expanded {{
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 360px;
-  max-height: 400px;
-  overflow-y: auto;
-  z-index: 101;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-active);
-  border-radius: 4px;
-  padding: 6px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.55);
+.milestone-bar[data-ms-done="true"][data-display-state="expanded"] .bar-segment {{
+  flex: 0 0 auto !important;
+  min-width: 56px;
+  width: auto !important;
+}}
+.gantt-milestone-wrap:has(.milestone-bar[data-ms-done="true"][data-display-state="expanded"]) {{
+  z-index: 50;
+  overflow: visible;
 }}
 .milestone-bar:hover {{ border-color: var(--border-active); }}
 .milestone-bar[data-status="active"]  {{ border-left: 2px solid var(--status-active); }}
@@ -3658,10 +3673,11 @@ function togglePhase(phase) {{
 
 /* ---- Gantt: phase hide/restore -----------------------------------------
    Separate from collapse. Hidden phases shrink to a 20px strip with only
-   a restore button. Default-hidden phases (e.g. Foundation) start hidden
-   on first visit; user's explicit restore is persisted so they stay open.
+   a restore button. No default-hidden phases anymore (removed 2026-05-23 when
+   "Foundation" became a first-class cluster the user wants visible). The
+   v1 → v2 key bump invalidates auto-persisted state from the v1 default-hide.
 */
-const HIDDEN_PHASES_KEY = 'dashboard.hiddenPhases.v1';
+const HIDDEN_PHASES_KEY = 'dashboard.hiddenPhases.v2';
 function loadHiddenPhases() {{
   try {{ return new Set(JSON.parse(localStorage.getItem(HIDDEN_PHASES_KEY) || '[]')); }}
   catch (e) {{ return new Set(); }}
@@ -4077,7 +4093,17 @@ function toggleBoardGroup(key) {{
    ================================================================ */
 let boardSearch = '';
 const boardEffort = new Set(['S', 'M', 'L', 'XL']);
+function _repoActive(slug) {{
+  if (!slug) return true;
+  return !document.body.classList.contains('hide-repo-' + slug);
+}}
+function _cardVisible(c) {{
+  if (c.style.display === 'none') return false;
+  return _repoActive(c.dataset.repo);
+}}
 function applyBoardFilters() {{
+  // 1. Inline display on cards reflects effort + search only.
+  //    Repo hiding is governed by CSS (body.hide-repo-X), not inline style.
   document.querySelectorAll('.board-col .task-card').forEach(card => {{
     const id = card.dataset.taskId;
     const t = TASK_MAP[id] || {{}};
@@ -4086,9 +4112,25 @@ function applyBoardFilters() {{
     const searchOk = !boardSearch || hay.indexOf(boardSearch) !== -1;
     card.style.display = (effortOk && searchOk) ? '' : 'none';
   }});
+  // 2. Groups: hide if empty AFTER all filters. Skip the group itself when
+  //    its repo is CSS-hidden — letting CSS govern avoids fighting it.
   document.querySelectorAll('.board-milestone-group').forEach(g => {{
-    const visible = Array.from(g.querySelectorAll('.task-card')).some(c => c.style.display !== 'none');
-    g.style.display = visible ? '' : 'none';
+    const groupRepo = g.dataset.repo || '';
+    const cards = Array.from(g.querySelectorAll('.task-card'));
+    const visCount = cards.filter(_cardVisible).length;
+    if (groupRepo && !_repoActive(groupRepo)) {{
+      g.style.display = '';
+    }} else {{
+      g.style.display = visCount > 0 ? '' : 'none';
+    }}
+    const gc = g.querySelector('.milestone-count');
+    if (gc) gc.textContent = '(' + visCount + ')';
+  }});
+  // 3. Column counts reflect actually-visible cards (post repo + filters).
+  document.querySelectorAll('.board-col').forEach(col => {{
+    const visCount = Array.from(col.querySelectorAll('.task-card')).filter(_cardVisible).length;
+    const cc = col.querySelector('.board-col-count');
+    if (cc) cc.textContent = '(' + visCount + ')';
   }});
 }}
 $('board-search').addEventListener('input', (e) => {{
