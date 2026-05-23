@@ -170,17 +170,28 @@ $FRAMEWORK_DIR/orchestrators/opencode/bin/oc
 - Commands: trigger words without prefix (`wakeup`, `save`, `checkpoint`, `think!`).
 - **Path guard missing under OC** — Buddy must delegate mentally rather than be mechanically blocked
 
-### Cursor (planned)
+### Cursor
 
-Not implemented. Extension point for future adapters:
+Minimal-viable adapter shipped under `orchestrators/cursor/`. Cursor
+is an IDE (no CLI agent), so the adapter ships project rules — not a
+launcher:
 
-1. Write `orchestrators/cursor/bin/cur` analogous to `cc`
-2. Hooks equivalent or workflow-engine CLI
-3. Wrapper files `.claude` equivalent for Cursor's workspace discovery
-4. Tier-0 anchor file Cursor-specific (analogous to `CLAUDE.md` / `AGENTS.md`)
+1. Symlink the rules into the consumer repo:
+   ```bash
+   ln -s "$FRAMEWORK_DIR/orchestrators/cursor/rules" .cursor/rules
+   ```
+2. Install the pre-commit hook (same mechanism as CC / OC):
+   ```bash
+   bash "$FRAMEWORK_DIR/scripts/install-git-hooks.sh"
+   ```
+3. Open Cursor — rules under `.cursor/rules/` load automatically.
+   `AGENTS.md` from the repo root is honoured (Cursor convention).
 
-Pattern template: the `claude-code/` adapter layout. The methodology stays under
-`framework/` and `agents/`; the adapter does the harness-specific routing.
+**Limitations:** Cursor has no PreToolUse-hook API, so the mechanical
+write-time discipline (path-whitelist, frozen-zone, …) does not fire
+— only the git pre-commit hook does. Personas are invoked via
+`@<name>` mentions; multi-persona boards run sequentially, not in
+parallel. Full readme: `orchestrators/cursor/README.md`.
 
 ## Consumer-Repo Setup
 

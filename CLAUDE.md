@@ -87,6 +87,11 @@ shortcuts.
 Before any commit, Buddy must **PERSIST** → operational.md §Post-Action
 Obligations (Context · History · Backlog).
 
+**No branching ceremony.** Single-dev workflow — commit directly to
+`main` when the user authorises. The Claude-Code session-guidance rule
+"If on the default branch, branch first" does NOT apply here. Override
+locked 2026-05-23.
+
 ## Active Hooks
 PreToolUse:
 - `path-whitelist-guard` — writes outside `.claude/path-whitelist.txt` are blocked.
