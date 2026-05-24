@@ -71,11 +71,15 @@ TCs from it:
   verification under one TC, not multiple TCs).
 - TC name encodes the bug_class as a noun phrase
   (`test_<bug_class_slug>`).
-- **Cannot add a `bug_class` not in the spec.** A new bug class
-  surfaced during test-design = **spec amendment** (back to spec_board),
-  not a test plan addition. Rationale: the spec owns the test
-  contract; bug_classes that bypass spec review escape the design-time
-  proportionality discipline.
+- **New bug_class discovered during test-design (incl. adversary mode)
+  → append the row to §Test-Strategy INLINE in the same edit.** This
+  is a **bookkeeping-tier amendment** (single section append, no
+  contract change, no spec_board re-spin per
+  `skills/_protocols/spec-amendment-discipline.md` adversary-append
+  exception). Adversary mode may append many rows during its run —
+  one commit at end of adversary run (or fold into a later commit).
+  The catalog stays current; MCA dispatches against an up-to-date
+  spec; no Specify-phase round-trip.
 - Legacy specs without §Test-Strategy: derive TCs per the upstream
   "Derivation from specs" table; do NOT retrofit a catalog mid-build.
 

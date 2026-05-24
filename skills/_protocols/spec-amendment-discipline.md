@@ -131,11 +131,32 @@ Three categories, with reconciliation triggers:
   spec does NOT yet have a §Test-Strategy section, the amendment MUST
   add the §Test-Strategy section in the SAME commit (per the schema in
   `framework/spec-engineering.md` §Convention: §Test-Strategy for L1+
-  specs), with bug-class rows for every AC the amendment touches AND
-  every pre-existing AC visible in the section it modifies.
+  specs), with bug-class rows **only for the AC(s) the amendment
+  touches**. Pre-existing ACs without bug_class rows stay uncovered;
+  the §Test-Strategy section is marked `partial: true` (header field)
+  until a future amendment fills more rows or a dedicated migration
+  task lands the full historic retrofit. Catalog grows organically
+  per touch; the first AC-amendment does not carry the whole-spec
+  retrofit weight.
   → **Reconcile in same commit** as a §test-strategy-add strand.
   Triggers only on AC-scope amendment; unrelated amendments (typo,
   §Changelog, cross-ref bump, internal example fix) do NOT trigger.
+
+  **Full-historic-AC migration** (whole-spec retrofit) is a separate
+  future topic — a dedicated migration task / sprint, not the
+  per-amendment author's burden.
+
+- **(f) §Test-Strategy bookkeeping append (adversary-mode discovery)** —
+  when `skills/testing/SKILL.md` test-design surfaces a new
+  `bug_class` (typically via adversary-mode), appending the row to
+  §Test-Strategy is **bookkeeping-tier** (single section append, no
+  contract change). No spec_board re-spin, no §Changelog ceremony
+  per row; one §Changelog line summarising the batch is sufficient.
+  The append happens inline during test-design (commit at end of
+  adversary run or folded into a later commit). Test-design cannot
+  invent bug_classes that are not derivable from an existing AC;
+  if the bug_class belongs to no existing AC, that is category (e)
+  territory (AC scope), not (f).
 
 **Strand-scope stop rule:** the spec-drift-fix strand covers the
 §-sections that name the diverged symbol(s). Recursion stops at the
