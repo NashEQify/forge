@@ -199,8 +199,22 @@ touched files only).
 ### Verify phase
 
 **7. code-review-board** — `code_review_board/SKILL.md`.
-L1 ≤5 files / L2 otherwise (L2 also on new module, cross-spec,
-schema change, or doubt). Output: `docs/reviews/code/{spec_name}-verdict.md`.
+L1 ≤5 files / L2 otherwise (L2 also on **new exported behavior**
+— new public API surface, new state machine, new schema —, cross-spec,
+schema change, or doubt). "New file in existing directory tree"
+alone is NOT an L2 trigger (per skill §1.2 NEW MODULE vs NEW
+SUBSYSTEM rule). **Shape-preserving extractions** — brief
+declares `shape-preserving: true` AND wire contract unchanged AND
+existing tests cover the moved behavior — stay at L1 regardless
+of module-count. Output: `docs/reviews/code/{spec_name}-verdict.md`.
+
+**Coverage rule (post-build):** reviewers verify the pre-build
+test plan was honored (every planned TC is in `tests/` and green).
+They do NOT re-design coverage for this task. Test-coverage
+findings are `code-spec-fit`'s sole lens. Imagined edge-case TCs
+without a corresponding AC or known bug class are out-of-scope;
+real new bug classes surface as tester-process feedback (forge-feed),
+not as new_task work that bundles edges from this task.
 
 **8. spec-drift-check** — implementation-decision drift to spec body
 (Cypher templates, state machines, schemas, interface contracts):

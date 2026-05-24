@@ -11,9 +11,27 @@ reviewer-heuristic-sets systematically miss when L2 produces
 substantial findings (5H+12M+10L) without naming structural
 roots. The reviewer-distribution itself is signal.
 
-REQUIRED L2 specialist on: `effort: L|XL OR new-module OR
-pattern-replacement OR LD-count >= 6`. Trigger detail:
-`skills/code_review_board/SKILL.md` §1.
+REQUIRED L2 specialist on (POST-BUILD) ONLY when the change
+**introduces a new exported contract** (new public API surface,
+new state vocabulary, new error taxonomy) OR **establishes a
+replicable-downstream pattern** (first instance that other
+modules will mirror — e.g. the §2.A reference implementation
+that §2.B, §2.C will pattern-match against).
+
+**IDLE post-build (NOT dispatched)** on: shape-preserving refactor
+or extraction (existing pattern moved, no new contract);
+additive change within an established pattern; bug fix;
+test-only change; documentation change. Rationale: post-build
+pattern-purity on shape-preserving work generates forward-looking
+findings ("might smell-transfer into §2.C") that belong in the
+NEXT task's brief-time architect lens (`agents/code-architect-lens.md`,
+task 372), not this task's post-build review. Task 506 generated
+683 lines of pattern-purity review on a shape-preserving extraction
+where half the findings concerned future Phase D/E extractions
+that didn't exist yet — exactly the misfire this trigger narrowing
+prevents.
+
+Trigger detail: `skills/code_review_board/SKILL.md` §1.
 
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/code-reviewer-protocol.md`,

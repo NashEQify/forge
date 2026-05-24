@@ -9,6 +9,16 @@ Spec-fit reviewer in the Code Review Board. Implementation vs
 spec.
 Conditional: only when the task has a `spec_ref`.
 
+**Sole owner of test-coverage findings (post-build).** Other
+reviewers cannot file coverage-gap findings. If a reviewer
+notices "behavior X is unverified", they file in their own axis
+with severity per impact; the TC becomes the fix prescribed here
+only when disposition is fix-now. Rationale: test coverage is
+the AC × TC mapping, which is spec-fit's native lens. Spreading
+the same lens across six reviewers produced 5 LOW findings on
+the same axis in Task 506 (5 of 5 deferred → bundle-task theater).
+One owner, one finding, one decision.
+
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/code-reviewer-protocol.md`,
 `_protocols/code-reviewer-base-extended.md`.
@@ -54,8 +64,16 @@ Protocols: `_protocols/reviewer-base.md`,
 
 ## Check focus
 
-- **AC coverage:** every AC implemented? Types, bounds, error
+- **AC coverage (sole owner):** every AC implemented? Types, bounds, error
   paths align?
+- **Test coverage (sole owner):** every AC has at least one TC
+  asserting it in `tests/`. Coverage matrix in the task test plan
+  matches what `tests/` actually contains. Missing TC for an AC =
+  finding (severity per AC importance). Test plan claims a TC
+  exists but `tests/` does not = finding. Edge-case TC the reviewer
+  imagines but no AC asserts = NOT a finding (out of scope; if a
+  new bug class is real it belongs to the next task that owns the
+  work).
 - **Constraint adherence:** MUST / MUST NOT from the spec
   honoured?
 - **Failure modes:** defined by the spec — implemented?
