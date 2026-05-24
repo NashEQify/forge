@@ -98,6 +98,21 @@ outputs differ. Mode-specific notes are inline.
      mentions actually exists in the codebase (grep against `src/`).
      For every defer-claim: grep for consumers of the deferred
      behaviour. A consumer hit invalidates the defer.
+     **Fix-task briefs — failure-cluster provenance (MANDATORY):**
+     when the brief's scope is a failing test/assertion cluster,
+     run `git log -L <line-range>:<file>` on EACH failing assertion
+     site BEFORE attributing root-cause to a recent commit. The
+     git-blame output IS the provenance. If an assertion is older
+     than the suspected-cause commit, the cause is elsewhere; iterate.
+     When git-blame is ambiguous (renames, refactors), re-run the
+     failing suite at the suspected-cause commit's parent (`git
+     stash && git checkout <suspect>~1 && pytest -x <scope>`) to
+     verify whether the failure pre-existed. Attributing every
+     failure in a cluster to the most recent commit ("most recent =
+     cause") is the cheap default; the discipline restores judgment
+     by grounding attribution in the assertion's actual authoring
+     history. Rule applies only to fix-task briefs, NOT L0/L1 build
+     briefs.
    - **`mode=spec_amendment`:** grep the target spec(s) for every
      occurrence of the shifting mechanism / class / contract — the
      amendment must touch every active-text occurrence (historical
@@ -166,10 +181,22 @@ outputs differ. Mode-specific notes are inline.
      brief sections (per `_protocols/mca-brief-template.md`):
      §Authority sources; §Implicit-Decisions-Surfaced (4 standard
      LD classes); §Scope (in / out / forbidden-adjacent);
+     §Expected-Files (prospective list — see below);
      §Defer-Audit (per item: consumer-grep result + rationale);
      §Test/Verification Scope (DoD per fix-phase, scope-focused);
      §RETURN-SUMMARY structure; §Convergence Prediction (PASS-likely
      / FAIL-likely / REVISE-likely-spike / REVISE-likely-user-input).
+     **§Expected-Files (forensic affordance, NOT binding contract):**
+     Brief lists the files the author expects MCA to touch — a
+     prospective prediction made from spec-+-scope reading. This
+     is NOT a gate: MCA may touch files outside the list when the
+     work legitimately requires it (chief-recommended cross-spec
+     amendments, board outputs, parallel-session artifacts). The
+     path-whitelist-guard hook (CLAUDE.md Invariant 4) remains the
+     sole enforcement layer. The list exists so Buddy, on suspected
+     scope-creep or MCA hang, can `diff <(expected_files) <(actual
+     files_touched)` in O(grep) instead of O(mtime-archaeology).
+     Treat divergence as a signal-to-investigate, never as auto-fail.
    - **`mode=spec_amendment`:** the inline-returned amendment block
      (per Required Output below) IS the plan — there is no
      downstream MCA dispatch. The orchestrator integrates the prose
@@ -190,6 +217,14 @@ List 3-5 files most critical for implementing this plan:
 - path/to/file1
 - path/to/file2
 - path/to/file3
+
+### Expected-Files (prospective; forensic affordance, not binding)
+Files the brief author expects MCA to touch. Divergence is a signal,
+not a gate — path-whitelist-guard hook enforces; this list aids
+post-hoc diff during suspected scope-creep / hang triage.
+- path/to/file1
+- path/to/file2
+- ...
 ```
 
 Followed by the sign-off field on its own line, exactly one of:
@@ -365,6 +400,11 @@ you reach for — recognize them and do the opposite:
   is not existing. Did you grep for it in `src/`?
 - "Out-of-scope is explicitly named" — explicit is not verified.
   Did you grep for consumers of every deferred item?
+- "Failures appeared after commit X landed → X is the cause" — that
+  is the cheap narrative shortcut, not provenance. Did you `git
+  log -L <range>:<file>` on each failing assertion? An assertion
+  older than X is evidence X is NOT the cause. Mis-attribution
+  corrupts the brief's scope contract and burns the MCA dispatch.
 
 **`mode=spec_amendment` specific:**
 
