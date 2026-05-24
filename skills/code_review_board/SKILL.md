@@ -423,6 +423,7 @@ Not full L1 / L2 redo.
 | Re-review type | Composition | When |
 |----------------|-------------|------|
 | Fix verification (default) | Single reviewer per cluster, scope = the finding's `affected_scope` | After every MCA fix-pass on FAIL |
+| Bundled fix verification | Convergence-axis grouping — ~3 reviewers covering the systemic patterns in the bundle (correctness/architecture via `code-review`; concurrency/state-machine via `code-domain-logic` or `code-adversary`; cross-spec amendment fitness via `code-spec-fit` if relevant). Buddy may add a 4th for an axis the brief's risk-assessment names dominant (e.g. `code-security` on an auth-fix-pass). | Fix-pass with >5 clusters OR >5 files OR cross-spec amendments touched |
 | Fresh angle (exception) | Full board (L1 / L2 per the original level) | Only if pass-1.5 surfaces an architecture concern OR Buddy explicitly wants a fresh take |
 
 Rationale: the verdict file documents `file:line` per finding;
@@ -431,6 +432,14 @@ redo of unaffected modules is risk-theater + 2-3× wallclock /
 token cost without new signal. Full-board re-runs are reserved
 for fresh analysis at a new convergence-pass scope, not for
 "did the fix land?" verification.
+
+**Bundled-fix-pass rationale (mid-row):** single-reviewer-per-cluster
+is silly at >5 clusters (10× dispatch overhead, sequential
+bottleneck); full-board redo is risk-theater on bundled scope.
+Convergence-axis grouping covers the systemic patterns the bundle
+risks regressing without the dispatch explosion. The 3-reviewer
+default is a starting point — Buddy adapts the axis-set to the
+brief's risk-assessment top entries.
 
 **F-AR (architect-roots) re-review exception:** pattern-class
 fixes touch multiple files by definition (smell-transfer
