@@ -89,3 +89,64 @@ engine is ground truth. Prose-coherent claims about mechanical
 behaviour can survive reviews that don't mechanically verify
 against the consuming code; require the engine-pointer to close
 the gap.
+
+## Cumulative file totals (anti-boiling-frog)
+
+Reviewers see DIFFS, not TOTALS. A 2000-LOC file grows in 40 steps
+of 50 LOC each — every diff reads as fine; no one carries the
+cumulative lens. This section closes that gap mechanically without
+becoming a numeric gate.
+
+**MANDATORY — every review output includes a `## File-totals`
+section** (after the role-specific findings, before "What's
+working well"). For each file touched by the diff:
+
+```
+## File-totals
+
+| File | wc -l (after diff) | Δ this diff | Signal |
+|---|---|---|---|
+| src/foo/bar.py    | 487 | +52 | — |
+| src/foo/baz.py    | 612 | +120 | size-trend |
+| skills/x/SKILL.md | 220 | +8  | size-trend (piebald budget ≤180) |
+```
+
+**Signal column — judgment-driven, soft thresholds as triggers only:**
+
+| File class | Soft threshold (raises signal) |
+|---|---|
+| `src/**/*.py` | ≥600 LOC OR Δ ≥150 LOC in one diff |
+| `src/**/*.ts`, `*.tsx` | ≥500 LOC OR Δ ≥120 LOC in one diff |
+| `skills/*/SKILL.md` | ≥180 LOC (per `_protocols/piebald-budget.md`) |
+| `agents/*.md` | ≥400 LOC OR Δ ≥100 LOC |
+| `docs/specs/*.md` | ≥800 LOC (specs naturally large) |
+
+**Soft thresholds are signal-raisers, NOT pass/fail floors.** The
+threshold is the trigger for the reviewer to APPLY JUDGMENT against
+their own axis: does this file's growth correspond to cohesion-loss
+/ SRP-violation / responsibility-leak / wide-interface, OR is it
+legit growth in a single-responsibility module (state-machine, OpenAPI
+surface, parser table)? Report the judgment as a finding when the
+former; report `size-trend (legit — <one-line reason>)` when the
+latter. Silent omission = "signal not raised" = false negative.
+
+**Finding class:** `module-size-trend`. Severity per reviewer
+judgment of cohesion-impact, not LOC alone. Convergent signals
+across reviewers (≥2 reviewers raising `module-size-trend` on the
+same file) get surfaced by chief as a **structural finding-class**
+and routed to `code-architect-roots` re-review (per `code_review_board/SKILL.md` §3 specialist trigger).
+
+**Why mechanical reporting + judgment severity:** the report itself
+is `wc -l` (cheap, mechanical, ~3s per review). The severity is the
+reviewer's domain — they own the cohesion / SRP / interface-shape
+judgment from their persona-axis. Chief converges signals, not raw
+LOCs. This is the diff-blindness backstop that the brief-time
+preventive lens (`code-architect-lens`, when present) misses or
+that grew between brief and review.
+
+**Boundary:** this is REVIEWER-LAYER discipline. It does NOT replace
+the brief-time architecture lens (preventive, plan-phase) NOR the
+piebald-budget hook (mechanical, commit-phase for skill files).
+Three layers, one discipline: prevention (brief), reporting
+(reviewer), enforcement (hook). Reviewer-layer is the curative
+backstop.
