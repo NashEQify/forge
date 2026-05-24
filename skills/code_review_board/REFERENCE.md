@@ -76,6 +76,17 @@ brief's risk-assessment top-1 entry) is a precision-escalation
 option when effort=S/M but a single risk-class dominates (e.g.
 error path with security implications → core + 1× security).
 
+## Post-MCA-return trigger consequence
+
+After every MCA return with `status=done` for L/XL tasks introducing
+new subsystems or named-public-API changes, Buddy MUST check the
+level. "MCA tested it itself, looks good" is NOT a valid skip signal
+when the §1.0 gate did not authorize light. MCA self-test does not
+catch architecture drift, cancellation-path bugs, races, PII logging,
+or edge-case data loss — those are caught only by multi-reviewer
+diversity, exactly what the §1.0 gate's sibling-pattern question
+screens for.
+
 ## State-vocabulary-property trigger (architect-roots required)
 
 When the brief's §Implicit-Decisions-Surfaced contains a
