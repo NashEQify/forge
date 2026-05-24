@@ -56,6 +56,10 @@ separate task. Cross-doc stale references to the same artifact are
 swept by `spec_amendment_verification` post-amendment per §Dispatch
 shape below.
 
+The same single-commit absorption applies to category (d)
+module-boundary topics on L1+ specs via the §module-decomposition-add
+strand — sister mechanism, different trigger.
+
 **The amendment author writes the spec to match the code** — unless
 the build is explicitly changing the code-shape, in which case the
 spec leads.
@@ -107,6 +111,19 @@ Three categories, with reconciliation triggers:
   ("the cache layer"), the code uses literal names (`RedisCache`).
   → **NOT divergence.** Paraphrase ↔ literal is intentional
   abstraction.
+- **(d) Module-boundary topic in an L1+ spec without §Module-Decomposition
+  (touch-it-fix-it for the new-class L1+ discipline)** — when the
+  amendment scope touches module-boundary topics (interface, dependency,
+  layer, seam, responsibility-split) AND the host spec is L1+ AND the
+  host spec does NOT yet have a §Module-Decomposition section, the
+  amendment MUST add the §Module-Decomposition section in the SAME
+  commit (per the schema in `framework/spec-engineering.md`
+  §Convention: §Module-Decomposition for L1+ specs).
+  → **Reconcile in same commit** as a §module-decomposition-add strand.
+  Mirrors the §spec-drift-fix strand semantics from §Same-commit
+  reconciliation rule above. Triggers only on amendment-into-topic;
+  unrelated amendments to legacy L1+ specs (typo, §Changelog, cross-ref
+  bump) do NOT trigger the absorption.
 
 **Strand-scope stop rule:** the spec-drift-fix strand covers the
 §-sections that name the diverged symbol(s). Recursion stops at the
