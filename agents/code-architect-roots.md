@@ -31,6 +31,18 @@ where half the findings concerned future Phase D/E extractions
 that didn't exist yet — exactly the misfire this trigger narrowing
 prevents.
 
+**Exception (re-fires within idle scope):** even on shape-preserving
+or additive-within-pattern work, architect-roots fires when the change
+introduces a **new top-level symbol** — new class, new test peer,
+new internal taxonomy, new state machine, new error type, new
+Protocol. The contract shape may be preserved but the new abstraction
+itself can carry smell-transfer or claim a fictitious precedent
+(second-instance check: does the prior art the new abstraction claims
+to mirror actually exist in the codebase?). Task 506's empty
+`_TestChatResumeAttach` with a docstring citing `_TestChatStream` as
+precedent (precedent did not exist anywhere) is the exact failure
+mode this exception catches.
+
 Trigger detail: `skills/code_review_board/SKILL.md` §1.
 
 Protocols: `_protocols/reviewer-base.md`,
