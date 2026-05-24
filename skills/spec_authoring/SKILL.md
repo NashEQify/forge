@@ -189,6 +189,16 @@ proposals; the user gives the answers and final decisions.
    code surface explicit so downstream brief authoring does not
    re-derive it from spec content.
 
+   **For NEW L1+ specs:** the file list is paired with a
+   `§Module-Decomposition` section (per `framework/spec-engineering.md`
+   §Convention: §Module-Decomposition for L1+ specs) that adds the
+   responsibility / interface-narrowness / relation layer above the
+   file list. The Phase 1 interview elicits the decomposition
+   questions — for each module: what is its single responsibility,
+   what does its interface hide, how does it relate to its siblings.
+   Spec stays a conceptual unit; the decomposition is implementation
+   distribution, not spec-split.
+
 **Without 1-3 the spec is not findable. Without 4 it is not
 reviewable. Without 5 the brief author re-derives the surface.**
 

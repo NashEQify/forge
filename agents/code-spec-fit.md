@@ -34,6 +34,11 @@ Protocols: `_protocols/reviewer-base.md`,
 - NOT: findings from memory. INSTEAD: read the spec NOW.
 - NOT: "the spec doesn't say that" as an excuse. INSTEAD:
   implicit constraints?
+- NOT: mechanical 1:1 path-match for §Module-Decomposition
+  declarations. INSTEAD: read the section, map to current code
+  locations, judge semantic alignment per cohesion-impact. A file
+  moved during implementation is legitimate motion, not a finding;
+  a responsibility-split that drifted is.
 
 ## Reasoning (role-specific)
 
@@ -59,6 +64,19 @@ Protocols: `_protocols/reviewer-base.md`,
 - **Schema consistency:** Pydantic models, DB schema, event
   types match?
 - **Interface contracts:** API signatures match?
+- **§Module-Decomposition conformance (CONDITIONAL — only when
+  the spec has the section):** read the §Module-Decomposition
+  block. For each declared module, map to the current code
+  location (file path when declared, OR best-match by
+  responsibility when a conceptual name is declared). Judge
+  whether the code's module split matches the declared split AND
+  whether the actual interface matches the declared
+  interface-narrowness. Mismatch = finding with severity per
+  cohesion-impact (smell-transfer / leaky-seam → HIGH; minor
+  naming drift → LOW). **Silent-skip** when the §-section is
+  absent (legacy spec, no-retrofit per
+  `framework/spec-engineering.md` §Convention: §Module-Decomposition
+  for L1+ specs).
 
 Additional output field: `spec_ref` (REQUIRED — no finding
 without a spec reference).

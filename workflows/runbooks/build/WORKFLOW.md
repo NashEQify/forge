@@ -58,7 +58,7 @@ paths. To skip a gate within an active path: `--skip <step-id>
 
 ## Named gates (standard route)
 
-The build workflow has **11 named gates**. Phase-status transitions
+The build workflow has **12 named gates**. Phase-status transitions
 are engine-internal and do not appear here.
 
 | # | Gate | Phase | Skill | Conditional |
@@ -67,6 +67,7 @@ are engine-internal and do not appear here.
 | 2 | spec-write | Specify | `spec_authoring/SKILL.md` (with source-spec-reduce as final sub-step) | — |
 | 3 | board | Specify | `spec_board/SKILL.md` (Standard or Deep) | — |
 | 4 | test-design | Prepare | `testing/SKILL.md` (+ `adversary_test_plan` + `test-skeleton-writer` on substantial dispatch) | adversary mode: ≥3 ACs OR schema change OR cross-module OR sub-build |
+| 4a | architect-lens | Prepare | `agents/code-architect-lens.md` (preventive plan-time module lens per spec 372) | scope-shape: ≥3 touched modules OR new subsystem OR effort L\|XL; idle on DIRECT, AUTHORITY-ONLY, and below-threshold work |
 | 5 | brief-author | Prepare | `agents/brief-architect.md` (single OR multi-mode per spec 306 §4.2) | DIRECT path: Buddy-inline; STANDARD/FULL with §4.1 trigger fired: architect dispatched; AUTHORITY-ONLY: skipped via `skip_when` |
 | 6 | brief-signoff | Prepare | gate (user approval) per spec 306 §4.4 | mirrors upstream Plan Mode Step 4; user approves before MCA dispatch (DIRECT path skips) |
 | 7 | mca-implementation | Execute | `main-code-agent` inline (Plan + impl_plan_review + Implement + L0) | impl_plan_review: ≥3 ACs OR schema change OR cross-module |

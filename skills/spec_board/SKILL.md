@@ -92,6 +92,17 @@ the board.
 - A YES on **full-path** (`dev_path: full`) ALWAYS escalates to
   Deep — the trigger fires on task-shape, not on section.
 
+**Pre-gate FAIL (new L1+ specs only):** when a NEW L1+ spec (per
+`skills/scoping/SKILL.md` §Spec hierarchy) is submitted for board
+review WITHOUT a §Module-Decomposition section, the verdict is
+**FAIL** before the proportionality gate runs. The author adds the
+section (per the schema in `framework/spec-engineering.md`
+§Convention: §Module-Decomposition for L1+ specs) and re-submits.
+Legacy L1+ specs (pre-date this rule, no §Module-Decomposition
+section) **silent-skip** this check — the touch-it-fix-it rule in
+`skills/_protocols/spec-amendment-discipline.md` §What counts as
+divergence (d) integrates them incrementally on amendment.
+
 The **cross-layer** and **interface** triggers DO yield to the gate
 when the bookkeeping criteria are met — questions 3 + 4 screen the
 contract concern those triggers were meant to catch.
@@ -432,3 +443,9 @@ block from `5-dimensions-review.md` in the dispatch."
   systematically fire the cross-layer / interface checks
   without justifying a Deep board (L-033). Security and
   full-path remain hard overrides.
+- **NOT** skip the §Module-Decomposition pre-gate check on a NEW
+  L1+ spec by assuming legacy. INSTEAD verify creation-date or
+  section-history before silent-skipping. Because: the no-retrofit
+  rule applies to specs that PRE-DATE this rule, not to new specs
+  that omitted the section. A net-new spec without §Module-Decomposition
+  is FAIL; only legacy absence is silent-skip.

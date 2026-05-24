@@ -141,8 +141,8 @@ is `wc -l` (cheap, mechanical, ~3s per review). The severity is the
 reviewer's domain — they own the cohesion / SRP / interface-shape
 judgment from their persona-axis. Chief converges signals, not raw
 LOCs. This is the diff-blindness backstop that the brief-time
-preventive lens (`code-architect-lens`, when present) misses or
-that grew between brief and review.
+preventive lens (`code-architect-lens` — plan-time, spec 372)
+misses or that grew between brief and review.
 
 **Boundary:** this is REVIEWER-LAYER discipline. It does NOT replace
 the brief-time architecture lens (preventive, plan-phase) NOR the

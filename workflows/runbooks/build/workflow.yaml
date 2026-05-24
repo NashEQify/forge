@@ -15,13 +15,15 @@ derived_from: "WORKFLOW.md@2026-05-09"
 
 routes:
   standard:
-    # 10 named gates; phase-status updates are engine-internal.
+    # 11 named gates (incl. architect-lens conditional pre-call to brief-author);
+    # phase-status updates are engine-internal.
     - phase-specify
     - interview
     - spec-write
     - board
     - phase-prepare
     - test-design
+    - architect-lens
     - brief-author
     - brief-signoff
     - phase-execute
@@ -34,6 +36,7 @@ routes:
     - commit-deploy
   authority-only:
     # Spec / ADR / plan authority without code implementation.
+    # No architect-lens — no MCA dispatch on this route, no brief authored.
     - phase-specify
     - interview
     - spec-write
@@ -50,6 +53,7 @@ routes:
     - board
     - phase-prepare
     - test-design
+    - architect-lens
     - brief-author
     - brief-signoff
     - phase-execute
@@ -62,9 +66,11 @@ routes:
     - commit-deploy
   sub-build:
     # Nested build on a parent's locked spec — skips Specify entirely, parent
-    # owns task-level status.
+    # owns task-level status. architect-lens included for route consistency;
+    # its skip_when clause idles the gate on narrow sub-build scopes.
     - phase-prepare
     - test-design
+    - architect-lens
     - brief-author
     - brief-signoff
     - phase-execute
@@ -175,6 +181,38 @@ steps:
     skill_ref: skills/testing/SKILL.md
     completion:
       type: manual
+    on_fail: block
+
+  - id: architect-lens
+    name: "Preventive plan-time architectural lens (sequential pre-call to brief-author)"
+    category: content
+    instruction: >
+      Per spec 372 §4 (workflow integration): on L2-shape briefs,
+      dispatch agents/code-architect-lens.md BEFORE brief-author.
+      The lens reads the target spec + brief scope and returns
+      module-state + optional decomposition-recommendation +
+      sign-off field (lens_clear | lens_with_decomposition: <s> |
+      escalate: <r>).
+
+      Buddy writes the lens return to
+      docs/build/<date>-task-<id>-lens.md and stores the path in
+      workflow_state as `lens_output_path`. The next gate
+      (`brief-author`) reads the path and passes
+      `lens_output: <path>` in the brief-architect dispatch.
+
+      On sign-off `lens_clear`: proceed to brief-author normally.
+      On `lens_with_decomposition`: proceed to brief-author; brief
+      MUST address the recommendation per spec 372 AC-5.
+      On `escalate`: STOP — escalate to user with the reason;
+      do not dispatch brief-author until resolved.
+
+      Anchor mode vs heuristik mode is auto-detected by the lens
+      (grep for `^## §Module-Decomposition` in target spec); no
+      configuration.
+    skill_ref: agents/code-architect-lens.md
+    completion:
+      type: manual
+    skip_when: "path == DIRECT OR path == AUTHORITY-ONLY OR (scope_modules < 3 AND NOT new_subsystem AND effort NOT IN ('L', 'XL'))"
     on_fail: block
 
   - id: brief-author
