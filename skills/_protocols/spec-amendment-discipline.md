@@ -124,6 +124,18 @@ Three categories, with reconciliation triggers:
   reconciliation rule above. Triggers only on amendment-into-topic;
   unrelated amendments to legacy L1+ specs (typo, §Changelog, cross-ref
   bump) do NOT trigger the absorption.
+- **(e) AC-scope amendment in an L1+ spec without §Test-Strategy
+  (touch-it-fix-it for the test-contract discipline)** — when the
+  amendment scope touches **AC scope** (new AC, AC boundary shift, new
+  behavior, new failure mode) AND the host spec is L1+ AND the host
+  spec does NOT yet have a §Test-Strategy section, the amendment MUST
+  add the §Test-Strategy section in the SAME commit (per the schema in
+  `framework/spec-engineering.md` §Convention: §Test-Strategy for L1+
+  specs), with bug-class rows for every AC the amendment touches AND
+  every pre-existing AC visible in the section it modifies.
+  → **Reconcile in same commit** as a §test-strategy-add strand.
+  Triggers only on AC-scope amendment; unrelated amendments (typo,
+  §Changelog, cross-ref bump, internal example fix) do NOT trigger.
 
 **Strand-scope stop rule:** the spec-drift-fix strand covers the
 §-sections that name the diverged symbol(s). Recursion stops at the

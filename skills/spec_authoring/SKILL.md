@@ -90,6 +90,13 @@ The agent (typically Buddy) interviews the user in detail:
 - Surface concerns and trade-offs.
 - No obvious questions — ask the hard ones.
 - Don't stop until the spec is self-contained.
+- **For NEW L1+ specs — bug-class elicitation:** for each draft AC,
+  ask "what defect class does this AC guard against? at which test
+  level?". Capture noun-phrase answers as bug_class rows in the
+  §Test-Strategy catalog (Phase 2 artifact checklist item 6).
+  Dedup at elicitation time — small variation within a bug class
+  does not warrant a new row (per `skills/testing/SKILL.md`
+  proportionality rules). When in doubt, drop the row.
 
 The goal of the interview is not "to query the user" but to
 **uncover gaps together that neither saw before**. The agent
@@ -199,8 +206,21 @@ proposals; the user gives the answers and final decisions.
    Spec stays a conceptual unit; the decomposition is implementation
    distribution, not spec-split.
 
+6. **§Test-Strategy (NEW L1+ specs):** bug-class catalog per
+   `framework/spec-engineering.md` §Convention: §Test-Strategy for
+   L1+ specs. Levels in scope + real-vs-mocked dependency policy +
+   table of `bug_class | AC ref | levels | implementation`. One row
+   per defect class; no duplicate `bug_class`. The Phase 1 interview
+   elicits the bug-class catalog — for each AC: what defect class
+   does this AC guard against, at which test level. The catalog is
+   the test contract; full TC bodies are derived later by
+   `skills/testing/SKILL.md` test-design in the Prepare phase.
+
 **Without 1-3 the spec is not findable. Without 4 it is not
-reviewable. Without 5 the brief author re-derives the surface.**
+reviewable. Without 5 the brief author re-derives the surface.
+Without 6 the test contract is implicit (Task 511 anti-pattern:
+post-build coverage gaps spawn bundle-tasks that re-litigate the
+contract the spec never declared).**
 
 ### Verify-before-recommend (when the spec proposes a library / API / tool / pattern)
 

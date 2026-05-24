@@ -127,6 +127,12 @@ new subsystem + schema change → frame deep mode (with `bedrock_drill`).
 On external library APIs: `get_api_docs` BEFORE AC formulation.
 Source-spec-reduce as a final sub-step when a NEW spec overlays an
 existing one (3-way triage → patches + drift-items.yaml).
+**For NEW L1+ specs:** §Module-Decomposition AND §Test-Strategy are
+both mandatory (per `spec-engineering.md` §Conventions). §Test-Strategy
+bug-class catalog co-evolves with ACs — each AC names ≥1 bug_class
+defining the defect class it guards against. Catalog dedup
+at-elicitation per `testing/SKILL.md` §Bug-class dedup. Spec board
+pre-gate FAILs on missing section.
 
 **Amendment path (per spec 306 §14):** when this gate operates on
 an EXISTING spec (mid-build mechanism shift, class rename, contract
@@ -150,12 +156,18 @@ Convergence_loop (max 3 passes). PASS = 0C+0H. Output:
 ### Prepare phase
 
 **4. test-design** — `testing/SKILL.md` §Design produces TC plan v1.
+**When spec has §Test-Strategy catalog** (per `spec-engineering.md`
+§Convention: §Test-Strategy for L1+ specs): tester DERIVES TCs
+one-per-bug_class from the catalog; cannot add bug_classes not in
+spec (= spec amendment, back to spec_board). Legacy specs without
+catalog: derive per the upstream "Derivation from specs" table.
 On substantial dispatch (≥3 ACs OR schema change OR cross-module OR
 sub-build): adversary augmentation via `adversary_test_plan` (extends
-plan v1 with edge-case TCs targeting implementer cognitive bias)
-followed by `test-skeleton-writer` (writes RED skeletons, context-
-isolated). All RED tests MUST FAIL via pytest before MCA dispatch.
-Below threshold: skip with one-line rationale.
+plan v1 with edge-case TCs targeting implementer cognitive bias —
+each adversary TC must name a NEW bug_class not already in catalog,
+else dropped) followed by `test-skeleton-writer` (writes RED skeletons,
+context-isolated). All RED tests MUST FAIL via pytest before MCA
+dispatch. Below threshold: skip with one-line rationale.
 
 **5. brief-author** — On STANDARD/FULL paths with §4.1 trigger
 fired (per spec 306 §4.1 — seven mechanically-evaluable triggers

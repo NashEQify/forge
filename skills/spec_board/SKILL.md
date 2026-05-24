@@ -92,16 +92,31 @@ the board.
 - A YES on **full-path** (`dev_path: full`) ALWAYS escalates to
   Deep — the trigger fires on task-shape, not on section.
 
-**Pre-gate FAIL (new L1+ specs only):** when a NEW L1+ spec (per
-`skills/scoping/SKILL.md` §Spec hierarchy) is submitted for board
-review WITHOUT a §Module-Decomposition section, the verdict is
-**FAIL** before the proportionality gate runs. The author adds the
-section (per the schema in `framework/spec-engineering.md`
-§Convention: §Module-Decomposition for L1+ specs) and re-submits.
-Legacy L1+ specs (pre-date this rule, no §Module-Decomposition
-section) **silent-skip** this check — the touch-it-fix-it rule in
+**Pre-gate FAIL (new L1+ specs only) — two required sections:** when
+a NEW L1+ spec (per `skills/scoping/SKILL.md` §Spec hierarchy) is
+submitted for board review WITHOUT either of the two required
+sections, the verdict is **FAIL** before the proportionality gate runs:
+
+1. **§Module-Decomposition missing** → FAIL. Author adds the section
+   per `framework/spec-engineering.md` §Convention: §Module-Decomposition
+   for L1+ specs and re-submits.
+2. **§Test-Strategy missing** → FAIL. Author adds the bug-class catalog
+   per `framework/spec-engineering.md` §Convention: §Test-Strategy
+   for L1+ specs and re-submits.
+
+**Board review of §Test-Strategy** (when present): every AC has at
+least one bug_class row (no AC orphaned); no duplicate bug_class
+(semantic dedup — "small variation within a bug class" = drop one);
+each bug_class is a noun phrase, not a test-case name or stack
+trace. Vague / duplicate / orphan-AC bug_classes are board findings
+(severity per impact; LOW for minor cleanup; MEDIUM when AC coverage
+is incomplete).
+
+Legacy L1+ specs (pre-date these rules, missing either section)
+**silent-skip** both checks — the touch-it-fix-it rule in
 `skills/_protocols/spec-amendment-discipline.md` §What counts as
-divergence (d) integrates them incrementally on amendment.
+divergence (d for module-decomposition; new AC-scope strand for
+test-strategy) integrates them incrementally on amendment.
 
 The **cross-layer** and **interface** triggers DO yield to the gate
 when the bookkeeping criteria are met — questions 3 + 4 screen the
@@ -443,9 +458,9 @@ block from `5-dimensions-review.md` in the dispatch."
   systematically fire the cross-layer / interface checks
   without justifying a Deep board (L-033). Security and
   full-path remain hard overrides.
-- **NOT** skip the §Module-Decomposition pre-gate check on a NEW
-  L1+ spec by assuming legacy. INSTEAD verify creation-date or
-  section-history before silent-skipping. Because: the no-retrofit
-  rule applies to specs that PRE-DATE this rule, not to new specs
-  that omitted the section. A net-new spec without §Module-Decomposition
-  is FAIL; only legacy absence is silent-skip.
+- **NOT** skip the §Module-Decomposition OR §Test-Strategy pre-gate
+  check on a NEW L1+ spec by assuming legacy. INSTEAD verify
+  creation-date or section-history before silent-skipping. Because:
+  the no-retrofit rule applies to specs that PRE-DATE these rules,
+  not to new specs that omitted the sections. A net-new L1+ spec
+  without either section is FAIL; only legacy absence is silent-skip.
