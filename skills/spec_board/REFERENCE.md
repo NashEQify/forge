@@ -132,3 +132,89 @@ Drill / trace OR bind missing on ≥1 reviewer: re-dispatch the
 same reviewer context-isolated with a hint at the missing
 section / bind. No full re-review. Loop bound: max 1
 re-dispatch per reviewer; then ESCALATE.
+
+## Risk carry-forward (full schema + acceptance scenarios)
+
+When the board terminates without a clean 0C+0H PASS but the user
+accepts the result anyway (cherry-pick override, convergence-valve
+hit at safety limit, outer-loop bound reached), the consolidated
+verdict file MUST carry the unfixed findings forward in a top-level
+YAML block:
+
+```yaml
+remaining_findings:
+  - id: F-H-014                                # finding ID
+    severity: high                             # critical | high | medium | low
+    locator: docs/specs/foo.md:§3.4 lines 88-104
+    title: "Pipeline phase 4 lacks fail-fast"
+    rationale_for_carry_over: >
+      User-override cherry-pick — only blockers fixed in this pass; H/M
+      findings deferred per explicit decision.
+    proposed_action: >
+      Add fail-fast condition per pattern in §3.2; ~20 LOC spec edit, no
+      cross-spec impact expected.
+  - id: F-M-006
+    severity: medium
+    locator: docs/specs/foo.md:§5.1
+    ...
+```
+
+The workflow steps `risk-followup-routing` (build / review / fix
+workflow.yaml) read this block and file ONE follow-up task per
+workflow run via `skills/task_creation/SKILL.md`. Empty/absent
+block: workflow step skips with rationale "no remaining findings".
+
+**Acceptance scenarios that require the block:**
+- User says "cherry-pick: fix only blockers, defer the rest" — verdict
+  carries deferred findings.
+- Convergence valve (5 passes) hits with open findings the user accepts.
+- Outer-loop bound reached (`convergence_loop` REFERENCE.md) and user
+  accepts the residual.
+- ESCALATE returned to user and user decides "ship anyway".
+
+**Why mechanical:** historically these residuals lived in verdict
+prose or informal session notes and disappeared between sessions.
+Structured block + workflow-step pair turns carry-forward into
+engine-tracked work instead of bookkeeping.
+
+## Engine context (§4 step 5 detail)
+
+When the spec references the workflow engine (engine steps, YAML
+definitions, completion types, guards), agents receive as required
+context:
+
+- `$FRAMEWORK_DIR/scripts/workflow_engine.py`
+- `$FRAMEWORK_DIR/scripts/lib/yaml_loader.py`
+- Existing `workflow.yaml` definitions in `workflows/runbooks/*/`
+
+Without this context: findings on engine limitations are unreliable
+(reviewers extrapolate from spec prose instead of grounding against
+the actual engine API).
+
+## Extended anti-patterns (rationale prose)
+
+- **NOT** pass findings on without chief consolidation. INSTEAD
+  check chief signal + tracking table. **Because:** silent loss is
+  the historic failure mode (consolidation-preservation discipline).
+- **NOT** close standard without discourse when findings diverge.
+  INSTEAD trigger discourse. **Because:** reviewers see different
+  problems; convergence has to be earned, not assumed.
+- **NOT** start a spec fix as a new full pass. INSTEAD scoped
+  pre-check + delta review. **Because:** pass inflation wastes tokens
+  on unaffected scope.
+- **NOT** dispatch agents without context isolation. INSTEAD every
+  agent gets ONLY the spec. **Because:** anchoring bias from prior
+  findings reduces independent signal.
+- **NOT** run §1.1's 4 checks before answering §1.0's proportionality
+  gate. INSTEAD §1.0 first; 3-of-4 yes → standard regardless of
+  cross-layer / interface triggers. **Because:** any YES → Deep is
+  risky-by-default; bookkeeping edits (amendment-log row, Step-alt
+  example, clarification) systematically fire cross-layer / interface
+  checks without justifying a Deep board (L-033 failure mode).
+  Security and full-path remain hard overrides.
+- **NOT** skip the §Module-Decomposition OR §Test-Strategy pre-gate
+  check on a NEW L1+ spec by assuming legacy. INSTEAD verify
+  creation-date or section-history before silent-skipping. **Because:**
+  the no-retrofit rule applies to specs that PRE-DATE these rules,
+  not to new specs that omitted the sections. Net-new L1+ spec
+  without either section = FAIL; only legacy absence is silent-skip.

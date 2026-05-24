@@ -23,444 +23,236 @@ uses: [_protocols/plan-review, _protocols/discourse, _protocols/context-isolatio
 
 # Skill: spec-board
 
-Buddy checklist for board dispatch. Detail mechanics:
-`REFERENCE.md`. Agent protocols:
-`agents/_protocols/reviewer-base.md` +
-`spec-reviewer-protocol.md`.
+Buddy checklist. Detail: `REFERENCE.md`. Agent protocols:
+`agents/_protocols/reviewer-base.md` + `spec-reviewer-protocol.md`.
 
 ## 0. Plan + review (required without a frame)
 
-On a direct board dispatch without a previous `frame`: plan block
-(scope / tool / alternatives) + self-review + (non-trivial)
-dispatch to `plan-adversary`. With an existing frame report:
-reference instead of re-running. Bind rule: the dispatch
-references the plan; deviation = rationale. Templates + triggers:
-`_protocols/plan-review.md`. spec_board specifics:
-`REFERENCE.md` §Plan+Review.
+Direct board dispatch without prior `frame`: plan block (scope /
+tool / alternatives) + self-review + (non-trivial) `plan-adversary`
+dispatch. With existing frame report: reference, don't re-run.
+Templates + triggers: `_protocols/plan-review.md`.
 
 ## Process — common
 
-1. Decide on scope + depth (incl. foundation flag).
-2. Assemble a role-based team.
-3. Dispatch context-isolated reviews and consolidate.
-4. Close NEEDS-WORK via fix / loop until 0C+0H.
+1. Decide scope + depth (incl. foundation flag).
+2. Assemble role-based team.
+3. Dispatch context-isolated reviews; consolidate via chief.
+4. Close NEEDS-WORK via fix-loop until 0C+0H.
 5. Post-pass checks + task / commit / deploy cleanly closed.
-
-## Process — mode standard
 
 ## 1. Depth mode
 
-### 1.0 Proportionality gate (MANDATORY — runs before the scoped pre-check + 4 checks)
+### 1.0 Proportionality gate (MANDATORY — runs before §1.1)
 
-The §1.1 step is risky-by-default: any single YES across four checks
-escalates a fresh-spec review to Deep (7 reviewers + chief +
-discourse). L-033 (forge-feed) surfaced the cost — a bookkeeping
-spec edit (amendment-log row that names an API, Step-alt example
-near a schema list, clarification near a state-machine section,
-lessons-table row, version bump) fires the `interface` or `cross-
-layer` check and burns a Deep pass for what is effectively an as-
-built note. The existing Scoped pre-check (in §1.1) only fires
-after a prior clean board pass; on a first-pass or after a prior
-NEEDS-WORK, the bookkeeping case falls through.
+Default = escalate. Bookkeeping spec edits (amendment-log rows,
+Step-alt examples, lessons-table rows, version bumps) systematically
+fire the cross-layer / interface checks and burn a Deep pass. Gate
+cuts theater. Answer 4:
 
-Before consulting the scoped pre-check or the 4 checks, answer four
-questions:
+1. Substantive edit ≤~30 net lines AND ≤2 sections (single change
+   site, not a sweep)?
+2. Mirrors visible sibling pattern in same spec (new amendment-log
+   row alongside existing, new Step-alt alongside existing alts)?
+3. Descriptive, not prescriptive — documents what already landed in
+   code OR clarification / rewording, NOT a new rule / state / contract?
+4. No new state-vocabulary, no new public-API contract, no new SSE
+   event, no new schema field, no new normative rule (cross-spec-impact
+   lens — if neighbour specs need to learn the change, it's contract)?
 
-1. **Substantive spec edit ≤~30 net lines AND ≤2 sections** (single
-   change site, not a sweep across the spec)?
-2. **Mirrors a visible sibling pattern in the same spec** (new
-   amendment-log row alongside existing rows, new Step-alt block
-   alongside existing alts, new lessons-table entry, clarification
-   near an existing clarification)?
-3. **Descriptive, not prescriptive** — documents what already
-   landed in code OR a clarification / rewording of an existing
-   rule, NOT introduction of a new rule / state / contract?
-4. **No new state-vocabulary entry, no new public-API contract,
-   no new SSE event, no new schema field, no new normative rule**
-   (the cross-spec-impact lens — if neighbour specs need to learn
-   the change, it's contract)?
+**3-of-4 yes → standard mode** regardless of §1.1 signals. spec_board
+has no `light` tier; gate authorizes *staying-in-standard*, not
+skipping the board.
 
-**3-of-4 yes → standard mode** regardless of the §1.1 4-check
-signals. spec_board has no `light` tier (`standard` is the
-lightest); the gate authorizes *staying-in-standard*, not skipping
-the board.
+**Override floor (hard escalation regardless of gate):**
+- YES on **security** check (auth / consent / crypto) → ALWAYS Deep.
+- YES on **full-path** (`dev_path: full`) → ALWAYS Deep.
 
-**Override floor (hard escalation regardless of the gate):**
-- A YES on the **security** check (auth / consent / crypto) ALWAYS
-  escalates to Deep — bookkeeping or not. Auth / consent / crypto
-  errors do not become safe because the diff is small.
-- A YES on **full-path** (`dev_path: full`) ALWAYS escalates to
-  Deep — the trigger fires on task-shape, not on section.
+**Pre-gate FAIL (new L1+ specs only) — two required sections:** new
+L1+ spec submitted without either section → **FAIL before §1.0 runs:
 
-**Pre-gate FAIL (new L1+ specs only) — two required sections:** when
-a NEW L1+ spec (per `skills/scoping/SKILL.md` §Spec hierarchy) is
-submitted for board review WITHOUT either of the two required
-sections, the verdict is **FAIL** before the proportionality gate runs:
+1. **§Module-Decomposition missing** → FAIL. Author adds per
+   `framework/spec-engineering.md` §Convention: §Module-Decomposition.
+2. **§Test-Strategy missing** → FAIL. Author adds bug-class catalog
+   per §Convention: §Test-Strategy.
 
-1. **§Module-Decomposition missing** → FAIL. Author adds the section
-   per `framework/spec-engineering.md` §Convention: §Module-Decomposition
-   for L1+ specs and re-submits.
-2. **§Test-Strategy missing** → FAIL. Author adds the bug-class catalog
-   per `framework/spec-engineering.md` §Convention: §Test-Strategy
-   for L1+ specs and re-submits.
+**Board review of §Test-Strategy** (when present): every AC ≥1
+bug_class row (no orphan); no duplicate bug_class (semantic dedup);
+each bug_class is a noun phrase (not test-case name). Vague /
+duplicate / orphan = findings (severity per impact).
 
-**Board review of §Test-Strategy** (when present): every AC has at
-least one bug_class row (no AC orphaned); no duplicate bug_class
-(semantic dedup — "small variation within a bug class" = drop one);
-each bug_class is a noun phrase, not a test-case name or stack
-trace. Vague / duplicate / orphan-AC bug_classes are board findings
-(severity per impact; LOW for minor cleanup; MEDIUM when AC coverage
-is incomplete).
-
-Legacy L1+ specs (pre-date these rules, missing either section)
-**silent-skip** both checks — the touch-it-fix-it rule in
-`skills/_protocols/spec-amendment-discipline.md` §What counts as
-divergence (d for module-decomposition; new AC-scope strand for
-test-strategy) integrates them incrementally on amendment.
-
-The **cross-layer** and **interface** triggers DO yield to the gate
-when the bookkeeping criteria are met — questions 3 + 4 screen the
-contract concern those triggers were meant to catch.
-
-The standard→Deep escalation on ≥1C or ≥3H still applies post-fact
-and is unaffected.
-
-**Gate is mandatory, not optional.** Skipping the gate and running
-§1.1 directly IS the L-033 failure mode. If the gate hits 0-2 yes,
-fall through to §1.1 normally.
+Legacy specs **silent-skip** both — touch-it-fix-it via
+`_protocols/spec-amendment-discipline.md` categories (d) and (e).
+Cross-layer / interface triggers yield to gate on bookkeeping;
+standard→Deep on ≥1C or ≥3H still applies.
 
 ### 1.1 Scoped pre-check + 4 checks
 
-- **Scoped pre-check:** `board_result pass` AND change ≤3
-  sections → standard (3 agents, no chief discovery). Otherwise
-  → step 1.
+- **Scoped pre-check:** `board_result pass` AND change ≤3 sections
+  → standard (3 agents, no chief discovery). Otherwise → step 1.
 - **Step 1 — 4 checks (≥1 YES → Deep):** cross-layer (consumers
-  in another layer), interface (API / Pydantic / schema), full
-  path (`dev_path: full`), security (auth / consent / crypto).
-- All NO → standard. Standard escalates to Deep on ≥1C or ≥3H.
-- §1.0 may have authorized standard despite a YES on the cross-
-  layer or interface check; security + full-path YES are hard
-  overrides per §1.0.
+  in another layer), interface (API / Pydantic / schema), full path
+  (`dev_path: full`), security (auth / consent / crypto).
+- All NO → standard. Standard escalates Deep on ≥1C or ≥3H.
 
 ## 2. Team composition
 
 - **Standard:** chief + adversary + implementer + impact +
-  **architect-roots (CONDITIONAL on §2a trigger)**.
-- **Deep pass 1:** all 7 (+ Adv-2, Adv-3 Sonnet, Consumer
-  Sonnet) + **architect-roots (ALWAYS in deep pass 1)**.
-- **Deep pass 2+:** 4 (Adv + Adv2 + Impl + Impact). Architect-
-  roots NOT in pass 2+ (analysis-mode shifted to delta).
+  **architect-roots** (CONDITIONAL on §2a).
+- **Deep pass 1:** all 7 (+ Adv-2, Adv-3 Sonnet, Consumer Sonnet)
+  + **architect-roots** (ALWAYS in pass 1).
+- **Deep pass 2+:** 4 (Adv + Adv2 + Impl + Impact).
 - **Deep final:** 2 (Adv + Impl).
 
-Specialists by content: schema / API → code-api-contract,
-readability → board-consumer, first principles →
-board-adversary-2.
+Specialists by content: schema/API → `code-api-contract`;
+readability → `board-consumer`; first principles → `board-adversary-2`.
 
 ### 2a. Architect-roots trigger
 
-Include `board-architect-roots` when **any** of:
-
-- the spec has ≥ 6 locked decisions (`LD-N:` entries),
-- the spec touches a state machine (state / transition / init /
-  degraded / phase as a domain concept),
-- the diff replaces a previously-flagged structural pattern
-  (cycle workaround, smell-transfer carrier).
-
-Otherwise architect-roots is optional (Buddy discretion on
-substantial specs).
+Include `board-architect-roots` when ANY of: spec has ≥6 LDs;
+spec touches a state machine; diff replaces a previously-flagged
+structural pattern.
 
 **User-review prompt (foundation specs):** "What would none of
-these agents see?" → "## User-Review" in the consolidated.
-Required prompt, no gate.
+these agents see?" → `## User-Review` in consolidated. Required, no gate.
 
 ## 3. Flow
 
-**Standard:** dispatch → chief (+ optional discourse) → chief
-synth → **post-convergence check** → SAVE → 0C+0H: DONE /
-otherwise: escalate Deep.
+**Standard:** dispatch → chief (+ optional discourse) → chief synth
+→ post-convergence check → SAVE → 0C+0H DONE; else escalate Deep.
 
-**Post-convergence check (after chief synth, required):** the
-chief answers in the consolidated: (1) "Weakest point in PASS —
-what tips it?" (2) "Which single-agent finding was downweighted
-the most — rightly so?"
+**Post-convergence check (required after chief synth):** chief
+answers in consolidated: (1) "Weakest point in PASS — what tips it?"
+(2) "Which single-agent finding was downweighted the most — rightly so?"
+
 **Deep:** pass 1 (7) → chief → DISCOURSE → chief → SAVE; pass 2+
-(4, context-isolated) → chief → discourse → SAVE → fix → next;
-final (2) → Buddy direct.
+(4) → chief → discourse → SAVE → fix → next; final (2) → Buddy direct.
 
-Roles: agents review, chief consolidates, MCA fixes, Buddy
-dispatches + commits. Chief consolidation: analysis-mode gate
-(`_protocols/analysis-mode-gate.md`) before findings
-classification.
+Chief consolidation: analysis-mode gate
+(`_protocols/analysis-mode-gate.md`) before findings classification.
 
 ### 3a. Delta-verify (standard mode, post-fix re-check)
 
-After fixing findings in standard mode, run a 2-agent re-check
-on the delta scope only — not the whole spec. This catches
-"smart-but-wrong-in-your-own-fix" (pattern D, session 99).
-
-**Trigger (any of):**
-- ≥10 normative lines changed (rule / trigger / required format /
-  acceptance — not comments / whitespace / headers)
-- ≥3 whole files touched
-- ≥1 MAJOR finding fixed
-- the fix touches gate composition, severity definition, or
-  enforcement logic (meta-critical)
-
-**Team:** 2 agents context-isolated — board-adversary +
-board-implementer. Both MUST deliver the first-principles drill
-(`agents/_protocols/first-principles-check.md`). No chief in the
-delta-verify team.
-
-**Acceptance:** 0 new BLOCKER + 0 new MAJOR. New findings →
-another fix pass + another delta-verify (max 3 iterations, then
-ESCALATE).
-
-Detail: see `REFERENCE.md` §Delta-Verify.
+After fix in standard mode: 2-agent re-check on delta scope only.
+Trigger (any): ≥10 normative lines changed; ≥3 files touched; ≥1
+MAJOR fixed; fix touches gate composition / severity / enforcement.
+Team: `board-adversary` + `board-implementer` (both deliver
+first-principles drill; no chief). Acceptance: 0 new BLOCKER + 0 new
+MAJOR. Max 3 iterations → ESCALATE. Detail: REFERENCE.md.
 
 ## Process — mode deep
 
-Deep uses the same flow as above, but starts with pass 1 (7
-reviewers) and then loops through pass 2+ (4 reviewers) until
-convergence.
+Same flow as above; starts with pass 1 (7) and loops through pass 2+
+(4) until convergence.
 
 ## Process — mode ux
 
-UX is no longer a separate skill in the Task-366-EF target. For
-UI-heavy specs `spec_board` runs in `mode=ux` with UX personas
-(`board-ux-heuristic`, `board-ux-ia`, `board-ux-interaction`)
-as an extended team variant. Functional and UX findings are
-carried in the same consolidated.
+UX is not a separate skill. For UI-heavy specs `spec_board` runs in
+`mode=ux` with UX personas (`board-ux-heuristic`, `board-ux-ia`,
+`board-ux-interaction`) as extended team variant. Functional + UX
+findings in same consolidated.
 
 ## 4. Buddy checklist (dispatch)
 
-1. Determine spec path + output paths.
-2. Operating mode: review or synthesize.
-3. Depth mode: §1.0 (proportionality gate, MANDATORY) then §1.1
-   (scoped pre-check + 4 checks).
-4. Check the foundation flag (→ chief receives the DR
-   scorecard).
-5. **Engine context** (conditional): when the spec references
-   the workflow engine (engine steps, YAML definitions,
-   completion types, guards) → agents receive as required
-   context: `$FRAMEWORK_DIR/scripts/workflow_engine.py`,
-   `$FRAMEWORK_DIR/scripts/lib/yaml_loader.py`, existing
-   `workflow.yaml` definitions. Without this context: findings
-   on engine limitations are unreliable.
-6. Read the SPEC-MAP, identify neighbour specs for impact.
-7. Agent selection (base + specialists, document the rationale).
-8. Assemble the prompt: reviewer-base + spec-reviewer-protocol +
-   persona + dispatch-template. Chief additionally:
-   consolidation-preservation + piebald-budget.
-9. Dispatch agents in parallel (context-isolated) → spawn the
-   chief → read the signal → SAVE (NON-NEGOTIABLE).
-10. NEEDS-WORK: fix → next pass | CONVERGED: DONE.
+1. Spec path + output paths.
+2. Operating mode (review or synthesize).
+3. Depth mode: §1.0 first (MANDATORY), then §1.1.
+4. Foundation flag check (→ chief receives DR scorecard).
+5. **Engine context** (conditional): spec references workflow engine
+   → agents receive `$FRAMEWORK_DIR/scripts/workflow_engine.py`,
+   `yaml_loader.py`, existing `workflow.yaml`. Detail: REFERENCE.md.
+6. Read SPEC-MAP; identify neighbour specs for impact.
+7. Agent selection (base + specialists; document rationale).
+8. Assemble prompt: reviewer-base + spec-reviewer-protocol + persona
+   + dispatch-template. Chief additionally: consolidation-preservation
+   + piebald-budget.
+9. Dispatch parallel (context-isolated) → spawn chief → read signal
+   → SAVE (NON-NEGOTIABLE).
+10. NEEDS-WORK: fix → next pass; CONVERGED: DONE.
 
 ## 5. Discourse
 
-Deep: ALWAYS after chief. Standard: Buddy decision
-(proportional). Mechanic: `_protocols/discourse.md`.
+Deep: ALWAYS after chief. Standard: Buddy decision (proportional).
+Mechanic: `_protocols/discourse.md`.
 
 ## 6. Post-pass (NON-NEGOTIABLE)
 
-- [ ] Chief consolidated has a tracking table
-  (consolidation-preservation.md).
-- [ ] Verification equation in the consolidated holds (Raw =
-  Kept + Merged + Related + Removed).
-- [ ] **Merge spot-check:** examine 2-3 MERGED findings — was
-  the root cause really identical? Wrong merge → correct to
-  RELATED.
-- [ ] **Minority re-check:** scan REMOVED + low-severity,
-  especially single-agent findings.
-- [ ] Piebald-budget check executed on skill / runbook /
-  persona reviews (piebald-budget.md).
-- [ ] ALL findings fixed (C+H+M+L).
-- [ ] **Delta-Verify mini-board** executed if the trigger fired
-  (§3a) — 0 new highs.
+- [ ] Chief consolidated has tracking table.
+- [ ] Verification equation holds (Raw = Kept + Merged + Related + Removed).
+- [ ] Merge spot-check (2-3 MERGED findings — root cause really identical?).
+- [ ] Minority re-check (scan REMOVED + low-severity single-agent).
+- [ ] Piebald-budget check on skill / runbook / persona reviews.
+- [ ] All findings fixed (C+H+M+L).
+- [ ] Delta-Verify mini-board if §3a trigger fired — 0 new highs.
 - [ ] Task YAML `board_result` + `readiness` updated.
-- [ ] git commit + push.
-- [ ] Deploy when task YAMLs changed.
+- [ ] git commit + push; deploy if task YAMLs changed.
 
-## 6a. Risk Carry-Forward
+## 6a. Risk carry-forward (MANDATORY on user-override / cherry-pick / valve-hit / ESCALATE-accepted)
 
-When the board terminates without a clean 0C+0H PASS but the user
-accepts the result anyway (cherry-pick override, convergence-valve
-hit at the safety limit, outer-loop bound reached), the
-consolidated verdict file MUST carry the unfixed findings forward
-in a top-level YAML block:
+Verdict file MUST carry unfixed findings forward in top-level YAML
+block `remaining_findings:` listing every unfixed finding with `id`,
+`severity`, `locator`, `title`, `rationale_for_carry_over`,
+`proposed_action`. Workflow step `risk-followup-routing` reads the
+block and files ONE follow-up task per workflow run via `task_creation`.
+Empty/absent block → skip with rationale.
 
-```yaml
-remaining_findings:
-  - id: F-H-014                                # finding ID
-    severity: high                             # critical | high | medium | low
-    locator: docs/specs/foo.md:§3.4 lines 88-104
-    title: "Pipeline phase 4 lacks fail-fast"
-    rationale_for_carry_over: >
-      User-override cherry-pick — only blockers fixed in this pass; H/M
-      findings deferred per explicit decision.
-    proposed_action: >
-      Add fail-fast condition per pattern in §3.2; ~20 LOC spec edit, no
-      cross-spec impact expected.
-  - id: F-M-006
-    severity: medium
-    locator: docs/specs/foo.md:§5.1
-    ...
-```
-
-The workflow steps `risk-followup-routing` (build / review / fix
-workflow.yaml) read this block and file ONE follow-up task per
-workflow run via `skills/task_creation/SKILL.md`. Empty/absent
-block: the workflow step skips with rationale "no remaining
-findings".
-
-**Acceptance scenarios that require the block:**
-- The user says "cherry-pick: fix only blockers, defer the rest"
-  — the verdict carries the deferred findings.
-- Convergence valve (5 passes) hits with open findings the user
-  accepts.
-- Outer-loop bound reached (`convergence_loop` REFERENCE.md) and
-  the user accepts the residual.
-- ESCALATE returned to the user and the user decides "ship
-  anyway".
-
-**Why mechanical:** historically these residuals lived in verdict
-prose or in informal session notes and disappeared between
-sessions. The structured block + workflow-step pair turns
-carry-forward into engine-tracked work instead of bookkeeping.
+Full schema, example, acceptance scenarios: REFERENCE.md
+§Risk carry-forward.
 
 ## 7. Output paths
 
-Review files: `docs/reviews/board/{spec-name}-{role}-pass{N}.md`
-Consolidated:
-`docs/reviews/board/{spec-name}-consolidated-pass{N}.md`
-
-## Contract
-
-### INPUT
-- **Required:** spec file (`docs/specs/*.md`) exists and is
-  committed.
-- **Required:** SPEC-MAP read (neighbour specs identified for
-  impact).
-- **Optional:** frame report (from `frame`) — as context for
-  reviewers.
-- **Optional:** engine context
-  (`$FRAMEWORK_DIR/scripts/workflow_engine.py`, YAML
-  definitions) — when the spec references the workflow engine.
-- **Context:** `agents/_protocols/reviewer-base.md`,
-  `spec-reviewer-protocol.md`, `dispatch-template.md`,
-  `consolidation-preservation.md`, `piebald-budget.md`.
-
-### OUTPUT
-**DELIVERS:**
-- Board verdict: PASS (0C+0H) or NEEDS-WORK (with severity
-  distribution).
-- Consolidated findings: finding ID, severity (C/H/M/L),
-  finding text, tracking status.
-- Tracking table (on NEEDS-WORK): finding → fix status →
-  re-review status.
-- `board_result`: `pass` | `needs-work` (machine-readable status
-  for task YAMLs).
-- Review files: individual agent reviews under
-  `docs/reviews/board/`.
-
-**DOES NOT DELIVER:**
-- No fixes — only findings. Fixes are Buddy / MCA work.
-- No code changes — spec-level review.
-- No spec authoring — the board reviews existing specs, doesn't
-  write them.
-
-**ENABLES:**
-- Build prepare: findings (`scope: implementation`) as MUST
-  constraints for delegation.
-- Fix: NEEDS-WORK findings as the fix scope.
-- Convergence: re-review after fixes (max 3 passes via
-  `convergence_loop`).
-- Task status: `board_result` updates `readiness` in the task
-  YAML.
-
-### DONE
-- Board verdict: 0C+0H (PASS) after every required pass.
-- Tracking table complete (verification equation holds).
-- Merge spot-check and minority re-check executed.
-- ALL findings fixed (C+H+M+L).
-- Delta-Verify executed if the trigger fired (§3a).
-- Task YAML `board_result` + `readiness` updated.
-- git commit + push + deploy when task YAMLs changed.
-
-### FAIL
-- **Retry:** NEEDS-WORK → fix → next pass (`convergence_loop`,
-  max 3 passes).
-- **Escalate:** standard escalates to Deep on ≥1C or ≥3H. After
-  `convergence_loop` max → escalate to the user.
-- **Abort:** not foreseen — escalate to the user instead of
-  aborting.
+Reviews: `docs/reviews/board/{spec-name}-{role}-pass{N}.md`
+Consolidated: `docs/reviews/board/{spec-name}-consolidated-pass{N}.md`
 
 ## 7a. Review-mode variants
 
-### Standard (role-based, default)
+**Standard (default):** agents review per role; findings grouped by agent.
+**5-dimensions (corpus sweeps):** agents additionally review along 5
+quality dimensions; chief consolidates per dimension. Use after
+`spec_update` or pre-launch sweep. Mechanics:
+`spec_board/5-dimensions-review.md`.
 
-Agents review according to their default role perspective.
-Findings grouped by agent. See §2 team composition.
+## 8. Contract
 
-### 5-dimensions mode (optional, corpus sweeps)
+**INPUT:** spec file (committed), SPEC-MAP read. Optional: frame
+report, engine context. Context: protocols (reviewer-base, spec-
+reviewer-protocol, dispatch-template, consolidation-preservation,
+piebald-budget).
 
-Agents **additionally** review along 5 quality dimensions
-(completeness, consistency, implementability, interface
-contracts, dependencies). Each finding carries a DIM tag in the
-finding ID (`ADV-COMP-001`, etc.). The chief consolidates
-**per dimension** instead of per agent. Verdict per dimension
-(PASS / NEEDS-WORK).
+**OUTPUT:** board verdict (PASS 0C+0H or NEEDS-WORK with severity
+distribution), consolidated findings, tracking table on NEEDS-WORK,
+`board_result` (machine-readable), review files under
+`docs/reviews/board/`.
 
-**When to use:**
-- After a `spec_update` skill run (phase 5).
-- Pre-launch corpus sweep (run every spec once).
-- When a standard pass leaves the suspicion "one dimension has
-  failed" unresolved.
+**DOES NOT:** fixes (Buddy/MCA work), code, spec authoring.
 
-**Do not use:**
-- Delta-Verify after a small fix (overhead too high).
-- Runbook / template reviews (different semantics for
-  implementability).
+**DONE:** verdict 0C+0H every required pass; tracking table complete;
+merge + minority checks executed; all findings fixed; Delta-Verify
+done if triggered; Task YAML updated; commit + push + deploy as needed.
 
-Mechanics + dispatch prompt template:
-`spec_board/5-dimensions-review.md`. Buddy checklist §4 step 8
-extended: "If 5-dim mode: also include the dimension prompt
-block from `5-dimensions-review.md` in the dispatch."
+**FAIL handling:** NEEDS-WORK → fix → next pass (max 3 via
+`convergence_loop`). Standard → Deep on ≥1C or ≥3H. After max →
+ESCALATE.
 
----
+## 9. Boundary
 
-## 8. Boundary
+- Code review → `code_review_board`.
+- Pre-code plan review → `impl_plan_review`.
+- Legacy UX board → `mode=ux` here.
+- As-is spec update → `spec_update` (writes before board reviews).
 
-- No code review → `code_review_board`.
-- No pre-code plan review → `impl_plan_review`.
-- No standalone legacy UX board in the new model: UI / docs
-  review runs as `mode=ux` in `spec_board`.
-- No as-is spec update → `spec_update` (writes, before the board
-  reviews).
-
-## 9. Anti-patterns
+## 10. Anti-patterns
 
 - **NOT** pass findings on without chief consolidation. INSTEAD
-  check the chief signal + tracking table. Because: silent loss
-  (consolidation-preservation).
-- **NOT** close standard without discourse when findings
-  diverge. INSTEAD trigger discourse. Because: reviewers see
-  different problems; convergence has to be earned.
-- **NOT** start a spec fix as a new full pass. INSTEAD scoped
-  pre-check + delta review. Because: pass inflation wastes
-  tokens.
-- **NOT** dispatch agents without context isolation. INSTEAD
-  every agent gets ONLY the spec. Because: anchoring bias.
-- **NOT** run §1.1's 4 checks before answering §1.0's
-  proportionality gate. INSTEAD §1.0 first; 3-of-4 yes →
-  standard regardless of cross-layer / interface triggers.
-  Because: any YES → Deep is risky-by-default; bookkeeping
-  edits (amendment-log row, Step-alt example, clarification)
-  systematically fire the cross-layer / interface checks
-  without justifying a Deep board (L-033). Security and
-  full-path remain hard overrides.
+  check chief signal + tracking table (silent-loss prevention).
+- **NOT** close standard without discourse when findings diverge.
+  INSTEAD trigger discourse.
+- **NOT** start spec fix as new full pass. INSTEAD scoped pre-check
+  + delta review (pass inflation = wasted tokens).
+- **NOT** dispatch agents without context isolation. INSTEAD every
+  agent gets ONLY the spec (anchoring bias).
+- **NOT** run §1.1's 4 checks before §1.0's proportionality gate.
+  INSTEAD §1.0 first; security + full-path remain hard overrides.
 - **NOT** skip the §Module-Decomposition OR §Test-Strategy pre-gate
-  check on a NEW L1+ spec by assuming legacy. INSTEAD verify
-  creation-date or section-history before silent-skipping. Because:
-  the no-retrofit rule applies to specs that PRE-DATE these rules,
-  not to new specs that omitted the sections. A net-new L1+ spec
-  without either section is FAIL; only legacy absence is silent-skip.
+  on a NEW L1+ spec by assuming legacy. INSTEAD verify creation-date
+  or section-history before silent-skipping.
