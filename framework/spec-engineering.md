@@ -148,17 +148,11 @@ Detailed evaluation patterns for different domains evolve over time.
 
 ### Convention: test section in implementation specs
 
-Every implementation spec (not design spec, not ADR) MUST include a
-"Test Strategy" section that defines at least:
-
-1. Which test levels are relevant (unit, integration, contract, E2E)
-2. Which external dependencies are mocked vs. tested real
-3. At least one concrete test scenario per acceptance criterion
-
-Example (from brain-foundation.md — reference):
-- testcontainers for Neo4j + Postgres (real, not mocked)
-- pytest fixtures for BrainFacade lifecycle
-- one test scenario per AC: "search finds entity" -> AC 1, etc.
+Superseded by the rigorous §Test-Strategy convention below (see
+§Convention: §Test-Strategy for L1+ specs). The legacy loose form
+("3 items: levels, mocks, AC scenarios") is replaced by the
+bug-class catalog — same intent (levels + AC coverage), enforceable
+shape (named bug classes, no duplicates).
 
 ### Convention: interfaces & protocols (optional, recommended for implementation specs)
 
@@ -323,6 +317,119 @@ added in the same commit as a §module-decomposition-add strand.
   `skills/spec_authoring/SKILL.md` §Artifact checklist item 5 — the
   file list is informational and stays; §Module-Decomposition adds
   the responsibility / interface / relation layer ABOVE it.
+
+### Convention: §Test-Strategy for L1+ specs
+
+Every new L1+ spec declares a `§Test-Strategy` section. It is the
+design-time anchor for the **test contract**: which bug classes the
+spec guards against, which AC each bug class belongs to, which test
+levels verify them, and where the test implementation lives.
+
+A **bug_class** is a noun-phrase naming a class of defect — not a
+single test case, not a stack trace. *"empty-string DB-fallback emits
+malformed catch_up"* is a bug class; *"test_X_returns_None_on_empty_input"*
+is a test case derived from it. The bug class is the contract; the
+test case is the implementation.
+
+**L0 specs are exempt.** L1 (capability spec) upwards must include
+the section.
+
+#### Vocabulary (strict)
+
+- **bug_class:** noun phrase, one per defect class. Free-text;
+  semantic dedup, not ID encoding.
+- **AC ref:** AC-N matching the §Acceptance Criteria section.
+- **levels:** L0 / L1 / L2 / L3 / L4 / L5 per
+  `skills/testing/SKILL.md` 6-level pyramid. Multiple levels allowed
+  on one row (same bug class verified at multiple levels = one row,
+  not multiple).
+- **implementation:** `tests/` path pointer (filled when tests land;
+  empty until then).
+
+#### Schema
+
+```markdown
+## §Test-Strategy
+
+**Levels in scope:** <which test levels apply, e.g. L2 unit + L3 integration>.
+**External dependencies:** <real-vs-mocked policy, e.g. testcontainers Postgres real; LLM mocked>.
+
+**Bug-class catalog** (one row per defect class; no duplicate bug_class):
+
+| bug_class | AC ref | levels | implementation |
+|---|---|---|---|
+| <noun phrase naming defect class> | AC-1 | L2 | tests/path/to/test.py::test_name |
+| <next bug class> | AC-2 | L2, L3 | tests/path |
+```
+
+#### Worked example
+
+For a hypothetical chat-resume-attach spec:
+
+```markdown
+## §Test-Strategy
+
+**Levels in scope:** L2 unit (peer-surface) + L3 integration (route-level).
+**External dependencies:** asyncpg pool real (testcontainers); LLM mocked.
+
+**Bug-class catalog:**
+
+| bug_class | AC ref | levels | implementation |
+|---|---|---|---|
+| empty-string DB-fallback emits malformed catch_up | AC-2 | L2 | tests/chat/test_resume_attach.py::test_from_db_path_empty_partial |
+| GeneratorExit on consumer aclose suppressed silently | AC-4 | L2 | tests/chat/test_resume_attach.py::test_from_live_path_client_disconnect |
+| race on registry detach during route disconnect | AC-5 | L3 | tests/chat/ux_flows/test_abort_state_cleanup.py |
+| graceful-degradation regression on missing in_flight_registry | AC-3 | L2, L3 | tests/chat/test_resume_attach.py + tests/chat/ux_flows/test_abort_state_cleanup.py |
+```
+
+Four bug classes, four AC mappings, all rows with non-empty `bug_class`
+and named `tests/` pointer.
+
+#### Enforcement
+
+- **Design-time gate:** `skills/spec_board/SKILL.md` pre-gate FAIL —
+  a new L1+ spec submitted for board review without a §Test-Strategy
+  section FAILs before the proportionality gate runs (mirrors
+  §Module-Decomposition enforcement).
+- **Spec-board review:** vague / duplicate bug_classes (semantic
+  overlap, "small variation within a bug class") = board finding;
+  missing AC coverage (AC-N has no bug_class row) = board finding.
+- **Review-time conformance:** `agents/code-spec-fit.md` reads the
+  section at code-review-time and verifies every AC has at least one
+  bug_class row, every bug_class has a `tests/` pointer once tests
+  land, and no duplicate bug_class survived. Spec-fit is the
+  sole owner of test-coverage findings per
+  `skills/code_review_board/SKILL.md` §5.
+- **Derivation gate (testing skill):** the test-design phase DERIVES
+  TC names from the bug_class catalog — `testing/SKILL.md` forbids
+  adding bug_classes that are not in the spec. A new bug_class needed
+  during implementation = spec amendment, not a test plan addition.
+
+#### No-retrofit boundary
+
+The ~300 specs in `docs/specs/` that pre-date this rule stay
+unchanged. Pre-gate FAIL and code-spec-fit conformance check
+**silent-skip** legacy specs that lack the section. Incremental
+coverage flows through
+`skills/_protocols/spec-amendment-discipline.md`: when an amendment
+to a legacy L1+ spec touches **AC scope** (new AC, AC boundary shift,
+new behavior, new failure mode), the §Test-Strategy section MUST be
+added in the same commit as a §test-strategy-add strand.
+
+#### What this convention is NOT
+
+- **NOT** a full test plan. TC bodies (names, assertions, fixtures)
+  stay in the task plan as ephemeral derivation; the spec carries
+  the bug_class contract only.
+- **NOT** a sidecar file. In-spec, mirrors the §Module-Decomposition
+  pattern. Sidecar would split a contract across two files (sync drift,
+  discovery overhead).
+- **NOT** a coverage report. The `implementation` column points to
+  `tests/` paths but the spec does not track green/red state — that
+  lives in run-time.
+- **NOT** a replacement for `tests/` as the asserting SoT. The spec
+  declares what bugs are guarded against; `tests/` proves the guard
+  exists; the task plan is the ephemeral build artifact between them.
 
 ---
 

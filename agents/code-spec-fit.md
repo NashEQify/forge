@@ -95,6 +95,18 @@ Protocols: `_protocols/reviewer-base.md`,
   absent (legacy spec, no-retrofit per
   `framework/spec-engineering.md` §Convention: §Module-Decomposition
   for L1+ specs).
+- **§Test-Strategy conformance (CONDITIONAL — only when the spec
+  has the section):** read the §Test-Strategy bug-class catalog.
+  Verify: (a) every AC has at least one bug_class row (no orphan
+  AC); (b) every bug_class in the catalog has a corresponding TC
+  in `tests/` (path matches the `implementation` column once
+  tests land; missing TC = finding); (c) no duplicate bug_class
+  survived (semantic dedup; "small variation" duplicates =
+  finding); (d) no TC in `tests/` outside the catalog (TC asserts
+  a bug_class not in spec = spec amendment needed OR rogue TC).
+  Severity per AC importance (orphan AC on a load-bearing AC →
+  HIGH; cosmetic dedup → LOW). **Silent-skip** when the §-section
+  is absent (legacy spec, no-retrofit).
 
 Additional output field: `spec_ref` (REQUIRED — no finding
 without a spec reference).

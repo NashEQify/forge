@@ -60,6 +60,46 @@ without a test plan.
 | Verifiable assumptions | Eval test (hypothesis with code) | Eval (3e) |
 | Architecture invariants | Structural test | L0 |
 
+### Derivation from §Test-Strategy catalog (L1+ specs only)
+
+When a spec has a §Test-Strategy bug-class catalog (per
+`framework/spec-engineering.md` §Convention: §Test-Strategy for L1+
+specs), the catalog **is the test contract**. Test-design DERIVES
+TCs from it:
+
+- One TC per `bug_class` row (level dimension allows multi-level
+  verification under one TC, not multiple TCs).
+- TC name encodes the bug_class as a noun phrase
+  (`test_<bug_class_slug>`).
+- **Cannot add a `bug_class` not in the spec.** A new bug class
+  surfaced during test-design = **spec amendment** (back to spec_board),
+  not a test plan addition. Rationale: the spec owns the test
+  contract; bug_classes that bypass spec review escape the design-time
+  proportionality discipline.
+- Legacy specs without §Test-Strategy: derive TCs per the upstream
+  "Derivation from specs" table; do NOT retrofit a catalog mid-build.
+
+### Bug-class dedup (at creation time)
+
+When drafting a TC for a new `bug_class`, check first whether the
+catalog (or current plan) already contains a row covering this
+defect class. If yes, do not add — small variations within a bug
+class do not warrant a separate TC. **When in doubt, drop the TC.**
+The proportionality bias is toward leaner plan; if a gap surfaces in
+practice, it becomes a real defect (real follow-up task), not a
+preemptive imagined-edge TC.
+
+### Proportionality table (plan-size sanity)
+
+| Trigger | TC count (typical) | Plan size |
+|---|---|---|
+| ≤3 ACs, mechanical change | 1.5-2× AC count | TC table only, <50 lines |
+| 4-7 ACs, new behavior | 2-3× AC count | table + adversary bias notes if mode fires, ~100-200 lines |
+| New subsystem, schema, cross-module | 3-4× AC count | full plan + adversary + skeleton notes, 200-400 lines |
+
+Above 400 lines without adversary mode firing = drift signal; revisit
+bug_class proportionality (likely duplicate / imagined edges).
+
 ### L1 Logic / semantic
 
 For process definitions, workflow specs, agent behaviour:
@@ -87,8 +127,13 @@ type: self-service (the tester adjusts its own test plan).
 
 ACs without TC = GAP. An empty row = invalid state.
 
-| Spec element | TC IDs | Level | AC quality | Eval status |
-|---|---|---|---|---|
+| Spec element | TC IDs | bug_class | Level | AC quality | Eval status |
+|---|---|---|---|---|---|
+
+**bug_class** (required when spec has §Test-Strategy): noun phrase
+naming the defect class this TC guards against. Must be present in
+the spec catalog (else: spec amendment first, see "Derivation from
+§Test-Strategy catalog"). Duplicate bug_class across rows = drop one.
 
 **AC quality** (required): **clear** / **vague** (annotate what's
 missing) / **contradictory** (which contradiction). Vague /
