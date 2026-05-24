@@ -62,70 +62,45 @@ without a test plan.
 
 ### Derivation from §Test-Strategy catalog (L1+ specs only)
 
-When a spec has a §Test-Strategy bug-class catalog (per
+When spec has §Test-Strategy bug-class catalog (per
 `framework/spec-engineering.md` §Convention: §Test-Strategy for L1+
-specs), the catalog **is the test contract**. Test-design DERIVES
-TCs from it:
+specs), the catalog **is the test contract**:
 
-- One TC per `bug_class` row (level dimension allows multi-level
-  verification under one TC, not multiple TCs).
-- TC name encodes the bug_class as a noun phrase
-  (`test_<bug_class_slug>`).
-- **New bug_class discovered during test-design (incl. adversary mode)
-  → append the row to §Test-Strategy INLINE in the same edit.** This
-  is a **bookkeeping-tier amendment** (single section append, no
-  contract change, no spec_board re-spin per
-  `skills/_protocols/spec-amendment-discipline.md` adversary-append
-  exception). Adversary mode may append many rows during its run —
-  one commit at end of adversary run (or fold into a later commit).
-  The catalog stays current; MCA dispatches against an up-to-date
-  spec; no Specify-phase round-trip.
-- Legacy specs without §Test-Strategy: derive TCs per the upstream
-  "Derivation from specs" table; do NOT retrofit a catalog mid-build.
+- One TC per `bug_class` row (multi-level verification = one row).
+- TC name = `test_<bug_class_slug>`.
+- **New bug_class discovered (incl. adversary mode) → inline append
+  to §Test-Strategy.** Bookkeeping-tier amendment, no spec_board
+  re-spin (per `_protocols/spec-amendment-discipline.md` category f).
+  Single commit at adversary-run end (or folded later).
+- Legacy specs without catalog: derive per upstream table above.
 
 ### Bug-class dedup (at creation time)
 
-When drafting a TC for a new `bug_class`, check first whether the
-catalog (or current plan) already contains a row covering this
-defect class. If yes, do not add — small variations within a bug
-class do not warrant a separate TC. **When in doubt, drop the TC.**
-The proportionality bias is toward leaner plan; if a gap surfaces in
-practice, it becomes a real defect (real follow-up task), not a
-preemptive imagined-edge TC.
+Before adding TC for a new `bug_class`, check catalog/plan for
+existing coverage. Duplicate or "small variation within a class" →
+do not add. **When in doubt, drop.** Real gaps surface later as
+real defects (real follow-up tasks), not preemptive imagined edges.
 
 ### Proportionality table (plan-size sanity)
 
-| Trigger | TC count (typical) | Plan size |
+| Trigger | TC count | Plan size |
 |---|---|---|
-| ≤3 ACs, mechanical change | 1.5-2× AC count | TC table only, <50 lines |
-| 4-7 ACs, new behavior | 2-3× AC count | table + adversary bias notes if mode fires, ~100-200 lines |
-| New subsystem, schema, cross-module | 3-4× AC count | full plan + adversary + skeleton notes, 200-400 lines |
+| ≤3 ACs, mechanical | 1.5-2× AC | <50 lines |
+| 4-7 ACs, new behavior | 2-3× AC | ~100-200 lines |
+| New subsystem / schema / cross-module | 3-4× AC | 200-400 lines |
 
-Above 400 lines without adversary mode firing = drift signal; revisit
-bug_class proportionality (likely duplicate / imagined edges).
+>400 lines without adversary mode = drift signal (likely duplicate /
+imagined edges).
 
-### L1 Logic / semantic
+### L1 Logic / semantic + Iteration protocol
 
-For process definitions, workflow specs, agent behaviour:
-simulation (concrete case against the definition) · completeness
-(does every step have a successor?) · consistency (does it
-contradict another definition?) · DRY check (canonical or
-duplicate?) · constraint satisfaction (are all constraints
-satisfiable?).
-
-Role split: `tester` (design mode) defines L1 checks. Buddy runs
-L1 scenarios (the L1-SIM step in
-`workflows/runbooks/build/WORKFLOW.md` Specify phase).
-`main-code-agent` calls `tester` (execution mode) after
-implementation.
-
-### Iteration protocol
-
-Test-case design runs inside the convergence loop
-(`skills/convergence_loop/SKILL.md`). Pass 1: full derivation
-with varied patterns (happy / error / boundary / concurrent /
-stale state). Passes 2-3: coverage gaps, rising threshold. Gate
-type: self-service (the tester adjusts its own test plan).
+L1 = simulation, completeness, consistency, DRY check, constraint
+satisfaction (for process / workflow / agent-behaviour specs).
+`tester` (design) defines L1 checks; Buddy runs L1-SIM in
+Specify phase; `main-code-agent` calls `tester` (execution) after
+implementation. Design runs inside `convergence_loop` (pass 1 full
+derivation; passes 2-3 coverage gaps with rising threshold; tester
+self-service gate). Detail: REFERENCE.md.
 
 ## Coverage matrix (MUST output)
 
@@ -148,53 +123,26 @@ change, do not recreate.
 
 ## Contract
 
-### INPUT
-- **Required:** spec with ACs (or process definition for L1).
-- **Required:** `spec_ref` from the task YAML — for the
-  spec-freshness check.
-- **Optional:** existing test plan — for delta updates instead
-  of starting from scratch.
-- **Context:** `skills/testing/REFERENCE.md` (format details,
-  skeleton templates, eval methodology).
+**INPUT:** spec with ACs (or process definition for L1), `spec_ref`
+for spec-freshness check. Optional: existing plan (delta updates).
+Context: REFERENCE.md.
 
-### OUTPUT
-**DELIVERS:**
-- Test plan: test cases per spec element (AC → positive TC,
-  MUST NOT → negative TC, etc.).
-- Coverage matrix: spec element × TC ID × level × AC quality ×
-  eval status.
-- AC-quality assessment: clear / vague / contradictory per AC.
-- Run strategy: which test levels on which trigger.
+**OUTPUT:** test plan + coverage matrix (spec element × TC × bug_class
+× level × AC quality × eval status) + AC-quality assessment + run
+strategy. Persisted in `docs/tasks/NNN.md`.
 
-**DOES NOT DELIVER:**
-- No test execution in design mode — plan, not results.
-- No spec fixes — reports vague / contradictory ACs, doesn't fix
-  them.
-- No code skeletons in design mode — skeleton creation is
-  execution mode (`tester`).
+**DOES NOT:** test execution in design mode (plan only); spec fixes
+(reports vague/contradictory ACs); code skeletons in design mode
+(execution-mode `tester` does that).
 
-**ENABLES:**
-- Build prepare: test plan as a delegation artifact for MCA.
-- Tester execution: plan as binding input for test
-  implementation.
-- Spec-review feedback: AC-quality findings as a signal to
-  `spec_board`.
+**DONE:** coverage matrix complete (every AC ≥1 TC, no empty rows);
+AC quality assessed; vague/contradictory → spec-review signal; run
+strategy decided; plan persisted.
 
-### DONE
-- Coverage matrix complete: every AC has at least 1 TC, no empty
-  rows.
-- AC quality assessed: clear / vague / contradictory per AC.
-- Vague / contradictory ACs → spec-review signal documented.
-- Run strategy decided (which levels on which trigger).
-- Test plan persisted in `docs/tasks/NNN.md`.
-
-### FAIL
-- **Retry:** coverage gaps → convergence-loop pass 2-3 with
-  rising threshold.
-- **Escalate:** vague / contradictory ACs → spec review BEFORE
-  execution (no opt-out).
-- **Abort:** spec-freshness check FAIL (`spec_version` ≠
-  `test_plan_spec_ref`) → STOP, design first.
+**FAIL handling:** coverage gaps → convergence-loop pass 2-3 rising
+threshold. Vague/contradictory ACs → ESCALATE to spec review (no
+opt-out). Spec-freshness mismatch (`spec_version` ≠ `test_plan_spec_ref`)
+→ ABORT, design first.
 
 ## Spec-freshness check (MUST before execution)
 
@@ -228,33 +176,18 @@ DESIGN → PRE-IMPL EVAL → Decomposition → Delegation`.
 
 ## Anti-patterns
 
-- **NOT** make L4 / L5 assertions too specific. **INSTEAD** at
-  L4 / L5 check only STRUCTURE / TYPE. Because: assertions that
-  are too specific at higher levels break on every L2 / L3
-  refactor — the assertion is wrong, not the code.
-- **NOT** write tests after implementation. **INSTEAD**
-  skeletons BEFORE implementation as a delegation-ready artifact.
-  Because: "green right away" without a red phase is not a test;
-  it's a tautology.
-- **NOT** write all tests first then all implementation
-  ("horizontal slice"). **INSTEAD** vertical slice / tracer
-  bullet: one test → one impl → repeat. Pattern lift Phase G
-  tier-2 from Pocock TDD. Because: horizontal slicing produces
-  tests that test *imagined* behaviour instead of *actual* —
-  you end up testing data shape instead of user-facing behaviour
-  and tests become insensitive to real changes. Vertical slicing
-  responds to what you learned in the previous cycle — you know
-  exactly which behaviour matters and how to verify it.
-- **NOT** wave through vague / contradictory ACs. **INSTEAD**
-  trigger spec review before deriving TCs. Because: TCs on vague
-  ACs are guessing, not testing.
-- **NOT** treat eval scripts as one-off checks. **INSTEAD** keep
-  them persistent in `tests/eval/` — assumption regression
-  suite. Because: assumptions remain assumptions; they need
-  repeatable verification.
-- **NOT** ignore the run strategy and always run everything.
-  **INSTEAD** scope per trigger. Because: unnecessary L5 runs
-  cost time without signal.
+- **NOT** L4/L5 assertions too specific. INSTEAD STRUCTURE/TYPE only
+  at L4/L5 (specific assertions break on every L2/L3 refactor).
+- **NOT** tests after implementation. INSTEAD skeletons BEFORE
+  (red-phase tautology guard).
+- **NOT** horizontal slice (all tests then all impl). INSTEAD vertical
+  slice / tracer bullet (one test → one impl → repeat). Horizontal
+  produces tests of imagined behaviour, not actual.
+- **NOT** wave through vague/contradictory ACs. INSTEAD trigger spec
+  review first (TCs on vague ACs = guessing).
+
+Extended anti-patterns (eval script persistence, run-strategy scope
+discipline): REFERENCE.md.
 
 ## References
 
