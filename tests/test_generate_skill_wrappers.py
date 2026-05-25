@@ -214,6 +214,19 @@ def test_tc4_criterion_cross_cutting(tmp_path: Path) -> None:
     assert "consistency-check" in desired
 
 
+def test_secondary_user_facing_is_eligible(tmp_path: Path) -> None:
+    root = _make_repo(tmp_path)
+    _write_skill(
+        root,
+        "get_api_docs",
+        "name: get-api-docs\ndescription: >\n  Fetch docs. Triggers when API.\n"
+        "status: active\ninvocation:\n  primary: workflow-step\n"
+        "  secondary: [user-facing, sub-skill]\n",
+    )
+    desired = build_desired(root / "skills")
+    assert "get-api-docs" in desired
+
+
 # --------------------------------------------------------------------------
 # TC-5 override-true (AC-2)
 # --------------------------------------------------------------------------
@@ -626,6 +639,15 @@ def test_is_eligible_predicate_matrix() -> None:
     assert is_eligible(
         {
             "status": "active",
+            "invocation": {
+                "primary": "workflow-step",
+                "secondary": ["user-facing"],
+            },
+        }
+    ) == (True, None)
+    assert is_eligible(
+        {
+            "status": "active",
             "cc_wrapper": True,
             "invocation": {"primary": "workflow-step"},
         }
@@ -640,8 +662,50 @@ def test_render_wrapper_shape() -> None:
     assert out.startswith("---\nname: foo-bar\n")
     assert "description: Does X. Triggers when Y.\n" in out
     assert "**SoT:** `skills/foo_bar/SKILL.md`" in out
+    assert "Claude-Code-discoverable wrapper" in out
     assert GENERATED_MARKER in out
     assert out.endswith("\n")
+
+
+def test_codex_output_root_and_tool_label(tmp_path: Path) -> None:
+    root = _make_repo(tmp_path)
+    _write_skill(root, "alpha", _uf("alpha"))
+    codex_root = tmp_path / "home" / ".agents" / "skills"
+
+    assert (
+        main(
+            [
+                "--repo",
+                str(root),
+                "--output-root",
+                str(codex_root),
+                "--tool-label",
+                "Codex",
+            ]
+        )
+        == 0
+    )
+
+    wrapper = codex_root / "alpha" / "SKILL.md"
+    assert wrapper.is_file()
+    text = wrapper.read_text(encoding="utf-8")
+    assert "Codex-discoverable wrapper" in text
+    assert "**SoT:** `skills/alpha/SKILL.md`" in text
+    assert not (root / ".claude" / "skills" / "alpha").exists()
+    assert (
+        main(
+            [
+                "--repo",
+                str(root),
+                "--output-root",
+                str(codex_root),
+                "--tool-label",
+                "Codex",
+                "--check",
+            ]
+        )
+        == 0
+    )
 
 
 # --------------------------------------------------------------------------

@@ -17,19 +17,22 @@ and the harness-neutral methodology.
         │   harness-agnostic                               │
         └────────────────────┬─────────────────────────────┘
                              │
-       ┌─────────────────────┼──────────────────────┐
-       │                     │                      │
-       ▼                     ▼                      ▼
-┌──────────────┐      ┌──────────────┐       ┌──────────────┐
-│ Claude Code  │      │ OpenCode     │       │ Cursor       │
-│ Adapter      │      │ Adapter      │       │ Adapter      │
-│              │      │              │       │ (IDE, no     │
-│ orchestrators│      │ orchestrators│       │  tool-event  │
-│ /claude-code/│      │ /opencode/   │       │  API)        │
-└──────┬───────┘      └──────┬───────┘       └──────┬───────┘
-       │                     │                      │
-       ▼                     ▼                      ▼
-   Claude Code CLI       OpenCode CLI           Cursor IDE
+   ┌─────────────────┬───────┴────────┬──────────────────┐
+   │                 │                │                  │
+   ▼                 ▼                ▼                  ▼
+┌──────────┐  ┌──────────────┐  ┌──────────┐      ┌──────────┐
+│ Claude   │  │ OpenCode     │  │ Codex    │      │ Cursor   │
+│ Code     │  │ Adapter      │  │ Adapter  │      │ Adapter  │
+│ Adapter  │  │              │  │          │      │ (IDE, no │
+│          │  │ orchestrators│  │ .codex/ +│      │  tool-   │
+│ orches   │  │ /opencode/   │  │ ~/.codex/│      │  event   │
+│ /claude- │  │              │  │ ~/.agents│      │  API)    │
+│ code/    │  │              │  │          │      │          │
+└────┬─────┘  └──────┬───────┘  └────┬─────┘      └────┬─────┘
+     │               │                │                 │
+     ▼               ▼                ▼                 ▼
+ Claude Code     OpenCode         Codex Desktop      Cursor IDE
+  CLI             CLI              / CLI
 ```
 
 An adapter delivers three things: persona / skill discovery,
@@ -37,8 +40,10 @@ tier-0-anchor loading, and — where the harness exposes a tool-event
 API — wiring of forge's PreToolUse / PostToolUse hooks. The bash
 hooks under `orchestrators/claude-code/hooks/` are the SoT for all
 adapters; CC fires them natively, OC fires them via a thin TS
-translator plugin, Cursor has no event API so they only fire via the
-git pre-commit symlink (drift catches at commit instead of at write).
+translator plugin, Codex fires them via a project-local
+`.codex/hooks.json` written by `scripts/setup-codex.sh`, Cursor has
+no event API so they only fire via the git pre-commit symlink (drift
+catches at commit instead of at write).
 
 ## Claude Code
 
@@ -234,6 +239,112 @@ JSON. CC retains the UserPromptSubmit + Stop/SessionEnd hook surfaces
 (workflow-reminder, FACTS check) which have no OC equivalent — those
 remain CC-only.
 
+## Codex
+
+Codex Desktop / CLI reads agent definitions from `~/.codex/agents/`
+(global, user-level) and project-local hooks from `<project>/.codex/
+hooks.json`. Skills are discovered globally from `~/.agents/skills/`.
+There is no `--add-dir`-style runtime path resolution; Codex expects
+agent files to carry concrete absolute paths.
+
+### Prerequisites
+
+- Codex Desktop or Codex CLI installed (`codex --version`).
+- The active repository carries an `AGENTS.md` (project Tier-0
+  surface; identical convention to OpenCode).
+
+### Adapter files
+
+```
+.codex/
+├── agents/              # 38 agent wrappers (TOML, generated/curated)
+│   ├── buddy.toml       # template stub — overwritten at install time
+│   ├── main-code-agent.toml
+│   ├── board-chief.toml
+│   ├── code-chief.toml
+│   └── … (one per persona)
+└── hooks.json           # project-local hook wiring (uses
+                         # ${CLAUDE_PROJECT_DIR} as the in-repo form;
+                         # overwritten with concrete paths on install)
+```
+
+The committed `.codex/agents/buddy.toml` is a TEMPLATE with a
+`${FRAMEWORK_DIR}` placeholder. `scripts/setup-codex.sh` writes the
+installed copy at `~/.codex/agents/buddy.toml` with the placeholder
+substituted to the user's absolute path. This indirection exists
+because Codex Desktop has no runtime environment-variable resolution
+for agent file paths; concrete paths must be baked in at install
+time. The 37 other wrappers carry no absolute paths and are copied
+unchanged.
+
+### setup-codex.sh
+
+```bash
+bash $FRAMEWORK_DIR/scripts/setup-codex.sh [project-dir ...]
+```
+
+Operations:
+
+1. **Detect `FRAMEWORK_DIR`** from the script's own location (same
+   pattern as `setup-cc.sh`, portable across clones).
+2. **Install agent wrappers** at `~/.codex/agents/` from
+   `.codex/agents/*.toml`.
+3. **Overwrite `~/.codex/agents/buddy.toml`** with a Codex-specific
+   wrapper carrying the concrete `FRAMEWORK_DIR`.
+4. **Write `~/.codex/AGENTS.md`** — a global fallback that points at
+   the active repo's `AGENTS.md` as the project Tier-0.
+5. **Generate skill wrappers** at `~/.agents/skills/` via
+   `scripts/generate_skill_wrappers.py --output-root ~/.agents/skills
+   --tool-label Codex`. Same generator as the Claude Code wrappers,
+   different output root.
+6. **For each `project-dir` argument:** write `<project-dir>/.codex/
+   hooks.json` with concrete `bash <FRAMEWORK_DIR>/orchestrators/
+   claude-code/hooks/*.sh` commands wired into Codex's PreToolUse,
+   PostToolUse, and UserPromptSubmit events. Hook coverage is parity
+   with Claude Code's `.claude/settings.json`.
+
+### Hook registration
+
+`.codex/hooks.json` registers forge's existing bash hooks for Codex's
+tool-event lifecycle:
+
+| Event | Matcher | Hooks |
+|---|---|---|
+| `PreToolUse` | Edit/Write/Bash | path-whitelist-guard |
+| `PreToolUse` | Edit/Write | frozen-zone-guard, state-write-block, engine-bypass-block, plan-adversary-reminder |
+| `PreToolUse` | Bash | workflow-commit-gate |
+| `PreToolUse` | Task | delegation-prompt-quality |
+| `PostToolUse` | Task | mca-return-stop-condition, board-output-check, evidence-pointer-check |
+| `UserPromptSubmit` | * | workflow-reminder |
+
+The hook scripts themselves live under `orchestrators/claude-code/
+hooks/`; Codex re-uses them, no Codex-specific hook implementations
+exist.
+
+### Discovery + tool use
+
+Codex discovers:
+- **Agents:** globally from `~/.codex/agents/`. No project-local
+  `.codex/agents/` lookup (unlike Claude Code's walk-up).
+- **Skills:** globally from `~/.agents/skills/`. Wrappers are
+  generated derived artefacts.
+- **Tier-0:** from the active project's `AGENTS.md` (same convention
+  as OpenCode). If the project has no `AGENTS.md`, the global
+  `~/.codex/AGENTS.md` fallback points at it as the missing Tier-0.
+
+### Limitations
+
+- **No project-local agent override.** Codex has no walk-up agent
+  discovery; consumer repos cannot ship per-project agent variants.
+  Workaround: edit the global `~/.codex/agents/` directly, or use a
+  per-repo `AGENTS.md` that re-routes via prompt.
+- **Skill wrappers are install-time, not repo-tracked.** Unlike
+  `.claude/skills/` (committed, exposed via symlink), the Codex skill
+  wrappers under `~/.agents/skills/` regenerate on every
+  `setup-codex.sh` run. When a skill's frontmatter changes, re-run
+  `setup-codex.sh` (or the generator directly) to refresh the
+  wrappers.
+
 ## Cursor
 
 Cursor is an IDE (not a CLI agent like CC / OC), so the adapter has a
@@ -258,14 +369,15 @@ Tier-0 anchor reuses the `AGENTS.md` convention (same as OC). Personas
 are invoked via `@<name>` mentions; the Cursor agent reads
 `agents/<name>.md` and follows it.
 
-### Limitations vs. CC / OC
+### Limitations vs. CC / OC / Codex
 
-| Aspect | CC | OC | Cursor |
-|---|---|---|---|
-| Sub-agent discovery | `~/.claude/agents/` | `.opencode/agent/` | project rules + `@`-mention |
-| PreToolUse hooks | native | translator plugin | **none** |
-| Pre-commit hook | git symlink | git symlink | git symlink |
-| Workflow-engine trigger | mechanical | mechanical | manual (terminal) |
+| Aspect | CC | OC | Codex | Cursor |
+|---|---|---|---|---|
+| Sub-agent discovery | `~/.claude/agents/` | `.opencode/agent/` | `~/.codex/agents/` | project rules + `@`-mention |
+| Skill discovery | `~/.claude/skills/` (symlink) | `.opencode/skill/` | `~/.agents/skills/` (generated) | project rules |
+| PreToolUse hooks | native | translator plugin | native (`.codex/hooks.json`) | **none** |
+| Pre-commit hook | git symlink | git symlink | git symlink | git symlink |
+| Workflow-engine trigger | mechanical | mechanical | mechanical | manual (terminal) |
 
 **Consequence:** the mechanical write-time discipline (path-whitelist,
 frozen-zone, delegation-prompt-quality, …) does not fire under Cursor.
@@ -315,7 +427,15 @@ persona-wrapper chain:
 agents/<name>.md                              <- SoT
 .claude/agents/<name>.md                      <- CC wrapper, "load SoT"
 orchestrators/opencode/.opencode/agent/<name>.md  <- OC wrapper, "load SoT"
+.codex/agents/<name>.toml                     <- Codex wrapper, "load SoT"
 ```
+
+Codex wrappers (`.codex/agents/<name>.toml`) live in the repo as a
+checked-in adapter surface; `setup-codex.sh` copies them to
+`~/.codex/agents/`. The Buddy wrapper is a template stub with a
+`${FRAMEWORK_DIR}` placeholder — substituted at install time. The
+other 37 wrappers are generated-then-curated (no install-time
+substitution needed).
 
 Cursor has no per-persona wrapper file (personas resolve via
 `@`-mention into `agents/<name>.md` directly), so Check 3 does not

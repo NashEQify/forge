@@ -3,7 +3,7 @@
 Methodology layer of forge: Tier-1 operational docs, design
 principles, and format specs. Skills, workflows, references, and templates
 are siblings at the repo root, not children of this directory.
-Tool-neutral; consumed by Claude Code, OpenCode, and future adapters
+Tool-neutral; consumed by Claude Code, OpenCode, Codex, and Cursor
 through wrappers.
 
 **Public OSS docs for readers:** [`../architecture-documentation/`](../architecture-documentation/).
@@ -23,7 +23,7 @@ through wrappers.
 | `agent-patterns.md` | active agent patterns from real drift cases |
 | `intent-tree.md` | intent inheritance + constraint hierarchy |
 | `milestone-execution.md` | multi-task orchestration |
-| `models.md` | model assignment (agent -> model, CC + OC) |
+| `models.md` | model assignment (agent -> model, CC + OC + Codex) |
 | `context-and-loading.md` | context mechanics + loading order |
 | `convoy.md` | objective progress tracking format |
 | `spec-engineering.md` | spec theory (5 primitives) |
@@ -76,6 +76,7 @@ manual walkthrough). `tests/hooks/` — hook smoke tests (bash).
 
 ## Consumed by
 
-Consumer repos via `--add-dir $FRAMEWORK_DIR` (Claude Code) and
-`OPENCODE_CONFIG_DIR` (OpenCode). Adapter details:
+Consumer repos via `--add-dir $FRAMEWORK_DIR` (Claude Code),
+`OPENCODE_CONFIG_DIR` (OpenCode), and `~/.codex/agents/` + `~/.agents/skills/`
+plus project-local `.codex/hooks.json` (Codex). Adapter details:
 [`../architecture-documentation/07-tool-integrations.md`](../architecture-documentation/07-tool-integrations.md).
