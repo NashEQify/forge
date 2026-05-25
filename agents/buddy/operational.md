@@ -176,11 +176,11 @@ CLI surface, path routing, step patterns, on_fail behaviour, multi-
 machine warnings, and skip-eligible workflow list:
 `framework/workflow-engine-cookbook.md`.
 
-Brief-quality gate for MCA dispatches (substantial = ≥3 ACs OR
-schema change OR cross-module impact OR sub-build): the brief MUST
-contain `## Implicit-Decisions-Surfaced` with 4 standard classes
+Brief-quality gate for MCA dispatches: when engagement applies per
+§Multi-perspective engagement, the brief MUST contain
+`## Implicit-Decisions-Surfaced` with 4 standard classes
 (schema_and_contract, error_and_stop, layer_discipline,
-structural_invariants). Template SoT:
+structural_invariants). Template SoT (incl. its own trigger):
 `skills/_protocols/mca-brief-template.md`. Pre-dispatch hook
 `delegation-prompt-quality.sh` Check C verifies presence.
 
