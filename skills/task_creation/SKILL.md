@@ -152,9 +152,9 @@ is clear) and `workflow_template` (decision / research —
 `standard-build` deprecated, build via the runbook). Detail +
 YAML signature: `REFERENCE.md`.
 
-The "Not yet" block is required — an empty block is invalid
-(DR-10). **No exclusion from the user → ask actively.** Optional
-fields (ACs, constraints, deps) when known.
+The "Not yet" block is required — an empty block is invalid (scope
+must be explicitly bounded). **No exclusion from the user → ask
+actively.** Optional fields (ACs, constraints, deps) when known.
 
 ### 5. Validation (MUST)
 
@@ -265,7 +265,7 @@ Validate: plan_engine --validate PASS
   5-minute tasks that could be done directly.
 - **NOT** accepting an empty "Not yet" block. **INSTEAD** ask the
   user actively "what is explicitly out of scope?". Because:
-  scope drift across the task lifecycle, DR-10 violation.
+  scope drift across the task lifecycle when boundaries are unstated.
 - **NOT** `spec_ref=null` on implementing tasks. **INSTEAD**
   assign a spec, or hold the task until the spec exists. Because:
   the spec ↔ task link is missing — breaks consistency_check spec

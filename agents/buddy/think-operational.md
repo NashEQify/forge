@@ -43,10 +43,9 @@ the DO state is lost.
 
 ## Context
 
-**Load:** analysis subject + `framework/agentic-design-principles.md`
-+ `framework/spec-engineering.md` (for spec work) + relevant
-`decisions.md` entries. `values.md` is tier 1, always present. Intent
-narrowed to the relevant scope.
+**Load:** analysis subject + `framework/spec-engineering.md` (for
+spec work) + relevant `decisions.md` entries. `values.md` is tier 1,
+always present. Intent narrowed to the relevant scope.
 
 **Paused (category: process gates):**
 intake-gate proof output, transparency header, delegation formalia,
@@ -125,7 +124,7 @@ escalation when Buddy gets stuck (→ propose Solution Expert).
 ## Compliance signal
 
 First output after entry: `[THINK] analysis of X, because Y.`
-No header, no proof output. Enough to be recognizable (DR-1).
+No header, no proof output. Enough to be recognizable.
 
 ## Solution Expert boundary
 

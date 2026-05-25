@@ -45,8 +45,7 @@ Entry points (Buddy fills these in before dispatch from
 context):
 - Always: intent.md (vision), CLAUDE.md (invariants),
   process-map.md (workflows).
-- Framework rewrite: 273.md (design decisions),
-  agentic-design-principles.md, workflow runbooks.
+- Framework rewrite: 273.md (design decisions), workflow runbooks.
 - Product rewrite: ARCHITECTURE.md, specs, container
   atlas.
 - Buddy derives entry points from scope + reason. No

@@ -76,11 +76,15 @@ multi-day build, a context switch, or a fresh session next week.
 
 ## Cross-session continuity
 
-Multi-session work doesn't restart from scratch:
+Multi-session work doesn't restart from scratch — but only if you end
+sessions with `save`.
 
-- **`save` / `quicksave`** — writes a structured session-handoff
-  (meta-summary, open topics, decisions, next steps). Next session
-  reads it on boot and picks up the thread.
+- **`save` / `quicksave`** — the explicit session-end / mid-session
+  ritual. Type `save` before closing the terminal; Buddy writes a
+  structured session-handoff (meta-summary, open topics, decisions,
+  next steps). The next session reads it on boot and picks up the
+  thread. `quicksave` is the lighter mid-day variant for context
+  switches.
 - **Workflow engine** — non-trivial workflows (`build`, `fix`,
   `solve`, `review`, `research`, `docs-rewrite`) persist state per
   task in `.workflow-state/<id>.json`. Pause a multi-day build
@@ -90,33 +94,93 @@ Multi-session work doesn't restart from scratch:
   active intent, session-handoff, and in-flight workflows, then tells
   you where you left off. No manual context reconstruction.
 
-## Get `cc` running
+## Setup
 
-End state: type `cc` inside any directory and a Claude Code session
-opens there with the full forge framework (agents, skills, hooks,
-workflows) attached — your directory is the working scope, forge is
-loaded alongside via `--add-dir` plus `~/.claude/{agents,skills}`
-symlinks. `cc forge` always works from anywhere — opens a session in
-the framework repo itself, no per-project setup needed.
-
-### Setup
+End state: open Claude Code in any project, the agent boots into Buddy
+with the full forge framework attached.
 
 ```bash
-git clone https://github.com/NashEQify/forge ~/projects/forge
-cd ~/projects/forge
-python3 -m venv .venv && .venv/bin/pip install pyyaml
-bash scripts/setup-cc.sh    # idempotent install + symlinks
-cc forge                    # smoke-test — opens the framework
+# 1. clone forge anywhere — typically next to your other repos
+git clone https://github.com/NashEQify/forge ~/forge
+
+# 2. register forge's personas + skills with Claude Code (user-level,
+#    idempotent, touches nothing in your projects)
+mkdir -p ~/.claude \
+  && ln -sn ~/forge/.claude/agents ~/.claude/agents \
+  && ln -sn ~/forge/.claude/skills ~/.claude/skills
 ```
 
-Once installed, `cc` works in any directory on your machine — it
-doesn't matter where your project repos live. If the directory has no
-`intent.md`, Buddy offers a 5-10 min interview to create one;
-afterwards `cc` there boots straight into Buddy with active workflows
-and session-handoff loaded.
+That's the setup. Then in any project:
 
-Details — prerequisites, what `setup-cc.sh` does, scope resolution,
-gotchas: [`docs/cc-launcher.md`](docs/cc-launcher.md).
+```bash
+cd ~/your-project
+claude --agent buddy --add-dir ~/forge
+```
+
+Buddy boots, reads `agents/buddy/{soul,operational,boot}.md`, loads the
+workflows + skills, and starts orchestrating. If your project has no
+`intent.md` yet, Buddy offers a short interview to create one.
+
+### What the symlinks buy you
+
+Without them, `--add-dir ~/forge` grants read access to the framework
+tree but the harness has no way to discover forge's personas or skills.
+Concretely:
+
+- The `Task` tool can't dispatch `board-chief`, `main-code-agent`, or
+  any of the 30+ framework personas — Claude Code looks up subagents
+  via `~/.claude/agents/` (or the project's `.claude/agents/`), not
+  via `--add-dir`.
+- The `Skill` tool sees zero forge skills. The agent can still read
+  `skills/<name>/SKILL.md` via the Read tool and follow the methodology
+  manually (the documented SoT-read fallback in
+  [`agents/buddy/operational.md`](agents/buddy/operational.md)), but
+  proactive discovery via the `available-skills` system-reminder is
+  off.
+
+With the symlinks, both surfaces light up — every Claude Code session
+on this machine knows about forge's personas and skills.
+
+### What you don't get with this setup
+
+PreToolUse hooks (path-whitelist, frozen-zones, state-write-block, …)
+and pre-commit checks are not active in your project. forge's
+mechanical drift-prevention layer protects forge's own repo. To extend
+it into a consumer repo, install hooks there once:
+
+```bash
+bash ~/forge/scripts/install-git-hooks.sh
+```
+
+For most users this is fine — methodology + state engine carry the
+discipline, and you can add hooks per-repo as you decide they earn
+their keep.
+
+### `cc` launcher (optional convenience)
+
+If you want a `cc <project>` shell shortcut and an opinionated
+project-root layout under `~/projects/`, run the maintainer's setup:
+
+```bash
+cd ~/forge
+python3 -m venv .venv && .venv/bin/pip install pyyaml
+bash scripts/setup-cc.sh
+```
+
+This installs `~/.local/bin/cc` and does the same two symlinks the
+manual setup above does. Then `cc forge` opens the framework from
+anywhere, `cc <project>` opens any subdir of `$PROJECTS_DIR`
+(default `~/projects`), and bare `cc` uses the current directory.
+Details: [`docs/cc-launcher.md`](docs/cc-launcher.md).
+
+### Prerequisites
+
+- **Claude Code CLI** — the harness
+  ([install](https://docs.anthropic.com/en/docs/claude-code))
+- **git**, **bash**, **jq**
+- **Python 3.10+ + `pyyaml`** — for the workflow / plan engines
+- Optional: **`chub` CLI** for `get_api_docs`,
+  **`gitleaks`** for the SECRET-SCAN pre-commit check
 
 ## Quick Start
 
@@ -130,9 +194,19 @@ the input (discuss / incident / substantial) and routes to a workflow:
 | `fix bug X` | root-cause first, no symptom-patching |
 | `review spec X` | multi-perspective spec-board (4-7 personas + chief) |
 | `research X` | knowledge artifact, not code |
+| `save` | end-of-session: writes the session-handoff so the next session picks up the thread |
+| `quicksave` | mid-session checkpoint: same handoff format, lighter footprint |
 
 For standalone frame / drill / council use, just ask in plain language;
 Buddy picks the entry point.
+
+**`save` is the session-end ritual.** Without it, the next session
+starts cold — workflow state in `.workflow-state/<id>.json` still
+resumes, but the discussion thread, open decisions, and "where I was
+heading" don't. Type `save` before you close the terminal; type
+`quicksave` when you're switching context mid-day and want to leave a
+breadcrumb without the full wrap-up. See
+[Cross-session continuity](#cross-session-continuity) above.
 
 ## Honest cost & scope
 
@@ -200,8 +274,10 @@ Adapter-based on top of an existing harness, not a re-implementation.
    strict shape every skill follows (mechanically validated).
 4. [`framework/agent-patterns.md`](framework/agent-patterns.md) —
    14 patterns from real drift cases.
-5. [`framework/agentic-design-principles.md`](framework/agentic-design-principles.md) —
-   13 design rules (DR-1 to DR-13).
+5. [`references/agentic-design-principles.md`](references/agentic-design-principles.md) —
+   research-derived design principles backing the framework's skill /
+   persona / runbook design. Historical reference, not consulted in
+   the runtime loop.
 
 ## Contributing
 

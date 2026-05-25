@@ -106,8 +106,9 @@ command (when present) · `agents/README.md` ·
 `agents/navigation.md` inventory (generator run) ·
 `framework/models.md` · `agents/buddy/operational.md`
 delegation table · all cross-refs in other agent SoTs · on
-primitives / gates / agent workflows: check against
-`framework/agentic-design-principles.md` (DR-1 / 2 / 7).
+primitives / gates / agent workflows: check that the primitive
+enforces output (proof, not signal), every stage gates independently,
+and new primitives absorb existing ones rather than adding.
 
 **Skill added / removed / archived:** `skills/<name>/SKILL.md`
 · `skills/<name>/REFERENCE.md` (on a split skill, linked from

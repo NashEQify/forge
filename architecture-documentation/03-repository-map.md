@@ -36,7 +36,6 @@ forge/
 │   ├── test-plan-format.md        # Test-plan SoT
 │   ├── scripts.md                 # Script inventory
 │   ├── agent-skill-map.md         # Persona × skill map
-│   ├── agentic-design-principles.md # Design rules (DR-1 … DR-13)
 │   ├── context-and-loading.md     # Context loading semantics
 │   ├── external-review-bundle-format.md
 │   ├── getting-started.md

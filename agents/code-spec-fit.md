@@ -19,6 +19,24 @@ the same lens across six reviewers produced 5 LOW findings on
 the same axis in Task 506 (5 of 5 deferred → bundle-task theater).
 One owner, one finding, one decision.
 
+**Coverage-finding contract.** Every
+coverage-gap finding MUST name:
+1. **The concrete failure-mode** the missing tests would catch
+   (not "no direct unit tests exist" — *what* breaks if X happens?).
+2. **Why the existing test surface does not catch it** —
+   integration tests, indirect coverage via consumers, contract-
+   pinning tests, end-to-end paths. If the existing surface DOES
+   catch it, the finding is `accept` (coverage exists at a higher
+   level).
+3. **The smallest test set that closes the gap** — not a wish-list
+   of every test that *could* exist around the new surface.
+
+A coverage finding without (1)+(2)+(3) is a value-floor fail at
+chief disposition (`agents/code-chief.md` §Disposition value-floor)
+and re-routes to `accept`. "New exported contract has zero direct
+unit tests" without a named failure-mode the existing suite can't
+catch is exactly the L-040 over-fire pattern.
+
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/code-reviewer-protocol.md`,
 `_protocols/code-reviewer-base-extended.md`.

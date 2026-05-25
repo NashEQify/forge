@@ -115,7 +115,7 @@ context. Detail now rides on map vocabulary.
 |---|---|
 | "User asked a detail question" | The user used the trigger phrase. Map first, then detail. |
 | "Map is overhead" | A user-explicit trigger means the user wants the map. Otherwise it would not be invoked. |
-| "No CONTEXT.md, so no glossary possible" | Code comments / spec refs / agentic-design-principles.md provide vocabulary. |
+| "No CONTEXT.md, so no glossary possible" | Code comments / spec refs / framework principles provide vocabulary. |
 
 ## Contract
 

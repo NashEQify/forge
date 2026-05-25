@@ -91,6 +91,20 @@ When output reflex hits >2x deltas/ACs: pause. **Pattern-class
 coverage is NOT required.** Classes without a clear code trigger go
 into `patterns_excluded` with rationale.
 
+**Per-TC value-floor (MANDATORY, CLAUDE.md Inv 9).** Before adding
+any ADV-TC, name in one sentence on the TC: *what production-
+realistic failure-mode does this test catch that the implementer's
+tests, the existing scope-suite, and the integration / contract-
+pinning tests do NOT catch?* If the answer is "future-edit safety"
+/ "convention" / "completeness" / "exports a new contract so it
+needs coverage" — the TC fails the value-floor and stays out of v2.
+Concrete consumer + concrete failure-mode = TC justified. The
+sentence stays inline on the TC as rationale; absence is a
+validation fail at MCA-ingest. Hand-curated configuration tuples,
+trivially-defaulted Pydantic fields, and topology checks on data
+the author edits by hand are typical fail patterns (Task 517 case:
+9 proposed TCs → 7 dropped as theater after value-floor pass).
+
 Three stop-and-think questions + consolidation rule (EXTENDS
 mandates dropped 2026-05-08): `REFERENCE.md` §Augenmaß +
 §Consolidation.

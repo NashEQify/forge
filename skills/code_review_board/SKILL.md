@@ -158,19 +158,52 @@ same `target:` = anti-pattern (missed triage). Workflow
 | **fix-now** | blocks requirement OR reproduces reported defect. ALWAYS every CRITICAL + every convergence cluster (≥3 reviewers same evidence). MEDIUM/LOW reproducing defect = fix-now. HIGH narrow latent = `accept`. | fix-pass brief |
 | **accept** | non-blocking AND (narrow+backstopped OR latent OR self-introduced narrower than original). **DEFAULT non-blocking.** | `target: accept` |
 | **watch** | as `accept` + named future trigger. | `target: watch_item` |
-| **fix-later** | MEDIUM+ only. Named concrete defect + measurable downstream cost. **LOW FORBIDDEN.** | `target: new_task` |
+| **fix-later** | MEDIUM+ only. Named concrete defect + measurable downstream cost. **LOW FORBIDDEN.** Value-floor check applies (see below). | `target: new_task` |
 
 **Hard floor — LOW (MANDATORY):** standalone LOW → `accept`. No
 cost-justification escape (text hallucinates). LOW → `new_task`
 FORBIDDEN. LOW feels important = severity wrong; re-classify MEDIUM
 with named defect, or accept.
 
+**Value-floor — `new_task` (MANDATORY):**
+mirrors `task_creation/SKILL.md` §1.5 on the consumption side. Before
+chief writes `target: new_task` for any finding (HIGH included),
+answer in the disposition rationale: *"what operational impact does
+NOT doing this followup have?"*
+
+- **Nothing breaks** — no contract violation, no consumer blocked, no
+  named bug-surface, no measurable downstream cost → re-route to
+  `accept` (carry-forward note, no task).
+- **Hand-wavy "future-edit safety" / "new contract needs coverage" /
+  "follows convention" with no named consumer or failure-mode** →
+  re-route to `accept` or `watch_item` (with named trigger).
+- **Real measurable cost + named concrete consumer + reproducible
+  failure shape** → `new_task` justified.
+
+A `new_task` disposition without an *operational-impact sentence*
+inline in the rationale is a validation fail. If the impact reduces
+to "should have tests" / "could be cleaner" / "consistency with
+convention" → re-route. Hard floors retain override: CRITICAL,
+security / auth / consent / crypto, schema or public-API contract
+changes, full-path tasks always stay `fix-now` or `new_task`
+regardless of value-floor outcome.
+
+**Bundling content-split (when chief bundles related findings into one
+new_task):** each bundled item tagged `value_class: real-impact |
+nice-to-have` so the followup task can be scoped down without
+re-reading the originating reviews.
+
 **Exception — convergence:** ≥3 reviewers same evidence → fix-now.
 Solo LOWs never escape `accept`.
 
 **Test-coverage findings = `code-spec-fit` sole owner.** Others cannot
 file coverage gaps. Behavior-unverified → finding in own axis with
-severity per impact. See `agents/code-spec-fit.md`.
+severity per impact. Coverage findings MUST name (a) the concrete
+failure-mode the missing tests would catch, (b) why the existing test
+surface (integration, indirect via consumers, contract-pinning) does
+not catch it, (c) the smallest test set that closes the gap. "Coverage
+exists at the integration level" is a valid `accept` disposition;
+chief honors it. See `agents/code-spec-fit.md`.
 
 **Process discipline** (detail REFERENCE.md): no "leanest fix" for
 non-fix-now (`accept` = closed); self-introduced narrower than

@@ -148,7 +148,7 @@ profiles:
       sovereignty:
         focus: "Datensouveraenitaet, Selfhosting, Vendor-Lock-in. Kontrolle ueber Daten?"
       simplicity:
-        focus: "Komplexitaet, Wartbarkeit, DR-7. Einfachste Loesung die funktioniert?"
+        focus: "Komplexitaet, Wartbarkeit, Absorption (neue Primitive absorbieren bestehende, statt zusaetzlich). Einfachste Loesung die funktioniert?"
       experience:
         focus: "User/Developer Experience. Verbessert die Loesung den Alltag?"
       compatibility:

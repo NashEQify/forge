@@ -249,6 +249,64 @@ brief-discipline failure.
 
 ---
 
+## Verification-gate cadence
+
+Distinct from test SCOPE above. Governs **when** a verification
+gate fires across the brief's commits — per-commit vs once-at-HEAD.
+
+**Trigger (when this section is mandatory):** the brief covers
+multiple commits (strangler extraction, shape-preserving refactor,
+sequential capability moves, any brief with ≥5 planned commits).
+For single-commit briefs, this section is implicit (one commit,
+one gate-set; no cadence question).
+
+**Default cadence by bug-class shape:**
+
+| Bug-class shape | Per-commit gate | Once-at-HEAD gate |
+|---|---|---|
+| **In-process behaviour** — start/stop, dep-order, kwarg migration, fixture-shape, type-check, lint, scope-suite | `pytest <scope-suite>` + L0 (`ruff <touched> && mypy <touched>`) | — |
+| **Real-container behaviour** — reverse-stop on SIGTERM, container restart, ansible compose-recreate, real-process signal handling | — | `make app-e2e` + targeted real-container test |
+| **Cross-process / external** — Playwright, app-e2e-live, deploy-verify, external-system integration | — | manual or `make app-e2e-live` post-deploy |
+
+**Rule:** if a bug-class is fully covered by an in-process gate
+that fires at every commit's scope-suite, the corresponding heavy
+external-system gate (e.g. `make app-e2e`) belongs **once at HEAD**,
+not per commit. Per-commit external-system gates that an existing
+in-process suite already covers are checklist-tick and consume the
+brief's time budget without information gain.
+
+**Auto-detection — `code-architect-lens` axis "over-specified gate
+cadence":** when the lens runs pre-brief on a multi-commit brief,
+check the brief's prescribed verification gates against the cadence
+table above. A per-commit external-system gate where an in-process
+gate covers the same bug-class is a lens finding (sibling of
+smell-transfer, state-vocab-half, cycle-symptom-cause).
+
+**Bind rule (cadence):** for any brief with ≥5 commits, the brief
+MUST name per gate (per-commit OR once-at-HEAD) and cite the
+bug-class shape that justifies the cadence. *"`make app-e2e` per
+commit"* on a strangler brief without naming a real-container
+bug-class not covered by chat-suite is a brief-discipline failure
+— re-author to once-at-HEAD with the named real-container check.
+
+**Example — strangler extraction of `lifespan` capabilities (14
+commits, shape-preserving):** chat-suite (532 tests, in-process
+via `TestClient` + lifespan_context) covers BC-1/3/4/5/6 every
+commit. BC-2 (reverse-stop drift on real container SIGTERM) is the
+only bug-class chat-suite cannot cover (in-process teardown ≠
+SIGTERM on pid-1). Brief encodes: per-commit `pytest chat-suite +
+L0`; once-at-HEAD `make app-e2e + manual docker SIGTERM + log
+inspection`. Cost: 14× chat-suite (already running per commit) +
+1× heavy gate at HEAD, vs the naive 14× heavy gate.
+
+**Reject the unsafe shortcut:** NOT *"skip app-e2e entirely on
+strangler refactors"*. Real-container bug-classes (reverse-stop,
+restart semantics, container-recreate) are real and need their gate
+— just once, at HEAD, where the bug-class can actually surface.
+The release-valve is cadence, not coverage.
+
+---
+
 ## Structural-refactor pre-lock checklist (transitive import graph)
 
 When a brief locks a decision that rearranges the import graph

@@ -25,12 +25,22 @@ protocol weakness) → apply the pre-write filter in
 
 ```
 Nested in a parent build (existing locked spec, parent has remaining ACs)? → SUB-BUILD
+Spec at spec_ref is locked from ANY source (parent task closed, predecessor
+  task, manually authored, external) AND no spec amendment in scope AND task
+  is implementation-only?                                                    → STANDARD-IMPLEMENTATION-ONLY
 Authority-only task (spec / ADR / plan without code output)?              → AUTHORITY-ONLY
 ALL three? (a) ≤3 files (b) no spec (c) no new behaviour                  → DIRECT
 At least ONE? (a) >1 subsystem (b) new subsystem (c) new pattern
   (d) schema change (e) >10 ACs                                            → FULL
 Otherwise                                                                 → STANDARD
 ```
+
+The STANDARD-IMPLEMENTATION-ONLY check sits **above** AUTHORITY-ONLY but
+**below** SUB-BUILD because it disambiguates "spec is locked, parent
+workflow is no longer active" — that case would otherwise fall through
+to FULL or STANDARD and hit a required Specify gate the engine can't
+skip (the friction this row resolves). Proportionality release-valve
+at the workflow-routing surface (CLAUDE.md Invariant 9).
 
 DIRECT is engine-skipped (Buddy handles inline). The other four routes
 are eager-activated via `workflow_engine.py --start build --task <id>
@@ -47,6 +57,7 @@ chooses which failure-modes the workflow is paying tax to prevent.
 | **STANDARD** | normal-case quality bar with bounded ceremony | one architect, one signoff, L1 review by default | mid-size feature work shipped without spec or test discipline |
 | **FULL** | high-stakes work where wrong implementation is expensive to undo | three parallel architects, multi-mode brief synthesis, L2 board, full close-bookkeeping | locking a load-bearing decision on a single perspective |
 | **SUB-BUILD** | nesting an MCA-pass inside an in-flight parent build that owns the spec | skips Specify (parent owns it) and Close bookkeeping (parent owns task status) | re-authoring the spec or re-closing the task at sub-level |
+| **STANDARD-IMPLEMENTATION-ONLY** | implementing against a spec that is locked from any source (closed parent, predecessor, external) on an independent child task | skips Specify (spec exists at `spec_ref`); KEEPS Close bookkeeping (no active parent to inherit closing from) | falling through to FULL/STANDARD and hitting required Specify gates the engine can't skip on a locked spec |
 | **AUTHORITY-ONLY** | spec / ADR / plan-authority work that produces NO code | skips Prepare/Execute/Verify (no implementation surface) | running an MCA-dispatch chain on a doc-only change |
 
 The **path triggers are mechanical** (count of files, presence of spec,
@@ -83,6 +94,25 @@ bookkeeping at the workflow level (parent's commit-deploy closes
 the task). 9 gates: `phase-prepare → test-design → brief-author →
 brief-signoff → phase-execute → mca-implementation → phase-verify
 → code-review-board → spec-drift-check`.
+
+### Standard-implementation-only route
+
+Sibling of sub-build for the case where the parent task is CLOSED but
+the spec at `spec_ref` is locked and the child task is implementation-
+only. Same Specify-skip as sub-build (parent already authored the
+spec), but KEEPS phase-close + close-bookkeeping + commit-deploy
+because no active parent workflow exists to inherit closing from. 12
+gates: `phase-prepare → test-design → architect-lens → brief-author →
+brief-signoff → phase-execute → mca-implementation → phase-verify →
+code-review-board → spec-drift-check → phase-close → close-bookkeeping
+→ commit-deploy`.
+
+Trigger pattern: a parent task split its work into sequential child
+tasks (e.g. 503 → 506/507/508), the spec landed with the parent and is
+no longer in flux, child tasks each ship a piece of the plan. Using
+SUB-BUILD here would silently skip close-bookkeeping (parent inheritance
+assumption broken because parent `status: done`); using STANDARD/FULL
+trips on required Specify gates.
 
 ### Authority-only route
 

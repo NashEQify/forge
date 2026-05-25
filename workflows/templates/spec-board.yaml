@@ -38,10 +38,6 @@ version: "6.0"
 #   Architecture, Agentic Safety, Intent-Driven Naming).
 #   Definiert in: framework/spec-engineering.md, Abschnitt "Die 5 Primitives".
 #
-# DR-1 bis DR-12: Design Rules for agentic Systems.
-#   Definiert in: context/system/agentic-design-principles.md.
-#   DR-Spot-Check: Chief prueft 3-5 relevanteste DRs (nach eigenem Judgement,
-#   fokussiert auf den Spec-Typ). DR-Scorecard: alle 12 DRs (bei Foundation-Flag).
 #
 # CC (Claude Code): CLI-Tool for Agent-Ausfuehrung. Sub-Agents haben
 #   isolierte Context Windows (CC Sub-Agent-Isolation).
@@ -665,15 +661,10 @@ process:
       ### F-{role_initial}-{NNN}: {Kurzbeschreibung}
       - severity: critical | high | medium | low
       - scope: local | cross-cutting | foundation
-      - primitive: P1-P5 | DR-1-12 | cross-check | blast-radius | readability | document_architecture
+      - primitive: P1-P5 | cross-check | blast-radius | readability | document_architecture
       - description: {Problem}
       - suggested_fix: {Vorschlag}
       - affected_sections: {Sections}
-
-      ## DR-Scorecard                          ← nur bei Foundation-Flag
-      | DR | Verdict | Finding-Ref |
-      | DR-1 | PASS/RISK/FAIL | F-{role_initial}-{NNN} or — |
-      ...
 
       ## Summary
       - critical: {N}, high: {N}, medium: {N}, low: {N}

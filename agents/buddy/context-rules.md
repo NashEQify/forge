@@ -71,7 +71,7 @@ Post-harness: a pre-commit hook that verifies the path patterns in
 consistency_check actually cover the directory structure.
 Mechanical, no prompt needed.
 
-## Source-Grounding trigger (DR-12)
+## Source-Grounding trigger
 
 When an agent writes an assertion about an artifact AND the last read
 of that artifact is more than 5 turns back → **source-read before the
@@ -117,8 +117,8 @@ Before every rename, refactor, or batch update:
    MUST NOT for frozen zones in the delegation prompt.
 
 This applies even when the user prompt doesn't mention frozen-zone
-exclusion. Buddy adds it on its own — DR-2 (every agent checks its
-own stage).
+exclusion. Buddy adds it on its own — every agent checks its own
+stage independently.
 
 A reminder: corrections to archived facts go through the corrections
 addendum (see STRUCTURE.md), never via mutation.

@@ -27,7 +27,8 @@ capabilities. Few entry points, modular building blocks behind them.
 
 New capabilities -> integrate into existing capabilities/workflows
 instead of creating new skills. Consolidation over proliferation
-(DR-7 cognitive overhead limit).
+(absorption — new primitives absorb existing ones; cognitive
+overhead is the real limit).
 
 **Skill guardrails (required per skill):** every skill has boundaries
 (routing protection, always required) and — for workflow/capability —

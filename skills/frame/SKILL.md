@@ -99,7 +99,7 @@ preparation (solution-candidate input).
    the plan; deviation = explicit rationale. Trigger definition,
    templates, adversary prompt, existing-primitives survey:
    `_protocols/plan-review.md` (SoT).
-4. **Repo check** (always, DR-12 source grounding). Grep / glob for
+4. **Repo check** (always, source grounding). Grep / glob for
    similar artifacts. Mark hits as part of the solution space, or
    as "touched but different". **On >1 hit:** analysis-mode gate
    (required proof sentence per `_protocols/analysis-mode-gate.md`)
@@ -271,6 +271,6 @@ check, small, reversible. User override wins.
 |-------|-----|
 | Detail mechanics, examples, edge cases | `REFERENCE.md` (this directory) |
 | Plan + review (step 3) | `skills/_protocols/plan-review.md` |
-| Source grounding (step 4) | `framework/agentic-design-principles.md` DR-12 |
+| Source grounding (step 4) | `agents/buddy/operational.md` §Source-Grounding |
 | Research sub-workflow (step 6) | `workflows/runbooks/research/WORKFLOW.md` |
 | Use in workflow | `workflows/runbooks/solve/WORKFLOW.md` |

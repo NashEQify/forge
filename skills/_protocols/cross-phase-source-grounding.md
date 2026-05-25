@@ -8,10 +8,10 @@ silent loss of parked findings from predecessor runs.
 Extension to fix / build / review is a **follow-up task** — not in
 this run.
 
-## Boundary against DR-12
+## Boundary against file-based source-grounding
 
-DR-12 (`operational.md`, `agentic-design-principles.md`) =
-**file-based** re-reading before edits. This protocol =
+File-based source-grounding (`agents/buddy/operational.md`
+§Source-Grounding) = re-reading files before edits. This protocol =
 **finding-based** cross-pass grounding. Two separate classes.
 
 ## Problem
