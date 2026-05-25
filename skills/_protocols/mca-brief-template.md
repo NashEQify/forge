@@ -30,6 +30,15 @@ Below threshold (≤2 ACs, single file, no schema): the section is
 optional. Buddy may write a one-sentence rationale why it's not
 enumerated.
 
+**Bedrock (why this trigger):** facets per
+`agents/buddy/operational.md §Multi-perspective engagement` —
+primarily **reversibility** (decisions locked in shipped code are
+expensive to undo) and **plural solution-space** (briefs at this
+size cover multiple legitimate decision-paths that must be locked
+explicitly before MCA fills gaps with its own choices). Count is
+the fallback when facets are unclear. Facet-question first, count
+as net.
+
 ## Section format
 
 Required block in the MCA brief under
