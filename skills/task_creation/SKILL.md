@@ -83,6 +83,28 @@ Document the dependency rationale in the MD body as a
 
 Detail + examples: `REFERENCE.md`.
 
+### 1.5. Value floor (MUST)
+
+Before triage: what operational impact does NOT doing this have?
+
+- **Nothing breaks** — no contract violation, no one blocked, no
+  behaviour change → `accept`, no task. Optional recording where
+  natural (forge-feed for lessons, ADR for decision-drivers,
+  code-comment for invariants). Default: drop.
+- **Cosmetic only** — SoT-link tidiness, placeholder fills, "nice
+  to have" docs, archived-yaml string-shape changes → same. `accept`.
+- **Real impact** — defect, blocker, contract gap, user-visible bug,
+  measurable downstream cost → continue to step 2 triage.
+
+Applies regardless of trigger (intake, root-cause-fix, user-says,
+decomposition). Symmetric with `code_review_board/SKILL.md` LOW-
+hard-floor.
+
+**User-override:** if trigger=user AND the floor says `accept`,
+Buddy MUST surface the outcome before proceeding —
+*"Value-floor says accept (Grund X) — really file?"*. User can
+override with explicit yes. Otherwise: no task.
+
 ### 2. Triage (MUST)
 
 Fix immediately or create a task? Criteria: effort, reversibility,

@@ -21,42 +21,52 @@ New input arrives. Three mental states, then respond:
 
 ## Phase 2: ACT
 
-### Board + Council
+### Multi-perspective engagement
 
-Behavior prohibitions: CLAUDE.md §Invariant 1 (Buddy = Dispatcher).
+Buddy reaches for collaboration (board, council, sub-agent, user-
+loop) when single-perspective error-cost exceeds coordination-cost.
+Five facets, non-exhaustive — name what's present, not what's
+counted:
 
-- **Board** (spec review): 7 in parallel, context-isolated. SoT:
-  `spec-board.yaml`. Standard: 3-4 Opus, 1 pass. Deep: 7→4→2,
-  convergence valve at 5. Save AFTER every run. Standalone:
-  `spec_board/SKILL.md`.
-- **Council** (architecture): at least 3 `council-member` in parallel,
-  context-isolated. SoT: `skills/council/SKILL.md` (council.yaml does
-  not exist — old operational.md drift). Trigger: more than one path
-  + hard to reverse, more than one layer affected, substantial impact,
-  Buddy uncertain. **Trigger consequence: the Council spawn MUST
-  happen in the SAME tool block as other follow-up actions — never
-  "we'll Council that later". Otherwise an architecture decision gets
-  made by Buddy alone, and the user only finds out too late.**
-- **Code-Review-Board** (code diff): L1 focused (2 reviewers) or L2
-  full board (core + specialists). SoT: `skills/code_review_board/SKILL.md`.
-  Trigger: every substantial code build (effort L/XL OR new module OR
-  cross-spec OR schema change). **Trigger consequence: after MCA
-  returns with `status=done`, Buddy MUST pick the level and dispatch
-  the board — never "MCA self-tested, looks fine" without a review.
-  MCA self-test does not substitute for multi-perspective review:
-  cancellation-path bugs, double timeouts, PII in logs and data-loss
-  edge cases only surface through reviewer diversity, not through
-  self-test.**
-  **Fix-pass exception (post-FAIL):** re-review = single-reviewer
-  pass-1.5 (the reviewer who flagged the cluster); brief MUST state
-  scope-focused tests + L0 on touched files only. Full board only on
-  fresh-angle exception. Detail: `code_review_board/SKILL.md` §5.
-  **Pre-LD-lock structural-challenge:** before MCA-dispatch on any
-  brief with ≥6 LDs OR an LD that replaces an existing pattern,
-  Buddy MUST self-challenge per LD: *"is this a root-fix or a
-  smell-transfer? what alternative pattern was considered?"* The
-  `structural_invariants` decision-class (mca-brief-template §7) is
-  the mechanical surface for this — `n/a` requires a stated reason.
+- **Complexity mastery** — many interacting parts, one model can't
+  hold all coherently. Symptom: summarizing instead of synthesizing.
+- **Depth** — first answer reveals a deeper question. Symptom:
+  "why" unanswered twice in a row.
+- **Plural solution-space** — multiple legitimate paths, dialectic
+  needed. Symptom: picked one, can't articulate against the others.
+- **Blind-spot compensation** — dimensions one perspective
+  systematically misses (cancellation, race, cross-temporal).
+  Symptom: reaching for confidence without evidence.
+- **Reversibility** — wrong is expensive to undo (shipped code,
+  locked spec, externalized decision). Symptom: "re-do if wrong"
+  stops being acceptable.
+
+Applies across code, spec, architecture, general problem-solving
+with the user. Skill-specific count fallbacks (L/XL, schema, cross-
+module, ≥3 ACs) live in their skill SoTs — safety net when facets
+are unclear, NOT the gate. Inhalt vor Mechanik: facet-question
+first, count as fallback.
+
+Behavior prohibitions during board/council: CLAUDE.md §Inv 1.
+
+**Surfaces:**
+
+- **Board** (spec): `spec_board/SKILL.md`.
+- **Council** (architecture): `skills/council/SKILL.md`. **Spawn
+  MUST happen in the SAME tool block as other follow-up actions —
+  never "we'll Council that later".** Otherwise the architecture
+  decision is made by Buddy alone, found out too late.
+- **Code-Review-Board** (code diff): `skills/code_review_board/SKILL.md`
+  (L1 focused / L2 full board / fix-pass single-reviewer pass-1.5).
+  **After MCA returns `status=done`, Buddy MUST pick level and
+  dispatch** — MCA self-test does not substitute (cancellation-path
+  bugs, double timeouts, PII leaks, data-loss edges surface only
+  through reviewer diversity).
+- **Pre-LD-lock self-challenge** (before MCA-dispatch on pattern-
+  replacing briefs): per LD ask *"root-fix or smell-transfer?
+  what alternative was considered?"* — `structural_invariants` in
+  `_protocols/mca-brief-template.md §7` is the mechanical surface;
+  `n/a` requires stated reason.
 
 **Inline-return fallback (sub-agent ignores file-output override):**
 If a board sub-agent ignores the file-output override from
@@ -124,10 +134,10 @@ when it fires.
 ### Sub-Agent Return
 
 Read the incident block:
-- None → Persist Gate, continue.
-- AUTO-FIXED → retest. FAIL → Root-Cause-Fix.
-- ARCH-CONFLICT → solution-expert.
-- ESCALATED → Root-Cause-Fix immediately.
+- None → Persist Gate, continue. *(landed clean)*
+- AUTO-FIXED → retest. FAIL → Root-Cause-Fix. *(verify before trust)*
+- ARCH-CONFLICT → solution-expert. *(architecture-level disagreement, not impl)*
+- ESCALATED → Root-Cause-Fix immediately. *(blocking issue, won't yield to retry)*
 
 Discoveries: `knowledge_processor (mode=process)`. Reconcile MCA
 discoveries against active specs.
@@ -173,19 +183,6 @@ contain `## Implicit-Decisions-Surfaced` with 4 standard classes
 structural_invariants). Template SoT:
 `skills/_protocols/mca-brief-template.md`. Pre-dispatch hook
 `delegation-prompt-quality.sh` Check C verifies presence.
-
-### Observability (ex-debug block)
-
-For state-changing actions, leave a one-line note in the turn. Format:
-`{action} → {target} ({reason})`
-
-Trigger:
-- Delegation to a sub-agent: `→ main-code-agent (src/-scope)`
-- Self-execution by Buddy instead of delegating: `Buddy direct (orchestrator-path)`
-- Task status change: `Task-010 → done`
-
-Skip it for analysis / discussion / framing — there the answer itself
-is the observable.
 
 ---
 
