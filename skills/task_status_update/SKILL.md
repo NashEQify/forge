@@ -180,6 +180,20 @@ legitimate within the skill contract. The frozen-zone check must
 tolerate `task_status_update`-driven modifies in archive/ (see
 consistency_check/REFERENCE.md §Frozen Zone Integrity Check).
 
+### Step 5.5: persist gate (when new_status == done)
+
+When flipping to `done`, the agent MUST run the persist gate before
+continuing:
+
+1. Write project-state patch to `context/overview.md`.
+2. Add `context/history/<entry>.md` close-out entry.
+3. If `workflow_engine.py --find --task {task_id}` shows an active
+   workflow not yet at `commit-deploy`, drive it to its terminal
+   step (`--complete commit-deploy`). No auto-abort.
+
+Closes the orphan-workflow case (task flipped via this skill outside
+the workflow's lifecycle) without bypassing closeout discipline.
+
 ### Step 6: output
 
 ```
