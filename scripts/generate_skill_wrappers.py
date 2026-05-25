@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-Regenerate the Claude-Code skill-wrapper set under .claude/skills/.
+Regenerate harness skill-wrapper sets.
 
-A wrapper (`.claude/skills/<kebab-name>/SKILL.md`) is the thin,
-CC-discoverable proxy for an orchestrator-neutral skill SoT
-(`skills/<dir>/SKILL.md`). Wrappers exist solely so Claude Code can
-inject the skill into the available-skills system-reminder for
-proactive discovery; they carry no methodology.
+A wrapper (`<output-root>/<kebab-name>/SKILL.md`) is the thin,
+harness-discoverable proxy for an orchestrator-neutral skill SoT
+(`skills/<dir>/SKILL.md`). Wrappers exist solely so Claude Code,
+Codex, or another harness can inject the skill into the
+available-skills system-reminder for proactive discovery; they carry
+no methodology.
 
 The wrapper is a DERIVED artifact: this script is the sole generator,
 `consistency_check` (check 10) is the validator. Mirrors the
@@ -18,6 +19,7 @@ locked decision Option C). A skill is wrapper-eligible iff:
   status not in {archived, deprecated}
   AND disable-model-invocation != true
   AND ( invocation.primary in {user-facing, cross-cutting}
+        OR invocation.secondary contains {user-facing, cross-cutting}
         OR cc_wrapper == true )
   AND cc_wrapper != false
 
@@ -37,8 +39,10 @@ CLI mirrors generate_skill_map.py:
   --check     verify-only; non-zero exit on any drift vs a fresh
               generation; no write.
 
-Standalone script: reads skills/*/SKILL.md, writes only under
-.claude/skills/. No framework-runtime import, no release-sync call.
+Standalone script: reads skills/*/SKILL.md, writes only under the
+selected output root. No framework-runtime import, no release-sync call.
+Default output is `.claude/skills/` for Claude Code. Codex setup passes
+`--output-root ~/.agents/skills --tool-label Codex`.
 """
 from __future__ import annotations
 
@@ -71,7 +75,7 @@ WRAPPER_BODY_TEMPLATE = """# Skill: {name} (Wrapper)
 
 {marker}
 
-This is the Claude-Code-discoverable wrapper. The full
+This is the {discovery_label}-discoverable wrapper. The full
 orchestrator-neutral protocol — methodology, contract, modes,
 red flags — lives in the SoT:
 
@@ -79,7 +83,7 @@ red flags — lives in the SoT:
 
 Read the SoT and follow it. This wrapper is a generated derived
 artifact (`scripts/generate_skill_wrappers.py`); it exists only so
-Claude Code can inject the skill into the available-skills
+{tool_label} can inject the skill into the available-skills
 system-reminder for proactive discovery. Do not hand-edit — edits
 are reverted on the next generator run and flagged by
 `consistency_check`.
@@ -258,9 +262,13 @@ def is_eligible(data: dict | None) -> tuple[bool, str | None]:
         return (False, None)
 
     prim = None
+    secondary: list[object] = []
     inv = data.get("invocation")
     if isinstance(inv, dict):
         prim = inv.get("primary")
+        raw_secondary = inv.get("secondary", [])
+        if isinstance(raw_secondary, list):
+            secondary = raw_secondary
 
     if cc is True:
         return (True, None)
@@ -268,10 +276,20 @@ def is_eligible(data: dict | None) -> tuple[bool, str | None]:
     if prim in ELIGIBLE_PRIMARY:
         return (True, None)
 
+    if any(item in ELIGIBLE_PRIMARY for item in secondary):
+        return (True, None)
+
     return (False, None)
 
 
-def render_wrapper(name_kebab: str, description: str, src_dir: str) -> str:
+def render_wrapper(
+    name_kebab: str,
+    description: str,
+    src_dir: str,
+    *,
+    tool_label: str = "Claude Code",
+    discovery_label: str = "Claude-Code",
+) -> str:
     """
     Render the full wrapper SKILL.md (frontmatter + fixed body).
 
@@ -291,7 +309,11 @@ def render_wrapper(name_kebab: str, description: str, src_dir: str) -> str:
     )
     front = f"---\n{front_block}---\n\n"
     body = WRAPPER_BODY_TEMPLATE.format(
-        name=name_kebab, src_dir=src_dir, marker=GENERATED_MARKER
+        name=name_kebab,
+        src_dir=src_dir,
+        marker=GENERATED_MARKER,
+        tool_label=tool_label,
+        discovery_label=discovery_label,
     )
     return front + body
 
@@ -315,7 +337,12 @@ def iter_skills(skills_root: Path) -> list[tuple[str, dict | None]]:
     return out
 
 
-def build_desired(skills_root: Path) -> dict[str, str]:
+def build_desired(
+    skills_root: Path,
+    *,
+    tool_label: str = "Claude Code",
+    discovery_label: str = "Claude-Code",
+) -> dict[str, str]:
     """
     Map kebab wrapper name -> wrapper file content for every eligible
     skill.
@@ -384,7 +411,13 @@ def build_desired(skills_root: Path) -> dict[str, str]:
                 f"`{prior_dir}` — ambiguous discovery, no wrapper "
                 f"written"
             )
-        desired[kebab] = render_wrapper(kebab, description, src_dir)
+        desired[kebab] = render_wrapper(
+            kebab,
+            description,
+            src_dir,
+            tool_label=tool_label,
+            discovery_label=discovery_label,
+        )
         seen_fold[fold] = (kebab, src_dir)
 
     return desired
@@ -432,16 +465,16 @@ def diff_report(
     return report
 
 
-def write_wrappers(cc_skills_root: Path, desired: dict[str, str]) -> None:
+def write_wrappers(output_root: Path, desired: dict[str, str]) -> None:
     """Write desired wrappers; remove orphan wrapper dirs."""
-    cc_skills_root.mkdir(parents=True, exist_ok=True)
+    output_root.mkdir(parents=True, exist_ok=True)
     for name, content in desired.items():
-        wdir = cc_skills_root / name
+        wdir = output_root / name
         wdir.mkdir(parents=True, exist_ok=True)
         target = wdir / "SKILL.md"
         if not target.is_file() or target.read_text(encoding="utf-8") != content:
             target.write_text(content, encoding="utf-8")
-    for child in sorted(cc_skills_root.iterdir()):
+    for child in sorted(output_root.iterdir()):
         if not child.is_dir():
             continue
         if child.name in desired:
@@ -455,7 +488,7 @@ def write_wrappers(cc_skills_root: Path, desired: dict[str, str]) -> None:
         else:
             print(
                 f"generate_skill_wrappers: WARN unmanaged dir under "
-                f".claude/skills/, not removed: {child.name}",
+                f"{output_root}, not removed: {child.name}",
                 file=sys.stderr,
             )
 
@@ -463,6 +496,22 @@ def write_wrappers(cc_skills_root: Path, desired: dict[str, str]) -> None:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", type=Path, default=None)
+    ap.add_argument(
+        "--output-root",
+        type=Path,
+        default=None,
+        help="wrapper output root (default: <repo>/.claude/skills)",
+    )
+    ap.add_argument(
+        "--tool-label",
+        default="Claude Code",
+        help="human harness label used in wrapper prose",
+    )
+    ap.add_argument(
+        "--discovery-label",
+        default=None,
+        help="label used before '-discoverable' (default: tool label, except Claude Code keeps Claude-Code)",
+    )
     ap.add_argument(
         "--check",
         action="store_true",
@@ -475,7 +524,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"generate_skill_wrappers: ERROR {exc}", file=sys.stderr)
         return 1
     skills_root = root / "skills"
-    cc_skills_root = root / ".claude" / "skills"
+    output_root = args.output_root or root / ".claude" / "skills"
+    output_root = output_root.expanduser()
+    discovery_label = args.discovery_label
+    if discovery_label is None:
+        discovery_label = "Claude-Code" if args.tool_label == "Claude Code" else args.tool_label
 
     if yaml is None:
         print("generate_skill_wrappers: SKIP — PyYAML missing", file=sys.stderr)
@@ -488,7 +541,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     try:
-        desired = build_desired(skills_root)
+        desired = build_desired(
+            skills_root,
+            tool_label=args.tool_label,
+            discovery_label=discovery_label,
+        )
     except FrontmatterValueError as exc:
         print(f"generate_skill_wrappers: ERROR {exc}", file=sys.stderr)
         return 1
@@ -496,7 +553,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"generate_skill_wrappers: ERROR {exc}", file=sys.stderr)
         return 1
 
-    current = current_wrappers(cc_skills_root)
+    current = current_wrappers(output_root)
     report = diff_report(desired, current)
 
     if args.check:
@@ -508,7 +565,7 @@ def main(argv: list[str] | None = None) -> int:
         print("generate_skill_wrappers: OK (no drift)")
         return 0
 
-    write_wrappers(cc_skills_root, desired)
+    write_wrappers(output_root, desired)
     if report:
         print(f"generate_skill_wrappers: wrote {len(desired)} wrappers")
         for line in report:

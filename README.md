@@ -173,6 +173,30 @@ anywhere, `cc <project>` opens any subdir of `$PROJECTS_DIR`
 (default `~/projects`), and bare `cc` uses the current directory.
 Details: [`docs/cc-launcher.md`](docs/cc-launcher.md).
 
+### Codex Desktop / CLI
+
+forge also ships a Codex adapter under `.codex/`. Setup is one script:
+
+```bash
+# global Codex setup (agents + skills installed under ~/.codex and ~/.agents)
+bash ~/forge/scripts/setup-codex.sh
+
+# optional: also wire forge's PreToolUse hooks into a project
+bash ~/forge/scripts/setup-codex.sh ~/your-project
+```
+
+The script (a) copies 38 agent wrappers into `~/.codex/agents/`,
+(b) writes a Buddy wrapper with a concrete `FRAMEWORK_DIR` so Codex
+boots Buddy at session start (Codex Desktop has no `--add-dir`
+equivalent, so paths get baked in at install time), (c) generates
+the same skill wrappers as Claude Code under `~/.agents/skills/`, and
+(d) when a project path is passed, writes a `.codex/hooks.json` there
+that fires forge's PreToolUse hooks via Codex's tool-event API.
+
+Then run `codex` inside any repo that has an `AGENTS.md` — Codex
+discovers the Buddy agent globally and the per-project hooks fire
+where installed.
+
 ### Prerequisites
 
 - **Claude Code CLI** — the harness
@@ -228,16 +252,16 @@ workflow runbooks, the workflow engine (Python + YAML state), persona
 definitions, task / plan YAMLs, and a hook layer (PreToolUse +
 pre-commit). Most of that is harness-neutral — any harness that loads
 MD + YAML and can spawn sub-agents can run it. forge ships adapters
-for Claude Code, OpenCode, and Cursor; an adapter handles three
-things: persona / skill discovery, tier-0 anchor loading, and — where
-the harness exposes a tool-event API — wiring forge's PreToolUse
+for Claude Code, OpenCode, Codex, and Cursor; an adapter handles
+three things: persona / skill discovery, tier-0 anchor loading, and —
+where the harness exposes a tool-event API — wiring forge's PreToolUse
 hooks (path-whitelist, frozen-zones, state-write-block, engine-
 bypass, plan-adversary-reminder, delegation-prompt-quality, workflow-
 commit-gate, mca-return-stop-condition, board-output-check, evidence-
-pointer-check) into it. Claude Code and OpenCode have such an API
-and block drift at write-time. Cursor doesn't, so those same hooks
-only fire via git pre-commit — drift catches at commit instead of at
-write, everything else runs identically. Any harness without a
+pointer-check) into it. Claude Code, OpenCode, and Codex have such
+an API and block drift at write-time. Cursor doesn't, so those same
+hooks only fire via git pre-commit — drift catches at commit instead
+of at write, everything else runs identically. Any harness without a
 dedicated adapter can still load the skills and run the workflows;
 discovery is just less mechanical and write-time hook enforcement is
 off.
