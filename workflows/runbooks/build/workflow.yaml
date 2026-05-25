@@ -78,6 +78,29 @@ routes:
     - phase-verify
     - code-review-board
     - spec-drift-check
+  standard-implementation-only:
+    # Child of a CLOSED parent task with a locked spec — same as sub-build
+    # for Specify (skipped: parent already authored the spec), BUT keeps
+    # phase-close + close-bookkeeping + commit-deploy because there is no
+    # active parent workflow to inherit closing from. Use when: spec_ref
+    # points to a locked section authored upstream (parent task, predecessor
+    # task, manually authored, external spec), no spec amendment in scope,
+    # task is implementation-only. Proportionality release-valve at the
+    # workflow-routing surface — avoids the SUB-BUILD semantic pollution
+    # (skipped close-bookkeeping on an independent child task).
+    - phase-prepare
+    - test-design
+    - architect-lens
+    - brief-author
+    - brief-signoff
+    - phase-execute
+    - mca-implementation
+    - phase-verify
+    - code-review-board
+    - spec-drift-check
+    - phase-close
+    - close-bookkeeping
+    - commit-deploy
 
 steps:
   # ============================================================================

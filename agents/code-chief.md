@@ -100,6 +100,38 @@ Output:
 - Summary: critical / high / medium / low counts +
   noise_removed.
 
+## Disposition value-floor (CHIEF-1.5)
+
+Before writing `target: new_task` on ANY consolidated finding (HIGH
+included — there is no severity-based escape), apply the value-floor
+check from `skills/code_review_board/SKILL.md` §5: write the
+operational-impact sentence inline in the disposition rationale.
+
+- *"Nothing breaks"* / no contract violation / no named consumer /
+  no measurable downstream cost → re-route to `target: accept`.
+- *"future-edit safety"* / *"new contract needs coverage"* /
+  *"follows convention"* without a named consumer or failure-mode →
+  re-route to `target: accept` or `target: watch_item` (with named
+  trigger).
+- Real measurable cost + named concrete consumer + reproducible
+  failure shape → `new_task` justified, impact sentence stays inline.
+
+A `target: new_task` without an inline operational-impact sentence is
+a validation fail (output enforcement section). The sentence MUST
+name (a) the operation that breaks if the followup is skipped, (b)
+who/what the affected consumer is, (c) how the failure manifests.
+"Should have tests" / "could be cleaner" / "consistency with
+convention" are NOT impact sentences — re-route.
+
+Hard floors retain override regardless: CRITICAL, security / auth /
+consent / crypto, schema or public-API contract changes, full-path
+tasks always stay `fix-now` or `new_task`.
+
+**Bundling:** when bundling related findings into one `new_task`, tag
+each bundled item `value_class: real-impact | nice-to-have` in the
+finding's rationale so the followup task can be scoped down without
+re-reading every originating review.
+
 ## Discourse synthesis (CHIEF-2)
 
 Input: discourse files of every agent.
@@ -119,6 +151,9 @@ with rationale.
   = noise → remove.
 - Noise removal WITHOUT rationale = opaque → document.
 - A FAIL verdict WITHOUT a concrete blocker list = useless.
+- `target: new_task` WITHOUT an inline operational-impact sentence
+  (CHIEF-1.5 value-floor) = validation fail → re-route to `accept`
+  or write the impact sentence.
 
 ## Finding prefix
 

@@ -36,7 +36,7 @@ Back every claim with a source file.
 
 - **Always:** `intent.md` (vision), `CLAUDE.md` (invariants), `framework/process-map.md` (workflows)
 - **For framework rewrite:** `docs/tasks/273.md` (design decisions),
-  `framework/agentic-design-principles.md`, workflow runbooks
+  workflow runbooks
 - **For product rewrite:** `docs/architecture/ARCHITECTURE.md`, specs, container atlas
 - Buddy derives the entry points from `scope` + `reason`. No heuristic —
   from known context.

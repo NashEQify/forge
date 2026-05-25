@@ -1,9 +1,25 @@
 # Agent Patterns
 
 Patterns for agent behaviour, captured from real drift cases. Each
-entry has a problem, the mechanism that catches it, and a status line.
-Live-fire only — patterns documented without an active mechanism are
-not in this file.
+entry has a problem, the mechanism that catches it, and the cited
+SoT where the mechanism lives.
+
+**What this file is:** post-incident audit registry. Forensic value —
+the *story* of why each mechanism exists. Consulted by the framework
+author when adding a new mechanism or when recurring drift suggests a
+pattern is already catalogued.
+
+**What this file is NOT:** runtime instruction for live agents. The
+mechanisms fire from the cited SoT (SKILL.md / persona / runbook);
+the entry here records the rationale, not the rule.
+
+**Maintenance convention:** manually curated. When codifying a
+pattern-shaped lesson from `docs/dogfood-learnings/forge-feed.md`,
+add the entry here pointing to the SoT before deleting the forge-feed
+entry. Forge-feed is rolling; agent-patterns.md is archival.
+
+Live-fire only — entries without an active mechanism in the cited
+SoT belong in forge-feed as open candidates, not here.
 
 ---
 
@@ -397,3 +413,40 @@ Spec drift between prose and engine accumulates silently. Each
 spec generation believes the prior generation's mechanical claims;
 runtime is the only ground truth that surfaces gaps. Multi-pass
 board iterations re-discover the same gap at different sites.
+
+---
+
+## Pattern family: Proportionality release-valve at decision boundaries
+
+Principle SoT: `CLAUDE.md` Invariant 9 (Tier 0, always loaded). Every
+decision boundary that creates followup work needs a value-floor
+judgment before its default fires. The entries below are the live
+instances — gate surfaces where the principle is enforced
+mechanically in the cited SoT.
+
+| Surface | Mechanism | Status |
+|---|---|---|
+| code-board verdict → fix-pass-brief (per-finding disposition) | `skills/code_review_board/SKILL.md` §5 + `accept` default | codified (L-031) |
+| code-board level-choice (WHETHER / WHICH board) | `skills/code_review_board/SKILL.md` §1.0 proportionality gate | codified (L-032) |
+| spec-board depth-mode (WHETHER deep board) | `skills/spec_board/SKILL.md` §1.0 proportionality gate | codified (L-033) |
+| brief-architect per-commit verification-gate cadence | `skills/_protocols/mca-brief-template.md` §Verification-gate cadence + `agents/code-architect-lens.md` Phase 3 gate-cadence axis | codified (L-039) |
+| chief disposition `target: new_task` value-floor | `agents/code-chief.md` §Disposition value-floor (CHIEF-1.5) + `agents/board-chief.md` §Disposition value-floor + `skills/code_review_board/SKILL.md` §5 + `agents/code-spec-fit.md` §Coverage-finding contract | codified (L-040) |
+| build workflow route selection (parent-locked spec, implementation-only) | `workflows/runbooks/build/workflow.yaml` route `standard-implementation-only` + `workflows/runbooks/build/WORKFLOW.md` §Path-determination | codified (L-041) |
+| adversary per-test value-floor | `skills/adversary_test_plan/SKILL.md` §3 Augenmaß per-TC value-floor | codified |
+| brief-architect lens-note binding triage | `agents/brief-architect.md` mode=brief per-note triage | codified |
+| task creation value-floor (sibling, creation side) | `skills/task_creation/SKILL.md` §1.5 | codified (precursor) |
+| ADR-trigger value-floor (`documentation_and_adrs`) | — | watch (no observed drift yet; codify on first instance) |
+
+Sibling principle at the delegation-modes layer (one level up from
+the gate-level instances above): PROC-002 in `buddyai/decisions.md`
+(Light/Standard/Full delegation modes, 2026-03-14).
+
+Safety floors retain hard override across every instance per Invariant
+9: CRITICAL severity, security / auth / consent / crypto, schema or
+public-API contract changes, full-path tasks. The release-valve is
+per-finding / per-task / per-route judgment within the non-blocking
+band — non-blocking findings still warrant fixing when there's a
+named operational cost (performance, stability, security,
+observability, maintainability). Re-route only when the rationale
+reduces to hand-wavy intuition ("future-edit safety", "should be
+cleaner", "follows convention" without a named consumer).

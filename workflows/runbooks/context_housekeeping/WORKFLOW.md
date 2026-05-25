@@ -73,9 +73,9 @@ The skill works editorially (from coarse to fine) and asks
 before changes to existing files.
 
 **After every area: update the status file** (done /
-skipped + reason). That is a MUST — DR-9 checkpoint
-obligation. On abort or session restart: read the status
-file, continue at the last "done".
+skipped + reason). That is a MUST — checkpoint obligation
+on long-running tasks. On abort or session restart: read
+the status file, continue at the last "done".
 
 ### Closing
 

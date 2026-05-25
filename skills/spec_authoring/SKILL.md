@@ -125,7 +125,7 @@ When spec recommends a library / API / tool / pattern: invoke
 `get_api_docs` (or first-party verification) BEFORE locking. A spec
 that recommends X claims X exists, is current, does what spec says.
 Verify; do not carry from training memory. SoT principle:
-`framework/agentic-design-principles.md` DR-12.
+`agents/buddy/operational.md` §Source-Grounding.
 
 ### Mediator pass-through audit
 

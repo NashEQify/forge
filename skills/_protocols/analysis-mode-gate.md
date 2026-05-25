@@ -81,7 +81,7 @@ better" / Model "Design decision" — pure tautologies.
 
 **Good (accepted):** Intent "Cross-phase findings from run X must
 not be lost" / Effect "Agent Y classifies 18 parked findings into 4
-status values" / Model "Finding-based source grounding (vs DR-12)".
+status values" / Model "Finding-based source grounding (vs file-based)".
 
 ## Anti-patterns
 

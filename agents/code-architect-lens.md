@@ -163,6 +163,19 @@ interface that should be narrowed), emit a
 §Decomposition-Recommendation block describing what to change and
 why. Otherwise omit the block.
 
+**Additional axis — gate-cadence:** if the brief-to-be has
+≥5 commits OR pattern=strangler OR shape_preserving=true, also
+check the brief's prescribed verification gates against
+`skills/_protocols/mca-brief-template.md` §Verification-gate
+cadence. A per-commit external-system gate (e.g. `make app-e2e`
+per commit) where an in-process gate (scope-suite + L0) covers the
+same bug-class is a finding — sibling of smell-transfer,
+state-vocab-half, cycle-symptom-cause. Report in
+§Decomposition-Recommendation as cadence-friction, name the
+bug-class the in-process gate covers, and propose the once-at-HEAD
+form for the heavy gate. Brief-architect ingests this as a binding
+amendment to the brief's verification section.
+
 If the recommendation is concrete enough to feed directly into
 the brief's plan (specific files / specific shape change), also
 emit a §Decomposition-Strand block — a sequenced edit-list the

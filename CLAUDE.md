@@ -70,6 +70,17 @@ hand-maintained `docs/plan.yaml` north_star stub. Topology and
 enforcement: `docs/STRUCTURE.md`; sync mechanism: the exclude list
 in `scripts/release-sync.sh`.
 
+### 9. Proportionality of effort
+Effort matches stakes. Every decision boundary that creates followup
+work (task, gate, test, route, lens-binding) needs a value-floor
+judgment: *what named operational cost would NOT doing this incur,
+for which named consumer?* Concrete cost + concrete consumer = justified
+(a non-blocking fix for performance, stability, security, observability,
+maintainability still passes when the cost is named). Hand-wavy
+"future-edit safety" / "should be cleaner" / "follows convention" =
+re-route. CRITICAL / security / schema / public-API / full-path hard
+floors stay in scope regardless.
+
 ## Observability
 For state-changing actions, leave a one-liner:
 `{action} → {target} ({reason})` — e.g. `→ main-code-agent (src/-scope)`,

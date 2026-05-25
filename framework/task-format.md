@@ -120,7 +120,7 @@ Readiness levels (dashboard):
 
 Required rules:
 1. `## Workflow` is required when the task has more than one step.
-2. `## Not yet` is required � empty block is invalid (DR-10).
+2. `## Not yet` is required — empty block is invalid (scope must be explicitly bounded).
 3. Workflow steps are always checkboxes, never prose.
 4. Last `in_progress` step = entry point for the next session (NDI principle).
 5. `## Blockers` only when a blocker currently exists.

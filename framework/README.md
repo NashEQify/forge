@@ -21,7 +21,6 @@ through wrappers.
 | `boot-navigation.md` | boot index (workflows + skills) |
 | `agent-autonomy.md` | permission/gate/routing triple per artifact type |
 | `agent-patterns.md` | active agent patterns from real drift cases |
-| `agentic-design-principles.md` | design rules (DR-1 to DR-13) |
 | `intent-tree.md` | intent inheritance + constraint hierarchy |
 | `milestone-execution.md` | multi-task orchestration |
 | `models.md` | model assignment (agent -> model, CC + OC) |

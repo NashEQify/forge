@@ -109,6 +109,27 @@ outputs differ. Mode-specific notes are inline.
    by-user). Silent omission of the recommendation is invalid
    output per spec 372 AC-5.
 
+   **Per-note triage (MANDATORY, CLAUDE.md Inv 9).** Lens notes are
+   advisory authority by design, not auto-binding. For each
+   distinct note in the lens output (each §Decomposition-Recommendation
+   item, each Module-state row with friction flagged, each
+   pattern-shape finding), classify in §Decomposition-Strand or
+   §Decomposition-Skip-Rationale as one of:
+   - **binding** — adopted into this brief's plan; name the concrete
+     scope-change the brief commits to.
+   - **advisory** — kept as guidance in the brief's preamble but
+     NOT planned in this scope; name the deferred-to context.
+   - **drop** — not adopted, not deferred; name why the note does
+     not apply to this brief (scope-decoupled, friction-but-not-
+     actionable, user-scoped-out at gate).
+   Default for any note without named operational impact on this
+   brief's scope = advisory or drop, NOT binding. Binding requires
+   a concrete consumer in this brief (a module that gets created,
+   moved, narrowed). Auto-binding every lens note is the failure
+   mode (Task 508 case: three lens notes all became binding by
+   default; per-note triage would have surfaced which actually
+   belonged in scope).
+
 2. **Explore Thoroughly**:
    - Read any files provided to you in the initial prompt
    - Find existing patterns and conventions using Glob, Grep, and Read

@@ -63,7 +63,7 @@ gate 1), fix-implementation plan, scope-focused test/verification,
 RETURN-SUMMARY structure, sign-off field per spec 306 §5.2. DIRECT
 path: Buddy authors inline as today. **On external library API
 references in the fix scope: invoke `get_api_docs` BEFORE writing
-the fix plan** (DR-12 source-grounding, mirrors build's spec-write hook).
+the fix plan** (source-grounding, mirrors build's spec-write hook).
 
 **4. brief-signoff** — Mirrors build's brief-signoff (same step
 ID, path-agnostic — single signoff shared across DIRECT/STANDARD/

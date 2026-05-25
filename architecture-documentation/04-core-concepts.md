@@ -604,23 +604,26 @@ pass rate, not the structural one.
 
 Detail spec: [`../framework/external-review-bundle-format.md`](../framework/external-review-bundle-format.md).
 
-## 26. Agentic Design Principles (13 Design Rules)
+## 26. Agentic Design Principles (historical research)
 
-**Purpose:** 13 design rules (DR-1 to DR-13) derived from research on
-agentic systems. A mandatory reference for every design.
+**Purpose:** research-derived design principles that backed forge's
+skill / persona / runbook design (2025/2026 research + drift cases).
+Preserved as design lineage; not consulted in the runtime loop —
+earlier framings ("required reference", "checked via design_review
+skill") were aspirational and no such mechanism was ever built.
 
-**Use case:** when solution-expert or council reviews an architectural decision,
-it MUST be mapped against the design rules. Examples:
-- DR-1 Proof Output (every primitive enforces output that proves compliance)
-- DR-7 Absorption (new primitives absorb existing primitives, not add to them)
-- DR-12 Source Grounding (verify against current artifact, not derived context)
-- DR-13 No Autonomous Deletion (no delete without explicit user OK)
+**Where the principles actually fire today:** in the SKILL.md / persona
+/ runbook step text where the rule is encoded directly. Source-grounding
+fires from `agents/buddy/operational.md` §Source-Grounding and from the
+relevant skill steps. The proportionality principle fires from
+`CLAUDE.md` Invariant 9 (Tier 0, always loaded) and the per-gate
+mechanisms registered in `framework/agent-patterns.md` §Pattern family.
 
-**Pattern:** design decisions confronted with the DR list are
-more robust against "obviously correct" bias. solution-expert §Entry-check
-step 5 references the DRs explicitly.
+**Use case for the historical reference:** design conversations,
+onboarding context, tracing the rationale behind a given skill's
+rules. Not a runtime gate.
 
-Detail: [`../framework/agentic-design-principles.md`](../framework/agentic-design-principles.md).
+Detail: [`../references/agentic-design-principles.md`](../references/agentic-design-principles.md).
 
 ## 27. Reader-Facing-Surface Detection
 

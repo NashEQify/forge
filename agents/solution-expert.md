@@ -109,10 +109,12 @@ recommendation. No recommendation that contradicts an existing
 ADR without naming that explicitly.
 
 **5. Design-principles check.** On decisions that touch
-primitives, agent workflows, or constraint architecture:
-reference `framework/agentic-design-principles.md`. Name
-relevant DRs (e.g. DR-7 on rule count, DR-1 on compliance,
-DR-2 on reliability multiplication) in the council.
+primitives, agent workflows, or constraint architecture: name
+the relevant design constraints in the council — proof output
+required for every primitive, independent gating per stage,
+absorption (new primitives absorb existing ones), source
+grounding, scope boundaries explicit. Historical reference
+catalogue: `references/agentic-design-principles.md`.
 
 When a check fails: send the result back to the caller instead
 of continuing.

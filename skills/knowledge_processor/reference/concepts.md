@@ -37,7 +37,7 @@ ls -t context/history/*.md | head -2
 **Check 2 — state-area staleness:**
 Persistent state-area files under `<active-context>/` (e.g. infrastructure
 overviews, machine state, deploy state): read the "Last verification" header.
-Older than 14 days → FLAG. No date → FLAG ("state unknown", DR-4).
+Older than 14 days → FLAG. No date → FLAG ("state unknown — no freshness marker").
 ```bash
 # Example pattern (consumer repo adapts this):
 for f in context/*/overview.md; do

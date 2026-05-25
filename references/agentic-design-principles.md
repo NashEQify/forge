@@ -1,11 +1,29 @@
 # Agentic Design Principles
 
-13 design rules (DR-1 to DR-13) derived from research on agentic systems
-(2025/2026). Required reference for every design.
-Checked via design_review skill.
+Research-derived design principles (2025/2026) that backed forge's
+skill / persona / runbook design.
 
-**See also:** [arch-doc/04 §26 Agentic Design Principles](../architecture-documentation/04-core-concepts.md) (concept context, use case) ·
-solution-expert §entry check step 5 (mechanical checkpoint)
+**What this file is:** historical research lineage for the framework's
+design choices. Useful for design conversations, onboarding context,
+and tracing the rationale behind a given skill's rules.
+
+**What this file is NOT:** runtime instruction for live agents. The
+principles fire in production only when their content is encoded
+directly in the SKILL.md / persona / runbook step the agent reads.
+Earlier framings ("required reference for every design", "checked via
+design_review skill") were aspirational; no `design_review` skill was
+ever built, and the file is no longer in the operational loop.
+
+DR labels that previously appeared as inline tags across skill text
+have been stripped in favour of the rules' substance — the agent
+follows the rule, not the citation. The principles below remain a
+useful design vocabulary for council / spec-board / framework
+discussions.
+
+The proportionality principle (formerly DR-14, codified after the
+L-031..L-033 / L-039..L-041 drift-case cluster) lifted to
+`CLAUDE.md` Invariant 9 — Tier 0, always loaded — when this file
+left the runtime loop.
 
 ---
 
@@ -62,6 +80,12 @@ decides what stays and what goes. Applies also to artifacts created in
 other sessions or by other agents.
 Pre-harness: prompt rule in soul.md ("you decide nothing alone") + this DR.
 Post-harness: pre-delete hook enforcing user confirmation.
+
+*(DR-14 was added during the L-031..L-033 / L-039..L-041 codification
+session, then lifted to CLAUDE.md Invariant 9 when this file left the
+runtime loop. The principle "proportionality of effort to stakes" now
+lives Tier 0; live instances cite Inv 9 directly. Kept here as a
+pointer for design-lineage readers.)*
 
 ---
 

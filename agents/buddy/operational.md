@@ -155,8 +155,7 @@ Mechanical, not a per-turn gate:
   existing locked spec → `skills/_protocols/spec-amendment-discipline.md`
   (pre-edit code-source-grounding gate + architect-dispatch threshold);
   sub-threshold amendments stay Buddy-direct, the gate still applies.
-  Theory + 5 primitives: `framework/spec-engineering.md`. Read
-  `framework/agentic-design-principles.md` first.
+  Theory + 5 primitives: `framework/spec-engineering.md`.
 - **Transparency header:** every turn → `transparency_header/SKILL.md`.
 
 ### Workflow engine (required for non-trivial workflows)

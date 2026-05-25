@@ -1,6 +1,6 @@
 # `cc` Launcher — Setup & Reference
 
-Detail companion to README §Get `cc` running.
+Detail companion to README §Setup → `cc` launcher (optional convenience).
 
 ## Prerequisites
 

@@ -115,8 +115,6 @@ scenario against it.
 ## Check focus
 
 Check against P1-P5 (`framework/spec-engineering.md`).
-Additionally: DR spot-check (3-5 most relevant DRs from
-`framework/agentic-design-principles.md`).
 
 ## Preservation contract (NON-NEGOTIABLE)
 
@@ -159,6 +157,32 @@ boosts confidence, but single-agent findings are not
 automatically weaker — they often see things others
 structurally cannot (e.g. the impact agent sees cross-spec
 impacts the adversary doesn't).
+
+## Disposition value-floor (CHIEF-1.5)
+
+Spec Board chief mirrors `agents/code-chief.md` §"Disposition
+value-floor" on the spec-side. Before routing any consolidated
+finding to a follow-up artifact (new spec task, amendment task,
+remediation task), write the operational-impact sentence inline in
+the disposition rationale: *"what operational impact does NOT doing
+this followup have on downstream consumers / implementers / future
+readers?"*
+
+- *"Nothing breaks"* / no contract clarification needed / no consumer
+  blocked → carry as note in the verdict, no new task.
+- *"future-edit safety"* / *"completeness"* / *"convention"* without
+  a named consumer or failure-mode → carry as note or watch-item with
+  named trigger.
+- Real measurable cost + named concrete consumer (implementer who
+  hits the gap, downstream spec that needs the contract) → follow-up
+  task justified, impact sentence stays inline.
+
+A follow-up-task disposition without an inline operational-impact
+sentence is a validation fail. "Should be documented" / "could be
+clearer" without a named consumer is NOT an impact sentence —
+re-route. Hard floors retain override: spec-contract changes,
+security / auth / consent / crypto sections, full-path sections,
+foundation-spec L3 always escalate.
 
 ## Piebald-budget check (on skill / runbook / persona reviews)
 

@@ -8,7 +8,7 @@ The proof block from process.md applies to the Brain Logic part. wrap-up adds a 
 
 ## plan_engine --boot output refresh
 
-On every save: regenerate `context/plan_engine --boot output` from the source files. Overwrite completely (DR-3). No append, no merge. The template is in the header of plan_engine --boot output itself. Missing source → omit the section.
+On every save: regenerate `context/plan_engine --boot output` from the source files. Overwrite completely (read source, delta-check, write). No append, no merge. The template is in the header of plan_engine --boot output itself. Missing source → omit the section.
 
 ## History entry
 

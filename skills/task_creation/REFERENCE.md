@@ -96,7 +96,7 @@ If ALL "fix immediately" criteria apply -> fix immediately (Light Plan). Otherwi
 | **Acceptance Criteria** | When the done criterion is clear. Check question: "Can an outsider unambiguously say whether it is met?" |
 | **Constraints** | When MUST/MUST NOT/PREFER/ESCALATE are known |
 | **Deps** | When dependencies are recognisable. Check against the backlog |
-| **Scope / Not yet** | When the scope boundaries are clear. An empty "Not yet" block is invalid (DR-10) |
+| **Scope / Not yet** | When the scope boundaries are clear. An empty "Not yet" block is invalid (scope must be explicitly bounded) |
 
 ## Dependency-spike check
 
@@ -106,7 +106,7 @@ Does the task introduce a new external dependency with >1 integration point? -> 
 
 ## "Not yet" check
 
-Every task MD MUST have a non-empty `## Not yet` block (mandatory per task-format.md, DR-10). At creation, formulate at least one scope exclusion. If the user names none, ask actively: "What explicitly does NOT belong in the scope of this task?"
+Every task MD MUST have a non-empty `## Not yet` block (mandatory per task-format.md — scope must be explicitly bounded). At creation, formulate at least one scope exclusion. If the user names none, ask actively: "What explicitly does NOT belong in the scope of this task?"
 
 ## Context manifest (for Step 4: writing the task file)
 
@@ -115,7 +115,6 @@ If the required context is clear at task creation: fill `context_manifest` in th
 ```yaml
 context_manifest:
   required:
-    - framework/agentic-design-principles.md        # short form: whole file
     - path: docs/specs/brain-schema.md              # long form with sections
       sections: ["## Entity-Schema", "## Relations"]
   available:

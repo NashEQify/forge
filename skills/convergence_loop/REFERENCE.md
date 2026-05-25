@@ -71,7 +71,7 @@ Pass 1 applies several perspectives, not a single read:
 |------|---------------------------|
 | Spec review (P1-P5) | Implementer perspective, adversarial reading, cross-reference check |
 | Board review | Fresh-look paraphrase, intent-alignment check, constraint-fulfilment simulation |
-| Design review (DR-1–DR-10) | Happy-path trace, error-path trace, cognitive-overhead measurement |
+| Design review | Happy-path trace, error-path trace, cognitive-overhead measurement |
 | L1 simulation | Happy path, error / edge, concurrent / timing, degraded service |
 | Test design | Happy path, error path, boundary, concurrent, stale state |
 | Pre-impl eval | Payload sizes, timing variants, degraded service, API mismatch |
