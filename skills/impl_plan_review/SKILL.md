@@ -38,6 +38,14 @@ BEFORE code exists.
 OR a schema change OR cross-module impact? → impl_plan_review.
 Otherwise skip with rationale.
 
+**Bedrock (why this trigger):** facets per
+`agents/buddy/operational.md §Multi-perspective engagement` —
+primarily **blind-spot compensation** (MCA's interpretation of spec
+degrees-of-freedom needs reviewer-diversity before code locks it)
+and **complexity mastery** (multi-decision plans exceed solo
+synthesis reliability). The count is the fallback when facets are
+unclear, not the gate. Facet-question first, count as net.
+
 ## Input
 
 MCA writes an implementation plan first in full_plan step 1

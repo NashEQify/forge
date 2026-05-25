@@ -55,6 +55,15 @@ Below threshold (≤2 ACs, single-file, no schema): the skill is
 skip-eligible with rationale. on_fail: warn — the hook adds
 nothing mechanically; Buddy discipline.
 
+**Bedrock (why this trigger):** facets per
+`agents/buddy/operational.md §Multi-perspective engagement` —
+primarily **blind-spot compensation** (implementer cognitive bias
+systematically misses what adversary targets: compensation-action
+shares-bug-class, cycle-entry-point sensitivity, cleanup-tx
+silent-ack — see §Purpose) and **reversibility** (test gaps in
+shipped code are expensive to recover from). Count is the fallback
+when facets are unclear. Facet-question first, count as net.
+
 **Position in the workflow:** between `test-design` (the
 tester writes a spec-derivative test plan) and
 `delegation-artefact` (Buddy writes the MCA brief). The
