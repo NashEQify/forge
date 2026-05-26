@@ -34,6 +34,10 @@ multi-day build, a context switch, or a fresh session next week.
 
 ## How it works
 
+Every session enters through **Buddy** — the single orchestrator persona.
+Buddy handles intake, classifies the request, and routes to one of the
+eight workflows; sub-agents do the actual work.
+
 ```
                    ┌─────────────────────────────────────────┐
   plain-text  ───► │  BUDDY  (single orchestrator persona)   │
@@ -96,111 +100,103 @@ sessions with `save`.
 
 ## Setup
 
-End state: open Claude Code in any project, the agent boots into Buddy
-with the full forge framework attached.
+forge runs on top of an existing coding-agent harness. Three are
+supported out of the box: **Claude Code**, **OpenCode**, and **Codex**
+(Desktop / CLI). Buddy is the orchestrator persona in all three — same
+methodology, same workflows, same boards.
+
+Two setup paths:
+
+- **Full** — one setup script per harness. Installs a launcher
+  (`cc` / `oc`), wires persona + skill discovery, and registers
+  forge's PreToolUse hooks where the harness exposes a tool-event
+  API. This is the canonical install and gets you the full discipline
+  layer with write-time enforcement.
+- **Quick (Claude Code only)** — two symlinks, no scripts, no
+  install-time magic. Personas and skills discoverable, but write-time
+  hooks off. Fastest way to try forge in a one-off project.
+
+### Full setup
 
 ```bash
-# 1. clone forge anywhere — typically next to your other repos
 git clone https://github.com/NashEQify/forge ~/forge
 
-# 2. register forge's personas + skills with Claude Code (user-level,
-#    idempotent, touches nothing in your projects)
+# Claude Code — installs `cc` launcher, symlinks, path-whitelist,
+#               git pre-commit hooks for forge itself
+bash ~/forge/scripts/setup-cc.sh
+
+# OpenCode — installs `oc` launcher, opencode.jsonc, forge-hooks plugin
+bash ~/forge/scripts/setup-oc.sh
+
+# Codex Desktop / CLI — agent + skill wrappers under ~/.codex, ~/.agents
+bash ~/forge/scripts/setup-codex.sh
+# optional: also wire PreToolUse hooks into a specific project
+bash ~/forge/scripts/setup-codex.sh ~/your-project
+```
+
+Each script is idempotent and self-contained: it detects
+`FRAMEWORK_DIR` from its own location, installs the launcher and
+adapter pieces, and verifies prerequisites. Re-run any time to repair
+the install. (Codex has no `--add-dir` equivalent, so `FRAMEWORK_DIR`
+is baked in at install time — the reason a script is mandatory there.)
+
+Then start a session in any repo:
+
+```bash
+cc <project>        # Claude Code via launcher (or bare `cc` for cwd)
+oc                  # OpenCode via launcher (forge config auto-loaded)
+codex               # Codex Desktop / CLI — Buddy discovered globally
+```
+
+The `cc` / `oc` launchers default to `~/projects/<project>` for the
+project root. If yours live elsewhere, override `$PROJECTS_DIR` or
+edit the launcher — both are short shell scripts. Per-repo git
+pre-commit hooks for a consumer project (any harness):
+`bash ~/forge/scripts/install-git-hooks.sh`. Launcher details:
+[`docs/cc-launcher.md`](docs/cc-launcher.md).
+
+### Quick (Claude Code only)
+
+```bash
+git clone https://github.com/NashEQify/forge ~/forge
+
 mkdir -p ~/.claude \
   && ln -sn ~/forge/.claude/agents ~/.claude/agents \
   && ln -sn ~/forge/.claude/skills ~/.claude/skills
 ```
 
-That's the setup. Then in any project:
+Then in any project:
 
 ```bash
 cd ~/your-project
 claude --agent buddy --add-dir ~/forge
 ```
 
-Buddy boots, reads `agents/buddy/{soul,operational,boot}.md`, loads the
-workflows + skills, and starts orchestrating. If your project has no
-`intent.md` yet, Buddy offers a short interview to create one.
+Buddy boots, reads `agents/buddy/{soul,operational,boot}.md`, loads
+the workflows + skills, and starts orchestrating. If the project has
+no `intent.md` yet, Buddy offers a short interview to create one.
 
-### What the symlinks buy you
+Trade-off vs. full setup: PreToolUse hooks (path-whitelist,
+frozen-zones, state-write-block, …) are **not** active. Methodology
+and the workflow engine carry the same discipline — you just lose
+mechanical write-time enforcement. To add the git pre-commit layer
+per repo: `bash ~/forge/scripts/install-git-hooks.sh`.
 
-Without them, `--add-dir ~/forge` grants read access to the framework
-tree but the harness has no way to discover forge's personas or skills.
-Concretely:
-
-- The `Task` tool can't dispatch `board-chief`, `main-code-agent`, or
-  any of the 30+ framework personas — Claude Code looks up subagents
-  via `~/.claude/agents/` (or the project's `.claude/agents/`), not
-  via `--add-dir`.
-- The `Skill` tool sees zero forge skills. The agent can still read
-  `skills/<name>/SKILL.md` via the Read tool and follow the methodology
-  manually (the documented SoT-read fallback in
-  [`agents/buddy/operational.md`](agents/buddy/operational.md)), but
-  proactive discovery via the `available-skills` system-reminder is
-  off.
-
-With the symlinks, both surfaces light up — every Claude Code session
-on this machine knows about forge's personas and skills.
-
-### What you don't get with this setup
-
-PreToolUse hooks (path-whitelist, frozen-zones, state-write-block, …)
-and pre-commit checks are not active in your project. forge's
-mechanical drift-prevention layer protects forge's own repo. To extend
-it into a consumer repo, install hooks there once:
-
-```bash
-bash ~/forge/scripts/install-git-hooks.sh
-```
-
-For most users this is fine — methodology + state engine carry the
-discipline, and you can add hooks per-repo as you decide they earn
-their keep.
-
-### `cc` launcher (optional convenience)
-
-If you want a `cc <project>` shell shortcut and an opinionated
-project-root layout under `~/projects/`, run the maintainer's setup:
-
-```bash
-cd ~/forge
-python3 -m venv .venv && .venv/bin/pip install pyyaml
-bash scripts/setup-cc.sh
-```
-
-This installs `~/.local/bin/cc` and does the same two symlinks the
-manual setup above does. Then `cc forge` opens the framework from
-anywhere, `cc <project>` opens any subdir of `$PROJECTS_DIR`
-(default `~/projects`), and bare `cc` uses the current directory.
-Details: [`docs/cc-launcher.md`](docs/cc-launcher.md).
-
-### Codex Desktop / CLI
-
-forge also ships a Codex adapter under `.codex/`. Setup is one script:
-
-```bash
-# global Codex setup (agents + skills installed under ~/.codex and ~/.agents)
-bash ~/forge/scripts/setup-codex.sh
-
-# optional: also wire forge's PreToolUse hooks into a project
-bash ~/forge/scripts/setup-codex.sh ~/your-project
-```
-
-The script (a) copies 38 agent wrappers into `~/.codex/agents/`,
-(b) writes a Buddy wrapper with a concrete `FRAMEWORK_DIR` so Codex
-boots Buddy at session start (Codex Desktop has no `--add-dir`
-equivalent, so paths get baked in at install time), (c) generates
-the same skill wrappers as Claude Code under `~/.agents/skills/`, and
-(d) when a project path is passed, writes a `.codex/hooks.json` there
-that fires forge's PreToolUse hooks via Codex's tool-event API.
-
-Then run `codex` inside any repo that has an `AGENTS.md` — Codex
-discovers the Buddy agent globally and the per-project hooks fire
-where installed.
+Why the symlinks are needed: `--add-dir ~/forge` grants read access
+to the framework tree, but Claude Code discovers personas via
+`~/.claude/agents/` — not via `--add-dir`. Without the symlinks the
+`Task` tool can't dispatch `board-chief` / `main-code-agent` / any
+forge persona, and the `Skill` tool sees zero forge skills. (The
+agent can still read `skills/<name>/SKILL.md` via the Read tool and
+follow the methodology manually — the SoT-read fallback documented in
+[`agents/buddy/operational.md`](agents/buddy/operational.md) — but
+proactive skill discovery is off.)
 
 ### Prerequisites
 
-- **Claude Code CLI** — the harness
-  ([install](https://docs.anthropic.com/en/docs/claude-code))
+- the harness itself:
+  [Claude Code](https://docs.anthropic.com/en/docs/claude-code),
+  [OpenCode](https://opencode.ai), or Codex (Desktop / CLI)
 - **git**, **bash**, **jq**
 - **Python 3.10+ + `pyyaml`** — for the workflow / plan engines
 - Optional: **`chub` CLI** for `get_api_docs`,
@@ -247,24 +243,24 @@ for the work where coherence across sessions is the bottleneck — long
 multi-day builds, multi-repo work, anything where context loss costs
 more than the discipline overhead.
 
-**Adapters.** forge's discipline is layered: skills (markdown + YAML),
+**Adapters.** forge's discipline is layered — skills (markdown + YAML),
 workflow runbooks, the workflow engine (Python + YAML state), persona
 definitions, task / plan YAMLs, and a hook layer (PreToolUse +
-pre-commit). Most of that is harness-neutral — any harness that loads
-MD + YAML and can spawn sub-agents can run it. forge ships adapters
-for Claude Code, OpenCode, Codex, and Cursor; an adapter handles
-three things: persona / skill discovery, tier-0 anchor loading, and —
-where the harness exposes a tool-event API — wiring forge's PreToolUse
-hooks (path-whitelist, frozen-zones, state-write-block, engine-
-bypass, plan-adversary-reminder, delegation-prompt-quality, workflow-
-commit-gate, mca-return-stop-condition, board-output-check, evidence-
-pointer-check) into it. Claude Code, OpenCode, and Codex have such
-an API and block drift at write-time. Cursor doesn't, so those same
-hooks only fire via git pre-commit — drift catches at commit instead
-of at write, everything else runs identically. Any harness without a
-dedicated adapter can still load the skills and run the workflows;
-discovery is just less mechanical and write-time hook enforcement is
-off.
+pre-commit). Most of it is harness-neutral: any harness that loads MD
++ YAML and can spawn sub-agents can run forge. An adapter buys
+mechanical persona / skill discovery, tier-0 anchor loading, and —
+where the harness exposes a tool-event API — write-time enforcement
+of forge's PreToolUse hooks (path-whitelist, frozen-zones,
+state-write-block, engine-bypass, plan-adversary-reminder,
+delegation-prompt-quality, workflow-commit-gate,
+mca-return-stop-condition, board-output-check, evidence-pointer-check).
+
+Cursor is the fourth shipped adapter; it has no tool-event API, so
+those hooks fire only at git pre-commit — drift catches at commit
+instead of at write, everything else runs identically. Any harness
+without a dedicated adapter can still load the skills and run the
+workflows; discovery is just less mechanical and write-time hook
+enforcement is off.
 
 **What this isn't.** Not a generic agent framework, not a marketplace,
 not a LangChain-style abstraction, not an onboarding product.
