@@ -160,10 +160,13 @@ same `target:` = anti-pattern (missed triage). Workflow
 | **watch** | as `accept` + named future trigger. | `target: watch_item` |
 | **fix-later** | MEDIUM+ only. Named concrete defect + measurable downstream cost. **LOW FORBIDDEN.** Value-floor check applies (see below). | `target: new_task` |
 
-**Hard floor — LOW (MANDATORY):** standalone LOW → `accept`. No
-cost-justification escape (text hallucinates). LOW → `new_task`
-FORBIDDEN. LOW feels important = severity wrong; re-classify MEDIUM
-with named defect, or accept.
+**Hard floor — LOW (MANDATORY, bundle-proof):** any LOW → `new_task`
+FORBIDDEN. Bundling LOWs (`bundle_with:`, `bundle:`) does NOT
+promote severity — a bundle of N LOWs is still LOW. Real-impact
+LOWs route to `absorb_next`; nice-to-have LOWs route to `accept`.
+LOW feels important = severity wrong; re-classify MEDIUM with named
+defect, or accept. No cost-justification escape (text hallucinates).
+Enforced mechanically by `risk_followup_routing/SKILL.md` Gate L.
 
 **Value-floor — `new_task` (MANDATORY):**
 mirrors `task_creation/SKILL.md` §1.5 on the consumption side. Before
@@ -188,10 +191,30 @@ security / auth / consent / crypto, schema or public-API contract
 changes, full-path tasks always stay `fix-now` or `new_task`
 regardless of value-floor outcome.
 
+**Critical-path lens — MANDATORY for `new_task` (Gate C surrogate).**
+`target: new_task` requires `consumers:` containing AT LEAST ONE
+in-flight task in an active milestone (IN_PROGRESS, NEXT ACTIONS, or
+the active-milestone `ready` set per `plan_engine.py --boot`).
+Consumer pointing only to dormant work (POST-MVP task, BLOCKED
+milestone, future-event, generic user-role) → reroute to
+`watch_item` with the consumer-activation as `trigger:`. This is
+mechanically enforced by `risk_followup_routing/SKILL.md` Gate C;
+chief writes the right disposition first time by asking *"does this
+finding have a named consumer that is in flight TODAY?"* before
+emitting `target: new_task`.
+
+**Goldplating self-admission (Gate G surrogate).** `value_class:
+nice-to-have` + `target: new_task` is invalid — the label IS the
+goldplating answer. Either upgrade `value_class` to `real-impact`
+with named cost OR route to `accept`. Mechanically rejected by
+`risk_followup_routing/SKILL.md` Gate G.
+
 **Bundling content-split (when chief bundles related findings into one
 new_task):** each bundled item tagged `value_class: real-impact |
 nice-to-have` so the followup task can be scoped down without
-re-reading the originating reviews.
+re-reading the originating reviews. **Bundling does NOT lift the
+severity floor (Gate L) — a bundle of N LOWs is still LOW and
+cannot be `new_task`.**
 
 **Exception — convergence:** ≥3 reviewers same evidence → fix-now.
 Solo LOWs never escape `accept`.
