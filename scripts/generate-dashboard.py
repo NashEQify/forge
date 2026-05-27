@@ -1611,6 +1611,12 @@ def build_milestone_data(per_repo: dict[str, dict]) -> list:
             # milestones_list (cross-repo dep edges not currently emitted by
             # plan_engine; same-repo deps use raw keys).
             deps_ns = [_nsms(slug, r) for r in (m.requires or [])]
+            # Gate-task IDs (type='task' gates only). Used to push gate-tasks
+            # to the back of their topo-level in the milestone-bar order —
+            # they are conceptually milestone-closers, not "next up". Plumbed
+            # into _topo_sort_tasks via tie-break.
+            gate_task_ids = [_nsid(slug, g.id) for g in (m.gate or [])
+                             if g.type == "task" and g.id]
             entry = {
                 "key": _nsms(slug, mkey),
                 "raw_key": mkey,
@@ -1622,6 +1628,7 @@ def build_milestone_data(per_repo: dict[str, dict]) -> list:
                 "deps": deps_ns,
                 "order": i,
                 "is_target": (mkey == target_key),
+                "gate_task_ids": gate_task_ids,
             }
             # Task 435 flat-Felder durchschleifen: feature, app_status_post_milestone,
             # parallel_to. Renderer kann diese fuer Display nutzen.
@@ -1842,8 +1849,36 @@ def generate_mermaid(tasks: list, slices: dict) -> str:
 # Gantt roadmap rendering (Python-side)
 # ---------------------------------------------------------------------------
 
-def _topo_sort_tasks(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Sort tasks by dependency order (Kahn's algorithm)."""
+# Readiness ranks for the topo tie-break (lower = lifted to front of level).
+# `ready` and `implementing` lead because they are the actively-in-flight
+# critical-path heads (board-locked or build-running). `reviewed` / `specced`
+# / `raw` trail by maturity. Default 4 catches unknown vocab without crash.
+_READINESS_RANK = {
+    "ready": 0,
+    "implementing": 0,
+    "reviewed": 1,
+    "specced": 2,
+    "raw": 3,
+}
+
+
+def _topo_sort_tasks(tasks: list[dict[str, Any]],
+                     gate_ids: set | None = None) -> list[dict[str, Any]]:
+    """Sort tasks by dependency order (Kahn's algorithm).
+
+    Within each Kahn level (tasks with equal in-degree at emission time),
+    tie-break by:
+      1. readiness — `ready` / `implementing` first (active critical-path
+         heads); `reviewed` / `specced` / `raw` trail.
+      2. gate-task last — milestone-closer tasks (per plan.yaml
+         `gate.id`) sink to the back of their level so they read as
+         "wraps up after" the work tasks.
+      3. id — stable fallback only; explicitly NOT a primary signal.
+    Topological invariant is preserved — a gate-task with open dependents
+    still emits before them (the back-of-level demotion only applies among
+    siblings with the same in-degree at that step).
+    """
+    gate_ids = gate_ids or set()
     task_ids = {t["id"] for t in tasks}
     task_map = {t["id"]: t for t in tasks}
     in_deg = {t["id"]: 0 for t in tasks}
@@ -1855,7 +1890,15 @@ def _topo_sort_tasks(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 adj[d].append(t["id"])
                 in_deg[t["id"]] += 1
 
-    queue = sorted([tid for tid, deg in in_deg.items() if deg == 0])
+    def _key(tid: Any) -> tuple:
+        t = task_map[tid]
+        return (
+            _READINESS_RANK.get(t.get("readiness", ""), 4),
+            1 if tid in gate_ids else 0,
+            tid,
+        )
+
+    queue = sorted([tid for tid, deg in in_deg.items() if deg == 0], key=_key)
     order = []
     while queue:
         tid = queue.pop(0)
@@ -1864,7 +1907,7 @@ def _topo_sort_tasks(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
             in_deg[nxt] -= 1
             if in_deg[nxt] == 0:
                 queue.append(nxt)
-        queue.sort()
+        queue.sort(key=_key)
 
     remaining = sorted(tid for tid in task_ids if tid not in set(order))
     order.extend(remaining)
@@ -2185,7 +2228,8 @@ def _render_gantt(tasks: list, milestones: list, phase_order: list,
             )
             rest_part = _topo_sort_tasks(
                 [t for t in m_tasks
-                 if t["status"] not in terminal and t["status"] != "in_progress"]
+                 if t["status"] not in terminal and t["status"] != "in_progress"],
+                gate_ids=set(m.get("gate_task_ids", [])),
             )
             m_tasks = done_part + ip_part + rest_part
             total_effort = sum(t.get("effort_weight", 3) for t in m_tasks) or 1
