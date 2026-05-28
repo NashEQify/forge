@@ -235,6 +235,26 @@ plan strand:
 2. <file:lines> — <one-line change description>
 ...
 
+## §Claim-Verifications (MUST when brief/task contains trigger formulations)
+
+Trigger formulations: `supersedes`, `reuses existing`,
+`already implemented`, `wraps existing`, `delivered in Task`,
+`existing-code verifications confirm`. For each occurrence, the
+lens (fresh-context-isolated, read-only) MUST grep the cited scope
+and emit one row:
+
+| Claim | Command | Output | Disposition |
+|---|---|---|---|
+| <verbatim phrase from brief/task> | `grep -rn "<canonical-pattern>" <scope-path>/` | <verbatim grep stdout OR `(no output)` for zero hits> | `CONFIRMED` if grep evidence supports the claim; `FALSIFIED` if zero hits or hits contradict claim |
+
+Disposition is a lens judgment, but the Command + Output must be
+verbatim. Hook `BRIEF-CLAIMS` re-runs the same Command at brief
+write-time and at commit-time, BLOCKs on output mismatch. The lens
+is the producer to prevent brief-architect from hallucinating its
+own verification — author-vs-verifier separation. Any FALSIFIED row
+flips the lens sign-off to `escalate: claim-falsified`. See
+dogfood-learning L-044.
+
 ## §Authority-sources
 
 - Target spec(s): <list with mode tag>

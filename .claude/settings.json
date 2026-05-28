@@ -36,6 +36,11 @@
             "type": "command",
             "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/plan-adversary-reminder.sh",
             "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/brief-claims-guard.sh",
+            "timeout": 8
           }
         ]
       },
@@ -89,6 +94,17 @@
             "type": "command",
             "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/evidence-pointer-check.sh",
             "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/session-start-remote.sh",
+            "timeout": 60
           }
         ]
       }

@@ -307,6 +307,28 @@ The release-valve is cadence, not coverage.
 
 ---
 
+## Existing-Impl-Verifications (MUST when trigger formulations present)
+
+If any AC, intent_chain, or brief section uses: `supersedes`,
+`reuses existing`, `already implemented`, `wraps existing`,
+`delivered in Task`, `existing-code verifications confirm` — the
+brief MUST include a `## Existing-Impl-Verifications` table, one
+row per claim:
+
+| Claim | Command | Output | Disposition |
+|---|---|---|---|
+| <verbatim claim phrase> | `grep -rn "<pattern>" <scope>/` | <verbatim grep output OR `(no output)`> | `CONFIRMED` \| `FALSIFIED` |
+
+Producer is `code-architect-lens` (fresh-context-isolated reads code,
+runs grep — see lens §Claim-Verifications). Brief-architect copies
+the verbatim rows. **Hook BRIEF-CLAIMS re-runs the embedded Command
+at write/commit time and BLOCKs on output mismatch.** Hallucinated
+rows do not survive the hook. Any FALSIFIED row → brief is INCOMPLETE,
+must return to author for AC re-scope before MCA dispatch. See
+dogfood-learning L-044.
+
+---
+
 ## Structural-refactor pre-lock checklist (transitive import graph)
 
 When a brief locks a decision that rearranges the import graph
