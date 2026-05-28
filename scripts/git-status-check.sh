@@ -24,9 +24,24 @@ FRAMEWORK_DIR_RAW="${FRAMEWORK_DIR:-$HOME/projects/forge}"
 FRAMEWORK_DIR="$(realpath "$FRAMEWORK_DIR_RAW" 2>/dev/null || echo "$FRAMEWORK_DIR_RAW")"
 CWD="$(realpath "$(pwd)" 2>/dev/null || pwd)"
 
-declare -a TARGETS=("$FRAMEWORK_DIR")
-if [ "$CWD" != "$FRAMEWORK_DIR" ] && [ -d "$CWD/.git" ]; then
-  TARGETS+=("$CWD")
+# Scope policy:
+#   - CWD INSIDE FRAMEWORK_DIR (or equal) → framework is the active repo,
+#     check it. Skip CWD as separate target (it IS the framework).
+#   - CWD OUTSIDE FRAMEWORK_DIR → consumer / project session. The user
+#     does not want framework status spam in unrelated sessions. Check
+#     ONLY the CWD's own repo if it is one. Framework is silenced.
+#   Override: explicit GIT_STATUS_CHECK_INCLUDE_FRAMEWORK=1 forces the
+#   framework target back in (legacy / power-user path).
+declare -a TARGETS=()
+if [ "$CWD" = "$FRAMEWORK_DIR" ] || [[ "$CWD" == "$FRAMEWORK_DIR"/* ]]; then
+  TARGETS+=("$FRAMEWORK_DIR")
+else
+  if [ -d "$CWD/.git" ]; then
+    TARGETS+=("$CWD")
+  fi
+  if [ "${GIT_STATUS_CHECK_INCLUDE_FRAMEWORK:-0}" = "1" ]; then
+    TARGETS+=("$FRAMEWORK_DIR")
+  fi
 fi
 
 # Safety: require TMPDIR_BOOT mktemp succeeded (set -u would catch but

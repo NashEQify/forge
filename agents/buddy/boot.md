@@ -75,10 +75,12 @@ guaranteed by the `cc` script). `values.md` + `profile.md` +
    - No intent.md found: only always-load, then create intent.md
      together.
 5. **STATUS-CHECK:** `bash $FRAMEWORK_DIR/scripts/git-status-check.sh`
-   — runs `git fetch` + `git status -sb` for `$FRAMEWORK_DIR` + the
-   active CWD in parallel (deduped). 5-second network timeout. Output:
-   one line per non-clean repo, `<path> [ahead N | behind N | ahead M,
-   behind N]`. Empty output = everything in sync.
+   — runs `git fetch` + `git status -sb` for the active repo only.
+   Scope: CWD inside `$FRAMEWORK_DIR` → check framework. CWD outside →
+   check CWD's repo only (framework silenced; consumer sessions stay
+   noise-free). Override via `GIT_STATUS_CHECK_INCLUDE_FRAMEWORK=1`.
+   5-second network timeout. Output: one line per non-clean repo,
+   `<path> [ahead N | behind N | ahead M, behind N]`. Empty = sync.
 
    In the same round: `bash $FRAMEWORK_DIR/scripts/chub-status-check.sh`
    — presence check for the `chub` CLI (get_api_docs prerequisite).

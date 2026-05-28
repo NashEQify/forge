@@ -105,6 +105,18 @@ Buddy MUST surface the outcome before proceeding —
 *"Value-floor says accept (Grund X) — really file?"*. User can
 override with explicit yes. Otherwise: no task.
 
+### 1.6. Claim verification (MUST when trigger formulations present)
+
+If the task body (ACs, intent_chain, description) uses any of:
+`supersedes`, `reuses existing`, `already implemented`,
+`wraps existing`, `delivered in Task`,
+`existing-code verifications confirm` — each claim MUST be paired
+with a `C-VERIFY` block (claim text + verbatim `grep -rn` command +
+verbatim output + `CONFIRMED|FALSIFIED` disposition). Hook
+BRIEF-CLAIMS re-runs the grep at write/commit time and BLOCKs on
+mismatch — hallucinated verification outputs die at the hook. See
+dogfood-learning L-044.
+
 ### 2. Triage (MUST)
 
 Fix immediately or create a task? Criteria: effort, reversibility,
