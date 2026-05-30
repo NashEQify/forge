@@ -48,54 +48,71 @@ tests).
 2. **Scope declaration:** "full scope" on pass 1. Pass 2-3:
    `affected_scope` from the predecessor.
 
-### Three passes, three structural roles
+### Three passes, narrowing analytical lens
 
-The passes are NOT three chances to converge — they are three
-distinct structural roles. Reading "max 3" as "3 attempts" is the
-common misreading that produces pass-3 pressure (see §Pass 3 framing
-below).
+Iterations with progressively narrowing scope and rising severity
+threshold. Each pass has a different analytical lens that can
+surface different findings. They are NOT three chances at the same
+work — but they are also not three rigidly-separated phases. The
+narrowing lens itself is the load-bearing mechanism.
 
-| Pass | Scope | Severity threshold | **Role** |
-|------|-------|--------------------|----------|
-| 1 | Full artifact scope | All (BLOCKER + MAJOR + MINOR) | **Broad analysis** — varied patterns surface what's there |
-| 2 | `affected_scope` from pass 1 + direct dependencies | BLOCKER + MAJOR | **Second-order effects** — did pass-1 fixes affect adjacent areas? |
-| 3 | `affected_scope` from pass 2 | BLOCKER only | **Verification** — any NEW problems caused by pass-2 fixes? |
+| Pass | Scope | Severity threshold | What the lens surfaces |
+|------|-------|--------------------|------------------------|
+| 1 | Full artifact scope | All (BLOCKER + MAJOR + MINOR) | Broad analysis, varied patterns — what's there at full scope |
+| 2 | `affected_scope` from pass 1 + direct dependencies | BLOCKER + MAJOR | Second-order effects from pass-1 fixes; the narrower scope + tighter threshold can also surface things the broad lens missed at depth |
+| 3 | `affected_scope` from pass 2 | BLOCKER only | Verification of pass-2 fix side-effects AND deeper findings the focused BLOCKER-only lens surfaces that pass 1/2 couldn't see |
 
-**Mechanical stop after pass 3.** No exceptions — unless the
-calling sub-workflow has its own limits (e.g. `spec-board.yaml`
-safety valve at pass 5, → `REFERENCE.md`).
+Pass 3 can legitimately surface NEW BLOCKERs from multiple sources:
+(a) caused by pass-2 fix side-effects; (b) deeper findings only the
+narrow lens reveals; (c) rare pass-1 broad-lens miss. The original
+framing claimed pass 3 = pure verification — empirically it's
+broader. The narrowing lens IS the structural property.
 
-### Pass 3 framing (anti-pressure)
+**Mechanical stop after pass 3 (with one conditional pass-4
+extension — see §Pass-3 termination).** Sub-workflow overrides
+preserved (e.g. `spec-board.yaml` safety valve at pass 5, →
+`REFERENCE.md`).
 
-Pass 3 is the **verification step**, not the last-chance pass. Its
-job is to catch NEW BLOCKERs introduced by pass-2 fix side-effects.
-If pass 3 surfaces a BLOCKER, classify and escalate honestly — both
-classes below are appropriate pass-3 outcomes:
+### Pass-3 termination (and conditional pass-4 extension)
 
-- **(a) NEW BLOCKER** caused by pass-2 fix side-effect → ESCALATE
-  with fix-direction (the fix introduced a new problem; name the
-  side-effect)
-- **(b) OLD BLOCKER** missed by pass-1's broad analysis → ESCALATE
-  with pass-1-quality note (the broad pass missed it; that's a
-  signal for the next gate iteration or the calling workflow)
+When pass 3 surfaces BLOCKERs, the agent classifies before
+terminating:
 
-**Neither is a grade against the agent.** (a) is verification doing
-its job. (b) is pass-1 quality feedback the framework wants to know
-about — burying it would degrade future calibration.
+| Pass-3 result | Decision |
+|---------------|----------|
+| 0 BLOCKERs | **CONVERGED** (MINORs carried as annex) |
+| BLOCKERs are architectural / cross-cutting / require human decision | **ESCALATE immediately** — not iteration territory |
+| BLOCKERs are scoped + clearly fixable within current scope without architecture change | **Pass-4 extension** (one focused fix-verify cycle) |
 
-Agents are NOT graded on "did you converge by pass 3". Agents are
-graded on best classification of what's actually present and honest
-termination signal. ESCALATE on a structurally non-convergent
-problem is the correct outcome — it signals "this needs architect
-or human judgment, not more agent iteration".
+**Pass-4 extension (one-shot, conditional):**
+- Scope = the specific pass-3 BLOCKER(s) only
+- Threshold = BLOCKER only
+- Buddy fixes between pass 3 and pass 4 per normal fix scope
+- Pass-4 outcomes: 0 BLOCKERs → CONVERGED; BLOCKERs remain →
+  ESCALATE (no further extension; the agent has had its fix-verify
+  cycle)
 
-The failure mode this framing prevents: agent treats pass 3 as
-deadline → under-classifies BLOCKERs to MAJOR / forces "good enough"
-CONVERGED / declares closure on strittige issues / suppresses class
-(b) findings to avoid signaling pass-1 quality concerns. All four
-are proportionality anti-patterns the framework's value-floor
-disciplines explicitly catch — but easier to prevent at entry than
-catch at disposition.
+**Hard mechanical cap at pass 4.** No pass 5 from convergence_loop
+itself; sub-workflow safety valves apply on top (spec-board at 5,
+etc).
+
+**Why the conditional extension, not "pass-3 BLOCKER = immediate
+ESCALATE":** when pass 3 surfaces a scoped, clearly-fixable BLOCKER
+(new or old, doesn't matter), automatic escalation imposes human
+overhead the agent could resolve in one focused fix-verify cycle.
+The extension is gated on agent's classification of fixability —
+architectural / cross-cutting BLOCKERs still ESCALATE because they
+need human judgment, not more agent iteration.
+
+**Anti-pressure framing.** Agents are NOT graded on "did you
+converge by pass 3 (or 4)". Agents are graded on best classification
+of what's actually present + honest termination signal. ESCALATE on
+architectural problems is appropriate. Pass-4 extension on
+scoped-fixable BLOCKERs is appropriate. CONVERGED when actually
+converged is appropriate. Forced CONVERGED to avoid the other two is
+the failure mode the framing prevents — under-classifying BLOCKERs
+to MAJOR / declaring closure on contested issues / suppressing
+deeper-lens findings to avoid pass-3 work.
 
 ### Severity definitions (L2 constrained judgment)
 
@@ -153,21 +170,19 @@ rules out (a) but not (b)-vs-(c) — both pass isolated. Second step: is
 the bleeding state a test fixture (→b) or a production singleton (→c)?
 Never fold an unclassified net-new failure into a fix-pass.
 
-### Termination
+### Termination (general)
 
 | Situation | Decision |
 |-----------|----------|
 | Pass N has 0 findings above the threshold | **CONVERGED** — proceed to the next gate |
-| Pass 3 finished, 0 BLOCKERs | **CONVERGED** — MINORs carried as an annex |
-| Pass 3 finished, BLOCKERs remain | **ESCALATE** — concrete question to Buddy / user |
-| Finding requires an architecture decision | **ESCALATE immediately** — not an iteration problem |
-
-Early termination allowed: pass 1 zero findings → CONVERGED after
-pass 1.
+| Pass 1 zero findings | **CONVERGED** — early termination after pass 1 |
+| Finding requires an architecture decision | **ESCALATE immediately** — not an iteration problem (any pass) |
+| Pass 3 BLOCKERs | see §Pass-3 termination (and conditional pass-4 extension) |
+| Pass 4 (extension) BLOCKERs remain | **ESCALATE** — no further extension |
 
 **ESCALATE is an appropriate outcome, not a failure mode.** It
 signals "this needs architect / human judgment, not more agent
-iteration". The agent loses no grade for ESCALATE on a stuck
+iteration". The agent loses no grade for ESCALATE on an architectural
 problem; the agent loses grade for forcing CONVERGED to avoid
 ESCALATE.
 
@@ -223,9 +238,11 @@ fix responsibility: `REFERENCE.md`.
 - **NOT** set severity abstractly. **INSTEAD** anchor it at the
   next step ("can the next step proceed?"). Because: only that
   is mechanically checkable.
-- **NOT** force CONVERGED at pass 3 to avoid ESCALATE. **INSTEAD**
-  classify honestly; ESCALATE is appropriate on stuck problems.
-  Because: pass-3-as-deadline framing produces premature CONVERGED,
-  severity-downgrade, and "good enough" closures — all
-  proportionality anti-patterns. Pass 3 is the verification step,
-  not a last-chance pass.
+- **NOT** force CONVERGED at pass 3 to avoid ESCALATE or skip the
+  pass-4 extension. **INSTEAD** classify pass-3 BLOCKERs honestly:
+  architectural → ESCALATE; scoped + fixable → pass-4 extension;
+  none → CONVERGED. **Because:** pass-3-as-deadline framing produces
+  premature CONVERGED, severity-downgrade, and "good enough" closures
+  — all proportionality anti-patterns. The narrowing lens at pass 3
+  legitimately surfaces new findings; the conditional pass-4
+  extension is the appropriate response for fixable ones.
