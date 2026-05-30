@@ -139,10 +139,10 @@ else
   echo "[session-start-remote] FAIL L-044 brief-claims-guard not wired"
 fi
 
-if grep -q 'BUDDY-BOOT REQUIRED' orchestrators/claude-code/hooks/workflow-reminder.sh 2>/dev/null; then
-  echo "[session-start-remote] PASS Buddy boot-reminder injection in workflow-reminder.sh"
+if [ -x orchestrators/claude-code/hooks/buddy-boot-inject.sh ]; then
+  echo "[session-start-remote] PASS buddy-boot-inject.sh present (SessionStart owns boot for claude-desktop/web)"
 else
-  echo "[session-start-remote] FAIL Buddy boot-reminder not present"
+  echo "[session-start-remote] FAIL buddy-boot-inject.sh missing or not executable"
 fi
 
 BRANCH_NOW="$(git symbolic-ref --short HEAD 2>/dev/null || echo unknown)"
@@ -150,12 +150,6 @@ if [ "$BRANCH_NOW" = "main" ]; then
   echo "[session-start-remote] PASS on main branch (no-branching override effective)"
 else
   echo "[session-start-remote] FAIL on $BRANCH_NOW (expected main — branch-override did not switch)"
-fi
-
-if [ -f .workflow-state/buddy-boot-ack ]; then
-  echo "[session-start-remote] INFO buddy-boot-ack marker present (boot suppressed this container)"
-else
-  echo "[session-start-remote] INFO buddy-boot-ack marker absent (boot will fire on first user turn)"
 fi
 
 echo "[session-start-remote] === END VALIDATION ==="
