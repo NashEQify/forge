@@ -144,5 +144,3 @@ git post-commit:
 
 Buddy acts, hooks catch the misses. Don't simulate hook logic up front;
 react when one fires.
-
-# allow:engine-bypass pre-OSS-cleanup sprint — meta-recursion removal, no engine
