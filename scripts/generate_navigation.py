@@ -78,7 +78,7 @@ TARGETS: list[tuple[str, str, str, list[str]]] = [
         "agents/navigation.md",
         "agents",
         "Personas",
-        ["_protocols", "buddy", "companions", "templates"],
+        ["_protocols", "buddy", "templates"],
     ),
     (
         "agents/buddy/navigation.md",

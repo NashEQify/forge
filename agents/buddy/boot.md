@@ -9,12 +9,7 @@ Input: working directory. Output: active intent + mode.
 1. Run `ls <CWD>/intent.md` — CWD comes from ORIENT step 1 (MUST —
    check the filesystem, do NOT infer from the context window).
 2. Found → that's the active intent. Mode comes from the Context
-   field (first sentence).
-   In the BuddyAI root (CWD = BuddyAI/): intent.md is already in
-   context via --add-dir — `ls` is for confirmation only, no `cat`.
-   In workspaces (CWD under BuddyAI/workspaces/): read intent.md from
-   the CWD (`cat`). The root intent.md is NOT the active intent — it
-   is ignored.
+   field (first sentence). Read with `cat` if not already in context.
 3. Not found → walk up the directory tree (`ls ../intent.md`, etc.).
    Stop at `/`.
 4. Nothing found → "No intent. New project? Should I create an
@@ -23,9 +18,9 @@ Input: working directory. Output: active intent + mode.
 
 The intent.md you find is the active intent. Everything else derives
 from it. `CLAUDE.md` always applies (via --add-dir, mechanically
-guaranteed by the `cc` script). `values.md` + `profile.md` +
-`companions.yaml` always apply (canonical under
-`~/projects/personal/context/user/`, independent of CWD).
+guaranteed by the `cc` script). `values.md` + `profile.md` always
+apply (canonical under `~/projects/personal/context/user/`,
+independent of CWD).
 
 ## Boot sequence
 
@@ -36,20 +31,16 @@ guaranteed by the `cc` script). `values.md` + `profile.md` +
 2. **RESOLVE:** run routing (see above).
 3. **ROUTE:** decide context routing (read and write paths for the
    session). CWD comes from ORIENT.
-   - CWD under BuddyAI/ → "inside", context write path =
-     BuddyAI/context/.
-   - CWD outside BuddyAI/ → run `ls <CWD>/context/` (MUST — filesystem
-     check, don't infer from intent.md).
-     Found → "with context/", write path = project-local.
-     Not found → "without context/", auto-create + project-local
-     (see Context Routing).
-   - **Project docs:** if CWD != BuddyAI root AND RESOLVE found an
-     intent.md, run `ls <CWD>/docs/backlog.md` (MUST).
-     Found → the project has a local docs/ (backlog, tasks, specs).
-     That applies for the session. The BuddyAI root `docs/backlog.md`
-     is NOT loaded in this session.
-     Not found → no local backlog, the root backlog applies.
-     Same mechanic for workspaces and external projects.
+   - Run `ls <CWD>/context/` (MUST — filesystem check, don't infer
+     from intent.md).
+     Found → context write path = `<CWD>/context/`.
+     Not found → auto-create `<CWD>/context/` with `history/` +
+     `overview.md`, then write project-local (see Context Routing).
+   - **Project docs:** if RESOLVE found an intent.md, run
+     `ls <CWD>/docs/backlog.md` (MUST).
+     Found → the project has a local docs/ (backlog, tasks, specs)
+     for the session.
+     Not found → no local backlog.
    The result holds for the entire session. Rules: see "Context
    routing".
 4. **LOAD:** load context. Two categories: always-load (Buddy
@@ -68,8 +59,7 @@ guaranteed by the `cc` script). `values.md` + `profile.md` +
    - **intent-load** (project-specific):
      - Whatever the Context field lists under "Boot". That, and
        nothing else.
-     - Workspace backlog: if ROUTE (step 3) found a local backlog →
-       load it.
+     - Local backlog: if ROUTE (step 3) found one → load it.
      - Context field missing in intent.md: derive from Vision +
        Non-Goals; ask if uncertain.
    - No intent.md found: only always-load, then create intent.md
@@ -94,8 +84,9 @@ guaranteed by the `cc` script). `values.md` + `profile.md` +
    recommended"). Never BLOCK — just a hint.
 
 6. **RESUME:** load session state.
-   - `session-buffer.md`: always `BuddyAI/docs/session-buffer.md`
-     (Buddy-global). PENDING → dispatcher, PROCESSED → remove.
+   - `session-buffer.md`: `<CWD>/docs/session-buffer.md` (repo-
+     local). PENDING → dispatcher, PROCESSED → remove. Not found →
+     skip.
    - **Root session:** run
      `python3 $FRAMEWORK_DIR/scripts/plan_engine.py --boot`. The
      output gives in-progress tasks, critical path, next actions,
@@ -108,27 +99,11 @@ guaranteed by the `cc` script). `values.md` + `profile.md` +
      step 7) AND read the state files of the active workflows
      (`docs/<workflow>/<slug>.md`) before the first user-substance
      turn so the content state is in mind.
-   - **Session handoff:** CWD-based (see Context routing below).
-     - CWD under `BuddyAI/workspaces/<name>/` →
-       `BuddyAI/context/session-handoff-<name>.md`
-     - CWD under `BuddyAI/` root →
-       `BuddyAI/context/session-handoff.md`
-     - CWD external → `<CWD>/context/session-handoff.md`
-     The handoff carries the discussion context from the last
-     session (meta-summary + open topics in the 9-point structure).
-     Not found → fresh start.
-   - **Companions** (optional user-scope convention): if
-     `~/projects/personal/context/user/companions.yaml` exists, read
-     the registry and load each entry's `soul_file` + `memory_file`.
-     Companion files live wherever the registry points to (typical
-     convention: a per-user `companions/` directory outside the
-     framework repo). Not found or empty → skip, no error. Companions
-     are NOT part of the framework distribution.
-7. **GREET:** short greeting (style: soul.md). If permanent companions
-   were loaded in step 6: optional brief character opener in a
-   companion's voice, 1-3 sentences, only when it adds to the session
-   state — not required, not every boot. Buddy's greeting stays
-   primary; the companion is the shadowy second guest behind it.
+   - **Session handoff:** `<CWD>/context/session-handoff.md`. The
+     handoff carries the discussion context from the last session
+     (meta-summary + open topics in the 9-point structure). Not
+     found → fresh start.
+7. **GREET:** short greeting (style: soul.md).
 
    **On STATUS-CHECK findings (step 5):** surface as a one-liner
    under the greeting (`Note: <repo> is behind by 3 commits — `git
@@ -169,11 +144,9 @@ Finish boot in at most 2 tool-call rounds:
    sessions only), and
    `python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --boot-context`.
    All boot files from the path table. No "if applicable" — what's
-   in intent.md Context field under Boot is required.
-   In BuddyAI root the paths are known — no reason for a third round.
-   For external projects: run the ROUTE check (`ls context/`,
-   `ls docs/backlog.md`) inside round 2. If the result needs further
-   reads → round 3 is allowed.
+   in intent.md Context field under Boot is required. ROUTE checks
+   (`ls <CWD>/context/`, `ls <CWD>/docs/backlog.md`) run inside
+   round 2. If the result needs further reads → round 3 is allowed.
 
 **Probe isolation (MUST).** Result-bearing probes (`workflow_engine
 --boot-context`, `plan_engine --boot`, STATUS-CHECK) = own Bash call,
@@ -195,13 +168,11 @@ CWD-independent.
 | context-rules.md | `agents/buddy/context-rules.md` | Only when listed in the Context field |
 | values.md | `~/projects/personal/context/user/values.md` | always-load (canonical, CWD-independent) |
 | profile.md | `~/projects/personal/context/user/profile.md` | always-load (canonical, CWD-independent) |
-| boot-navigation.md | `$FRAMEWORK_DIR/framework/boot-navigation.md` | always-load (skill + workflow index, scope-independent). Explicit-absolute because consumer sessions (CWD≠FRAMEWORK_DIR) resolve relative `framework/` paths through `--add-dir` — the explicit form is more fail-safe. 421-finding B-2. |
-| session-buffer.md | `docs/session-buffer.md` | Always (Buddy-global) |
+| boot-navigation.md | `$FRAMEWORK_DIR/framework/boot-navigation.md` | always-load (skill + workflow index, scope-independent). Explicit-absolute because consumer sessions (CWD≠FRAMEWORK_DIR) resolve relative `framework/` paths through `--add-dir` — the explicit form is more fail-safe. |
+| session-buffer.md | `<CWD>/docs/session-buffer.md` | Only when present (repo-local) |
 | plan_engine --boot | `$FRAMEWORK_DIR/scripts/plan_engine.py --boot` | Root sessions only (bash call) |
 | chub-status-check | `$FRAMEWORK_DIR/scripts/chub-status-check.sh` | Always (bash call; parallel with git-status-check). Empty stdout = chub installed; non-empty = single advisory line surfaced in GREET. |
-| session-handoff | `<context>/session-handoff[-<workspace>].md` | CWD-based (see Context routing) |
-| companions.yaml (optional, user-scope) | `~/projects/personal/context/user/companions.yaml` | only when present |
-| companion soul+memory (optional, user-scope) | path per registry entry | only when companions.yaml exists |
+| session-handoff | `<CWD>/context/session-handoff.md` | Only when present (repo-local) |
 | project backlog | `<CWD>/docs/backlog.md` | Only when ROUTE found a local backlog |
 
 Project-specific context: derive paths from intent.md Context field.
@@ -212,41 +183,25 @@ Decided once at boot (ROUTE step), holds for the entire session.
 
 ### Write paths (context)
 
-- **Inside BuddyAI:** centrally under `BuddyAI/context/`. Workspaces
-  have their own `docs/` (backlog, tasks, specs); context stays
-  central.
-- **External projects with `context/`:** project-local.
-- **External projects without `context/`:** create `context/` with
-  `history/` and `overview.md`, then write project-local. The intent
-  exists, so the intention is clear — no clarifying round trip.
+- **CWD with `context/`:** project-local (`<CWD>/context/`).
+- **CWD without `context/`:** create `context/` with `history/` and
+  `overview.md`, then write project-local. The intent exists, so the
+  intention is clear — no clarifying round trip.
 - **Always global:** `~/projects/personal/context/user/` (canonical
   user-scope path), regardless of the active path.
-- **Always BuddyAI:** `session-buffer.md` (Buddy-global).
-- **Session handoff:** CWD-based, mirroring general context routing:
-  - CWD under `BuddyAI/` (incl. `workspaces/<name>/`) →
-    `BuddyAI/context/session-handoff[-<name>].md`
-  - CWD external with `context/` →
-    `<CWD>/context/session-handoff.md`
-  - CWD external without `context/` → `<CWD>/context/...`
-    (auto-created per context routing)
-  Workspace-suffix convention only under `BuddyAI/`. External
-  projects: one handoff per repo. Parallel sessions on different
-  hosts don't collide (different repos).
+- **Session handoff:** `<CWD>/context/session-handoff.md` (repo-
+  local). Parallel sessions on different hosts don't collide
+  (different repos).
+- **Session buffer:** `<CWD>/docs/session-buffer.md` (repo-local).
 
 ### Project docs routing (read paths)
 
-If CWD != BuddyAI root AND RESOLVE found an intent.md AND ROUTE
-found a local backlog:
+If RESOLVE found an intent.md AND ROUTE found a local backlog:
 
-- `docs/backlog.md` → active backlog for this session (instead of
-  the root `docs/backlog.md`)
+- `docs/backlog.md` → active backlog for this session
 - `docs/tasks/` → task files for this project
 - `docs/specs/` → spec files for this project
 - References inside the backlog / tasks: project-root-relative
   (`tasks/020.md`, `specs/020-*.md`)
 - Cross-repo context paths: list them per the `intent.md` Context
   field; if not specified, treat as project-relative.
-
-One backlog per session. Root backlog and project backlog are not
-loaded in parallel. Cross-references between root and project: on
-demand, when explicitly asked.
