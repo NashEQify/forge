@@ -35,13 +35,8 @@ parallel (one tool-call batch).
 
 4. **Session handoff** — primary artifact. **Merge default,
    never blind overwrite.**
-   - **Path (CWD-based, see `boot.md` §context routing):**
-     - CWD under `BuddyAI/workspaces/<name>/` →
-       `BuddyAI/context/session-handoff-<name>.md`.
-     - CWD under `BuddyAI/` root →
-       `BuddyAI/context/session-handoff.md`.
-     - CWD external (with or without `context/`) →
-       `<CWD>/context/session-handoff.md` (auto-create).
+   - **Path:** `<CWD>/context/session-handoff.md` (auto-create
+     `context/` if absent, per `boot.md` §Context routing).
    - **Merge protocol:**
      1. `cp <handoff> <handoff>.bak` (gitignored).
      2. Read the handoff fully.
@@ -67,11 +62,9 @@ parallel (one tool-call batch).
      merge, write. The `.bak` then shows the
      second-to-last version.
 5. **History entry** —
-   `<context>/history/YYYY-MM-DD-<slug>.md`. Guard: the
-   active context path must support history (otherwise
-   skip). Workspace sessions: always
-   `BuddyAI/context/history/` (global); the filename
-   contains the workspace name.
+   `<CWD>/context/history/YYYY-MM-DD-<slug>.md`. Guard:
+   the active context path must support history
+   (otherwise skip).
 
 ### C. Post-write (sequential)
 
