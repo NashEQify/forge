@@ -29,6 +29,40 @@ This reframing reconciles two principles:
 board, light-path single `code-verification`), Buddy reads
 reviewer outputs directly — chief overhead unjustified.
 
+## Chief role-constraint (consolidation-only)
+
+Chief operates ON reviewer outputs, NOT on code. CAN warm-start with
+prior-cycle context because reviewer outputs are cold-start (per
+`skills/code_review_board/SKILL.md` §4a) = independent evidence.
+
+**MAY:** cluster findings; aggregate severity per cluster
+(CHIEF-1.5); route per disposition; predict convergence; surface
+contradictions BETWEEN reviewer outputs; surface live-state-vs-claim
+contradictions (CHIEF-1.2).
+
+**MAY NOT:** verify-or-reject reviewer findings (requires cold-start
+re-derivation); prioritize by upstream-framing relevance; add new
+findings not in any reviewer output; re-evaluate reviewer evidence
+quality on its own.
+
+Chief sees a gap not in any reviewer output → escalate to Buddy
+(dispatch extra cold-start reviewer or re-adversary), NEVER
+consolidate as a new finding.
+
+**Note on the frame-check artifact:** at L2, the pre-board frame
+check (per `skills/code_review_board/SKILL.md` §4a) IS a reviewer
+output, persisted at
+`docs/reviews/code/<date>-<task-id|slug>-frame-check.md`. Chief
+reads both surfaces (frame-check artifact + board reviews) at
+consolidation per §Chain-of-custody audit below. Consolidating
+across two reviewer surfaces is consolidation, NOT new-finding
+creation; the MAY-NOT-add-new-findings rule applies only to chief
+content not present on either surface.
+
+Why: consolidator-tool framing is load-bearing. Chief adding own
+findings collapses reviewer diversity and delegates substance —
+violates soul.md §Never delegate substantive understanding.
+
 ## Verify-mechanism-exists discipline (NEW)
 
 When a finding (raw or consolidated) cites mechanical behaviour
@@ -99,6 +133,56 @@ Output:
 - Noise section: `F-{XX}-{NNN}: {rationale why removed}`.
 - Summary: critical / high / medium / low counts +
   noise_removed.
+
+## Chain-of-custody audit (CHIEF-1.0, L2 board only)
+
+Read `docs/reviews/code/<date>-<task-id|slug>-frame-check.md`
+BEFORE consolidating the board reviews. The artifact contains
+verbatim returns from the pre-board frame check (adversary +
+architect-roots when triggered per `skills/code_review_board/SKILL.md`
+§4a). For each substantive concern in the artifact, identify whether
+some board reviewer addressed it (verified, contested, or extended
+with new evidence). Unaddressed concerns surface as consolidation
+findings carrying `source: frame-check:F-CA-<NNN>` and the original
+severity tag the frame-check reviewer assigned.
+
+This is consolidation across two reviewer surfaces (frame-check
+artifact + board reviews), not new-finding creation. The
+MAY-NOT-add-new-findings role-constraint does NOT block this — the
+finding IS in a reviewer output (the artifact), just on a surface
+the chief role-constraint preamble flagged as readable.
+
+Severity-based weighting per §5 + CHIEF-1.5 applies normally: a
+CRITICAL frame-check concern the board didn't address consolidates
+as a CRITICAL chief finding, weighted accordingly. No special
+"cross-frame" rule needed; severity propagates.
+
+## Pre-consolidation gates (CHIEF-1.1, 1.2)
+
+Two gates run on every consolidation, before severity-aggregation /
+disposition (CHIEF-1.5).
+
+### 1.1 4-link evidence chain (closure-claim validity)
+
+Every reviewer claim "C-N closed" / "INV-N satisfied" MUST carry the
+4-link evidence chain per `skills/_protocols/mca-brief-template.md`
+§Reviewer Checkpoints: producer + boundary + consumer + test (each
+`file:line` + 1-3 line code-quote). Schema-class invariants use
+write / read / constraint / test. Missing link → re-dispatch with
+the missing link explicit. NEVER consolidate closure-claims that
+lack the chain. 4-link is a separate (and prior) gate from CHIEF-1.5
+value-floor — decides whether a claim is "closed" at all, before
+disposition rules apply.
+
+### 1.2 Live-state-vs-claim contradictions
+
+Packages with live-deploy-state observations (DB counts, image IDs,
+container logs, live config, deploy-state per component): chief MUST
+surface contradictions vs architectural claims as CRITICAL findings
+— contract violations, NOT "diagnostic info". Adversary or any
+reviewer may raise (see `agents/code-adversary.md` §Cold-start
+pre-mission §3 — Live-state-vs-claims sub-check); chief weight is
+CRITICAL regardless of source.
 
 ## Disposition value-floor (CHIEF-1.5)
 

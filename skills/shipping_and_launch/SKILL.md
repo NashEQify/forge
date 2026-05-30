@@ -331,7 +331,7 @@ async def error_middleware(request: Request, call_next):
             error_type=type(exc).__name__,
             error_message=str(exc),
         )
-        # AppError instead of HTTPException (Task 265)
+        # AppError instead of HTTPException
         raise AppError(
             code="INTERNAL_ERROR",
             message="Something went wrong",

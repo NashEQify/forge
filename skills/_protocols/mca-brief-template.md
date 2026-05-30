@@ -26,18 +26,8 @@ Analogous to the `impl_plan_review` trigger:
 - the task has cross-module impact (>1 subsystem affected), **OR**
 - the workflow is sub-build (parent has remaining scope).
 
-Below threshold (≤2 ACs, single file, no schema): the section is
-optional. Buddy may write a one-sentence rationale why it's not
-enumerated.
-
-**Bedrock (why this trigger):** facets per
-`agents/buddy/operational.md §Multi-perspective engagement` —
-primarily **reversibility** (decisions locked in shipped code are
-expensive to undo) and **plural solution-space** (briefs at this
-size cover multiple legitimate decision-paths that must be locked
-explicitly before MCA fills gaps with its own choices). Count is
-the fallback when facets are unclear. Facet-question first, count
-as net.
+Below threshold (≤2 ACs, single file, no schema): optional; Buddy
+may write a one-sentence rationale why it's not enumerated.
 
 ## Section format
 
@@ -81,29 +71,33 @@ implicit_decisions_surfaced:
 
 ## Decision classes — detail
 
+Decision classes are load-bearing downstream: MCA references
+`no-NEEDS-LOCKING` decisions as plan constraints; `code_review_board`
+reviewers check code against decision locks (deviation = finding);
+chief uses them for triage; proportionality gates
+(`code_review_board` §1.0 / `spec_board` §1.0) use the same vocabulary
+(new state-vocab / new SSE type / new public API / schema break).
+
 ### 1. schema_and_contract
 
-What shape does the data have, what does the code call it, what
-does it return back. Covers:
-
-- Data shape produced / consumed (Pydantic model, DDL schema,
-  event payload, NATS subject format).
+What shape does the data have, what does the code call it, what does
+it return back. Covers:
+- Data shape produced / consumed (Pydantic model, DDL schema, event
+  payload, NATS subject format).
 - Symbol names that could collide with existing imports (StrEnum
   values, Pydantic models, Cypher templates, NATS subjects).
-- RETURN-SUMMARY structure (SPEC_VERIFICATION field, INCIDENT
-  block, L0 result, files touched).
+- RETURN-SUMMARY structure (SPEC_VERIFICATION field, INCIDENT block,
+  L0 result, files touched).
 
 ### 2. error_and_stop
 
 What does the code do when something is wrong, and when does MCA
 stop and escalate. Covers:
-
-- How code reacts to errors (exception classes, retry vs fail,
-  poison queue, cleanup transaction, compensation action).
-- When MCA STOPs + escalates (architecture conflict, spec-
-  authority violation, cross-layer impact > brief scope, > N
-  file changes without anticipation, non-resolvable test
-  failure).
+- Error reactions: exception classes, retry vs fail, poison queue,
+  cleanup transaction, compensation action.
+- STOP+escalate conditions: architecture conflict, spec-authority
+  violation, cross-layer impact > brief scope, > N file changes
+  without anticipation, non-resolvable test failure.
 
 ### 3. layer_discipline
 
@@ -118,45 +112,36 @@ break-with-rationale. Property-shaped: does the implementation
 preserve the root-property the refactor claims to fix?
 
 **Always required on substantial briefs** (NOT conditional on
-self-assessed `architecture_touch`). Always-required-with-
-`n/a + reason` forces meta-reflection.
+self-assessed `architecture_touch`). `n/a` requires named reason;
+bare `n/a` invalid (forces meta-reflection).
 
-**Permitted `locked` values for this class:**
-
+Permitted `locked` values for this class:
 - `"yes — invariant locked: <name>"` — explicit pattern-class
   invariant the implementation preserves.
-- `"yes — pattern audited (paths considered: <list>)"` — Buddy
-  has surveyed alternative patterns and the locked LD is the
-  root-fix.
-- `"no-NEEDS-LOCKING (Buddy decision: <choice>)"` — Buddy locks
-  it in the brief.
-- `"n/a — <why mechanical>"` — the brief is genuinely mechanical
-  (mechanical refactor / typo / no-architecture-touch). The
-  reason MUST name what makes it mechanical. Bare `n/a` is invalid.
+- `"yes — pattern audited (paths considered: <list>)"` — Buddy has
+  surveyed alternative patterns and the locked LD is the root-fix.
+- `"no-NEEDS-LOCKING (Buddy decision: <choice>)"` — Buddy locks in
+  the brief.
+- `"n/a — <why mechanical>"` — mechanical refactor / typo /
+  no-architecture-touch. Reason MUST name what makes it mechanical.
 
-**Three pattern classes the invariant should defend against**
-(mirror of `code-architect-roots` / `board-architect-roots`):
-
-- **Smell-transfer:** new pattern has identical root-property
-  to old. State the invariant the new pattern preserves.
-- **Cycle-symptom-as-cause:** type erosion (`Any` / `dict`)
-  justified by import-cycle. State why the cycle is necessary
-  OR why the module placement is correct.
-- **State-vocabulary half-coverage:** initial state squeezed
-  into a working state. State the lifecycle vocabulary
-  explicitly.
+Three pattern classes the invariant should defend against (mirror
+`code-architect-roots` / `board-architect-roots`):
+- **Smell-transfer:** new pattern has identical root-property to old.
+  State the invariant the new pattern preserves.
+- **Cycle-symptom-as-cause:** type erosion (`Any` / `dict`) justified
+  by import-cycle. State why the cycle is necessary OR why the module
+  placement is correct.
+- **State-vocabulary half-coverage:** initial state squeezed into a
+  working state. State the lifecycle vocabulary explicitly.
 
 ### 5. other (free-text list)
 
 Task-specific decision classes that don't fit the standard 4.
-Examples:
-
-- idempotency-guarantee (event-driven systems)
-- retry-policy (NATS consumer config)
-- state-machine-transitions (workflow specs)
-- ordering-guarantees (concurrent flows)
-
-Format: list of mappings with `klasse + locked + value`.
+Examples: idempotency-guarantee (event-driven systems), retry-policy
+(NATS consumer config), state-machine-transitions (workflow specs),
+ordering-guarantees (concurrent flows). Format: list of mappings with
+`klasse + locked + value`.
 
 ---
 
@@ -194,6 +179,21 @@ Format: list of mappings with `klasse + locked + value`.
   carry the same grep-verify-discipline as the §-section
   amendment gate in `_protocols/spec-amendment-discipline.md`.
 
+- **DO NOT** prescribe a code-touch on a file or region (e.g.
+  "extend the SSE handler in `chatAdapter.ts`", "add the audit fold
+  to `orchestrator.py:1406`") without first grepping the upstream
+  surface for whether the contract is already satisfied by existing
+  wiring. **INSTEAD** for every prescribed code-touch: grep the
+  upstream wiring (parent handler, mediator, capability boundary).
+  If the upstream surface already satisfies the prescribed contract,
+  the brief MUST say "verify X unchanged" not "extend X".
+  Prescribing extension of pre-existing wiring is cycle-symptom-cause
+  at the file / region level — same class as the hardcoded-literal
+  bullet above with broader trigger. Catches the implicit "extend X"
+  case where the brief prescribes a code-touch WITHOUT the
+  `## Claim-Verifications` trigger phrases (`reuses existing`,
+  `supersedes`, `already implemented`, etc.).
+
 ## Bind rule
 
 Subsequent workflow steps must reference the decision locks by
@@ -210,170 +210,149 @@ name:
 
 ---
 
-## Test/Verification scope (DoD guidance)
+## Test/Verification scope (DoD)
 
-Distinct from Implicit-Decisions above. Governs the `Test plan` /
-DoD section of the MCA brief — what scope MCA tests after each
-fix-phase between convergence-loop passes.
+Brief encodes **scope-focused tests**, not full repo suite.
+Full-suite reserved for convergence-end + pre-deploy + cross-cutting
+refactor.
 
-**Default:** the brief MUST encode **scope-focused tests**, not
-the full repo suite. Full-suite is reserved for convergence-end +
-pre-deploy + cross-cutting refactor.
+Per-fix DoD:
+1. **Unit tests** — explicit paths (`tests/<module>/test_<file>.py`),
+   not a `tests/` glob.
+2. **Cross-pass-binding test** — RED skeleton's test file (where
+   applicable) locks the convergence cluster.
+3. **Integration smoke** — 0-1 test only if public-API contract or
+   spec-defined behaviour touched.
+4. **L0** — `ruff check <touched-files> && mypy <touched-files>` —
+   touched files only.
 
-### Per-fix scope rules
+**Convergence-end full-suite:** ONE run at END of convergence-loop
+fixes, before close.
 
-Each finding / AC has a known affected scope. The DoD encodes:
-
-1. **Unit tests:** the test file(s) for the modules touched —
-   explicit paths (`tests/<module>/test_<file>.py`), not a
-   `tests/` glob.
-2. **Cross-pass-binding test:** the RED skeleton's test file
-   (where applicable) — locks the convergence cluster.
-3. **Integration smoke:** 0-1 integration test if the change
-   touches a public-API contract or spec-defined behaviour.
-4. **L0:** `ruff check <touched-files> && mypy <touched-files>`
-   — only on changed files. Not the whole repo.
-
-### Convergence-end full-suite
-
-ONE full-suite run at the END of all convergence-loop fixes,
-before close. Not per fix-phase.
-
-### Bind rule (test scope)
-
-`mca-implementation` step: MCA's RETURN-SUMMARY MUST report
-per-fix test scope (which scope-files were run + L0 scope) per
-fix-phase, plus the single full-suite run at convergence-end.
-A blanket `pytest tests/` run with no scope breakdown is a
-brief-discipline failure.
+**Bind rule:** MCA RETURN-SUMMARY reports per-fix scope + the
+single convergence-end full-suite. Blanket `pytest tests/` without
+scope breakdown = brief-discipline failure.
 
 ---
 
 ## Verification-gate cadence
 
-Distinct from test SCOPE above. Governs **when** a verification
-gate fires across the brief's commits — per-commit vs once-at-HEAD.
+Governs **when** a gate fires — per-commit vs once-at-HEAD. Mandatory
+when brief covers multiple commits (strangler, shape-preserving
+refactor, sequential moves, ≥5 commits). Single-commit briefs:
+implicit (one commit, one gate-set).
 
-**Trigger (when this section is mandatory):** the brief covers
-multiple commits (strangler extraction, shape-preserving refactor,
-sequential capability moves, any brief with ≥5 planned commits).
-For single-commit briefs, this section is implicit (one commit,
-one gate-set; no cadence question).
+**Default cadence:**
 
-**Default cadence by bug-class shape:**
-
-| Bug-class shape | Per-commit gate | Once-at-HEAD gate |
+| Bug-class shape | Per-commit | Once-at-HEAD |
 |---|---|---|
-| **In-process behaviour** — start/stop, dep-order, kwarg migration, fixture-shape, type-check, lint, scope-suite | `pytest <scope-suite>` + L0 (`ruff <touched> && mypy <touched>`) | — |
-| **Real-container behaviour** — reverse-stop on SIGTERM, container restart, ansible compose-recreate, real-process signal handling | — | `make app-e2e` + targeted real-container test |
-| **Cross-process / external** — Playwright, app-e2e-live, deploy-verify, external-system integration | — | manual or `make app-e2e-live` post-deploy |
+| In-process (start/stop, dep-order, kwarg, fixture-shape, type-check, lint, scope-suite) | `pytest <scope-suite>` + L0 (`ruff <touched> && mypy <touched>`) | — |
+| Real-container (reverse-stop on SIGTERM, restart, ansible compose-recreate, real-process signals) | — | `make app-e2e` + targeted real-container test |
+| Cross-process / external (Playwright, app-e2e-live, deploy-verify) | — | manual or `make app-e2e-live` post-deploy |
 
-**Rule:** if a bug-class is fully covered by an in-process gate
-that fires at every commit's scope-suite, the corresponding heavy
-external-system gate (e.g. `make app-e2e`) belongs **once at HEAD**,
-not per commit. Per-commit external-system gates that an existing
-in-process suite already covers are checklist-tick and consume the
-brief's time budget without information gain.
+**Rule:** bug-class fully covered by an in-process gate firing per
+commit → the heavy external-system gate belongs ONCE at HEAD, not
+per commit. Per-commit external gates duplicating in-process
+coverage = checklist-tick, no information gain.
 
-**Auto-detection — `code-architect-lens` axis "over-specified gate
-cadence":** when the lens runs pre-brief on a multi-commit brief,
-check the brief's prescribed verification gates against the cadence
-table above. A per-commit external-system gate where an in-process
-gate covers the same bug-class is a lens finding (sibling of
-smell-transfer, state-vocab-half, cycle-symptom-cause).
+**Auto-detection:** `code-architect-lens` axis "over-specified gate
+cadence" flags per-commit external-system gates whose bug-class an
+in-process gate already covers.
 
-**Bind rule (cadence):** for any brief with ≥5 commits, the brief
-MUST name per gate (per-commit OR once-at-HEAD) and cite the
-bug-class shape that justifies the cadence. *"`make app-e2e` per
-commit"* on a strangler brief without naming a real-container
-bug-class not covered by chat-suite is a brief-discipline failure
-— re-author to once-at-HEAD with the named real-container check.
+**Bind rule:** brief with ≥5 commits MUST name per gate (per-commit
+OR once-at-HEAD) and cite the bug-class shape that justifies the
+cadence. Re-author per-commit gates without a named real-container
+bug-class to once-at-HEAD.
 
-**Example — strangler extraction of `lifespan` capabilities (14
-commits, shape-preserving):** chat-suite (532 tests, in-process
-via `TestClient` + lifespan_context) covers BC-1/3/4/5/6 every
-commit. BC-2 (reverse-stop drift on real container SIGTERM) is the
-only bug-class chat-suite cannot cover (in-process teardown ≠
-SIGTERM on pid-1). Brief encodes: per-commit `pytest chat-suite +
-L0`; once-at-HEAD `make app-e2e + manual docker SIGTERM + log
-inspection`. Cost: 14× chat-suite (already running per commit) +
-1× heavy gate at HEAD, vs the naive 14× heavy gate.
-
-**Reject the unsafe shortcut:** NOT *"skip app-e2e entirely on
-strangler refactors"*. Real-container bug-classes (reverse-stop,
-restart semantics, container-recreate) are real and need their gate
-— just once, at HEAD, where the bug-class can actually surface.
-The release-valve is cadence, not coverage.
+**Reject the unsafe shortcut:** NOT "skip app-e2e entirely on
+strangler refactors". Real-container bug-classes are real; the
+release-valve is cadence (once at HEAD), not coverage.
 
 ---
 
-## Existing-Impl-Verifications (MUST when trigger formulations present)
+## Claim-Verifications (MUST when trigger formulations present)
 
-If any AC, intent_chain, or brief section uses: `supersedes`,
-`reuses existing`, `already implemented`, `wraps existing`,
-`delivered in Task`, `existing-code verifications confirm` — the
-brief MUST include a `## Existing-Impl-Verifications` table, one
-row per claim:
+If any AC, `intent_chain`, or brief section uses one of the trigger
+formulations below, the brief MUST include a `## Claim-Verifications`
+table with one row per claim:
 
-| Claim | Command | Output | Disposition |
-|---|---|---|---|
-| <verbatim claim phrase> | `grep -rn "<pattern>" <scope>/` | <verbatim grep output OR `(no output)`> | `CONFIRMED` \| `FALSIFIED` |
+- **Existing-impl triggers:** `supersedes`, `reuses existing`,
+  `already implemented`, `wraps existing`, `delivered in Task`,
+  `existing-code verifications confirm`.
+- **Spec-citation triggers:** `spec requires X`, `AC says Y`,
+  `per <file>.md §Z`, `<file>.md:N`.
 
-Producer is `code-architect-lens` (fresh-context-isolated reads code,
-runs grep — see lens §Claim-Verifications). Brief-architect copies
-the verbatim rows. **Hook BRIEF-CLAIMS re-runs the embedded Command
-at write/commit time and BLOCKs on output mismatch.** Hallucinated
-rows do not survive the hook. Any FALSIFIED row → brief is INCOMPLETE,
-must return to author for AC re-scope before MCA dispatch. See
-dogfood-learning L-044.
+| Claim | Source-ref | grep command | grep output | Disposition |
+|---|---|---|---|---|
+| <verbatim claim phrase> | `<file:line>` for spec-cite OR `<scope-path>/` for existing-impl | `grep -n "<pattern>" <target>` | <verbatim stdout OR `(no output)`> | `CONFIRMED` / `FALSIFIED` / `SILENT` |
+
+Disposition values:
+
+- `CONFIRMED` — grep evidence supports the claim
+- `FALSIFIED` — zero hits OR hits contradict the claim
+- `SILENT` — target exists but doesn't address the claim
+  (spec-cite only; escalation flag for council / user)
+
+Producer is `code-architect-lens` (fresh-context-isolated reads
+code / spec, runs grep — see lens §Claim-Verifications, single
+merged table). Brief-architect copies the verbatim rows. **Adversary
+re-verifies at L2 dispatch** per `agents/code-adversary.md`
+§Cold-start pre-mission — two-pass author / verifier separation. Hook `brief-claims-guard.sh` (Claude
+Code only) re-runs the embedded Command at write/commit time and
+BLOCKs on output mismatch; SKILL text remains binding when the hook
+is unavailable.
+
+Any `FALSIFIED` row → brief is INCOMPLETE, return to author for AC
+re-scope before MCA dispatch.
 
 ---
 
-## Structural-refactor pre-lock checklist (transitive import graph)
+## Reviewer Checkpoints — 4-link Evidence Chain DoD (MANDATORY for L2)
 
-When a brief locks a decision that rearranges the import graph
-(extract module / move symbol / break cycle / re-type field
-unblocked-by-cycle), the visible-edge analysis is not enough.
+Every claim "C-N closed" / "INV-N satisfied" in MCA RETURN-SUMMARY or
+reviewer verdict MUST carry the 4-link evidence chain:
 
-### Trigger (when this section is mandatory)
+| Variant | Link 1 | Link 2 | Link 3 | Link 4 |
+|---|---|---|---|---|
+| Signal-routing | Producer site | Boundary translation site | Consumer ACK / NAK / TERM site | Test that fails if boundary re-flattens |
+| Schema / data | Write site | Read site | Constraint site (DDL / model) | Test |
 
-The brief mentions any of:
+Each link: `file:line` + 1-3 line verbatim code-quote (test variant:
+`test:line` + assertion shape).
 
-- `import` / `import cycle` / `circular import`
-- `extract` / `extraction` (module/class/symbol)
-- `move from X to Y` / `relocate` (module-level symbol motion)
-- `unblock typing` / `eliminate Any`
-- `forward reference` / `runtime import` / `TYPE_CHECKING`
+Fewer links = claim does NOT qualify as "closed". Chief rejects and
+re-dispatches with the missing link explicit
+(`agents/code-chief.md` + `agents/board-chief.md` §4-link
+enforcement). Value-floor + bundle-laundering rules apply to
+disposition; 4-link is a separate (and prior) gate on whether a
+closure-claim is even valid.
 
-If the brief contains any of these tokens, the checklist below
-MUST be completed and its result documented in the brief BEFORE
-locking the decision.
+Forces opening the file at each link → prevents single-layer
+verification (helper repaired but signal-exit boundary still broken).
 
-### Pre-lock checklist
+---
 
-1. **List ALL modules that import the affected module.**
-   `grep -rn "from <affected>"` — every entry-point that triggers
-   the affected module on import.
-2. **List ALL modules the affected module imports.** Forward
-   direction.
-3. **For each (caller, target) pair, check if the new design
-   creates a back-edge.** A back-edge from `target` into any
-   module already mid-init in the caller chain is a cycle that
-   only manifests at import time.
-4. **Run baseline collection BEFORE lock.** `pytest --collect-only`
-   on every test directory that imports the affected module.
-5. **Document any prior workarounds with rationale.** If a prior
-   pass typed `Any` or used `TYPE_CHECKING`, restate why.
+## Structural-refactor pre-lock checklist
 
-For static (non-runtime) traversal, use
-`scripts/import_graph_check.py` (AST-based).
+Mandatory when brief mentions any of: `import` / `import cycle` /
+`circular import` / `extract` / `extraction` / `move from X to Y` /
+`relocate` / `unblock typing` / `eliminate Any` /
+`forward reference` / `runtime import` / `TYPE_CHECKING`.
 
-### Bind rule (structural-refactor briefs)
+Pre-lock steps (result documented in brief BEFORE locking):
+1. List ALL modules importing the affected module
+   (`grep -rn "from <affected>"`).
+2. List ALL modules the affected module imports (forward direction).
+3. For each (caller, target) pair: check if new design creates a
+   back-edge into a module already mid-init in caller chain.
+4. Baseline collection BEFORE lock: `pytest --collect-only` on every
+   test dir importing the affected module.
+5. Document prior workarounds with rationale (typed `Any`,
+   `TYPE_CHECKING`).
 
-The brief MUST contain, before the `## Acceptance-Criteria`
-section:
+Static traversal: `scripts/import_graph_check.py` (AST-based).
 
-- A `## §Import-Graph-Spike` block with the result of steps 1-4
-  above.
-- The `structural_invariants` decision class MUST cite the spike
-  result in its `value:`.
+**Bind rule:** brief contains, before `## Acceptance-Criteria`, a
+`## §Import-Graph-Spike` block with steps 1-4 results; the
+`structural_invariants` class cites the spike result in its
+`value:`.

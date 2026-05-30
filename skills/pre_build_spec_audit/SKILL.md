@@ -152,13 +152,12 @@ task lens is then too narrow.
   of phase 1's HIGH list).
 
 **Pattern observed:** phase 1 with task keywords filters out
-specs that are foundation-relevant but not task-relevant.
-Example task 380: `cognee-integration-spec.md`,
-`harness-core-4.md`, `harness-runtime-patterns.md`,
-`proactive-surfacing-impl.md`, `phase-6-plan.md`,
-`cognitive-architecture.md` were not HIGH in phase 1 (no chat /
-intake keyword), but with the foundation lens they are
-HIGH-FOUNDATION (worker topology, brain architecture).
+specs that are foundation-relevant but not task-relevant. Example
+recurrence: integration specs, harness-core/runtime patterns,
+cognitive-architecture, phase-plan specs are not HIGH in phase 1
+when the task keyword is narrow (e.g. chat / intake) — but with
+the foundation lens they are HIGH-FOUNDATION (worker topology,
+brain architecture).
 
 **When phase 1b is not needed:**
 - The build is single-domain without cross-cutting (e.g. a UI

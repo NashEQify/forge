@@ -64,7 +64,7 @@ end-to-end.
 
 ### BuddyAI-specific
 - `response_model` on every route?
-- AppError + ErrorResponse (Task 265) integrated?
+- AppError + ErrorResponse integrated?
 - SSE: `BuddyResponseChunk` / `DoneEvent` / `ErrorEvent`?
 - Zod pipeline: `check-schemas` runs?
 - `extra="forbid"` on public request models?

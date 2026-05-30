@@ -41,9 +41,8 @@ persona behaviour.
 **Default is inline.** Buddy applies the adversary discipline
 (6 criteria + anti-rat + check focus including
 existing-primitives reuse) inline in the frame report without
-a sub-agent dispatch.
-Example: Task 362 phase 1 step 3 ("Plan-Review inline —
-plan-adversary persona") runs directly in the Buddy turn.
+a sub-agent dispatch. The persona runs directly in the Buddy
+turn — no separate sub-agent context.
 
 **Explicit spawn only on:**
 - Extremely high stakes (foundation spec, schema change,

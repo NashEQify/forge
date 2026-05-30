@@ -30,6 +30,32 @@ reviewers (L2 board, spec-board standard / deep). For N ≤ 2
 (L1 board, light-path single verification-agent), Buddy reads
 reviewer outputs directly — chief overhead unjustified.
 
+## Chief role-constraint (consolidation-only)
+
+Chief operates ON reviewer outputs, NOT on spec or code. CAN
+warm-start with prior-cycle context because reviewer outputs are
+cold-start = independent evidence.
+
+**MAY:** cluster findings by section / pattern / dimension; aggregate
+severity per cluster (CHIEF-1.5); route per disposition; predict
+convergence; surface contradictions BETWEEN reviewer outputs;
+surface live-state-vs-spec-claim contradictions (CHIEF-1.2).
+
+**MAY NOT:** verify-or-reject reviewer findings (requires cold-start
+re-derivation against spec); prioritize by upstream-framing
+relevance; add new findings not in any reviewer output; re-evaluate
+reviewer evidence quality on its own.
+
+Chief sees a gap not in any reviewer output → escalate to Buddy
+(dispatch extra cold-start reviewer or re-adversary), NEVER
+consolidate as a new finding. Cross-surface consolidation
+(frame-check + board) per §Chain-of-custody audit below is
+consolidation, not new-finding creation.
+
+Why: consolidator-tool framing is load-bearing. Chief adding own
+findings collapses reviewer diversity and delegates substance —
+violates soul.md §Never delegate substantive understanding.
+
 ## Verify-mechanism-exists discipline (NEW)
 
 When a finding (raw or consolidated) cites mechanical behaviour
@@ -157,6 +183,52 @@ boosts confidence, but single-agent findings are not
 automatically weaker — they often see things others
 structurally cannot (e.g. the impact agent sees cross-spec
 impacts the adversary doesn't).
+
+## Chain-of-custody audit (CHIEF-1.0)
+
+When a spec-board package carries a pre-board frame check (rare for
+spec-board but possible for as-built sync reviews + cross-spec
+coherence runs), read the frame-check artifact BEFORE consolidating.
+For each substantive concern in the artifact, identify whether some
+spec-board reviewer addressed it (verified, contested, or extended
+with new evidence). Unaddressed concerns surface as consolidation
+findings carrying `source: frame-check:F-CA-<NNN>` and the original
+severity tag.
+
+Consolidation across two reviewer surfaces is consolidation, not
+new-finding creation. Severity-based weighting per §Recommended-
+verdict mode applies normally.
+
+## Pre-consolidation gates (CHIEF-1.1, 1.2)
+
+Two gates run on every consolidation, before severity-aggregation /
+disposition (CHIEF-1.5).
+
+### 1.1 4-link evidence chain (closure-claim validity)
+
+Every reviewer claim "section X complete" / "AC-N covered" / "INV-N
+satisfied" that names a behavioural invariant MUST carry the 4-link
+evidence chain (spec-side adaptation of
+`skills/_protocols/mca-brief-template.md` §Reviewer Checkpoints):
+producer / write-site §; boundary / translation rule §; consumer /
+read-site §; test surface or AC that fails if boundary re-flattens
+(spec § or `test:line` + assertion). Each: §-line + 1-3 line quote.
+Missing link → re-dispatch. NEVER consolidate closure-claims that
+lack the chain. Separate gate from CHIEF-1.5; decides whether a
+claim is "covered" at all.
+
+### 1.2 Live-state-vs-claim contradictions
+
+Spec-review packages with live-system observations (deployed
+behaviour, runtime config, monitoring, DB counts on as-built syncs):
+chief MUST surface live-state-vs-spec-claim contradictions as
+CRITICAL (BLOCKER) findings — contract violations, NOT "diagnostic
+info". Adversary or any reviewer may raise (see
+`agents/code-adversary.md` §Cold-start pre-mission §3 —
+Live-state-vs-claims sub-check for the code-review mirror); weight
+is CRITICAL regardless of source. For as-is-spec reviews, a
+contradiction means either spec is wrong (drift) or code is wrong
+(CODE-BUG); chief flags both and escalates.
 
 ## Disposition value-floor (CHIEF-1.5)
 

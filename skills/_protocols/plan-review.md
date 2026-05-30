@@ -8,9 +8,8 @@ without proof output, plan-self-review missing before execution
 Loaded by: `frame/SKILL.md` step 3 (primary), `spec_board/SKILL.md`
 §0.
 
-**Status (2026-04-09, Task 348 review):** this protocol is **not
-loaded explicitly** but applied by content in the skills that
-reference it:
+**Status (calibrated 2026-04-09):** this protocol is **not loaded
+explicitly** but applied by content in the skills that reference it:
 
 - `frame` step 3 runs the plan block + self-review + (when
   non-trivial) plan-adversary review inline — without loading the

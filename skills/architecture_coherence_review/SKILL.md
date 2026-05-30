@@ -3,7 +3,7 @@ name: architecture-coherence-review
 description: >
   Cross-spec coherence review for specs that share contracts.
   7-dimension extraction, interface-contract assembly, advisory
-  board. Formalized from Task 274 experience.
+  board.
   Triggers when 2+ specs share contracts/interfaces and cross-spec coherence must be checked (review execute, type=arch); NOT for single-spec quality (use spec_board).
 status: active
 verification_tier: 1
@@ -23,9 +23,6 @@ Checks whether 2+ specs that share interfaces (API routes, NATS
 subjects, Pydantic models, schema definitions) are actually
 consistent. Single board reviews check specs in isolation —
 coherence reviews check the seams BETWEEN specs.
-
-Formalized from the process developed for Task 274 (foundation
-specs).
 
 ## When to call
 
@@ -164,10 +161,10 @@ docs/reviews/coherence/
 - The interface contract is a persistent artifact — updated on
   future reviews.
 
-## Lessons learned (Task 274)
+## Calibration data (foundation-spec review pass)
 
-- Foundation specs (HC4 × GBWI × HRP × brain-foundation): 182
-  interfaces extracted, 99 consistent, 56 divergent, 21 gaps,
+- 4 foundation specs (HC4 × GBWI × HRP × brain-foundation):
+  182 interfaces extracted, 99 consistent, 56 divergent, 21 gaps,
   11 HIGH decisions.
 - Typical effort: 2-3 sessions for 3-4 specs.
 - Batching the fixes by theme (schema, auth, error,

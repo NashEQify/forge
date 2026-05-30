@@ -114,8 +114,7 @@ If the task body (ACs, intent_chain, description) uses any of:
 with a `C-VERIFY` block (claim text + verbatim `grep -rn` command +
 verbatim output + `CONFIRMED|FALSIFIED` disposition). Hook
 BRIEF-CLAIMS re-runs the grep at write/commit time and BLOCKs on
-mismatch — hallucinated verification outputs die at the hook. See
-dogfood-learning L-044.
+mismatch — hallucinated verification outputs die at the hook.
 
 ### 2. Triage (MUST)
 
@@ -269,9 +268,8 @@ Validate: plan_engine --validate PASS
   pending / in_progress tasks. **INSTEAD** run the cross-task
   dependency check (step 1b) substantively: "does either task
   change artifacts the other documents / uses?" Because: parallel
-  tasks with implicit dependency produce rework (A changes
-  framework while B documents it → B has to redo). Task 365 ↔ 366
-  was the proven case (2026-04-09).
+  tasks with implicit dependency produce rework — A changes the
+  framework while B documents it, then B has to redo when A lands.
 - **NOT** skipping triage and always creating a task. **INSTEAD**
   check the immediate-fix criteria. Because: backlog bloat from
   5-minute tasks that could be done directly.

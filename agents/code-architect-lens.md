@@ -237,23 +237,53 @@ plan strand:
 
 ## §Claim-Verifications (MUST when brief/task contains trigger formulations)
 
-Trigger formulations: `supersedes`, `reuses existing`,
-`already implemented`, `wraps existing`, `delivered in Task`,
-`existing-code verifications confirm`. For each occurrence, the
-lens (fresh-context-isolated, read-only) MUST grep the cited scope
-and emit one row:
+The lens emits ONE merged Claim-Verifications table covering both
+trigger classes (single schema matches the brief-template consumer
+at `skills/_protocols/mca-brief-template.md` §Claim-Verifications):
 
-| Claim | Command | Output | Disposition |
-|---|---|---|---|
-| <verbatim phrase from brief/task> | `grep -rn "<canonical-pattern>" <scope-path>/` | <verbatim grep stdout OR `(no output)` for zero hits> | `CONFIRMED` if grep evidence supports the claim; `FALSIFIED` if zero hits or hits contradict claim |
+- **Existing-impl triggers:** `supersedes`, `reuses existing`,
+  `already implemented`, `wraps existing`, `delivered in Task`,
+  `existing-code verifications confirm`.
+- **Spec-citation triggers:** `spec requires X`, `AC says Y`,
+  `per <file>.md §Z`, `<file>.md:N`.
 
-Disposition is a lens judgment, but the Command + Output must be
-verbatim. Hook `BRIEF-CLAIMS` re-runs the same Command at brief
-write-time and at commit-time, BLOCKs on output mismatch. The lens
-is the producer to prevent brief-architect from hallucinating its
-own verification — author-vs-verifier separation. Any FALSIFIED row
-flips the lens sign-off to `escalate: claim-falsified`. See
-dogfood-learning L-044.
+For each occurrence, the lens (fresh-context-isolated, read-only)
+MUST grep the cited target and emit one row:
+
+| Claim | Source-ref | grep command | grep output | Disposition |
+|---|---|---|---|---|
+| <verbatim phrase from brief/task> | `<file:line>` for spec-cite OR `<scope-path>/` for existing-impl | `grep -n "<pattern>" <target>` | <verbatim stdout OR `(no output)`> | `CONFIRMED` / `FALSIFIED` / `SILENT` |
+
+Disposition values:
+
+- `CONFIRMED` — grep evidence supports the claim
+- `FALSIFIED` — zero hits OR hits contradict the claim
+- `SILENT` — target exists but doesn't address the claim
+  (spec-cite only; escalation flag for council / user)
+
+Disposition is a lens judgment, but Source-ref + Command + Output
+must be verbatim. Hook `BRIEF-CLAIMS` re-runs the Command at brief
+write-time and commit-time, BLOCKs on output mismatch. Adversary
+re-verifies at L2 dispatch per `agents/code-adversary.md`
+§Cold-start pre-mission §3 — two-pass author / verifier separation.
+Any FALSIFIED row flips lens sign-off to `escalate: claim-falsified`.
+
+## §Live-state-checked-against-claims (MUST when package contains live-deploy-state)
+
+When the dispatch package contains live-deploy-state observations
+(deploy commit IDs, container logs, DB counts, live config values,
+deploy-state per component), the lens MUST emit a table listing each
+architectural claim alongside the live-state evidence that supports
+or contradicts it:
+
+| Live observation | Architectural claim affected | Supports / Contradicts |
+|---|---|---|
+
+Architectural claims that contradict live-state are FALSIFIED claims;
+the lens MUST re-frame against what live-state shows, not against
+what spec or brief implies. Live-state is authority — the most
+ground-truth empirical evidence available — not "interesting
+context".
 
 ## §Authority-sources
 

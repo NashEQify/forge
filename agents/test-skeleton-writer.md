@@ -85,10 +85,10 @@ Without a TC scope: every TC.
 
    Anti-pattern caught: writing `pytest.skip("STUB — needs <X>")`
    while a canonical `<X>` already exists in the repo. Pattern class:
-   *cycle-symptom-as-cause / rebuild-vs-reuse*. Origin: BuddyAI
-   Task 468 cost_persistence skeleton-writer skipped with STUB while
-   `real_pg_pool` was production-tested at
-   `tests/chat/test_l3_reaper_postgres.py:44`.
+   *cycle-symptom-as-cause / rebuild-vs-reuse*. Recurrence shape: a
+   skeleton-writer skips a cost-persistence fixture as STUB while a
+   production-tested `real_pg_pool` already exists in the test corpus
+   one directory away.
 
 5. `conftest.py` with shared fixtures (only the ones the preflight
    confirmed as genuinely-needed-new).
