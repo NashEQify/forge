@@ -9,7 +9,9 @@ setups. Security-relevant surface:
   Code with user permissions).
 - **Engines** in `scripts/` (Python, run by user with full PATH access).
 - **Adapter configs** that route paths and external_directory permissions
-  (`opencode.jsonc`, `.claude/settings.json`, `.claude/path-whitelist.txt`).
+  (`opencode.jsonc`, `~/.claude/settings.json` — forge hooks slot, provisioned by
+  `setup-cc.sh` from `orchestrators/claude-code/settings.json.template`;
+  `.claude/path-whitelist.txt` per-user, generated from the template).
 - **Sub-agent dispatch** flows that can lead to LLM-driven file/code edits.
 
 ## Reporting a vulnerability

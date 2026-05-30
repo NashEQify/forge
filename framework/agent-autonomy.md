@@ -100,7 +100,7 @@ for reference only.
 | **Consumer code** (`src/`, `scripts/` consumer-side, `tests/`) | main-code-agent (NOT Buddy) | code_review_board post-write | MCA iterates; spec change ⇒ escalate to Buddy |
 | **Spec** (`docs/specs/*.md`) | Buddy via build-workflow Specify | spec_board pre-write (Standard or Deep) | convergence_loop max 3 → user escalation |
 | **ADR** (`docs/decisions/`, `decisions.md`) | Buddy | council on architecture decisions; none on small docs | council decision binds |
-| **Config / hooks** (`pyproject.toml`, `package.json`, `.claude/settings.json`, `orchestrators/**/hooks/`, `scripts/hooks/`) | Buddy or main-code-agent depending on scope | code_review_board on semantic change | revert; reopen with explicit user gate |
+| **Config / hooks** (`pyproject.toml`, `package.json`, `orchestrators/claude-code/settings.json.template`, `orchestrators/**/hooks/`, `scripts/hooks/`) | Buddy or main-code-agent depending on scope | code_review_board on semantic change | revert; reopen with explicit user gate |
 | **Generated / AUTO blocks** (`framework/skill-map.md` AUTO, `framework/agent-skill-map.md`, `*/navigation.md` AUTO) | regenerator scripts only | hook validators (consistency_check, AGENT-SKILL-DRIFT, RUNBOOK-DRIFT) | rerun the generator; manual edits revert on next run |
 
 ### "Substantial" vs "wording" — mechanically testable

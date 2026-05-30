@@ -210,16 +210,21 @@ bash tests/hooks/test-<name>.sh
 
 Add a hook:
 1. Write `orchestrators/claude-code/hooks/<name>.sh` (header doc mandatory)
-2. Register in `.claude/settings.json` (matching lifecycle event)
-3. Test in `tests/hooks/test-<name>.sh`
-4. Doc update in `CLAUDE.md §Active Hooks` and `02-architecture.md` table
+2. Add an entry to `orchestrators/claude-code/settings.json.template`
+   under the matching lifecycle event; use `__FRAMEWORK_DIR__` placeholder
+3. Run `bash $FRAMEWORK_DIR/scripts/setup-cc.sh` to re-merge into
+   `~/.claude/settings.json` (idempotent — preserves user keys)
+4. Test in `tests/hooks/test-<name>.sh`
+5. Doc update in `CLAUDE.md §Active Hooks` and `02-architecture.md` table
 
 Remove a hook:
 1. Stale cleanup (CLAUDE.md §5): clean up all refs in one commit
-2. Remove from `.claude/settings.json`
-3. Delete the hook file
-4. Delete the test file
-5. Doc update
+2. Remove the entry from `orchestrators/claude-code/settings.json.template`
+3. Re-run `setup-cc.sh` (the merge strips forge's old hooks slot before
+   writing the new one — no manual cleanup of `~/.claude/settings.json` needed)
+4. Delete the hook file
+5. Delete the test file
+6. Doc update
 
 ## Conventions
 

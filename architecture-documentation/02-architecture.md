@@ -12,7 +12,7 @@
 │  HARNESS-ADAPTER (orchestrators/<name>/)                            │
 │  - cc / oc: scope-routing, --add-dir composition                    │
 │  - hooks/: PreToolUse, Stop, SessionEnd, pre-commit                 │
-│  - .claude/settings.json registers hooks for CC                     │
+│  - ~/.claude/settings.json (user-global) registers CC hooks         │
 └──────────────────────────────┬──────────────────────────────────────┘
                                │ loads
                                ▼
@@ -597,7 +597,7 @@ Buddy has a plan block or gate file
 | New workflow | `workflows/runbooks/<name>/WORKFLOW.md` + routing in `process-map.md` | `docs-rewrite` |
 | New persona | `agents/<name>.md` (SoT) + `.claude/agents/<name>.md` (wrapper) | `code-review` multi-axis persona |
 | New adapter | `orchestrators/<harness>/bin/<wrapper>` + hooks equivalent + wrapper files | (planned) Cursor |
-| New hook | `orchestrators/claude-code/hooks/<name>.sh` + registration in `.claude/settings.json` | `mca-return-stop-condition.sh` |
+| New hook | `orchestrators/claude-code/hooks/<name>.sh` + entry in `orchestrators/claude-code/settings.json.template` (re-applied to `~/.claude/settings.json` via `setup-cc.sh`) | `mca-return-stop-condition.sh` |
 | New reference | `references/<name>.md` with lift source documented | `orchestration-patterns.md` |
 | New skill protocol | `skills/_protocols/<name>.md`; referenced via `uses:` in skills | `analysis-mode-gate.md` |
 

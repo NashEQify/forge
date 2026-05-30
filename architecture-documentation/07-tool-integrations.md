@@ -127,8 +127,13 @@ actual call.
 
 ### Hook registration
 
-`.claude/settings.json` registers the hooks for Claude Code's
-lifecycle events:
+`~/.claude/settings.json` (user-global) registers the hooks for Claude
+Code's lifecycle events. Forge owns the top-level `hooks` slot;
+`setup-cc.sh` merges them in from
+`orchestrators/claude-code/settings.json.template` (substituting
+`__FRAMEWORK_DIR__` with the detected forge checkout) without touching
+user-owned keys like `effortLevel` or `permissions`. Hooks fire in
+every CC session regardless of CWD or entrypoint:
 
 | Event | Hook |
 |---|---|
@@ -301,7 +306,8 @@ Operations:
    hooks.json` with concrete `bash <FRAMEWORK_DIR>/orchestrators/
    claude-code/hooks/*.sh` commands wired into Codex's PreToolUse,
    PostToolUse, and UserPromptSubmit events. Hook coverage is parity
-   with Claude Code's `.claude/settings.json`.
+   with Claude Code's `~/.claude/settings.json` (provisioned by
+   `setup-cc.sh` from the shared `orchestrators/claude-code/settings.json.template`).
 
 ### Hook registration
 

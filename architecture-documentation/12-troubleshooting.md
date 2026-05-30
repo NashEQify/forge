@@ -93,9 +93,14 @@ missing spec_ref, invalid status values.
 ### Hook does not seem to fire
 
 Check:
-1. Is the hook registered in `.claude/settings.json`?
+1. Is the hook registered in `~/.claude/settings.json` (user-global)?
+   `jq '.hooks' ~/.claude/settings.json` should list it. If missing, the
+   template was edited without re-running setup: `bash $FRAMEWORK_DIR/scripts/setup-cc.sh`.
 2. Is the hook executable? (`chmod +x orchestrators/claude-code/hooks/<name>.sh`)
-3. For git hooks: is the symlink at `.git/hooks/<name>` correct?
+3. For claude-desktop / claude-web: verify the entrypoint gate inside the
+   hook script doesn't `exit 0` early (some hooks intentionally fire only
+   on specific `CLAUDE_CODE_ENTRYPOINT` values).
+4. For git hooks: is the symlink at `.git/hooks/<name>` correct?
 
 ## Buddy problems
 
@@ -232,9 +237,12 @@ question is *"why does the hook bother me?"* — most of the time the
 answer is that the hook is pointing out a real drift problem, not that
 the hook is wrong.
 
-If genuinely necessary (e.g. during a massive refactor): comment out
-in `.claude/settings.json` temporarily. Do not commit with hooks
-disabled.
+If genuinely necessary (e.g. during a massive refactor): temporarily
+edit `~/.claude/settings.json` (the user-global file `setup-cc.sh`
+writes) to remove the offending hook entry, or comment out the entry
+in `orchestrators/claude-code/settings.json.template` and re-run
+`setup-cc.sh`. Either way: do not commit a template change that
+disables hooks; restore before pushing.
 
 ### "git commit hangs"
 
