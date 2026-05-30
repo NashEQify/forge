@@ -1,7 +1,4 @@
 {
-  "permissions": {
-    "defaultMode": "bypassPermissions"
-  },
   "hooks": {
     "PreToolUse": [
       {
@@ -9,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/path-whitelist-guard.sh",
+            "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/path-whitelist-guard.sh",
             "timeout": 3
           }
         ]
@@ -19,27 +16,27 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/frozen-zone-guard.sh",
+            "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/frozen-zone-guard.sh",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/state-write-block.sh",
+            "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/state-write-block.sh",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/engine-bypass-block.sh",
+            "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/engine-bypass-block.sh",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/plan-adversary-reminder.sh",
+            "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/plan-adversary-reminder.sh",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/brief-claims-guard.sh",
+            "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/brief-claims-guard.sh",
             "timeout": 8
           }
         ]
@@ -49,7 +46,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/workflow-commit-gate.sh",
+            "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/workflow-commit-gate.sh",
             "timeout": 5
           }
         ]
@@ -59,7 +56,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/delegation-prompt-quality.sh",
+            "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/delegation-prompt-quality.sh",
             "timeout": 3
           }
         ]
@@ -70,7 +67,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/workflow-reminder.sh",
+            "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/workflow-reminder.sh",
             "timeout": 3
           }
         ]
@@ -82,17 +79,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/mca-return-stop-condition.sh",
+            "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/mca-return-stop-condition.sh",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/board-output-check.sh",
+            "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/board-output-check.sh",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/evidence-pointer-check.sh",
+            "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/evidence-pointer-check.sh",
             "timeout": 5
           }
         ]
@@ -103,12 +100,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/session-start-remote.sh",
+            "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/session-start-remote.sh",
             "timeout": 60
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/buddy-boot-inject.sh",
+            "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/buddy-boot-inject.sh",
             "timeout": 3
           }
         ]

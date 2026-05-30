@@ -105,35 +105,52 @@ supported out of the box: **Claude Code**, **OpenCode**, and **Codex**
 (Desktop / CLI). Buddy is the orchestrator persona in all three — same
 methodology, same workflows, same boards.
 
-How Buddy boots differs by how you launched Claude Code. The
-methodology is identical; only the trigger that loads
-`agents/buddy/{soul,operational,boot}.md` before the first user turn
-varies:
+**One command provisions the whole Claude Code adapter:**
 
-| Entrypoint | Boot trigger | Setup required |
-|---|---|---|
-| `cc` (terminal launcher) | launcher sets `--agent buddy` + framework inject + `CLAUDE_PROJECT_DIR` | `bash setup-cc.sh` (installs the launcher) |
-| `claude --agent buddy --add-dir` (CLI direct) | the explicit `--agent buddy` flag loads the persona | `~/.claude/agents` symlink |
-| **claude-desktop / claude-web** | SessionStart hook `buddy-boot-inject.sh` | `bash setup-cc.sh` (provisions per-user env config) |
+```bash
+bash ~/forge/scripts/setup-cc.sh
+```
 
-Claude Code Desktop and the web app open a folder and run plain
-`claude` — no launcher flags, no persona param. forge ships a
-SessionStart hook (`orchestrators/claude-code/hooks/buddy-boot-inject.sh`)
-that fires only there (gated on `CLAUDE_CODE_ENTRYPOINT in {claude-desktop,
-claude-web}`) and emits the boot instruction. The hook is wired in
-committed `.claude/settings.json` with `${CLAUDE_PROJECT_DIR}/...` paths
-— the terminal `cc` launcher sets that variable; Desktop and Web do
-not. To make every forge hook resolve correctly there, `setup-cc.sh`
-provisions a per-user `.claude/settings.local.json` containing the
-detected absolute path of your forge checkout. `settings.local.json` is
-gitignored, machine-local, and merged over the committed `settings.json`
-by Claude Code at session start.
+After that, opening **any** folder in **any** Claude Code entrypoint
+(`cc` terminal launcher, `claude` CLI, claude-desktop, claude-web)
+triggers Buddy boot. The discipline-layer hooks (path-whitelist,
+frozen-zones, brief-claims, workflow-reminder, SessionStart boot-inject,
+…) fire globally — they live in `~/.claude/settings.json`, not in
+per-project files, and resolve to absolute forge paths so the folder
+you opened is irrelevant.
 
-In short: **claude-desktop / claude-web require `bash setup-cc.sh`** to
-have run once before forge boots reliably in them. The terminal `cc`
-launcher works without that step (it sets the variable itself); the
-CLI-direct path doesn't need it either as long as the user passes
-`--agent buddy` explicitly.
+How the boot signal actually reaches Buddy still differs per
+entrypoint, but every path lands on the same boot:
+
+| Entrypoint | Boot trigger |
+|---|---|
+| `cc` (terminal launcher) | launcher passes `--agent buddy` + framework inject |
+| `claude --agent buddy --add-dir` (CLI direct) | user's explicit `--agent buddy` flag |
+| claude-desktop / claude-web | SessionStart hook `buddy-boot-inject.sh` (gated on `CLAUDE_CODE_ENTRYPOINT in {claude-desktop, claude-web}`) |
+
+What `setup-cc.sh` does (idempotent — re-run any time to repair or
+re-apply):
+
+- installs the `cc` launcher at `~/.local/bin/cc` (absolute forge path
+  substituted in)
+- generates `<forge>/.claude/path-whitelist.txt` from the template
+- **merges forge hooks into `~/.claude/settings.json`** using `jq`;
+  preserves your other keys (`effortLevel`, `voiceEnabled`, custom
+  `permissions`, …); backs the prior file up with a timestamp before
+  rewriting
+- links `~/.claude/agents` and `~/.claude/skills` to forge's persona
+  and skill SoTs (so the `Task` and `Skill` tools discover them)
+- wires forge's git pre-commit and commit-msg hooks in the forge
+  checkout itself
+
+The reason setup-cc.sh writes hooks **globally** rather than into a
+per-project file: forge hooks should fire in every claude-code session
+regardless of which folder you opened, and the absolute paths must be
+substituted at setup time (the same value the agent stores in
+`FRAMEWORK_DIR`). Per-project `.claude/settings.json` files are not
+required by forge — if you want project-specific overrides, drop them
+into `.claude/settings.local.json` (which CC merges over the global)
+and they'll layer on top.
 
 Two setup paths:
 
@@ -151,8 +168,9 @@ Two setup paths:
 ```bash
 git clone https://github.com/NashEQify/forge ~/forge
 
-# Claude Code — installs `cc` launcher, symlinks, path-whitelist,
-#               git pre-commit hooks for forge itself
+# Claude Code — installs cc launcher + symlinks + path-whitelist,
+#               merges forge hooks into ~/.claude/settings.json,
+#               wires forge's git pre-commit hooks
 bash ~/forge/scripts/setup-cc.sh
 
 # OpenCode — installs `oc` launcher, opencode.jsonc, forge-hooks plugin
