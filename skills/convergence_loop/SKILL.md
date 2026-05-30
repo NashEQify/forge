@@ -62,11 +62,10 @@ narrowing lens itself is the load-bearing mechanism.
 | 2 | `affected_scope` from pass 1 + direct dependencies | BLOCKER + MAJOR | Second-order effects from pass-1 fixes; the narrower scope + tighter threshold can also surface things the broad lens missed at depth |
 | 3 | `affected_scope` from pass 2 | BLOCKER only | Verification of pass-2 fix side-effects AND deeper findings the focused BLOCKER-only lens surfaces that pass 1/2 couldn't see |
 
-Pass 3 can legitimately surface NEW BLOCKERs from multiple sources:
+Pass 3 surfaces NEW BLOCKERs from multiple legitimate sources:
 (a) caused by pass-2 fix side-effects; (b) deeper findings only the
-narrow lens reveals; (c) rare pass-1 broad-lens miss. The original
-framing claimed pass 3 = pure verification — empirically it's
-broader. The narrowing lens IS the structural property.
+narrow lens reveals; (c) rare pass-1 broad-lens miss. All three are
+real outcomes of the narrowing-lens mechanism.
 
 **Mechanical stop after pass 3 (with one conditional pass-4
 extension — see §Pass-3 termination).** Sub-workflow overrides
@@ -89,30 +88,10 @@ terminating:
 - Threshold = BLOCKER only
 - Buddy fixes between pass 3 and pass 4 per normal fix scope
 - Pass-4 outcomes: 0 BLOCKERs → CONVERGED; BLOCKERs remain →
-  ESCALATE (no further extension; the agent has had its fix-verify
-  cycle)
+  ESCALATE (no further extension)
 
-**Hard mechanical cap at pass 4.** No pass 5 from convergence_loop
-itself; sub-workflow safety valves apply on top (spec-board at 5,
-etc).
-
-**Why the conditional extension, not "pass-3 BLOCKER = immediate
-ESCALATE":** when pass 3 surfaces a scoped, clearly-fixable BLOCKER
-(new or old, doesn't matter), automatic escalation imposes human
-overhead the agent could resolve in one focused fix-verify cycle.
-The extension is gated on agent's classification of fixability —
-architectural / cross-cutting BLOCKERs still ESCALATE because they
-need human judgment, not more agent iteration.
-
-**Anti-pressure framing.** Agents are NOT graded on "did you
-converge by pass 3 (or 4)". Agents are graded on best classification
-of what's actually present + honest termination signal. ESCALATE on
-architectural problems is appropriate. Pass-4 extension on
-scoped-fixable BLOCKERs is appropriate. CONVERGED when actually
-converged is appropriate. Forced CONVERGED to avoid the other two is
-the failure mode the framing prevents — under-classifying BLOCKERs
-to MAJOR / declaring closure on contested issues / suppressing
-deeper-lens findings to avoid pass-3 work.
+**Hard mechanical cap at pass 4.** No pass 5 from convergence_loop;
+sub-workflow safety valves apply on top (spec-board at 5, etc).
 
 ### Severity definitions (L2 constrained judgment)
 
@@ -180,11 +159,8 @@ Never fold an unclassified net-new failure into a fix-pass.
 | Pass 3 BLOCKERs | see §Pass-3 termination (and conditional pass-4 extension) |
 | Pass 4 (extension) BLOCKERs remain | **ESCALATE** — no further extension |
 
-**ESCALATE is an appropriate outcome, not a failure mode.** It
-signals "this needs architect / human judgment, not more agent
-iteration". The agent loses no grade for ESCALATE on an architectural
-problem; the agent loses grade for forcing CONVERGED to avoid
-ESCALATE.
+ESCALATE signals "this needs architect / human judgment, not more
+agent iteration".
 
 ## State format between passes
 
@@ -241,8 +217,5 @@ fix responsibility: `REFERENCE.md`.
 - **NOT** force CONVERGED at pass 3 to avoid ESCALATE or skip the
   pass-4 extension. **INSTEAD** classify pass-3 BLOCKERs honestly:
   architectural → ESCALATE; scoped + fixable → pass-4 extension;
-  none → CONVERGED. **Because:** pass-3-as-deadline framing produces
-  premature CONVERGED, severity-downgrade, and "good enough" closures
-  — all proportionality anti-patterns. The narrowing lens at pass 3
-  legitimately surfaces new findings; the conditional pass-4
-  extension is the appropriate response for fixable ones.
+  none → CONVERGED. Because: deadline framing produces premature
+  CONVERGED + severity-downgrade.
