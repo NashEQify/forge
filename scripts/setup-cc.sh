@@ -70,42 +70,62 @@ else
   echo "WARNUNG: $WHITELIST_TEMPLATE fehlt — path-whitelist nicht generiert." >&2
 fi
 
-# --- Provision .claude/settings.local.json (env block for CLAUDE_PROJECT_DIR) ---
-# Why: committed .claude/settings.json uses ${CLAUDE_PROJECT_DIR}/... for
-# all hook paths. The cc Launcher sets CLAUDE_PROJECT_DIR automatically;
-# claude-desktop and claude-web do NOT — there the variable is unset, the
-# path resolves to /orchestrators/..., the hooks die silently, and the
-# whole discipline layer (path-whitelist, frozen-zones, brief-claims,
-# SessionStart boot-inject, workflow-reminder, …) is off.
+# --- Provision ~/.claude/settings.json with forge hooks (idempotent merge) ---
+# Forge ships hooks that should fire in EVERY claude-code session regardless
+# of CWD (boot-inject, path-whitelist-guard, workflow-reminder, …). The
+# canonical place for that is ~/.claude/settings.json (global user-level
+# config). Per-project .claude/settings.json is no longer used by forge.
 #
-# Fix: provision per-user settings.local.json with an env block that sets
-# CLAUDE_PROJECT_DIR to this checkout's absolute path. settings.local.json
-# is gitignored and machine-local, so committed settings.json stays
-# user-neutral. CC merges settings.local.json over settings.json.
+# Idempotent merge strategy:
+#   1. Read existing ~/.claude/settings.json (or {} if absent)
+#   2. Strip out the top-level "hooks" key entirely (forge owns this slot)
+#   3. Substitute __FRAMEWORK_DIR__ placeholder in the template with the
+#      detected absolute path (template-driven so paths are not hardcoded
+#      in the script and the same template can be shipped to consumers)
+#   4. Merge user's preserved (non-hooks) keys with forge's hooks block
+#   5. Write atomically with a timestamped backup of the prior file
 #
-# Idempotent: skip if the env block already names this FRAMEWORK_DIR;
-# refuse to overwrite a different file silently — bail with a hint so
-# the user can merge by hand.
-SETTINGS_LOCAL="$FRAMEWORK_DIR/.claude/settings.local.json"
-DESIRED_ENV_LINE="\"CLAUDE_PROJECT_DIR\": \"$FRAMEWORK_DIR\""
-if [ -f "$SETTINGS_LOCAL" ]; then
-  if grep -qF "$DESIRED_ENV_LINE" "$SETTINGS_LOCAL"; then
-    echo "settings.local.json: OK (CLAUDE_PROJECT_DIR already pinned to $FRAMEWORK_DIR)"
-  else
-    echo "WARNUNG: $SETTINGS_LOCAL existiert, enthaelt aber nicht den erwarteten CLAUDE_PROJECT_DIR-Eintrag." >&2
-    echo "         Fuege manuell ein (oder loesche die Datei und re-run setup-cc.sh):" >&2
-    echo "         { \"env\": { $DESIRED_ENV_LINE } }" >&2
-  fi
+# User-owned keys (effortLevel, voiceEnabled, permissions, env, …) are
+# preserved across re-runs. If a user wants their own hooks alongside
+# forge's, they go into a per-project .claude/settings.local.json (which
+# CC merges over the global) — not into the global hooks slot.
+SETTINGS_TEMPLATE="$FRAMEWORK_DIR/orchestrators/claude-code/settings.json.template"
+USER_SETTINGS="$HOME/.claude/settings.json"
+
+if ! command -v jq &>/dev/null; then
+  echo "FEHLER: 'jq' wird gebraucht zum idempotenten Mergen von $USER_SETTINGS." >&2
+  echo "       Install: apt install jq / brew install jq / dnf install jq" >&2
+  exit 1
+fi
+
+if [ ! -f "$SETTINGS_TEMPLATE" ]; then
+  echo "FEHLER: $SETTINGS_TEMPLATE fehlt." >&2
+  exit 1
+fi
+
+# Substitute FRAMEWORK_DIR placeholder (in memory, not written to disk).
+FORGE_HOOKS_JSON="$(sed "s|__FRAMEWORK_DIR__|$FRAMEWORK_DIR|g" "$SETTINGS_TEMPLATE")"
+
+# Validate substituted template parses as JSON (catches path with quotes).
+if ! echo "$FORGE_HOOKS_JSON" | jq empty 2>/dev/null; then
+  echo "FEHLER: Template ergibt nach Substitution kein gueltiges JSON. Path mit Sonderzeichen?" >&2
+  exit 1
+fi
+
+mkdir -p "$HOME/.claude"
+USER_PRESERVED="$(jq 'del(.hooks)' "$USER_SETTINGS" 2>/dev/null || echo '{}')"
+MERGED="$(jq -n --argjson user "$USER_PRESERVED" --argjson forge "$FORGE_HOOKS_JSON" \
+  '$user + $forge')"
+
+if [ -f "$USER_SETTINGS" ] && [ "$(jq -S . "$USER_SETTINGS")" = "$(echo "$MERGED" | jq -S .)" ]; then
+  echo "global settings.json: OK (forge hooks already merged into $USER_SETTINGS)"
 else
-  cat > "$SETTINGS_LOCAL" <<JSON
-{
-  "env": {
-    "CLAUDE_PROJECT_DIR": "$FRAMEWORK_DIR"
-  }
-}
-JSON
-  echo "settings.local.json: $SETTINGS_LOCAL (CLAUDE_PROJECT_DIR=$FRAMEWORK_DIR)"
-  echo "  → fixes claude-desktop / claude-web hook resolution (cc terminal sets the var itself)"
+  if [ -f "$USER_SETTINGS" ]; then
+    cp "$USER_SETTINGS" "$USER_SETTINGS.backup-$(date +%Y%m%d-%H%M%S)"
+  fi
+  echo "$MERGED" | jq . > "$USER_SETTINGS"
+  echo "global settings.json: $USER_SETTINGS (forge hooks merged, user keys preserved)"
+  echo "  → fires in every claude-desktop / claude-web / cc session, regardless of CWD"
 fi
 
 # --- PATH-Check ---
