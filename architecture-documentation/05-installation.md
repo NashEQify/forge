@@ -98,11 +98,17 @@ bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh --uninstall   # remove symlinks
 On the next `git commit` the pre-commit checks run (see
 [`02-architecture.md`](02-architecture.md) §Pre-Commit 12 Checks).
 
-#### 3. Hook registration (`.claude/settings.json`)
+#### 3. Hook registration (`~/.claude/settings.json`)
 
-`.claude/settings.json` registers the hooks for Claude Code's PreToolUse,
-Stop, SessionEnd triggers. Already included in the framework repo. Consumer repos
-inherit this via `--add-dir`.
+Forge owns the `hooks` slot in **`~/.claude/settings.json`** (user-global,
+not per-project). `setup-cc.sh` merges them in from
+`orchestrators/claude-code/settings.json.template`, substituting
+`__FRAMEWORK_DIR__` with the detected forge checkout. Hooks fire in
+every Claude Code session regardless of CWD or entrypoint
+(`cc` terminal launcher, `claude` CLI, claude-desktop, claude-web).
+Consumer repos do not need their own `.claude/settings.json` for forge;
+if they want project-specific overrides, they drop them into a
+`.claude/settings.local.json` (CC merges that over the global).
 
 #### 4. cc launcher
 

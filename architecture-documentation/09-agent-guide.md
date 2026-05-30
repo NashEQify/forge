@@ -229,7 +229,7 @@ For a bug → `fix` workflow Phase A is not optional. Even for a "small" bug.
 | New skill | `skills/<name>/SKILL.md` | standard skill format, `Standalone` block, spec-board L1, pre-commit Check 7 PASS |
 | New workflow | `workflows/runbooks/<name>/WORKFLOW.md` | Routing in `process-map.md`, entry in `boot-navigation.md`, new line in skill-map composition map |
 | New persona | `agents/<name>.md` (SoT) + `.claude/agents/<name>.md` (CC wrapper) + possibly OC wrapper | Adapter-SoT-Sync (`consistency_check` Check 3) |
-| New hook | `orchestrators/claude-code/hooks/<name>.sh` | Header doc, `.claude/settings.json`, `tests/hooks/test-<name>.sh`, doc in `CLAUDE.md §Active Hooks` |
+| New hook | `orchestrators/claude-code/hooks/<name>.sh` | Header doc, entry in `orchestrators/claude-code/settings.json.template` + re-run `setup-cc.sh`, `tests/hooks/test-<name>.sh`, doc in `CLAUDE.md §Active Hooks` |
 | New reference | `references/<name>.md` | Document lift source, add to `references/navigation.md` lookup table |
 | Retire a skill | `git rm -r skills/<name>/` (git history is the archive) | Stale cleanup in the same commit |
 | Retire a persona | `git rm agents/<name>.md` | Delete adapter wrapper too, stale cleanup |

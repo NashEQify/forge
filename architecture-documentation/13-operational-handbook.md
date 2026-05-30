@@ -267,7 +267,7 @@ python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --find --task 123
 - **Boot-Step `WORKFLOW-RESUME`** (`agents/buddy/boot.md` §6 RESUME) calls
   `--boot-context` automatically. Active workflows surface in GREET.
 - **UserPromptSubmit Hook** `workflow-reminder.sh` (registered in
-  `.claude/settings.json`) calls `--next --brief` on every user turn,
+  `~/.claude/settings.json` via `setup-cc.sh`) calls `--next --brief` on every user turn,
   injects current step into the model context as `WORKFLOW-ENGINE: <step info>`.
 - **Save-Workflow Step A.3** calls `--handoff-context` to bake state into
   session-handoff.
