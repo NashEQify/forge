@@ -113,15 +113,104 @@ silently — verify at dispatch-prep. Substitution table: REFERENCE.md.
 4. Assemble prompts: `reviewer-base` + `code-reviewer-protocol` +
    `reviewer-reasoning-trace` + `first-principles-check` + persona;
    dispatch with brief + diff + L0 + spec.
-5. Dispatch parallel, context-isolated.
+   **L2 brief content (per §4a):** persona-prompt + scope + diff +
+   spec links + code paths ONLY. NO prior cycle findings, NO prior
+   chief verdict, NO lens framing as autonomous authority, NO
+   brief-author rationale.
+5. Dispatch.
+   - **L1:** parallel, context-isolated.
+   - **L2:** pre-board frame check + board dispatch per §4a — Buddy
+     runs adversary (+ architect-roots when §1.2 trigger) cold-start
+     first, persists their returns verbatim as the frame-check
+     artifact (`docs/reviews/code/<date>-<task-id|slug>-frame-check.md`,
+     slug fallback when no task), distills the substantive findings
+     (severity-preserving) into the board brief as scope/context
+     content, then dispatches the board (code-review + risk
+     specialists) parallel cold-start.
 6. **L1:** Buddy reads both → verify drill+trace → verdict.
 7. **L2:** chief consolidates (F-C-DRILL-MISSING / F-C-TRACE-MISSING
-   enforced) → discourse → synthesis → verdict.
+   enforced; chain-of-custody audit per `agents/code-chief.md`
+   §CHIEF-1.0 — chief reads frame-check artifact and audits board
+   coverage of its substantive concerns; pre-consolidation gates
+   §CHIEF-1.1, 1.2; reject every claim without ≥1 verbatim
+   `file:line` code-quote) → discourse → synthesis → verdict.
 8. SAVE.
 
 **Fix-pass dispatch (post-FAIL):** scope-focused tests + L0 on touched
 files only, full-suite once at convergence-end, single-reviewer-per-cluster
 re-review. Detail: REFERENCE.md.
+
+## 4a. L2 dispatch — pre-board frame check + board
+
+The board itself is one cold-start parallel dispatch (no internal
+"layers" the reviewers need to know about). Buddy's pre-board work
+incorporates an adversarial frame-check so the board brief reflects
+substantive scope/parity/spec-citation concerns before reviewers
+read it. The frame-check returns are persisted so chief can audit
+the chain at consolidation.
+
+**Cold-start brief (board reviewers):** persona + scope + diff +
+spec links (locked) + code paths. NO prior cycle findings, NO chief
+verdict, NO lens framing as autonomous authority, NO brief-author
+rationale. Exception: narrow verify-single-fix gates (NOT board
+iterations).
+
+*Lens framing as autonomous authority defined.* Lens-produced
+`## Claim-Verifications` rows (mechanical evidence: `file:line` +
+grep command + grep output + disposition) ARE allowed in the brief
+— the reviewer can independently re-verify each row with one grep.
+What's NOT allowed: lens-produced depth/seam/responsibility-purity
+JUDGMENTS presented as conclusions the reviewer must accept. The
+distinction is mechanical-evidence (allowed) vs persona-judgment
+(blocked).
+
+**Pre-board frame check** (Buddy runs before assembling the board
+brief, cold-start):
+- Adversary — FULL review per `agents/code-adversary.md`
+  §Cold-start pre-mission + persona Check focus. One pass.
+- Architect-roots (when §1.2 trigger fires) — pattern-purity review
+  per `agents/code-architect-roots.md` §Pre-board frame check role.
+
+**Frame-check artifact (chain-of-custody, MANDATORY).** Buddy
+persists both returns verbatim to
+`docs/reviews/code/<date>-<task-id|slug>-frame-check.md` BEFORE
+assembling the board brief. `<slug>` is a Buddy-derived short
+identifier when no task-id exists (e.g. ad-hoc review). The
+artifact is the raw evidence chain — chief reads it at consolidation
+alongside the board reviews per
+`agents/code-chief.md` §Chain-of-custody audit.
+
+**Buddy intermezzo (substantive distillation, brief stays clean).**
+Read both returns. Distill the substantive concerns into the board
+brief as scope clarifications + named open verifications + code-path
+emphasis. The brief contains SUBSTANCE, NOT findings-with-severity
+or other finding-shaped framing. Severity stays in the frame-check
+artifact for chief audit. Adding `[severity:CRITICAL]` or other
+finding-shaped framing into brief content would re-create the
+brief-contagion L-046's cold-start rule prevents (reviewer reads
+against the brief's framing, not against spec → code).
+
+The anti-dilution mechanism is the **chief audit at consolidation**:
+chief reads frame-check artifact AND board reviews, cross-references
+by substance + severity (per `agents/code-chief.md` §CHIEF-1.0
+audit), surfaces unaddressed artifact concerns at their original
+severity. Severity carries the weight via the chief's existing §5 +
+CHIEF-1.5 consolidation — without needing severity-tags in the brief.
+
+The board reviewers receive the enriched brief. They do their normal
+persona Check focus on what the brief shows them — no "frame-
+challenges to verify or reject" framing, because special framing
+invites special handling and the substantive concerns are already
+in the brief content with their severity tags. They do NOT read the
+frame-check artifact — that's chief-audit surface, not reviewer-
+input surface.
+
+**Board dispatch** (parallel, cold-start): code-review + risk
+specialists per team composition.
+
+**Code-quote mandate (all reviewers):** every finding AND every
+"verified X" non-finding carries ≥1 verbatim `file:line` quote
+(1-3 lines). Chief rejects claim-without-quote and re-dispatches.
 
 ## 5. Verdict
 
@@ -131,89 +220,98 @@ PASS_WITH_RISKS: 0C + ≤2H (carry-forward MANDATORY)
 FAIL:            ≥1C or >2H → triage → MCA fixes fix-now → re-review (max 2)
 ```
 
-**Risk carry-forward (MANDATORY on PASS_WITH_RISKS / FAIL non-fix-now
-/ override cherry-pick / ESCALATE-with-open):** verdict file has YAML
-`remaining_findings:` block. Per entry: `id`, `target`, `severity`,
+**Risk carry-forward** (on PASS_WITH_RISKS / FAIL non-fix-now /
+cherry-pick / ESCALATE-with-open): verdict YAML
+`remaining_findings:` per entry: `id`, `target`, `severity`,
 `locator`, `title`, `rationale_for_carry_over`, `proposed_action`.
 Schema + example: REFERENCE.md.
 
-**7-value `target:` enum** (full table REFERENCE.md):
+**7-value `target:` enum:**
 
 - `spec_text` — batch-patched, no task
-- `new_task` — follow-up task (**MEDIUM+ only**; LOW forbidden, see hard floor)
+- `new_task` — MEDIUM+ only; LOW FORBIDDEN
 - `watch_item` — appended to `context/risk-watch.md`
-- `accept` — known limitation, no action (DEFAULT non-blocking; MANDATORY standalone LOW)
+- `accept` — DEFAULT non-blocking; MANDATORY standalone LOW
 - `absorb_next` — logged, next file-touch closes
 - `closes_with: <id>` — duplicate / convergence to another fix
 - `re_review: <reviewer>` — scoped specialist re-look
 
-Chief annotates every entry. Empty `target:` = validation fail. All
-same `target:` = anti-pattern (missed triage). Workflow
-`risk-followup-routing` files new_tasks mechanically.
+Empty `target:` = validation fail. All same `target:` = missed
+triage anti-pattern. `risk-followup-routing` files new_tasks
+mechanically.
 
 **Proportionality triage (NON-NEGOTIABLE on FAIL):**
 
-| Disposition | Criterion | Routing |
-|---|---|---|
-| **fix-now** | blocks requirement OR reproduces reported defect. ALWAYS every CRITICAL + every convergence cluster (≥3 reviewers same evidence). MEDIUM/LOW reproducing defect = fix-now. HIGH narrow latent = `accept`. | fix-pass brief |
-| **accept** | non-blocking AND (narrow+backstopped OR latent OR self-introduced narrower than original). **DEFAULT non-blocking.** | `target: accept` |
-| **watch** | as `accept` + named future trigger. | `target: watch_item` |
-| **fix-later** | MEDIUM+ only. Named concrete defect + measurable downstream cost. **LOW FORBIDDEN.** Value-floor check applies (see below). | `target: new_task` |
+| Disposition | Criterion |
+|---|---|
+| **fix-now** | blocks requirement OR reproduces reported defect. ALWAYS every CRITICAL + every convergence cluster (≥3 reviewers same evidence). MEDIUM/LOW reproducing defect = fix-now. HIGH narrow latent = `accept` |
+| **accept** | non-blocking AND (narrow+backstopped OR latent OR self-introduced narrower than original). DEFAULT non-blocking |
+| **watch** | `accept` + named future trigger |
+| **fix-later** | MEDIUM+ only. Named concrete defect + measurable downstream cost. LOW FORBIDDEN |
 
-**Hard floor — LOW (MANDATORY):** standalone LOW → `accept`. No
-cost-justification escape (text hallucinates). LOW → `new_task`
+**Hard floor LOW:** standalone LOW → `accept`. LOW → `new_task`
 FORBIDDEN. LOW feels important = severity wrong; re-classify MEDIUM
 with named defect, or accept.
 
-**Value-floor — `new_task` (MANDATORY):**
-mirrors `task_creation/SKILL.md` §1.5 on the consumption side. Before
-chief writes `target: new_task` for any finding (HIGH included),
-answer in the disposition rationale: *"what operational impact does
-NOT doing this followup have?"*
+**Value-floor `new_task`:** before chief writes `new_task` for any
+finding (HIGH included), inline-rationale answers "what operational
+impact does NOT doing this followup have?":
+- "Nothing breaks" / no named consumer / no measurable cost →
+  re-route `accept`.
+- "Future-edit safety" / "follows convention" without named consumer
+  → re-route `accept` or `watch_item`.
+- Real measurable cost + named consumer + reproducible failure
+  shape → `new_task` justified.
 
-- **Nothing breaks** — no contract violation, no consumer blocked, no
-  named bug-surface, no measurable downstream cost → re-route to
-  `accept` (carry-forward note, no task).
-- **Hand-wavy "future-edit safety" / "new contract needs coverage" /
-  "follows convention" with no named consumer or failure-mode** →
-  re-route to `accept` or `watch_item` (with named trigger).
-- **Real measurable cost + named concrete consumer + reproducible
-  failure shape** → `new_task` justified.
+`new_task` without operational-impact sentence = validation fail.
+Hard floors override: CRITICAL, security/auth/consent/crypto, schema
+/ public-API contract, full-path tasks stay `fix-now` / `new_task`.
 
-A `new_task` disposition without an *operational-impact sentence*
-inline in the rationale is a validation fail. If the impact reduces
-to "should have tests" / "could be cleaner" / "consistency with
-convention" → re-route. Hard floors retain override: CRITICAL,
-security / auth / consent / crypto, schema or public-API contract
-changes, full-path tasks always stay `fix-now` or `new_task`
-regardless of value-floor outcome.
+**Bundling content-split:** bundled items tagged
+`value_class: real-impact | nice-to-have`. ≥3 reviewers same evidence
+= convergence → fix-now. Solo LOWs never escape `accept`.
 
-**Bundling content-split (when chief bundles related findings into one
-new_task):** each bundled item tagged `value_class: real-impact |
-nice-to-have` so the followup task can be scoped down without
-re-reading the originating reviews.
+**Test-coverage findings = `code-spec-fit` sole owner.** Coverage
+findings name (a) concrete failure-mode missing tests catch, (b) why
+existing test surface (integration, indirect, contract-pinning)
+doesn't catch it, (c) smallest test set that closes gap. "Coverage at
+integration level" = valid `accept`.
 
-**Exception — convergence:** ≥3 reviewers same evidence → fix-now.
-Solo LOWs never escape `accept`.
+**Process discipline:** no "leanest fix" for non-fix-now (`accept`
+= closed); self-introduced narrower than original → `accept`; Buddy
+MUST NOT offer paths A/B/C.
 
-**Test-coverage findings = `code-spec-fit` sole owner.** Others cannot
-file coverage gaps. Behavior-unverified → finding in own axis with
-severity per impact. Coverage findings MUST name (a) the concrete
-failure-mode the missing tests would catch, (b) why the existing test
-surface (integration, indirect via consumers, contract-pinning) does
-not catch it, (c) the smallest test set that closes the gap. "Coverage
-exists at the integration level" is a valid `accept` disposition;
-chief honors it. See `agents/code-spec-fit.md`.
+**Re-review:** max 2 → ESCALATE. Default single-reviewer pass-1.5
+(scope = `affected_scope`). Bundled (>5 clusters/files) or pass-2+
+→ §5a two-phase. Full table: REFERENCE.md.
 
-**Process discipline** (detail REFERENCE.md): no "leanest fix" for
-non-fix-now (`accept` = closed); self-introduced narrower than
-original → `accept`; Buddy MUST NOT offer paths A/B/C.
+## 5a. Re-review two-phase (multi-reviewer re-reviews)
 
-**Re-review:** max 2 → ESCALATE (foundation override on measurable
-severity drop). Default = **single-reviewer pass-1.5** (same reviewer
-reads fix; scope = `affected_scope`). Bundled (>5 clusters/files):
-convergence-axis ~3 reviewers. F-AR pattern-class = pass-1.5 extended
-scope. Full table: REFERENCE.md.
+Triggers: any re-review with >1 reviewer dispatched
+(multi-reviewer pass-1.5, bundled clusters, pass-2+). Warm-start
+anchoring + brief contagion are precisely the failure modes that
+fire when multiple reviewers share a prior-cycle frame.
+
+Exception (narrow): a re-review with exactly one reviewer dispatched
+AND scope = single named finding AND single cluster (e.g. "verify
+F-CR-007 patched at the cited line") stays single-reviewer pass-1.5,
+no two-phase. All three conditions required — single-reviewer alone
+is not enough (a bundled multi-cluster dispatch with one reviewer
+still inherits cross-cluster prior-frame contagion). The exception
+is scoped by reviewer count + cluster count + single-finding focus.
+
+**Phase 1 — cold-derive (60-70%):** diff + scope + persona + spec
+(locked) + code paths. FORBIDDEN: prior board findings / brief
+rationale / chief verdict / lens framing. Output: findings on
+as-coded state per §4a code-quote; closure-claims carry 4-link chain
+per `_protocols/mca-brief-template.md` §Reviewer Checkpoints.
+
+**Phase 2 — reconcile (30-40%):** prior findings as appendix.
+Output: table — prior finding | addressed? | evidence | correct fix?
+| new shape (smell-transfer +1/+2).
+
+Chief: Phase-1 = primary evidence, Phase-2 = closure-verification.
+`remaining_findings` = Phase-1 minus prior-cycle-confirmed-closed.
 
 ## 6. Discourse
 

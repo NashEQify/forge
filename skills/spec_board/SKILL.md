@@ -170,6 +170,34 @@ findings in same consolidated.
    → SAVE (NON-NEGOTIABLE).
 10. NEEDS-WORK: fix → next pass; CONVERGED: DONE.
 
+## 4a. Cross-task AC validation
+
+Trigger patterns (cross-subsystem flow implied):
+"user types ... → ... lands in ..."; "X publishes Y; Z consumes Y"
+(across components); "after deploy, ... is visible / active /
+produced"; "UI displays state X after backend action Y";
+"milestone-level user-promise activation across components".
+
+Per such AC: list subsystems traversed; per subsystem identify
+OWNING task (via `blocked_by` / `blocks` / sibling-task references).
+If owning-task ≠ this task for ANY subsystem → AC cannot close in
+this task alone — finding.
+
+Resolution (board recommends, author / orchestrator chooses):
+(a) **Split** — this task gets owned half; others become separate
+ACs in owning tasks. (b) **Move** — full AC reassigned to whichever
+task owns the LAST subsystem to land. (c) **Conditional (task-YAML ACs only)** — prefix
+"(after `<blocking-task>` ships) ...". Applies to task-YAML ACs
+only. For spec-level ACs in L1+ specs (public-surface OSS mirror per
+CLAUDE.md Inv 7+8), use (a) Split or (b) Move — NEVER (c) in a spec,
+to keep forensic task-IDs out of public surface. Spec-level ACs
+needing dependency: use semantic phrasing ("when consumer-side X is
+wired") instead of task-ID prefix.
+
+Unaddressed cross-task AC = NEEDS-WORK blocker. Defense-in-depth pair
+with `agents/buddy/operational.md` §Architecture-Comprehension B
+(post-return).
+
 ## 5. Discourse
 
 Deep: ALWAYS after chief. Standard: Buddy decision (proportional).

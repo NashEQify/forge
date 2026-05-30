@@ -47,7 +47,7 @@ Lifted from `github.com/addyosmani/agent-skills`
 - TypeScript examples translated to Pydantic + FastAPI.
 - JSON-body validation: Pydantic `extra="forbid"` +
   `model_validate()`.
-- Error handling: AppError + ErrorResponse (Task 265).
+- Error handling: AppError + ErrorResponse.
 - SSE as the streaming counterpart to REST
   (BuddyResponseChunk / DoneEvent / ErrorEvent).
 - Schema pipeline: Pydantic → OpenAPI → Zod (frontend sync).
@@ -170,7 +170,7 @@ class PaginatedResult(BaseModel):
 **One error strategy for every endpoint.** Mixed patterns
 break consumer predictability.
 
-BuddyAI pattern (Task 265):
+BuddyAI pattern:
 
 ```python
 # AppError + ErrorResponse — one form for every error

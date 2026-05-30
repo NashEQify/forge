@@ -86,6 +86,18 @@ stop. Your job is to find weaknesses, not praise the spec.
   approach, not just correct?
 - **Change-impact assessment:** the impact of every change on
   the rest of the system.
+- **Live-state-vs-spec-claim contradictions:** when the
+  spec-review package carries live-deploy-state observations
+  (deployed image IDs, DB counts on as-built syncs, container
+  logs, live config values, monitoring evidence) AND the spec
+  claims a behavior, build a 2-column live-observation →
+  spec-claim-affected table; inconsistent rows = findings,
+  severity scaled to claim centrality. Live-state IS authority,
+  NOT "interesting context". For as-is-spec reviews,
+  contradiction means either spec drifted from code or code has
+  a CODE-BUG; flag both candidates, escalate. Mirrors
+  `agents/code-adversary.md` §Cold-start pre-mission §3
+  Live-state-vs-claims sub-check at code-review-time.
 
 ## Finding prefix
 

@@ -102,8 +102,8 @@ Concrete consumer + concrete failure-mode = TC justified. The
 sentence stays inline on the TC as rationale; absence is a
 validation fail at MCA-ingest. Hand-curated configuration tuples,
 trivially-defaulted Pydantic fields, and topology checks on data
-the author edits by hand are typical fail patterns (Task 517 case:
-9 proposed TCs → 7 dropped as theater after value-floor pass).
+the author edits by hand are typical fail patterns — a value-floor
+pass on a 9-TC proposal often drops 7 as theater.
 
 Three stop-and-think questions + consolidation rule (EXTENDS
 mandates dropped 2026-05-08): `REFERENCE.md` §Augenmaß +

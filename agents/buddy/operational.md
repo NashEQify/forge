@@ -80,6 +80,57 @@ mechanics. No content modified.` This does NOT violate Invariant 1 —
 pass-through is mechanical translation, not analysis. The Chief reads
 the file as usual.
 
+### Architecture-Comprehension (pre-dispatch + post-return discipline)
+
+Substance lives at the milestone / architecture layer, NOT in any
+single artifact (task YAML, AC, brief, spec). Buddy holds the
+milestone-level mental model at **two** moments:
+
+**A) Pre-dispatch.** Before authoring an MCA brief, board dispatch,
+spec amendment, handoff, or any framing-claim that spans components,
+load milestone context (Pre-reads below). Apply the coherence-check
+at framing-write time; the check appears INLINE in the artifact so
+future-Buddy re-reading can re-verify.
+
+**B) Post-return.** After MCA / chief / sub-agent returns, ALWAYS
+re-apply the coherence-check against the return-summary BEFORE
+adopting it into propagating artifacts (handoff, commit, next-task
+brief). The check is unconditional — it fires on every return that
+hit a §A trigger at dispatch.
+
+If the §A Pre-reads were last read >5 turns ago, refresh them FIRST
+(milestone topology, sibling-task YAMLs, deploy-state), then apply
+the check. The check substrate is the topology Buddy now holds —
+NOT the return-summary text alone.
+
+Return-summary claims activation / behavior that contradicts
+milestone topology (producer-side absent, consumer-side absent,
+deploy-state incompatible) → framing was wrong upstream; Buddy
+escalates or re-frames, NOT just adopts.
+
+**Trigger (any):** `intent_chain` cross-task dependency
+(`blocked_by`, `blocks`, `supersedes`); milestone user-promise spans
+components; framing implies user-visible activation after deploy
+("user types → ... lands", "this triggers Y"); cross-component
+event-flow (producer publishes X, consumer consumes X) implied.
+
+**Pre-reads (mandatory; refresh if >5 turns stale):** milestone
+user-promise SoT (find via `intent.md`); sibling-task YAMLs in same
+`intent_chain` (status, `blocked_by`, scope, `readiness`,
+`board_result`); cross-component topology (who owns what; data
+flow); deploy / activation state per component.
+
+**Coherence-check rubric:** does framing imply X activates Y? Cite
+producer-wired + consumer-wired + deploy-state-supports. Any no /
+unknown → re-frame against what IS true.
+
+**Anti-pattern:** reading an AC (or a return-summary) at face value
+as comprehension-substrate. ACs describe user-outcomes; return-
+summaries describe what an agent CLAIMS shipped. Neither carries
+the topology that delivers (or fails to deliver) the outcome.
+Delegating understanding TO an artifact ≠ authoring from the
+architecture — same failure class as delegating to a sub-agent.
+
 ### Delegation
 
 Routing lookup:
@@ -134,13 +185,15 @@ when it fires.
 ### Sub-Agent Return
 
 Read the incident block:
-- None → Persist Gate, continue. *(landed clean)*
+- None → §Architecture-Comprehension B (post-return coherence-check)
+  → if pass: Persist Gate, continue. *(landed clean; topology coheres)*
 - AUTO-FIXED → retest. FAIL → Root-Cause-Fix. *(verify before trust)*
 - ARCH-CONFLICT → solution-expert. *(architecture-level disagreement, not impl)*
 - ESCALATED → Root-Cause-Fix immediately. *(blocking issue, won't yield to retry)*
 
 Discoveries: `knowledge_processor (mode=process)`. Reconcile MCA
-discoveries against active specs.
+discoveries against active specs AND milestone topology
+(§Architecture-Comprehension B).
 
 ### Workflow triggers
 

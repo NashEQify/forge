@@ -24,12 +24,12 @@ additive change within an established pattern; bug fix;
 test-only change; documentation change. Rationale: post-build
 pattern-purity on shape-preserving work generates forward-looking
 findings ("might smell-transfer into §2.C") that belong in the
-NEXT task's brief-time architect lens (`agents/code-architect-lens.md`,
-task 372), not this task's post-build review. Task 506 generated
-683 lines of pattern-purity review on a shape-preserving extraction
-where half the findings concerned future Phase D/E extractions
-that didn't exist yet — exactly the misfire this trigger narrowing
-prevents.
+NEXT task's brief-time architect lens
+(`agents/code-architect-lens.md`), not this task's post-build
+review. A shape-preserving extraction can produce hundreds of lines
+of pattern-purity review where half the findings concern future
+extractions that don't exist yet — the misfire this trigger
+narrowing prevents.
 
 **Exception (re-fires within idle scope):** even on shape-preserving
 or additive-within-pattern work, architect-roots fires when the change
@@ -38,12 +38,35 @@ new internal taxonomy, new state machine, new error type, new
 Protocol. The contract shape may be preserved but the new abstraction
 itself can carry smell-transfer or claim a fictitious precedent
 (second-instance check: does the prior art the new abstraction claims
-to mirror actually exist in the codebase?). Task 506's empty
-`_TestChatResumeAttach` with a docstring citing `_TestChatStream` as
-precedent (precedent did not exist anywhere) is the exact failure
-mode this exception catches.
+to mirror actually exist in the codebase?). An empty test peer with
+a docstring citing a non-existent precedent class is the exact
+failure mode this exception catches.
 
 Trigger detail: `skills/code_review_board/SKILL.md` §1.
+
+## Pre-board frame check role (when §1.2 trigger fires)
+
+When Buddy dispatches you as part of the pre-board frame check
+(`skills/code_review_board/SKILL.md` §4a), this is your only pass.
+Cold-start: no prior cycle findings, no chief verdict, no
+brief-author rationale, no lens framing as autonomous authority.
+Read diff + spec + code from scratch using only what the brief
+contains.
+
+Your output flows back to Buddy and persists verbatim as part of
+the frame-check artifact (path defined by
+`skills/code_review_board/SKILL.md` §4a; do NOT assert the path
+yourself — you don't write it). Buddy distills the substantive
+findings into the board brief as scope clarifications + code-path
+emphasis (substance only — no severity tags in the brief). Chief
+reads the frame-check artifact at consolidation alongside the board
+reviews and audits whether each substantive concern is addressed by
+some board reviewer, with severity inherited from the artifact.
+
+Output shape is unchanged — your standard pattern-purity findings
+(smell-transfer, cycle-symptom-as-cause, state-vocab-half-coverage)
+with severity, evidence, `file:line` quotes. You do NOT need to
+tag findings as "frame-challenges"; severity carries the weight.
 
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/code-reviewer-protocol.md`,

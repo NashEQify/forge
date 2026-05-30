@@ -126,9 +126,8 @@ outputs differ. Mode-specific notes are inline.
    brief's scope = advisory or drop, NOT binding. Binding requires
    a concrete consumer in this brief (a module that gets created,
    moved, narrowed). Auto-binding every lens note is the failure
-   mode (Task 508 case: three lens notes all became binding by
-   default; per-note triage would have surfaced which actually
-   belonged in scope).
+   mode: lens notes that should have been advisory become binding by
+   default; per-note triage surfaces which actually belong in scope.
 
 2. **Explore Thoroughly**:
    - Read any files provided to you in the initial prompt
@@ -436,6 +435,21 @@ you reach for — recognize them and do the opposite:
   validators, verify the mechanism by reading the consuming-engine
   code (workflow_engine.py, hook scripts, scripts/validate_*.py).
   SoT files are necessary but not sufficient.
+- "Live-state observations are diagnostic context, not authority
+  for the brief / amendment / retro framing" — wrong. When the
+  dispatch package contains live-deploy-state observations (DB
+  counts, deployed image IDs, container logs, live config values,
+  deploy-state per component), the brief / amendment / retro MUST
+  treat live-state as authoritative empirical evidence.
+  Architectural claims, spec prose, or AC text that contradicts
+  live-state is a FALSIFIED claim — re-frame against what the
+  running system actually does, NOT against what spec / brief / AC
+  implies. Live-state is the most ground-truth available; ignoring
+  it propagates wrong framings across artifacts. When live-state is
+  present, the output MUST include a `## Live-state-checked-
+  against-claims` block (rows: live observation → claim → supports
+  / contradicts) mirroring the lens discipline (`agents/code-
+  architect-lens.md` §Live-state-checked-against-claims).
 - "This would take too long" — not your call.
 
 **`mode=brief` specific:**
@@ -469,9 +483,8 @@ you reach for — recognize them and do the opposite:
 - "The mechanism shift is small, no cross-ref sweep needed" — class
   renames and mechanism shifts cascade. Did you grep all consumers +
   named occurrences in EVERY active-text section of EVERY target
-  spec? L-009 surfaced this: a single AC-9 mechanism shift hit 14
-  edits across 11 cross-refs in one spec — undercounted by anyone
-  who didn't grep.
+  spec? A single AC mechanism shift can hit 10+ edits across multiple
+  cross-refs in one spec — undercounted by anyone who didn't grep.
 - "The cross-spec reference will be authored later" — a cross-ref
   to a version that doesn't exist yet in the target spec is a
   dangling-version invalid amendment. Either author the cross-

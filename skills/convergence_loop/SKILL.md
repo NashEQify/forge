@@ -48,17 +48,54 @@ tests).
 2. **Scope declaration:** "full scope" on pass 1. Pass 2-3:
    `affected_scope` from the predecessor.
 
-### Three passes, three rules
+### Three passes, three structural roles
 
-| Pass | Scope | Severity threshold | Purpose |
-|------|-------|--------------------|---------|
-| 1 | Full artifact scope | All (BLOCKER + MAJOR + MINOR) | Broad analysis, varied patterns |
-| 2 | `affected_scope` from pass 1 + direct dependencies | BLOCKER + MAJOR | Second-order effects |
-| 3 | `affected_scope` from pass 2 | BLOCKER only | Verification: any new problems caused by pass-2 fixes? |
+The passes are NOT three chances to converge — they are three
+distinct structural roles. Reading "max 3" as "3 attempts" is the
+common misreading that produces pass-3 pressure (see §Pass 3 framing
+below).
+
+| Pass | Scope | Severity threshold | **Role** |
+|------|-------|--------------------|----------|
+| 1 | Full artifact scope | All (BLOCKER + MAJOR + MINOR) | **Broad analysis** — varied patterns surface what's there |
+| 2 | `affected_scope` from pass 1 + direct dependencies | BLOCKER + MAJOR | **Second-order effects** — did pass-1 fixes affect adjacent areas? |
+| 3 | `affected_scope` from pass 2 | BLOCKER only | **Verification** — any NEW problems caused by pass-2 fixes? |
 
 **Mechanical stop after pass 3.** No exceptions — unless the
 calling sub-workflow has its own limits (e.g. `spec-board.yaml`
 safety valve at pass 5, → `REFERENCE.md`).
+
+### Pass 3 framing (anti-pressure)
+
+Pass 3 is the **verification step**, not the last-chance pass. Its
+job is to catch NEW BLOCKERs introduced by pass-2 fix side-effects.
+If pass 3 surfaces a BLOCKER, classify and escalate honestly — both
+classes below are appropriate pass-3 outcomes:
+
+- **(a) NEW BLOCKER** caused by pass-2 fix side-effect → ESCALATE
+  with fix-direction (the fix introduced a new problem; name the
+  side-effect)
+- **(b) OLD BLOCKER** missed by pass-1's broad analysis → ESCALATE
+  with pass-1-quality note (the broad pass missed it; that's a
+  signal for the next gate iteration or the calling workflow)
+
+**Neither is a grade against the agent.** (a) is verification doing
+its job. (b) is pass-1 quality feedback the framework wants to know
+about — burying it would degrade future calibration.
+
+Agents are NOT graded on "did you converge by pass 3". Agents are
+graded on best classification of what's actually present and honest
+termination signal. ESCALATE on a structurally non-convergent
+problem is the correct outcome — it signals "this needs architect
+or human judgment, not more agent iteration".
+
+The failure mode this framing prevents: agent treats pass 3 as
+deadline → under-classifies BLOCKERs to MAJOR / forces "good enough"
+CONVERGED / declares closure on strittige issues / suppresses class
+(b) findings to avoid signaling pass-1 quality concerns. All four
+are proportionality anti-patterns the framework's value-floor
+disciplines explicitly catch — but easier to prevent at entry than
+catch at disposition.
 
 ### Severity definitions (L2 constrained judgment)
 
@@ -75,9 +112,10 @@ Guidance questions: `REFERENCE.md`.
 
 Between passes, **ALL findings** are fixed — not just those above
 the current threshold. The threshold determines when CONVERGENCE
-is reached, not what gets FIXED. Rationale (Task 191): high-only
-fixes accumulate M/L debt. Exception: a `code_review_board` FAIL
-fixes only the *fix-now set* per its §5 proportionality triage.
+is reached, not what gets FIXED. Rationale: high-only fixes
+accumulate M/L debt that compounds across passes. Exception: a
+`code_review_board` FAIL fixes only the *fix-now set* per its §5
+proportionality triage.
 
 Scope narrowing (pass 2+) refers to the ANALYSIS scope of the next
 pass, not to the FIX scope.
@@ -127,6 +165,12 @@ Never fold an unclassified net-new failure into a fix-pass.
 Early termination allowed: pass 1 zero findings → CONVERGED after
 pass 1.
 
+**ESCALATE is an appropriate outcome, not a failure mode.** It
+signals "this needs architect / human judgment, not more agent
+iteration". The agent loses no grade for ESCALATE on a stuck
+problem; the agent loses grade for forcing CONVERGED to avoid
+ESCALATE.
+
 ## State format between passes
 
 ```
@@ -167,8 +211,8 @@ fix responsibility: `REFERENCE.md`.
 
 - **NOT** fix only findings above the threshold between passes.
   **INSTEAD** fix ALL findings — the threshold determines
-  convergence, not fix scope. Because: MINOR accumulation
-  (Task 191). Exception: `code_review_board` FAIL fixes the
+  convergence, not fix scope. Because: MINOR accumulation compounds
+  across passes. Exception: `code_review_board` FAIL fixes the
   fix-now set per its §5 proportionality triage.
 - **NOT** treat pass 2 / 3 as fix verification. **INSTEAD** every
   pass is a fresh analysis. Because: anchoring bias — tainted
@@ -179,3 +223,9 @@ fix responsibility: `REFERENCE.md`.
 - **NOT** set severity abstractly. **INSTEAD** anchor it at the
   next step ("can the next step proceed?"). Because: only that
   is mechanically checkable.
+- **NOT** force CONVERGED at pass 3 to avoid ESCALATE. **INSTEAD**
+  classify honestly; ESCALATE is appropriate on stuck problems.
+  Because: pass-3-as-deadline framing produces premature CONVERGED,
+  severity-downgrade, and "good enough" closures — all
+  proportionality anti-patterns. Pass 3 is the verification step,
+  not a last-chance pass.

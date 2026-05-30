@@ -117,7 +117,7 @@ User + agent write together. Agent proposes; user decides.
 
 **Without 1-3 spec is not findable. Without 4 not reviewable. Without
 5 brief author re-derives surface. Without 6 test contract is implicit
-(Task 511 anti-pattern: post-build coverage gaps spawn bundle-tasks).**
+— post-build coverage gaps then spawn bundle-tasks.**
 
 ### Verify-before-recommend
 

@@ -34,7 +34,7 @@ its persona.
 - asyncpg: connection-pool patterns, transaction timeouts
 - Pydantic: `model_dump()` vs `dict()`, `model_validate()` vs
   constructor, `extra="forbid"`
-- AppError instead of HTTPException (Task 265)
+- AppError instead of HTTPException
 - Resource cleanup: `async with` for connections, subscriptions,
   locks
 

@@ -8,14 +8,14 @@ the board review to every review target whose type has a budget.
 ## The problem this protocol solves
 
 During fix passes, skills and runbooks grow past the Piebald budget
-(Task 273: Buddy-facing ≤100 lines, agent-facing ≤200 lines
-assembled, runbook ≤150 lines, persona ≤70 lines). The
-rationalization "substance justifies budget, split later if
-critical" causes permanent drift, because later splits do not get
-re-triggered.
+(Buddy-facing ≤100 lines, agent-facing ≤200 lines assembled, runbook
+≤150 lines, persona ≤70 lines). The rationalization "substance
+justifies budget, split later if critical" causes permanent drift,
+because later splits do not get re-triggered.
 
-Demonstrated on solve-framing fix pass (session 98): `frame/SKILL.md`
-177 lines (budget 100), `solve/WORKFLOW.md` 237 lines (budget 150).
+Recurrence shape: a solve-framing fix pass leaves `frame/SKILL.md`
+at 177 lines (budget 100) and `solve/WORKFLOW.md` at 237 lines
+(budget 150).
 User feedback: that's not reliable enough.
 
 ## Budget table (hard gate)
@@ -43,7 +43,7 @@ must come in under 120.
 
 **Differentiation by skill type (calibrated 2026-04-05):**
 - **Single-class v2** (`invocation`, no `type:`): **120 lines** —
-  target state Task 366.
+  the convergence target for the single-class skill model.
 - **Workflow** (legacy `type: workflow`): 180 lines. Scoping needs
   room for 5+ phases.
 - **Capability** (legacy `type: capability`): 120 lines.
@@ -115,6 +115,6 @@ Automatic NEEDS-WORK on an open budget finding, until resolved.
 ## Why a hard gate?
 
 Soft target + "split later" rationalization empirically leads to
-permanent drift. Task 273 defined budgets; the docs-rewrite fix
-pass exceeded them; the solve-framing fix pass did too. Three data
-points = pattern. Without a hard gate the drift repeats.
+permanent drift. Multiple fix passes (docs-rewrite, solve-framing,
+others) overshot the original budget calibration. Without a hard
+gate the drift repeats.
