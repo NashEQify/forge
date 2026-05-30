@@ -105,6 +105,36 @@ supported out of the box: **Claude Code**, **OpenCode**, and **Codex**
 (Desktop / CLI). Buddy is the orchestrator persona in all three — same
 methodology, same workflows, same boards.
 
+How Buddy boots differs by how you launched Claude Code. The
+methodology is identical; only the trigger that loads
+`agents/buddy/{soul,operational,boot}.md` before the first user turn
+varies:
+
+| Entrypoint | Boot trigger | Setup required |
+|---|---|---|
+| `cc` (terminal launcher) | launcher sets `--agent buddy` + framework inject + `CLAUDE_PROJECT_DIR` | `bash setup-cc.sh` (installs the launcher) |
+| `claude --agent buddy --add-dir` (CLI direct) | the explicit `--agent buddy` flag loads the persona | `~/.claude/agents` symlink |
+| **claude-desktop / claude-web** | SessionStart hook `buddy-boot-inject.sh` | `bash setup-cc.sh` (provisions per-user env config) |
+
+Claude Code Desktop and the web app open a folder and run plain
+`claude` — no launcher flags, no persona param. forge ships a
+SessionStart hook (`orchestrators/claude-code/hooks/buddy-boot-inject.sh`)
+that fires only there (gated on `CLAUDE_CODE_ENTRYPOINT in {claude-desktop,
+claude-web}`) and emits the boot instruction. The hook is wired in
+committed `.claude/settings.json` with `${CLAUDE_PROJECT_DIR}/...` paths
+— the terminal `cc` launcher sets that variable; Desktop and Web do
+not. To make every forge hook resolve correctly there, `setup-cc.sh`
+provisions a per-user `.claude/settings.local.json` containing the
+detected absolute path of your forge checkout. `settings.local.json` is
+gitignored, machine-local, and merged over the committed `settings.json`
+by Claude Code at session start.
+
+In short: **claude-desktop / claude-web require `bash setup-cc.sh`** to
+have run once before forge boots reliably in them. The terminal `cc`
+launcher works without that step (it sets the variable itself); the
+CLI-direct path doesn't need it either as long as the user passes
+`--agent buddy` explicitly.
+
 Two setup paths:
 
 - **Full** — one setup script per harness. Installs a launcher
@@ -155,7 +185,12 @@ pre-commit hooks for a consumer project (any harness):
 `bash ~/forge/scripts/install-git-hooks.sh`. Launcher details:
 [`docs/cc-launcher.md`](docs/cc-launcher.md).
 
-### Quick (Claude Code only)
+### Quick (Claude Code CLI only)
+
+This path is for the terminal CLI (`claude` binary) — **not** for
+claude-desktop / claude-web, which need `bash setup-cc.sh` (see the
+boot-mechanics table above). The trade-off below also applies: no
+PreToolUse hooks.
 
 ```bash
 git clone https://github.com/NashEQify/forge ~/forge

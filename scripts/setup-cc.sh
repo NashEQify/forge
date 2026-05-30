@@ -70,6 +70,44 @@ else
   echo "WARNUNG: $WHITELIST_TEMPLATE fehlt — path-whitelist nicht generiert." >&2
 fi
 
+# --- Provision .claude/settings.local.json (env block for CLAUDE_PROJECT_DIR) ---
+# Why: committed .claude/settings.json uses ${CLAUDE_PROJECT_DIR}/... for
+# all hook paths. The cc Launcher sets CLAUDE_PROJECT_DIR automatically;
+# claude-desktop and claude-web do NOT — there the variable is unset, the
+# path resolves to /orchestrators/..., the hooks die silently, and the
+# whole discipline layer (path-whitelist, frozen-zones, brief-claims,
+# SessionStart boot-inject, workflow-reminder, …) is off.
+#
+# Fix: provision per-user settings.local.json with an env block that sets
+# CLAUDE_PROJECT_DIR to this checkout's absolute path. settings.local.json
+# is gitignored and machine-local, so committed settings.json stays
+# user-neutral. CC merges settings.local.json over settings.json.
+#
+# Idempotent: skip if the env block already names this FRAMEWORK_DIR;
+# refuse to overwrite a different file silently — bail with a hint so
+# the user can merge by hand.
+SETTINGS_LOCAL="$FRAMEWORK_DIR/.claude/settings.local.json"
+DESIRED_ENV_LINE="\"CLAUDE_PROJECT_DIR\": \"$FRAMEWORK_DIR\""
+if [ -f "$SETTINGS_LOCAL" ]; then
+  if grep -qF "$DESIRED_ENV_LINE" "$SETTINGS_LOCAL"; then
+    echo "settings.local.json: OK (CLAUDE_PROJECT_DIR already pinned to $FRAMEWORK_DIR)"
+  else
+    echo "WARNUNG: $SETTINGS_LOCAL existiert, enthaelt aber nicht den erwarteten CLAUDE_PROJECT_DIR-Eintrag." >&2
+    echo "         Fuege manuell ein (oder loesche die Datei und re-run setup-cc.sh):" >&2
+    echo "         { \"env\": { $DESIRED_ENV_LINE } }" >&2
+  fi
+else
+  cat > "$SETTINGS_LOCAL" <<JSON
+{
+  "env": {
+    "CLAUDE_PROJECT_DIR": "$FRAMEWORK_DIR"
+  }
+}
+JSON
+  echo "settings.local.json: $SETTINGS_LOCAL (CLAUDE_PROJECT_DIR=$FRAMEWORK_DIR)"
+  echo "  → fixes claude-desktop / claude-web hook resolution (cc terminal sets the var itself)"
+fi
+
 # --- PATH-Check ---
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
   echo ""
