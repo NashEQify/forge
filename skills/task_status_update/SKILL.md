@@ -1,9 +1,12 @@
 ---
 name: task-status-update
 description: >
-  Atomic task-status change. The only allowed way to change
-  `status` in task YAMLs. Writes YAML + backlog in one operation.
-  Triggers when a task's status must change (the only allowed path); NOT for content edits to task bodies.
+  Coherent task-status change. The only allowed way to change
+  `status` in task YAMLs. On terminal status (done, superseded,
+  wontfix, absorbed) it also sweeps cross-task `blocked_by` and
+  `docs/plan.yaml` inline refs so the task-graph and plan stay
+  consistent.
+  Triggers when a task's status must change (the only allowed path); NOT for content edits to task bodies of OPEN tasks — the terminal-status sweep of `blocked_by` / cross-refs on OTHER tasks IS in scope.
 status: active
 relevant_for: ["main-code-agent"]
 invocation:
@@ -15,184 +18,145 @@ uses: []
 
 # Skill: task-status-update
 
-## Purpose
-
-Atomic status changes for tasks. Ensures that `status`, `updated`,
-the backlog entry, and (when applicable) the convoy are updated
-consistently in one operation.
-
-This skill is the ONLY allowed way to change `status` in task
-YAMLs. Direct edits to that field are forbidden.
-
-## Who runs it
-
-Buddy (as orchestrator). Other agents report status changes to
-Buddy, who runs this skill. Post-harness: NATS event handler.
+The only allowed way to change `status` in a task YAML. Direct
+edits to that field are forbidden. On terminal status (done,
+superseded, wontfix, absorbed) it also closes the task-graph
+(cross-task `blocked_by`) and aligns `docs/plan.yaml` inline refs —
+all in one invocation, so the graph never sees a half-closed
+terminal.
 
 ## Input
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| task_id | int | yes | Task ID (NNN) |
-| new_status | enum | yes | Target status: pending, in_progress, done, blocked, superseded, wontfix, absorbed |
-| board_result | string | no | Board result: APPROVED, APPROVED_WITH_RISKS, REJECTED, PASS_WITH_RISKS, null. Written to YAML when given. |
-| readiness | enum | no | Spec readiness (schema SoT): raw, specced, reviewed, implementing, done. Written to YAML when given. |
-| reason | string | no | Free text; not stored — kept for traceability in chat. |
-| workflow_phase | string (soft-validated) | no | Current workflow phase. Written to YAML when given. Values: workflow-specific (e.g. specify, prepare, execute, verify, close, done; solve: frame, refine, artifact, validate, execute, done). |
-| spec_phase_update | object | no | Spec-phase update (see below). |
+| task_id | int | yes | Task ID (NNN). |
+| new_status | enum | yes | pending, in_progress, done, blocked, superseded, wontfix, absorbed. |
+| board_result | string | no | APPROVED, APPROVED_WITH_RISKS, REJECTED, PASS_WITH_RISKS, null. |
+| readiness | enum | no | raw, specced, reviewed, implementing, done. |
+| reason | string | no | Free text for traceability; not stored. |
+| workflow_phase | string | no | Current workflow phase. Soft-validated. |
+| spec_phase_update | object | no | Spec-phase transition (see Step 4). |
+| closure_ref | int | conditional | Successor / absorbing task ID. Required when `new_status` ∈ {superseded, absorbed}. |
 
 ## Flow
 
-### Step 1: read the YAML
+### Step 1: read YAML
 
-Lookup order:
-1. `docs/tasks/{task_id}.yaml` (top level — active tasks).
-2. If absent: `docs/tasks/archive/{task_id}.yaml` (archived done
-   tasks).
+Lookup `docs/tasks/{task_id}.yaml`, else
+`docs/tasks/archive/{task_id}.yaml`. Missing → error. Remember the
+source path (Step 5 uses it).
 
-The task must exist in one of these paths — otherwise an error.
-Remember the source path (used in step 5 for the auto-move
-decision).
+### Step 2: write YAML
 
-### Step 2: write the YAML
-
-Writes to the source path discovered in step 1 (top level or
-archive/). The move happens only in step 5.
-
-Required fields (always):
+Write to the source path. Always:
 - `status: {new_status}`
-- `updated: {today, YYYY-MM-DD}`
+- `updated: {today YYYY-MM-DD}`
 
-Optional fields (only when set in the input):
-- `board_result: {board_result}` — board review result.
-- `readiness: {readiness}` — spec readiness level.
-- `workflow_phase: {workflow_phase}` — current workflow phase.
+Optional fields when given: `board_result`, `readiness`,
+`workflow_phase`. Don't touch others. Unknown `workflow_phase`
+value → WARN, still write (new workflows define new phases).
 
-**`workflow_phase` validation:** known values: frame, refine,
-artifact, validate, specify, prepare, execute, verify, close,
-done. Unknown value → emit a warning ("workflow_phase '{value}'
-not in the known list — typo?"), still write (no hard block —
-future workflows can define new phases).
-
-Do not change other fields.
-
-**Schema conformance (SoT: `framework/task-schema.yaml`).** Values
-written here must conform to the schema vocab (`status`, `readiness`).
-After the write, the touched task is validated against the schema via
-`plan_engine --validate <id>`; on a schema FAIL, fix before reporting.
-Calibration is `warn_first` until the backfill lands (the schema's
-`strict_after_backfill` switch) — a WARN does not block the status
-change, a post-backfill BLOCK does.
+Validate the touched task against `framework/task-schema.yaml` via
+`plan_engine --validate <id>`; on schema FAIL, fix before
+reporting.
 
 ### Step 3: convoy update (conditional)
 
-If `objective` is in the YAML and not null →
-`workspaces/{objective}/convoy.md` is updated. Field absent →
-skip.
+YAML carries `objective: <name>` → update
+`workspaces/{objective}/convoy.md`. Absent → skip.
 
 ### Step 4: spec_phase_update (conditional)
 
-Only when `spec_phase_update` is set in the input. Writes to the
-`spec_states` map of the task.
+Only when `spec_phase_update` is in the input. Writes to the task's
+`spec_states` map. Valid transitions (each may fire a counter):
 
-**Input format:**
+- `raw → reviewing` (`increment_review=true`)
+- `reviewing → fixing`
+- `fixing → reviewing` (`increment_review=true`,
+  `increment_fix=true`)
+- `reviewing → ready`
 
-```yaml
-spec_phase_update:
-  spec_name: harness-runtime-patterns
-  current_phase: reviewing        # target phase
-  increment_review: true          # review_passes += 1
-  increment_fix: false            # fix_passes += 1
-```
+`spec_name` is created at `raw` if absent. Invalid transition or
+unknown `current_phase` → abort.
 
-**Transition matrix (SoT: docs/tasks/328.md):**
+### Step 4.5: cross-task + plan.yaml sweep (MUST on terminal status)
 
-- `raw -> reviewing` — board started. `increment_review=true`.
-- `reviewing -> fixing` — board NEEDS-WORK. `increment_fix` not
-  incremented.
-- `fixing -> reviewing` — fix pass done, re-review.
-  `increment_review=true`, `increment_fix=true`.
-- `reviewing -> ready` — board PASS. `increment_review` not
-  incremented again (already counted).
+Lifecycle-symmetric with `task_creation` Step 1b — that step
+**builds** the `blocked_by` graph, this step **closes** it.
 
-Invalid transitions (e.g. raw→ready, fixing→raw) are errors.
-Buddy aborts and reports the error.
+Runs BEFORE Step 5 archive so the focal task stays at top level
+until the graph is consistent. On sweep failure, the focal task is
+re-readable; the archive move only happens after the sweep returns.
 
-**Validation:**
+**`closure_ref` existence guard (superseded / absorbed):** verify
+`closure_ref` resolves to an existing task whose status is NOT in
+`terminal_status`. Fail → abort with `closure_ref={id} does not
+point at an open task — ask the user, then re-run`.
 
-1. `spec_name` must exist in `spec_states` OR is created (raw as
-   the starting point).
-2. `current_phase` must be in {raw, reviewing, fixing, ready}.
-3. The transition must be valid (old_phase → new_phase per
-   matrix).
-4. On `increment_review=true`: `review_passes += 1`.
-5. On `increment_fix=true`: `fix_passes += 1`.
+**Focal-task closure write:**
+
+- `superseded` → focal: `superseded_by: {closure_ref}`; successor
+  (`{closure_ref}`): `supersedes: {task_id}`.
+- `absorbed` → focal: `absorbed_by: {closure_ref}` (one-way —
+  no `absorbs:` on the absorbing task; its body documents what was
+  folded in).
+- `done` / `wontfix` → no closure-field write.
+
+Missing `closure_ref` on superseded / absorbed → abort with
+`closure_ref required for status={status} — ask the user, then
+re-run`.
+
+**`blocked_by` sweep on open tasks** (open = status NOT in
+`terminal_status`):
+
+- `done` → **keep** the entry (historical record; `plan_engine`
+  evaluates via status).
+- `superseded` / `absorbed` → **replace** `{task_id}` with
+  `{closure_ref}`.
+- `wontfix` → **remove** `{task_id}`; emit `wontfix on {task_id}
+  orphans N blocked-by entries — review each`.
+
+**`docs/plan.yaml` inline refs:** run
+`grep -nE 'Task {task_id}\b' docs/plan.yaml` (`\b` portable across
+ugrep / GNU / BSD — the project shell's `grep` is a ugrep wrapper).
+Inspect each hit in `operational_intent.goal`,
+`operational_intent.done`, each milestone's `desc`. Rewrite stale
+descs inhaltlich. No hit → skip.
+
+After the sweep: `plan_engine --validate` (whole tree, no `<id>`
+arg) must PASS — dangling `blocked_by` is a graph error.
 
 ### Step 5: auto-archive / reverse move
 
-Lifecycle move mechanic between `docs/tasks/` (active) and
-`docs/tasks/archive/` (history). Happens AFTER all YAML writes
-(steps 2-4).
+Lifecycle move between `docs/tasks/` (active) and
+`docs/tasks/archive/` (history, WORM frozen zone). Move pair (yaml
++ md) via two `git mv`; if the second fails, roll back the first.
 
-**Forward move (top level → archive/):** when `new_status == done`
-AND the source path from step 1 was the top level → atomic move:
+- `new_status == done` from top level → forward move to archive/.
+- `new_status != done` from archive/ → reverse move back.
+- Otherwise → no-op.
 
-1. `git mv docs/tasks/{task_id}.yaml docs/tasks/archive/{task_id}.yaml`
-2. `git mv docs/tasks/{task_id}.md   docs/tasks/archive/{task_id}.md`
+Aux files (`{id}-gates.md`, `{id}-delegation.md`,
+`{id}-test-plan.md`) stay at the source path — gitignored,
+operational state.
 
-If an error occurs after (1) but before (2): roll (1) back via
-`git mv`, then raise the error.
+Other terminal statuses (`superseded`, `wontfix`, `absorbed`) do
+NOT auto-move — their cross-refs would break under the move.
 
-**Reverse move (archive/ → top level):** when `new_status != done`
-AND the source path from step 1 was archive/ (reopen pattern, e.g.
-done → in_progress) → analogous move, both files back to the top
-level.
-
-**No-op cases:**
-- `new_status == done` AND source is already in archive/ → no
-  move (already there).
-- `new_status != done` AND source is already at top level → no
-  move.
-
-**What gets moved:**
-- `{task_id}.yaml`
-- `{task_id}.md`
-
-**What stays at the source path (do NOT take along):**
-- Auxiliary files: `{task_id}-gates.md`,
-  `{task_id}-delegation.md`, `{task_id}-test-plan.md`.
-- These are gitignored per the docs-folder-taxonomy decision
-  (internal operational state, not part of the historical work
-  record).
-
-**Other terminal statuses (`superseded`, `wontfix`, `absorbed`):**
-trigger NO auto-move. The lifecycle semantic is different —
-`superseded` often has cross-refs to the original
-(`supersedes: <id>`, `superseded_by: <id>`) that would break on
-move. Such tasks stay at the top level with their terminal status.
-
-**Frozen zone:** `docs/tasks/archive/` is a consistency_check
-frozen zone (WORM). Step 5 is the ONLY legitimate write operation
-on that path. Subsequent calls of `task_status_update` on an
-already-archived file keep writing to the archive path (step 2
-writes at the source path) — that is conceptually a modify, but
-legitimate within the skill contract. The frozen-zone check must
-tolerate `task_status_update`-driven modifies in archive/ (see
-consistency_check/REFERENCE.md §Frozen Zone Integrity Check).
+Step 5 is the only legitimate write operation in
+`docs/tasks/archive/`; subsequent calls on already-archived files
+keep writing there per contract (see
+`consistency_check/REFERENCE.md` §Frozen Zone).
 
 ### Step 5.5: persist gate (when new_status == done)
 
-When flipping to `done`, the agent MUST run the persist gate before
-continuing:
+On flip to `done` the agent MUST:
 
-1. Write project-state patch to `context/overview.md`.
-2. Add `context/history/<entry>.md` close-out entry.
+1. Patch `context/overview.md`.
+2. Add `context/history/<entry>.md` close-out.
 3. If `workflow_engine.py --find --task {task_id}` shows an active
-   workflow not yet at `commit-deploy`, drive it to its terminal
-   step (`--complete commit-deploy`). No auto-abort.
-
-Closes the orphan-workflow case (task flipped via this skill outside
-the workflow's lifecycle) without bypassing closeout discipline.
+   workflow not yet at `commit-deploy` → drive it (`--complete
+   commit-deploy`). No auto-abort.
 
 ### Step 6: output
 
@@ -200,119 +164,28 @@ the workflow's lifecycle) without bypassing closeout discipline.
 Status update: [{task_id}] {title}
   status: {old} -> {new}
   updated: {today}
-  board_result: {value} | unchanged
-  readiness: {value} | unchanged
-  workflow_phase: {value} | unchanged
-  spec_states: {spec_name} {old_phase} -> {new_phase} | unchanged
+  board_result | readiness | workflow_phase | spec_states: ... | unchanged
   convoy: updated | n/a
+  cross-task sweep: N blocked_by + M closure entries | n/a (non-terminal)
+  plan.yaml sweep: K descs rewritten | n/a
   archive: forward | reverse | no-op
 ```
 
-## Contract
-
-### INPUT
-- **Required:** task_id — task ID (NNN), the task must exist.
-- **Required:** new_status — target status (pending, in_progress,
-  done, blocked, superseded, wontfix, absorbed).
-- **Optional:** board_result — board result (APPROVED,
-  APPROVED_WITH_RISKS, REJECTED, PASS_WITH_RISKS, null).
-- **Optional:** readiness — spec readiness (schema SoT:
-  raw, specced, reviewed, implementing, done).
-- **Optional:** reason — free text for traceability.
-- **Optional:** workflow_phase — current workflow phase.
-- **Optional:** spec_phase_update — spec-phase transition
-  (spec_name, current_phase, increment_review, increment_fix).
-- **Context:** `docs/tasks/{task_id}.yaml` — read in step 1.
-
-### OUTPUT
-**DELIVERS:**
-- Updated task YAML: status + updated (always) + board_result +
-  readiness + workflow_phase + spec_states (optional).
-- Convoy update when `objective` is present.
-- Status-update output block (old → new for every changed field).
-
-**DOES NOT DELIVER:**
-- No new tasks — that is `task_creation`.
-- No changes to title, area, priority, spec_ref — only
-  status-relevant fields.
-- No backlog writes — `plan_engine` computes overviews.
-
-**ENABLES:**
-- Commit-guard TASK-SYNC: atomic status updates instead of
-  direct YAML edits.
-- Plan engine: accurate task statuses for critical path and
-  milestone calculation.
-- Save workflow: status consistency as part of the save process.
-
-### DONE
-- YAML written: status + updated (+ optional fields when set:
-  board_result, readiness, workflow_phase, spec_states).
-- Convoy updated when `objective` is present.
-- Auto-archive move executed (forward on done from top level,
-  reverse on != done from archive/) or no-op.
-- Status-update output block emitted.
-
-### FAIL
-- **Retry:** not foreseen — atomic operation.
-- **Escalate:** task does not exist → report the error. Invalid
-  spec-phase transition → abort and report the error.
-- **Abort:** invalid status value or invalid transition →
-  immediate abort with error message.
-
-## Boundary
-
-- **Limited field scope.** Title, area, priority, spec_ref, etc. are
-  still edited directly. This skill writes: status, updated
-  (always) + board_result, readiness, workflow_phase,
-  spec_states (optional, when given).
-- **No replacement for task_creation.** New tasks are still
-  created via `task_creation`. This skill takes over from the
-  first status mutation onwards.
-
 ## Anti-patterns
 
-- **NOT** edit status directly in the YAML. INSTEAD call this
-  skill. Because: atomic updates + backlog consistency.
-- **NOT** commit without an `updated` field. INSTEAD the skill
-  sets both atomically. Because: drift between status and the
-  updated timestamp.
-- **NOT** create new tasks via a status update (status: pending
-  on a non-existent task). INSTEAD the `task_creation` skill.
-  Because: new tasks need duplicate check + triage.
-- **NOT** set `workflow_phase` without updating the state-file
-  frontmatter (when the state file exists). INSTEAD do both
-  atomically: `task_status_update workflow_phase=X` +
-  state-file frontmatter `phase: X` in the same step. Because:
-  drift between task YAML and state file produces a contradictory
-  state on boot resume.
-- **NOT** edit files in `docs/tasks/archive/` directly or move
-  them via `git mv` yourself. INSTEAD call this skill — step 5
-  is the only legitimate move operation. Because: frozen zone
-  (WORM); consistency_check reports hand edits as INCIDENT.
-- **NOT** order workflow steps so that `phase-done`
-  (workflow_phase=done) runs AFTER `task-status-done`
-  (status=done) when both work on the same task. INSTEAD
-  `phase-done` first, `task-status-done` as the very last
-  content step. Because: after status=done the YAML is in
-  archive/, and subsequent writes look like a frozen-zone
-  modify — see step 5 §Frozen zone.
-
-## Enforcement
-
-The following points point at this skill as the only allowed way:
-
-- `skills/task_creation/SKILL.md` — creating new tasks.
-- `workflows/runbooks/save/WORKFLOW.md` — step 2.5.
-- `workflows/runbooks/build/WORKFLOW.md` — `workflow_phase` at
-  every phase boundary.
-- `workflows/runbooks/fix/WORKFLOW.md` — `workflow_phase` at every
-  phase boundary.
-- `workflows/runbooks/research/WORKFLOW.md` — `workflow_phase` at
-  every phase boundary.
-- `workflows/runbooks/solve/WORKFLOW.md` — `workflow_phase` at
-  every phase boundary.
-- `workflows/runbooks/review/WORKFLOW.md` — `workflow_phase` at
-  every phase boundary.
-- `workflows/runbooks/docs-rewrite/WORKFLOW.md` — close phase
-  step 1 (TASK-UPDATE, when a task exists).
-- `CLAUDE.md` — commit-guard TASK-SYNC.
+- **NOT** edit `status` directly in the YAML — call this skill.
+  Reason: cross-task graph + plan.yaml refs must stay consistent in
+  the same operation.
+- **NOT** create new tasks via this skill (`status: pending` on a
+  non-existent task) — `task_creation`. Reason: new tasks need
+  duplicate check + triage.
+- **NOT** edit `docs/tasks/archive/` directly or `git mv` files
+  yourself — Step 5 is the only legitimate write. Reason: frozen
+  zone (WORM); `consistency_check` reports hand edits as INCIDENT.
+- **NOT** sequence `workflow_phase=done` AFTER `status=done` on the
+  same task — phase first, status last. Reason: `status=done`
+  archives the YAML; subsequent writes look like frozen-zone
+  modifies.
+- **NOT** skip the cross-task sweep on superseded/absorbed because
+  *"there are probably no dependents"* — run the scan; cold-graph
+  assumptions break silently.

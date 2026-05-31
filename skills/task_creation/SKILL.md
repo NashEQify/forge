@@ -2,8 +2,8 @@
 name: task-creation
 description: >
   Structured task creation. Self-contained tasks with ACs,
-  intent_chain, and a duplicate check. Task quality determines
-  downstream quality.
+  intent_chain, and a duplicate + dependency check. Task quality
+  determines downstream quality.
   Triggers when actionable work needs tracking as a new task (intake ACTIONABLE, root-cause fix-task, spec decomposition); NOT for direct YAML edits or sofort-fixes.
 status: active
 invocation:
@@ -15,186 +15,147 @@ uses: []
 
 # Skill: task-creation
 
-## Purpose
+Structured, high-quality task creation. Self-contained tasks with
+clear ACs, a derived `intent_chain`, and no duplicates. Task quality
+sets the upper bound on downstream work quality.
 
-Structured, high-quality task creation. Ensures that every new
-task is self-contained, has clear ACs, carries an `intent_chain`,
-and does not produce duplicates. Task quality sets the upper bound
-on the quality of all downstream work.
-
-## Who and when
-
-Buddy. Calls this skill on:
-
-| Trigger | Context |
-|---------|---------|
-| Intake gate ACTIONABLE — future work identified | Buddy creates a task instead of an ad-hoc note |
-| Root-cause-fix primitive step 4 — the fix is a task | Defect task with root-cause info |
-| User says "create a task for X" | Explicit instruction |
-| Spec process produces a new task | Result of decomposition |
+Triggers: intake gate ACTIONABLE, root-cause-fix step 4, user
+"create a task for X", spec decomposition.
 
 ## Input
 
-- **problem:** what is broken / missing / wanted? (raw input)
-- **context** (optional): additional context (defect info,
-  incident, conversation)
+- **problem:** what is broken / missing / wanted? (raw)
+- **context** (optional): defect info, incident, conversation.
 - **source** (optional): `intake` | `root-cause-fix` | `user` |
-  `decomposition`
+  `decomposition`.
 
 ## The 5 steps
 
 ### 1. Duplicate + dependency check (MUST)
 
-Two checks in the same scan of `docs/tasks/`:
+Single scan over `docs/tasks/`, two dimensions:
 
-**(a) Duplicate check:** is there a task with the same goal
-(semantic, not just title match)? A subset of an existing one? An
-existing one becoming obsolete? Action: duplicate → no new task,
-reference the existing one. Subset → fold into the existing task as
-an AC / comment. Obsolescence-maker → supersede the existing one.
-No duplicate → continue.
+**(a) Duplicate check** — same goal (semantic, not title match),
+subset of existing, or makes existing obsolete?
+- Duplicate → no new task, reference the existing one.
+- Subset → fold the problem into the existing task as an AC /
+  comment.
+- Obsolescence-maker → supersede the existing one (via
+  `task_status_update`), the new task is the successor.
+- No duplicate → continue.
 
-**(b) Cross-task dependency check (required, not optional):** for
-every pending / in_progress task, check — is there a logical
-dependency to the new task in **either** direction?
+**(b) Cross-task dependency check (required, not optional)** — for
+every pending / in_progress task, is there a logical dependency in
+**either** direction?
 
-- **The new task needs the result of an existing task** → the new
-  task gets `blocked_by: [NNN]` for the predecessor(s). Example:
-  the new task documents a framework state. An existing pending
-  task is changing that framework state. → the new task gets
-  `blocked_by: [<existing>]`.
-- **An existing task needs the result of the new task** → the
-  existing task gets the new task added to its `blocked_by`.
-  Editing the existing YAML is required, not optional.
+- New task needs result of existing → new task gets
+  `blocked_by: [NNN]`.
+- Existing task needs result of new → **edit the existing YAML**
+  and add the new task ID to its `blocked_by`. Mandatory.
 
-Trigger questions for the dependency check (substantive, not
-regex):
-- Does either task change framework artifacts that the other
-  documents / uses / extends?
-- Does either task produce specs / decisions that the other
-  needs?
-- Is A's scope a precondition for B's scope?
-- Would running them in parallel produce rework (B documents the
-  state, A changes the state → B repeats work)?
+Yes on any → record; document rationale in the MD body as a
+`## Dependency: blocked_by N` block (why, direction, order). No on
+all → `blocked_by: []`.
 
-Yes on any → record the dependency. No on all → `blocked_by: []`.
-Document the dependency rationale in the MD body as a
-`## Dependency: blocked_by N` block (why, which direction, order).
+Trigger questions + worked example: `REFERENCE.md`.
 
-Detail + examples: `REFERENCE.md`.
+**Lifecycle symmetry:** this step **builds** the `blocked_by`
+graph; closure on terminal status (replace on superseded/absorbed,
+remove on wontfix, keep on done) is `task_status_update` Step 4.5.
 
 ### 1.5. Value floor (MUST)
 
-Before triage: what operational impact does NOT doing this have?
+What operational impact does NOT doing this have?
 
 - **Nothing breaks** — no contract violation, no one blocked, no
-  behaviour change → `accept`, no task. Optional recording where
-  natural (forge-feed for lessons, ADR for decision-drivers,
-  code-comment for invariants). Default: drop.
+  behaviour change → `accept`, no task. Optional record where
+  natural (forge-feed for lessons, ADR for decision-drivers).
 - **Cosmetic only** — SoT-link tidiness, placeholder fills, "nice
-  to have" docs, archived-yaml string-shape changes → same. `accept`.
-- **Real impact** — defect, blocker, contract gap, user-visible bug,
-  measurable downstream cost → continue to step 2 triage.
+  to have" docs → `accept`.
+- **Real impact** — defect, blocker, contract gap, user-visible
+  bug, measurable downstream cost → continue to step 2.
 
-Applies regardless of trigger (intake, root-cause-fix, user-says,
-decomposition). Symmetric with `code_review_board/SKILL.md` LOW-
-hard-floor.
+Applies regardless of trigger. Symmetric with `code_review_board`
+LOW-hard-floor.
 
 **User-override:** if trigger=user AND the floor says `accept`,
-Buddy MUST surface the outcome before proceeding —
-*"Value-floor says accept (Grund X) — really file?"*. User can
-override with explicit yes. Otherwise: no task.
+surface the outcome before proceeding —
+*"Value-floor says accept (Grund X) — really file?"*. Explicit
+yes overrides; otherwise: no task.
 
 ### 1.6. Claim verification (MUST when trigger formulations present)
 
-If the task body (ACs, intent_chain, description) uses any of:
-`supersedes`, `reuses existing`, `already implemented`,
-`wraps existing`, `delivered in Task`,
+If the task body uses any of: `supersedes`, `reuses existing`,
+`already implemented`, `wraps existing`, `delivered in Task`,
 `existing-code verifications confirm` — each claim MUST be paired
-with a `C-VERIFY` block (claim text + verbatim `grep -rn` command +
-verbatim output + `CONFIRMED|FALSIFIED` disposition). Hook
-BRIEF-CLAIMS re-runs the grep at write/commit time and BLOCKs on
-mismatch — hallucinated verification outputs die at the hook.
+with a `C-VERIFY` block (claim text + verbatim `grep -rn` command
++ verbatim output + `CONFIRMED|FALSIFIED` disposition). Hook
+BRIEF-CLAIMS re-runs the grep at write/commit and BLOCKs on
+mismatch.
 
 ### 2. Triage (MUST)
 
 Fix immediately or create a task? Criteria: effort, reversibility,
-dependencies, context, interruption. All "fix immediately"
-criteria met → light plan, no task; **steps 3-5 are skipped**.
-Otherwise → continue. Triage table: `REFERENCE.md`.
+dependencies, context, interruption. All "fix immediately" criteria
+met → light plan, no task; **steps 3-5 are skipped**. Otherwise →
+continue. Triage table: `REFERENCE.md`.
 
 ### 3. Derive the intent_chain (MUST)
 
-Derive from the active context. Required field on delegation;
-optional in direct user conversation. Format and rules (build +
-life variants): `framework/intent-tree.md` §intent_chain.
+Derive from the active context. Required on delegation; optional in
+direct user conversation. Format + rules (build + life variants):
+`framework/intent-tree.md` §intent_chain.
 
 ### 4. Write the task file (MUST)
 
-Format: `docs/tasks/NNN.yaml` + `NNN.md` (see
-`framework/task-format.md`).
+Format: `docs/tasks/NNN.yaml` + `NNN.md`. Schema SoT:
+`framework/task-schema.yaml`. Body SoT: `framework/task-format.md`.
 
-**Required YAML fields** (SoT: `framework/task-schema.yaml`):
-`id`, `title`, `status`, `milestone`, `blocked_by`, `created`,
-`updated`; plus `effort` (`S|M|L|XL`, strict) and `priority`
-(`high|medium|low`, write-strict) — both required on open
-(non-terminal) tasks. New tasks are open, so a new task MUST carry
-`effort` + `priority`. Field names + vocab live in the schema SoT,
-not here.
+YAML field names + value vocab live in the schema, not here. New
+tasks are open → MUST carry `effort` (`S|M|L|XL`) and `priority`
+(`high|medium|low`) alongside the always-required fields (`id`,
+`title`, `status`, `milestone`, `blocked_by`, `created`, `updated`).
 
-**`milestone` MUST** be a key from `docs/plan.yaml` milestones.
-Pick the milestone that fits the task **inhaltlich** (read the task
-content, don't default to the last-used one). If no existing milestone
-fits → add a new milestone entry to `docs/plan.yaml`
-(`key + title + desc + phases + requires`) **before** running step 5.
-New-milestone justification belongs in the `desc:` field; existing
-milestones win on fit, a new one is only created when the task content
-genuinely doesn't belong anywhere.
+**`milestone`** MUST be a key from `docs/plan.yaml` milestones.
+Pick the milestone that fits the task **inhaltlich** (read the
+content, don't default to the last-used one). If no existing
+milestone fits, **surface to the user before continuing**:
+*"No existing milestone fits — propose a new one (key + title +
+desc) or pick the closest existing one?"* (See `docs/plan.yaml`
+`milestones:` for the schema — new entries follow the existing
+`key + title + desc + phases + requires` shape.) Plan.yaml
+milestone-writes belong outside this skill; if the user approves,
+Buddy edits `docs/plan.yaml` directly before this skill resumes
+at step 5.
 
-**`spec_ref` required check:** when the task implements an
-existing spec → `spec_ref` MUST point at the spec. `null` only
-when no spec exists.
+**`spec_ref`** required when the task implements an existing spec
+(`null` only when no spec exists).
 
 **Dependency-spike check:** new external dependency with >1
-integration point? → place a spike task (PoC / eval) ahead of it
-as `blocked_by`. Detail: `REFERENCE.md`.
+integration point → place a spike task (PoC / eval) ahead of it as
+`blocked_by`. Detail: `REFERENCE.md`.
 
-**MD content quality** (required check before commit, not YAML
-fields): problem (is the why understandable?), intent (goal
-without prescribing the path?), description (self-contained?),
-priority (plausible?), area (does it fit?). FAIL criteria:
-`REFERENCE.md`.
+**MD content quality** — problem (why understandable?), intent
+(goal not path?), description (self-contained?), priority
+(plausible?), area (fits?). FAIL criteria: `REFERENCE.md`.
 
-**Optional but always check:** `context_manifest` (when context
-is clear) and `workflow_template` (decision / research —
-`standard-build` deprecated, build via the runbook). Detail +
-YAML signature: `REFERENCE.md`.
+**Optional but always check:** `context_manifest`,
+`workflow_template` (decision / research). Detail: `REFERENCE.md`.
 
-The "Not yet" block is required — an empty block is invalid (scope
-must be explicitly bounded). **No exclusion from the user → ask
-actively.** Optional fields (ACs, constraints, deps) when known.
+**`## Not yet`** block required — empty is invalid. No exclusion
+from the user → ask actively.
 
 ### 5. Validation (MUST)
 
-`python3 $FRAMEWORK_DIR/scripts/plan_engine.py --validate`. The
-new task must appear without an ERROR. Checks: milestone exists in
-plan.yaml, blocked_by references existing tasks, no cycle, **plus
-schema conformance against `framework/task-schema.yaml`** (field
-names, required-when-open `effort`+`priority`, value vocab).
-Calibration is `warn_first` until the backfill lands; a new task
-should be schema-clean on creation regardless.
+`python3 $FRAMEWORK_DIR/scripts/plan_engine.py --validate`. The new
+task must appear without an ERROR (milestone exists in plan.yaml,
+blocked_by refs existing tasks, no cycle, schema conformance).
+
 **FAIL →** correct the task file (milestone vs `docs/plan.yaml`,
 blocked_by IDs vs `docs/tasks/`) and re-validate. Repeated FAIL →
 delete the task files; escalate to the user (NNN is reused).
 
-## SoT boundary
-
-The task YAML is the SoT for metadata (status, deps, effort,
-assignee). `docs/plan.yaml` is the SoT for milestone assignment.
-There is no separate backlog index — `plan_engine` computes the
-overviews.
-
-## Output format
+## Output
 
 ```
 Task creation: [NNN] [title]
@@ -205,99 +166,25 @@ File: docs/tasks/NNN.yaml + NNN.md
 Validate: plan_engine --validate PASS
 ```
 
-## Contract
-
-### INPUT
-- **Required:** problem — what is broken / missing / wanted?
-  (raw input)
-- **Optional:** context — additional context (defect info,
-  incident, conversation)
-- **Optional:** source — `intake` | `root-cause-fix` | `user` |
-  `decomposition`
-- **Context:** `docs/tasks/` (for duplicate check),
-  `docs/plan.yaml` (for milestone assignment),
-  `framework/task-format.md` (format SoT).
-
-### OUTPUT
-**DELIVERS:**
-- Task YAML (`docs/tasks/NNN.yaml`) + task MD
-  (`docs/tasks/NNN.md`).
-- Duplicate check result (no duplicate / duplicate of / subset of).
-- Triage decision (fix immediately / create task + rationale).
-- `plan_engine --validate` PASS.
-
-**DOES NOT DELIVER:**
-- No spec process — task creation, not spec maturation.
-- No status update — that is `task_status_update`.
-- No index management — overviews come from `plan_engine`.
-- No backlog grooming — no bulk reorganization.
-
-**ENABLES:**
-- Build workflow: task as the delegation artifact.
-- Spec process: task with `spec_ref` as a tracking anchor.
-- Plan engine: task in milestone calculation and the critical
-  path.
-
-### DONE
-- Duplicate check executed.
-- Triage decision taken (fix immediately or create task).
-- For a task: YAML + MD written, `intent_chain` derived.
-- "Not yet" block filled (not empty).
-- `plan_engine --validate` PASS (0 errors).
-
-### FAIL
-- **Retry:** `plan_engine --validate` FAIL → correct the task
-  file, re-validate.
-- **Escalate:** repeated FAIL → delete the task files, escalate
-  to the user (NNN is reused).
-- **Abort:** duplicate found → no new task, reference the existing
-  one.
-
-## Boundary
-
-- **No spec process.** This skill creates tasks. Spec maturation →
-  spec process (interview → spec → review → test design)
-  separately.
-- **No status update.** Status changes → `task_status_update`
-  skill.
-- **No index management.** Overviews come from
-  `plan_engine --boot`, not from this skill.
-- **No backlog grooming.** Task merging, re-sorting, or bulk
-  reorganization do not belong here.
-
 ## Anti-patterns
 
-- **NOT** skipping the duplicate check because "my task is
-  certainly new". **INSTEAD** always scan. Because: duplicates
-  arise from slightly different wording — a semantic match is
-  required.
-- **NOT** setting `blocked_by: []` without actively checking
-  pending / in_progress tasks. **INSTEAD** run the cross-task
-  dependency check (step 1b) substantively: "does either task
-  change artifacts the other documents / uses?" Because: parallel
-  tasks with implicit dependency produce rework — A changes the
-  framework while B documents it, then B has to redo when A lands.
-- **NOT** skipping triage and always creating a task. **INSTEAD**
-  check the immediate-fix criteria. Because: backlog bloat from
+- **NOT** skip the duplicate check ("my task is certainly new") —
+  always scan; duplicates arise from slightly different wording.
+- **NOT** set `blocked_by: []` without running step 1b
+  substantively — parallel tasks with implicit dependency produce
+  rework (B documents while A changes the state, B redoes).
+- **NOT** skip triage and always create a task — backlog bloat from
   5-minute tasks that could be done directly.
-- **NOT** accepting an empty "Not yet" block. **INSTEAD** ask the
-  user actively "what is explicitly out of scope?". Because:
-  scope drift across the task lifecycle when boundaries are unstated.
-- **NOT** `spec_ref=null` on implementing tasks. **INSTEAD**
-  assign a spec, or hold the task until the spec exists. Because:
-  the spec ↔ task link is missing — breaks consistency_check spec
-  coverage (exception: REFERENCE_SPECS).
-- **NOT** filling required fields with "see above" or "current
-  conversation". **INSTEAD** make them self-contained. Because:
-  tasks are picked up later without the session context.
-
-- **NOT** embedding build-workflow route decisions in task notes
-  (e.g. `Trigger Build-Workflow: ... --route sub-build`).
-  **INSTEAD** leave route-decision to workflow-start time;
-  path-determination per `workflows/runbooks/build/WORKFLOW.md`
-  wins based on current task properties (effort, schema, AC count,
-  parent-build relationship). Because: route-hints in task notes
-  go stale (effort grows, ACs added, schema-change introduced)
-  and anchor the start-time decision toward an outdated path. The
-  correct action when a stale hint disagrees with current properties
-  is to ignore the hint, not to honor it.
+- **NOT** accept an empty `## Not yet` block — ask actively; scope
+  drift across the lifecycle when boundaries are unstated.
+- **NOT** `spec_ref: null` on implementing tasks — assign a spec
+  or hold the task. Breaks `consistency_check` spec coverage
+  (exception: REFERENCE_SPECS).
+- **NOT** fill required fields with "see above" / "current
+  conversation" — tasks are picked up later without session
+  context.
+- **NOT** embed build-workflow route decisions in task notes
+  (`--route sub-build`) — route-determination at workflow-start
+  time per `workflows/runbooks/build/WORKFLOW.md` based on current
+  task properties. Stale hints in notes anchor toward outdated
+  paths.
