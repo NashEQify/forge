@@ -111,7 +111,7 @@ For a workflow trigger: look in `framework/process-map.md`. What I want
 ### DO 4: Stale cleanup in the same commit
 
 When you archive/delete something: `grep -rn <name>` with a frozen-zone
-filter, fix all active refs in the same commit. Pre-commit Check 5 warns.
+filter, fix all active refs in the same commit. This is discipline-only — no pre-commit check for it.
 
 ### DO 5: Respect generator output
 
@@ -122,13 +122,13 @@ sections outside the `<!-- SKILL-MAP-AUTO-START -->` /
 ### DO 6: Skill anatomy for new skills
 
 Mandatory frontmatter fields: `name`, `description` (with "Use when"),
-`status`, `invocation.primary`. Anatomy-v2 conformant. Pre-commit Check 7
-BLOCKS otherwise.
+`status`, `invocation.primary`. Anatomy-v2 conformant. Pre-commit Check 3
+(SKILL-FM-VALIDATE) BLOCKS otherwise.
 
 ### DO 7: Persist gate on status change
 
-Status change without context update is half. Pre-commit Check 6
-(PERSIST-GATE) is only WARN — discipline closes the gap.
+Status change without context update is half. This is discipline-only —
+there's no pre-commit check for it; habit closes the gap.
 
 ### DO 8: Source-grounding discipline
 
@@ -182,9 +182,9 @@ now discipline-enforced.
 
 ### DON'T 6: Raw edits on task YAMLs (status/readiness)
 
-Status/readiness ALWAYS via the `task_status_update` skill. Pre-commit
-Check 2 (TASK-SYNC) warns otherwise — but that is just a symptom, not
-the diagnosis.
+Status/readiness ALWAYS via the `task_status_update` skill. Raw edits
+are caught by discipline + `consistency_check`, not a pre-commit check —
+but that is just a symptom, not the diagnosis.
 
 ### DON'T 7: Edit the AUTO block manually
 
@@ -229,7 +229,7 @@ For a bug → `fix` workflow Phase A is not optional. Even for a "small" bug.
 
 | Change type | Where | Mandatory steps |
 |---|---|---|
-| New skill | `skills/<name>/SKILL.md` | standard skill format, `Standalone` block, spec-board L1, pre-commit Check 7 PASS |
+| New skill | `skills/<name>/SKILL.md` | standard skill format, `Standalone` block, spec-board L1, pre-commit Check 3 (SKILL-FM-VALIDATE) PASS |
 | New workflow | `workflows/runbooks/<name>/WORKFLOW.md` | Routing in `process-map.md`, entry in `boot-navigation.md`, new line in skill-map composition map |
 | New persona | `agents/<name>.md` (SoT) + `.claude/agents/<name>.md` (CC wrapper) + possibly OC wrapper | Adapter-SoT-Sync (`consistency_check` Check 3) |
 | New hook | `orchestrators/claude-code/hooks/<name>.sh` | Header doc, entry in `orchestrators/claude-code/settings.json.template` + re-run `setup-cc.sh`, `tests/hooks/test-<name>.sh`, doc in `CLAUDE.md §Active Hooks` |
@@ -242,13 +242,11 @@ For a bug → `fix` workflow Phase A is not optional. Even for a "small" bug.
 
 | # | Check | Severity | Trigger |
 |---|---|---|---|
-| 1 | PLAN-VALIDATE | BLOCK | Structural plan inconsistency |
-| 2 | TASK-SYNC | WARN | Status/readiness edit without skill |
-| 3 | OBLIGATIONS | WARN | docs/dashboard/plan_engine touched, deploy needed |
-| 4 | CG-CONV | BLOCK | Wrong commit-message form |
-| 5 | STALE-CLEANUP | WARN | Marker `STALE:|RETIRED:|SUNSET:` with live refs |
-| 6 | PERSIST-GATE | WARN | Status change without context update |
-| 7 | SKILL-FM-VALIDATE | BLOCK | Required frontmatter field missing / unknown invocation |
+| 1 | PLAN-VALIDATE | BLOCK | Structural plan inconsistency (`plan_engine.py --validate`) |
+| 2 | CG-CONV | BLOCK | Wrong commit-message form |
+| 3 | SKILL-FM-VALIDATE | BLOCK | Required frontmatter field missing / unknown invocation |
+| 4 | SECRET-SCAN | WARN | gitleaks finding in staged content |
+| 5 | SOURCE-VERIFICATION | WARN | Board/council review missing line-numbered evidence pointers |
 
 WARN is **not ignorable** — the real failure class is "Buddy forgets",
 not "actively bypasses". You belong to the first class; respect warnings.

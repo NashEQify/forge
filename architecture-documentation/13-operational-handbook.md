@@ -16,8 +16,8 @@ invariants, the operational rules, the boot routing. He greets you and
 asks what's up. Whatever you say, he routes through three phases:
 **RECEIVE** (incident? substantive? trivial?), **ACT** (delegate, dispatch
 boards, work skills), **BOUNDARY** (persist context, update task state,
-close the loop). Mechanical hooks block paths that aren't whitelisted,
-freeze WORM zones, and validate every commit against 13 checks. When
+close the loop). A thin hook layer boots Buddy on session start and
+validates every commit against 5 pre-commit checks. When
 Buddy needs to do something non-trivial, he writes a Plan-Block before
 acting. When he needs multiple perspectives, he dispatches a Board and
 reads only the chief signal — never the individual reviewer outputs.
@@ -454,7 +454,7 @@ If you're used to vanilla Claude Code, here's what changes:
 | Skill management | text in prompts | Single-class skills with `invocation` axis, frontmatter mechanically validated |
 | Cross-repo | duplicate everything | Single SoT + adapters; consumers point at framework |
 | Drift detection | none | `consistency_check` skill with 10 checks |
-| Stale cleanup | manual sweep | Stale-Cleanup invariant + pre-commit STALE-CLEANUP warn |
+| Stale cleanup | manual sweep | Stale-Cleanup invariant (discipline; the pre-commit STALE-CLEANUP WARN was dropped) |
 
 The cost is higher per-task overhead. The win is that work compounds:
 nothing falls through the cracks, multi-session continuity is real,

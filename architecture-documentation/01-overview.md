@@ -145,7 +145,7 @@ equal. Variation lives in one orthogonal axis:
 `invocation.primary` ∈ {user-facing, workflow-step,
 sub-skill, hook, cross-cutting}. The 7-section anatomy is
 mandatory and mechanically enforced (`scripts/skill_fm_validate.py`,
-pre-commit Check 7 BLOCK).
+pre-commit Check 3 BLOCK).
 
 A new skill must include a `Standalone` block arguing why it isn't a
 mode of an existing skill. Spec-Board L1 reviews that argument.

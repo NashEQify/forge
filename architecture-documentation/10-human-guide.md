@@ -152,7 +152,7 @@ parallel. `code-chief` consolidates. Buddy reads **only the chief
 signal**.
 
 On PASS: Phase Close with `task_status_update → done`, commit. The
-pre-commit hook runs (13 checks). On BLOCK: Buddy fixes, then makes a
+pre-commit hook runs (5 checks). On BLOCK: Buddy fixes, then makes a
 new commit attempt.
 
 That is what a typical session looks like. The framework gives you the
@@ -287,7 +287,7 @@ In order of importance:
    `invocation` axis. No class inflation.
 4. **Stale cleanup in the same commit.** When something is archived,
    fix all references in one atomic commit.
-5. **Frozen zones.** History and archive are WORM. Mechanically blocked.
+5. **Frozen zones.** History and archive are WORM — convention-enforced (the mechanical guard was removed).
 6. **Generator + validator.** Generate drift-prone indices; the
    validator checks idempotency.
 7. **Source grounding.** Before any edit or consistency assertion: read.

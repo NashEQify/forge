@@ -228,10 +228,11 @@ Fix:
 
 ### "I want to edit a frozen zone"
 
-Mechanically blocked. If truly necessary:
+Convention-enforced (WORM) — there's no mechanical block. If truly
+necessary:
 - Corrections via `.correction.md` sidecar (a convention, not a file
   modification)
-- Or an explicit user override (bypass the hook — rarely justified).
+- Or an explicit user OK to write into the zone — rarely justified.
 
 ### "I want to disable a hook"
 

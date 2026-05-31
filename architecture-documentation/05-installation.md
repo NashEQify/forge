@@ -171,7 +171,7 @@ $FRAMEWORK_DIR/orchestrators/opencode/bin/oc
   applies in addition to the framework AGENTS.md, never instead — both
   are loaded.
 - Commands: trigger words without prefix (`wakeup`, `save`, `checkpoint`, `think!`).
-- **Path guard missing under OC** — Buddy must delegate mentally rather than be mechanically blocked
+- **No write-time path guard** (on any harness) — Buddy stays within intent scope by discipline
 
 ### Cursor
 
