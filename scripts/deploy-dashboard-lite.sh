@@ -33,9 +33,9 @@ if [ -z "${FRAMEWORK_DIR:-}" ]; then
 fi
 
 # Auto-source user-local deploy.env if it exists. This makes the documented
-# convention (~/.config/forge/deploy.env) actually work for both
-# manual invocation AND the post-commit-dashboard.sh hook (which runs in a
-# subshell that does not inherit interactive-shell exports).
+# convention (~/.config/forge/deploy.env) actually work for manual
+# invocation (which runs in a subshell that does not inherit
+# interactive-shell exports).
 DEPLOY_ENV_FILE="${HOME}/.config/forge/deploy.env"
 if [ -f "$DEPLOY_ENV_FILE" ]; then
     set -a

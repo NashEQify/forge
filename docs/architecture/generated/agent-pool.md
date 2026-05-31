@@ -14,13 +14,14 @@
 | board-impact | name: board-impact description: Impact analyst in the Spec Board — cross-spec blast radius, interface breaks, dependency chains. | agents/board-impact.md |
 | board-implementer | name: board-implementer description: Implementer reviewer in the Spec Board — buildability, missing details, API check. | agents/board-implementer.md |
 
-## Code Board (14 Agents)
+## Code Board (15 Agents)
 
 | Agent | Rolle | Datei |
 |-------|-------|-------|
 | code-adversary | name: code-adversary description: Code Review Board adversary — smart-but-wrong, race conditions, silent data corruption. | agents/code-adversary.md |
 | code-ai-llm | name: code-ai-llm description: AI / LLM reviewer in the Code Review Board — prompt quality, model selection, token budget, LLM patterns. | agents/code-ai-llm.md |
 | code-api-contract | name: code-api-contract description: API / contract reviewer in the Code Review Board — REST contracts, schema pipeline (Pydantic → OpenAPI → Zod), SSE events, versioning. | agents/code-api-contract.md |
+| code-architect-lens | name: code-architect-lens description: > Preventive Ousterhout deep-modules lens at brief-time. | agents/code-architect-lens.md |
 | code-architect-roots | name: code-architect-roots description: Code Review Board specialist — structural-pattern-purity at the property level. | agents/code-architect-roots.md |
 | code-chief | name: code-chief description: Chief reviewer in the Code Review Board — consolidator-tool that produces a deduplicated, severity-ranked, theme-clustered consolidation document with convergence prediction and a recommended verdict label. | agents/code-chief.md |
 | code-data | name: code-data description: Data engineer reviewer in the Code Review Board — schema, query correctness, integrity, migrations. | agents/code-data.md |
@@ -41,13 +42,15 @@
 | board-ux-ia | name: board-ux-ia description: Information-architecture reviewer (UX Board) — navigation, findability, content strategy. | agents/board-ux-ia.md |
 | board-ux-interaction | name: board-ux-interaction description: Interaction-design reviewer (UX Board) — flows, feedback, error states, accessibility, dark theme. | agents/board-ux-interaction.md |
 
-## Other (12 Agents)
+## Other (14 Agents)
 
 | Agent | Rolle | Datei |
 |-------|-------|-------|
 | brief-architect | name: brief-architect description: > Software architect and planning specialist. | agents/brief-architect.md |
 | buddy | name: buddy description: Primary orchestrator and user-facing agent of the forge framework. | agents/buddy.md |
 | buddy-thinking | name: buddy-thinking description: "Buddy with maximum thinking depth — for deep spec interviews, strategic life questions, complex open conversations that don't need a council. | agents/buddy-thinking.md |
+| council-adversary | name: council-adversary description: Council adversary — smart-but-wrong DECISION challenges (framing-trap, reversibility-trap, missing-stakeholder, default-bypass). | agents/council-adversary.md |
+| council-chief | name: council-chief description: Chief reviewer in the Architectural Council — consolidator-tool. | agents/council-chief.md |
 | council-member | name: council-member description: Council member for the Architecture Council or the Life-Domain Council — analyses a question from a SINGLE perspective. | agents/council-member.md |
 | main-code-agent | name: main-code-agent description: Main build agent with full development capabilities — implements specs, writes production code, runs tests. | agents/main-code-agent.md |
 | navigation | **Orchestrator-neutral persona definitions** (source of truth). | agents/navigation.md |
@@ -58,4 +61,4 @@
 | test-skeleton-writer | name: test-skeleton-writer description: TDD red phase — writes test skeletons from a test plan. | agents/test-skeleton-writer.md |
 | tester | name: tester description: "Spec-driven test engineer with three modes (design, eval, execution). | agents/tester.md |
 
-*Status: 2026-05-22*
+*Status: 2026-05-31*

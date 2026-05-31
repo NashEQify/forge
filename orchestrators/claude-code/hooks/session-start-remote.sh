@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # session-start-remote.sh — SessionStart hook for Claude Code remote/web sessions.
 #
-# Web/desktop CC containers are ephemeral: pre-commit hooks + path-whitelist
-# + ~/.claude/{agents,skills} symlinks are NOT installed by default. This
+# Web/desktop CC containers are ephemeral: pre-commit hooks +
+# ~/.claude/{agents,skills} symlinks are NOT installed by default. This
 # hook runs setup-cc.sh idempotently so the full forge hook stack is
 # available in web sessions too.
 #

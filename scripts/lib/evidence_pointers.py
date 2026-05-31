@@ -8,9 +8,9 @@ schema.md`). 4 kinds: file_range, grep_match, dir_listing, file_exists.
 
 Re-Use:
 - Engine-Check (`workflow_engine.py` `pointer_check`): Library-Import.
-- CC-Hook (`evidence-pointer-check.sh`): CLI-Aufruf.
-- Pre-commit Check 13 (`pre-commit.sh`): CLI-Aufruf pro staged File-Batch
-  (nargs="+" Multi-File-Mode, CC-018 Pass-1-Fix).
+- Pre-commit Check 5 SOURCE-VERIFICATION (`pre-commit.sh`): CLI-Aufruf
+  pro staged File-Batch (nargs="+" Multi-File-Mode). The earlier
+  `evidence-pointer-check.sh` CC PostToolUse hook was removed.
 
 Quote-Length-Cap-Metrik: Codepoints (`len(quote)` in Python). Nicht Bytes,
 nicht Grapheme-Cluster. Documented decision (ADV-TC-008).

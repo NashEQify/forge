@@ -67,11 +67,9 @@ steps.) Idempotent, worktree-safe, includes a self-probe. Both
 via `$0` basename. The hook itself is harness-agnostic (lives under
 `orchestrators/claude-code/hooks/` for historical reasons).
 
-13 checks (3 BLOCK + 10 WARN): PLAN-VALIDATE (BLOCK) · TASK-SYNC (WARN) ·
-OBLIGATIONS (WARN) · CG-CONV (BLOCK) · STALE-CLEANUP (WARN) · PERSIST-GATE
-(WARN) · SKILL-FM-VALIDATE (BLOCK) · ENGINE-USE (WARN) · RUNBOOK-DRIFT
-(WARN) · AGENT-SKILL-DRIFT (WARN) · SECRET-SCAN (WARN) · SOURCE-VERIFICATION
-(WARN) · PIEBALD-BUDGET (WARN).
+5 checks (3 BLOCK + 2 WARN): PLAN-VALIDATE (BLOCK) · CG-CONV (BLOCK) ·
+SKILL-FM-VALIDATE (BLOCK) · SECRET-SCAN (WARN) · SOURCE-VERIFICATION
+(WARN).
 
 Don't `--no-verify`. If a hook blocks, fix the underlying issue.
 
@@ -141,7 +139,7 @@ Quickstart:
 git clone https://github.com/NashEQify/forge ~/projects/forge
 cd ~/projects/forge
 python3 -m venv .venv && .venv/bin/pip install pyyaml
-bash scripts/setup-cc.sh   # Claude Code adapter + path-whitelist + git hooks
+bash scripts/setup-cc.sh   # Claude Code adapter (SessionStart + git hooks)
 bash scripts/setup-oc.sh   # OpenCode adapter (optional)
 ```
 
