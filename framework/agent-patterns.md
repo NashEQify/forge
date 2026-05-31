@@ -435,6 +435,7 @@ mechanically in the cited SoT.
 | adversary per-test value-floor | `skills/adversary_test_plan/SKILL.md` §3 Augenmaß per-TC value-floor | codified |
 | brief-architect lens-note binding triage | `agents/brief-architect.md` mode=brief per-note triage | codified |
 | task creation value-floor (sibling, creation side) | `skills/task_creation/SKILL.md` §1.5 | codified (precursor) |
+| MCA-delegation routing (inline vs dispatch, upstream of brief-write) | `agents/buddy/operational.md` §Delegation hygiene — 5-axis proportionality question (context-locality / failure-mode-class / specialization-need / cognitive-load / safety-floor) | codified (2026-05-31, from 2026-05-14 brief-architect-overhead standalone) |
 | ADR-trigger value-floor (`documentation_and_adrs`) | — | watch (no observed drift yet; codify on first instance) |
 
 Sibling principle at the delegation-modes layer (one level up from
