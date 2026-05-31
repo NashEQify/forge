@@ -27,8 +27,14 @@ replaces "remember to" rules with mechanical enforcement.
   irreversible decisions.
 - A workflow runbook system (8 active workflows, e.g. solve / build / fix /
   review / research / save) with explicit phase models.
-- 13 mechanical enforcement hooks (path-whitelist, frozen-zone, pre-commit
-  with 13 checks, delegation-prompt-quality, workflow-reminder).
+- 3 hook scripts (post-ADR-004 2026-05-31 paradigm shift):
+  `buddy-boot-inject` + `session-start-remote` (SessionStart) +
+  `pre-commit.sh` (git pre-commit, 5 checks: 3 BLOCK + 2 WARN). All
+  three are universally portable — git pre-commit runs on every
+  harness, SessionStart works on CC-Terminal / claude-desktop /
+  claude-web / Codex. The earlier 13 CC-Terminal-only PreToolUse /
+  PostToolUse / UserPromptSubmit hooks were removed; discipline
+  replicates via protocols. Rationale: `docs/decisions/ADR-004-hook-paradigm-shift.md`.
 
 It is consumed by other repos (code projects, personal-management
 repos, infra/sysadmin setups) without re-installation: consumers point
@@ -83,15 +89,21 @@ You write a system-prompt rule. The agent follows it for 20 turns. By turn
 50, it's forgotten. You discover a state-corruption that the rule was
 supposed to prevent.
 
-**The framework's answer:** mechanical hooks where possible.
-`path-whitelist-guard.sh` blocks Edit/Write outside whitelisted paths at
-PreToolUse time — the agent can't even attempt the unsafe write.
-`frozen-zone-guard.sh` makes `context/history/**` WORM (write-once-read-many).
-Pre-commit hook with 3 BLOCK + 10 WARN checks runs at every commit.
+**The framework's answer (post-ADR-004 2026-05-31):** discipline-as-
+methodology anchored in protocols (`_protocols/dispatch-template.md`,
+`context-isolation.md`, `mca-brief-template.md`, `plan-review.md`,
+`evidence-pointer-schema.md`), backed by a thin universal-portable
+reinforcement layer (git pre-commit 5 checks + SessionStart hooks).
+The earlier CC-Terminal-only mechanical hooks (`path-whitelist-guard`,
+`frozen-zone-guard`, etc.) were dropped because (a) they only fired on
+one harness, breaking forge's adapter promise, and (b) several had
+bypass vectors and gave false trust. Buddy's reasoning is the
+load-bearing substrate; protocols carry the rules; hooks catch what's
+mechanically cheap-and-cross-portable.
 
-For things that can't be hook-enforced (content-quality, methodology
-correctness): mandatory Spec-Board review, with anti-anchoring discipline
-(`agents/_protocols/dispatch-template.md`, `context-isolation.md`).
+For methodology correctness (content-quality, completeness): mandatory
+multi-perspective review via Spec-Board / Code-Review-Board / Council
+with chief consolidator + anti-anchoring (Invariant 1).
 
 ### Problem 3 — Multi-perspective reviews collapse
 
@@ -114,10 +126,12 @@ wasted a cycle.
 **The framework's answer:** `CLAUDE.md §3` Pre-Delegation Non-Negotiable.
 No sub-agent call without a Plan-Block (Scope, Tool, Alternatives,
 Expected Artefacts) or a Gate-File. The orchestrator must materialize
-constraints into an artefact before delegating. The
-`delegation-prompt-quality.sh` hook warns at PreToolUse time when the
-sub-agent prompt is shorter than 200 chars (proxy for "didn't actually
-write a brief").
+constraints into an artefact before delegating. Brief shape is
+codified in `_protocols/mca-brief-template.md` (with 6 standard
+decision classes). The earlier `delegation-prompt-quality.sh`
+PreToolUse hook warned when sub-agent prompts were under 200 chars;
+removed in ADR-004 (2026-05-31) — discipline now lives in Buddy
+reading the protocol before each dispatch.
 
 ### Problem 5 — Skill-class inflation
 
@@ -158,7 +172,7 @@ Plan-Block / Gate-File before sub-agent calls, mechanical drift-killer hooks,
 single-source-of-truth + N adapters, generator+validator for drift-prone
 indices, cross-session continuity via workflow-engine.
 
-Detail comparison table: §What makes it different (below).
+Detail comparison: §Why forge vs. directly-invoked skills (above).
 
 ## Trade-offs vs. lighter alternatives
 
@@ -175,9 +189,11 @@ state). The honest trade-offs:
 - **Cross-session state** (workflow engine + state file + session-handoff)
   adds operational complexity; the win is that a multi-day build resumes
   where it stood. For one-shot tasks the overhead is unjustified.
-- **Mechanical hooks** (path-whitelist, frozen-zone, pre-commit) impose
-  a setup cost (`scripts/setup-cc.sh` plus a git-hook symlink per
-  consumer repo) and require investigating BLOCKs rather than bypassing.
+- **Universal-portable hooks** (git pre-commit 5 checks + SessionStart
+  for boot) impose a small setup cost (`scripts/setup-cc.sh` plus a
+  git-hook symlink per consumer repo) and require investigating BLOCKs
+  rather than bypassing. The CC-Terminal-only PreToolUse layer was
+  removed in ADR-004 (2026-05-31).
 - **Single-class skill model + anatomy validation** prevents skill
   inflation; the cost is a learning curve for skill authors.
 

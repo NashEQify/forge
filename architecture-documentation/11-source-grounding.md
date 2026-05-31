@@ -69,7 +69,7 @@ to a file path. The mapping below is the audit table.
 
 | Claim | Evidence |
 |---|---|
-| 35 personas including Buddy + boards + standalone | `ls agents/*.md` plus `agents/buddy/` |
+| 40 personas including Buddy + boards + council + code-review + standalone | `ls agents/*.md` plus `agents/buddy/` |
 | Spec-Board: chief, adversary[-2], implementer, impact, consumer, architect-roots (7) | `ls agents/board-*.md \| grep -v ux` |
 | UX-Board: ux-heuristic, ux-ia, ux-interaction (3) | `ls agents/board-ux-*.md` |
 | Code-Review-Board: 14 personas (multi-axis hybrid) | `ls agents/code-*.md` |
@@ -80,10 +80,10 @@ to a file path. The mapping below is the audit table.
 
 | Claim | Evidence |
 |---|---|
-| 13 active hooks | `ls orchestrators/claude-code/hooks/*.sh` |
-| Pre-commit 13 checks (PLAN-VALIDATE, TASK-SYNC, OBLIGATIONS, CG-CONV, STALE-CLEANUP, PERSIST-GATE, SKILL-FM-VALIDATE, ENGINE-USE, RUNBOOK-DRIFT, AGENT-SKILL-DRIFT, SECRET-SCAN, SOURCE-VERIFICATION, PIEBALD-BUDGET) | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
-| 3 checks BLOCK (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE), 10 checks WARN | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
-| Path-whitelist + frozen-zones SoT | [`../.claude/path-whitelist.txt.example`](../.claude/path-whitelist.txt.example) (template; `setup-cc.sh` generates the live `path-whitelist.txt`) + [`../.claude/frozen-zones.txt`](../.claude/frozen-zones.txt) |
+| 3 hook scripts (post-ADR-004 2026-05-31) | `ls orchestrators/claude-code/hooks/*.sh` |
+| Pre-commit 5 checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE, SECRET-SCAN, SOURCE-VERIFICATION) | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
+| 3 checks BLOCK (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE), 2 checks WARN | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
+| Path-whitelist + frozen-zones legacy SoT (hooks removed in ADR-004 2026-05-31; files kept short-term for reference) | [`../.claude/path-whitelist.txt.example`](../.claude/path-whitelist.txt.example) + [`../.claude/frozen-zones.txt`](../.claude/frozen-zones.txt) |
 
 ### Adapter
 

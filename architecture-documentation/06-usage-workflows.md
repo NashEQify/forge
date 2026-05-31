@@ -51,8 +51,10 @@ What you see as a user:
   — at session start you immediately know where you left off
 - **Every turn:** `WORKFLOW-ENGINE: NEXT: build [task <id>] > <step-name>:
   <instruction>` as a header in Buddy's response
-- **Pre-commit:** workflow with unfinished `commit_gate: true` steps blocks
-  the commit (workflow-commit-gate.sh hook)
+- **Commit discipline:** post-ADR-004 there is no `workflow-commit-gate.sh`
+  hook — the workflow_engine is in usage standby. If you use the engine
+  for a build, advance step pointers via `--complete` before commit;
+  otherwise the engine isn't blocking your commit.
 - **Cross-session resume:** if you close the session mid-flow and reopen
   later — the engine puts you on the same step. State lives in
   `.workflow-state/<id>.json` (gitignored, per checkout)
@@ -98,10 +100,14 @@ The script sources deploy.env automatically (`deploy-dashboard-lite.sh`) or
 expects the variables exported (`deploy-docs.sh` does not yet have an
 auto-source block — drift note, ACTIONABLE spawn).
 
-**OBLIGATIONS reminder:** pre-commit Check 3 WARNS when `docs/dashboard/`
-or plan files have changed — *"Deploy via deploy-docs.sh required"*.
-For pure local mode the WARN is ignorable. For server mode: deploy
-before the next push.
+**Dashboard regen cadence (post-ADR-004):** the earlier
+`post-commit-dashboard.sh` hook (auto-regen after every commit) was
+removed in the 2026-05-31 hook paradigm shift. Regenerate manually
+when you want a fresh dashboard, or wire a periodic cron / Ansible
+job to call `generate-dashboard.py`. The earlier pre-commit
+OBLIGATIONS WARN (which reminded to redeploy when plan/dashboard
+files changed) was also dropped — relying on Buddy discipline +
+manual regen instead.
 
 **When server push is worth it:** multiple devices, sharing use case,
 Hetzner / own-server setup. Otherwise local is enough.
@@ -429,8 +435,10 @@ copy. On hook update the consumer is automatically in sync.
 
 ### BP4 — Respect frozen zones
 
-Never write actively into `context/history/**`. `frozen-zone-guard.sh`
-blocks mechanically, but discipline shouldn't even attempt it.
+Never write actively into `context/history/**`. The
+`frozen-zone-guard.sh` PreToolUse hook used to block mechanically;
+removed in ADR-004 (2026-05-31). Convention is now discipline-only —
+don't attempt writes inside frozen paths.
 
 ### BP5 — Stale cleanup in the same commit
 
@@ -467,7 +475,7 @@ REFERENCE.md or consolidate a mode.
 ### Maintainers
 
 - Engine details + generator care in [`08-development-and-maintenance.md`](08-development-and-maintenance.md).
-- Skill anatomy in [`04-core-concepts.md`](04-core-concepts.md) §Single-Class and
+- Skill anatomy in [`04-core-concepts.md`](04-core-concepts.md) §3. Single-class skill model and
   [`../framework/skill-anatomy.md`](../framework/skill-anatomy.md).
 
 ## Next step

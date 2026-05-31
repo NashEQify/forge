@@ -16,7 +16,7 @@ forge/
 │   ├── _protocols/                # Persona-level cross-cutting protocols
 │   ├── templates/                 # Persona templates
 │   ├── navigation.md              # Reader journey + auto inventory
-│   └── <persona>.md               # 35 personas (board, code, council, etc.)
+│   └── <persona>.md               # 40 personas (board, code, council, etc.)
 │
 ├── framework/                     # Methodology — tier-1 .md files only
 │   ├── README.md
@@ -64,13 +64,18 @@ forge/
 ├── orchestrators/                 # Adapter layer
 │   ├── claude-code/
 │   │   ├── bin/                   # cc, sysadmin launcher
-│   │   └── hooks/                 # 13 active hooks
+│   │   └── hooks/                 # 3 hook scripts (post-ADR-004 2026-05-31: buddy-boot-inject + session-start-remote + pre-commit.sh)
 │   ├── opencode/
 │   │   ├── bin/oc                 # OC launcher
-│   │   ├── .opencode/             # agent + command wrappers
+│   │   ├── .opencode/             # agent + command wrappers + plugins/forge-hooks.ts (PreToolUse parity)
 │   │   └── opencode.jsonc.example
 │   └── cursor/
-│       └── rules/                 # Cursor rules
+│       └── rules/                 # Cursor rules (no PreToolUse API)
+│
+├── .codex/                        # Codex Desktop / CLI adapter (project-local)
+│   ├── agents/                    # Per-persona TOML wrappers (template + curated)
+│   └── hooks.json                 # Project-local hook wiring per Codex lifecycle
+│   #   (global: ~/.codex/agents/ + ~/.agents/skills/, written by setup-codex.sh)
 │
 ├── scripts/                       # Engines + generators
 │   ├── plan_engine.py             # Computed planning layer
@@ -90,11 +95,11 @@ forge/
 │   └── hooks/  →  ../orchestrators/claude-code/hooks  (symlink)
 │
 ├── .claude/                       # Claude Code workspace config
-│   ├── agents/                    # 30+ persona wrappers
+│   ├── agents/                    # 40 persona wrappers
 │   ├── skills/                    # Skill wrappers (user-level discovery)
-│   ├── path-whitelist.txt         # PreToolUse path-whitelist-guard SoT
-│   ├── frozen-zones.txt           # PreToolUse frozen-zone-guard SoT
-│   └── settings.json              # Hook registration
+│   ├── path-whitelist.txt         # legacy SoT (hook removed in ADR-004; file slated for cleanup)
+│   ├── frozen-zones.txt           # legacy SoT (hook removed in ADR-004; convention-only now)
+│   └── settings.json              # Hook registration (3 hooks post-ADR-004)
 │
 ├── docs/                          # Project bookkeeping (no public content)
 │   ├── plan.yaml                  # North Star + operational + phases + milestones
@@ -133,7 +138,7 @@ forge/
 | `workflows/runbooks/` | 9 workflows | "What does workflow X do?" → `<name>/WORKFLOW.md` |
 | `references/` | Reference docs | a11y → `accessibility-checklist.md`. Orch pattern → `orchestration-patterns.md` |
 | `agents/_protocols/` | Persona-level mechanisms | "Reviewer base rules?" → `reviewer-base.md` |
-| `orchestrators/` | Adapter layer | Claude Code → `claude-code/`. OpenCode → `opencode/` |
+| `orchestrators/` | Adapter layer | Claude Code → `claude-code/`. OpenCode → `opencode/`. Cursor → `cursor/`. Codex via `.codex/` (project-local) + `setup-codex.sh` (global) |
 | `scripts/` | Engines + generators | "plan_engine.py" + "workflow_engine.py" are the two central ones |
 | `.claude/` | Workspace config for Claude Code | wrappers, hook registration, path whitelist |
 | `docs/` | Project bookkeeping | plan → `plan.yaml`. Tasks → `tasks/`. Reviews → `reviews/` |
@@ -160,20 +165,22 @@ Drift protection: `consistency_check` Check 8 (existence + idempotency + manual-
 
 ## Convention Notes
 
-### Frozen Zones
+### Frozen Zones (convention, post-ADR-004)
 
-`.claude/frozen-zones.txt` lists glob patterns whose writes are mechanically
-blocked (`frozen-zone-guard.sh`). Files in those paths are WORM
-(write-once-read-many) — corrections via `.correction.md` sidecar.
+`.claude/frozen-zones.txt` was the SoT for the
+`frozen-zone-guard.sh` PreToolUse hook (BLOCK on writes inside listed
+glob patterns). The hook was removed in ADR-004 (2026-05-31). The
+convention persists: `context/history/**` is WORM (write-once-read-many);
+corrections via `.correction.md` sidecar. Discipline-enforced by Buddy;
+no mechanical block.
 
-The canonical entry is `context/history/**` (session-history append-only log).
+### Path Whitelist (legacy, post-ADR-004)
 
-### Path Whitelist
-
-`.claude/path-whitelist.txt` is generated per user by `scripts/setup-cc.sh`.
-The committed `.claude/path-whitelist.txt.example` is the template; the live
-file lists absolute paths the agent may write under. See `12-troubleshooting.md`
-for setup notes.
+`.claude/path-whitelist.txt` was the SoT for the
+`path-whitelist-guard.sh` PreToolUse hook (BLOCK on writes outside the
+listed paths). The hook was removed in ADR-004 (2026-05-31). The file
+is kept short-term for reference but no longer enforced. Buddy writes
+within intent-scope by discipline.
 
 ### Naming Convention (skills)
 
@@ -185,5 +192,13 @@ for setup notes.
 ### Skill format
 
 Every active skill is a directory under `skills/` containing a single
-`SKILL.md` (frontmatter + 7 sections) and an optional tier-2 `REFERENCE.md`.
-See `framework/skill-anatomy.md` for the format specification.
+`SKILL.md` (frontmatter + 7 sections). An optional `REFERENCE.md` for
+tier-2 detail used to live alongside; the May 2026 anatomy review found
+REFERENCE files were effectively never auto-loaded, so the pattern is
+being folded back into SKILL.md (with a raised Piebald budget). See
+`framework/skill-anatomy.md` for the current format specification.
+
+## Next step
+
+The 29-discipline mental model that turns the directory layout into a
+working framework: [`04-core-concepts.md`](04-core-concepts.md).

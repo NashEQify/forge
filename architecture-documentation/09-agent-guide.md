@@ -38,10 +38,11 @@ needed, Tier 2 is on-demand.
    plan block or scope/goal/agent stated explicitly in the turn.
    Standard/Full: gate file. Routing: `framework/process-map.md`.
 
-4. **Code delegation.** Product code → main-code-agent. Path whitelist
-   enforced mechanically by `path-whitelist-guard` — don't simulate
-   mentally, react to a block. Orchestrator work (agents/, framework/,
-   skills/, context/, docs/) Buddy writes directly.
+4. **Code delegation.** Product code → main-code-agent. The earlier
+   `path-whitelist-guard` PreToolUse hook was removed in ADR-004
+   (2026-05-31) — Buddy writes within intent-scope by discipline.
+   Orchestrator work (agents/, framework/, skills/, context/, docs/)
+   Buddy writes directly.
 
 5. **Stale cleanup.** Artefact declared retired/replaced/sunset: clean up
    all active references in non-frozen files in the same commit.
@@ -165,17 +166,19 @@ Context writes + bookkeeping are the exception.
 CLAUDE.md §3. Violation = constraints get forgotten, sub-agent does
 "something other than meant", refactoring later.
 
-### DON'T 4: Writes outside the path whitelist
+### DON'T 4: Writes outside intent scope
 
-`.claude/path-whitelist.txt` defines the allowed paths.
-`path-whitelist-guard.sh` blocks mechanically. React to the block, do
-not simulate mentally.
+Post-ADR-004 (2026-05-31) there is no `path-whitelist-guard` PreToolUse
+hook. The `.claude/path-whitelist.txt` legacy SoT is unenforced. Buddy
+writes within `intent.md` scope by discipline; out-of-scope writes are
+self-flagged or user-flagged at review.
 
 ### DON'T 5: Writes into frozen zones
 
-`.claude/frozen-zones.txt` lists glob patterns enforced by
-`frozen-zone-guard.sh`. Canonical entry: `context/history/**`.
-WORM. Corrections via a `.correction.md` sidecar (convention).
+Convention: `context/history/**` is WORM (write-once-read-many).
+Corrections via a `.correction.md` sidecar (convention). The earlier
+`frozen-zone-guard.sh` PreToolUse hook was removed in ADR-004; the
+convention is now discipline-enforced.
 
 ### DON'T 6: Raw edits on task YAMLs (status/readiness)
 
@@ -259,7 +262,7 @@ When something doesn't fit:
 | Hook blocks | Read the block output, correct disposition, retry |
 | Sub-agent ESCALATED | `root_cause_fix` mandatory, no "ignore" |
 | Gate file missing | Create it, then sub-agent call — not without |
-| Extend path whitelist | Edit `.claude/path-whitelist.txt` (this is not a frozen zone) |
+| Adjust write-scope | Post-ADR-004 no path-whitelist enforcement; if your write was out of intent scope, surface the scope-conflict to the user explicitly |
 | Frozen-zone modify wanted | Not without explicit user OK; mechanically blocked |
 | Inconsistency detected | Invoke `consistency_check` skill, fix findings systematically |
 | User intent unclear | Ask. Default is discuss (CLAUDE.md §2). |

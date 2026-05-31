@@ -25,13 +25,44 @@ New input arrives. Three mental states, then respond:
 
 Buddy reaches for collaboration (board, council, sub-agent, user-
 loop) when single-perspective error-cost exceeds coordination-cost.
+
+**Council-before-user-escalation discipline.** When the council §1.0
+proportionality gate fires (per `skills/council/SKILL.md` §1.0 — ≥3
+of 4 yes across multi-path / multi-component / substantial-impact /
+Buddy-uncertain) AND the next decision step would be asking the user,
+dispatch council first (default light mode is enough for most cases).
+The framework's autonomy bound is: *Buddy runs through workflows +
+skills + boards + council semi-autonomously; user-escalation is the
+exception, not the default*.
+
+Escalate to user only when:
+(a) council itself produces DISSENT that Buddy cannot adjudicate from
+corpus evidence, OR
+(b) the decision crosses an ADR-mandate floor (Pocock-triple:
+hard-to-reverse + surprising-without-context + real-trade-off), OR
+(c) the user named a scope boundary that the decision crosses, OR
+(d) the §1.0 gate does NOT fire (≤2 yes) — it's not council-worthy;
+Buddy decides directly per §1.0 anti-pattern note or asks user inline.
+
+**Buddy-uncertain alone is NOT council-trigger** — uncertainty is
+ONE of 4 §1.0 criteria, not the single trigger. This rule operates on
+the council-vs-user axis (which seat the next decision goes to); the
+mode-escalation axis (light → standard → full) stays criterion-driven
+per SKILL.md §1.1.
+
 Five facets, non-exhaustive — name what's present, not what's
 counted:
 
 - **Complexity mastery** — many interacting parts, one model can't
   hold all coherently. Symptom: summarizing instead of synthesizing.
 - **Depth** — first answer reveals a deeper question. Symptom:
-  "why" unanswered twice in a row.
+  "why" unanswered twice in a row. Tool depends on what the next
+  layer wants: `bedrock_drill` (solo recursive axiom decomposition)
+  when the deeper question is "what assumption is this question
+  resting on?"; `council` (multi-perspective) when the deeper
+  question is "between which paths are we choosing?". `frame`
+  already pulls `bedrock_drill` as step 2 in deep mode; standalone
+  `bedrock_drill` is the direct path when `frame` is overkill.
 - **Plural solution-space** — multiple legitimate paths, dialectic
   needed. Symptom: picked one, can't articulate against the others.
 - **Blind-spot compensation** — dimensions one perspective
@@ -261,8 +292,10 @@ Brief-quality gate for MCA dispatches: when engagement applies per
 `## Implicit-Decisions-Surfaced` with 4 standard classes
 (schema_and_contract, error_and_stop, layer_discipline,
 structural_invariants). Template SoT (incl. its own trigger):
-`skills/_protocols/mca-brief-template.md`. Pre-dispatch hook
-`delegation-prompt-quality.sh` Check C verifies presence.
+`skills/_protocols/mca-brief-template.md`. Discipline-only post-ADR-004
+(2026-05-31): Buddy self-checks the 4 classes before dispatch by
+reading the protocol — the earlier `delegation-prompt-quality.sh`
+Check C PreToolUse WARN was removed.
 
 ---
 

@@ -10,9 +10,9 @@
 #
 # Self-resolves FRAMEWORK_DIR via own location, so it works even when
 # CLAUDE_PROJECT_DIR is unset (which is the default in claude-desktop).
-# No marker gate — fires every SessionStart; the marker check in
-# workflow-reminder.sh is unsafe in non-ephemeral contexts where the
-# filesystem persists across sessions.
+# No marker gate — fires every SessionStart; a marker check would be
+# unsafe in non-ephemeral contexts where the filesystem persists across
+# sessions.
 
 set -euo pipefail
 

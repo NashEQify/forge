@@ -71,13 +71,13 @@ relaunch).
 The hook is doing what it should — check the block output. Typical
 causes:
 
-| Hook | Block reason | Fix |
+| Check | Block reason | Fix |
 |---|---|---|
-| `path-whitelist-guard` | Write outside `.claude/path-whitelist.txt` | Add the path to the whitelist OR write to an allowed path |
-| `frozen-zone-guard` | Write into `context/history/**` | Frozen zone — do not perform the write; correct via `.correction.md` sidecar |
-| `pre-commit` Check 4 (CG-CONV) | Commit message format | Use conventional-commit form (`feat(scope): msg`) |
-| `pre-commit` Check 7 (SKILL-FM-VALIDATE) | SKILL frontmatter incomplete or unknown invocation | Check the frontmatter against `framework/skill-anatomy.md` |
 | `pre-commit` Check 1 (PLAN-VALIDATE) | `plan_engine.py --validate` reports errors | Run `python3 scripts/plan_engine.py --validate` locally and fix the errors |
+| `pre-commit` Check 2 (CG-CONV, commit-msg) | Commit message format | Use conventional-commit form (`feat(scope): msg`) |
+| `pre-commit` Check 3 (SKILL-FM-VALIDATE) | SKILL frontmatter incomplete or unknown invocation | Check the frontmatter against `framework/skill-anatomy.md` |
+| `pre-commit` Check 5 (SOURCE-VERIFICATION) | Board/council review missing line-numbered evidence pointers | Add evidence pointers per `_protocols/evidence-pointer-schema.md` |
+| (historical, removed 2026-05-31) `path-whitelist-guard` / `frozen-zone-guard` | Write outside whitelist / into frozen zones | Discipline only post-ADR-004: write within intent scope; corrections in frozen paths via `.correction.md` sidecar |
 
 ### Pre-commit hook BLOCKs with "PLAN-VALIDATE"
 
@@ -125,17 +125,20 @@ The boot did not run. Check:
 
 ### Buddy writes to the wrong directory
 
-This should be blocked mechanically (path-whitelist-guard). If it
-slips through anyway: check `.claude/path-whitelist.txt`, possibly too
-permissive. The single-user setup today has the catch-all
-`/home/xxx/projects/**`.
+Post-ADR-004 there is no mechanical hook for this; discipline replaces
+the earlier `path-whitelist-guard`. If you see it happening: tell
+Buddy directly that the write was out of scope; check whether
+`intent.md` scope is unclear or the touched file's intent isn't
+documented.
 
 ### Buddy runs a board without a plan-block
 
 CLAUDE.md §3 violated. Fix: explicitly tell Buddy to "write a
-plan-block first and then trigger the board". If this happens
-repeatedly: the pre-hook `delegation-prompt-quality.sh` issues a WARN —
-check whether the threshold needs to be tightened.
+plan-block first and then trigger the board". The earlier
+`delegation-prompt-quality.sh` WARN hook was removed in ADR-004 —
+discipline lives in `_protocols/plan-review.md`; if Buddy repeatedly
+skips plan-blocks, the discipline is being internalized poorly and
+needs explicit reinforcement.
 
 ## Skill / workflow problems
 
@@ -288,13 +291,15 @@ For external contributions the setup would have to be extended:
 - Issue templates
 - PR template with a pre-commit-check list
 
-### Cursor: write-time hooks don't fire
+### Cursor: harness parity
 
-Expected. Cursor has no PreToolUse-hook API, so the mechanical
-write-time discipline (path-whitelist, frozen-zone, …) does not run
-under the Cursor adapter. Only the git pre-commit hook fires (commit-
-time enforcement). Full adapter shape + limitations:
-[`07-tool-integrations.md`](07-tool-integrations.md) §Cursor.
+Post-ADR-004 (2026-05-31) the framework runs identically on every
+supported harness. The earlier CC-Terminal-only PreToolUse /
+PostToolUse / UserPromptSubmit hook layer was removed; only universally-
+portable hooks remain (git pre-commit + SessionStart). Cursor no longer
+needs a special "limitation" note — write-time discipline lives in
+Buddy reasoning + protocols, identical to CC-Terminal. Full adapter
+shape: [`07-tool-integrations.md`](07-tool-integrations.md) §Cursor.
 
 ## When nothing helps
 
@@ -309,14 +314,20 @@ time enforcement). Full adapter shape + limitations:
 
 ## When the framework is blocking you
 
-Pre-commit hooks and path-whitelist-guard exist to protect you from
-drift. If you are pushing back against the framework: re-examine your
-assumption that you are really on the right path. Most of the time the
-conflict is not in the framework, but in a drift in your mental model
-of the repo.
+The 5 pre-commit checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE,
+SECRET-SCAN, SOURCE-VERIFICATION) exist to catch schema + format
+drift before it ships. If you are pushing back against a BLOCK:
+re-examine the assumption that you are really on the right path. Most
+of the time the conflict is in a drift in your mental model of the
+repo, not in the framework.
 
 But: if there is a genuine bug in the framework — a hook BLOCKs
 something it should not, a generator is not idempotent, a convention
 is contradictory — document it transparently (an issue, an ADR via
 `documentation_and_adrs/SKILL.md`). The public-OSS quality bar is
 honest drift labelling, not drift hiding.
+
+## Next step
+
+Daily-use methodology + commands:
+[`13-operational-handbook.md`](13-operational-handbook.md).

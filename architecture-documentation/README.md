@@ -1,9 +1,15 @@
+<p align="center">
+  <img src="../assets/vibeforge-logo.png" width="200" alt="forge mascot" />
+</p>
+
 # architecture-documentation/ — start here
 
 Public-OSS architecture, installation, and usage
-documentation for **forge** — opinionated workflows +
-codified discipline patterns as a Skill + Discipline
-Layer between human and LLM.
+documentation for **forge** — disciplined LLM capabilities
+between you and your coding agent: opinionated workflows
+plus a multi-perspective reasoning substrate (Boards +
+Council) plus a thin universal-portable reinforcement
+layer.
 
 This documentation is aimed at **two audiences in
 parallel**:

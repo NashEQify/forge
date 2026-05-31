@@ -22,6 +22,19 @@ What this spec does not do:
 - define workflow routing standard (`process-map.md` does)
 - provide semantic content validator (Spec-Board L1 does)
 
+## Files in a skill directory (post-2026-05-31)
+
+A skill is a single `skills/<name>/SKILL.md` file. The earlier optional
+`REFERENCE.md` tier-2 split-file pattern is **deprecated** — Buddy's
+Skill-tool loading mechanism never auto-loads REFERENCE.md content,
+so the split delivered no operational benefit. SKILL.md budget loosened
+to ≤400 lines (see `skills/_protocols/piebald-budget.md`) so existing
+REFERENCE.md content can fold back without splitting.
+
+Per-skill fold-back happens incrementally as each skill is next
+touched. The 12 active REFERENCE.md files at the policy switch are
+tracked in the piebald-budget protocol.
+
 ---
 
 ## Ontological split — 4 artifact types

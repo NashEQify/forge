@@ -5,61 +5,66 @@ prompts. Loaded by: spec_board, code_review_board,
 sectional_deep_review, architecture_coherence_review. Applied by
 the board review to every review target whose type has a budget.
 
-## The problem this protocol solves
+> **2026-05-31 policy update.** SKILL.md budget loosened from ≤120
+> to **≤400 lines** following empirical evidence that the earlier
+> tight cap drove content into REFERENCE.md split-files that the
+> framework's skill-loading mechanism never auto-loads (Buddy reads
+> SKILL.md via the Skill tool; REFERENCE.md is a manual on-demand
+> read that effectively never happens). REFERENCE.md pattern is
+> **deprecated** — fold the content back into SKILL.md as touched.
+> Modern LLM context windows handle 400-line skills trivially; the
+> earlier 120-line cap was a piebald optimization for an older
+> attention-budget that no longer constrains us at this scale.
 
-During fix passes, skills and runbooks grow past the Piebald budget
-(Buddy-facing ≤100 lines, agent-facing ≤200 lines assembled, runbook
-≤150 lines, persona ≤70 lines). The rationalization "substance
-justifies budget, split later if critical" causes permanent drift,
-because later splits do not get re-triggered.
+## The problem this protocol still solves
 
-Recurrence shape: a solve-framing fix pass leaves `frame/SKILL.md`
-at 177 lines (budget 100) and `solve/WORKFLOW.md` at 237 lines
-(budget 150).
-User feedback: that's not reliable enough.
+Token bloat through accreting prose. Skills + workflows + personas
+need to stay focused. Past hard-cap was 120 lines per SKILL.md;
+loosened to 400 in light of (a) modern context windows + (b) the
+REFERENCE.md split-file pattern empirically not delivering its
+intended benefit.
 
-## Budget table (hard gate)
+Skill *count* inflation is the higher-leverage concern now, not
+*size* — inflation guard sits in `skill-anatomy.md` §Inflation guard.
 
-**Single-class skill model:** the **unified budget ≤120 lines**
-applies to **`skills/*/SKILL.md`**. Large skills that were originally
-authored as workflows may sit between 120–180 lines; new skills
-must come in under 120.
+## Budget table (hard gate, post-2026-05-31)
 
 | Artifact type | Budget | Path pattern |
 |---------------|--------|--------------|
-| **Skill SKILL.md (single-class v2, no `type:`)** | ≤120 lines | `skills/*/SKILL.md` with new schema (`invocation`, no `type:`) |
-| **Skill SKILL.md (workflow type, legacy)** | ≤180 lines | `skills/*/SKILL.md` with **`type: workflow`** while still set |
-| **Skill SKILL.md (capability type, legacy)** | ≤120 lines | `skills/*/SKILL.md` with **`type: capability`** |
-| **Skill SKILL.md (protocol type, legacy)** | ≤100 lines | `skills/*/SKILL.md` with **`type: protocol`** |
-| **Skill SKILL.md (utility type, legacy)** | ≤100 lines | `skills/*/SKILL.md` with **`type: utility`** |
-| Skill REFERENCE.md (detail mechanics) | ≤120 lines | `skills/*/REFERENCE.md` |
-| Workflow runbook | ≤150 lines | `workflows/runbooks/*/WORKFLOW.md` |
-| Runbook REFERENCE.md | ≤120 lines | `workflows/runbooks/*/REFERENCE.md` |
-| Agent persona (standard) | ≤70 lines | `agents/*.md` |
-| Agent persona (special: chief, consolidation roles, moderator roles) | ≤120 lines | `agents/board-chief.md`, `agents/code-chief.md`, `agents/board-ux-heuristic.md`, `agents/solution-expert.md` |
-| Skill protocol | ≤100 lines | `skills/_protocols/*.md` |
-| Agent protocol | ≤60 lines | `agents/_protocols/*.md` |
-| Assembled prompt (protocol + persona + dispatch) | ≤200 lines | runtime check on dispatch |
+| **Skill SKILL.md** (single-class v3, REFERENCE.md folded back) | ≤400 lines | `skills/*/SKILL.md` |
+| **Skill SKILL.md** (legacy with REFERENCE.md split, transitional) | ≤180 lines while REFERENCE.md exists | `skills/*/SKILL.md` + paired `REFERENCE.md` |
+| ~~Skill REFERENCE.md~~ | **deprecated, fold back to SKILL.md** | `skills/*/REFERENCE.md` |
+| Workflow runbook | ≤200 lines | `workflows/runbooks/*/WORKFLOW.md` |
+| ~~Runbook REFERENCE.md~~ | **deprecated, fold back to WORKFLOW.md** | `workflows/runbooks/*/REFERENCE.md` |
+| Agent persona (standard) | ≤100 lines | `agents/*.md` |
+| Agent persona (chief / moderator / consolidator) | ≤150 lines | `agents/board-chief.md`, `agents/code-chief.md`, `agents/council-chief.md`, `agents/solution-expert.md` |
+| Skill protocol | ≤150 lines | `skills/_protocols/*.md` |
+| Agent protocol | ≤80 lines | `agents/_protocols/*.md` |
+| Assembled prompt (protocol + persona + dispatch) | ≤500 lines | runtime check on dispatch |
 
-**Differentiation by skill type:**
-- **Single-class v2** (`invocation`, no `type:`): **120 lines** —
-  the convergence target for the single-class skill model.
-- **Workflow** (legacy `type: workflow`): 180 lines. Scoping needs
-  room for 5+ phases.
-- **Capability** (legacy `type: capability`): 120 lines.
-  `frame` 96/120 (hardened in session 99).
-- **Protocol** (legacy `type: protocol`): 100 lines. Has to stay
-  tight or it loses its rule character.
-- **Utility** (legacy `type: utility`): 100 lines. Low-discretion.
+**Per-skill REFERENCE.md fold-back triage** (12 active files, 2444
+LoC total as of 2026-05-31 policy switch; 2 done as of late-evening
+sweep):
 
-**Moderator special case:** `agents/solution-expert.md` is the
-moderator of a 6-perspective Architecture Council mechanic with
-intake check + research check — structurally not splittable
-without losing moderator context. Special-case list budget
-≤120 lines, analogous to chief personas.
+| Skill | REF lines | Status |
+|---|---|---|
+| council | 102 | **DONE 2026-05-31** — folded into SKILL (206 LoC merged) |
+| sectional_deep_review | 87 | **DONE 2026-05-31** — folded into SKILL (259 LoC merged) |
+| consistency_check | 636 | TODO — heaviest: triage forensic history; likely 80% drop, 20% inline |
+| code_review_board | 313 | TODO — review-mode detail merges into SKILL §Process |
+| testing | 282 | TODO — L0-L5 pyramid detail belongs in SKILL |
+| spec_board | 220 | TODO — mode profiles + chief routing merge into SKILL |
+| spec_authoring | 160 | TODO — phase detail merges |
+| adversary_test_plan | 146 | TODO |
+| task_creation | 139 | TODO |
+| frame | 120 | TODO — 8-step process detail |
+| bedrock_drill | 120 | TODO |
+| convergence_loop | 119 | TODO |
 
-Rationale: Piebald benchmark (CC's own prompts 200-600 tokens =
-~50-150 lines). Attention degrades above those sizes.
+Per-skill fold-back is **per-skill content judgment** (not mechanical
+replace) and runs as a follow-up sweep or as each skill is next
+touched. The transitional 180-line cap applies while paired
+REFERENCE.md still exists.
 
 ## Gate rule
 

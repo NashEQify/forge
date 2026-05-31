@@ -609,3 +609,13 @@ When in doubt: `framework/process-map.md` (workflow routing) or `agents/navigati
 | Workflow-YAML schema example | [`../workflows/runbooks/solve/workflow.yaml`](../workflows/runbooks/solve/workflow.yaml) |
 | Workflow-Reminder hook (UserPromptSubmit) | [`../orchestrators/claude-code/hooks/workflow-reminder.sh`](../orchestrators/claude-code/hooks/workflow-reminder.sh) |
 | Boot status-check script | [`../scripts/git-status-check.sh`](../scripts/git-status-check.sh) |
+
+## Next step
+
+You've reached the end of the reader-journey set. From here:
+- [`README.md`](README.md) (this directory's index) for a re-orientation.
+- [`../README.md`](../README.md) (repo root) for the public-OSS framing.
+- [`../intent.md`](../intent.md) for the framework's stated identity
+  (vision, pillars, non-goals).
+- [`../framework/agent-patterns.md`](../framework/agent-patterns.md)
+  for the rolling pattern catalogue (real drift cases).

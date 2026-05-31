@@ -11,9 +11,14 @@ template fields > LLM persona review.
 `agents/main-code-agent.md` input validation as a required field
 on Full / Standard.
 
-**Pre-dispatch check:**
-`orchestrators/claude-code/hooks/delegation-prompt-quality.sh`
-Check C verifies presence + completeness of all 4 classes.
+**Pre-dispatch check (discipline, post-ADR-004):**
+Buddy verifies presence + completeness of all 4 classes before
+dispatching the brief. The earlier
+`orchestrators/claude-code/hooks/delegation-prompt-quality.sh` Check
+C performed this as a CC PreToolUse WARN; removed 2026-05-31 (CC-
+Terminal-only, observability not enforcement). Discipline now lives
+at brief-authoring time: Buddy reads this protocol before drafting
+and self-checks all 4 classes against the dispatch.
 
 ---
 
@@ -297,10 +302,11 @@ Producer is `code-architect-lens` (fresh-context-isolated reads
 code / spec, runs grep — see lens §Claim-Verifications, single
 merged table). Brief-architect copies the verbatim rows. **Adversary
 re-verifies at L2 dispatch** per `agents/code-adversary.md`
-§Cold-start pre-mission — two-pass author / verifier separation. Hook `brief-claims-guard.sh` (Claude
-Code only) re-runs the embedded Command at write/commit time and
-BLOCKs on output mismatch; SKILL text remains binding when the hook
-is unavailable.
+§Cold-start pre-mission — two-pass author / verifier separation. The
+earlier `brief-claims-guard.sh` PreToolUse hook re-ran the embedded
+Command at write time and BLOCKed on output mismatch; removed in
+ADR-004 (2026-05-31). SKILL text remains binding; adversary's L2
+re-verification is now the load-bearing check.
 
 Any `FALSIFIED` row → brief is INCOMPLETE, return to author for AC
 re-scope before MCA dispatch.

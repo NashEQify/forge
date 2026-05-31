@@ -1,36 +1,76 @@
+<p align="center">
+  <img src="assets/vibeforge-logo.png" width="240" alt="forge mascot — a friendly furnace with headphones smithing code on a circuit-board anvil. The forged code reads: def forge(vibes): build(); ship()." />
+</p>
+
 # forge
 
-forge is the rebar in your process for complex multi-session work with
-coding agents: an opinionated workflow engine and discipline layer for
-solo devs and vibe coders. Eight workflows (`build`, `solve`, `fix`,
-`review`, `research`, `docs-rewrite`, `save`, `context-housekeeping`)
-walk the same arc every time — phase models with persistent state per
-task, gates at the boundaries, procedures an unsteered LLM doesn't
-reliably apply.
+forge is **disciplined LLM capabilities** between you and your coding
+agent — an opinionated orchestration layer that gives the LLM
+*more reach*, not *less rope*. Aimed at a single dev who wants
+vibe-at-complexity: the velocity of vibe-coding with the coherence of
+process when the work outgrows a single session.
+
+Eight workflows (`build`, `solve`, `fix`, `review`, `research`,
+`docs-rewrite`, `save`, `context-housekeeping`) walk the same arc
+every time. Three review boards (Spec-Board, Code-Review-Board,
+UX-Board) and an Architectural Council provide a multi-perspective
+reasoning substrate when one model can't hold the whole thing
+coherently. A small set of universally-portable hooks (git pre-commit
+plus SessionStart for boot) catches drift where mechanical catching is
+both cheap and reliable across harnesses.
 
 The point: when the work outgrows a single session — multi-day builds,
-multi-repo refactors, anything where coherence across context loss is
-the bottleneck — vibe-coding alone stops scaling. forge gives you
-structure for the work without ceremony for trivial fixes.
+multi-repo refactors, anything where coherence-across-context-loss is
+the bottleneck — unsteered vibe-coding stops scaling. forge augments
+the LLM's reasoning with skills + boards + council, so the LLM stays
+in the driver's seat while drift gets caught at the boundaries.
 
 Dogfooded. Opinionated. Pre-1.0.
+
+> **Honest framing (2026-05-31, post-self-review).** Earlier versions
+> of this README claimed "mechanical enforcement" as a primary pillar
+> — *"the LLM cannot rationalize away a shell hook"*. Empirically that
+> framing was overstated: most hooks were stderr-WARN (observability),
+> several BLOCK hooks had bypass vectors, the PreToolUse layer was
+> CC-Terminal-CLI only (claude-desktop / claude-web / Codex / Cursor
+> lack it). The framework's actual operating substrate is **Buddy's
+> reasoning, augmented by skills + boards + council + protocols**.
+> The hook layer is a thin reinforcement at the boundaries — git
+> pre-commit checks (universal) + SessionStart for boot (semi-
+> universal). The CC-Terminal-only PreToolUse / PostToolUse /
+> UserPromptSubmit layer is being removed (May 2026 hook-paradigm
+> shift) so the framework runs identically on every supported harness.
 
 ## What's in the workshop
 
 **Eight opinionated workflows.** A `build` walks the same arc every
 time: scoping → spec interview → spec-board (4-7 reviewer personas in
 parallel + chief consolidator) → MCA implements → code-review-board →
-close. State persists per task in `.workflow-state/<id>.json` — pause
-after spec today, resume at code-board tomorrow on a different
-machine, with full phase history. The eight workflows carry the
-methodology; their 41 skills carry the moves inside each phase.
+close. The 8 workflows carry the methodology; the 41 active skills
+carry the moves inside each phase. Workflow state can persist per
+task in `.workflow-state/<id>.json` (atomic-write + flock) for
+genuinely-multi-day-multi-phase builds — currently in usage standby;
+Buddy's reasoning + the `save` session-handoff cover most cross-
+session needs without ceremony.
 
-**Discipline at the boundaries.** Workflow state gates each phase
-transition. Path-whitelist + frozen-zones keep writes inside the
-declared scope at tool-call time. Pre-commit checks (13) catch
-convention drift before it ships. The combination is the same arc
-plus the same guardrails on every task — so the methodology survives a
-multi-day build, a context switch, or a fresh session next week.
+**Multi-perspective decision substrate.** Three boards (Spec-Board,
+Code-Review-Board, UX-Board) and an Architectural Council are the
+framework's reasoning layer for irreversible or multi-path decisions.
+Anti-anchoring discipline (`_protocols/dispatch-template.md` +
+`context-isolation.md`) keeps Buddy from coloring the reviewers'
+findings; the orchestrator reads only the chief consolidator's signal
+(Invariant 1). Council has four modes (light / standard / full /
+interactive) with proportionality gates and an explicit
+*council-before-user-escalation* rule when Buddy hits a multi-path
+uncertainty.
+
+**Reinforcement at the boundaries — universal-portable only.** Git
+pre-commit catches convention + schema drift before it ships on any
+harness. SessionStart hooks bootstrap Buddy on claude-desktop /
+claude-web / Codex where the `--agent buddy` flag isn't an
+entrypoint. The earlier CC-Terminal-CLI-only PreToolUse / PostToolUse
+/ UserPromptSubmit layer is being dropped — discipline replicates,
+and harness-portability beats CC-coupled enforcement.
 
 ## How it works
 
@@ -73,9 +113,10 @@ eight workflows; sub-agents do the actual work.
                                        ▼
                                     RESULT
 
-  ── HOOKS enforce at every boundary ─────────────────────────────────
-     PreToolUse · PostToolUse · UserPromptSubmit · pre-commit (13 checks)
-     path-whitelist BLOCK · frozen-zone BLOCK · workflow-reminder · CG-CONV · …
+  ── HOOKS (universal-portable only, post-ADR-004 2026-05-31) ──
+     SessionStart (boot inject) · git pre-commit (5 checks)
+     PLAN-VALIDATE BLOCK · CG-CONV BLOCK · SKILL-FM-VALIDATE BLOCK
+     SECRET-SCAN WARN · SOURCE-VERIFICATION WARN
 ```
 
 ## Cross-session continuity
@@ -321,8 +362,8 @@ Adapter-based on top of an existing harness, not a re-implementation.
 
 ## Inventory (live)
 
-- **Skills:** [`framework/skill-map.md`](framework/skill-map.md) (41 active)
-- **Personas:** [`agents/navigation.md`](agents/navigation.md) (35, incl. boards)
+- **Skills:** [`framework/skill-map.md`](framework/skill-map.md) (41 active + 1 draft + 1 deprecated)
+- **Personas:** [`agents/navigation.md`](agents/navigation.md) (40, incl. boards + council)
 - **Workflows + Routing:** [`framework/process-map.md`](framework/process-map.md)
 - **Protocols / References / Hooks:** [`architecture-documentation/02-architecture.md`](architecture-documentation/02-architecture.md)
 

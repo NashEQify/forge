@@ -11,8 +11,8 @@
 ┌─────────────────────────────────────────────────────────────────────┐
 │  HARNESS-ADAPTER (orchestrators/<name>/)                            │
 │  - cc / oc: scope-routing, --add-dir composition                    │
-│  - hooks/: PreToolUse, Stop, SessionEnd, pre-commit                 │
-│  - ~/.claude/settings.json (user-global) registers CC hooks         │
+│  - hooks/: SessionStart (boot) + git pre-commit (5 checks)          │
+│  - ~/.claude/settings.json (user-global) registers SessionStart     │
 └──────────────────────────────┬──────────────────────────────────────┘
                                │ loads
                                ▼
@@ -52,16 +52,20 @@
                                │ delegates to
                                ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│  PERSONAS (agents/<name>.md)                                        │
+│  PERSONAS (agents/<name>.md) — 40 total                             │
 │  Buddy (Orchestrator)                                               │
-│  Spec-Board (chief, adversary[-2], implementer, impact, consumer)   │
-│  UX-Board (ux-heuristic, ux-ia, ux-interaction)                     │
-│  Code-Review-Board (14: chief, review, adversary, security, data,   │
+│  Spec-Board (7: chief, adversary, adversary-2, implementer,         │
+│    impact, consumer, architect-roots)                               │
+│  UX-Board (3: ux-heuristic, ux-ia, ux-interaction)                  │
+│  Code-Review-Board (15: chief, review, adversary, security, data,   │
 │    reliability, domain-logic, api-contract, ai-llm, spec-fit,       │
-│    spec-drift, docs-consumer, architect-roots, verification)        │
-│  Standalone (main-code-agent, council-member, solution-expert,      │
-│    security, tester, test-skeleton-writer, plan-adversary,          │
-│    brief-architect, buddy-thinking, spec-text-drift-batch)          │
+│    spec-drift, docs-consumer, architect-roots, architect-lens,      │
+│    verification)                                                    │
+│  Council (3: council-member, council-chief, council-adversary       │
+│    — Stage-1 parity rewrite May 2026)                               │
+│  Standalone (main-code-agent, solution-expert, security, tester,    │
+│    test-skeleton-writer, plan-adversary, brief-architect,           │
+│    buddy-thinking, spec-text-drift-batch)                           │
 │                                                                     │
 │  Persona-Level Protocols (agents/_protocols/)                       │
 │  - reviewer-base, reasoning-trace, first-principles-check,          │
@@ -287,8 +291,10 @@ checkout). Schema:
 - **Atomic write**: write to `<file>.tmp` + `os.replace(tmp, file)` (POSIX
   guarantees rename atomicity, anti-corruption against crash mid-write)
 - **Locking**: `fcntl.flock` via `_state_lock()` context manager around
-  all read/write operations — prevents race conditions when
-  the UserPromptSubmit hook + Buddy access state in parallel
+  all read/write operations — historically protected against
+  concurrent access (the earlier `workflow-reminder.sh` UserPromptSubmit
+  hook + Buddy could both read state). Post-ADR-004 the hook is gone;
+  the lock remains as defense-in-depth against parallel CLI invocations
 - **Corrupt warning**: corrupt state files are reported (stderr) instead of
   silently skipped — the user notices the problem, rather than "workflow vanished"
 
@@ -303,18 +309,19 @@ review/research/docs-rewrite **MUST go through the engine**. Skip list:
 - frame/bedrock_drill standalone (sub-skills)
 - think! (open discussion)
 
-Enforcement: pre-commit Check 8 (ENGINE-USE) WARNs for feat/fix/refactor with
-`[Task-NNN]` without an active workflow.
+Enforcement (post-ADR-004): the engine itself is in usage standby for
+2026-05; discipline-only. The earlier pre-commit Check 8 (ENGINE-USE)
+WARN was removed alongside the workflow-engine reinforcement layer.
 
 ### Cross-Session Resume
 
 - Boot step 5 STATUS-CHECK + step 6 RESUME → `--boot-context` injects a
   resume line that `Step 7 RESUME` hands to the user
-- UserPromptSubmit hook (`workflow-reminder.sh`) renders `WORKFLOW-ENGINE:
-  NEXT: <wf> [Task N] > step-i/n: <instruction>` as `additionalContext` in
-  every user turn — Buddy sees it before each reply
-- Hard cap: 200 characters so the hook does not cause context bloat
-- Fast path: `timeout 2 python3 ...` so boot is not slowed down
+- The earlier `workflow-reminder.sh` UserPromptSubmit hook (which
+  rendered `WORKFLOW-ENGINE: NEXT: <wf> [Task N] > step-i/n:
+  <instruction>` as `additionalContext` every turn) was removed in
+  ADR-004 — Buddy reads workflow state on demand via
+  `--boot-context` / `--next` rather than per-turn injection.
 
 ### Multi-Machine Constraint
 
@@ -387,58 +394,66 @@ absorbed into the **`code-review` multi-axis persona** (3 → 1, council decisio
 
 ### Council (`skills/council/SKILL.md`)
 
-Structured architectural decision. Two modes:
+Structured architectural / strategic decision. Four modes
+(2026-05-31 Stage-1 Council-Board parity rewrite):
 
-- **Architectural Council**: 3-4 `council-member` subagents in parallel,
-  context isolation, Buddy consolidates.
-- **Interactive Council**: Buddy moderates a user dialogue with perspectives
-  (phase 1-2-3).
+| Mode | Team | When |
+|---|---|---|
+| **light** | 3 `council-member` + `council-chief` (no adversary, no frame-check) | default on §1.0 proportionality pass — single-component, mid-reversible decisions |
+| **standard** | 4 members + `council-adversary` + `council-chief` + pre-council frame-check (plan-adversary on briefing draft) | escalation tier: ≥2 of {hard-to-reverse, multi-component, security/sovereignty} |
+| **full** | 5-7 members + `council-adversary` + `council-chief` + discourse + frame-check | foundational decisions / ≥2 hard constraints / >2 dimensions |
+| **interactive** | Buddy moderates a user dialog with perspectives (phase 1-2-3) | user wants to think through together, not parallel-isolation |
 
-Trigger: >1 path + hard to reverse, >1 layer, substantial impact, Buddy unsure.
+**Consolidator-tool mandatory for ≥3 members** per CLAUDE.md Invariant 1
+— Buddy reads only the chief signal, never the individual member files.
 
-## Hooks (Mechanism)
+**Post-council coherence-check** (`agents/buddy/operational.md`
+§Architecture-Comprehension B) re-applies unconditionally on chief return.
 
-`orchestrators/claude-code/hooks/`:
+Personas added in the Stage-1 rewrite:
+`agents/council-chief.md` (consolidator-tool, DISSENT preservation,
+predicate-based verdict labels) and `agents/council-adversary.md`
+(frame-acceptance / charity-overflow / past-similarity hunt;
+challenges briefing framing itself).
+
+Trigger: >1 viable path, hard to reverse, >1 component, Buddy uncertain
+about which path is right.
+
+## Hooks (Mechanism, post-2026-05-31 paradigm shift)
+
+`orchestrators/claude-code/hooks/` — **3 hook scripts on disk**,
+post-ADR-004. The earlier CC-Terminal-CLI-only PreToolUse / PostToolUse
+/ UserPromptSubmit layer (13 scripts) was removed in favor of
+universally-portable enforcement. Discipline replicates via protocols
+and `agents/buddy/operational.md`. Detail rationale +
+alternatives-considered: `docs/decisions/ADR-004-hook-paradigm-shift.md`.
 
 | Hook | Trigger | Behaviour |
 |---|---|---|
-| `path-whitelist-guard.sh` | PreToolUse(Edit/Write/NotebookEdit/Bash) | BLOCK writes outside `.claude/path-whitelist.txt` |
-| `frozen-zone-guard.sh` | PreToolUse | BLOCK writes inside `.claude/frozen-zones.txt` |
-| `engine-bypass-block.sh` | PreToolUse(Edit/Write/MultiEdit/NotebookEdit) | BLOCK reader-facing Tier-1 writes (2+ reader-facing files modified/staged) without an active workflow in `.workflow-state/`. Override: `# allow:engine-bypass <reason>` in CLAUDE.md scratch (Pattern 7) |
-| `delegation-prompt-quality.sh` | PreToolUse(Task) | WARN <200 characters + missing plan-block keyword + (Check C) MCA dispatch without `implicit_decisions_surfaced` section on a substantive dispatch |
-| `plan-adversary-reminder.sh` | PreToolUse(Edit/Write/MultiEdit) | WARN on non-trivial Tier-1 edit cluster (N>2 distinct Tier-1 files OR single-file delta ≥80 lines) without a plan-adversary spawn in the last 60min. Override: `# allow:no-plan-adversary <reason>` |
-| `mca-return-stop-condition.sh` | PostToolUse(Task) | WARN when subagent_type=main-code-agent + the MCA return contains Stop-Condition / ESCALATE / ARCH-CONFLICT / AUTO-FIXED keywords. |
-| `board-output-check.sh` | PostToolUse(Task) | WARN on a dispatch prompt with a file-output pattern when the expected file is missing post-task. Pass-through fallback suggestion in the WARN. |
-| `evidence-pointer-check.sh` | PostToolUse(Task) | WARN when Tier-1 skill sub-agent output lacks line-numbered evidence pointers. |
-| `pre-commit.sh` | git pre-commit | 13 checks (see below) |
-| `state-write-block.sh` | PreToolUse | state-file protection |
-| `workflow-commit-gate.sh` | git pre-commit | workflow-state consistency |
-| `workflow-reminder.sh` | UserPromptSubmit | workflow-engine `additionalContext` injection (NEXT step + task) every turn |
-| `post-commit-dashboard.sh` | git post-commit | dashboard refresh |
+| `buddy-boot-inject.sh` | SessionStart | Triggers Buddy boot in claude-desktop / claude-web (where `--agent buddy` isn't an entrypoint flag). Load-bearing for boot on non-Terminal entrypoints. |
+| `session-start-remote.sh` | SessionStart | Resume-nudge — checks for recent session-handoff at session start. |
+| `pre-commit.sh` | git pre-commit + commit-msg | 5 checks (see below) — universally available across harnesses (git is portable). |
 
-### Pre-Commit 13 Checks
+### Pre-Commit 5 Checks (post-ADR-004)
 
-`orchestrators/claude-code/hooks/pre-commit.sh`:
+`orchestrators/claude-code/hooks/pre-commit.sh` — 3 BLOCK + 2 WARN.
 
 | # | Check | Severity | Implementation |
 |---|---|---|---|
-| 1 | PLAN-VALIDATE | BLOCK | `plan_engine.py --validate` 0 errors |
-| 2 | TASK-SYNC | WARN | status/readiness changes without `task_status_update` |
-| 3 | OBLIGATIONS | WARN | docs/dashboard/plan_engine touched → deploy needed |
-| 4 | CG-CONV | BLOCK | conventional-commit format |
-| 5 | STALE-CLEANUP | WARN | STALE/RETIRED/SUNSET marker with live refs |
-| 6 | PERSIST-GATE | WARN | status change without context update |
-| 7 | SKILL-FM-VALIDATE | BLOCK | `skill_fm_validate.py` mandatory fields + invocation + `relevant_for` |
-| 8 | ENGINE-USE | WARN | feat/fix/refactor + `[Task-NNN]` without an active workflow in `.workflow-state/` |
-| 9 | RUNBOOK-DRIFT | WARN | `validate_runbook_consistency.py --staged` — workflow.yaml ↔ WORKFLOW.md drift (phase comments, step-name keywords, derived_from) |
-| 10 | AGENT-SKILL-DRIFT | WARN | `generate_agent_skill_map.py --check` — `agents/<name>.md` AUTO block out of sync with skill `relevant_for:` frontmatter |
-| 11 | SECRET-SCAN | WARN | `gitleaks protect --staged` (skipped when gitleaks is not installed, 24h-suppressed note WARN) |
-| 12 | SOURCE-VERIFICATION | WARN | board/council reviews must cite source files (line-numbered evidence pointers) |
-| 13 | PIEBALD-BUDGET | WARN | staged active `SKILL.md` over `skills/_protocols/piebald-budget.md` threshold |
+| 1 | PLAN-VALIDATE | BLOCK | `plan_engine.py --validate` 0 errors (regex pinned 2026-05-31 — earlier `^Summary:.*0 errors` was fail-OPEN) |
+| 2 | CG-CONV | BLOCK | Conventional-Commits format (commit-msg authoritative; pre-commit mode skips to avoid F-102 amend-with-m stale-message false-positive) |
+| 3 | SKILL-FM-VALIDATE | BLOCK | `skill_fm_validate.py` mandatory fields + invocation + `relevant_for` |
+| 4 | SECRET-SCAN | WARN | `gitleaks protect --staged` (skipped when gitleaks not installed, 24h-suppressed note WARN) |
+| 5 | SOURCE-VERIFICATION | WARN | Board/council reviews must cite source files (line-numbered evidence pointers per `_protocols/evidence-pointer-schema.md`) |
 
-The 10 WARN checks are deliberately not BLOCK — trace markers would be faux
-mechanism (trivially settable). The real failure class: Buddy forgets a skill, not
-"actively bypasses". WARN is enough and does not disturb pure cosmetic commits.
+**Dropped 2026-05-31 (8 checks, ADR-004):** TASK-SYNC, OBLIGATIONS,
+STALE-CLEANUP, PERSIST-GATE, ENGINE-USE, RUNBOOK-DRIFT,
+AGENT-SKILL-DRIFT, PIEBALD-BUDGET. Most were observability-WARN that
+discipline replaces; ENGINE-USE was tied to the workflow_engine state
+file which is in usage standby; AGENT-SKILL-DRIFT covered only ~12.5%
+of personas (`relevant_for:` opt-in coverage); PIEBALD-BUDGET dropped
+in favor of a loosened budget for SKILL.md (REFERENCE.md fold-back is
+a parallel change).
 
 ## Engines + Generators
 
@@ -576,8 +591,8 @@ User: "implement feature X"
 ```
 Buddy has a plan block or gate file
   → Buddy invokes the Agent tool with subagent_type, prompt, isolation?
-  → CC PreToolUse: delegation-prompt-quality.sh
-      WARN if <200 characters
+      (Brief discipline lives in _protocols/mca-brief-template.md +
+       dispatch-template.md; no PreToolUse hook post-ADR-004)
   → Sub-agent boot:
       .claude/agents/<name>.md found
       Wrapper loads agents/<name>.md (SoT)
@@ -604,3 +619,8 @@ Buddy has a plan block or gate file
 ## Repository Structure in Detail
 
 → see [`03-repository-map.md`](03-repository-map.md).
+
+## Next step
+
+Repository topology and where what lives:
+[`03-repository-map.md`](03-repository-map.md).

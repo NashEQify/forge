@@ -6,29 +6,32 @@
 
 The mental models you must understand to use the framework correctly.
 
-## Contents (29 disciplines)
+## Contents (27 disciplines)
 
-**Foundational (1-10):** tier model, pre-delegation, single-class model,
+**Foundational (§1-§10):** tier model, pre-delegation, single-class model,
 cross-loading, generator+validator, frozen zones, RECEIVE/ACT/BOUNDARY,
-boards, token budgets, cross-session state.
+boards, workflow phases, token budgets.
 
-**Mechanism-driven (11-19):** agent-skill awareness, path routing,
-mechanical cognitive-bias mitigation, override discipline, iteration-cap
-default, sub-build path, re-verify step, task-status orthogonality,
-spec co-evolution.
+**Mechanism-driven (§11-§19):** ADR-discipline-triple, idea-variation
+lenses, deletion test, cross-session state machine, agent-skill
+awareness, path routing, mechanical cognitive-bias mitigation, task-
+status orthogonality, spec co-evolution.
 
-**Citation / pattern-derived (21-27):** stop-condition mechanic,
-board-output mechanical, adversary-driven test plan,
-external-review-bundle mechanic, agentic design principles,
+**Citation / pattern-derived (§21-§23 + §25-§27):** stop-condition
+mechanic, board-output mechanical, adversary-driven test plan,
+external-review-bundle mechanic, agentic design principles (historical),
 reader-facing-surface detection.
 
-**Recent additions (28-29):** triage checklist (pattern-absorb in
-`root_cause_fix`), skill catalogue (`security_and_hardening` +
-`frontend_ui_engineering` NEW).
+**Recent additions (§28-§29):** triage checklist (pattern-absorb in
+`root_cause_fix`), external-skill catalogue (`security_and_hardening`,
+`frontend_ui_engineering`).
 
-Format from §20 onwards: each discipline follows **Failure mode → Pattern → Mechanism →
-Detail spec**. §1-§19 historically inconsistent (tables, before/after,
-prose) — Anatomy sweep BL.
+Numbering gaps at §20 + §24: discipline slots reserved during earlier
+drafts that were folded into adjacent sections rather than getting
+their own. The sequence holds within ranges, total = 27 (10 + 9 + 6 + 2).
+Format from §20 onwards: each discipline follows **Failure mode →
+Pattern → Mechanism → Detail spec**. §1-§19 historically inconsistent
+(tables, before/after, prose) — anatomy-sweep follow-up tracked.
 
 ---
 
@@ -68,7 +71,7 @@ to materialise their assumptions before invoking a sub-agent.
 | STANDARD | gate file (`docs/tasks/<id>-gates.yaml`) + state file (`docs/build/...`) |
 | FULL | gate file + state file + multi-phase spec (E1→Board→E2→...) |
 
-Quality hook: `delegation-prompt-quality.sh` warns on sub-agent prompts under 200 characters.
+Quality discipline: brief shape is enforced in `_protocols/dispatch-template.md` + `mca-brief-template.md`. The earlier `delegation-prompt-quality.sh` hook warned at PreToolUse time when sub-agent prompts were under 200 characters; removed in ADR-004 (2026-05-31 hook paradigm shift), discipline now lives in operational.md §Delegation hygiene.
 
 ## 3. Single-class skill model
 
@@ -203,15 +206,21 @@ only succeeded with the drift mechanism — generator + validator together.
 
 ## 6. Frozen Zones + Stale Cleanup
 
-### Frozen Zones (`CLAUDE.md §5` + `frozen-zone-guard.sh` + `.claude/frozen-zones.txt`)
+### Frozen Zones (`CLAUDE.md §5` — convention post-ADR-004)
 
-WORM zones (write-once-read-many). Writes mechanically blocked:
+WORM zones (write-once-read-many). Convention:
 
 ```
 context/history/**
 ```
 
-Corrections via `.correction.md` sidecar (convention, not mechanism).
+Corrections via `.correction.md` sidecar. **Mechanism shift 2026-05-31:**
+`frozen-zone-guard.sh` (PreToolUse BLOCK) was removed in ADR-004; the
+convention is now enforced by Buddy discipline (don't write into
+history zones) + occasional grep-audit during `stale-cleanup` passes.
+The `.claude/frozen-zones.txt` glob-list was the hook SoT; the file is
+obsolete post-ADR-004 (kept short-term for reference, slated for
+removal in a follow-up).
 
 **Context-system mechanism:** pattern per area `context/<area>/navigation.md`
 + `overview.md` + detail files. Detail + loading order:
@@ -375,7 +384,7 @@ is the runtime layer:
 | State file | `.workflow-state/<wf>-<task-id>-<ts>.json`, atomic-write + flock-locked |
 | Step pointer | `current_step` index, advanced via `--complete` |
 | Boot resume | `--boot-context` injects a resume line at every boot |
-| Per-turn reminder | `UserPromptSubmit` hook injects NEXT step + task ref into `additionalContext` |
+| Per-turn reminder | Removed 2026-05-31 (ADR-004) — Buddy reads workflow_engine state on demand via `--boot-context` / `--next`; the earlier `workflow-reminder.sh` UserPromptSubmit hook injected next-step per turn but was CC-Terminal-CLI only |
 | Pre-commit gate | `commit_gate: true` steps block the commit until done |
 | Engine-use detector | pre-commit Check 8 WARNs on feat/fix/refactor + `[Task-NNN]` without an active workflow |
 
@@ -477,15 +486,19 @@ with 6 standard decision classes (schema_shape, error_handling, layer_discipline
 naming_collisions, return_format_spec, stop_conditions). Each class:
 `locked: <yes/no/n.a.>` + `value: <decision>`.
 
-**Mechanical enforcement:** `delegation-prompt-quality.sh` Check C — for
-`subagent_type=main-code-agent` + prompt >= 600 chars: regex checks for
-section presence + 6-class completeness. WARN on missing.
+**Discipline enforcement post-ADR-004:** brief discipline lives in
+`skills/_protocols/mca-brief-template.md` and is enforced by Buddy
+reading the protocol during brief authoring. The earlier
+`delegation-prompt-quality.sh` Check C (PreToolUse regex for section
+presence + 6-class completeness) was removed in the 2026-05-31
+paradigm shift — discipline replicates without the hook.
 
 **Anti-pattern (why NOT a persona spawn instead of a template):** a persona costs
 +5-15k tokens per dispatch, is probabilistic, can be wrongly tuned
 (plan-adversary is plan-tuned, not brief-tuned — F-PA-005 pattern).
-A mechanical template is deterministic, falsifiable, 0-token cost. **Mechanism
-beats persona** when the failure mode is catchable via structural fields.
+A protocol template is deterministic, falsifiable, 0-token cost.
+**Protocol-as-substrate beats persona-as-substrate** when the failure
+mode is catchable via structural fields the author can re-read.
 
 **Forcing-function effect:** the template forces Buddy to enumerate 6 classes
 — classes he would otherwise overlook are surfaced (unknown-unknowns via
@@ -530,14 +543,13 @@ No → --skip with rationale. Complementary to `spec-amendment-verify`
 Buddy autonomously resolves instead of escalating. The pattern costs re-verification
 in the next wave.
 
-**Pattern:** PostToolUse(Task) hook `mca-return-stop-condition.sh` parses
-the MCA return for keywords (Stop-Condition, ESCALATE, ARCH-CONFLICT, AUTO-FIXED).
-On match: stderr WARN with context line + pattern lesson + action prompt.
-Filter: subagent_type=main-code-agent only.
-
-**Mechanical enforcement:** Buddy sees stderr in the next-turn context,
-discipline-based catch. WARN-only — not BLOCK because legitimate ESCALATEs
-exist (Buddy should decide consciously).
+**Pattern (post-ADR-004):** Buddy reads MCA return summaries himself
+per `agents/buddy/operational.md` §Sub-Agent Return — incident-block
+keywords (Stop-Condition, ESCALATE, ARCH-CONFLICT, AUTO-FIXED) route
+to documented next actions. The earlier `mca-return-stop-condition.sh`
+PostToolUse hook flagged these keywords via stderr WARN; removed
+2026-05-31 (CC-Terminal-only). Discipline replicates by Buddy reading
+the return.
 
 ## 22. Board-Output Mechanical
 
@@ -545,15 +557,14 @@ exist (Buddy should decide consciously).
 the file-output OVERRIDE and return findings inline. dispatch-template.md
 has Buddy's pass-through fallback (recovery), but not prevention.
 
-**Pattern:** PostToolUse(Task) hook `board-output-check.sh` parses the dispatch
-prompt for a file-output pattern (Write...in:, Output path:, WRITE...at,
-backtick-quoted .md paths). Checks post-task whether expected files exist.
-On missing: stderr WARN with pass-through fallback suggestion + banner-
-note template.
-
-**Mechanical enforcement:** Buddy receives an explicit list of missing files
-+ recovery instruction in the next turn. Prevents silent loss of
-sub-agent output.
+**Pattern (post-ADR-004):** Buddy verifies expected board / council
+output files after each dispatch per `agents/buddy/operational.md`
+§Inline-return fallback — the pass-through mechanic (Buddy writes the
+returned content verbatim into the expected file path with a banner
+note) is the discipline-level recovery. The earlier
+`board-output-check.sh` PostToolUse hook listed missing files via
+stderr WARN; removed 2026-05-31. Buddy's post-dispatch read of
+chief.md is the load-bearing check.
 
 ## 23. Adversary-Driven Test Plan
 
@@ -648,10 +659,15 @@ classify_artifact(artifact) → primary_consumer
 The trigger is NOT file extension (false positive on SKILL.md), but the
 **primary consumer**. Allowlist explicit (default OUT when in doubt).
 
-**Mechanism:**
+**Mechanism (post-ADR-004):**
 - solve workflow.yaml `dispatch-board` artifact_class branching
-- `engine-bypass-block.sh` PreToolUse multi-file reader-facing-edit block
-- Override: `# allow:engine-bypass <reason>` in CLAUDE.md scratch
+- Buddy discipline: pre-dispatch classify the artifact's primary
+  consumer; require a presentation-audit when consumer is
+  "human-without-context". The earlier `engine-bypass-block.sh`
+  PreToolUse hook attempted to BLOCK multi-file reader-facing-edits
+  without an active workflow; removed 2026-05-31 (the workflow_engine
+  was in usage standby anyway, and the hook produced friction without
+  delivering protection).
 
 Detail spec: pattern 7 in [`../framework/agent-patterns.md`](../framework/agent-patterns.md).
 
@@ -724,6 +740,15 @@ The framework is not just a collection of files. It is a coherent
 - Agentic design principles (14 DRs) prevent obviously-correct bias on architectural decisions.
 - Reader-facing-surface detection prevents validators-PASS blindness on reader-facing artefacts.
 
-Each discipline has a mechanical anchor (hook / validator / generator)
-and a mental side (Spec-Board / review). If you leave any one out, the system
-falls back into a drift state at the next refactoring pressure at the latest.
+Each discipline has a mechanical anchor (hook / validator / generator
+/ protocol) and a mental side (Spec-Board / Council / review). The
+2026-05-31 self-review surfaced that several "mechanical" anchors were
+actually observability (WARN-only, easy to miss); the hook-paradigm
+shift (May 2026) is moving toward universally-portable enforcement
+(git pre-commit + SessionStart) + protocol-anchored reasoning. The
+disciplines stay; the enforcement gradient is becoming honest.
+
+## Next step
+
+Concrete setup for Claude Code / OpenCode / Codex / Cursor:
+[`05-installation.md`](05-installation.md).
