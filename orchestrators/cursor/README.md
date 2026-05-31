@@ -27,16 +27,14 @@ with the framework behaviour.
 | Aspect | Claude Code | OpenCode | Cursor |
 |---|---|---|---|
 | Sub-agent discovery | `~/.claude/agents/` | `.opencode/agent/` | project rules + manual via @-mention |
-| PreToolUse hooks | yes (path-whitelist, frozen-zone) | no | no |
 | Pre-commit hook | git symlink | git symlink | git symlink |
 | FACTS background hook | yes | no | no |
 | Workflow-engine trigger | mechanical | mechanical | manual |
 
-**Consequence:** under Cursor the mechanical discipline hooks do not run
-(path-whitelist, frozen-zone, delegation-prompt-quality). Instead
-the user + Cursor agent must hold the discipline mentally — analogous to
-the OC constraint situation. The pre-commit hook REMAINS mechanical (git triggers
-it independently of the agent tool).
+**Consequence:** Cursor's mechanical layer is the git pre-commit hook
+(git triggers it independently of the agent tool) plus the project
+rules + persona wrapper. There is no write-time hook on any harness;
+the user + agent hold path/scope discipline mentally.
 
 ## Setup
 
@@ -74,10 +72,6 @@ The Cursor agent then reads the referenced persona definition from
   Cursor sequentially via @-mention instead of in parallel. Workaround: Buddy
   manually collects the outputs of the individual persona invocations.
 
-- **Path whitelist mechanical:** Cursor has no PreToolUse-hook
-  equivalent. The path whitelist takes effect only via the pre-commit hook
-  (post-hoc). User discipline required.
-
 - **Workflow engine:** workflow-engine invocations (`workflow_engine.py
   --next` etc.) run via Cursor's terminal integration manually —
   no auto-trigger.
@@ -85,6 +79,6 @@ The Cursor agent then reads the referenced persona definition from
 ## Status
 
 **Minimal-viable adapter.** Sufficient to apply forge methodology under
-Cursor. Full mechanical parity with CC still requires:
-PreToolUse equivalent (open, depends on Cursor), sub-agent spawn
-(open, depends on Cursor's composer roadmap).
+Cursor. The parity gap vs CC is now just parallel sub-agent spawn
+(open, depends on Cursor's composer roadmap) — the hook layer (git
+pre-commit + boot) is portable, and there's no write-time hook to match.

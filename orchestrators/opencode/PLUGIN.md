@@ -1,9 +1,18 @@
 # OpenCode plugin: forge-hooks
 
-OpenCode-side translator for the forge hook-discipline layer. Wires
+> **Obsolete — slated for removal.** This plugin translated CC
+> PreToolUse / PostToolUse hooks for OpenCode. Those hooks were removed
+> when forge narrowed its hook layer to universal-portable only (git
+> pre-commit + SessionStart), so the plugin no longer has anything to
+> translate. OpenCode now runs the same git pre-commit hook as every
+> other harness, with the rest carried by protocol-anchored discipline.
+> The detail below is retained for historical reference until the
+> plugin file is deleted.
+
+OpenCode-side translator for the forge hook-discipline layer. It wired
 OpenCode's `tool.execute.before` / `tool.execute.after` events to the
-existing CC bash hooks under `orchestrators/claude-code/hooks/`. The bash
-hooks are the SoT; this plugin is a thin adapter so they stay unchanged.
+CC bash hooks under `orchestrators/claude-code/hooks/`. The bash hooks
+were the SoT; this plugin was a thin adapter so they stayed unchanged.
 
 File: `.opencode/plugins/forge-hooks.ts`. OpenCode auto-loads it at
 startup (Bun runtime transpiles TS — no build step).

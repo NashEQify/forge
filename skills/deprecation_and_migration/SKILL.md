@@ -198,8 +198,8 @@ Only **after** every consumer has migrated:
 
 **STALE-CLEANUP invariant (CLAUDE.md §5) in the same commit:**
 clean every active ref in non-frozen files. `grep -rn
-<artifact>` + frozen-zone filter + fix the rest. pre-commit
-check 5 is a safety net, not a replacement for the sweep.
+<artifact>` + frozen-zone filter + fix the rest. This is
+discipline-only — there's no pre-commit check for it.
 
 ### Phase 4: migration patterns
 

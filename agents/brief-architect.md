@@ -240,7 +240,7 @@ outputs differ. Mode-specific notes are inline.
      amendments, board outputs, parallel-session artifacts). Path
      discipline (CLAUDE.md Invariant 4: Buddy writes within intent-
      scope by discipline; the earlier `path-whitelist-guard` PreToolUse
-     hook was removed in ADR-004 2026-05-31) is the enforcement layer.
+     hook was removed) is the enforcement layer.
      The list exists so Buddy, on suspected scope-creep or MCA hang,
      can `diff <(expected_files) <(actual files_touched)` in O(grep)
      instead of O(mtime-archaeology). Treat divergence as a

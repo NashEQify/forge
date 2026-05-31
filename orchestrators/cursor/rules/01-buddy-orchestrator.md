@@ -41,8 +41,9 @@ After state-changing actions:
 
 ## Cursor-specific
 
-- No mechanical PreToolUse hook → mental discipline for path-writes.
-  Pre-commit hook still BLOCKs at git-commit time.
+- Path-writes are governed by intent-scope discipline (no mechanical
+  write-time hook on any harness). The git pre-commit hook still
+  BLOCKs at commit time.
 - No parallel sub-agent spawn → multi-persona reviews run sequentially via
   @-mention. Document this in the Plan-Block.
 - Workflow-Engine via terminal commands when needed.
