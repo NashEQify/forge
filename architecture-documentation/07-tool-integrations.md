@@ -58,7 +58,6 @@ catches at commit instead of at write).
 orchestrators/claude-code/
 ├── bin/
 │   ├── cc                   # main launcher (191 LoC)
-│   ├── cc.bak-session132    # backup before the Session-132 refactor
 │   └── sysadmin             # sysadmin variant
 └── hooks/
     ├── pre-commit.sh
