@@ -61,8 +61,7 @@
 │    reliability, domain-logic, api-contract, ai-llm, spec-fit,       │
 │    spec-drift, docs-consumer, architect-roots, architect-lens,      │
 │    verification)                                                    │
-│  Council (3: council-member, council-chief, council-adversary       │
-│    — Stage-1 parity rewrite May 2026)                               │
+│  Council (3: council-member, council-chief, council-adversary)      │
 │  Standalone (main-code-agent, solution-expert, security, tester,    │
 │    test-skeleton-writer, plan-adversary, brief-architect,           │
 │    buddy-thinking, spec-text-drift-batch)                           │
@@ -165,7 +164,7 @@ Check 7, BLOCK for mandatory-field violations and unknown `invocation.primary`).
 
 Detail: [`../framework/skill-anatomy.md`](../framework/skill-anatomy.md).
 
-### Skill Inventory (as of May 2026)
+### Skill Inventory
 
 42 skill dirs under `skills/<name>/` — 41 active + 1 deprecated. The
 live inventory (canonical) is the AUTO block in
@@ -293,8 +292,8 @@ checkout). Schema:
 - **Locking**: `fcntl.flock` via `_state_lock()` context manager around
   all read/write operations — historically protected against
   concurrent access (the earlier `workflow-reminder.sh` UserPromptSubmit
-  hook + Buddy could both read state). Post-ADR-004 the hook is gone;
-  the lock remains as defense-in-depth against parallel CLI invocations
+  hook + Buddy could both read state). That hook is gone now; the lock
+  remains as defense-in-depth against parallel CLI invocations
 - **Corrupt warning**: corrupt state files are reported (stderr) instead of
   silently skipped — the user notices the problem, rather than "workflow vanished"
 
@@ -309,9 +308,9 @@ review/research/docs-rewrite **MUST go through the engine**. Skip list:
 - frame/bedrock_drill standalone (sub-skills)
 - think! (open discussion)
 
-Enforcement (post-ADR-004): the engine itself is in usage standby for
-2026-05; discipline-only. The earlier pre-commit Check 8 (ENGINE-USE)
-WARN was removed alongside the workflow-engine reinforcement layer.
+Enforcement: the engine itself is in usage standby; discipline-only.
+An earlier pre-commit Check 8 (ENGINE-USE) WARN was removed alongside
+the workflow-engine reinforcement layer.
 
 ### Cross-Session Resume
 
@@ -319,9 +318,9 @@ WARN was removed alongside the workflow-engine reinforcement layer.
   resume line that `Step 7 RESUME` hands to the user
 - The earlier `workflow-reminder.sh` UserPromptSubmit hook (which
   rendered `WORKFLOW-ENGINE: NEXT: <wf> [Task N] > step-i/n:
-  <instruction>` as `additionalContext` every turn) was removed in
-  ADR-004 — Buddy reads workflow state on demand via
-  `--boot-context` / `--next` rather than per-turn injection.
+  <instruction>` as `additionalContext` every turn) was removed —
+  Buddy reads workflow state on demand via `--boot-context` / `--next`
+  rather than per-turn injection.
 
 ### Multi-Machine Constraint
 
@@ -394,8 +393,7 @@ absorbed into the **`code-review` multi-axis persona** (3 → 1, council decisio
 
 ### Council (`skills/council/SKILL.md`)
 
-Structured architectural / strategic decision. Four modes
-(2026-05-31 Stage-1 Council-Board parity rewrite):
+Structured architectural / strategic decision. Four modes:
 
 | Mode | Team | When |
 |---|---|---|
@@ -419,14 +417,12 @@ challenges briefing framing itself).
 Trigger: >1 viable path, hard to reverse, >1 component, Buddy uncertain
 about which path is right.
 
-## Hooks (Mechanism, post-2026-05-31 paradigm shift)
+## Hooks (Mechanism)
 
-`orchestrators/claude-code/hooks/` — **3 hook scripts on disk**,
-post-ADR-004. The earlier CC-Terminal-CLI-only PreToolUse / PostToolUse
-/ UserPromptSubmit layer (13 scripts) was removed in favor of
-universally-portable enforcement. Discipline replicates via protocols
-and `agents/buddy/operational.md`. Detail rationale +
-alternatives-considered: `docs/decisions/ADR-004-hook-paradigm-shift.md`.
+`orchestrators/claude-code/hooks/` — **3 hook scripts on disk**. An
+earlier CC-Terminal-CLI-only PreToolUse / PostToolUse / UserPromptSubmit
+layer was removed in favor of universally-portable enforcement.
+Discipline replicates via protocols and `agents/buddy/operational.md`.
 
 | Hook | Trigger | Behaviour |
 |---|---|---|
@@ -434,21 +430,21 @@ alternatives-considered: `docs/decisions/ADR-004-hook-paradigm-shift.md`.
 | `session-start-remote.sh` | SessionStart | Resume-nudge — checks for recent session-handoff at session start. |
 | `pre-commit.sh` | git pre-commit + commit-msg | 5 checks (see below) — universally available across harnesses (git is portable). |
 
-### Pre-Commit 5 Checks (post-ADR-004)
+### Pre-Commit 5 Checks
 
 `orchestrators/claude-code/hooks/pre-commit.sh` — 3 BLOCK + 2 WARN.
 
 | # | Check | Severity | Implementation |
 |---|---|---|---|
-| 1 | PLAN-VALIDATE | BLOCK | `plan_engine.py --validate` 0 errors (regex pinned 2026-05-31 — earlier `^Summary:.*0 errors` was fail-OPEN) |
+| 1 | PLAN-VALIDATE | BLOCK | `plan_engine.py --validate` must report 0 errors |
 | 2 | CG-CONV | BLOCK | Conventional-Commits format (commit-msg authoritative; pre-commit mode skips to avoid F-102 amend-with-m stale-message false-positive) |
 | 3 | SKILL-FM-VALIDATE | BLOCK | `skill_fm_validate.py` mandatory fields + invocation + `relevant_for` |
 | 4 | SECRET-SCAN | WARN | `gitleaks protect --staged` (skipped when gitleaks not installed, 24h-suppressed note WARN) |
 | 5 | SOURCE-VERIFICATION | WARN | Board/council reviews must cite source files (line-numbered evidence pointers per `_protocols/evidence-pointer-schema.md`) |
 
-**Dropped 2026-05-31 (8 checks, ADR-004):** TASK-SYNC, OBLIGATIONS,
-STALE-CLEANUP, PERSIST-GATE, ENGINE-USE, RUNBOOK-DRIFT,
-AGENT-SKILL-DRIFT, PIEBALD-BUDGET. Most were observability-WARN that
+**Dropped (8 checks):** TASK-SYNC, OBLIGATIONS, STALE-CLEANUP,
+PERSIST-GATE, ENGINE-USE, RUNBOOK-DRIFT, AGENT-SKILL-DRIFT,
+PIEBALD-BUDGET. Most were observability-WARN that
 discipline replaces; ENGINE-USE was tied to the workflow_engine state
 file which is in usage standby; AGENT-SKILL-DRIFT covered only ~12.5%
 of personas (`relevant_for:` opt-in coverage); PIEBALD-BUDGET dropped
@@ -592,7 +588,7 @@ User: "implement feature X"
 Buddy has a plan block or gate file
   → Buddy invokes the Agent tool with subagent_type, prompt, isolation?
       (Brief discipline lives in _protocols/mca-brief-template.md +
-       dispatch-template.md; no PreToolUse hook post-ADR-004)
+       dispatch-template.md; no PreToolUse hook)
   → Sub-agent boot:
       .claude/agents/<name>.md found
       Wrapper loads agents/<name>.md (SoT)
@@ -612,7 +608,7 @@ Buddy has a plan block or gate file
 | New workflow | `workflows/runbooks/<name>/WORKFLOW.md` + routing in `process-map.md` | `docs-rewrite` |
 | New persona | `agents/<name>.md` (SoT) + `.claude/agents/<name>.md` (wrapper) | `code-review` multi-axis persona |
 | New adapter | `orchestrators/<harness>/bin/<wrapper>` + hooks equivalent + wrapper files | (planned) Cursor |
-| New hook | `orchestrators/claude-code/hooks/<name>.sh` + entry in `orchestrators/claude-code/settings.json.template` (re-applied to `~/.claude/settings.json` via `setup-cc.sh`) | `mca-return-stop-condition.sh` |
+| New hook | `orchestrators/claude-code/hooks/<name>.sh` + entry in `orchestrators/claude-code/settings.json.template` (re-applied to `~/.claude/settings.json` via `setup-cc.sh`) | `session-start-remote.sh` |
 | New reference | `references/<name>.md` with lift source documented | `orchestration-patterns.md` |
 | New skill protocol | `skills/_protocols/<name>.md`; referenced via `uses:` in skills | `analysis-mode-gate.md` |
 
