@@ -116,19 +116,6 @@ steps:
   # Group C: post-write (sequential)
   # ==========================================================================
 
-  - id: tc-recognition
-    name: "Test-case recognition (opportunistic)"
-    category: deterministic
-    instruction: >
-      One grep call: UNTESTED in tests/TESTCASES.md. From the output,
-      check whether a TC was naturally exercised this session. Match →
-      record PASS / FAIL. No match → skip. 0 UNTESTED → skip. Max one
-      call; do not retry.
-    completion:
-      type: manual
-    required: false
-    on_fail: skip
-
   - id: convoy
     name: "Convoy update"
     category: deterministic
@@ -189,8 +176,8 @@ variants:
     description: "Mid-session checkpoint without a full persistence cycle"
     steps: [dispatcher-final, validate-reconciliation, handoff-write]
     notes: >
-      No history entry, no TC recognition, no convoy update, no deploy,
-      no session-buffer cleanup. quicksave is NOT a substitute for save
-      at session end. quicksave uses the same handoff-write step as save
-      — meaning the .bak copy + merge-default apply identically (no blind
-      overwrite, even on quicksave).
+      No history entry, no convoy update, no deploy, no session-buffer
+      cleanup. quicksave is NOT a substitute for save at session end.
+      quicksave uses the same handoff-write step as save — meaning the
+      .bak copy + merge-default apply identically (no blind overwrite,
+      even on quicksave).
