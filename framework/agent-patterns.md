@@ -152,7 +152,7 @@ Consequence: minimal-brief delegations carry task spec, not full intent tree.
 
 ---
 
-## Pattern: Re-Council Inversion (positive) (421 audit)
+## Pattern: Re-Council Inversion (positive)
 
 ### Problem
 
@@ -168,11 +168,11 @@ Structured re-council mechanics:
 4. synthesis lock only when voting and argument-decisive logic converge,
    otherwise STOP + user escalation
 
-Empirical: 421 moved 1/4 -> 4/4 with substantive revision rationale.
+Empirical: a re-council pass moved 1/4 -> 4/4 lean with substantive revision rationale.
 
 ---
 
-## Pattern: Adversary-Sole-Found Drift (421 audit)
+## Pattern: Adversary-Sole-Found Drift
 
 ### Problem
 
@@ -187,7 +187,7 @@ setups.
 
 ---
 
-## Pattern: §1 Position-Map Consolidation Visibility (421 audit spot check)
+## Pattern: §1 Position-Map Consolidation Visibility
 
 ### Problem
 
@@ -206,7 +206,7 @@ This makes convergence claims externally auditable without full member-file acce
 
 ---
 
-## Pattern: External Discipline Review as Structural Mitigation (post-421)
+## Pattern: External Discipline Review as Structural Mitigation
 
 ### Problem
 
@@ -229,7 +229,7 @@ Output tiers: verified / observations with severity / methodological break.
 
 ---
 
-## Pattern: External Reviewer Bundle Mechanics (post-423)
+## Pattern: External Reviewer Bundle Mechanics
 
 ### Problem
 
@@ -250,7 +250,7 @@ Format spec:
 
 ---
 
-## Pattern: Reader-Facing Surface Detection (post-commit 82657bc defect B)
+## Pattern: Reader-Facing Surface Detection
 
 ### Problem
 
@@ -398,7 +398,7 @@ Applies to:
 **Mechanical surface candidates** (not yet implemented, future
 work): pre-spec-lock hook that checks all spec claims about
 mechanical behaviour have engine-pointer references — analogous
-to the evidence-pointer-check from Task 299.
+to the evidence-pointer-check hook.
 
 ### Anti-pattern signature
 
@@ -435,7 +435,7 @@ mechanically in the cited SoT.
 | adversary per-test value-floor | `skills/adversary_test_plan/SKILL.md` §3 Augenmaß per-TC value-floor | codified |
 | brief-architect lens-note binding triage | `agents/brief-architect.md` mode=brief per-note triage | codified |
 | task creation value-floor (sibling, creation side) | `skills/task_creation/SKILL.md` §1.5 | codified (precursor) |
-| MCA-delegation routing (inline vs dispatch, upstream of brief-write) | `agents/buddy/operational.md` §Delegation hygiene — 5-axis proportionality question (context-locality / failure-mode-class / specialization-need / cognitive-load / safety-floor) | codified (2026-05-31, from 2026-05-14 brief-architect-overhead standalone) |
+| MCA-delegation routing (inline vs dispatch, upstream of brief-write) | `agents/buddy/operational.md` §Delegation hygiene — 5-axis proportionality question (context-locality / failure-mode-class / specialization-need / cognitive-load / safety-floor) | codified |
 | ADR-trigger value-floor (`documentation_and_adrs`) | — | watch (no observed drift yet; codify on first instance) |
 
 Sibling principle at the delegation-modes layer (one level up from
@@ -453,3 +453,53 @@ named operational cost (performance, stability, security,
 observability, maintainability). Re-route only when the rationale
 reduces to hand-wavy intuition ("future-edit safety", "should be
 cleaner", "follows convention" without a named consumer).
+
+---
+
+## Pattern family: Review-board discipline (cold-derivation + evidence chain + adversary-first)
+
+Principle source: review work depends on **context cleanliness**, not
+on apparatus depth. Warm-start anchoring (inherited prior analysis),
+brief contagion (every in-session reviewer reads against the brief),
+and format-over-substance trust-shortcuts ("well-formatted ≈
+verified") let a 7-reviewer board + 3-reviewer re-review + multiple
+architect-lens passes miss producer/consumer chain breaks that a
+single cold-start external reviewer catches on first pass. Model
+strength is not the differentiator; context cleanliness is.
+
+The entries below are the live discipline gates that operationalize
+that principle across the review surfaces — board operation, brief
+authoring, adversary scoping, chief consolidation, re-review,
+council triggering, cross-task validation, and orchestrator-level
+synthesis preconditions.
+
+| Surface | Mechanism | Status |
+|---|---|---|
+| board-apparatus framing contagion (cold-start as default, chief role-constraint, code-quote mandate) | `skills/code_review_board/SKILL.md` §4a + `agents/code-chief.md` + `agents/board-chief.md` §Chief role-constraint | codified (L-046) |
+| 4-link evidence-chain DoD as standard brief-template requirement | `skills/_protocols/mca-brief-template.md` §Reviewer Checkpoints — 4-link Evidence Chain DoD + `agents/code-chief.md` + `agents/board-chief.md` §Pre-consolidation gates §1.1 | codified (L-047) |
+| adversary-first board ordering + adversary cold-start + frame-challenge mandate | `skills/code_review_board/SKILL.md` §4a (pre-board frame check, chain-of-custody artifact, brief enrichment) + `agents/code-adversary.md` §Cold-start pre-mission §1 + §2 + `agents/code-architect-roots.md` §Pre-board frame check role | codified (L-048) |
+| spec-citation discipline (architect-authors + adversary-verifies) | `agents/code-architect-lens.md` §Spec-Citation-Verifications + `agents/code-adversary.md` §Cold-start pre-mission §3 (Claim re-verify — Spec-citation sub-check) + `skills/_protocols/mca-brief-template.md` §Claim-Verifications | codified (L-049) |
+| live-state-vs-claim authority across analyst roles | `agents/code-adversary.md` §Cold-start pre-mission §3 (Live-state-vs-claims sub-check) + `agents/code-chief.md` + `agents/board-chief.md` §Pre-consolidation gates §1.2 + `agents/code-architect-lens.md` §Live-state-checked-against-claims + `agents/brief-architect.md` Anti-rationalization (live-state) | codified (L-050) |
+| re-review two-phase protocol (cold-derive + appendix-reconcile) | `skills/code_review_board/SKILL.md` §5a Re-review two-phase protocol | codified (L-051) |
+| council-trigger refinement (cross-scope contradiction ≠ current-scope undecidable) | `skills/council/SKILL.md` §Anti-patterns — when NOT to council | codified (L-052) |
+| cross-task AC validation at spec-board | `skills/spec_board/SKILL.md` §4a Cross-task AC validation | codified (L-053) |
+| orchestrator architecture-comprehension as precondition for cross-component synthesis | `agents/buddy/operational.md` §Architecture-Comprehension (pre-dispatch + post-return) | codified (L-054) |
+| discipline-in-SKILL-text-first, hooks-as-last-resort-verifier (meta-rule) | `docs/dogfood-learnings/README.md` §Discipline-location rule | codified (L-055) |
+
+The meta-rule (last row) binds the rest: every entry above is
+codified in SKILL / agent / runbook text first; runtime hooks are
+mechanical verifiers, not the rule home. Cross-runtime parity gaps
+(Claude Code has more hook coverage than Codex / OpenCode) do not
+weaken the discipline because the SoT is text the agent reads, not
+a hook fire path the agent triggers.
+
+### Failure mode without this family
+
+In-session review apparatus reaches consistent verdict on a
+spec/brief/code that an external cold-start reviewer immediately
+rejects with critical findings. The shared brief, prior findings,
+and well-formatted artifacts produce reviewer-agreement that looks
+like signal but reflects shared framing, not independent
+verification. Producer / consumer chain breaks across module
+boundaries are systematically missed at the depth where every
+reviewer is briefed on the same upstream chain summary.

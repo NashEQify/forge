@@ -199,7 +199,7 @@ For stale-prone indices:
 
 **Historical anti-pattern:** the navigation-layer pattern was purely
 hand-maintained in early versions and discarded due to drift. Re-introduction
-on 2026-05-01 only went through with the drift mechanism — generator + validator together.
+only succeeded with the drift mechanism — generator + validator together.
 
 ## 6. Frozen Zones + Stale Cleanup
 

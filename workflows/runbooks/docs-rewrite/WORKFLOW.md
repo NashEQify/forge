@@ -15,7 +15,7 @@ the system.
 | Parameter | Required | Description |
 |-----------|----------|-------------|
 | scope | yes | What is rewritten (e.g. "Framework site /dev/") |
-| reason | yes | Why stale (e.g. "Task 273 fundamentally reworked the framework") |
+| reason | yes | Why stale (e.g. "framework fundamentally reworked, docs lag the as-is state") |
 | content_goal | yes | What the docs should convey (e.g. "Workflows, architectures, design decisions — no file listings") |
 | personas | no | Path to persona definitions. Default: derive from existing docs / task. |
 | existing_docs | no | Path to existing pages being rewritten |

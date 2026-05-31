@@ -93,7 +93,7 @@ Is the routing target unambiguously clear?
     → call knowledge_processor directly (T1 path, mode=process)
   → No: ambiguous input, multi-topic, nuance
     → write to session-buffer (capture, zero friction)
-    → CC SessionEnd hook (Task 161 Tier-1) extracts PENDING, calls knowledge_processor
+    → CC SessionEnd hook extracts PENDING, calls knowledge_processor
 ```
 
 **When direct (T1):** clear fact with unambiguous target, Agent Check 7e with unambiguous information, task status change.

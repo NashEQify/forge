@@ -191,8 +191,7 @@ fix responsibility: `REFERENCE.md`.
 
 - **Not** the fix loop in `main-code-agent` · **not** the gate
   cascade itself (the cascade decides which gates run).
-- **Not** the review protocol (superseded 2026-03-24, Task-182
-  F-2 — replaced by Spec Board).
+- **Not** the review protocol (replaced by Spec Board).
 - **Not** alternatives evaluation — divergent thinking belongs in
   council / solution-expert.
 - **Not** execution steps (writing code, running tests) — only

@@ -262,7 +262,7 @@ scripts/                         — Engines (plan_engine, workflow_engine) + ge
 ```
 
 Reader-journey lookups live in the `navigation.md` files under the
-respective top-level-3 directories — introduced 2026-05-01.
+respective top-level-3 directories.
 
 ## The most important disciplines
 

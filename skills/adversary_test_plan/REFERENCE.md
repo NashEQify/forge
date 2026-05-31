@@ -90,9 +90,10 @@ without consolidation is forbidden — only replace-with-rationale.
 - `implementer_blindspots` block empty or "n/a" — pattern-coverage
   rationale missing.
 - **TC inflation: ratio >2x deltas / ACs without active rationale**
-  — Task-459 pattern (41 TCs / 6 deltas = 6.8). Indicator: the
-  adversary uses pattern-class enforcement as boilerplate coverage
-  instead of Augenmaß. Re-dispatch with a stop-and-think reminder.
+  — anti-pattern observed empirically (41 TCs / 6 deltas = 6.8).
+  Indicator: the adversary uses pattern-class enforcement as
+  boilerplate coverage instead of Augenmaß. Re-dispatch with a
+  stop-and-think reminder.
 - **`patterns_chosen` contains all ~7 classes with ritualistic
   rationale** ("could-apply" / "defence-in-depth") — pattern-class
   coverage no longer required. Active selection, not blanket cover.
@@ -121,17 +122,17 @@ without consolidation is forbidden — only replace-with-rationale.
 | "Adversary TCs are all setup variations of one idea — keep all" | Consolidation rule: variations of one idea belong in one TC with multiple setup branches, not in 5 separate TCs. Consolidation requires a `consolidations` entry with rationale, but it is allowed and desired. |
 | "The `proportional_check` rationale is bureaucracy" | The other way round: it is the only audit trail for Augenmaß. Without it Buddy can't verify whether 41 TCs are honest or ritualistic. At ratio ≤2: one sentence is enough. At ratio >2: an active defence per TC cluster. |
 
-## Discipline rationale (Task-459 lesson)
+## Discipline rationale
 
 Adversary-driven test plan = mechanical pre-fix gate. The adversary
 writes tests the implementer cannot think of; the RED phase verifies
 the failure mode reproduces. Mechanism > prompt discipline — a soft
 mitigation in the MCA brief alone is systematically missed.
 
-**Augenmaß as the central discipline (Task-459, 2026-05-08
-correction):** an earlier attempt (severity triage `must / should /
-could`) was compliance theatre — the inflation effort was invested;
-only the bind label differed. The real problem: writing too many
+**Augenmaß as the central discipline:** an earlier attempt
+(severity triage `must / should / could`) was compliance theatre —
+the inflation effort was invested; only the bind label differed.
+The real problem: writing too many
 TCs.
 
 Solution: the adversary writes fewer, with an active selection

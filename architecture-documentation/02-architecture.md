@@ -218,7 +218,7 @@ For detail see `workflows/runbooks/<name>/WORKFLOW.md`.
 - **Operations**: `save` — end-of-session persistence, 3 groups (A pre-write,
   B content-writes parallel, C post-write).
 - **Maintenance**: `context_housekeeping` — periodic upkeep.
-- (Bootstrap — previously `selfhost/new-host-bootstrap`, removed 2026-05-02 and moved into the consumer repo `~/projects/sysadmin/`.)
+- (Bootstrap — previously `selfhost/new-host-bootstrap`, moved into the consumer repo `~/projects/sysadmin/`.)
 
 ### Path Determination (build)
 
@@ -271,14 +271,14 @@ checkout). Schema:
 ```json
 {
   "schema_version": "2",
-  "workflow_id": "build-380-20260501T1505",
+  "workflow_id": "build-123-<UTC-stamp>",
   "workflow": "build",
-  "task_id": "380",
-  "started_at": "2026-05-01T15:05:42Z",
+  "task_id": "123",
+  "started_at": "<ISO-8601 UTC>",
   "current_step": 7,
   "selected_route": "sub-build",
   "steps": [{"id": "...", "status": "done|pending|skipped|route_skipped", "evidence": "..."}],
-  "variables": {"state_file": "docs/build/2026-05-01-task-380-feature.md"}
+  "variables": {"state_file": "docs/build/<slug>.md"}
 }
 ```
 
@@ -405,11 +405,11 @@ Trigger: >1 path + hard to reverse, >1 layer, substantial impact, Buddy unsure.
 | `path-whitelist-guard.sh` | PreToolUse(Edit/Write/NotebookEdit/Bash) | BLOCK writes outside `.claude/path-whitelist.txt` |
 | `frozen-zone-guard.sh` | PreToolUse | BLOCK writes inside `.claude/frozen-zones.txt` |
 | `engine-bypass-block.sh` | PreToolUse(Edit/Write/MultiEdit/NotebookEdit) | BLOCK reader-facing Tier-1 writes (2+ reader-facing files modified/staged) without an active workflow in `.workflow-state/`. Override: `# allow:engine-bypass <reason>` in CLAUDE.md scratch (Pattern 7) |
-| `delegation-prompt-quality.sh` | PreToolUse(Task) | WARN <200 characters + missing plan-block keyword + (Check C) MCA dispatch without `implicit_decisions_surfaced` section on a substantive dispatch (Item 4 brief-quality gate) |
+| `delegation-prompt-quality.sh` | PreToolUse(Task) | WARN <200 characters + missing plan-block keyword + (Check C) MCA dispatch without `implicit_decisions_surfaced` section on a substantive dispatch |
 | `plan-adversary-reminder.sh` | PreToolUse(Edit/Write/MultiEdit) | WARN on non-trivial Tier-1 edit cluster (N>2 distinct Tier-1 files OR single-file delta ≥80 lines) without a plan-adversary spawn in the last 60min. Override: `# allow:no-plan-adversary <reason>` |
-| `mca-return-stop-condition.sh` | PostToolUse(Task) | WARN when subagent_type=main-code-agent + the MCA return contains Stop-Condition / ESCALATE / ARCH-CONFLICT / AUTO-FIXED keywords. Pattern-Lesson 388 F-CR-004 (Item 2 mechanical Stop-Condition enforcement). |
+| `mca-return-stop-condition.sh` | PostToolUse(Task) | WARN when subagent_type=main-code-agent + the MCA return contains Stop-Condition / ESCALATE / ARCH-CONFLICT / AUTO-FIXED keywords. |
 | `board-output-check.sh` | PostToolUse(Task) | WARN on a dispatch prompt with a file-output pattern when the expected file is missing post-task. Pass-through fallback suggestion in the WARN. |
-| `evidence-pointer-check.sh` | PostToolUse(Task) | WARN when Tier-1 skill sub-agent output lacks line-numbered evidence pointers (Spec 299 Phase E). |
+| `evidence-pointer-check.sh` | PostToolUse(Task) | WARN when Tier-1 skill sub-agent output lacks line-numbered evidence pointers. |
 | `pre-commit.sh` | git pre-commit | 13 checks (see below) |
 | `state-write-block.sh` | PreToolUse | state-file protection |
 | `workflow-commit-gate.sh` | git pre-commit | workflow-state consistency |

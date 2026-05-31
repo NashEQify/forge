@@ -236,7 +236,7 @@ the utilities table, not the capabilities table).
 appear in the boot map under the "Utilities (directly
 callable by the orchestrator)" table.
 
-### 7. Rationalization test (Task 366 F.3)
+### 7. Rationalization test
 
 **Purpose:** prevents the "housekeeping instead of
 rationalization" pattern on framework refactorings. A
@@ -306,7 +306,7 @@ Decision: **B + check 6 instead of E**. Rationale:
 This decision is captured so follow-up discussions don't
 re-raise "why don't we have a generator?" without context.
 
-### 8. Navigation-layer drift (Task 366 D.5)
+### 8. Navigation-layer drift
 
 **Purpose:** prevents re-drift of the navigation layer
 (reverse-lookup tier for "what lives here? where to look for
@@ -475,7 +475,7 @@ instead of `docs/reviews/`) → **ERROR**: "drift alias
 exists (SoT requirement). Missing STRUCTURE.md → **ERROR**:
 "consistency_check check 9 needs docs/STRUCTURE.md as SoT".
 
-### 10. Wrapper drift (Task 326)
+### 10. Wrapper drift
 
 **Purpose:** prevents re-drift of the Claude-Code skill-wrapper
 layer (`.claude/skills/<kebab>/SKILL.md`). Wrappers were a
