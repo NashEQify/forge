@@ -83,9 +83,9 @@ pattern-lessons, NO implementation code.
 ### 3. Augenmaß discipline (core behaviour rule)
 
 **Before adding any TC: stop and think.** Default magnitude: 5-10
-high-signal ADV-TCs. Task-459 anti-case: 41 TCs for 6 deltas (6.8
-TC/delta) drives MCA into workaround patterns (trivial-green
-skeletons, impl-fragments that only serve tests).
+high-signal ADV-TCs. Anti-case observed empirically: 41 TCs for 6
+deltas (6.8 TC/delta) drives MCA into workaround patterns
+(trivial-green skeletons, impl-fragments that only serve tests).
 
 When output reflex hits >2x deltas/ACs: pause. **Pattern-class
 coverage is NOT required.** Classes without a clear code trigger go
@@ -153,7 +153,7 @@ Skill-violations (full list with detail: `REFERENCE.md`):
 - Only 1-2 TCs ("looks fine") — adversary mindset not active.
 - No `pattern_class` annotation — no pattern discipline.
 - All happy-path variations — "smart-but-wrong" not active.
-- TC inflation: ratio >2x without active rationale (Task-459).
+- TC inflation: ratio >2x without active rationale.
 - `patterns_chosen` contains all ~7 classes ritualistically.
 - `patterns_excluded` empty — selection act invisible.
 - Consolidation without rationale — silent deletion.
@@ -165,7 +165,7 @@ Skill-violations (full list with detail: `REFERENCE.md`):
 - **NOT** TC inflation without Augenmaß. INSTEAD 5-10 high-signal
   default; ratio >2x = stop-and-think + active defence in
   `proportional_check`. Because: many + diluted drives MCA into
-  workaround patterns (Task-459 41/6 case).
+  workaround patterns (the 41-TC / 6-delta anti-case).
 - **NOT** walk pattern classes ritualistically. INSTEAD per class
   check code trigger; no trigger → `patterns_excluded` with
   rationale. Because: pattern-enforcement drives inflation.

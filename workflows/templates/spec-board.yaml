@@ -21,10 +21,9 @@
 # Breaking Changes v5.2 → v6.0:
 #   - Quick eliminiert. 2 Modi: Standard (3-4 Agents, 1 Pass) + Deep (7→4→2, Convergence)
 #   - Standard: Opus-only. Deep: 5 Opus + 2 Sonnet in Pass 1, 4 Opus ab Pass 2
-#   - Implementer: Sonnet → Opus (PF-03 Corpus Run: Sonnet Implementer unzureichend)
+#   - Implementer-Modell-Upgrade: Sonnet → Opus (Sonnet Implementer empirisch unzureichend)
 #   - Deep Discovery: Pass 1 only (nicht Pass 1-2). Narrowing ab Pass 2
-#   - Task 180 C-003 implemented: Minimum-Viable-Review = 3 Agents
-#   - Empirische Basis: 16 HC4-Passes, Corpus Run PF-02/PF-03, Task 231 Board
+#   - Minimum-Viable-Review = 3 Agents
 # Breaking Changes v4.0 → v5.0 (kumulativ): 5→7 Reviewer, Adversary 2+3 neu
 # Breaking Changes v3.0 → v4.0 (kumulativ): 3→5 Reviewer
 
@@ -196,8 +195,8 @@ operation_modes:
 # Empirische Basis (v6.0):
 #   - Agents 5-7 (Consumer, Adv-2, Adv-3) liefern marginale Returns in Single Pass
 #   - Ihr Wert entsteht in Convergence Loops (Diversitaet bricht Anchoring)
-#   - PF-03 (Corpus Run): Sonnet Implementer unzureichend → Opus
-#   - Task 231: Scoped Board (3 Agents) haette CRITICAL + alle relevanten HIGHs gefunden
+#   - Sonnet Implementer empirisch unzureichend → Opus
+#   - Scoped Board (3 Agents) reicht für CRITICAL + alle relevanten HIGHs (empirisch verifiziert)
 
 modes:
 
@@ -527,8 +526,8 @@ convergence_loop:
              Der Threshold (0 critical + 0 high) bestimmt wann KONVERGIERT wird,
              nicht was GEFIXT wird. Ohne vollstaendige Fixes akkumulieren medium/low
              Findings ueber Passes and werden nie adressiert.
-             (v5.3, 2026-03-25: Empirisch bewiesen in Task 191 UX Board —
-             nur-H-Fixes fuehrten zu stagnierender M/L-Akkumulation.)
+             (Empirisch bewiesen: nur-H-Fixes fuehrten zu stagnierender
+             M/L-Akkumulation in einem UX-Board-Lauf.)
          d. Divergence-Check (pass > 1):
             new_count >= prev_new_count UND > 0 → WARNING. Loop laeuft weiter.
             Ausnahme pass 2 + escalated_from quick: ausgesetzt.
@@ -579,10 +578,10 @@ convergence_loop:
       Finding-Tracking ist AUSSCHLIESSLICH Aufgabe des Chief (Phase 2 Aggregation).
       Individuelle Reviewer erhalten KEINE vorherigen Findings.
 
-      Rationale (v5.3, 2026-03-25): Vorherige Findings an Reviewer zu geben
-      erzeugt Anchoring Bias — Reviewer fokussieren auf Fix-Verification statt
-      Fresh Analysis. Empirisch bewiesen: tainted Passes uebersehen 5+ High-Findings
-      die ein frischer Blick findet. Siehe Task 191 UX Board Convergence.
+      Rationale: Vorherige Findings an Reviewer zu geben erzeugt Anchoring
+      Bias — Reviewer fokussieren auf Fix-Verification statt Fresh Analysis.
+      Empirisch bewiesen: tainted Passes uebersehen 5+ High-Findings die ein
+      frischer Blick findet.
 
       Neuer Ablauf ab Pass 2:
       1. Reviewer bekommen NUR Spec-Pfad + Output-Pfad (identisch zu Pass 1)
@@ -918,14 +917,13 @@ propagation_checklist:
 # changeen v5.2 → v6.0:
 #   Quick eliminiert. 2 Modi: Standard (3-4 Agents, 1 Pass) + Deep (7→4→2, Convergence)
 #   Standard: 2 Varianten — reviewed Spec (3 Agents) vs neue Spec (4 Agents)
-#   Alle Standard-Agents: Opus (kein Sonnet). PF-03: Sonnet Implementer unzureichend.
+#   Alle Standard-Agents: Opus (kein Sonnet). Sonnet Implementer empirisch unzureichend.
 #   Deep Discovery: Pass 1 only (vorher Pass 1-2). Narrowing ab Pass 2 (4 Agents).
 #   Deep Convergence: Consumer + Adversary-3 fallen raus (marginale Returns nach Pass 1)
 #   Deep Verification: 2 Agents (Adv + Impl), Buddy liest direkt
 #   Eskalation: Standard→Deep (vorher Quick→Deep). Trigger verschaerft: >=1C or >=3H (vorher >=1H)
 #   Implementer Model: Sonnet→Opus in allen Modi
-#   Task 180 C-003 (Minimum-Viable-Review) als implemented markiert
-#   Empirische Basis: 16 HC4-Passes, Corpus Run PF-02/PF-03, Task 231 Board-Review
+#   Minimum-Viable-Review = 3 Agents als implemented markiert
 #   Bestehende Board-Artefakte mit mode: quick bleiben gueltig (implizit Standard)
 #
 # ============================================================

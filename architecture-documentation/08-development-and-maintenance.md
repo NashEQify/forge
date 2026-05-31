@@ -233,9 +233,9 @@ Remove a hook:
 Conventional-Commits format. Examples:
 
 ```
-feat(framework): close 366 D.5 navigation-layer-re-introduction
+feat(framework): reintroduce navigation-layer with generator + validator
 fix(scripts): explicit utf-8 encoding for cross-platform (Windows)
-chore(save): session 2026-04-28 — phase F.1 spec-board pass 1 needs-work
+chore(save): end-of-session persistence pass
 docs(framework): boot-navigation entry for new skill X
 refactor(agents): consolidate code-quality + code-architecture + code-performance
 ```

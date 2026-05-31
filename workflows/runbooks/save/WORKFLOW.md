@@ -12,9 +12,8 @@ parallel (one tool-call batch).
 
 1. **Dispatcher** — Buddy inline: triage PENDING entries from
    `docs/session-buffer.md` (act / defer / drop). Buffer
-   empty → skip. Note: the dispatcher skill is archived
-   (Task 161 tier-1 mitigation) — the mechanic now runs
-   inline.
+   empty → skip. Note: the dispatcher skill is archived —
+   the mechanic now runs inline.
 2. **Reconciliation** — from the context window:
    - **Gap check:** info in the window, not on disk →
      write it now.
@@ -79,8 +78,8 @@ parallel (one tool-call batch).
    (without the tag: last 5 commits). Hit →
    `bash $FRAMEWORK_DIR/scripts/deploy-dashboard-lite.sh`
    via `run_in_background`. The script is idempotent —
-   the redundant call to the Task-370 post-commit hook is
-   only network latency. Precondition: step 7
+   the redundant call alongside the `post-commit-dashboard`
+   hook is only network latency. Precondition: step 7
    succeeded. Result as a notification — error in the
    handoff note.
 9. **Buffer cleanup** — remove `PROCESSED` entries from

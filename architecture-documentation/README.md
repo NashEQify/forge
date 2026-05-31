@@ -4,7 +4,6 @@ Public-OSS architecture, installation, and usage
 documentation for **forge** — opinionated workflows +
 codified discipline patterns as a Skill + Discipline
 Layer between human and LLM.
-Created 2026-05-01.
 
 This documentation is aimed at **two audiences in
 parallel**:
