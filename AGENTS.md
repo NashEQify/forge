@@ -28,17 +28,17 @@ Routing rules in `framework/process-map.md`; path detail in
 
 ### 4. Code delegation
 Product code goes to main-code-agent. The earlier `path-whitelist-guard`
-PreToolUse hook was removed in ADR-004 (2026-05-31); Buddy writes
-within intent-scope by discipline. Orchestrator work (agents/, framework/,
+PreToolUse hook was removed; Buddy writes within intent-scope by
+discipline. Orchestrator work (agents/, framework/,
 skills/, context/, docs/) Buddy writes directly. Detail:
 `framework/agent-autonomy.md`.
 
 ### 5. Stale cleanup
 When an artifact is retired/replaced/sunset, clean up every live
 reference in non-frozen files in the same commit. `grep -rn <artifact>`,
-filter frozen zones, fix the rest. Discipline-only post-ADR-004 (the
-earlier pre-commit STALE-CLEANUP WARN check was dropped along with
-its opt-in marker mechanism).
+filter frozen zones, fix the rest. Discipline-only (the earlier
+pre-commit STALE-CLEANUP WARN check was dropped along with its opt-in
+marker mechanism).
 
 ### 6. Deployment verification
 After a deploy, look at it. HTTP 200 isn't proof. If you can't see it,
@@ -56,17 +56,16 @@ SoT: `docs/STRUCTURE.md`. Consistency cascade: `context-rules.md`.
 ## Commit
 Format and types are enforced by the `pre-commit` hook (CG-CONV).
 
-## Active Hooks (post-ADR-004 2026-05-31 paradigm shift)
+## Active Hooks
 
 Forge ships 3 hook scripts: `buddy-boot-inject.sh` +
 `session-start-remote.sh` (SessionStart) + `pre-commit.sh` (git
 pre-commit + commit-msg, 5 checks: PLAN-VALIDATE / CG-CONV /
 SKILL-FM-VALIDATE BLOCK; SECRET-SCAN / SOURCE-VERIFICATION WARN). All
 universally portable across CC-Terminal, claude-desktop, claude-web,
-OpenCode, Codex, Cursor. The earlier 13 CC-Terminal-only PreToolUse /
-PostToolUse / UserPromptSubmit hooks were removed; discipline
-replicates via protocols + operational.md. Rationale:
-`docs/decisions/ADR-004-hook-paradigm-shift.md`.
+OpenCode, Codex, Cursor. An earlier CC-Terminal-only PreToolUse /
+PostToolUse / UserPromptSubmit layer was removed; discipline replicates
+via protocols + operational.md.
 
 ## OC Constraints
 The consumer repo is the CWD; the framework is mounted via the OpenCode
@@ -75,7 +74,7 @@ launcher (`$FRAMEWORK_DIR/orchestrators/opencode/bin/oc`, with
 A consumer's project-level AGENTS.md (in the consumer repo root) adds
 to this framework AGENTS.md, it doesn't replace it. Commands are
 trigger words without a prefix (wakeup, save, checkpoint, think!).
-Post-ADR-004 OpenCode runs identically to CC-Terminal on the
-discipline layer; the earlier `forge-hooks.ts` Bun-TS plugin that
+OpenCode runs identically to CC-Terminal on the discipline layer; the
+earlier `forge-hooks.ts` Bun-TS plugin that
 translated `tool.execute.{before,after}` into CC-shaped JSON is
 obsolete (slated for removal).

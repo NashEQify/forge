@@ -28,17 +28,17 @@ Routing rules in `framework/process-map.md`; path detail in
 
 ### 4. Code delegation
 Product code goes to main-code-agent. The earlier `path-whitelist-guard`
-PreToolUse hook was removed in ADR-004 (2026-05-31); Buddy writes
-within intent-scope by discipline. Orchestrator work (agents/, framework/,
+PreToolUse hook was removed; Buddy writes within intent-scope by
+discipline. Orchestrator work (agents/, framework/,
 skills/, context/, docs/) Buddy writes directly. Detail:
 `framework/agent-autonomy.md`.
 
 ### 5. Stale cleanup
 When an artifact is retired/replaced/sunset, clean up every live
 reference in non-frozen files in the same commit. `grep -rn <artifact>`,
-filter frozen zones, fix the rest. Discipline-only post-ADR-004 (the
-earlier pre-commit STALE-CLEANUP WARN check was dropped along with
-its opt-in marker mechanism).
+filter frozen zones, fix the rest. Discipline-only (the earlier
+pre-commit STALE-CLEANUP WARN check was dropped along with its opt-in
+marker mechanism).
 
 ### 6. Deployment verification
 After a deploy, look at it. HTTP 200 isn't proof. If you can't see it,
@@ -116,7 +116,7 @@ Obligations (Context · History · Backlog).
 "If on the default branch, branch first" does NOT apply here. Override
 locked 2026-05-23.
 
-## Active Hooks (post-2026-05-31 paradigm shift, ADR-004)
+## Active Hooks
 
 The framework's hook layer was narrowed to universally-portable only:
 git pre-commit (works on every harness) plus SessionStart (CC-Terminal,
@@ -139,16 +139,15 @@ git pre-commit (5 checks, 3 BLOCK + 2 WARN):
 - WARN: SECRET-SCAN (gitleaks), SOURCE-VERIFICATION (board/council
   review evidence-pointer schema).
 
-**Dropped 2026-05-31 (13 hook scripts + 8 pre-commit checks):**
-PreToolUse path-whitelist-guard / frozen-zone-guard / brief-claims-guard
-/ engine-bypass-block / state-write-block / delegation-prompt-quality /
-plan-adversary-reminder; PostToolUse mca-return-stop-condition /
-board-output-check / evidence-pointer-check; UserPromptSubmit
-workflow-reminder; git pre-commit workflow-commit-gate; git post-commit
-post-commit-dashboard. Pre-commit checks dropped: TASK-SYNC, OBLIGATIONS,
-STALE-CLEANUP, PERSIST-GATE, ENGINE-USE, RUNBOOK-DRIFT,
-AGENT-SKILL-DRIFT, PIEBALD-BUDGET. Rationale + alternatives + trigger
-for revisit: `docs/decisions/ADR-004-hook-paradigm-shift.md`.
+**Dropped (the earlier CC-Terminal-only layer — 13 hook scripts + 8
+pre-commit checks):** PreToolUse path-whitelist-guard / frozen-zone-guard
+/ brief-claims-guard / engine-bypass-block / state-write-block /
+delegation-prompt-quality / plan-adversary-reminder; PostToolUse
+mca-return-stop-condition / board-output-check / evidence-pointer-check;
+UserPromptSubmit workflow-reminder; git pre-commit workflow-commit-gate;
+git post-commit post-commit-dashboard. Pre-commit checks dropped:
+TASK-SYNC, OBLIGATIONS, STALE-CLEANUP, PERSIST-GATE, ENGINE-USE,
+RUNBOOK-DRIFT, AGENT-SKILL-DRIFT, PIEBALD-BUDGET.
 
 **Replacement disciplines** for what the hooks used to attempt:
 - Path discipline: Buddy writes within intent-scope; deliberate-action
@@ -171,8 +170,8 @@ for revisit: `docs/decisions/ADR-004-hook-paradigm-shift.md`.
 Buddy acts, the 3 remaining hooks catch what's universally catchable;
 discipline carries the rest.
 
-<!-- Hook paradigm: as of 2026-05-31 (ADR-004), the framework runs
-identically on every supported harness. Only SessionStart hooks (for
+<!-- Hook paradigm: the framework runs identically on every supported
+harness. Only SessionStart hooks (for
 boot on claude-desktop / claude-web / Codex) and git pre-commit (5
 checks, universally portable) remain. The previous CC-Terminal-only
 PreToolUse / PostToolUse / UserPromptSubmit layer is gone — discipline
