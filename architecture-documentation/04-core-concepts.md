@@ -71,7 +71,7 @@ to materialise their assumptions before invoking a sub-agent.
 | STANDARD | gate file (`docs/tasks/<id>-gates.yaml`) + state file (`docs/build/...`) |
 | FULL | gate file + state file + multi-phase spec (E1→Board→E2→...) |
 
-Quality discipline: brief shape is enforced in `_protocols/dispatch-template.md` + `mca-brief-template.md`. The earlier `delegation-prompt-quality.sh` hook warned at PreToolUse time when sub-agent prompts were under 200 characters; removed in ADR-004 (2026-05-31 hook paradigm shift), discipline now lives in operational.md §Delegation hygiene.
+Quality discipline: brief shape is enforced in `_protocols/dispatch-template.md` + `mca-brief-template.md`. An earlier `delegation-prompt-quality.sh` hook warned at PreToolUse time when sub-agent prompts were under 200 characters; it has been removed, and discipline now lives in operational.md §Delegation hygiene.
 
 ## 3. Single-class skill model
 
@@ -206,7 +206,7 @@ only succeeded with the drift mechanism — generator + validator together.
 
 ## 6. Frozen Zones + Stale Cleanup
 
-### Frozen Zones (`CLAUDE.md §5` — convention post-ADR-004)
+### Frozen Zones (`CLAUDE.md §5` — convention)
 
 WORM zones (write-once-read-many). Convention:
 
@@ -214,13 +214,12 @@ WORM zones (write-once-read-many). Convention:
 context/history/**
 ```
 
-Corrections via `.correction.md` sidecar. **Mechanism shift 2026-05-31:**
-`frozen-zone-guard.sh` (PreToolUse BLOCK) was removed in ADR-004; the
+Corrections via `.correction.md` sidecar. The `frozen-zone-guard.sh`
+PreToolUse BLOCK that used to enforce this has been removed; the
 convention is now enforced by Buddy discipline (don't write into
 history zones) + occasional grep-audit during `stale-cleanup` passes.
-The `.claude/frozen-zones.txt` glob-list was the hook SoT; the file is
-obsolete post-ADR-004 (kept short-term for reference, slated for
-removal in a follow-up).
+The `.claude/frozen-zones.txt` glob-list was the hook SoT; it is no
+longer enforced, kept as a convention reference.
 
 **Context-system mechanism:** pattern per area `context/<area>/navigation.md`
 + `overview.md` + detail files. Detail + loading order:
@@ -231,8 +230,8 @@ removal in a follow-up).
 > When an artefact is declared retired/replaced/dying: clean up all live
 > references in non-frozen files in the same commit.
 
-Pre-commit Check 5 (STALE-CLEANUP, WARN) catches the marker `STALE:|RETIRED:|SUNSET:`
-in the commit body when the referenced artefacts still live in the repo.
+This is discipline-only — the earlier STALE-CLEANUP pre-commit WARN (and
+its opt-in marker mechanism) was dropped; Buddy sweeps references by hand.
 
 **Practical consequence:** when you archive `skills/old_skill/`,
 all live refs belong cleaned up in a single commit — `grep -rn old_skill`
@@ -384,9 +383,9 @@ is the runtime layer:
 | State file | `.workflow-state/<wf>-<task-id>-<ts>.json`, atomic-write + flock-locked |
 | Step pointer | `current_step` index, advanced via `--complete` |
 | Boot resume | `--boot-context` injects a resume line at every boot |
-| Per-turn reminder | Removed 2026-05-31 (ADR-004) — Buddy reads workflow_engine state on demand via `--boot-context` / `--next`; the earlier `workflow-reminder.sh` UserPromptSubmit hook injected next-step per turn but was CC-Terminal-CLI only |
+| Per-turn reminder | Removed — Buddy reads workflow_engine state on demand via `--boot-context` / `--next`; the earlier `workflow-reminder.sh` UserPromptSubmit hook injected next-step per turn but was CC-Terminal-CLI only |
 | Pre-commit gate | `commit_gate: true` steps block the commit until done |
-| Engine-use detector | pre-commit Check 8 WARNs on feat/fix/refactor + `[Task-NNN]` without an active workflow |
+| Engine-use detector | Removed — an earlier pre-commit Check 8 WARNed on feat/fix/refactor + `[Task-NNN]` without an active workflow |
 
 **Anti-pattern:** "Buddy should remember." Discipline-as-mechanism: the engine
 forces the path mechanically — forgetting is impossible because every turn
@@ -486,12 +485,12 @@ with 6 standard decision classes (schema_shape, error_handling, layer_discipline
 naming_collisions, return_format_spec, stop_conditions). Each class:
 `locked: <yes/no/n.a.>` + `value: <decision>`.
 
-**Discipline enforcement post-ADR-004:** brief discipline lives in
+**Discipline enforcement:** brief discipline lives in
 `skills/_protocols/mca-brief-template.md` and is enforced by Buddy
-reading the protocol during brief authoring. The earlier
+reading the protocol during brief authoring. An earlier
 `delegation-prompt-quality.sh` Check C (PreToolUse regex for section
-presence + 6-class completeness) was removed in the 2026-05-31
-paradigm shift — discipline replicates without the hook.
+presence + 6-class completeness) was removed — discipline replicates
+without the hook.
 
 **Anti-pattern (why NOT a persona spawn instead of a template):** a persona costs
 +5-15k tokens per dispatch, is probabilistic, can be wrongly tuned
@@ -543,12 +542,12 @@ No → --skip with rationale. Complementary to `spec-amendment-verify`
 Buddy autonomously resolves instead of escalating. The pattern costs re-verification
 in the next wave.
 
-**Pattern (post-ADR-004):** Buddy reads MCA return summaries himself
+**Pattern:** Buddy reads MCA return summaries himself
 per `agents/buddy/operational.md` §Sub-Agent Return — incident-block
 keywords (Stop-Condition, ESCALATE, ARCH-CONFLICT, AUTO-FIXED) route
 to documented next actions. The earlier `mca-return-stop-condition.sh`
-PostToolUse hook flagged these keywords via stderr WARN; removed
-2026-05-31 (CC-Terminal-only). Discipline replicates by Buddy reading
+PostToolUse hook flagged these keywords via stderr WARN; it has been
+removed. Discipline replicates by Buddy reading
 the return.
 
 ## 22. Board-Output Mechanical
@@ -557,13 +556,13 @@ the return.
 the file-output OVERRIDE and return findings inline. dispatch-template.md
 has Buddy's pass-through fallback (recovery), but not prevention.
 
-**Pattern (post-ADR-004):** Buddy verifies expected board / council
+**Pattern:** Buddy verifies expected board / council
 output files after each dispatch per `agents/buddy/operational.md`
 §Inline-return fallback — the pass-through mechanic (Buddy writes the
 returned content verbatim into the expected file path with a banner
 note) is the discipline-level recovery. The earlier
 `board-output-check.sh` PostToolUse hook listed missing files via
-stderr WARN; removed 2026-05-31. Buddy's post-dispatch read of
+stderr WARN; it has been removed. Buddy's post-dispatch read of
 chief.md is the load-bearing check.
 
 ## 23. Adversary-Driven Test Plan
@@ -659,13 +658,13 @@ classify_artifact(artifact) → primary_consumer
 The trigger is NOT file extension (false positive on SKILL.md), but the
 **primary consumer**. Allowlist explicit (default OUT when in doubt).
 
-**Mechanism (post-ADR-004):**
+**Mechanism:**
 - solve workflow.yaml `dispatch-board` artifact_class branching
 - Buddy discipline: pre-dispatch classify the artifact's primary
   consumer; require a presentation-audit when consumer is
   "human-without-context". The earlier `engine-bypass-block.sh`
   PreToolUse hook attempted to BLOCK multi-file reader-facing-edits
-  without an active workflow; removed 2026-05-31 (the workflow_engine
+  without an active workflow; it has been removed (the workflow_engine
   was in usage standby anyway, and the hook produced friction without
   delivering protection).
 
@@ -740,13 +739,11 @@ The framework is not just a collection of files. It is a coherent
 - Agentic design principles (14 DRs) prevent obviously-correct bias on architectural decisions.
 - Reader-facing-surface detection prevents validators-PASS blindness on reader-facing artefacts.
 
-Each discipline has a mechanical anchor (hook / validator / generator
-/ protocol) and a mental side (Spec-Board / Council / review). The
-2026-05-31 self-review surfaced that several "mechanical" anchors were
-actually observability (WARN-only, easy to miss); the hook-paradigm
-shift (May 2026) is moving toward universally-portable enforcement
-(git pre-commit + SessionStart) + protocol-anchored reasoning. The
-disciplines stay; the enforcement gradient is becoming honest.
+Each discipline has a mental side (Spec-Board / Council / review) and,
+where enforcement is cheap and portable, a mechanical anchor. That
+anchor layer is deliberately thin — git pre-commit + SessionStart hooks
+— with the rest carried by protocol-anchored reasoning. The mechanical
+layer reinforces; it doesn't replace the reasoning.
 
 ## Next step
 

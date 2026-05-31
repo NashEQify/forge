@@ -64,7 +64,7 @@ forge/
 ├── orchestrators/                 # Adapter layer
 │   ├── claude-code/
 │   │   ├── bin/                   # cc, sysadmin launcher
-│   │   └── hooks/                 # 3 hook scripts (post-ADR-004 2026-05-31: buddy-boot-inject + session-start-remote + pre-commit.sh)
+│   │   └── hooks/                 # 3 hook scripts: buddy-boot-inject + session-start-remote + pre-commit.sh
 │   ├── opencode/
 │   │   ├── bin/oc                 # OC launcher
 │   │   ├── .opencode/             # agent + command wrappers + plugins/forge-hooks.ts (PreToolUse parity)
@@ -97,9 +97,8 @@ forge/
 ├── .claude/                       # Claude Code workspace config
 │   ├── agents/                    # 40 persona wrappers
 │   ├── skills/                    # Skill wrappers (user-level discovery)
-│   ├── path-whitelist.txt         # legacy SoT (hook removed in ADR-004; file slated for cleanup)
-│   ├── frozen-zones.txt           # legacy SoT (hook removed in ADR-004; convention-only now)
-│   └── settings.json              # Hook registration (3 hooks post-ADR-004)
+│   ├── frozen-zones.txt           # legacy SoT (hook removed; convention-only now)
+│   └── settings.json              # SessionStart hook registration (boot-inject + resume-nudge)
 │
 ├── docs/                          # Project bookkeeping (no public content)
 │   ├── plan.yaml                  # North Star + operational + phases + milestones
@@ -165,22 +164,14 @@ Drift protection: `consistency_check` Check 8 (existence + idempotency + manual-
 
 ## Convention Notes
 
-### Frozen Zones (convention, post-ADR-004)
+### Frozen Zones (convention)
 
 `.claude/frozen-zones.txt` was the SoT for the
 `frozen-zone-guard.sh` PreToolUse hook (BLOCK on writes inside listed
-glob patterns). The hook was removed in ADR-004 (2026-05-31). The
-convention persists: `context/history/**` is WORM (write-once-read-many);
-corrections via `.correction.md` sidecar. Discipline-enforced by Buddy;
-no mechanical block.
-
-### Path Whitelist (legacy, post-ADR-004)
-
-`.claude/path-whitelist.txt` was the SoT for the
-`path-whitelist-guard.sh` PreToolUse hook (BLOCK on writes outside the
-listed paths). The hook was removed in ADR-004 (2026-05-31). The file
-is kept short-term for reference but no longer enforced. Buddy writes
-within intent-scope by discipline.
+glob patterns). That hook has been removed. The convention persists:
+`context/history/**` is WORM (write-once-read-many); corrections via
+`.correction.md` sidecar. Discipline-enforced by Buddy; no mechanical
+block.
 
 ### Naming Convention (skills)
 
@@ -193,7 +184,7 @@ within intent-scope by discipline.
 
 Every active skill is a directory under `skills/` containing a single
 `SKILL.md` (frontmatter + 7 sections). An optional `REFERENCE.md` for
-tier-2 detail used to live alongside; the May 2026 anatomy review found
+tier-2 detail used to live alongside; an anatomy review found
 REFERENCE files were effectively never auto-loaded, so the pattern is
 being folded back into SKILL.md (with a raised Piebald budget). See
 `framework/skill-anatomy.md` for the current format specification.

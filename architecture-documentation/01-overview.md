@@ -27,14 +27,13 @@ replaces "remember to" rules with mechanical enforcement.
   irreversible decisions.
 - A workflow runbook system (8 active workflows, e.g. solve / build / fix /
   review / research / save) with explicit phase models.
-- 3 hook scripts (post-ADR-004 2026-05-31 paradigm shift):
-  `buddy-boot-inject` + `session-start-remote` (SessionStart) +
-  `pre-commit.sh` (git pre-commit, 5 checks: 3 BLOCK + 2 WARN). All
-  three are universally portable — git pre-commit runs on every
-  harness, SessionStart works on CC-Terminal / claude-desktop /
-  claude-web / Codex. The earlier 13 CC-Terminal-only PreToolUse /
-  PostToolUse / UserPromptSubmit hooks were removed; discipline
-  replicates via protocols. Rationale: `docs/decisions/ADR-004-hook-paradigm-shift.md`.
+- 3 hook scripts: `buddy-boot-inject` + `session-start-remote`
+  (SessionStart) + `pre-commit.sh` (git pre-commit, 5 checks: 3 BLOCK
+  + 2 WARN). All three are universally portable — git pre-commit runs
+  on every harness, SessionStart works on CC-Terminal / claude-desktop
+  / claude-web / Codex. An earlier CC-Terminal-only PreToolUse /
+  PostToolUse / UserPromptSubmit layer was removed in favor of this
+  portable set; discipline replicates via protocols.
 
 It is consumed by other repos (code projects, personal-management
 repos, infra/sysadmin setups) without re-installation: consumers point
@@ -89,7 +88,7 @@ You write a system-prompt rule. The agent follows it for 20 turns. By turn
 50, it's forgotten. You discover a state-corruption that the rule was
 supposed to prevent.
 
-**The framework's answer (post-ADR-004 2026-05-31):** discipline-as-
+**The framework's answer:** discipline-as-
 methodology anchored in protocols (`_protocols/dispatch-template.md`,
 `context-isolation.md`, `mca-brief-template.md`, `plan-review.md`,
 `evidence-pointer-schema.md`), backed by a thin universal-portable
@@ -128,10 +127,10 @@ No sub-agent call without a Plan-Block (Scope, Tool, Alternatives,
 Expected Artefacts) or a Gate-File. The orchestrator must materialize
 constraints into an artefact before delegating. Brief shape is
 codified in `_protocols/mca-brief-template.md` (with 6 standard
-decision classes). The earlier `delegation-prompt-quality.sh`
-PreToolUse hook warned when sub-agent prompts were under 200 chars;
-removed in ADR-004 (2026-05-31) — discipline now lives in Buddy
-reading the protocol before each dispatch.
+decision classes). An earlier `delegation-prompt-quality.sh` PreToolUse
+hook warned when sub-agent prompts were under 200 chars; it has been
+removed — discipline now lives in Buddy reading the protocol before
+each dispatch.
 
 ### Problem 5 — Skill-class inflation
 
@@ -168,7 +167,7 @@ short tasks. It does not survive the failure modes that show up at scale.
 
 **What forge adds (high-level):** orchestrator-persona above skills,
 multi-perspective boards with chief-consolidation + anti-anchoring, mandatory
-Plan-Block / Gate-File before sub-agent calls, mechanical drift-killer hooks,
+Plan-Block / Gate-File before sub-agent calls, a thin reinforcement-hook layer (git pre-commit + SessionStart),
 single-source-of-truth + N adapters, generator+validator for drift-prone
 indices, cross-session continuity via workflow-engine.
 
@@ -192,8 +191,8 @@ state). The honest trade-offs:
 - **Universal-portable hooks** (git pre-commit 5 checks + SessionStart
   for boot) impose a small setup cost (`scripts/setup-cc.sh` plus a
   git-hook symlink per consumer repo) and require investigating BLOCKs
-  rather than bypassing. The CC-Terminal-only PreToolUse layer was
-  removed in ADR-004 (2026-05-31).
+  rather than bypassing. An earlier CC-Terminal-only PreToolUse layer
+  has been removed.
 - **Single-class skill model + anatomy validation** prevents skill
   inflation; the cost is a learning curve for skill authors.
 
