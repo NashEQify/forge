@@ -32,7 +32,7 @@ gone, technical substance stays.
 Lifted from `github.com/mattpocock/skills`
 (`skills/productivity/caveman/SKILL.md`, 2026-04-30).
 Adapted only lightly — the pattern is linguistically generic; no
-BuddyAI-specific adaptation needed.
+consumer-specific adaptation needed.
 
 ## Standalone
 
@@ -99,7 +99,7 @@ unsure. Off only on explicit user instruction.
 - Technical terms exactly (no synonym swap).
 - Code blocks unchanged.
 - Error messages quoted exactly.
-- Domain vocabulary (BuddyAI / brain / asyncpg / etc).
+- Domain vocabulary (project-specific terms, library names, etc).
 
 ### Compression patterns
 
@@ -176,8 +176,8 @@ Resume caveman after the clear part is done.
 
 ### INPUT
 - **Required:** user trigger (pattern list above).
-- **Optional:** domain context (BuddyAI / Huddle / etc —
-  domain vocabulary stays).
+- **Optional:** domain context (project name + domain
+  vocabulary stays).
 - **Context:** no cross-refs needed — the mode switch is
   self-contained.
 

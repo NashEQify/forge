@@ -79,14 +79,14 @@ data, stop services, lock accounts.
 permission.
 
 **MUST NOT:** never share or publish findings or exploits
-outside the BuddyAI repo.
+outside the project repo.
 
 On uncertainty: STOP. Escalate to the user. Better to ask once
 too often than to attack a system that isn't in scope.
 
 ### Operational security (OpSec)
 
-**MUST:** store every result, report, PoC in the BuddyAI repo
+**MUST:** store every result, report, PoC in the project repo
 — not in `/tmp`, not in `$HOME` without structure.
 
 **MUST:** credentials, keys, tokens found during a test:

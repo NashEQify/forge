@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-workflow_engine.py — Workflow Engine for BuddyAI.
+workflow_engine.py — Workflow Engine for forge.
 
 YAML-driven workflow orchestration: reads definitions, tracks state,
 tells the LLM what step comes next.
@@ -64,18 +64,16 @@ from scripts.lib.yaml_loader import (  # noqa: E402
 )
 
 # ---------------------------------------------------------------------------
-# Path resolution (Task 010 Part L0b — Pre-Split Refactor)
+# Path resolution
 # ---------------------------------------------------------------------------
 #
 # PROJECT_ROOT   → where the active project's data lives: .workflow-state/,
 #                  docs/tasks/, docs/<workflow>/ (solve/build/fix/review/
 #                  research/docs-rewrite — see STATE_FILE_DIRS), and any
-#                  workflow-step artefacts
-#                  referenced by completion checks / guards. Derived from
-#                  BUDDY_PROJECT_ROOT env-var, --project-root flag, or
-#                  Path.cwd(). Post-split this is the product repo (e.g.
-#                  ~/projects/buddyai), while workflow_engine.py itself has
-#                  moved to the framework repo.
+#                  workflow-step artefacts referenced by completion checks /
+#                  guards. Derived from BUDDY_PROJECT_ROOT env-var,
+#                  --project-root flag, or Path.cwd() (e.g.
+#                  ~/projects/<consumer>).
 #
 # FRAMEWORK_ROOT → where workflow_engine.py itself lives. Reserved for
 #                  framework-internal reads (currently none directly —
@@ -85,11 +83,11 @@ from scripts.lib.yaml_loader import (  # noqa: E402
 #
 # REPO_ROOT      → back-compat alias mirroring PROJECT_ROOT. Kept so existing
 #                  callers / tests that reference `scripts.workflow_engine
-#                  .REPO_ROOT` keep working during the transition.
+#                  .REPO_ROOT` keep working.
 #
-# Pre-Split Invariant: when invoked from the BuddyAI monolith root without
-# BUDDY_PROJECT_ROOT set, PROJECT_ROOT == FRAMEWORK_ROOT == BuddyAI root,
-# so existing behaviour (and the 140-test regression suite) is preserved.
+# When PROJECT_ROOT and FRAMEWORK_ROOT coincide (session running directly
+# inside the framework repo without BUDDY_PROJECT_ROOT set), state files
+# land under the framework's own docs/ tree.
 
 PROJECT_ROOT = Path(os.environ.get("BUDDY_PROJECT_ROOT", Path.cwd())).resolve()
 FRAMEWORK_ROOT = _FRAMEWORK_ROOT
@@ -1956,7 +1954,7 @@ def find_active_workflow_for_next(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="BuddyAI Workflow Engine",
+        description="forge Workflow Engine",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 

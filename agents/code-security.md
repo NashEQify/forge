@@ -64,16 +64,6 @@ endpoint?
 - **Error information leak:** stack traces, internal paths in
   responses.
 
-### BuddyAI-specific
-- **Tailscale auth (`resolve_user`):** on EVERY endpoint?
-- **CSRF:** on every state-changing request? Exempt list
-  correct?
-- **`Remote-User` header:** only from `TRUSTED_PROXY_IPS`?
-- **AppError:** no stack trace? No `raise HTTPException`?
-- **pg_advisory_lock:** lock scope correct? No lock leak?
-- **NATS subjects:** no user input in subject names?
-- **Brain queries:** parameterized? No string concatenation?
-
 Additional output field: `attack_vector` (REQUIRED on critical
 / high). A security FAIL = blocker.
 

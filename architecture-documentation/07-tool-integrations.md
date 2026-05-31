@@ -112,10 +112,8 @@ Benefit: persona logic changes → update SoT, wrapper unchanged.
    `~/.claude/skills` point at the framework. Idempotent. WARN on
    diverging target.
 2. **Scope routing** — argument 1 determines the CWD:
-   - `framework` → `$FRAMEWORK_DIR`
-   - `buddyai` → `$BUDDYAI_DIR`
-   - `sysadmin` / `infra` → `$PROJECTS_DIR/sysadmin`
-   - `<dir>` → dynamic lookup under `$PROJECTS_DIR/<dir>` with `intent.md` filter
+   - `framework` / `forge` → `$FRAMEWORK_DIR` (built-in)
+   - `<name>` → case-insensitive lookup under `$PROJECTS_DIR/<name>/` with `intent.md` filter
    - (no scope) → CWD stays; Buddy does the intent.md lookup
 3. **--add-dir composition:**
    - Always: `--add-dir $FRAMEWORK_DIR`
@@ -215,7 +213,7 @@ generates the user-specific `opencode.jsonc` (gitignored).
 |---|---|
 | Path guard | **present** via `forge-hooks.ts` plugin (`tool.execute.before` → `path-whitelist-guard.sh`) |
 | Hook parity | PreToolUse + PostToolUse via plugin (Edit/Write/Bash/Task); pre-commit identical (git-side) |
-| BuddyAI context | manual via `--add-dir ~/BuddyAI` |
+| Consumer context | manual via `--add-dir <consumer-repo>` |
 | Project AGENTS.md | applies in addition, never instead |
 | Commands | trigger words without prefix (`wakeup`, `save`, `checkpoint`, `think!`) |
 | FACTS check | prompt-side (`AGENTS.md §2`), no background hook |

@@ -1,10 +1,10 @@
 ---
 name: python-code-quality-enforcement
 description: >
-  Python code quality and conventions for BuddyAI. Tooling,
+  Python code quality and conventions for forge consumers. Tooling,
   layouts, coding standards, and security checks for all
   Python code.
-  Triggers when writing or modifying Python code in this codebase (MCA during coding); NOT for non-Python code or design-level decisions.
+  Triggers when writing or modifying Python code in a consumer codebase (MCA during coding); NOT for non-Python code or design-level decisions.
 status: active
 relevant_for: ["main-code-agent"]
 invocation:
@@ -18,12 +18,13 @@ uses: []
 
 ## Purpose
 
-Enforce Python code quality and conventions for BuddyAI.
-Defines tooling, layouts, coding standards, and security
-checks for all Python code in the project.
+Enforce Python code quality and conventions for forge consumers.
+Defines tooling, layouts, coding standards, and security checks for
+all Python code in a consumer project.
 
-Inspired by Trail of Bits' `modern-python` skill. Adapted for
-BuddyAI's stack: FastAPI, PydanticAI, NATS, Neo4j, LiteLLM.
+Inspired by Trail of Bits' `modern-python` skill. Stack-specific
+patterns (broker / DB / multi-tenancy conventions) belong in the
+consumer repo's own override files, not in this skill.
 
 ## Who runs it
 
@@ -38,26 +39,18 @@ on delegation (checklist section 8). Primary consumer:
 | New Python code is written | The agent follows these conventions |
 | Code review / PR | The reviewer checks against these conventions |
 | New package / dependency added | `pyproject.toml`, no requirements.txt |
-| Task [040] Gateway kickoff | Make sure the tooling is in place (extend ruff rules, install security tools) |
 
 ---
 
 ## 1. Project layout
 
 ```
-BuddyAI/
+<project>/
   pyproject.toml          # the only build/dependency definition
-  src/buddyai/            # source root (src layout)
+  src/<project>/          # source root (src layout)
     __init__.py
-    brain/                # knowledge layer
-    gateway/              # runtime layer (FastAPI)
-    workers/              # NATS consumer workers
-    harness/              # orchestration
-    models/               # Pydantic models (shared)
-    events/               # event schemas + stream defs
-    skills/               # Python skills (PydanticAI tools)
-    scheduler/            # APScheduler jobs
-  tests/                  # tests (mirror of src/buddyai/)
+    ...                   # consumer-defined package structure
+  tests/                  # tests (mirror of src/<project>/)
     unit/
     integration/
     fixtures/
@@ -114,8 +107,8 @@ uv pip install -e ".[dev]" # instead of pip install
 uv pip compile             # generate the lock file
 ```
 
-Currently: not installed yet. Standard pip + venv is enough
-for phase 2.
+Currently: standard pip + venv is the baseline. uv when needed
+(large dependency trees, lock files).
 
 ---
 
@@ -147,7 +140,7 @@ select = ["E", "F", "I", "N", "W", "UP"]
 | W | pycodestyle warnings | style warnings |
 | UP | pyupgrade | use Python 3.12+ syntax |
 
-### Extended rules (turn on at Task [040] kickoff)
+### Extended rules (recommended for service / library code)
 
 ```toml
 select = ["E", "F", "I", "N", "W", "UP", "B", "SIM", "RUF", "ASYNC", "S"]
@@ -158,12 +151,12 @@ select = ["E", "F", "I", "N", "W", "UP", "B", "SIM", "RUF", "ASYNC", "S"]
 | B | flake8-bugbear | common bugs (mutable defaults, etc.) |
 | SIM | flake8-simplify | constructs that simplify |
 | RUF | ruff-specific | ruff's own rules |
-| ASYNC | flake8-async | async / await mistakes (relevant for FastAPI) |
+| ASYNC | flake8-async | async / await mistakes (relevant for async frameworks) |
 | S | bandit (security) | security patterns (eval, exec, hardcoded passwords) |
 
-**Caution on activation:** existing code in `src/` has bare
-`except Exception:` (S110) and `subprocess.run()` in tests
-(S603/S607). Before activation:
+**Caution on activation:** existing code can fall foul of stricter
+rules (bare `except Exception:` S110, `subprocess.run()` in tests
+S603/S607). Before activation:
 1. Run `ruff check --select B,SIM,RUF,ASYNC,S src/ tests/`
    (dry run).
 2. Fix auto-fixable issues:
@@ -197,7 +190,7 @@ global install needed.
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
-    "integration: L3 integration tests (need DB / NATS)",
+    "integration: L3 integration tests (need infra services)",
     "e2e: L4 end-to-end tests (need running services)",
     "contract: L3 contract tests (need OpenAPI schema)",
     "property: L5 property-based tests (hypothesis)",
@@ -223,8 +216,8 @@ the other way round).
 - **Async tests:** `async def test_...()` — pytest-asyncio in
   auto mode.
 - **Integration tests:** marker `@pytest.mark.integration`.
-  Need DB / NATS. Testcontainers for Postgres + Neo4j (in
-  dev deps).
+  Need infra services (DB, broker, etc.). Testcontainers in
+  dev deps when applicable.
 
 ### Execution
 
@@ -235,8 +228,8 @@ the other way round).
 # Integration tests (need Docker)
 .venv/bin/pytest tests/integration/ -m integration
 
-# With coverage (src layout: point the path at src/buddyai)
-.venv/bin/pytest --cov=src/buddyai --cov-report=term-missing tests/
+# With coverage (src layout: point the path at the package)
+.venv/bin/pytest --cov=src/<project> --cov-report=term-missing tests/
 
 # Single test
 .venv/bin/pytest tests/unit/test_models.py::test_specific -v
@@ -252,7 +245,7 @@ strategy.
 
 ## 5. Security tooling
 
-### detect-secrets (required from phase 2)
+### detect-secrets
 
 Prevents API keys, passwords, tokens from landing in the
 code.
@@ -265,14 +258,12 @@ detect-secrets scan > .secrets.baseline
 detect-secrets audit .secrets.baseline
 ```
 
-**Status:** not installed yet. Set up at Task [040] kickoff:
-
 ```bash
 .venv/bin/pip install detect-secrets
 detect-secrets scan > .secrets.baseline
 ```
 
-### pip-audit (required from phase 2)
+### pip-audit
 
 Audits dependencies for known vulnerabilities (CVEs).
 
@@ -280,71 +271,49 @@ Audits dependencies for known vulnerabilities (CVEs).
 .venv/bin/pip-audit
 ```
 
-**Status:** not installed yet. Set up at Task [040] kickoff:
-
 ```bash
 .venv/bin/pip install pip-audit
 ```
 
 ---
 
-## 6. BuddyAI-specific conventions
+## 6. Stack conventions
+
+Generic Python service patterns. Consumer repos add stack-specific
+patterns (broker, ORM, multi-tenancy, framework idioms) in their
+own override files.
 
 ### Pydantic models
 
-- All shared models in `src/buddyai/models/`.
+- Shared models in a dedicated package (e.g. `<project>/models/`).
 - `model_config = ConfigDict(...)` instead of `class Config`.
 - Validators via `@field_validator` (Pydantic v2 syntax).
 - No `from_orm` — Pydantic v2 uses `model_validate`.
 
-### FastAPI
+### FastAPI (when used)
 
-- Routers in separate files
-  (`gateway/routes/sessions.py`, etc.).
+- Routers in separate files (one per resource).
 - Dependency injection via `Depends()`.
-- Response models explicit: `response_model=SessionOut`.
+- Response models explicit: `response_model=...`.
 - No `*` imports.
-
-### NATS / JetStream
-
-- Event schemas in `src/buddyai/events/schemas/`.
-- Stream definitions in `src/buddyai/events/streams/`.
-- Consumer pattern with error handling:
-  ```python
-  async for msg in subscription:
-      try:
-          payload = json.loads(msg.data)
-          await process(payload)
-          await msg.ack()
-      except Exception:
-          logger.exception("consumer_error", subject=msg.subject)
-          await msg.nak(delay=5)  # redeliver after 5s
-  ```
-
-### Neo4j
-
-- Queries as string constants (no f-string injection).
-- `user_id` in EVERY query (multi-user from day one).
-- Transactions via `async with driver.session() as session:`.
 
 ### Async / await
 
 - No `asyncio.run()` in library code (only in entrypoints).
-- `asyncio.to_thread()` for blocking I/O (e.g. RLM
-  completion, subprocess).
+- `asyncio.to_thread()` for blocking I/O (e.g. LLM completion,
+  subprocess).
 - No mixing of sync / async in the same module without a
   clear reason.
 
 ### Imports
 
-- Absolute imports:
-  `from buddyai.models.session import Session`.
+- Absolute imports.
 - No relative imports (`from .models import ...`) except in
   `__init__.py`.
 - Import order (enforced by ruff `I`):
   1. stdlib.
   2. third-party.
-  3. local (`buddyai.*`).
+  3. local (`<project>.*`).
 
 ### Logging
 
@@ -353,26 +322,27 @@ Audits dependencies for known vulnerabilities (CVEs).
   `logger = structlog.get_logger(__name__)`.
 - Structured: `logger.info("event_name", key=value)` — no
   f-string in log messages.
-- **Migration:** some existing files still use
-  `import logging`. On touch, switch to `structlog`. No
+- **Migration:** on touching files that still use
+  `import logging`, switch to `structlog`. No
   big-bang refactor.
 
 ---
 
 ## 7. What NOT
 
-- **No mypy / ty (currently).** Pydantic + ruff UP + runtime
-  validation are enough for phase 2. Evaluate type checkers
-  later when the codebase grows. Write type annotations
-  anyway — they serve as documentation and Pydantic uses
-  them at runtime.
+- **No mypy / ty (by default).** Pydantic + ruff UP + runtime
+  validation are enough for many service codebases. Evaluate
+  type checkers when the codebase grows. Write type
+  annotations anyway — they serve as documentation and
+  Pydantic uses them at runtime.
 - **No pre-commit framework.** CC hooks are the mechanism
   for pre-commit checks. A separate pre-commit framework
   would conflict with that.
-- **No CI / CD.** No GitHub Actions. Everything local. CI
-  comes later when needed.
-- **No uv (yet).** Standard pip + venv is enough. uv when
-  needed (large dependency trees, lock files).
+- **CI / CD optional.** Local-first is fine. CI comes when
+  the project needs it.
+- **No uv (yet).** Standard pip + venv is enough at the
+  baseline. uv when needed (large dependency trees, lock
+  files).
 
 ---
 
@@ -380,7 +350,7 @@ Audits dependencies for known vulnerabilities (CVEs).
 
 Buddy verifies on every code delegation to main-code-agent:
 
-- [ ] New code under `src/buddyai/` (src layout)?
+- [ ] New code under `src/<project>/` (src layout)?
 - [ ] Tests under `tests/` (with the right marker)?
 - [ ] Dependencies in `pyproject.toml` (not
   requirements.txt)?
@@ -388,7 +358,6 @@ Buddy verifies on every code delegation to main-code-agent:
 - [ ] No secrets in the code (API keys, passwords)?
 - [ ] Async patterns correct (no `asyncio.run` in libraries)?
 - [ ] Structured logging (structlog, not print / logging)?
-- [ ] `user_id` in Neo4j queries?
 
 ---
 

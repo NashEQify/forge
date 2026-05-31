@@ -142,7 +142,7 @@ direct answer.
 Before the council starts: is there established research,
 known patterns, or documented solutions for this problem?
 
-- **Yes:** name the references, reconcile against the BuddyAI
+- **Yes:** name the references, reconcile against the project
   context, justify deviations. The research result feeds into
   every one of the 6 perspectives as a starting point.
 - **No:** record explicitly: "no known pattern found for

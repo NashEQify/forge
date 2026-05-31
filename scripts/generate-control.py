@@ -129,7 +129,7 @@ def is_pid_alive(pid: int) -> bool:
 def cwd_to_project_key(cwd: str) -> str:
     """Convert CWD path to Claude project directory name.
 
-    e.g. /home/xxx/BuddyAI -> -home-xxx-BuddyAI
+    e.g. /home/xxx/<project> -> -home-xxx--project-
     """
     return cwd.replace("/", "-")
 
@@ -179,7 +179,7 @@ def parse_jsonl_for_session(session_id: str, cwd: str) -> dict:
 
     if not jsonl_path.exists():
         # Try parent directories — session might be in a parent project
-        # e.g. cwd is /home/xxx/BuddyAI/workspaces/infra but project is -home-xxx-BuddyAI
+        # e.g. cwd is /home/xxx/<project>/sub/dir but project root is one level up
         # Check all project dirs to find matching sessionId
         found = False
         if PROJECTS_DIR.exists():

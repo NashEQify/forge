@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# state-write-block.sh — PreToolUse(Write/Edit) Hook for BuddyAI Workflow Engine
+# state-write-block.sh — PreToolUse(Write/Edit) Hook for forge Workflow Engine
 #
 # Blocks direct Write/Edit operations on .workflow-state/ files.
 # The LLM must use workflow_engine.py CLI to modify state.

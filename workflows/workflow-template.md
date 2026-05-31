@@ -1,6 +1,6 @@
-# Workflow Template — BuddyAI
+# Workflow Template
 
-Canonical structure for BuddyAI workflows. Every runbook under
+Canonical structure for forge workflows. Every runbook under
 `workflows/runbooks/<name>/WORKFLOW.md` MUST contain all the mandatory
 fields defined here.
 

@@ -72,7 +72,7 @@ path.
 | Knowledge type | Recognition | Example |
 |----------------|-------------|---------|
 | **Research** | Framework analysis, tool evaluation, benchmark | "14 frameworks compared" |
-| **SOTA** | Position map, consensus, BuddyAI placement | "Where do we stand vs SOTA?" |
+| **SOTA** | Position map, consensus, the project's placement | "Where do we stand vs SOTA?" |
 | **Solve** | RFP result, axioms, problem statement | "Optimal workflow structure analysed" |
 | **Interview** | Insights from conversations, conferences, articles | "Leoplo interview insights" |
 | **Decision** | Architecture decision, trade-off analysis — **required threshold: ADR-discipline triple** (hard-to-reverse + surprising-without-context + result-of-real-trade-off, pattern lift Phase G tier-2 from Pocock grill-with-docs). When only 1-2 are met: don't capture as a decision; consider an inline comment. Cross-ref `documentation_and_adrs` §When-an-ADR. | "ADR: why X instead of Y (triple satisfied)" |
@@ -134,7 +134,7 @@ to become persistent. Checklist:
 
 - [ ] Research results (framework analyses, tool
   evaluations)?
-- [ ] SOTA placements (BuddyAI vs the field)?
+- [ ] SOTA placements (the project vs the field)?
 - [ ] Solve / RFP results (axioms, derivations, problem
   statements)?
 - [ ] Interview / external insights?

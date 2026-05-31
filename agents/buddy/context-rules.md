@@ -154,7 +154,8 @@ second-precise.
   read, costs nothing.
 - **Facts** — just store, no clarifying question.
 - **Interpretations** — verify briefly before storing.
-- Always applies globally (BuddyAI), even inside project contexts.
+- User-scope rules always apply globally (canonical
+  `~/projects/personal/context/user/`), even inside project contexts.
 
 ## History format
 
@@ -168,26 +169,17 @@ Detail extracted from operational.md that doesn't need to load on
 every boot. operational.md keeps the judgment one-liners; the
 context lives here.
 
-### Mode-switch transition matrix
+### Session-switch boundary
 
-Mode switches are explicit, by the user. Buddy never switches on its
-own.
+Mid-session switch to a different project is NOT supported.
+CC limitation: `--add-dir` and the project root are startup
+parameters. The project CLAUDE.md is not auto-enforced after start
+and `.claude/agents/` is not updated. Switch by starting a new
+`cc <project>` call.
 
-- **Coding → Life:** switch WD to `workspaces/`. Target objective
-  unclear → ask.
-- **Life → Coding:** flush the context window → switch WD to
-  BuddyAI/ root.
-- **Life task needs code:** the user switches explicitly. Normal
-  coding mode (full delegation, smallest possible context). Life
-  context gets flushed.
-- **Coding / Life → external project:** start a new `cc <project>`
-  call.
-- **External project → Coding / Life:** new `cc` or `cc life` call.
-- **External project → external project:** new `cc <project>` call.
-- **Mid-session switch to external: NOT supported.**
-  CC limitation: --add-dir and the project root are startup
-  parameters. The project CLAUDE.md isn't auto-enforced and
-  .claude/agents isn't updated.
+Consumer-specific work-mode matrices (e.g. a "coding ↔ life"
+split between code work and personal-management workspaces) belong
+in the consumer's own override files, not in the framework.
 
 ### User facts — explicit, not automatic
 

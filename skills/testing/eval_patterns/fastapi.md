@@ -48,7 +48,7 @@ async def test_invalid_request_returns_422(client: AsyncClient):
 # Generated from FA-U2 (L2 Unit, Positive)
 # INFRA: Postgres
 from pydantic import ValidationError
-from buddyai.gateway.models import BrainEntryResponse
+from myapp.gateway.models import EntityResponse
 
 
 async def test_response_matches_model(client: AsyncClient):
@@ -57,12 +57,12 @@ async def test_response_matches_model(client: AsyncClient):
     assert resp.status_code == 200
 
     try:
-        BrainEntryResponse.model_validate(resp.json())
+        EntityResponse.model_validate(resp.json())
     except ValidationError as e:
         pytest.fail(f"Response deviates from model: {e}")
 
     response_keys = set(resp.json().keys())
-    model_keys = set(BrainEntryResponse.model_fields.keys())
+    model_keys = set(EntityResponse.model_fields.keys())
     extra = response_keys - model_keys
     assert extra == set(), f"Extra fields in response: {extra}"
 ```
@@ -78,25 +78,25 @@ async def test_response_matches_model(client: AsyncClient):
 # Generated from FA-U3 (L2 Unit, Positive)
 # INFRA: none
 from unittest.mock import AsyncMock
-from buddyai.gateway.app import create_app
-from buddyai.gateway.deps import get_brain
+from myapp.gateway.app import create_app
+from myapp.gateway.deps import get_repo
 from httpx import AsyncClient, ASGITransport
 
 
 async def test_dependency_override():
     """FA-U3: Dependencies can be replaced via dependency_overrides."""
-    mock_brain = AsyncMock()
-    mock_brain.get_entity.return_value = {"id": "test", "name": "Mock Entity"}
+    mock_repo = AsyncMock()
+    mock_repo.get_entity.return_value = {"id": "test", "name": "Mock Entity"}
 
     app = create_app()
-    app.dependency_overrides[get_brain] = lambda: mock_brain
+    app.dependency_overrides[get_repo] = lambda: mock_repo
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as c:
         resp = await c.get("/api/brain/entities/test")
 
     assert resp.status_code == 200
-    mock_brain.get_entity.assert_called_once_with("test")
+    mock_repo.get_entity.assert_called_once_with("test")
     app.dependency_overrides.clear()
 ```
 
@@ -163,7 +163,7 @@ async def test_protected_endpoint_with_invalid_token(client: AsyncClient):
 # INFRA: Postgres
 import pytest
 import schemathesis
-from buddyai.gateway.app import create_app
+from myapp.gateway.app import create_app
 
 schema = schemathesis.openapi.from_asgi("/openapi.json", app=create_app())
 
@@ -207,7 +207,7 @@ import pytest
 from pathlib import Path
 from deepdiff import DeepDiff
 from httpx import AsyncClient, ASGITransport
-from buddyai.gateway.app import create_app
+from myapp.gateway.app import create_app
 
 
 SNAPSHOT_PATH = Path("tests/snapshots/openapi_schema.json")

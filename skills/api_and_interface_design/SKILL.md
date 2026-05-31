@@ -43,13 +43,15 @@ OpenAPI → Zod) as a concrete pattern.
 
 Lifted from `github.com/addyosmani/agent-skills`
 (`skills/api-and-interface-design/SKILL.md`, 2026-04-30).
-**Adapted** to the BuddyAI / forge reality:
+**Adapted** to the Python / FastAPI reality forge consumers
+typically run:
 - TypeScript examples translated to Pydantic + FastAPI.
 - JSON-body validation: Pydantic `extra="forbid"` +
   `model_validate()`.
-- Error handling: AppError + ErrorResponse.
-- SSE as the streaming counterpart to REST
-  (BuddyResponseChunk / DoneEvent / ErrorEvent).
+- Error handling: an `AppError` + `ErrorResponse` pair as a
+  uniform error contract.
+- SSE as the streaming counterpart to REST (typed event
+  variants as a discriminated union).
 - Schema pipeline: Pydantic → OpenAPI → Zod (frontend sync).
 
 ## Standalone
@@ -170,7 +172,7 @@ class PaginatedResult(BaseModel):
 **One error strategy for every endpoint.** Mixed patterns
 break consumer predictability.
 
-BuddyAI pattern:
+Example pattern (`AppError` + `ErrorResponse`):
 
 ```python
 # AppError + ErrorResponse — one form for every error
@@ -224,7 +226,7 @@ Trust internal code. Validate **at system edges** where
 external input enters:
 
 ```python
-# BuddyAI pattern: Pydantic validation at the API boundary
+# Pydantic validation at the API boundary
 @app.post("/api/tasks", response_model=Task, status_code=201)
 async def create_task(
     input: CreateTaskInput,  # Pydantic validates AUTOMATICALLY
@@ -287,9 +289,10 @@ class CreateTaskInput(BaseModel):
 | Boolean fields | `is_/has_/can_` prefix | `is_complete`, `has_attachments` |
 | Enum values | UPPER_SNAKE | `"IN_PROGRESS"`, `"COMPLETED"` |
 
-**BuddyAI convention:** response fields snake_case
-(Python-consistent); the frontend Zod schema maps on
-receipt. **Stay consistent inside the API.**
+**Recommendation for Python-backed APIs:** response fields
+snake_case (Python-consistent); the frontend Zod schema maps
+on receipt. The cardinal rule is to **stay consistent inside
+the API** — pick one form and apply it everywhere.
 
 ## REST API patterns
 
@@ -342,13 +345,13 @@ class UpdateTaskInput(BaseModel):
     priority: Literal["low", "medium", "high"] | None = None
 ```
 
-## SSE patterns (BuddyAI-specific)
+## SSE patterns
 
 Server-Sent-Events follow analogous discipline:
 
 ```python
 # Event schema explicit (analogous to a REST response schema)
-class BuddyResponseChunk(BaseModel):
+class ContentChunk(BaseModel):
     type: Literal["chunk"]
     content: str
     chunk_index: int
@@ -366,14 +369,14 @@ class ErrorEvent(BaseModel):
 
 
 # The stream as a discriminated union
-StreamEvent = BuddyResponseChunk | DoneEvent | ErrorEvent
+StreamEvent = ContentChunk | DoneEvent | ErrorEvent
 ```
 
 **SSE obligations:**
 - Each event type explicitly defined (no anonymous dict).
 - ErrorEvent as a discriminated variant (don't raise after
-  a StreamingResponse start — see code-adversary
-  BuddyAI-specific).
+  a StreamingResponse start — errors past the
+  StreamingResponse boundary belong to SSE, not HTTP).
 - DoneEvent as the terminal sentinel.
 - The client recognizes the event type via the `type` field
   discriminator.
@@ -452,7 +455,7 @@ UserId = NewType("UserId", str)
 def get_task(id: TaskId) -> Task: ...
 ```
 
-### Schema pipeline (BuddyAI-specific)
+### Schema pipeline (Pydantic → OpenAPI → Zod)
 
 Pydantic models are SoT. Pipeline:
 

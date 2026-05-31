@@ -244,21 +244,6 @@ experience friction:
 shallow: would deletion concentrate complexity or just shift
 it? A "yes, it concentrates" is the signal you want.
 
-#### BuddyAI-specific friction hotspots
-
-- **Brain facade:** deep module (every DB access on brain
-  tables flows through a single interface). When new code
-  goes direct-DB instead of facade — seam break.
-- **5-layer model** (knowledge → runtime → intelligence →
-  cross-cutting → interface): imports must flow downwards or
-  within. Friction on cross-layer imports.
-- **NATS subjects:** the events/ package is shared. Local
-  event definitions are friction.
-- **Pydantic AppError vs HTTPException:** mixed pattern is
-  friction.
-- **asyncpg vs Brain-Facade direct access:** bypass is
-  friction.
-
 ### Phase 2: present candidates
 
 Present a numbered list of deepening opportunities. Per

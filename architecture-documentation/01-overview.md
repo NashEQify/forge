@@ -1,11 +1,10 @@
 # 01 — Overview
 
-> **A note on context:** BuddyAI is the primary consumer product the
-> framework was built to serve; it lives in a separate repo. Task IDs
-> referenced throughout this documentation (e.g. Task-388, Task-467)
-> point to internal development tasks in that consumer repo. They are
+> **A note on context:** Task IDs that appear in this documentation
+> point to internal development tasks in consumer repos that exercised
+> a particular mechanism while it was being built. They are
 > traceability anchors for *why* a particular mechanism exists, not
-> required reading.
+> required reading and not authoritative for the framework itself.
 
 ## The loop, in one paragraph
 
@@ -31,10 +30,11 @@ replaces "remember to" rules with mechanical enforcement.
 - 13 mechanical enforcement hooks (path-whitelist, frozen-zone, pre-commit
   with 13 checks, delegation-prompt-quality, workflow-reminder).
 
-It is consumed by other repos (BuddyAI, personal projects, sysadmin/infra
-setups) without re-installation: consumers point at the framework via
-`--add-dir` (Claude Code) or `OPENCODE_CONFIG_DIR` (OpenCode), and the
-framework methodology becomes active in their session.
+It is consumed by other repos (code projects, personal-management
+repos, infra/sysadmin setups) without re-installation: consumers point
+at the framework via `--add-dir` (Claude Code) or `OPENCODE_CONFIG_DIR`
+(OpenCode), and the framework methodology becomes active in their
+session.
 
 ## Who is it for?
 
@@ -67,9 +67,9 @@ It is **not** for:
 
 ### Problem 1 — Cross-repo duplication
 
-You run BuddyAI for memory infrastructure. Personal projects in
-`~/projects/personal`. A sysadmin repo. Each starts wanting Buddy. Each
-duplicates the persona definition. Drift follows.
+You run several repos: a coding project, a personal-management repo
+in `~/projects/personal`, a sysadmin/infra repo. Each starts wanting
+Buddy. Each duplicates the persona definition. Drift follows.
 
 **The framework's answer:** one Source-of-Truth (`agents/buddy/`,
 `framework/`), N adapters (`orchestrators/<harness>/`, `.claude/agents/`,

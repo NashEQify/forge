@@ -28,7 +28,7 @@ naivety) OR code-docs-consumer (cross-board with code-docs
 extension) is dispatched, NOT both. board-consumer has the
 first-reader naivety as distinct (loads NO refs, no drill /
 trace). code-docs-consumer has the standard reviewer setup
-with BuddyAI-specific code-docs focus.
+with code-docs focus.
 
 **Which persona in the Spec Board:**
 - Pure spec without code reference → board-consumer.
@@ -86,12 +86,6 @@ No docs gap? You didn't read it as a first reader.
   containment.
 - Document architecture: token budget, decomposition,
   duplication.
-
-### BuddyAI-specific
-- Agent definitions: role statement clear? Constraints
-  explicit?
-- structlog: log messages meaningful? Event names consistent?
-- Pydantic models: field descriptions on public models?
 
 ## Finding prefix
 

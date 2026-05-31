@@ -86,7 +86,7 @@ see "Retired / deprecated skills" at the end of this section.
 | `improve_codebase_architecture` | codebase-wide friction map + deepening opportunities | manual, periodic / build specify when refactor |
 | `security_and_hardening` | security-first development discipline: 3-level boundary, OWASP top-10 prevention, input-validation patterns, audit triage. Methodology-layer complement to `agents/security` (pentest) + `agents/code-security` (static review). | build verify (security sub-agent), shipping_and_launch pre-production review |
 | `frontend_ui_engineering` | production-quality UI discipline: component architecture, state decisions, design-system adherence (no AI aesthetic), A11y (WCAG 2.1 AA), 4 states. Code-side complement to `spec_board mode=ux` (spec side) + `code_review_board` (diff side). | build execute for frontend code, code_review_board UX specialists |
-| `frontend_design_tty` | design system for dark, terminal-inspired web UIs (monospace, mint/sage on dark blue-grey, box-drawing borders, hex labels, no rounded corners). Provides concrete CSS custom properties + component patterns + anti-patterns. Complements `frontend_ui_engineering` (methodology side). Used in Huddle / BuddyAI dashboards. | manual when building UI, sub-skill of `frontend_ui_engineering` |
+| `frontend_design_tty` | design system for dark, terminal-inspired web UIs (monospace, mint/sage on dark blue-grey, box-drawing borders, hex labels, no rounded corners). Provides concrete CSS custom properties + component patterns + anti-patterns. Complements `frontend_ui_engineering` (methodology side). Used by consumer apps that declare TTY aesthetic. | manual when building UI, sub-skill of `frontend_ui_engineering` |
 
 ### Utilities (directly callable by orchestrator)
 

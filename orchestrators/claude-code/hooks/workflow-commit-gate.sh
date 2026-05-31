@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# workflow-commit-gate.sh — PreToolUse(Bash) Hook for BuddyAI Workflow Engine (Task 321)
+# workflow-commit-gate.sh — PreToolUse(Bash) Hook for forge Workflow Engine.
 #
 # Called by Claude Code on every Bash tool invocation. Checks if the command
 # is a git commit and, if so, validates against the Workflow Engine.

@@ -11,10 +11,10 @@ https://docs.anthropic.com/claude/docs/claude-code (or equivalent).
 
 ### "Unknown scope: <name>"
 
-`cc` could not resolve the scope you passed. Built-in scopes:
-`buddyai`, `framework`, `life`, `sysadmin`, `infra`. Plus a dynamic
-lookup under `$PROJECTS_DIR/<scope>/` for all projects with an
-`intent.md`.
+`cc` could not resolve the scope you passed. Built-in scope:
+`framework` (alias `forge`). All other scopes resolve dynamically
+under `$PROJECTS_DIR/<scope>/` (case-insensitive, requires
+`intent.md`).
 
 Solutions:
 - Create an `intent.md` in the project, OR
@@ -265,7 +265,7 @@ No LICENSE file in the repo. To be added for public-OSS status
 Paths are hard-coded to `/home/xxx/projects/...`. On adoption these
 need to be generalised per user:
 - `.claude/path-whitelist.txt`
-- `orchestrators/claude-code/bin/cc` (FRAMEWORK_DIR / BUDDYAI_DIR
+- `orchestrators/claude-code/bin/cc` (FRAMEWORK_DIR / PROJECTS_DIR
   defaults)
 - `orchestrators/opencode/bin/oc` (OPENCODE_CONFIG_DIR default)
 

@@ -106,7 +106,8 @@ to lift, when to spin up containers, how to isolate. The principles
 here are project-neutral — project-specific concretions (DSN, image
 tags, port numbers, marker vocabulary, custom fixtures) live in the
 **project-side** `docs/test-conventions/<topic>.md`. Cross-link
-example: BuddyAI's `docs/test-conventions/postgres-fixtures.md`.
+example: a consumer's `docs/test-conventions/postgres-fixtures.md`
+documenting its concrete DSN, fixture name, and transaction wrapper.
 
 ### Fixture-availability preflight (the L-025 discipline)
 
@@ -181,9 +182,10 @@ but call it out explicitly and create a follow-up task to converge.
 
 - **NOT** `pytest.skip("STUB — needs X")` without running the
   preflight. **INSTEAD** grep first, document evidence in the RED
-  return summary. Because: the unchecked skip-comment is what
-  spawned BuddyAI Task 468 cost-persistence MCA-PARTIAL; pattern
-  class is *cycle-symptom-as-cause*.
+  return summary. Because: an unchecked skip-comment asserts absence
+  without checking and lets the next agent rebuild parallel
+  infrastructure instead of lifting the existing one; pattern class
+  is *cycle-symptom-as-cause*.
 - **NOT** SQLite fallback for Postgres tests. **INSTEAD** real
   Postgres via testcontainer. Because: pgvector, JSONB operators,
   tsvector, NUMERIC — none of these translate to SQLite.
@@ -272,9 +274,9 @@ project*. Convention:
   README.md                 — index + cross-link back to forge §Infrastructure
 ```
 
-Example: BuddyAI maintains
-`<buddyai>/docs/test-conventions/postgres-fixtures.md` with the
-concrete `real_pg_pool` fixture (DSN, port 5433, pgvector pg16 image,
-transaction-rollback wrapper). Test-skeleton-writers running in the
-BuddyAI repo lift from there; the discipline that *makes them check
-first* lives in this §Infrastructure section.
+Example: a Postgres-backed consumer maintains
+`<consumer-repo>/docs/test-conventions/postgres-fixtures.md` with
+the concrete `real_pg_pool` fixture (DSN, port, image tag,
+transaction-rollback wrapper). Test-skeleton-writers running in
+the consumer repo lift from there; the discipline that *makes them
+check first* lives in this §Infrastructure section.

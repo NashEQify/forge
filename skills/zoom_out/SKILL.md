@@ -92,8 +92,9 @@ otherwise project-specific spec terms). Prevent drift on
 "component / service / API" (cross-ref
 `improve_codebase_architecture` strict glossary when relevant).
 
-BuddyAI-specific when relevant: brain facade / context assembly
-/ materialization / navigate / entry points / 5-layer model.
+Consumer-specific when relevant: name the project's own
+load-bearing architectural primitives (facades, layers, entry
+points) so the zoomed view stays grounded in real terms.
 
 ### After-map
 

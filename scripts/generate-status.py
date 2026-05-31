@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Component Status Generator for BuddyAI Architecture Documentation.
+Component Status Generator for forge Architecture Documentation.
 
 Data-driven: uses spec_ref from task YAMLs as the ONLY source for
 spec↔task linking. No hardcoded maps.

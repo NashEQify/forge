@@ -66,16 +66,6 @@ construction deeply enough.
 - **Token budget:** max input computed? Output reserved? Cost
   per call?
 
-### BuddyAI-specific
-- LiteLLM: `model` parameter correct? No hardcoded provider?
-- Pydantic-AI: agent definition correct? `result_type` set?
-- Context assembly: brain query → prompt? Budget logic
-  consistent?
-- Ollama: local-model path? Fallback to cloud?
-- Prompt templates: central (not inline)?
-- LLM output → brain: structured output → entity extraction →
-  facade?
-
 ## Finding prefix
 
 F-AI-{NNN}

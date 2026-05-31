@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Architecture Documentation Generator for BuddyAI.
+Architecture Documentation Generator for forge.
 
 Parses SoT (Source of Truth) files and generates mkdocs-compatible
 Markdown pages for the architecture documentation.

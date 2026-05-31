@@ -4,7 +4,7 @@ Central overview of executable scripts under `$FRAMEWORK_DIR/scripts/`.
 
 ## Convention
 
-**From consumer repos (BuddyAI, Huddle, personal, external projects):**
+**From consumer repos:**
 always call scripts as `$FRAMEWORK_DIR/scripts/<name>`. The variable is
 set by the `cc` wrapper at Buddy startup (`--add-dir $FRAMEWORK_DIR`,
 default `~/projects/forge`).

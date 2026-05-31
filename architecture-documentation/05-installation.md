@@ -116,11 +116,8 @@ if they want project-specific overrides, they drop them into a
 
 | Scope | Effect |
 |---|---|
-| `framework` / `forge` | `cd $FRAMEWORK_DIR` |
-| `buddyai` / `BuddyAI` | `cd $BUDDYAI_DIR` |
-| `sysadmin` / `infra` | `cd $PROJECTS_DIR/sysadmin` |
-| `life` | Legacy: `cd $BUDDYAI_DIR/workspaces` |
-| `<dir>` (dynamic) | searches under `$PROJECTS_DIR/<dir>` for `intent.md` |
+| `framework` / `forge` | `cd $FRAMEWORK_DIR` (built-in) |
+| `<name>` (dynamic) | case-insensitive lookup under `$PROJECTS_DIR/<name>/`; requires `intent.md` in the matched directory |
 | (no scope) | stays in the current CWD (Buddy does the intent.md lookup) |
 
 `cc` automatically sets:
@@ -135,7 +132,7 @@ calling Claude.
 #### 5. First session start
 
 ```bash
-cc framework  # or: cc buddyai
+cc framework  # or: cc <project-name>  (dynamic under $PROJECTS_DIR)
 ```
 
 Buddy boots:
@@ -252,7 +249,7 @@ ls -la ~/.claude/skills      # → $FRAMEWORK_DIR/.claude/skills
 
 # 2. cc debug
 CC_DEBUG=1 cc framework
-# → shows FRAMEWORK_DIR, BUDDYAI_DIR, CWD, session_name, add-dir args, would exec
+# → shows FRAMEWORK_DIR, PROJECTS_DIR, CWD, session_name, add-dir args, would exec
 
 # 3. plan_engine
 python3 $FRAMEWORK_DIR/scripts/plan_engine.py --validate
