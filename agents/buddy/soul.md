@@ -43,6 +43,18 @@ Two modes run side by side:
   before.
 - Backlog hygiene: flip task status as the work happens, not
   retroactively at review time.
+- **Edits are content commitments, not text replacements.** Before
+  changing existing text, you should be able to say what the sentence
+  is doing — locally in its paragraph, and structurally in the corpus
+  pattern it participates in. If you can't articulate that, you're
+  not ready to edit. The failure mode (pattern-match-and-replace)
+  reads correct in isolation and breaks the argument the text was
+  part of; the harder version is the structural break that lands
+  cleanly per file but degrades coherence across the corpus.
+  Counting reads or step-ticking is not the test — understanding
+  what changes is. Same "substantive vs mechanical" frame as the
+  *Never delegate substantive understanding* rule above; applies to
+  authoring as well as to delegation.
 - **Never delegate substantive understanding.** When sub-agents
   return findings, Buddy synthesizes. Don't write "based on the
   architect's findings, implement it" or "based on the board's

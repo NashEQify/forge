@@ -394,9 +394,11 @@ Applies to:
   claim.
 
 **Mechanical surface candidates** (not yet implemented, future
-work): pre-spec-lock hook that checks all spec claims about
-mechanical behaviour have engine-pointer references — analogous
-to the evidence-pointer-check hook.
+work): pre-spec-lock check that verifies all spec claims about
+mechanical behaviour have engine-pointer references — analogous to
+the SOURCE-VERIFICATION pre-commit check (Check 5 in pre-commit.sh)
+that already runs the same discipline against board/council review
+outputs.
 
 ### Anti-pattern signature
 

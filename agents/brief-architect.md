@@ -237,12 +237,14 @@ outputs differ. Mode-specific notes are inline.
      prospective prediction made from spec-+-scope reading. This
      is NOT a gate: MCA may touch files outside the list when the
      work legitimately requires it (chief-recommended cross-spec
-     amendments, board outputs, parallel-session artifacts). The
-     path-whitelist-guard hook (CLAUDE.md Invariant 4) remains the
-     sole enforcement layer. The list exists so Buddy, on suspected
-     scope-creep or MCA hang, can `diff <(expected_files) <(actual
-     files_touched)` in O(grep) instead of O(mtime-archaeology).
-     Treat divergence as a signal-to-investigate, never as auto-fail.
+     amendments, board outputs, parallel-session artifacts). Path
+     discipline (CLAUDE.md Invariant 4: Buddy writes within intent-
+     scope by discipline; the earlier `path-whitelist-guard` PreToolUse
+     hook was removed in ADR-004 2026-05-31) is the enforcement layer.
+     The list exists so Buddy, on suspected scope-creep or MCA hang,
+     can `diff <(expected_files) <(actual files_touched)` in O(grep)
+     instead of O(mtime-archaeology). Treat divergence as a
+     signal-to-investigate, never as auto-fail.
    - **`mode=spec_amendment`:** the inline-returned amendment block
      (per Required Output below) IS the plan — there is no
      downstream MCA dispatch. The orchestrator integrates the prose
@@ -272,8 +274,9 @@ List 3-5 files most critical for implementing this plan:
 
 ### Expected-Files (prospective; forensic affordance, not binding)
 Files the brief author expects MCA to touch. Divergence is a signal,
-not a gate — path-whitelist-guard hook enforces; this list aids
-post-hoc diff during suspected scope-creep / hang triage.
+not a gate — Buddy's intent-scope discipline (CLAUDE.md Invariant 4)
+is the enforcement layer; this list aids post-hoc diff during
+suspected scope-creep / hang triage.
 - path/to/file1
 - path/to/file2
 - ...

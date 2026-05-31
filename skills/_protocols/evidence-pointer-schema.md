@@ -6,9 +6,12 @@ This protocol is tool-neutral. It defines the pointer
 format for source claims in reviewer outputs and skill outputs. It
 is consumed by the engine check
 (`scripts/workflow_engine.py` `pointer_check`), the standalone
-validator (`scripts/validate_evidence_pointers.py`), the CC hook
-(`orchestrators/claude-code/hooks/evidence-pointer-check.sh`), and
-pre-commit check 13.
+validator (`scripts/validate_evidence_pointers.py`), and pre-commit
+Check 5 SOURCE-VERIFICATION
+(`orchestrators/claude-code/hooks/pre-commit.sh`). The earlier
+PostToolUse hook `evidence-pointer-check.sh` was removed in ADR-004
+(2026-05-31 hook paradigm shift); pre-commit Check 5 is the
+universally-portable replacement.
 
 Canonical spec authority:
 `docs/specs/299-fabrication-mitigation.md` §1.
@@ -251,5 +254,7 @@ the output frontmatter.
 - yaml_loader: `scripts/lib/yaml_loader.py`
   `VALID_COMPLETION_TYPES` + `_validate_completion`
 - Validator: `scripts/validate_evidence_pointers.py`
-- CC hook: `orchestrators/claude-code/hooks/evidence-pointer-check.sh`
-- Pre-commit check 13: `orchestrators/claude-code/hooks/pre-commit.sh`
+- Pre-commit Check 5 SOURCE-VERIFICATION:
+  `orchestrators/claude-code/hooks/pre-commit.sh`
+  (earlier PostToolUse hook `evidence-pointer-check.sh` removed in
+  ADR-004 2026-05-31; pre-commit is the universal-portable replacement)

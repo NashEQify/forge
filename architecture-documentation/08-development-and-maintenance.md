@@ -168,63 +168,49 @@ python3 scripts/validate_runbook_consistency.py --runbook build
 
 WARN-only — drift is heuristic (not every yaml step has to appear in md).
 
-## Hooks
+## Hooks (post-ADR-004 2026-05-31 paradigm shift)
 
-`orchestrators/claude-code/hooks/`:
+`orchestrators/claude-code/hooks/` — only 3 scripts remain after the
+universal-portable-only sweep:
 
 ```
-board-output-check.sh          ~145 LoC  PostToolUse(Task) WARN on missing expected file output
-delegation-prompt-quality.sh   ~170 LoC  PreToolUse(Task) WARN (length + keyword + MCA-Brief decision classes)
-engine-bypass-block.sh         ~100 LoC  PreToolUse BLOCK reader-facing Tier-1 writes without active workflow
-evidence-pointer-check.sh      ~195 LoC  PostToolUse(Task) WARN on missing line-numbered evidence pointers
-frozen-zone-guard.sh            171 LoC  PreToolUse BLOCK
-mca-return-stop-condition.sh   ~140 LoC  PostToolUse(Task) WARN on MCA-return stop-condition keywords
-path-whitelist-guard.sh         203 LoC  PreToolUse BLOCK
-plan-adversary-reminder.sh     ~125 LoC  PreToolUse WARN on Tier-1 edit cluster without plan-adversary spawn
-post-commit-dashboard.sh         85 LoC  git post-commit
-pre-commit.sh                  ~600 LoC  git pre-commit, 13 checks (3 BLOCK + 10 WARN)
-state-write-block.sh             25 LoC  PreToolUse, state-file protection (.workflow-state/)
-workflow-commit-gate.sh          68 LoC  git pre-commit, workflow state
-workflow-reminder.sh            ~55 LoC  UserPromptSubmit, additionalContext inject (timeout 2s, 200-char cap)
+buddy-boot-inject.sh           SessionStart — Buddy boot on claude-desktop / claude-web / Codex
+session-start-remote.sh        SessionStart — resume-nudge (recent handoff check)
+pre-commit.sh                  git pre-commit + commit-msg, 5 checks (3 BLOCK + 2 WARN)
 ```
 
-Total ~2100 LoC bash. Each hook is self-contained with:
-- Header doc block
-- Spec reference
-- Exit-code convention
-- Standalone test mode
-
-### Hook tests
-
-`tests/hooks/`:
-- `test-delegation-prompt-quality.sh`
-- `test-persist-gate.sh`
-- `test-stale-cleanup.sh`
-
-Manual smoke testing. Run:
-```bash
-bash tests/hooks/test-<name>.sh
-```
+13 hook scripts dropped 2026-05-31 (CC-Terminal-only PreToolUse /
+PostToolUse / UserPromptSubmit layer): see
+`docs/decisions/ADR-004-hook-paradigm-shift.md` for the inventory +
+rationale + alternatives + trigger-for-revisit. Each remaining hook is
+self-contained with a header doc block + exit-code convention.
 
 ### Hook care
 
-Add a hook:
-1. Write `orchestrators/claude-code/hooks/<name>.sh` (header doc mandatory)
-2. Add an entry to `orchestrators/claude-code/settings.json.template`
-   under the matching lifecycle event; use `__FRAMEWORK_DIR__` placeholder
-3. Run `bash $FRAMEWORK_DIR/scripts/setup-cc.sh` to re-merge into
-   `~/.claude/settings.json` (idempotent — preserves user keys)
-4. Test in `tests/hooks/test-<name>.sh`
-5. Doc update in `CLAUDE.md §Active Hooks` and `02-architecture.md` table
+Add a hook (must satisfy ADR-004 gate):
+1. Verify universal-portability: replicable in git pre-commit OR
+   exposed via SessionStart on every supported harness (CC-Terminal,
+   claude-desktop, claude-web, Codex). If not universal, reject (the
+   ADR-004 default is "no CC-Terminal-only additions").
+2. Write `orchestrators/claude-code/hooks/<name>.sh` (header doc
+   mandatory) and `tests/hooks/test-<name>.sh`.
+3. Add an entry to `orchestrators/claude-code/settings.json.template`
+   under the matching lifecycle event; use `__FRAMEWORK_DIR__`
+   placeholder.
+4. Run `bash $FRAMEWORK_DIR/scripts/setup-cc.sh` to re-merge into
+   `~/.claude/settings.json` (idempotent — preserves user keys).
+5. Doc update in `CLAUDE.md §Active Hooks` + `02-architecture.md`
+   table + this section.
+6. If hook is genuinely architectural (hard-to-reverse +
+   surprising-without-context + real-trade-off): add an ADR.
 
 Remove a hook:
-1. Stale cleanup (CLAUDE.md §5): clean up all refs in one commit
-2. Remove the entry from `orchestrators/claude-code/settings.json.template`
-3. Re-run `setup-cc.sh` (the merge strips forge's old hooks slot before
-   writing the new one — no manual cleanup of `~/.claude/settings.json` needed)
-4. Delete the hook file
-5. Delete the test file
-6. Doc update
+1. Stale cleanup (CLAUDE.md Inv-5): clean up all refs in one commit.
+2. Remove the entry from `orchestrators/claude-code/settings.json.template`.
+3. Re-run `setup-cc.sh` (the merge strips forge's old hooks slot
+   before writing the new one).
+4. Delete the hook file + test file.
+5. Doc update.
 
 ## Conventions
 

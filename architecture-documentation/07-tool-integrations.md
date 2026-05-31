@@ -36,14 +36,15 @@ and the harness-neutral methodology.
 ```
 
 An adapter delivers three things: persona / skill discovery,
-tier-0-anchor loading, and — where the harness exposes a tool-event
-API — wiring of forge's PreToolUse / PostToolUse hooks. The bash
-hooks under `orchestrators/claude-code/hooks/` are the SoT for all
-adapters; CC fires them natively, OC fires them via a thin TS
-translator plugin, Codex fires them via a project-local
-`.codex/hooks.json` written by `scripts/setup-codex.sh`, Cursor has
-no event API so they only fire via the git pre-commit symlink (drift
-catches at commit instead of at write).
+tier-0-anchor loading, and — for the SessionStart + git pre-commit
+hooks — universal wiring. **Post-ADR-004 (2026-05-31) only universal-
+portable hooks are wired:** SessionStart (boot inject + resume nudge)
+and git pre-commit (5 checks). The earlier CC-Terminal-only PreToolUse
+/ PostToolUse / UserPromptSubmit layer was dropped. All supported
+harnesses (CC-Terminal, claude-desktop, claude-web, OpenCode, Codex,
+Cursor) now run discipline + protocols + the same 3 hooks (Cursor
+lacks SessionStart, so it boots via project rules; pre-commit fires
+identically).
 
 ## Claude Code
 
@@ -59,22 +60,17 @@ orchestrators/claude-code/
 ├── bin/
 │   ├── cc                   # main launcher (191 LoC)
 │   └── sysadmin             # sysadmin variant
-└── hooks/
-    ├── pre-commit.sh
-    ├── path-whitelist-guard.sh
-    ├── frozen-zone-guard.sh
-    ├── delegation-prompt-quality.sh
-    ├── state-write-block.sh
-    ├── workflow-commit-gate.sh
-    ├── workflow-reminder.sh
-    └── post-commit-dashboard.sh
+└── hooks/                  # post-ADR-004 — 3 scripts only
+    ├── pre-commit.sh        # git pre-commit + commit-msg, 5 checks
+    ├── buddy-boot-inject.sh # SessionStart — Buddy boot trigger
+    └── session-start-remote.sh # SessionStart — resume nudge
 ```
 
 `.claude/` (in the repo root) additionally contains:
-- `agents/` — 30+ persona wrapper files (each `<name>.md` is a wrapper)
+- `agents/` — 40 persona wrapper files (each `<name>.md` is a wrapper)
 - `skills/` — skill wrappers for user-level discovery
-- `path-whitelist.txt`, `frozen-zones.txt` — SoT for the guards
-- `settings.json` — hook registration
+- `path-whitelist.txt`, `frozen-zones.txt` — legacy SoT (hooks removed in ADR-004; files kept short-term)
+- `settings.json` — hook registration (SessionStart-only post-ADR-004)
 
 ### Wrapper pattern
 
@@ -134,18 +130,13 @@ every CC session regardless of CWD or entrypoint:
 
 | Event | Hook |
 |---|---|
-| `PreToolUse` (Edit/Write/NotebookEdit/Bash) | `path-whitelist-guard.sh` |
-| `PreToolUse` (Edit/Write/NotebookEdit/Bash) | `frozen-zone-guard.sh` |
-| `PreToolUse` (Task) | `delegation-prompt-quality.sh` |
-| `PreToolUse` (state-file paths) | `state-write-block.sh` |
-| `UserPromptSubmit` | `workflow-reminder.sh` (workflow-engine `additionalContext` inject) |
+| `SessionStart` | `session-start-remote.sh` + `buddy-boot-inject.sh` |
 
 Plus git hooks (not in `settings.json` but via symlink in `.git/hooks/`):
 
 | Trigger | Hook |
 |---|---|
-| `pre-commit` | `pre-commit.sh`, `workflow-commit-gate.sh` |
-| `post-commit` | `post-commit-dashboard.sh` |
+| `pre-commit` + `commit-msg` | `pre-commit.sh` (5 checks) |
 
 ### Install the pre-commit hook
 
@@ -155,9 +146,9 @@ bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh
 ```
 
 Wires `.git/hooks/{pre-commit,commit-msg}` to
-`orchestrators/claude-code/hooks/pre-commit.sh`. The 13 checks run on
+`orchestrators/claude-code/hooks/pre-commit.sh`. The 5 checks run on
 the next `git commit`. Detail:
-[`02-architecture.md`](02-architecture.md) §Pre-Commit 12 Checks.
+[`02-architecture.md`](02-architecture.md) §Pre-Commit 5 Checks (post-ADR-004).
 
 ### Discovery + tool use
 
@@ -204,42 +195,30 @@ exec opencode "$@"
 `${FRAMEWORK_DIR}` and `${HOME}` placeholders. `scripts/setup-oc.sh`
 generates the user-specific `opencode.jsonc` (gitignored).
 
-### OC constraints
-
-`AGENTS.md §OC Constraints`:
+### OC constraints (post-ADR-004)
 
 | Aspect | OC behaviour |
 |---|---|
-| Path guard | **present** via `forge-hooks.ts` plugin (`tool.execute.before` → `path-whitelist-guard.sh`) |
-| Hook parity | PreToolUse + PostToolUse via plugin (Edit/Write/Bash/Task); pre-commit identical (git-side) |
+| PreToolUse hooks | **None.** ADR-004 dropped the CC-Terminal-only PreToolUse layer. The `forge-hooks.ts` TS plugin used to translate `tool.execute.{before,after}` events into CC-shaped JSON; obsolete post-ADR-004 (slated for removal) |
+| Pre-commit hook | Identical — git-side, runs the same 5 checks |
 | Consumer context | manual via `--add-dir <consumer-repo>` |
 | Project AGENTS.md | applies in addition, never instead |
 | Commands | trigger words without prefix (`wakeup`, `save`, `checkpoint`, `think!`) |
-| FACTS check | prompt-side (`AGENTS.md §2`), no background hook |
 
 ### Tier 0 under OpenCode
 
 `AGENTS.md` is the Tier 0 anchor for OC. Content analogous to
-`CLAUDE.md` plus an additional Invariant 2 (FACTS check per turn).
+`CLAUDE.md`.
 
-### Limitations
+### Parity with CC post-ADR-004
 
-- No `workflow-reminder` hook — OC has no UserPromptSubmit event.
-  Workflow state lives on disk in `.workflow-state/<id>.json`, so the
-  gap is mostly cosmetic (the per-turn nudge is missing, the state is
-  still readable on demand). PLUGIN.md §"UserPromptSubmit gap" lists
-  three workaround options if the gap becomes load-bearing.
-- No FACTS background hook — per-turn FACTS check is prompt-level
-  (`AGENTS.md §2`), no Stop+SessionEnd equivalent wired.
-
-CC and OC now share the same mechanical-prevention layer for tool
-events. The bash hooks under `orchestrators/claude-code/hooks/` are the
-SoT for both; the OC plugin
-(`orchestrators/opencode/.opencode/plugins/forge-hooks.ts`) is a thin
-adapter that translates `tool.execute.{before,after}` into CC-shaped
-JSON. CC retains the UserPromptSubmit + Stop/SessionEnd hook surfaces
-(workflow-reminder, FACTS check) which have no OC equivalent — those
-remain CC-only.
+CC and OC now run identically — both have only the pre-commit hook
+universally wired (OC lacks SessionStart, so the boot mechanism is
+prompt-side via `oc` launcher rather than hook-injected). Discipline +
+protocols carry everything that the old translator-plugin was
+attempting to mirror. The earlier "OC has UserPromptSubmit gap" /
+"OC parity is uneven" caveats are obsolete; the framework no longer
+relies on those surfaces.
 
 ## Codex
 
@@ -300,29 +279,23 @@ Operations:
    --tool-label Codex`. Same generator as the Claude Code wrappers,
    different output root.
 6. **For each `project-dir` argument:** write `<project-dir>/.codex/
-   hooks.json` with concrete `bash <FRAMEWORK_DIR>/orchestrators/
-   claude-code/hooks/*.sh` commands wired into Codex's PreToolUse,
-   PostToolUse, and UserPromptSubmit events. Hook coverage is parity
-   with Claude Code's `~/.claude/settings.json` (provisioned by
-   `setup-cc.sh` from the shared `orchestrators/claude-code/settings.json.template`).
+   hooks.json` with SessionStart entries pointing at the same scripts
+   CC uses (`buddy-boot-inject.sh` + `session-start-remote.sh`). Post-
+   ADR-004 the per-project hooks.json carries SessionStart-only; the
+   git pre-commit symlink is wired separately via
+   `scripts/install-git-hooks.sh`.
 
-### Hook registration
+### Hook registration (post-ADR-004)
 
-`.codex/hooks.json` registers forge's existing bash hooks for Codex's
-tool-event lifecycle:
+`.codex/hooks.json` registers SessionStart only:
 
-| Event | Matcher | Hooks |
-|---|---|---|
-| `PreToolUse` | Edit/Write/Bash | path-whitelist-guard |
-| `PreToolUse` | Edit/Write | frozen-zone-guard, state-write-block, engine-bypass-block, plan-adversary-reminder |
-| `PreToolUse` | Bash | workflow-commit-gate |
-| `PreToolUse` | Task | delegation-prompt-quality |
-| `PostToolUse` | Task | mca-return-stop-condition, board-output-check, evidence-pointer-check |
-| `UserPromptSubmit` | * | workflow-reminder |
+| Event | Hooks |
+|---|---|
+| `SessionStart` | `buddy-boot-inject.sh` + `session-start-remote.sh` |
 
-The hook scripts themselves live under `orchestrators/claude-code/
-hooks/`; Codex re-uses them, no Codex-specific hook implementations
-exist.
+The earlier PreToolUse / PostToolUse / UserPromptSubmit wiring (8+ hook
+entries) was removed in ADR-004 (2026-05-31). Discipline + protocols
++ git pre-commit (5 checks, universally available) carry the rest.
 
 ### Discovery + tool use
 
@@ -378,23 +351,22 @@ are invoked via `@<name>` mentions; the Cursor agent reads
 |---|---|---|---|---|
 | Sub-agent discovery | `~/.claude/agents/` | `.opencode/agent/` | `~/.codex/agents/` | project rules + `@`-mention |
 | Skill discovery | `~/.claude/skills/` (symlink) | `.opencode/skill/` | `~/.agents/skills/` (generated) | project rules |
-| PreToolUse hooks | native | translator plugin | native (`.codex/hooks.json`) | **none** |
+| SessionStart hook | native | n/a (boot via launcher) | native (`.codex/hooks.json`) | n/a (boot via project rules) |
 | Pre-commit hook | git symlink | git symlink | git symlink | git symlink |
-| Workflow-engine trigger | mechanical | mechanical | mechanical | manual (terminal) |
+| Workflow-engine | available, on-demand | available, on-demand | available, on-demand | available, on-demand |
 
-**Consequence:** the mechanical write-time discipline (path-whitelist,
-frozen-zone, delegation-prompt-quality, …) does not fire under Cursor.
-The pre-commit hook remains mechanical (git triggers it independent of
-the agent), so drift catches at commit instead of at write. Skills,
-workflows, runbooks, the workflow engine, personas, task / plan YAMLs
-all run identically.
+**Consequence post-ADR-004:** the framework runs identically on every
+adapter. Boot mechanism varies (SessionStart on CC/Codex, launcher on
+OC, project rules on Cursor); pre-commit is identical (git symlink);
+discipline + protocols + skills + workflows + personas are 1:1.
 
 ### Status
 
-**Minimal-viable adapter.** Sufficient to apply forge methodology
-under Cursor. Full mechanical parity with CC requires a Cursor
-PreToolUse-equivalent (open, depends on Cursor) and a sub-agent
-spawn API (open, depends on Cursor's composer roadmap).
+Cursor adapter is feature-complete post-ADR-004 — Cursor was the
+"limited" adapter when the framework relied on CC-Terminal-only
+PreToolUse hooks; with those gone, Cursor has parity with CC on the
+substantive layer. Personas resolve via `@`-mention into `agents/<name>.md`
+directly.
 
 ## Adding a new adapter
 

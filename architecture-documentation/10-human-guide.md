@@ -54,20 +54,30 @@ convention into the system prompt, the agent sticks to it for the first
 few turns, and after 50 turns the convention is completely forgotten.
 Drift is unavoidable as soon as the rule lives only in the prompt text.
 
-The framework attempts to anchor every important rule **mechanically**:
-- Path whitelist as a hook (PreToolUse blocks; the agent simply cannot
-  write anywhere else).
-- Frozen zones as a hook (history and archive are read-only).
-- Pre-commit hook with 13 checks (plan-validate, skill frontmatter,
-  commit convention, etc.).
-- Frontmatter validator (a skill-map without the standard frontmatter is rejected).
-- Generator + validator hook for drift-prone indices.
+The framework anchors important rules in three layers (post-ADR-004
+2026-05-31 honest framing):
+- **Protocols + operational.md** carry the rules in prose Buddy reads
+  on dispatch (`_protocols/dispatch-template.md`, `mca-brief-template.md`,
+  `evidence-pointer-schema.md`, `context-isolation.md`,
+  `plan-review.md`, etc.).
+- **Pre-commit (5 checks, universal):** PLAN-VALIDATE, CG-CONV,
+  SKILL-FM-VALIDATE (BLOCK); SECRET-SCAN, SOURCE-VERIFICATION (WARN).
+- **SessionStart hooks** for boot on claude-desktop / claude-web /
+  Codex.
+
+The earlier "13 CC-Terminal-only PreToolUse / PostToolUse /
+UserPromptSubmit BLOCK/WARN layer" was removed in the May 2026
+paradigm shift — see [`../docs/decisions/ADR-004-hook-paradigm-shift.md`](../docs/decisions/ADR-004-hook-paradigm-shift.md).
+Earlier framings ("Path whitelist as a hook — the agent simply cannot
+write anywhere else") were empirically overstated; the hook had bypass
+vectors, ran only on one harness, and gave false trust.
 
 What cannot be checked mechanically (content quality, spec
 completeness, whether a new skill is genuinely standalone) remains a
-matter of **spec-board discipline** — multiple personas review in
-parallel, a chief consolidates. That is the second pillar: *hooks catch
-schema drift, reviews catch content drift. Both are needed.*
+matter of **multi-perspective board / council discipline** — multiple
+personas review in parallel, a chief consolidates. The second pillar:
+*boards catch content drift, pre-commit catches schema drift. Both are
+needed.*
 
 ## How did this come about?
 
@@ -190,8 +200,13 @@ solve:
   five-phase model (specify / prepare / execute / verify / close) for
   producer-class workflows.
 - **Mechanical hook layer.** Skill-bag has optional session hooks.
-  forge has 13 active hooks: PreToolUse BLOCK for path whitelist +
-  frozen zone, pre-commit with 13 checks.
+  forge has 3 hook scripts (post-ADR-004 paradigm shift 2026-05-31):
+  buddy-boot-inject + session-start-remote (SessionStart, portable on
+  CC-Terminal / claude-desktop / claude-web / Codex) and pre-commit.sh
+  (git pre-commit, 5 checks: PLAN-VALIDATE / CG-CONV / SKILL-FM-VALIDATE
+  BLOCK; SECRET-SCAN / SOURCE-VERIFICATION WARN). All universally
+  portable. Discipline replaces the earlier CC-Terminal-only WARN /
+  BLOCK PreToolUse layer.
 - **Anti-inflation.** Skill-bag allows "more skills = better". forge
   requires a `Standalone-justification` block for every new skill +
   spec-board L1 review + pre-commit validator.

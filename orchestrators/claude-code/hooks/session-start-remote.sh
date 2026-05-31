@@ -132,13 +132,6 @@ else
   echo "[session-start-remote] FAIL SessionStart not in settings.json"
 fi
 
-if grep -q 'brief-claims-guard' .claude/settings.json 2>/dev/null \
-   && [ -x orchestrators/claude-code/hooks/brief-claims-guard.sh ]; then
-  echo "[session-start-remote] PASS L-044 brief-claims-guard registered + executable"
-else
-  echo "[session-start-remote] FAIL L-044 brief-claims-guard not wired"
-fi
-
 if [ -x orchestrators/claude-code/hooks/buddy-boot-inject.sh ]; then
   echo "[session-start-remote] PASS buddy-boot-inject.sh present (SessionStart owns boot for claude-desktop/web)"
 else
