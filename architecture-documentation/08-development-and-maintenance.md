@@ -168,7 +168,7 @@ python3 scripts/validate_runbook_consistency.py --runbook build
 
 WARN-only — drift is heuristic (not every yaml step has to appear in md).
 
-## Hooks (post-ADR-004 2026-05-31 paradigm shift)
+## Hooks
 
 `orchestrators/claude-code/hooks/` — only 3 scripts remain after the
 universal-portable-only sweep:
@@ -179,19 +179,18 @@ session-start-remote.sh        SessionStart — resume-nudge (recent handoff che
 pre-commit.sh                  git pre-commit + commit-msg, 5 checks (3 BLOCK + 2 WARN)
 ```
 
-13 hook scripts dropped 2026-05-31 (CC-Terminal-only PreToolUse /
-PostToolUse / UserPromptSubmit layer): see
-`docs/decisions/ADR-004-hook-paradigm-shift.md` for the inventory +
-rationale + alternatives + trigger-for-revisit. Each remaining hook is
-self-contained with a header doc block + exit-code convention.
+An earlier CC-Terminal-only PreToolUse / PostToolUse / UserPromptSubmit
+layer was dropped in the move to universal-portable hooks. Each
+remaining hook is self-contained with a header doc block + exit-code
+convention.
 
 ### Hook care
 
-Add a hook (must satisfy ADR-004 gate):
+Add a hook (must satisfy the universal-portability gate):
 1. Verify universal-portability: replicable in git pre-commit OR
    exposed via SessionStart on every supported harness (CC-Terminal,
    claude-desktop, claude-web, Codex). If not universal, reject (the
-   ADR-004 default is "no CC-Terminal-only additions").
+   default is "no CC-Terminal-only additions").
 2. Write `orchestrators/claude-code/hooks/<name>.sh` (header doc
    mandatory) and `tests/hooks/test-<name>.sh`.
 3. Add an entry to `orchestrators/claude-code/settings.json.template`
@@ -231,11 +230,12 @@ Allowed types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `style`,
 
 The pre-commit hook BLOCKS on the wrong form.
 
-### Path whitelist + frozen zones
+### Frozen zones
 
-`.claude/path-whitelist.txt` and `.claude/frozen-zones.txt` are the SoT.
-Changes there are structural — `consistency_check` Check 5 verifies
-refactoring checklists.
+`.claude/frozen-zones.txt` is a convention reference — the
+`frozen-zone-guard.sh` hook that once enforced it was removed, and
+`context/history/**` stays WORM by discipline. The path-whitelist
+mechanism was retired with its hook.
 
 ### Skill anatomy (v2)
 
@@ -272,14 +272,6 @@ Self-contained, with a clearly referenced "Loaded by:" list.
 Buddy / agent behaviour observations are captured in the rolling
 dogfood feed (`docs/dogfood-learnings/forge-feed.md`) as pattern
 findings rather than as discrete test cases.
-
-### Hook smoke tests
-
-```bash
-bash tests/hooks/test-delegation-prompt-quality.sh
-bash tests/hooks/test-persist-gate.sh
-bash tests/hooks/test-stale-cleanup.sh
-```
 
 ### Generator idempotency (effectively a self-test)
 
@@ -339,7 +331,7 @@ Migration corridor:
 - Phase 2 on-touch (8 weeks)
 - Phase 3 cut-off bulk (remaining)
 
-As of May 2026 effectively all active skills are on v2. New skills MUST
+Effectively all active skills are on v2. New skills MUST
 go directly to v2 (pre-commit Check 7 BLOCK).
 
 ### Persona migration / consolidation

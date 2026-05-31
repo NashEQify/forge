@@ -77,7 +77,7 @@ causes:
 | `pre-commit` Check 2 (CG-CONV, commit-msg) | Commit message format | Use conventional-commit form (`feat(scope): msg`) |
 | `pre-commit` Check 3 (SKILL-FM-VALIDATE) | SKILL frontmatter incomplete or unknown invocation | Check the frontmatter against `framework/skill-anatomy.md` |
 | `pre-commit` Check 5 (SOURCE-VERIFICATION) | Board/council review missing line-numbered evidence pointers | Add evidence pointers per `_protocols/evidence-pointer-schema.md` |
-| (historical, removed 2026-05-31) `path-whitelist-guard` / `frozen-zone-guard` | Write outside whitelist / into frozen zones | Discipline only post-ADR-004: write within intent scope; corrections in frozen paths via `.correction.md` sidecar |
+| (removed) `path-whitelist-guard` / `frozen-zone-guard` | These hooks no longer exist | Discipline-only: write within intent scope; corrections in frozen paths via `.correction.md` sidecar |
 
 ### Pre-commit hook BLOCKs with "PLAN-VALIDATE"
 
@@ -125,8 +125,8 @@ The boot did not run. Check:
 
 ### Buddy writes to the wrong directory
 
-Post-ADR-004 there is no mechanical hook for this; discipline replaces
-the earlier `path-whitelist-guard`. If you see it happening: tell
+There is no mechanical hook for this; discipline replaces the earlier
+`path-whitelist-guard`. If you see it happening: tell
 Buddy directly that the write was out of scope; check whether
 `intent.md` scope is unclear or the touched file's intent isn't
 documented.
@@ -135,8 +135,8 @@ documented.
 
 CLAUDE.md §3 violated. Fix: explicitly tell Buddy to "write a
 plan-block first and then trigger the board". The earlier
-`delegation-prompt-quality.sh` WARN hook was removed in ADR-004 —
-discipline lives in `_protocols/plan-review.md`; if Buddy repeatedly
+`delegation-prompt-quality.sh` WARN hook was removed — discipline
+lives in `_protocols/plan-review.md`; if Buddy repeatedly
 skips plan-blocks, the discipline is being internalized poorly and
 needs explicit reinforcement.
 
@@ -255,7 +255,7 @@ For large repos this can take a few seconds. If it hangs longer than
 
 ## Public-OSS adoption issues
 
-As of May 2026, the framework is not fully public-OSS-ready. Known
+The framework is not yet fully public-OSS-ready. Known
 issues:
 
 ### LICENSE missing
@@ -265,9 +265,8 @@ No LICENSE file in the repo. To be added for public-OSS status
 
 ### Single-user defaults
 
-Paths are hard-coded to `/home/xxx/projects/...`. On adoption these
-need to be generalised per user:
-- `.claude/path-whitelist.txt`
+Paths are hard-coded to a single user's home directory. On adoption
+these need to be generalised per user:
 - `orchestrators/claude-code/bin/cc` (FRAMEWORK_DIR / PROJECTS_DIR
   defaults)
 - `orchestrators/opencode/bin/oc` (OPENCODE_CONFIG_DIR default)
@@ -293,8 +292,8 @@ For external contributions the setup would have to be extended:
 
 ### Cursor: harness parity
 
-Post-ADR-004 (2026-05-31) the framework runs identically on every
-supported harness. The earlier CC-Terminal-only PreToolUse /
+The framework runs identically on every supported harness. The earlier
+CC-Terminal-only PreToolUse /
 PostToolUse / UserPromptSubmit hook layer was removed; only universally-
 portable hooks remain (git pre-commit + SessionStart). Cursor no longer
 needs a special "limitation" note — write-time discipline lives in

@@ -34,9 +34,9 @@ Three layers, clearly separated:
 2. **Adapter (`orchestrators/<name>/`)** — a thin layer per agent
    harness that translates between harness-specific discovery / hook
    mechanics / tool vocabulary and the harness-neutral methodology.
-   Today: Claude Code in full, OpenCode at hook parity via translator
-   plugin, Cursor as minimal-viable IDE adapter (project rules + git
-   pre-commit; no tool-event API, so no write-time hooks).
+   Today: Claude Code in full, OpenCode via the `oc` launcher + git
+   pre-commit, Cursor as minimal-viable IDE adapter (project rules +
+   git pre-commit).
 
 3. **Consumer repositories** (e.g. a code project,
    `~/projects/personal`, an infra repo) — they use the methodology
@@ -54,8 +54,7 @@ convention into the system prompt, the agent sticks to it for the first
 few turns, and after 50 turns the convention is completely forgotten.
 Drift is unavoidable as soon as the rule lives only in the prompt text.
 
-The framework anchors important rules in three layers (post-ADR-004
-2026-05-31 honest framing):
+The framework anchors important rules in three layers:
 - **Protocols + operational.md** carry the rules in prose Buddy reads
   on dispatch (`_protocols/dispatch-template.md`, `mca-brief-template.md`,
   `evidence-pointer-schema.md`, `context-isolation.md`,
@@ -65,12 +64,10 @@ The framework anchors important rules in three layers (post-ADR-004
 - **SessionStart hooks** for boot on claude-desktop / claude-web /
   Codex.
 
-The earlier "13 CC-Terminal-only PreToolUse / PostToolUse /
-UserPromptSubmit BLOCK/WARN layer" was removed in the May 2026
-paradigm shift — see [`../docs/decisions/ADR-004-hook-paradigm-shift.md`](../docs/decisions/ADR-004-hook-paradigm-shift.md).
-Earlier framings ("Path whitelist as a hook — the agent simply cannot
-write anywhere else") were empirically overstated; the hook had bypass
-vectors, ran only on one harness, and gave false trust.
+An earlier CC-Terminal-only PreToolUse / PostToolUse / UserPromptSubmit
+layer was removed: it ran on a single harness, which broke forge's
+adapter promise. The universal-portable set above is what every harness
+gets; the rest is carried by protocol-anchored discipline.
 
 What cannot be checked mechanically (content quality, spec
 completeness, whether a new skill is genuinely standalone) remains a
@@ -91,8 +88,7 @@ appeared in vanilla Claude Code sessions:
   Tier-0 invariant.
 - **Skip-pattern at pre-delegation:** "implement feature X" was
   delegated to sub-agents without complete constraints. The
-  pre-delegation non-negotiable model + the
-  `delegation-prompt-quality.sh` hook arose as a fix.
+  pre-delegation non-negotiable model arose as a fix.
 - **Skill-class inflation:** an organically grown four-class division
   (workflow / capability / utility / protocol) drifted over months. An
   architectural-council decision consolidated it onto a single-class
@@ -181,9 +177,8 @@ solve:
   Buddy = dispatcher invariant (CLAUDE.md §1) plus
   `_protocols/dispatch-template.md` and `_protocols/context-isolation.md`.
 - **Pre-delegation leaks.** Skill-bag puts discipline on the user's
-  shoulders. forge makes it a Tier-0 invariant (CLAUDE.md §3) plus
-  the `delegation-prompt-quality.sh` hook (which warns at <200
-  characters).
+  shoulders. forge makes it a Tier-0 invariant (CLAUDE.md §3) — every
+  sub-agent call needs a plan-block or gate-file first.
 - **Cross-repo drift.** Skill-bag gets installed per repo. forge
   exports via `--add-dir $FRAMEWORK_DIR` — one SoT, N adapters, nothing
   vendored.
@@ -200,7 +195,7 @@ solve:
   five-phase model (specify / prepare / execute / verify / close) for
   producer-class workflows.
 - **Mechanical hook layer.** Skill-bag has optional session hooks.
-  forge has 3 hook scripts (post-ADR-004 paradigm shift 2026-05-31):
+  forge has 3 hook scripts:
   buddy-boot-inject + session-start-remote (SessionStart, portable on
   CC-Terminal / claude-desktop / claude-web / Codex) and pre-commit.sh
   (git pre-commit, 5 checks: PLAN-VALIDATE / CG-CONV / SKILL-FM-VALIDATE
@@ -314,7 +309,7 @@ In order of importance:
 ## If you want to contribute
 
 Today this is more of a single-user project, but the setup is open
-source. Contribution requires (as of May 2026, not all in place yet):
+source. Contribution requires (not all in place yet):
 - A LICENSE file (probably MIT)
 - CONTRIBUTING.md with conventions
 - A CI pipeline (today no auto CI, only pre-commit)

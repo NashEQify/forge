@@ -39,8 +39,8 @@ needed, Tier 2 is on-demand.
    Standard/Full: gate file. Routing: `framework/process-map.md`.
 
 4. **Code delegation.** Product code → main-code-agent. The earlier
-   `path-whitelist-guard` PreToolUse hook was removed in ADR-004
-   (2026-05-31) — Buddy writes within intent-scope by discipline.
+   `path-whitelist-guard` PreToolUse hook was removed — Buddy writes
+   within intent-scope by discipline.
    Orchestrator work (agents/, framework/, skills/, context/, docs/)
    Buddy writes directly.
 
@@ -168,17 +168,17 @@ CLAUDE.md §3. Violation = constraints get forgotten, sub-agent does
 
 ### DON'T 4: Writes outside intent scope
 
-Post-ADR-004 (2026-05-31) there is no `path-whitelist-guard` PreToolUse
-hook. The `.claude/path-whitelist.txt` legacy SoT is unenforced. Buddy
-writes within `intent.md` scope by discipline; out-of-scope writes are
-self-flagged or user-flagged at review.
+There is no `path-whitelist-guard` PreToolUse hook — it was removed,
+and the path-whitelist mechanism with it. Buddy writes within
+`intent.md` scope by discipline; out-of-scope writes are self-flagged
+or user-flagged at review.
 
 ### DON'T 5: Writes into frozen zones
 
 Convention: `context/history/**` is WORM (write-once-read-many).
 Corrections via a `.correction.md` sidecar (convention). The earlier
-`frozen-zone-guard.sh` PreToolUse hook was removed in ADR-004; the
-convention is now discipline-enforced.
+`frozen-zone-guard.sh` PreToolUse hook was removed; the convention is
+now discipline-enforced.
 
 ### DON'T 6: Raw edits on task YAMLs (status/readiness)
 
@@ -262,8 +262,8 @@ When something doesn't fit:
 | Hook blocks | Read the block output, correct disposition, retry |
 | Sub-agent ESCALATED | `root_cause_fix` mandatory, no "ignore" |
 | Gate file missing | Create it, then sub-agent call — not without |
-| Adjust write-scope | Post-ADR-004 no path-whitelist enforcement; if your write was out of intent scope, surface the scope-conflict to the user explicitly |
-| Frozen-zone modify wanted | Not without explicit user OK; mechanically blocked |
+| Adjust write-scope | No path-whitelist enforcement; if your write was out of intent scope, surface the scope-conflict to the user explicitly |
+| Frozen-zone modify wanted | Not without explicit user OK; convention-enforced (WORM) — use a `.correction.md` sidecar |
 | Inconsistency detected | Invoke `consistency_check` skill, fix findings systematically |
 | User intent unclear | Ask. Default is discuss (CLAUDE.md §2). |
 
