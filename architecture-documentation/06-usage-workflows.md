@@ -49,11 +49,12 @@ What you see as a user:
 
 - **Boot:** resume line `WORKFLOWS: build [task <id>] step 7/15 (since 2h)`
   — at session start you immediately know where you left off
-- **Every turn:** `WORKFLOW-ENGINE: NEXT: build [task <id>] > <step-name>:
-  <instruction>` as a header in Buddy's response
-- **Commit discipline:** post-ADR-004 there is no `workflow-commit-gate.sh`
-  hook — the workflow_engine is in usage standby. If you use the engine
-  for a build, advance step pointers via `--complete` before commit;
+- **On demand:** Buddy reads workflow state via `--boot-context` /
+  `--next` and can surface `WORKFLOW-ENGINE: NEXT: build [task <id>] >
+  <step-name>: <instruction>` — no longer auto-injected every turn.
+- **Commit discipline:** there is no `workflow-commit-gate.sh` hook —
+  the workflow_engine is in usage standby. If you use the engine for a
+  build, advance step pointers via `--complete` before commit;
   otherwise the engine isn't blocking your commit.
 - **Cross-session resume:** if you close the session mid-flow and reopen
   later — the engine puts you on the same step. State lives in
@@ -100,9 +101,8 @@ The script sources deploy.env automatically (`deploy-dashboard-lite.sh`) or
 expects the variables exported (`deploy-docs.sh` does not yet have an
 auto-source block — drift note, ACTIONABLE spawn).
 
-**Dashboard regen cadence (post-ADR-004):** the earlier
-`post-commit-dashboard.sh` hook (auto-regen after every commit) was
-removed in the 2026-05-31 hook paradigm shift. Regenerate manually
+**Dashboard regen cadence:** the earlier `post-commit-dashboard.sh`
+hook (auto-regen after every commit) was removed. Regenerate manually
 when you want a fresh dashboard, or wire a periodic cron / Ansible
 job to call `generate-dashboard.py`. The earlier pre-commit
 OBLIGATIONS WARN (which reminded to redeploy when plan/dashboard
@@ -436,15 +436,15 @@ copy. On hook update the consumer is automatically in sync.
 ### BP4 — Respect frozen zones
 
 Never write actively into `context/history/**`. The
-`frozen-zone-guard.sh` PreToolUse hook used to block mechanically;
-removed in ADR-004 (2026-05-31). Convention is now discipline-only —
-don't attempt writes inside frozen paths.
+`frozen-zone-guard.sh` PreToolUse hook used to block mechanically; it
+has been removed. Convention is now discipline-only — don't attempt
+writes inside frozen paths.
 
 ### BP5 — Stale cleanup in the same commit
 
 When a skill/workflow is archived: clean up all active refs in the same
-commit. `grep -rn old_skill` + frozen-zone filter + fix the rest.
-Pre-commit Check 5 warns; discipline closes the gap.
+commit. `grep -rn old_skill` + frozen-zone filter + fix the rest. This
+is discipline-only — there's no pre-commit check for it.
 
 ### BP6 — Mode discipline
 
