@@ -68,27 +68,24 @@ parallel (one tool-call batch).
 
 ### C. Post-write (sequential)
 
-6. **TC detection** — 1 grep call: UNTESTED in
-   `tests/TESTCASES.md`. Match → note PASS / FAIL. No
-   match / 0 UNTESTED → skip. No second call.
-7. **Convoy** — update when an objective task was active.
-8. **Commit + push** — convention: CLAUDE.md §commit
+6. **Convoy** — update when an objective task was active.
+7. **Commit + push** — convention: CLAUDE.md §commit
    convention. Push MUST come before deploy (Hetzner does
    `git pull`). SSH passphrase failure → ask the user to
    push manually.
-9. **Dashboard deploy** (BACKGROUND, conditional) — only
+8. **Dashboard deploy** (BACKGROUND, conditional) — only
    when dashboard-relevant content changed:
    `git diff <last-deploy-tag>..HEAD -- docs/tasks/ docs/plan.yaml`
    (without the tag: last 5 commits). Hit →
    `bash $FRAMEWORK_DIR/scripts/deploy-dashboard-lite.sh`
    via `run_in_background`. The script is idempotent —
    the redundant call to the Task-370 post-commit hook is
-   only network latency. Precondition: step 8
+   only network latency. Precondition: step 7
    succeeded. Result as a notification — error in the
    handoff note.
-10. **Buffer cleanup** — remove `PROCESSED` entries from
-    `docs/session-buffer.md`. The header stays. Empty →
-    skip.
+9. **Buffer cleanup** — remove `PROCESSED` entries from
+   `docs/session-buffer.md`. The header stays. Empty →
+   skip.
 
 ---
 
@@ -100,9 +97,9 @@ full cycle.
 Steps: **1 (dispatcher) → 2 (recon) → 3 (handoff, like
 step 4 above with `.bak` + merge default)** sequentially.
 
-What quicksave does NOT do: history entry, TC detection,
-convoy, deploy, buffer cleanup. No replacement for full
-`save` at end of session.
+What quicksave does NOT do: history entry, convoy,
+deploy, buffer cleanup. No replacement for full `save`
+at end of session.
 
 When: secure state while continuing to work, before a
 context switch, intermediate save on a large context.

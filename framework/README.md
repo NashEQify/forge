@@ -69,8 +69,11 @@ External pattern lifts + reference material:
 
 ## Tests (`../tests/`)
 
-`tests/TESTCASES.md` — structural tests for Buddy behavior (T01-Tnn,
-manual walkthrough). `tests/hooks/` — hook smoke tests (bash).
+`tests/hooks/` — hook smoke tests (bash). `tests/test_*.py` — pytest
+suites for the workflow engine, schema validation, skill-wrapper
+generation. Behavioral observations of Buddy / agents are captured
+in the rolling dogfood feed (`docs/dogfood-learnings/forge-feed.md`),
+not as discrete test cases.
 
 ---
 

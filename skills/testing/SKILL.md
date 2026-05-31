@@ -191,8 +191,6 @@ discipline): REFERENCE.md.
 
 ## References
 
-L4 E2E: `tests/TESTCASES.md`. L1 findings:
-`docs/tasks/l1-testing-pass-findings.md`. Python tooling
-(pytest config, ruff, conventions):
+Python tooling (pytest config, ruff, conventions):
 `skills/python_code_quality_enforcement/SKILL.md`. Detail formats
 (test plan, skeleton, eval, retest gate): `REFERENCE.md`.

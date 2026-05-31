@@ -99,17 +99,6 @@ Flow: read the criteria, mark gaps in the matrix, use the
 pattern where it fits. No pattern for a domain → skip + note
 ("No eval pattern for <domain>").
 
-## L4 TESTCASES reference
-
-Full L4 E2E test cases: `tests/TESTCASES.md`. Run on workflow
-changes and milestone checks.
-
-## L1 findings store
-
-L1 logic / semantic findings from spec-review passes:
-`docs/tasks/l1-testing-pass-findings.md`. Historical collection
-for regression verification on process changes.
-
 ## Infrastructure
 
 Cross-project discipline for test infrastructure: when to mock, when

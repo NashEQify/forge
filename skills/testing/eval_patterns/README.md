@@ -24,11 +24,12 @@ No upfront design — patterns emerge from real tasks.
 ## Scope boundary
 
 L4 / L5 testing stays manual until the harness is in
-place. Pre-harness, TESTCASES.md (with the
-expected_behavior field) is the golden dataset. No
-attempt to automate L4 / L5 without tracing
+place. No attempt to automate L4 / L5 without tracing
 infrastructure — evaluation without observability is
-blind.
+blind. Pre-harness, behavioural observations of agents
+and workflows are captured in the rolling dogfood feed
+(`docs/dogfood-learnings/forge-feed.md`) rather than as
+discrete golden test cases.
 
 Pre-harness manual traces: incident block + transparency
 header are the current tracing proxy. Sufficient as long
