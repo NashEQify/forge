@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# setup-cc.sh — Setup fuer den cc-Launcher (Claude Code) und path-whitelist.
+# setup-cc.sh — Setup fuer den cc-Launcher (Claude Code).
 #
 # Was es tut:
 #   1. Erkennt FRAMEWORK_DIR aus eigenem Standort.
 #   2. Kopiert orchestrators/claude-code/bin/cc nach ~/.local/bin/cc
 #      (cc detektiert FRAMEWORK_DIR ohnehin selbst — Kopie ist fuer PATH).
-#   3. Generiert .claude/path-whitelist.txt aus .example (substituiert
-#      ${FRAMEWORK_DIR} und ${HOME}).
+#   3. Merged forge's SessionStart-Hooks idempotent in ~/.claude/settings.json
+#      (Template-getrieben, User-Keys bleiben erhalten).
 #   4. Pruefe Symlinks ~/.claude/agents und ~/.claude/skills (cc legt sie
 #      ebenfalls idempotent an, hier nur Info-Output).
+#   5. Wired git pre-commit + commit-msg Hooks im Framework-Checkout.
 #
 # Usage: bash $FRAMEWORK_DIR/scripts/setup-cc.sh
 #
@@ -58,23 +59,11 @@ if ! grep -q "^FRAMEWORK_DIR_INSTALLED=\"$FRAMEWORK_DIR\"" "$INSTALL_PATH"; then
   exit 1
 fi
 
-# --- Generate path-whitelist.txt ---
-WHITELIST_TEMPLATE="$FRAMEWORK_DIR/.claude/path-whitelist.txt.example"
-WHITELIST_TARGET="$FRAMEWORK_DIR/.claude/path-whitelist.txt"
-if [ -f "$WHITELIST_TEMPLATE" ]; then
-  sed -e "s|\${FRAMEWORK_DIR}|$FRAMEWORK_DIR|g" \
-      -e "s|\${HOME}|$HOME|g" \
-      "$WHITELIST_TEMPLATE" > "$WHITELIST_TARGET"
-  echo "path-whitelist: $WHITELIST_TARGET"
-else
-  echo "WARNUNG: $WHITELIST_TEMPLATE fehlt — path-whitelist nicht generiert." >&2
-fi
-
 # --- Provision ~/.claude/settings.json with forge hooks (idempotent merge) ---
-# Forge ships hooks that should fire in EVERY claude-code session regardless
-# of CWD (boot-inject, path-whitelist-guard, workflow-reminder, …). The
-# canonical place for that is ~/.claude/settings.json (global user-level
-# config). Per-project .claude/settings.json is no longer used by forge.
+# Forge ships SessionStart hooks that should fire in EVERY claude-code session
+# regardless of CWD (boot-inject + resume-nudge). The canonical place for that
+# is ~/.claude/settings.json (global user-level config). Per-project
+# .claude/settings.json is no longer used by forge.
 #
 # Idempotent merge strategy:
 #   1. Read existing ~/.claude/settings.json (or {} if absent)

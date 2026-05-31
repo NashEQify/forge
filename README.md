@@ -25,20 +25,6 @@ in the driver's seat while drift gets caught at the boundaries.
 
 Dogfooded. Opinionated. Pre-1.0.
 
-> **Honest framing (2026-05-31, post-self-review).** Earlier versions
-> of this README claimed "mechanical enforcement" as a primary pillar
-> — *"the LLM cannot rationalize away a shell hook"*. Empirically that
-> framing was overstated: most hooks were stderr-WARN (observability),
-> several BLOCK hooks had bypass vectors, the PreToolUse layer was
-> CC-Terminal-CLI only (claude-desktop / claude-web / Codex / Cursor
-> lack it). The framework's actual operating substrate is **Buddy's
-> reasoning, augmented by skills + boards + council + protocols**.
-> The hook layer is a thin reinforcement at the boundaries — git
-> pre-commit checks (universal) + SessionStart for boot (semi-
-> universal). The CC-Terminal-only PreToolUse / PostToolUse /
-> UserPromptSubmit layer is being removed (May 2026 hook-paradigm
-> shift) so the framework runs identically on every supported harness.
-
 ## What's in the workshop
 
 **Eight opinionated workflows.** A `build` walks the same arc every
@@ -66,9 +52,9 @@ uncertainty.
 pre-commit catches convention + schema drift before it ships on any
 harness. SessionStart hooks bootstrap Buddy on claude-desktop /
 claude-web / Codex where the `--agent buddy` flag isn't an
-entrypoint. The earlier CC-Terminal-CLI-only PreToolUse / PostToolUse
-/ UserPromptSubmit layer is being dropped — discipline replicates,
-and harness-portability beats CC-coupled enforcement.
+entrypoint. The rest of the discipline lives in protocols and Buddy's
+operating rules rather than harness-coupled hooks, so forge runs
+identically on every supported harness.
 
 ## How it works
 
@@ -111,7 +97,7 @@ eight workflows; sub-agents do the actual work.
                                        ▼
                                     RESULT
 
-  ── HOOKS (universal-portable only, post-ADR-004 2026-05-31) ──
+  ── HOOKS (universal-portable only) ──
      SessionStart (boot inject) · git pre-commit (5 checks)
      PLAN-VALIDATE BLOCK · CG-CONV BLOCK · SKILL-FM-VALIDATE BLOCK
      SECRET-SCAN WARN · SOURCE-VERIFICATION WARN
@@ -152,11 +138,10 @@ bash ~/forge/scripts/setup-cc.sh
 
 After that, opening **any** folder in **any** Claude Code entrypoint
 (`cc` terminal launcher, `claude` CLI, claude-desktop, claude-web)
-triggers Buddy boot. The discipline-layer hooks (path-whitelist,
-frozen-zones, brief-claims, workflow-reminder, SessionStart boot-inject,
-…) fire globally — they live in `~/.claude/settings.json`, not in
-per-project files, and resolve to absolute forge paths so the folder
-you opened is irrelevant.
+triggers Buddy boot. The SessionStart hooks (boot-inject +
+resume-nudge) fire globally — they live in `~/.claude/settings.json`,
+not in per-project files, and resolve to absolute forge paths so the
+folder you opened is irrelevant.
 
 How the boot signal actually reaches Buddy still differs per
 entrypoint, but every path lands on the same boot:
@@ -172,18 +157,17 @@ re-apply):
 
 - installs the `cc` launcher at `~/.local/bin/cc` (absolute forge path
   substituted in)
-- generates `<forge>/.claude/path-whitelist.txt` from the template
-- **merges forge hooks into `~/.claude/settings.json`** using `jq`;
-  preserves your other keys (`effortLevel`, `voiceEnabled`, custom
-  `permissions`, …); backs the prior file up with a timestamp before
-  rewriting
+- **merges forge's SessionStart hooks into `~/.claude/settings.json`**
+  using `jq`; preserves your other keys (`effortLevel`, `voiceEnabled`,
+  custom `permissions`, …); backs the prior file up with a timestamp
+  before rewriting
 - links `~/.claude/agents` and `~/.claude/skills` to forge's persona
   and skill SoTs (so the `Task` and `Skill` tools discover them)
 - wires forge's git pre-commit and commit-msg hooks in the forge
   checkout itself
 
 The reason setup-cc.sh writes hooks **globally** rather than into a
-per-project file: forge hooks should fire in every claude-code session
+per-project file: forge's SessionStart hooks should fire in every claude-code session
 regardless of which folder you opened, and the absolute paths must be
 substituted at setup time (the same value the agent stores in
 `FRAMEWORK_DIR`). Per-project `.claude/settings.json` files are not
@@ -194,21 +178,22 @@ and they'll layer on top.
 Two setup paths:
 
 - **Full** — one setup script per harness. Installs a launcher
-  (`cc` / `oc`), wires persona + skill discovery, and registers
-  forge's PreToolUse hooks where the harness exposes a tool-event
-  API. This is the canonical install and gets you the full discipline
-  layer with write-time enforcement.
+  (`cc` / `oc`), wires persona + skill discovery, merges forge's
+  SessionStart boot hook into the global config, and wires the git
+  pre-commit checks. This is the canonical install and gets you boot
+  automation plus the commit-time discipline layer.
 - **Quick (Claude Code only)** — two symlinks, no scripts, no
-  install-time magic. Personas and skills discoverable, but write-time
-  hooks off. Fastest way to try forge in a one-off project.
+  install-time magic. Personas and skills discoverable, but no
+  launcher, no SessionStart boot hook, and no git pre-commit. Fastest
+  way to try forge in a one-off project.
 
 ### Full setup
 
 ```bash
 git clone https://github.com/NashEQify/forge ~/forge
 
-# Claude Code — installs cc launcher + symlinks + path-whitelist,
-#               merges forge hooks into ~/.claude/settings.json,
+# Claude Code — installs cc launcher + symlinks, merges forge's
+#               SessionStart hooks into ~/.claude/settings.json,
 #               wires forge's git pre-commit hooks
 bash ~/forge/scripts/setup-cc.sh
 
@@ -217,7 +202,7 @@ bash ~/forge/scripts/setup-oc.sh
 
 # Codex Desktop / CLI — agent + skill wrappers under ~/.codex, ~/.agents
 bash ~/forge/scripts/setup-codex.sh
-# optional: also wire PreToolUse hooks into a specific project
+# optional: also wire the project-local hooks into a specific project
 bash ~/forge/scripts/setup-codex.sh ~/your-project
 ```
 
@@ -247,7 +232,7 @@ pre-commit hooks for a consumer project (any harness):
 This path is for the terminal CLI (`claude` binary) — **not** for
 claude-desktop / claude-web, which need `bash setup-cc.sh` (see the
 boot-mechanics table above). The trade-off below also applies: no
-PreToolUse hooks.
+launcher, no SessionStart boot hook, no git pre-commit.
 
 ```bash
 git clone https://github.com/NashEQify/forge ~/forge
@@ -268,11 +253,11 @@ Buddy boots, reads `agents/buddy/{soul,operational,boot}.md`, loads
 the workflows + skills, and starts orchestrating. If the project has
 no `intent.md` yet, Buddy offers a short interview to create one.
 
-Trade-off vs. full setup: PreToolUse hooks (path-whitelist,
-frozen-zones, state-write-block, …) are **not** active. Methodology
-and the workflow engine carry the same discipline — you just lose
-mechanical write-time enforcement. To add the git pre-commit layer
-per repo: `bash ~/forge/scripts/install-git-hooks.sh`.
+Trade-off vs. full setup: no `cc` launcher, no SessionStart boot hook
+(claude-desktop / claude-web won't auto-boot Buddy — see the
+boot-mechanics table above), and no git pre-commit checks. Methodology
+and the workflow engine carry the discipline either way. To add the
+git pre-commit layer per repo: `bash ~/forge/scripts/install-git-hooks.sh`.
 
 Why the symlinks are needed: `--add-dir ~/forge` grants read access
 to the framework tree, but Claude Code discovers personas via
@@ -335,24 +320,20 @@ for the work where coherence across sessions is the bottleneck — long
 multi-day builds, multi-repo work, anything where context loss costs
 more than the discipline overhead.
 
-**Adapters.** forge's discipline is layered — skills (markdown + YAML),
-workflow runbooks, the workflow engine (Python + YAML state), persona
-definitions, task / plan YAMLs, and a hook layer (PreToolUse +
-pre-commit). Most of it is harness-neutral: any harness that loads MD
-+ YAML and can spawn sub-agents can run forge. An adapter buys
-mechanical persona / skill discovery, tier-0 anchor loading, and —
-where the harness exposes a tool-event API — write-time enforcement
-of forge's PreToolUse hooks (path-whitelist, frozen-zones,
-state-write-block, engine-bypass, plan-adversary-reminder,
-delegation-prompt-quality, workflow-commit-gate,
-mca-return-stop-condition, board-output-check, evidence-pointer-check).
+**Adapters.** forge's discipline lives in several layers: skills
+(markdown + YAML), workflow runbooks, the workflow engine (Python +
+YAML state), persona definitions, task / plan YAMLs, and a thin hook
+layer (SessionStart boot + git pre-commit). Most of it is
+harness-neutral — any harness that loads MD + YAML and can spawn
+sub-agents can run forge. An adapter buys mechanical persona / skill
+discovery, tier-0 anchor loading, and the boot + commit-time hooks
+wired into the harness startup and the repo's git hooks.
 
-Cursor is the fourth shipped adapter; it has no tool-event API, so
-those hooks fire only at git pre-commit — drift catches at commit
-instead of at write, everything else runs identically. Any harness
-without a dedicated adapter can still load the skills and run the
-workflows; discovery is just less mechanical and write-time hook
-enforcement is off.
+Cursor is the fourth shipped adapter; it has no tool-event API and no
+SessionStart hook, so its mechanical layer is git pre-commit plus the
+rules + persona wrapper — everything else runs identically. Any
+harness without a dedicated adapter can still load the skills and run
+the workflows; discovery is just less mechanical.
 
 **What this isn't.** Not a generic agent framework, not a marketplace,
 not a LangChain-style abstraction, not an onboarding product.
@@ -360,7 +341,7 @@ Adapter-based on top of an existing harness, not a re-implementation.
 
 ## Inventory (live)
 
-- **Skills:** [`framework/skill-map.md`](framework/skill-map.md) (41 active + 1 draft + 1 deprecated)
+- **Skills:** [`framework/skill-map.md`](framework/skill-map.md) (41 active + 1 deprecated)
 - **Personas:** [`agents/navigation.md`](agents/navigation.md) (40, incl. boards + council)
 - **Workflows + Routing:** [`framework/process-map.md`](framework/process-map.md)
 - **Protocols / References / Hooks:** [`architecture-documentation/02-architecture.md`](architecture-documentation/02-architecture.md)
