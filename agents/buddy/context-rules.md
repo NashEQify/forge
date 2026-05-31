@@ -218,8 +218,7 @@ action or doing a rollback. Cancel signal != stable state.
 If file changes are detected: report them explicitly and clarify
 with the user whether that was the expected completion or a race.
 
-**Hook coverage (planned):** PostToolUse hook after `ExitPlanMode`
-or agent completion that, on interrupt detection, injects
-`git status --porcelain` into Buddy's additionalContext for the
-next UserPromptSubmit. With the hook: net zero mental load (the
-hook handles trigger + content injection).
+This stays discipline-only: Buddy runs the proof-output check himself
+on agent completion / interrupt detection. A CC-coupled PostToolUse
+hook could automate the trigger, but forge no longer adds
+CC-Terminal-only hooks.

@@ -11,13 +11,13 @@ template fields > LLM persona review.
 `agents/main-code-agent.md` input validation as a required field
 on Full / Standard.
 
-**Pre-dispatch check (discipline, post-ADR-004):**
+**Pre-dispatch check (discipline):**
 Buddy verifies presence + completeness of all 4 classes before
-dispatching the brief. The earlier
+dispatching the brief. An earlier
 `orchestrators/claude-code/hooks/delegation-prompt-quality.sh` Check
-C performed this as a CC PreToolUse WARN; removed 2026-05-31 (CC-
-Terminal-only, observability not enforcement). Discipline now lives
-at brief-authoring time: Buddy reads this protocol before drafting
+C performed this as a CC PreToolUse WARN; it was removed (CC-Terminal-
+only, observability not enforcement). Discipline now lives at
+brief-authoring time: Buddy reads this protocol before drafting
 and self-checks all 4 classes against the dispatch.
 
 ---
@@ -304,8 +304,8 @@ merged table). Brief-architect copies the verbatim rows. **Adversary
 re-verifies at L2 dispatch** per `agents/code-adversary.md`
 §Cold-start pre-mission — two-pass author / verifier separation. The
 earlier `brief-claims-guard.sh` PreToolUse hook re-ran the embedded
-Command at write time and BLOCKed on output mismatch; removed in
-ADR-004 (2026-05-31). SKILL text remains binding; adversary's L2
+Command at write time and BLOCKed on output mismatch; it was removed.
+SKILL text remains binding; adversary's L2
 re-verification is now the load-bearing check.
 
 Any `FALSIFIED` row → brief is INCOMPLETE, return to author for AC

@@ -84,10 +84,9 @@ forge_dev/                       <- this repo (private dev SoT)
 bash $FRAMEWORK_DIR/scripts/setup-cc.sh
 ```
 
-This generates the per-user `.claude/path-whitelist.txt` from the
-shipped example and wires the hook stack (PreToolUse +
-PostToolUse + UserPromptSubmit + pre-commit). Other harnesses:
-see `architecture-documentation/07-tool-integrations.md`.
+This merges forge's SessionStart hooks into `~/.claude/settings.json`
+and wires the git pre-commit hook. Other harnesses: see
+`architecture-documentation/07-tool-integrations.md`.
 
 ### 2. Open a forge-aware session
 
@@ -167,9 +166,9 @@ Working style: `agents/buddy/operational.md`.
 
 ## Per-harness mechanics
 
-Mechanical prevention (PreToolUse hooks) is Claude-Code-coupled and
-gives the discipline layer its early-signal property. Other harnesses
-degrade gracefully: OpenCode runs the discipline at full hook parity
-via the TS plugin; Cursor uses rules + pre-commit; Codex uses global
+The hook layer is deliberately thin and harness-portable: git
+pre-commit (every harness) + SessionStart boot (where supported), no
+PreToolUse layer. OpenCode boots via the `oc` launcher + git
+pre-commit; Cursor uses rules + pre-commit; Codex uses global
 wrappers + per-project `.codex/hooks.json`. Detail:
 `architecture-documentation/07-tool-integrations.md`.

@@ -535,13 +535,10 @@ git diff --cached | grep -iE "password\s*=|secret\s*=|api_key\s*=|token\s*="
   ([github.com/trufflesecurity/trufflehog](https://github.com/trufflesecurity/trufflehog))
   — git-history scan + verification (actively probes
   tokens), AGPL.
-- **forge:** pre-commit check 12 (`SECRET-SCAN`) as a gitleaks
+- **forge:** pre-commit `SECRET-SCAN` check as a gitleaks
   wrapper.
   WARN-only initially; skipped when gitleaks is not
-  installed (24h-suppressed hint WARN, no block). Plus:
-  `frozen-zone-guard` explicitly protects declared
-  secret-storage files from edits (no scan, mechanical
-  frozen zone). Cross-ref:
+  installed (24h-suppressed hint WARN, no block). Cross-ref:
   `orchestrators/claude-code/hooks/pre-commit.sh` check
   12. For serious secret hygiene, add trufflehog in the
   CI step (deeper history scan).
