@@ -94,6 +94,30 @@ plan_engine DEAD_DEP warns if blocked_by points at terminal status other than do
 (e.g. `superseded_by: <id>`) that would break on move. See
 `skills/task_status_update/SKILL.md` step 5.
 
+### Cross-reference fields (terminal-status closure)
+
+Optional YAML fields written by `task_status_update` Step 4.5 when a
+task reaches a terminal status. All three are `int_or_null`; declared
+in `framework/task-schema.yaml`.
+
+| Field | Status that writes it | Semantics |
+|---|---|---|
+| `superseded_by: <id>` | `superseded` | This task was replaced by `<id>`. Dependents' `blocked_by` redirects from this task to `<id>`. |
+| `supersedes: <id>` | written on the **successor** when the predecessor flips to `superseded` | The successor explicitly carries forward what `<id>` was tracking. |
+| `absorbed_by: <id>` | `absorbed` | This task was folded into `<id>`. Dependents' `blocked_by` redirects from this task to `<id>`. |
+
+Live examples: `docs/tasks/311.yaml` (`superseded_by: 306`),
+`docs/tasks/374.yaml` (`absorbed_by: 372`).
+
+### Cross-reference MD blocks
+
+| Block | Written by | Purpose |
+|---|---|---|
+| `## Dependency: blocked_by N` | `task_creation` Step 1b | Free-text justification for the `blocked_by` entry — why this dependency, which direction, what order. |
+
+The MD block is rationale, the YAML field is the graph SoT. `plan_engine`
+reads only the YAML.
+
 Readiness levels (dashboard):
 - raw: idea, no spec
 - specced: spec written, no board

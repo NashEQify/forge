@@ -81,6 +81,12 @@ fields:
   spec_version:        {type: str,            required: false}
   workflow_phase:      {type: str,            required: false}
   workflow_template:   {type: str,            required: false}
+  # Cross-reference fields (terminal-status closure, written by
+  # task_status_update Step 4.5 sweep on the focal task and the
+  # named counterpart task).
+  superseded_by:       {type: int_or_null,    required: false}
+  supersedes:          {type: int_or_null,    required: false}
+  absorbed_by:         {type: int_or_null,    required: false}
   # Unlisted keys: passed through, not an error (forward-compatible).
 
 # --- Validator behaviour ---------------------------------------------
