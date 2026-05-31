@@ -63,9 +63,9 @@ Plus a Self-Review (Scope-Check, Instance-vs-Class, Rationalization-Reflex).
 For non-trivial actions, additionally a Plan-Adversary review (a
 context-isolated persona that argues why the plan is wrong).
 
-This is `CLAUDE.md §3` + `skills/_protocols/plan-review.md`.
-The `delegation-prompt-quality.sh` hook warns when sub-agent prompts are
-shorter than 200 chars — a proxy for "Buddy skipped writing a real brief".
+This is `CLAUDE.md §3` + `skills/_protocols/plan-review.md`. Buddy
+authors the brief with the protocol open rather than relying on a hook
+to flag thin prompts.
 
 ### 4. Boards run multi-perspective, Buddy doesn't co-read
 
@@ -101,8 +101,8 @@ dispatch Personas. Three layers, clear contract.
 
 | Level | Mechanism | Examples |
 |---|---|---|
-| Tool-use | PreToolUse hooks | `path-whitelist-guard`, `frozen-zone-guard`, `delegation-prompt-quality` |
-| Commit-time | Pre-commit hook | 13 checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE = BLOCK; TASK-SYNC, OBLIGATIONS, STALE-CLEANUP, PERSIST-GATE, ENGINE-USE, RUNBOOK-DRIFT, AGENT-SKILL-DRIFT, SECRET-SCAN, SOURCE-VERIFICATION, PIEBALD-BUDGET = WARN) |
+| Boot-time | SessionStart hooks | `buddy-boot-inject`, `session-start-remote` |
+| Commit-time | git pre-commit hook | 5 checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE = BLOCK; SECRET-SCAN, SOURCE-VERIFICATION = WARN) |
 | Index-level | Generator + Validator | `generate_skill_map.py` + `consistency_check` Check 6, `generate_navigation.py` + Check 8 |
 
 Vanilla Claude Code has none of these. They are user-installed during
@@ -214,8 +214,8 @@ Three failure modes it prevents:
 
 1. **Orchestrator forgets mid-workflow.** Buddy is in build Phase Verify
    on turn 47, gets a side-question, comes back, forgets where he was. The
-   engine's `--next` and the UserPromptSubmit-hook `workflow-reminder.sh`
-   inject the current step into every turn's context.
+   engine's `--boot-context` / `--next` surface the current step when
+   Buddy reads workflow state (no longer auto-injected every turn).
 
 2. **Cross-session resumption.** Session crashes, new agent boots. Boot-step
    `WORKFLOW-RESUME` calls `--boot-context`. Active workflows surface in
@@ -266,9 +266,9 @@ python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --find --task 123
 
 - **Boot-Step `WORKFLOW-RESUME`** (`agents/buddy/boot.md` §6 RESUME) calls
   `--boot-context` automatically. Active workflows surface in GREET.
-- **UserPromptSubmit Hook** `workflow-reminder.sh` (registered in
-  `~/.claude/settings.json` via `setup-cc.sh`) calls `--next --brief` on every user turn,
-  injects current step into the model context as `WORKFLOW-ENGINE: <step info>`.
+- **On-demand step read** — Buddy calls `--next --brief` to surface the
+  current step as `WORKFLOW-ENGINE: <step info>` when needed (the earlier
+  per-turn `workflow-reminder.sh` injection was removed).
 - **Save-Workflow Step A.3** calls `--handoff-context` to bake state into
   session-handoff.
 
@@ -353,9 +353,8 @@ Buddy routes to the **fix** workflow. Phase Specify:
 - Test plan: failing test that reproduces the folded-line frontmatter gap
 
 Phase Execute: `main-code-agent` is dispatched (with the Plan-Block as
-delegation-artefact and the test plan). The sub-agent works in isolation.
-PreToolUse hooks check every Edit/Write — `path-whitelist-guard` confirms
-the path is OK. It produces a fix + green test.
+delegation-artefact and the test plan). The sub-agent works in isolation
+and produces a fix + green test.
 
 Phase Verify: `code_review_board` L1 (because effort=S, ≤5 files). Two
 reviewers in parallel: `code-review` (correctness/architecture/performance
@@ -433,11 +432,6 @@ where you've symlinked it. It calls `plan_engine.py --validate` (which
 auto-detects `BUDDY_PROJECT_ROOT` vs `FRAMEWORK_ROOT`), runs `skill_fm_validate.py`
 (skipped gracefully in consumer repos that don't have `skills/`),
 and enforces commit-message convention.
-
-Path-whitelist-guard runs at Claude Code's PreToolUse — its file lives at
-`$FRAMEWORK_DIR/.claude/path-whitelist.txt` (generated user-specific by
-`setup-cc.sh`, gitignored). Patterns are `$HOME/projects/**` and
-`$HOME/.claude/settings.json` — broad enough to cover all consumer repos.
 
 OpenCode under a consumer: same `oc` command, same auto-detected config.
 Cursor: project-rules under `.cursor/rules/` symlink to
@@ -556,10 +550,9 @@ The right responses:
 
 | Block | Reason | Action |
 |---|---|---|
-| `path-whitelist-guard` BLOCK | Path outside `.claude/path-whitelist.txt` | Add the path to whitelist (template + setup-cc.sh) OR write somewhere allowed |
-| `frozen-zone-guard` BLOCK | Trying to modify `context/history/**` | Use `.correction.md` sidecar convention; don't fight WORM |
-| Pre-commit Check 7 BLOCK | Skill frontmatter invalid | Read `framework/skill-anatomy.md` §Frontmatter-Schema; fix fields |
-| Pre-commit Check 4 BLOCK | Commit message format | Use `<type>(<scope>): <message>`. Types: feat/fix/chore/docs/refactor/test/style/perf/revert |
+| PLAN-VALIDATE BLOCK | `plan_engine.py --validate` reports errors | Fix the task / plan YAML until `--validate` is clean |
+| SKILL-FM-VALIDATE BLOCK | Skill frontmatter invalid | Read `framework/skill-anatomy.md` §Frontmatter-Schema; fix fields |
+| CG-CONV BLOCK | Commit message format | Use `<type>(<scope>): <message>`. Types: feat/fix/chore/docs/refactor/test/style/perf/revert |
 | `consistency_check` ERROR | Stale ref / orphan / drift | Fix in same commit (Stale-Cleanup invariant) |
 
 When you're tempted to bypass with `--no-verify`: don't. Investigate the
@@ -607,7 +600,6 @@ When in doubt: `framework/process-map.md` (workflow routing) or `agents/navigati
 | Pre-commit hook script | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
 | Workflow-Engine source | [`../scripts/workflow_engine.py`](../scripts/workflow_engine.py) |
 | Workflow-YAML schema example | [`../workflows/runbooks/solve/workflow.yaml`](../workflows/runbooks/solve/workflow.yaml) |
-| Workflow-Reminder hook (UserPromptSubmit) | [`../orchestrators/claude-code/hooks/workflow-reminder.sh`](../orchestrators/claude-code/hooks/workflow-reminder.sh) |
 | Boot status-check script | [`../scripts/git-status-check.sh`](../scripts/git-status-check.sh) |
 
 ## Next step

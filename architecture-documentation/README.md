@@ -101,7 +101,6 @@ another harness)"** →
   path.
 - No invented features.
 - Uncertainties marked transparently.
-- Reflects the May 2026 state.
 
 Source-grounding trace:
 [`11-source-grounding.md`](11-source-grounding.md).
