@@ -146,8 +146,32 @@ Permission depth per artifact: `framework/agent-autonomy.md` (SoT).
 Pre-Delegation: CLAUDE.md §Invariant 3 (gate file BEFORE the agent
 call).
 
-**Delegation hygiene:** before every MCA delegation, ask: *"design
-decision or mechanical writing?"*
+**Delegation hygiene:** before every MCA delegation, ask two
+questions in order:
+
+*"is delegation the proportional vehicle?"* (per CLAUDE.md Inv 9) —
+judgment across five axes, not a numeric threshold:
+- **context-locality** — Buddy already holds the context live
+  (diagnose + implement same thread); transferring it as a brief
+  costs more than it conveys.
+- **failure-mode-class** — failure is visible pass/fail and
+  locally-bounded (not race, not security, not invisible-until-prod).
+- **specialization-need** — the task does not need MCA's toolchain
+  (full-suite test-runs, large-refactor coordination, adversary
+  review) at a cost Buddy can't match.
+- **cognitive-load** — inline stays in Buddy's orchestrator role
+  (rough sense: under ~15-30 min hands-on); longer coding stretches
+  take Buddy out of the role.
+- **safety-floor** — no security / auth / schema / public-API /
+  full-path touch (Inv 9 §Safety floors stay always-L2).
+
+Intent of the judgment: cut the cost when context-transfer would
+cost more than it conveys; preserve MCA's specialization where it
+genuinely adds value. Self-check: if writing the brief would take
+longer than writing the code would, the brief is the wrong
+vehicle — but that is one signal, not the rule.
+
+*"design decision or mechanical writing?"* (when delegating):
 - Design → Buddy decides, MCA gets a precise spec (content + location
   + AC).
 - Mechanical → MCA gets spec + AC + scope, no design freedom.
