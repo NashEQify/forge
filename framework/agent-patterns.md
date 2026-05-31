@@ -26,7 +26,6 @@ SoT belong in forge-feed as open candidates, not here.
 ## Pattern: Hook + Handoff (Session Continuity)
 
 Status: active
-Activated: 2026-03-05
 
 ### Problem
 
@@ -120,7 +119,6 @@ Wakeup behavior: read hook for quick orientation, then checklist as source of tr
 ## Pattern: NDI via Workflow Checklist
 
 Status: active
-Activated: 2026-03-05
 
 ### Problem
 
@@ -137,7 +135,7 @@ Result: nondeterministic idempotence with Git as persistence substrate.
 
 ## Pattern: Briefing Depth (Crew vs Polecat)
 
-Status: active (implicit), formalized 2026-03-05
+Status: active (implicit)
 
 Not all agents need the same context depth.
 Key question: does this agent need to know *why* or only *whether correct*?

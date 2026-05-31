@@ -140,7 +140,7 @@ If no template is set, Buddy writes the workflow manually.
 **Archive location:** `docs/tasks/archive/NNN.yaml` + `docs/tasks/archive/NNN.md`.
 
 **Status `tracked`:** archive/ is committed in the OSS repo (historical
-work record). Decision: 2026-05-03, see
+work record). Rationale: see
 `docs/solve/2026-05-03-doc-folder-taxonomy.md`.
 
 **Frozen zone (WORM):** consistency_check reports Modify/Rename/Delete in

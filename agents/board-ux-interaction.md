@@ -11,8 +11,7 @@ error states, accessibility, dark theme.
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/ux-reviewer-protocol.md`.
 
-**Intentional protocol exception** (documented 2026-05-01 after
-the 366-BC tier-3 clarification): board-ux-interaction does
+**Intentional protocol exception:** board-ux-interaction does
 **not** load `reviewer-reasoning-trace.md` and does **not**
 load `first-principles-check.md`, in contrast to
 board-ux-heuristic (primus with full drill+trace discipline).
@@ -22,8 +21,6 @@ primus with the consolidation role and full drill / trace; IA
 focus (interaction: flows / feedback / error states / A11y /
 dark theme). The consolidation step by ux-heuristic delivers
 the drill+trace synthesis for the overall UX-Board verdict.
-The pre-2026-05-01 file did not document this rationale
-(366-C2 observation 4).
 
 ## Anti-rationalization
 

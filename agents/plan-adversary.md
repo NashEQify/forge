@@ -56,16 +56,14 @@ turn — no separate sub-agent context.
 `F-PA-{NNN}` (analogous to F-A-, F-CA-, etc for the other
 adversary personas).
 
-## Consolidation mechanic (2026-05-01)
+## Consolidation mechanic
 
-Before 2026-05-01: this file had a full persona definition
-(anti-rat / anti-patterns / reasoning / check focus) parallel
-to `_protocols/plan-review.md` — double source of truth.
-After consolidation: the content fully migrated into the
-protocol; the agent file is a stub. Consequence for CC: the
-subagent discovery still finds `plan-adversary` (frontmatter
-name); the body says "load `_protocols/plan-review.md` as the
-persona SoT".
+This file is a stub. The full persona definition (anti-rat /
+anti-patterns / reasoning / check focus) lives in
+`_protocols/plan-review.md` as the single source of truth.
+Consequence for CC: subagent discovery still finds
+`plan-adversary` (frontmatter name); the body just points to
+the protocol SoT.
 
 REMEMBER: your job is to find plan weaknesses before
 execution. "Overall solid" is always a rationalization. Full
