@@ -106,8 +106,7 @@ the author edits by hand are typical fail patterns — a value-floor
 pass on a 9-TC proposal often drops 7 as theater.
 
 Three stop-and-think questions + consolidation rule (EXTENDS
-mandates dropped 2026-05-08): `REFERENCE.md` §Augenmaß +
-§Consolidation.
+mandates dropped): `REFERENCE.md` §Augenmaß + §Consolidation.
 
 ### 4. Output format (required)
 

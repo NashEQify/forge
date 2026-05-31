@@ -46,7 +46,7 @@ has a `navigation.md` with reader-journey sections (`## What lives here?`,
 
 ---
 
-## Skills (42 in tree, 2026-05-23 — 41 active + 1 deprecated)
+## Skills (42 in tree — 41 active + 1 deprecated)
 
 Type legend: **Capability** = multi-phase, callable from workflow steps.
 **Utility** = single function, directly callable by Buddy.

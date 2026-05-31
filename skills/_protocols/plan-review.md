@@ -8,8 +8,8 @@ without proof output, plan-self-review missing before execution
 Loaded by: `frame/SKILL.md` step 3 (primary), `spec_board/SKILL.md`
 §0.
 
-**Status (calibrated 2026-04-09):** this protocol is **not loaded
-explicitly** but applied by content in the skills that reference it:
+**Status:** this protocol is **not loaded explicitly** but applied
+by content in the skills that reference it:
 
 - `frame` step 3 runs the plan block + self-review + (when
   non-trivial) plan-adversary review inline — without loading the
@@ -229,10 +229,9 @@ rule). Without the bind = filler → re-dispatch.
   change or justified rejection.
 - **NOT** "I already know what I want to build" → skipping the
   existing-primitives survey. **INSTEAD** 3-4 greps are cheap and
-  catch class-architecture mistakes. Empirically: on 2026-05-02
-  the adversary found that the `paths:` plan would have duplicated
-  the `routes:` mechanic — the survey would have caught it
-  pre-adversary.
+  catch class-architecture mistakes. Empirically: an adversary
+  found that a `paths:` plan would have duplicated the `routes:`
+  mechanic — the survey would have caught it pre-adversary.
 
 ## Gate rule
 

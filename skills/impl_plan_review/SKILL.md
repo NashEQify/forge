@@ -66,7 +66,7 @@ MCA writes an implementation plan first in full_plan step 1
 
 - **code-review** (ALWAYS, architecture axis): module structure,
   dependency graph, pattern fit. (Code-review absorbed
-  code-architecture as of 2026-04-30.)
+  code-architecture.)
 - **code-adversary** (ALWAYS): edge cases, smart-but-wrong
   interpretations.
 - **code-domain-logic** (conditional, on business logic):

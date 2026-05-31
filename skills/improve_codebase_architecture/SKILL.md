@@ -48,7 +48,7 @@ deepening concentrate complexity?".
 
 Lifted from `github.com/mattpocock/skills`
 (`skills/engineering/improve-codebase-architecture/SKILL.md` +
-`LANGUAGE.md`, 2026-04-30). **Adapted** to the
+`LANGUAGE.md`). **Adapted** to the
 forge reality:
 - Glossary inlined (instead of a separate LANGUAGE.md file —
   the "no altlasten" tendency).
@@ -71,9 +71,9 @@ Distinct from:
 - `architecture_coherence_review` — cross-spec interface
   contracts (≥2 specs). This skill is codebase-wide within a
   single repo, not cross-spec.
-- `code-architecture` persona (absorbed into code-review since
-  2026-04-30) — diff-review architecture axis. This skill
-  finds refactor candidates, not review-of-existing-code.
+- `code-architecture` persona (absorbed into code-review) —
+  diff-review architecture axis. This skill finds refactor
+  candidates, not review-of-existing-code.
 - `frame` — problem-analysis discipline. This skill is the
   codebase-walk discipline (anchored on concrete files +
   modules).

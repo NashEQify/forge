@@ -310,15 +310,14 @@ re-raise "why don't we have a generator?" without context.
 
 **Purpose:** prevents re-drift of the navigation layer
 (reverse-lookup tier for "what lives here? where to look for
-which question?"). The pattern was reintroduced 2026-04-30
-after historical drift experience — this time with generator
-+ validator together, not hand-maintained alone.
+which question?"). The pattern was reintroduced after historical
+drift experience — this time with generator + validator together,
+not hand-maintained alone.
 
 **SoT:**
 - Generator: `scripts/generate_navigation.py` (AUTO block per
   `navigation.md`).
-- Targets: hardcoded in the generator's `TARGETS` (8 entries,
-  2026-05-01).
+- Targets: hardcoded in the generator's `TARGETS` (8 entries).
 
 **Expected `navigation.md` targets (top-level depth-3 cap):**
 

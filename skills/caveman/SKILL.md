@@ -30,7 +30,7 @@ gone, technical substance stays.
 ## Source
 
 Lifted from `github.com/mattpocock/skills`
-(`skills/productivity/caveman/SKILL.md`, 2026-04-30).
+(`skills/productivity/caveman/SKILL.md`).
 Adapted only lightly — the pattern is linguistically generic; no
 consumer-specific adaptation needed.
 
