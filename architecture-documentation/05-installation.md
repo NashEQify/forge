@@ -190,11 +190,11 @@ launcher:
 3. Open Cursor — rules under `.cursor/rules/` load automatically.
    `AGENTS.md` from the repo root is honoured (Cursor convention).
 
-**Limitations:** Cursor has no PreToolUse-hook API, so the mechanical
-write-time discipline (path-whitelist, frozen-zone, …) does not fire
-— only the git pre-commit hook does. Personas are invoked via
-`@<name>` mentions; multi-persona boards run sequentially, not in
-parallel. Full readme: `orchestrators/cursor/README.md`.
+**Limitations:** Cursor has no SessionStart hook, so its mechanical
+layer is the git pre-commit hook plus the rules + persona wrapper.
+Personas are invoked via `@<name>` mentions; multi-persona boards run
+sequentially, not in parallel. Full readme:
+`orchestrators/cursor/README.md`.
 
 ## Consumer-Repo Setup
 
@@ -227,16 +227,6 @@ A consumer repo (e.g. your own project) needs:
    hook (per repo)" above for modes and details.
 
 Buddy finds these files automatically via the `ls` boot sequence (`agents/buddy/boot.md`).
-
-## Adjusting the Path Whitelist
-
-`.claude/path-whitelist.txt` is currently single-user (`/home/xxx/projects/...`).
-For public OSS adoption this needs to be generalised per user. Candidates:
-- env-var substitution (`$HOME/projects/**`)
-- per-machine `~/.claude/path-whitelist-local.txt` as supplement
-- run `setup-cc.sh` with a user-specific patch
-
-Today this is still hand-maintained — see [`12-troubleshooting.md`](12-troubleshooting.md).
 
 ## Verification
 

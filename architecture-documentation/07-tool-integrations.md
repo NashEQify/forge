@@ -37,10 +37,10 @@ and the harness-neutral methodology.
 
 An adapter delivers three things: persona / skill discovery,
 tier-0-anchor loading, and — for the SessionStart + git pre-commit
-hooks — universal wiring. **Post-ADR-004 (2026-05-31) only universal-
-portable hooks are wired:** SessionStart (boot inject + resume nudge)
-and git pre-commit (5 checks). The earlier CC-Terminal-only PreToolUse
-/ PostToolUse / UserPromptSubmit layer was dropped. All supported
+hooks — universal wiring. **Only universal-portable hooks are wired:**
+SessionStart (boot inject + resume nudge) and git pre-commit (5
+checks). The earlier CC-Terminal-only PreToolUse / PostToolUse /
+UserPromptSubmit layer was dropped. All supported
 harnesses (CC-Terminal, claude-desktop, claude-web, OpenCode, Codex,
 Cursor) now run discipline + protocols + the same 3 hooks (Cursor
 lacks SessionStart, so it boots via project rules; pre-commit fires
@@ -60,7 +60,7 @@ orchestrators/claude-code/
 ├── bin/
 │   ├── cc                   # main launcher (191 LoC)
 │   └── sysadmin             # sysadmin variant
-└── hooks/                  # post-ADR-004 — 3 scripts only
+└── hooks/                  # 3 scripts only
     ├── pre-commit.sh        # git pre-commit + commit-msg, 5 checks
     ├── buddy-boot-inject.sh # SessionStart — Buddy boot trigger
     └── session-start-remote.sh # SessionStart — resume nudge
@@ -69,8 +69,8 @@ orchestrators/claude-code/
 `.claude/` (in the repo root) additionally contains:
 - `agents/` — 40 persona wrapper files (each `<name>.md` is a wrapper)
 - `skills/` — skill wrappers for user-level discovery
-- `path-whitelist.txt`, `frozen-zones.txt` — legacy SoT (hooks removed in ADR-004; files kept short-term)
-- `settings.json` — hook registration (SessionStart-only post-ADR-004)
+- `frozen-zones.txt` — legacy SoT (hook removed; convention-only now)
+- `settings.json` — SessionStart hook registration
 
 ### Wrapper pattern
 
@@ -148,7 +148,7 @@ bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh
 Wires `.git/hooks/{pre-commit,commit-msg}` to
 `orchestrators/claude-code/hooks/pre-commit.sh`. The 5 checks run on
 the next `git commit`. Detail:
-[`02-architecture.md`](02-architecture.md) §Pre-Commit 5 Checks (post-ADR-004).
+[`02-architecture.md`](02-architecture.md) §Pre-Commit 5 Checks.
 
 ### Discovery + tool use
 
@@ -195,11 +195,11 @@ exec opencode "$@"
 `${FRAMEWORK_DIR}` and `${HOME}` placeholders. `scripts/setup-oc.sh`
 generates the user-specific `opencode.jsonc` (gitignored).
 
-### OC constraints (post-ADR-004)
+### OC constraints
 
 | Aspect | OC behaviour |
 |---|---|
-| PreToolUse hooks | **None.** ADR-004 dropped the CC-Terminal-only PreToolUse layer. The `forge-hooks.ts` TS plugin used to translate `tool.execute.{before,after}` events into CC-shaped JSON; obsolete post-ADR-004 (slated for removal) |
+| PreToolUse hooks | **None.** The CC-Terminal-only PreToolUse layer was dropped. The `forge-hooks.ts` TS plugin used to translate `tool.execute.{before,after}` events into CC-shaped JSON; it is now obsolete (slated for removal) |
 | Pre-commit hook | Identical — git-side, runs the same 5 checks |
 | Consumer context | manual via `--add-dir <consumer-repo>` |
 | Project AGENTS.md | applies in addition, never instead |
@@ -210,7 +210,7 @@ generates the user-specific `opencode.jsonc` (gitignored).
 `AGENTS.md` is the Tier 0 anchor for OC. Content analogous to
 `CLAUDE.md`.
 
-### Parity with CC post-ADR-004
+### Parity with CC
 
 CC and OC now run identically — both have only the pre-commit hook
 universally wired (OC lacks SessionStart, so the boot mechanism is
@@ -280,12 +280,12 @@ Operations:
    different output root.
 6. **For each `project-dir` argument:** write `<project-dir>/.codex/
    hooks.json` with SessionStart entries pointing at the same scripts
-   CC uses (`buddy-boot-inject.sh` + `session-start-remote.sh`). Post-
-   ADR-004 the per-project hooks.json carries SessionStart-only; the
+   CC uses (`buddy-boot-inject.sh` + `session-start-remote.sh`). The
+   per-project hooks.json carries SessionStart-only; the
    git pre-commit symlink is wired separately via
    `scripts/install-git-hooks.sh`.
 
-### Hook registration (post-ADR-004)
+### Hook registration
 
 `.codex/hooks.json` registers SessionStart only:
 
@@ -294,7 +294,7 @@ Operations:
 | `SessionStart` | `buddy-boot-inject.sh` + `session-start-remote.sh` |
 
 The earlier PreToolUse / PostToolUse / UserPromptSubmit wiring (8+ hook
-entries) was removed in ADR-004 (2026-05-31). Discipline + protocols
+entries) was removed. Discipline + protocols
 + git pre-commit (5 checks, universally available) carry the rest.
 
 ### Discovery + tool use
@@ -355,14 +355,14 @@ are invoked via `@<name>` mentions; the Cursor agent reads
 | Pre-commit hook | git symlink | git symlink | git symlink | git symlink |
 | Workflow-engine | available, on-demand | available, on-demand | available, on-demand | available, on-demand |
 
-**Consequence post-ADR-004:** the framework runs identically on every
+**Consequence:** the framework runs identically on every
 adapter. Boot mechanism varies (SessionStart on CC/Codex, launcher on
 OC, project rules on Cursor); pre-commit is identical (git symlink);
 discipline + protocols + skills + workflows + personas are 1:1.
 
 ### Status
 
-Cursor adapter is feature-complete post-ADR-004 — Cursor was the
+Cursor adapter is feature-complete — Cursor was the
 "limited" adapter when the framework relied on CC-Terminal-only
 PreToolUse hooks; with those gone, Cursor has parity with CC on the
 substantive layer. Personas resolve via `@`-mention into `agents/<name>.md`
