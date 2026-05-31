@@ -1,6 +1,6 @@
 # forge
 
-<img src="assets/vibeforge-logo.png" align="right" width="280" alt="forge mascot — a friendly furnace with headphones smithing code on a circuit-board anvil. The forged code reads: def forge(vibes): build(); ship()." />
+<img src="assets/vibeforge-logo.png" align="right" width="294" alt="forge mascot — a friendly furnace with headphones smithing code on a circuit-board anvil. The forged code reads: def forge(vibes): build(); ship()." />
 
 forge is **disciplined LLM capabilities** between you and your coding
 agent — an opinionated orchestration layer that gives the LLM
