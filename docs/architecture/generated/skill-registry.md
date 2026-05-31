@@ -12,7 +12,7 @@
 | code-review-board | Multi-perspective code review. | active |
 | consistency-check | Checks the structural integrity of the repo. | active |
 | convergence-loop | Intra-gate iteration protocol. | active |
-| council | Structured decision-making. | active |
+| council | Structured architectural / strategic decision-making. | active |
 | cross-spec-consistency-check | Pre-authoring conflict detection between specs in the source-grounding set of the current build run. | active |
 | deprecation-and-migration | Deprecation and migration discipline. | active |
 | documentation-and-adrs | Capture decisions and documentation — why, alternatives, trade-offs. | active |
@@ -25,7 +25,7 @@
 | knowledge-capture | Persist knowledge from context windows, conversations, and research sessions. | draft |
 | knowledge-processor | Brain logic as agent behaviour. | active |
 | pre-build-spec-audit | Concept mining + MVP reconciliation against pre-existing specs. | active |
-| python-code-quality-enforcement | Python code quality and conventions for BuddyAI. | active |
+| python-code-quality-enforcement | Python code quality and conventions for forge consumers. | active |
 | retroactive-spec-update | Retroactively update existing specs to match the as-is code state. | active |
 | return-summary | Format and rules for sub-agent return summaries. | active |
 | risk-followup-routing | Routes chief-verdict `remaining_findings:` entries per their `target:` annotation (7-value enum: spec_text / new_task / watch_item / accept / absorb_next / closes_with / re_review). | active |
@@ -39,9 +39,9 @@
 | spec-amendment-verification | Read-only cross-spec verification after spec amendments. | active |
 | spec-authoring | Interview-based authoring of a NEW spec. | active |
 | spec-board | Multi-perspective spec quality review. | active |
-| spec-update | DEPRECATED (2026-04-10). | deprecated |
+| spec-update | DEPRECATED. | deprecated |
 | task-creation | Structured task creation. | active |
-| task-status-update | Atomic task-status change. | active |
+| task-status-update | Coherent task-status change. | active |
 | testing | Methodology and formats for test-case design and execution across the entire SSDLC. | active |
 | transparency-header | Header formats for delegation, execution, and direct conversation. | active |
 | youtube-subtitles | Read YouTube videos via subtitles instead of watching them. | active |
@@ -49,4 +49,4 @@
 
 Active: 40 | Other: 2
 
-*Status: 2026-05-22*
+*Status: 2026-05-31*

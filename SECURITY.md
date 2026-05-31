@@ -9,9 +9,9 @@ setups. Security-relevant surface:
   Code with user permissions).
 - **Engines** in `scripts/` (Python, run by user with full PATH access).
 - **Adapter configs** that route paths and external_directory permissions
-  (`opencode.jsonc`, `~/.claude/settings.json` — forge hooks slot, provisioned by
-  `setup-cc.sh` from `orchestrators/claude-code/settings.json.template`;
-  `.claude/path-whitelist.txt` per-user, generated from the template).
+  (`opencode.jsonc`, `~/.claude/settings.json` — forge hooks slot,
+  provisioned by `setup-cc.sh` from
+  `orchestrators/claude-code/settings.json.template`).
 - **Sub-agent dispatch** flows that can lead to LLM-driven file/code edits.
 
 ## Reporting a vulnerability
@@ -40,9 +40,7 @@ If you don't hear back within 14 days, follow up via a different channel
 
 ## What we consider in-scope
 
-- Hook scripts that escalate path-write privileges
-- Path-whitelist bypass via creative path crafting
-- Frozen-zone-guard bypass
+- Hook scripts (SessionStart / git pre-commit) that escalate privileges
 - Pre-commit-hook bypass that lets unsafe content into commit history
 - Plan-engine / workflow-engine arbitrary-code-execution from YAML input
 - Adapter-config injection (untrusted opencode.jsonc / settings.json)
@@ -53,8 +51,8 @@ If you don't hear back within 14 days, follow up via a different channel
   single-user setups. Multi-user / shared-host concerns require explicit
   threat-modeling work that hasn't been done.
 - **LLM hallucinations** producing harmful suggestions — the framework's
-  Anti-Hallucination posture is via mechanical hooks (path-whitelist,
-  pre-commit-validate), not via prompt-level filtering.
+  anti-drift posture is via protocol-anchored discipline + git pre-commit
+  validation, not via prompt-level filtering.
 - **Generic supply-chain risks** of Python deps (PyYAML, etc.) — see
   https://github.com/advisories for upstream.
 - **Claude Code / OpenCode / Cursor agent-tool privilege scope** — that's
@@ -62,26 +60,25 @@ If you don't hear back within 14 days, follow up via a different channel
 
 ## Hardening that's already in place
 
-- **Path-Whitelist** (`path-whitelist-guard.sh`) blocks Edit/Write to
-  unwhitelisted paths.
-- **Frozen Zones** (`frozen-zone-guard.sh`) block writes to
-  `context/history/**` (append-only WORM).
-- **Pre-Commit-Hook** runs `plan_engine.py --validate` and frontmatter
-  validation before allowing commits.
+- **Pre-commit hook** (universal, git-triggered) runs `plan_engine.py
+  --validate`, commit-convention + SKILL-frontmatter validation (BLOCK)
+  plus secret-scan + source-verification (WARN) before a commit lands.
+- **Frozen Zones** — `context/history/**` is append-only WORM by
+  convention (the earlier `frozen-zone-guard` hook was removed; the
+  discipline persists, corrections via `.correction.md` sidecars).
 - **No external network calls** in hooks.
 
 ## Known weak points
 
-- **OC-Adapter UserPromptSubmit gap** — `workflow-reminder` has no
-  OpenCode equivalent (no per-turn UserPromptSubmit event). All other
-  PreToolUse + PostToolUse hooks fire via the TS plugin, so path-write
-  discipline is mechanical under OC. Workflow state lives on disk
-  (`.workflow-state/<id>.json`), not load-bearing as a prompt injection.
+- **No write-time enforcement on any harness** — the earlier
+  CC-Terminal-only PreToolUse / PostToolUse layer was removed; path-write
+  discipline is now protocol-anchored, not blocked at the tool call. The
+  mechanical layer is git pre-commit (universal) + SessionStart boot.
 - **Cursor adapter** (and any harness without a tool-event API): the
   workflow phase model + git pre-commit checks are the mechanical
   layer there; path-write discipline is workflow-driven rather than
   blocked at the tool call.
-- **Pre-commit `--no-verify`** can bypass all 13 checks. Discipline-only
+- **Pre-commit `--no-verify`** can bypass all 5 checks. Discipline-only
   protection.
 
 ## Maintainer commitment

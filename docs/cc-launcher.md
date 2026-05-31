@@ -26,11 +26,8 @@ idempotent:
    personas and skills via these paths, so framework agents are
    available from every working directory regardless of which repo
    you're in.
-3. **Generates `.claude/path-whitelist.txt`** from `.example`,
-   substituting `${FRAMEWORK_DIR}` and `${HOME}`. The PreToolUse
-   `path-whitelist-guard` hook reads this file and blocks writes
-   outside the declared paths — first line of mechanical defense
-   against drift.
+3. **Merges forge's SessionStart hooks** into `~/.claude/settings.json`
+   (boot-inject + resume-nudge), preserving your other keys.
 4. **Warns** if `~/.local/bin` isn't on your `$PATH`. Fix with
    `export PATH="$HOME/.local/bin:$PATH"` in your shell rc.
 5. **Installs git hooks** in the framework repo —
