@@ -41,7 +41,7 @@ must come in under 120.
 | Agent protocol | ≤60 lines | `agents/_protocols/*.md` |
 | Assembled prompt (protocol + persona + dispatch) | ≤200 lines | runtime check on dispatch |
 
-**Differentiation by skill type (calibrated 2026-04-05):**
+**Differentiation by skill type:**
 - **Single-class v2** (`invocation`, no `type:`): **120 lines** —
   the convergence target for the single-class skill model.
 - **Workflow** (legacy `type: workflow`): 180 lines. Scoping needs

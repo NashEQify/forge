@@ -36,7 +36,7 @@ skill obligations, not just a user convention.
 ## Source
 
 Lifted from `github.com/addyosmani/agent-skills`
-(`skills/shipping-and-launch/SKILL.md`, 2026-04-30).
+(`skills/shipping-and-launch/SKILL.md`).
 **Adapted** to the forge reality:
 - npm audit → pip-audit + ruff (Python stack).
 - Core Web Vitals → relevant for the React frontend, not

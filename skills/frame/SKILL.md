@@ -91,7 +91,7 @@ preparation (solution-candidate input).
    / flag / step / skill / hook / state field): existing-primitives
    survey BEFORE the plan block — 3-4 greps + reuse-vs-new decision
    (prevents class-architecture mistakes; the paths-vs-routes
-   pattern from 2026-05-02). **When a drill output exists (step
+   anti-pattern). **When a drill output exists (step
    2):** the plan MUST reference the bedrock map (axioms as
    constraints). **Trivial = skip** (save / commit / task-update /
    bookkeeping / status-without-output / pure discussion) with a

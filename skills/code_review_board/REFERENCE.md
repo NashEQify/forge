@@ -123,14 +123,14 @@ Architecture-Axis 2 which is **module-graph-shaped** (dependency
 direction, coupling, layer violations). Both run in parallel on
 substantial L2 when architect-roots is triggered.
 
-## Migration note (2026-04-30)
+## Migration note
 
-Before 2026-04-30 the L2 table had separate entries for
+The L2 table previously had separate entries for
 `code-architecture` (dependency / cross-package) and `code-performance`
-(hot path / N+1 / memory). Both are absorbed into `code-review`
-since the hybrid migration. The risk areas dependency / architecture
-and hot path / performance are covered by `code-review` — no
-separate specialist dispatch needed.
+(hot path / N+1 / memory). Both are absorbed into `code-review` via
+the hybrid migration. The risk areas dependency / architecture and
+hot path / performance are covered by `code-review` — no separate
+specialist dispatch needed.
 
 ## Fix-pass dispatch (post-FAIL detail)
 

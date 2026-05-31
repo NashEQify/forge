@@ -42,7 +42,7 @@ OpenAPI → Zod) as a concrete pattern.
 ## Source
 
 Lifted from `github.com/addyosmani/agent-skills`
-(`skills/api-and-interface-design/SKILL.md`, 2026-04-30).
+(`skills/api-and-interface-design/SKILL.md`).
 **Adapted** to the Python / FastAPI reality forge consumers
 typically run:
 - TypeScript examples translated to Pydantic + FastAPI.

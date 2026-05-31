@@ -19,8 +19,7 @@ bootstrap) have their own structures.
 
 **Classification:** 8 DISTINCT, 0 ORCHESTRATION / REDUNDANT /
 WRONG-ABSTRACTION, 1 REPO-SCOPE-DRIFT (`selfhost/` — user-specific,
-belongs in a consumer repo). `project_bootstrap/` was removed
-2026-05-01.
+belongs in a consumer repo). `project_bootstrap/` was removed.
 
 ## Where to look for which question?
 

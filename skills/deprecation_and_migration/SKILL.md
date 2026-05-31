@@ -42,7 +42,7 @@ methodology question, not just a hook trigger.
 ## Source
 
 Lifted from `github.com/addyosmani/agent-skills`
-(`skills/deprecation-and-migration/SKILL.md`, 2026-04-30).
+(`skills/deprecation-and-migration/SKILL.md`).
 **Adapted** to the forge reality:
 - STALE-CLEANUP invariant (CLAUDE.md §5) as a mechanical
   companion.

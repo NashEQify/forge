@@ -29,7 +29,7 @@ after the map.
 ## Source
 
 Lifted from `github.com/mattpocock/skills`
-(`skills/engineering/zoom-out/SKILL.md`, 2026-04-30). The
+(`skills/engineering/zoom-out/SKILL.md`). The
 Pocock skill is 2 lines ("Go up a layer of abstraction. Give me
 a map of all the relevant modules and callers, using the
 project's domain glossary vocabulary.") — user-only via

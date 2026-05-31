@@ -69,9 +69,9 @@ Per potential TC, before adding:
 
 ## Consolidation rule
 
-EXTENDS mandates dropped 2026-05-08. The adversary may flag +
-consolidate existing tester TCs as redundant variations when a
-clean reduction is visible.
+EXTENDS mandates dropped. The adversary may flag + consolidate
+existing tester TCs as redundant variations when a clean reduction
+is visible.
 
 Test plan v2 comment:
 `# consolidated: TC-X+TC-Y → ADV-TC-N (rationale)`.

@@ -1,7 +1,7 @@
 ---
 name: spec-update
 description: >
-  DEPRECATED (2026-04-10). Split into two more specific skills.
+  DEPRECATED. Split into two more specific skills.
   Use retroactive_spec_update for code-as-evidence catch-up (existing specs
   drifted from code). Use spec_authoring for new specs or new sections
   that need Interview-based User-Intent clarification.

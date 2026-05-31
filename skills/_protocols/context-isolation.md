@@ -34,7 +34,7 @@ pass N-1.
 
 ## Rationale
 
-Empirically demonstrated (2026-03-25): tainted passes found 0C/0H
-on a spec that, on a fresh look, had 0C/5H. Anchoring on previous
-findings turns reviewers into fix-verifiers instead of independent
+Empirically demonstrated: tainted passes found 0C/0H on a spec
+that, on a fresh look, had 0C/5H. Anchoring on previous findings
+turns reviewers into fix-verifiers instead of independent
 analysts.
