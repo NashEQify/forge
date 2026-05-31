@@ -298,14 +298,25 @@ NEW-METHODOLOGY examples:
 - Spec-maintenance candidates.
 
 **Council spawn:** via `council/SKILL.md` (Architectural
-Council, 3-4 council-members in parallel). The briefing file
-contains:
+Council). Mode per §1.0 proportionality (light = 3 members +
+chief; standard = + council-adversary + pre-council frame
+check; full = 4-6 members). The briefing file contains:
 - Phase-3 synthesis (NEW-METHODOLOGY section).
 - Pre-MVP prescription(s) verbatim + context (spec era,
   picture).
 - Current MVP build status.
-- 2-4 solution candidates (MVP stays / adopt pre-MVP idea /
-  hybrid / post-MVP migration with bridge).
+- Solution-candidate enumeration (MVP stays / adopt pre-MVP idea
+  / hybrid / post-MVP migration with bridge) — listed without
+  lean / recommendation / severity per `council/SKILL.md` §3
+  cold-start brief (candidates are domain-derived solution-space
+  mapping, not Buddy's proposal — but the briefing must not
+  flag any as preferred).
+- Per-option reversibility cost-band.
+
+If audit fires in build context: Buddy starts the workflow
+engine (`workflow_engine.py --start build --task <id>`) in the
+same tool block as council spawn — see `skills/council/
+REFERENCE.md` §Workflow_engine handshake.
 
 The user decides finally.
 

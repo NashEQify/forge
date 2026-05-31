@@ -160,12 +160,30 @@ steps:
     on_fail: block
 
   - id: board
-    name: "Spec board review (Standard or Deep)"
+    name: "Spec quality gate — spec_board OR council (architectural, Buddy-routed)"
     category: content
     instruction: >
-      spec_board/SKILL.md. Convergence_loop max 3 passes. Output:
-      docs/reviews/board/{spec_name}-consolidated*.md with 0C+0H = PASS.
+      Default: spec_board/SKILL.md (spec-quality review). Convergence_loop
+      max 3 passes. Output: docs/reviews/board/{spec_name}-consolidated*.md
+      with 0C+0H = PASS.
+
+      Buddy-routed substitute: skills/council/SKILL.md (architectural
+      decision review) when the specify-phase output shape is an
+      architectural decision (ADR / design-shape) rather than a
+      spec-quality artifact. Council mode per §1.0 proportionality
+      (light / standard / full). Output: docs/reviews/council/<date>-
+      <topic>-consolidated.md + decision.md.
+
+      DOCUMENTATION-ONLY ROUTING: this is Buddy-side discipline. The
+      engine itself reads only `skill_ref` below; `council-needed` guard
+      at scripts/workflow_engine.py is a `sys.exit(1)` stub (L-058 open).
+      When council substitutes, Buddy MUST start the engine manually
+      (`python3 scripts/workflow_engine.py --start build --task <id>`)
+      and update completion via the manual check. Stage 2 wires the
+      engine; until then this step's automation is board-only.
     skill_ref: skills/spec_board/SKILL.md
+    # alternative_skill_refs: documentation-only, not consumed by engine.
+    # Engine wire-up is L-058 Stage 2 (workflow_engine.py council-needed guard).
     completion:
       type: compound
       checks:

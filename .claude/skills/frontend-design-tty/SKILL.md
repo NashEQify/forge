@@ -1,6 +1,6 @@
 ---
 name: frontend-design-tty
-description: Design system for dark, terminal-inspired web UIs (monospace, mint/sage on dark blue-grey, box drawing, hex labels, no rounded corners). Provides concrete CSS custom properties + component patterns + anti-patterns. Use when a new web UI is built or extended in TTY aesthetic (Huddle, BuddyAI dashboards, comparable apps), or when an existing element needs a conformance check.
+description: Design system for dark, terminal-inspired web UIs (monospace, mint/sage on dark blue-grey, box drawing, hex labels, no rounded corners). Provides concrete CSS custom properties + component patterns + anti-patterns. Use when a new web UI is built or extended in TTY aesthetic (any consumer app that declares TTY style), or when an existing element needs a conformance check.
 ---
 
 # Skill: frontend-design-tty (Wrapper)

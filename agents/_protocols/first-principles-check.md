@@ -3,19 +3,21 @@
 Required drill for reviewer / council agents before review output.
 A visible section in the review file with a bind rule to findings.
 
-Loaded by every Chief persona of the three boards:
+Loaded by every Chief persona of the four boards:
 
 - **Spec Board:** `board-chief` loads + enforces on
   `board-adversary`, `-2`, `-3`, `-implementer`, `-impact`. Plus:
-  `council-member`, `solution-expert`, `plan-adversary`.
+  `solution-expert`, `plan-adversary`.
 - **Code Board:** `code-chief` loads + enforces on `code-adversary`,
   `code-quality`, `code-security`, `code-architecture`,
   `code-domain-logic`, `code-reliability`, `code-performance`,
   `code-data`, `code-spec-fit`.
 - **UX Board:** `board-ux-heuristic` (primus) loads + enforces on
   `board-ux-ia`, `board-ux-interaction`, and itself.
+- **Architectural Council:** `council-chief` loads + enforces on
+  `council-member`, `council-adversary`.
 
-Chief raises `F-{C|UX}-DRILL-MISSING` when the drill is missing,
+Chief raises `F-{C|UX|CC}-DRILL-MISSING` when the drill is missing,
 re-dispatch limited to 1.
 
 **Intentional exception:** `board-consumer` does NOT load this

@@ -81,6 +81,16 @@ maintainability still passes when the cost is named). Hand-wavy
 re-route. CRITICAL / security / schema / public-API / full-path hard
 floors stay in scope regardless.
 
+### 10. Verify mechanical claims with the shell
+Before stating a mechanical fact (file exists, grep count, line
+numbers, version, byte-identity, command output), run the check (`ls`,
+`grep`, `wc`, `read`, `stat`). Don't infer from the model — confident
+plausible specifics that turn out wrong are a recurrent silent failure
+class. Reviewers carry an evidence-pointer mandate
+(`_protocols/evidence-pointer-schema.md`); this is the Buddy-side
+equivalent — every load-bearing fact costs one verifying command, not
+"sounds right".
+
 ## Observability
 For state-changing actions, leave a one-liner:
 `{action} → {target} ({reason})` — e.g. `→ main-code-agent (src/-scope)`,

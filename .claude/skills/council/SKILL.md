@@ -1,6 +1,6 @@
 ---
 name: council
-description: 'Structured decision-making. Two modes: (a) Architectural — 3-4 council-member subagents in parallel, context isolation, Buddy consolidates. (b) Interactive — Buddy moderates a user dialog with perspectives (phase 1-2-3). Triggers when an architecture/strategy decision has more than one viable path and is hard to reverse; NOT for single-path or easily-reversible decisions (decide directly).'
+description: 'Structured architectural / strategic decision-making. Two modes: (a) Architectural — 3-6 council-member subagents in parallel, context-isolation, chief consolidates, Buddy decides. (b) Interactive — Buddy moderates a user dialog with perspectives. Triggers when an architecture/strategy decision has more than one viable path and is hard to reverse, AND Buddy is uncertain; NOT for single-path, easily-reversible, or current-scope-decidable cross-scope contradictions.'
 ---
 
 # Skill: council (Wrapper)

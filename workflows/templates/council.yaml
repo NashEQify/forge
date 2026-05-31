@@ -2,12 +2,15 @@
 #
 # Referenziert von build/WORKFLOW.md (Specify-Phase) + gates-template.yaml.
 # Tier 1 SoT: workflows/runbooks/build/WORKFLOW.md.
+# Tier 1 SKILL (Buddy checklist): skills/council/SKILL.md + REFERENCE.md.
 # Diese YAML ist die Tier 2 (Harness) Repraesentation.
 # Auch eigenstaendig nutzbar: "buddy: architecture council for {Fragestellung}"
 #
-# Kern-Idee: Min 3 unabhaengige Members, Context-Isolation (CC Sub-Agents),
-# sehen gegenseitig NICHTS bis Deliberation. Bei Dissens: Rebuttal (nur Full).
-# Sub-Agent-MD: .claude/agents/council-member/
+# Kern-Idee: Min 3 unabhaengige Members + (standard/full) 1 adversary,
+# Context-Isolation (CC Sub-Agents), sehen gegenseitig NICHTS bis chief
+# consolidation. council-chief = consolidator-tool per Inv 1 (Buddy decides).
+# Sub-Agent-MDs: agents/council-member.md, agents/council-adversary.md,
+#                agents/council-chief.md
 
 version: "2.1"
 
@@ -85,54 +88,67 @@ mode_selection:
     "Council nicht noetig: [rationale]."
 
 # ============================================================
-# Modi — IMMER min 3 Members (Entscheidung aus Design-Session)
+# Modi — aligned with skills/council/SKILL.md §1.1 (post-Stage-1)
 # ============================================================
 
 modes:
 
   light:
     description: >
-      Schnelle Einschaetzung for umkehrbare Entscheidungen.
-      3 Members (2×Opus + 1×Sonnet). Moderator (Buddy) entscheidet.
+      Reversible decisions, 3 perspectives sufficient.
+      3 members + council-chief. No adversary, no frame-check, no discourse.
     members: 3
     member_config:
-      - model: opus   # Wichtigste Perspektive
-      - model: opus   # Kontraerste Perspektive
-      - model: sonnet # Weitere Perspektive
-    deliberation: moderator_decides
-    output: inline  # Kein separates Decision-File
-    adr_required: false
-    expected_cc_calls: 4  # 3 Members + 1 Deliberation
+      - model: opus   # Primary perspective
+      - model: opus   # Contrasting perspective
+      - model: sonnet # Additional perspective
+    chief: council-chief         # Inv 1 — chief consolidates even at N=3
+    adversary: false
+    frame_check: false
+    discourse: false
+    coherence_check: required    # Buddy applies §Architecture-Comprehension B
+    output: decision_file
+    adr_required: optional
+    expected_cc_calls: 4  # 3 members + 1 chief
 
   standard:
     description: >
-      Gruendliche Analyse for schwer umkehrbare Entscheidungen.
-      3 Members (2×Opus + 1×Sonnet), Context-Isolation.
-      Buddy aggregiert and entscheidet.
+      Hard-to-reverse OR 2-3 layers OR 1+ HARD constraint touched.
+      3 members + chief + council-adversary + pre-council frame check
+      + post-council coherence check.
     members: 3
     member_config:
       - model: opus
       - model: opus
       - model: sonnet
-    deliberation: moderator_decides
+    chief: council-chief
+    adversary: council-adversary
+    frame_check: plan-adversary   # cold-start on briefing draft per §2
+    discourse: false              # on dissent → escalate to full
+    coherence_check: required
     output: decision_file
     adr_required: true
-    expected_cc_calls: 4
+    expected_cc_calls: 6  # 3 members + adversary + frame-check + chief
 
   full:
     description: >
-      Volle Deliberation for Entscheidungen die >2 Dimensionen betreffen.
-      4-6 Members. Rebuttal bei Patt. Opus als Final Arbiter.
+      >2 dimensions OR foundational pattern OR ≥2 hard constraints.
+      4-6 members + chief + adversary + frame-check + coherence-check
+      + discourse on dissent.
     members: "4-6"
     member_config:
       - model: opus   # Min 2×Opus
       - model: opus
       - model: sonnet
-      # + optionale weitere je nach Dimensionen
-    deliberation: rebuttal_on_dissent  # Max 1 Runde
+      # + additional per dimension count
+    chief: council-chief
+    adversary: council-adversary
+    frame_check: plan-adversary
+    discourse: on_dissent          # _protocols/discourse.md, max 1 round
+    coherence_check: required
     output: decision_file
     adr_required: true
-    expected_cc_calls: "5-12"
+    expected_cc_calls: "7-12"  # 4-6 members + adversary + frame-check + chief + (optional discourse round)
 
 # ============================================================
 # Perspektiven-Profile
@@ -174,49 +190,81 @@ profiles:
 
 process:
 
-  phase_1_briefing:
-    title: Briefing erstellen
+  phase_0_briefing_draft:
+    title: Briefing-Draft erstellen
     agent: buddy
     description: >
-      Self-contained Briefing-File: Fragestellung, Optionen, Context,
-      Kriterien, Constraints. Members sollen NUR anhand des Briefings
-      urteilen koennen.
-    output: "docs/tasks/{task_id}-council-brief.md"
+      Buddy schreibt Briefing-Draft. NOCH NICHT final. Per
+      skills/council/SKILL.md §3: question + intent_chain + context-paths
+      + null option + perspectives. MUST NOT: Buddy's proposal,
+      pre-classified conflicts, severity tags, lean hints. Brief-contagion
+      empirisch demonstriert (L-046).
+    output: "docs/reviews/council/{date}-{topic}-briefing-draft.md"
+    modes: [standard, full]  # light skips frame-check, goes direct to final
+
+  phase_1_frame_check:
+    title: Pre-council frame check
+    agent: buddy
+    description: >
+      Buddy dispatched plan-adversary cold-start auf Briefing-Draft
+      (criteria 1-6 per _protocols/plan-review.md). Persist return
+      verbatim als frame-check-artifact. Buddy distills substantive
+      concerns (re-framed questions, added options, missing stakeholders)
+      ins FINAL briefing.
+    sub_agent: plan-adversary
+    output: "docs/reviews/council/{date}-{topic}-frame-check.md"
+    final_briefing: "docs/reviews/council/{date}-{topic}-briefing.md"
+    modes: [standard, full]
 
   phase_2_independent_analysis:
     title: Unabhaengige Analyse
     description: >
-      Buddy spawnt N council-member Sub-Agents PARALLEL via Task tool.
-      Jeder bekommt: Perspektive + Briefing-Pfad + Output-Pfad.
-      Context-Isolation durch CC Sub-Agent-Mechanismus.
-    sub_agent: council-member
-    output_per_member: "docs/tasks/{task_id}-council-{perspective}.md"
+      Buddy spawnt N council-member + 1 council-adversary (standard/full)
+      Sub-Agents PARALLEL via Task tool. Jeder: Perspektive + Briefing-Pfad
+      + Output-Pfad + File-Output OVERRIDE block. Context-Isolation durch
+      CC Sub-Agent-Mechanismus. Members sehen FINAL briefing only,
+      NICHT frame-check artifact.
+    sub_agents:
+      - council-member  # N domain members
+      - council-adversary  # 1, standard/full only
+    output_per_member: "docs/reviews/council/{date}-{topic}-{perspective}.md"
+    output_adversary: "docs/reviews/council/{date}-{topic}-adversary.md"
 
-  phase_3_deliberation:
-    title: Deliberation
-    agent: buddy
+  phase_3_chief_consolidation:
+    title: Chief Consolidation
     description: >
-      Buddy liest ALLE Member-Analysen.
-      Konsens? Dissens? Blinde Flecken? Perspektiven-Gewichtung?
-      Bei Konsens → Phase 4. Bei Dissens (Full): → Phase 3b.
-      Bei Dissens (Standard/Light): Buddy entscheidet.
-    output: "docs/tasks/{task_id}-council-deliberation.md"
+      Buddy spawnt council-chief mit allen Member-Outputs + Adversary +
+      (standard/full) frame-check artifact. Chief produced consolidation
+      document per CHIEF-1.0 (chain-of-custody audit), CHIEF-1.1
+      (evidence-pointer gate), CHIEF-1.2 (live-state-vs-claim) +
+      consolidation-preservation tracking table. Output: recommended-verdict
+      label. Buddy decides per Inv 1 / soul.md.
+    sub_agent: council-chief
+    output: "docs/reviews/council/{date}-{topic}-consolidated.md"
+    modes: [standard, full]  # light: Buddy reads N=3 outputs directly
 
-  phase_3b_rebuttal:
-    title: Rebuttal (nur Full, nur bei Dissens)
+  phase_3b_discourse:
+    title: Discourse on dissent (Full only)
     description: >
-      Members im Dissens bekommen eigene + Gegen-Analyse + Deliberation.
-      "Widerlege X or passe deine Empfehlung an."
-      Max 1 Runde. Kein Ping-Pong.
+      Bei chief-recommended DISSENT-recommended (members split,
+      adversary on one side): Buddy triggert discourse phase per
+      _protocols/discourse.md. AGREE/CHALLENGE/CONNECT/SURFACE grammar.
+      Max 1 Runde. Chief re-konsolidiert nach Discourse.
     max_iterations: 1
+    modes: [full]
 
-  phase_4_decision:
-    title: Finale Entscheidung
+  phase_4_coherence_and_decision:
+    title: Post-council coherence check + Entscheidung
     agent: buddy
     description: >
-      Entscheidung mit rationale. Bei ueberstimmten Perspektiven:
-      explizit warum. ADR in decisions.md wenn adr_required.
-    output: "docs/tasks/{task_id}-council-decision.md"
+      MANDATORY (unconditional, standard/full): Buddy applied
+      agents/buddy/operational.md §Architecture-Comprehension B
+      (post-return) auf Chief-Output BEVOR Adoption. Topology-Contradiction
+      (producer/consumer absent, deploy-state incompatible) → escalate
+      oder re-frame, NICHT adopt. Pass → Buddy decides mit rationale.
+      Bei ueberstimmten Perspektiven: explizit warum. ADR per
+      adr_required.
+    output: "docs/reviews/council/{date}-{topic}-decision.md"
     gate_update: "council.status: pass"
 
 # ============================================================
@@ -226,15 +274,22 @@ process:
 tier_behavior:
   tier_1:
     description: >
-      CC-basiert. Buddy spawnt N council-member Sub-Agents parallel.
-      Jeder schreibt sein Analysis-File. Buddy liest alle, deliberiert.
+      CC-basiert. Buddy spawnt N council-member + 1 council-adversary
+      (standard/full) Sub-Agents parallel via Task tool. Jeder schreibt
+      sein Analysis-File mit evidence-pointer-schema:v1. Buddy spawnt
+      council-chief auf alle Outputs. Buddy liest Consolidation,
+      applied post-council coherence check, decided.
     execution: >
-      Buddy spawnt parallel:
+      Buddy spawnt parallel (ONE tool block, run_in_background: true):
         council-member "Perspektive: {X}. Briefing: {path}. Output: {output_path}."
-      (wiederholt for jede Perspektive)
-      Wartet auf alle. Liest Files. Deliberation + Decision.
+        (wiederholt for jede Perspektive)
+        council-adversary "Briefing: {path}. Output: {adversary_output_path}."  # standard/full
+      Wartet auf alle. Spawnt council-chief mit allen Pfaden +
+      (standard/full) frame-check artifact. Liest Consolidation.
+      Coherence check (Arch-Comp B). Decision.
 
   tier_2:
     description: >
       Harness dispatcht N CC-Instanzen parallel.
-      Wartet auf alle Outputs. Dispatcht Buddy for Deliberation.
+      Wartet auf alle Outputs. Dispatcht council-chief.
+      Dispatcht Buddy for Decision.
