@@ -100,7 +100,7 @@ discovery hint, not body content. **Enforced (not advisory):** for
 `status: active` skills the `description` MUST contain one of
 `Use when` / `Triggers when` / `Trigger:` (closed set, case-
 insensitive substring). Mechanical surface: C3 WARN in
-`scripts/skill_fm_validate.py` (pre-commit Check 7). Definitional-only
+`scripts/skill_fm_validate.py` (pre-commit Check 3). Definitional-only
 descriptions misfire at invocation time — the trigger string is the
 load-bearing factor for `P(invoked)` (no background loader).
 
@@ -431,11 +431,9 @@ name: task_creation
 - `framework/boot-navigation.md` (boot index)
 - `agents/buddy/operational.md` (operational anti-inflation behavior)
 - `framework/spec-engineering.md` (5 primitives spirit)
-- `skills/_protocols/piebald-budget.md` (length-budget SoT —
-  **enforced, not advisory**: C2 WARN as pre-commit Check 13
-  PIEBALD-BUDGET fires on staged active `SKILL.md` over the
-  documented per-type / single-class-v2 threshold; WARN-first,
-  calibrate before any BLOCK)
+- `skills/_protocols/piebald-budget.md` (length-budget SoT — the
+  earlier PIEBALD-BUDGET pre-commit WARN was dropped, so the per-type
+  / single-class-v2 threshold is now discipline-enforced)
 
 ---
 

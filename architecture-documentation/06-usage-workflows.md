@@ -69,9 +69,9 @@ Skip list (engine NOT active):
 - frame/bedrock_drill standalone — sub-skills
 - think! — open discussion
 
-Mechanical fallback: pre-commit Check 8 (`ENGINE-USE`) WARNS when a
-`feat|fix|refactor` commit with a `[Task-NNN]` ref has no active workflow
-— catching the case where Buddy mentally forgot `--start`.
+This is discipline-only — the earlier ENGINE-USE pre-commit WARN (which
+flagged a `feat|fix|refactor` commit carrying a `[Task-NNN]` ref but no
+active workflow) was dropped.
 
 ## Deploy lifecycle (optional)
 
@@ -280,7 +280,7 @@ B. Content writes (PARALLEL — one batch)
    6. Context updates (overview.md + history entries)
 
 C. Post-Write
-   7. Commit (pre-commit hooks run, incl. PERSIST-GATE)
+   7. Commit (pre-commit hooks run)
 ```
 
 `quicksave` is the same path with reduced depth.
@@ -362,7 +362,7 @@ Both are written on `save`, loaded on `wakeup`.
 
 On task status change (e.g. `pending` → `in_progress` or `→ done`):
 - 2 writes: `overview.md` + `history/`
-- Pre-commit Check 6 (PERSIST-GATE) catches a status change without a context update
+- This is discipline-only — the earlier PERSIST-GATE pre-commit WARN was dropped
 
 ## Anti-patterns
 
@@ -411,8 +411,8 @@ root-cause hypothesis was wrong, the bug comes back.
 ### A7 — Skipping the persist gate after status change
 
 `task_status_update` sets the YAML status. Without the `overview.md` patch
-and the `history` entry the status change is half. Pre-commit Check 6 warns
-but does not block — discipline-discipline.
+and the `history` entry the status change is half. There's no pre-commit
+check for this any more — discipline closes it.
 
 ## Best practices
 

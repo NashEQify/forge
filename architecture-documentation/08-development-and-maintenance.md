@@ -119,7 +119,7 @@ sub-checks:
 
 ### skill_fm_validate.py
 
-Pre-commit Check 7. Validates the frontmatter of all active SKILL.md files:
+Pre-commit Check 3 (SKILL-FM-VALIDATE). Validates the frontmatter of all active SKILL.md files:
 
 | Check | Severity |
 |---|---|
@@ -137,7 +137,7 @@ Skip on repos without `skills/` (graceful degradation for consumers).
 
 ### generate_agent_skill_map.py
 
-Generator + validator for agent-skill awareness (pre-commit Check 10).
+Generator + validator for agent-skill awareness (`--check` mode; the earlier AGENT-SKILL-DRIFT pre-commit WARN was dropped).
 
 ```bash
 python3 scripts/generate_agent_skill_map.py            # write
@@ -156,7 +156,7 @@ name (underscored), not the `name` field (which can be hyphenated).
 
 ### validate_runbook_consistency.py
 
-Pre-commit Check 9. Heuristic check workflow.yaml ↔ WORKFLOW.md:
+`consistency_check` Check 9. Heuristic check workflow.yaml ↔ WORKFLOW.md:
 paired existence, derived_from format (`WORKFLOW.md@YYYY-MM-DD`),
 step-name keyword presence in md, phase-comment parity.
 
@@ -213,7 +213,7 @@ Remove a hook:
 
 ## Conventions
 
-### Commit format (CG-CONV, pre-commit Check 4)
+### Commit format (CG-CONV, pre-commit Check 2)
 
 Conventional-Commits format. Examples:
 
@@ -246,7 +246,7 @@ Every new SKILL.md follows `framework/skill-anatomy.md`:
 - Token budget ≤120 lines (Single-Class v2)
 - Naming: `verb_object` default
 
-Pre-commit Check 7 (BLOCK) catches structural frontmatter drift; spec-board
+Pre-commit Check 3 (SKILL-FM-VALIDATE, BLOCK) catches structural frontmatter drift; spec-board
 L1 catches content drift (process quality, standalone, naming).
 
 ### Persona format
@@ -332,7 +332,7 @@ Migration corridor:
 - Phase 3 cut-off bulk (remaining)
 
 Effectively all active skills are on v2. New skills MUST
-go directly to v2 (pre-commit Check 7 BLOCK).
+go directly to v2 (pre-commit Check 3 BLOCK).
 
 ### Persona migration / consolidation
 

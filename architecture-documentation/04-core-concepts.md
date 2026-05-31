@@ -123,7 +123,7 @@ for new skills).
 
 ### Mechanical enforcement
 
-`scripts/skill_fm_validate.py` as Pre-Commit Check 7:
+`scripts/skill_fm_validate.py` as Pre-Commit Check 3 (SKILL-FM-VALIDATE):
 - BLOCK for YAML corruption
 - BLOCK for missing mandatory fields on new or modified skills
 - BLOCK for unknown `invocation.primary`
@@ -433,16 +433,16 @@ markers in opt-in agent defs:
 
 Plus the aggregated `framework/agent-skill-map.md` as a reverse-lookup map.
 
-**Enforcement:** pre-commit Check 10 AGENT-SKILL-DRIFT — when
-SKILL.md frontmatter or agent files are staged, `--check` mode is
-run, drift = WARN.
+**Enforcement:** discipline-only — the earlier AGENT-SKILL-DRIFT
+pre-commit WARN was dropped. Run `generate_agent_skill_map.py --check`
+manually after touching `relevant_for:` frontmatter or agent files.
 
 **Maintenance loop on a new skill:**
 
 1. Tag SKILL.md with `relevant_for: [...]` where applicable (or `["*"]`
    for genuinely agent-spanning skills like transparency_header)
 2. Run `python3 scripts/generate_agent_skill_map.py`
-3. Pre-commit catches forgetting (Check 10)
+3. Run the generator's `--check` to catch forgetting (no pre-commit check)
 4. For workflow-step skills: separately decide manually whether the
    workflow.yaml gets a step.relevant_skills hint (future work,
    not yet mechanised — `validate_runbook_consistency.py` could

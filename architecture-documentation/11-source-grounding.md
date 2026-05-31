@@ -104,7 +104,7 @@ to a file path. The mapping below is the audit table.
 | `workflow_engine.py` ~2.5k LoC | `wc -l scripts/workflow_engine.py` |
 | `generate_skill_map.py` regenerates the AUTO block | [`../scripts/generate_skill_map.py`](../scripts/generate_skill_map.py) + [`../framework/skill-map.md`](../framework/skill-map.md) marker |
 | `generate_navigation.py` regenerates AUTO blocks in 8 navigation.md files | [`../scripts/generate_navigation.py`](../scripts/generate_navigation.py) |
-| `skill_fm_validate.py` pre-commit Check 7 | [`../scripts/skill_fm_validate.py`](../scripts/skill_fm_validate.py) + [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
+| `skill_fm_validate.py` pre-commit Check 3 | [`../scripts/skill_fm_validate.py`](../scripts/skill_fm_validate.py) + [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
 | Generator + validator pattern | [`../skills/consistency_check/REFERENCE.md`](../skills/consistency_check/REFERENCE.md) §6 + §8 |
 
 ### Consumer repositories

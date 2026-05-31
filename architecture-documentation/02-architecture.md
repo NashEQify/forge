@@ -463,8 +463,8 @@ a parallel change).
 | `generate_navigation.py` (310 LoC) | Regenerates the AUTO block in 8 navigation.md files |
 | `generate_skill_wrappers.py` (~520 LoC) | Regenerates `.claude/skills/<name>/SKILL.md` Claude-Code discovery wrappers from skill frontmatter (Option-C inclusion + `cc_wrapper` override; marker-gated deletion); validator `consistency_check` Check 10 |
 | `generate_agent_skill_map.py` (~360 LoC) | Regenerates the AUTO block in opt-in `agents/<name>.md` + the aggregated `framework/agent-skill-map.md` from skill frontmatter `relevant_for:` |
-| `skill_fm_validate.py` (~300 LoC) | Pre-commit Check 7 — frontmatter validator incl. `relevant_for` |
-| `validate_runbook_consistency.py` (~300 LoC) | Pre-commit Check 9 — workflow.yaml ↔ WORKFLOW.md drift heuristic |
+| `skill_fm_validate.py` (~300 LoC) | Pre-commit Check 3 (SKILL-FM-VALIDATE) — frontmatter validator incl. `relevant_for` |
+| `validate_runbook_consistency.py` (~300 LoC) | `consistency_check` Check 9 — workflow.yaml ↔ WORKFLOW.md drift heuristic |
 | `generate-architecture.py` (475 LoC) | architecture-doc generator |
 | `generate-control.py` / `generate-dashboard.py` / `generate-status.py` | dashboard + control + status generation |
 
@@ -522,16 +522,12 @@ error message, no default Hetzner push.
 The dashboard is generated regardless (by `generate-dashboard.py`,
 not by deploy-docs).
 
-### Pre-Commit `OBLIGATIONS` Check
+### Dashboard-redeploy reminder
 
-Pre-commit Check 3 WARN. Triggers when `docs/dashboard/` or plan-relevant
-files (tasks, plan) are changed in a commit. A reminder that the dashboard
-should be redeployed (otherwise the hosted version drifts away
-from the repo state).
-
-**When does the reader see this live?** On every commit that touches tasks or plan
-— a typical daily-user experience. The reader thereby learns that there is a
-dashboard and that the lifecycle is active.
+An earlier pre-commit OBLIGATIONS WARN fired when `docs/dashboard/` or
+plan-relevant files (tasks, plan) changed in a commit — a reminder that
+the dashboard should be redeployed (otherwise the hosted version drifts
+from the repo state). That check was dropped; redeploy is now discipline.
 
 ## Data Flows (Three Examples)
 
