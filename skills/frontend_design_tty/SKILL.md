@@ -5,8 +5,8 @@ description: >
   mint/sage on dark blue-grey, box drawing, hex labels, no
   rounded corners). Provides concrete CSS custom properties +
   component patterns + anti-patterns. Use when a new web UI is
-  built or extended in TTY aesthetic (Huddle, BuddyAI dashboards,
-  comparable apps), or when an existing element needs a
+  built or extended in TTY aesthetic (any consumer app that
+  declares TTY style), or when an existing element needs a
   conformance check.
 status: active
 invocation:
@@ -41,9 +41,9 @@ provides **concrete token values, component patterns and anti-patterns**.
 Whoever invokes it gets a reference that translates directly into CSS /
 components — not guidance on how to decide.
 
-Used in **Huddle** (chat/voice/video, web app) and in
-**BuddyAI dashboards** as the default aesthetic. Other projects can
-adopt it equally.
+Used by consumer apps that explicitly declare TTY aesthetic as
+their default — typical: chat/voice/video apps, dashboards,
+operator UIs. Other projects can adopt it equally.
 
 ## When to invoke
 
@@ -86,10 +86,9 @@ an empty-state component with 4 states"*, `frontend_design_tty` says
 monospace 14px"*. Deleting and integrating would either narrow the
 methodology to TTY or render the design system invisible.
 
-Source: previously `skills/frontend_design_tty/SKILL.md` in
-BuddyAI (2026-03-06), migrated into forge
-(`skills/frontend_design_tty/SKILL.md`, 2026-04-15, commit `0e80cd0`).
-Restore + restored 2026-05-07.
+Source: design system originally developed for an internal
+consumer app, contributed to forge as a standalone skill that
+any consumer can opt into.
 
 ## Process
 

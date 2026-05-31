@@ -439,8 +439,10 @@ mechanically in the cited SoT.
 | ADR-trigger value-floor (`documentation_and_adrs`) | — | watch (no observed drift yet; codify on first instance) |
 
 Sibling principle at the delegation-modes layer (one level up from
-the gate-level instances above): PROC-002 in `buddyai/decisions.md`
-(Light/Standard/Full delegation modes, 2026-03-14).
+the gate-level instances above): the Direct/Standard/Full
+delegation-path split in `workflows/runbooks/build/WORKFLOW.md`
+follows the same pattern — pick the proportionate path by scope and
+risk, not by name.
 
 Safety floors retain hard override across every instance per Invariant
 9: CRITICAL severity, security / auth / consent / crypto, schema or

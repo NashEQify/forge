@@ -61,14 +61,6 @@ No data findings? Did you check constraints on the DB level?
 - **Data integrity:** multi-table writes in a transaction?
   Cascade deletes safe? Concurrency controls?
 
-### BuddyAI-specific
-- **asyncpg:** $1, $2 parameters (not f-string)?
-- **Alembic:** migration order? No circular FKs?
-- **pg_advisory_lock:** lock-key namespace correct (two-arg)?
-- **session_turns:** UNIQUE(session_id, turn_number)?
-- **Neo4j Cypher:** parameterized?
-- **Embedding dimension:** 768, HNSW index?
-
 Additional output field: `data_impact`.
 
 ## Finding prefix

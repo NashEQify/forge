@@ -281,13 +281,11 @@ Self-contained, with a clearly referenced "Loaded by:" list.
 
 ## Tests
 
-### TESTCASES.md
+### Behavioural observations
 
-`tests/TESTCASES.md` contains T01-Tnn patterns for Buddy behaviour:
-- T01: boot in BuddyAI (intent.md in WD)
-- T02-Tnn: boot variations, intent detection, delegation routing, etc.
-
-Manual walkthrough — Buddy guides through it.
+Buddy / agent behaviour observations are captured in the rolling
+dogfood feed (`docs/dogfood-learnings/forge-feed.md`) as pattern
+findings rather than as discrete test cases.
 
 ### Hook smoke tests
 

@@ -147,16 +147,6 @@ flow back to Buddy for distillation into the board brief.
 - **State leaks:** mutable state leaking between requests /
   sessions / users.
 
-### BuddyAI-specific
-- NATS message ordering: out-of-order messages?
-- pg_advisory_lock: connection drop while locked? Two requests
-  on the same state?
-- Pydantic `extra="forbid"`: unexpected field?
-- Brain facade: direct DB access bypassing the facade?
-- SSE / HTTP boundary: errors after StreamingResponse = SSE,
-  not HTTP.
-- asyncio: shield? Task-cancellation safety?
-
 Additional output field: `attack_scenario` (REQUIRED — no
 finding without a concrete scenario).
 

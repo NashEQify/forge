@@ -33,7 +33,7 @@ and agents need.
 
 ## Framework paths (consumer repo)
 
-| Artifact | Canonical location (BuddyAI / framework consumer) |
+| Artifact | Canonical location (framework consumer) |
 |----------|---------------------------------------------------|
 | ADR / architecture decision | `docs/decisions/` (see also the `knowledge_capture` skill, knowledge type **Decision**) |
 | Solve / large research | `docs/solve/`, `docs/research/` |

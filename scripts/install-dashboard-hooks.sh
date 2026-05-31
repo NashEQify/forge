@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # install-dashboard-hooks.sh — Symlink post-commit Hook in Consumer-Repos.
 #
-# Idempotent. Läuft über die Consumer-Repo-Liste (BuddyAI, forge,
-# personal, Huddle) und installiert den post-commit-Hook als Symlink nach
-# <repo>/.git/hooks/post-commit. Bei bestehendem Non-Symlink: abort mit
-# Warnung — User muss manuell entscheiden.
+# Idempotent. Läuft über die Consumer-Repo-Liste unten und installiert den
+# post-commit-Hook als Symlink nach <repo>/.git/hooks/post-commit. Bei
+# bestehendem Non-Symlink: abort mit Warnung — User muss manuell
+# entscheiden. Liste der Repos = lokale Wahl des Users; anpassen wie
+# benötigt.
 #
 # Usage: ./scripts/install-dashboard-hooks.sh [--dry-run]
 
@@ -26,11 +27,11 @@ if [ "${1:-}" = "--dry-run" ]; then
 fi
 
 # Candidate consumer repos — all with docs/tasks/ structure.
+# Adjust this list to your local fleet. forge itself is always included
+# because the dashboard depends on it.
 REPOS=(
-    "$HOME/projects/BuddyAI"
     "$HOME/projects/forge"
     "$HOME/projects/personal"
-    # Huddle: excluded bis docs/tasks/ existiert
 )
 
 for repo in "${REPOS[@]}"; do

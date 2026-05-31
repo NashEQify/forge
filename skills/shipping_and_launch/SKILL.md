@@ -67,8 +67,9 @@ What only this skill delivers:
 - Rollback-plan obligation **before deploy** (not ad-hoc
   post-incident).
 - Post-launch verification in the first hour.
-- BuddyAI-specific deploy discipline (pg_dump obligation,
-  mount verify).
+- Deploy-discipline invariants (pg_dump before DB-touch,
+  mount-verify after machine change) as mechanical
+  obligations.
 
 ## When to call
 
@@ -117,19 +118,17 @@ starts.
   X-Frame-Options).
 - [ ] Rate limiting on auth endpoints.
 - [ ] CORS specifically configured (no wildcard `*`).
-- [ ] Tailscale auth (`resolve_user`) on every protected
-  endpoint.
+- [ ] Auth check on every protected endpoint (mesh auth /
+  cookie / token, per project).
 
 #### Performance (cross-ref `code-review` performance axis)
 - [ ] Hot paths: no N+1 queries (cross-check asyncpg
   logging).
 - [ ] DB indexes for common query patterns.
 - [ ] Token budget for LLM calls respected.
-- [ ] Connection-pool config (asyncpg pool_size,
-  acquire_timeout).
-- [ ] **Frontend (React Huddle / Dashboard, when
-  relevant):** Core Web Vitals within "good" thresholds
-  (LCP <2.5s, INP <200ms, CLS <0.1).
+- [ ] Connection-pool config (pool size, acquire timeout).
+- [ ] **Frontend (when relevant):** Core Web Vitals within
+  "good" thresholds (LCP <2.5s, INP <200ms, CLS <0.1).
 
 #### Accessibility (cross-ref `skills/spec_board/` mode=ux when UI)
 - [ ] Keyboard navigation for every interactive element.
@@ -140,20 +139,20 @@ starts.
   form field.
 - [ ] No A11y warnings in axe-core / Lighthouse.
 
-#### Infrastructure (BuddyAI-specific)
+#### Infrastructure
 - [ ] Environment variables set in production
-  (.env.production).
+  (`.env.production` or equivalent).
 - [ ] **DB-touching deploy:** `pg_dump` run as the FIRST
   command (see phase 1.5 below — INVARIANT).
 - [ ] **Container recreate:** mount sources verified
   (`docker inspect`) BEFORE `docker compose up -d` (see
   phase 1.5 below — INVARIANT).
 - [ ] DNS + SSL configured for changed endpoints.
-- [ ] Logging + error reporting configured (structlog →
-  where?).
+- [ ] Logging + error reporting configured (structured logs
+  to a known sink).
 - [ ] Health-check endpoint exists + answers 200.
-- [ ] Tailscale mesh: production host (Hetzner) + edge
-  (Odroid / local) reachable.
+- [ ] All target hosts (production + edge) reachable from
+  the deploy host.
 
 #### Documentation
 - [ ] README + setup guide updated.
@@ -164,13 +163,12 @@ starts.
 - [ ] Changelog updated.
 - [ ] User-facing docs updated (when relevant).
 
-### Phase 1.5: DEPLOY-DISCIPLINE-INVARIANT (BuddyAI, NON-NEGOTIABLE)
+### Phase 1.5: DEPLOY-DISCIPLINE-INVARIANT (NON-NEGOTIABLE)
 
-Absorbed from
-`~/projects/personal/context/user/profile.md` §Deploy-Discipline.
 These two INVARIANTS are **mechanical obligations** before
 every production deploy that touches the DB or recreates
-containers:
+containers. They apply to any docker-compose deploy with
+persistent data.
 
 #### INVARIANT-1: pg_dump pre-DB-deploy
 
@@ -185,10 +183,12 @@ docker compose exec -T <service-name>-db pg_dump -U <user> <dbname> | \
   gzip > ~/backups/<service-name>-pre-deploy-$(date +%Y%m%d-%H%M).sql.gz
 ```
 
-**Rationale** (lessons learned 2026-04-19, Juliane DB total
-loss on deploy v2.6.5→v2.7): 30s pg_dump versus hours of
-recovery via re-ingest (when an external source exists) or
-total data loss (when not). Lost data is not reproducible.
+**Rationale:** 30s pg_dump versus hours of recovery via
+re-ingest (when an external source exists) or total data
+loss (when not). Lost data is not reproducible. This
+invariant has been validated by real incidents where a
+"trivial" migration produced total DB loss because the
+pg_dump step was skipped.
 
 **When to skip:** **never.** Not even on a nominal
 "read-only change". DB touch is DB touch.
@@ -301,10 +301,10 @@ Application:
 
 Infrastructure:
 ├── CPU + memory
-├── DB connection-pool usage (asyncpg pool exhaustion)
-├── Disk space (Hetzner)
+├── DB connection-pool usage (pool exhaustion)
+├── Disk space
 ├── Network latency
-└── Queue depth (NATS JetStream)
+└── Queue depth (broker / job queue, when relevant)
 
 Client (when frontend):
 ├── Core Web Vitals (LCP, INP, CLS)
@@ -313,7 +313,7 @@ Client (when frontend):
 └── Page-load time
 ```
 
-#### Error-reporting pattern (Python / asyncpg / FastAPI)
+#### Error-reporting pattern (Python / FastAPI)
 
 ```python
 # Server-side error reporting (FastAPI middleware)
@@ -363,7 +363,7 @@ async def error_middleware(request: Request, call_next):
 1. Disable the feature flag (when applicable)
    OR
 1. Deploy the previous version: `git revert <commit> && git push`
-   PLUS on Hetzner: `docker compose pull && docker compose up -d`
+   PLUS on the target host: `docker compose pull && docker compose up -d`
 2. Verify: health check + error monitoring
 3. Communicate: notify the team
 
@@ -400,8 +400,8 @@ async def error_middleware(request: Request, call_next):
 | "Monitoring is overhead" | Without monitoring you discover problems through user complaints instead of dashboards. |
 | "We add monitoring later" | Add it before launch. What you don't see, you can't debug. |
 | "Rollback is admitting failure" | Rollback is responsible engineering. Shipping a broken feature is the failure. |
-| "The migration is trivial — pg_dump is unnecessary" | Pattern session 2026-04-19 Juliane v2.6.5→v2.7: trivial migration, total DB loss. **Never.** |
-| "Mount-verify is paranoia, compose reads .env anyway" | Pattern session 2026-04-19: `.env.production` was not read; a different mount appeared. **Verify.** |
+| "The migration is trivial — pg_dump is unnecessary" | Validated by real incident: trivial migration, total DB loss. **Never skip.** |
+| "Mount-verify is paranoia, compose reads .env anyway" | Validated by real incident: `.env.production` was not read; a different mount appeared. **Verify.** |
 
 ## Contract
 
@@ -416,12 +416,10 @@ async def error_middleware(request: Request, call_next):
 - **Optional:** feature-flag definition (when phase 2
   applies).
 - **Optional:** rollback-plan template (see phase 6).
-- **Context:**
-  `~/projects/personal/context/user/profile.md`
-  §Deploy-Discipline (INVARIANTS),
-  `skills/code_review_board/SKILL.md` (pre-deploy gate),
-  `skills/security/SKILL.md` (cross-ref on
-  security pre-launch).
+- **Context:** `skills/code_review_board/SKILL.md`
+  (pre-deploy gate), `skills/security/SKILL.md` (cross-ref
+  on security pre-launch). Consumer repos can layer
+  additional invariants via their own override files.
 
 ### OUTPUT
 **DELIVERS:**

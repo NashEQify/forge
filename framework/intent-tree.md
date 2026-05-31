@@ -1,7 +1,7 @@
 # Intent Tree & Constraint Inheritance
 
-How intent flows in the BuddyAI system. Meta-framework — describes the
-structure, not a concrete intent.
+How intent flows in a forge-consuming project. Meta-framework —
+describes the structure, not a concrete intent.
 
 ## Intent tree
 
@@ -15,26 +15,23 @@ intent.md (in folder)              <- vision intent
 Every level must be derivable in one sentence from the level above.
 If not -> the action has no intent -> STOP.
 
-## Life-domain intent (parallel, not below)
+## Parallel intent trees
 
-Life domains live under `context/life/` and run parallel to the
-build-intent tree.
-`intent.md` in BuddyAI root describes the system vision (why BuddyAI exists).
-Life domains describe the user's life goals (independent of BuddyAI).
-Objectives in `workspaces/` derive from domains, not from
-BuddyAI/intent.md.
+A project may carry **more than one** intent tree in parallel —
+e.g. a code build-tree (this project's roadmap) and an out-of-band
+domain-tree (longer-term concerns the project also tracks). Forge
+does not prescribe a specific parallel-tree shape; that is a
+consumer-side concern.
 
-```
-context/life/<domain>.md              <- life domain (stable value space)
-  -> workspaces/<objective>/intent.md <- objective (concrete initiative)
-    -> docs/tasks/NNN.md              <- action
-```
+When parallel trees exist, each one independently follows the same
+"derivable in one sentence from above" rule. Trees are sibling, not
+nested — an action under one tree never derives from another tree's
+vision.
 
 ## intent_chain
 
-Required field for planned work. Two variants:
+Required field for planned work on a build tree:
 
-**Build tasks** (BuddyAI development, technical projects):
 ```
 intent_chain:
   vision: <1 sentence — from active intent.md>
@@ -43,14 +40,9 @@ intent_chain:
   trace_id: null   # pre-harness. post-harness: Langfuse/OTel.
 ```
 
-**Life tasks** (objectives under life domains):
-```
-intent_chain:
-  domain: <life domain + core principle>
-  objective: <objective intent from workspace intent.md>
-  action: <1 sentence — why this specific task exists>
-  trace_id: null
-```
+A consumer with parallel non-build trees declares its own
+intent_chain shape for those trees; the rules below apply
+identically.
 
 Rules:
 - Required on delegation (pre-delegation checklist). No delegation
@@ -68,15 +60,15 @@ They inherit downward:
 ```
 ~/projects/personal/context/user/values.md            <- overarching intent + personal defaults
   +- CLAUDE.md                                        <- global technical constraints (always active)
-  +- context/life/<domain>.md                         <- domain constraints (for life tasks)
       ?
-        project/workspace intent.md                   <- objective/project constraints (can add)
+        project/workspace intent.md                   <- project-level constraints (can add)
           -> task constraints                         <- task-specific (can add)
             -> agent reasoning                        <- per action
 ```
 
-CLAUDE.md and domain.md are parallel axes that merge at project level.
-A domain constraint cannot override a technical constraint, and vice versa.
+`values.md` and `CLAUDE.md` are parallel axes that merge at project
+level. A personal-default constraint cannot override a technical
+invariant, and vice versa.
 
 Lower levels can **ADD** constraints, never **REMOVE** constraints.
 Soft constraints can be REWEIGHTED at lower levels (different priority),
@@ -128,31 +120,8 @@ When an intent update is needed at any level:
 1. Describe the drift — what intent says vs what we actually do
 2. Propose updated intent — concrete, in that level's format
 3. User confirms (or corrects)
-4. Update file — plan.yaml operational_intent, intent.md, or domain.md
+4. Update file — plan.yaml operational_intent, intent.md, etc.
 5. Create missing tasks retroactively when needed
 
 Triggered by: save (session review), agent check step 0 (freshness),
 obligation 7d.
-
-## Life-domain format
-
-Every domain file under `context/life/<domain>.md`:
-
-```markdown
-# Domain — [Name]
-
-## Principles
-[What matters in this life area. 3-5 sentences.]
-
-## Constraints
-[Hard and soft boundaries. Format like values.md.]
-
-## Health Indicators
-[How do I recognize that this domain is going well/poorly?]
-
-## Active Objectives
-[Reference to workspaces/<objective>/intent.md. Or: none.]
-```
-
-Max 200 lines. Domain is created when the first objective needs it.
-Buddy performs first-time domain setup in discussion mode (advisory gate).

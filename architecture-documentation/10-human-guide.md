@@ -38,10 +38,10 @@ Three layers, clearly separated:
    plugin, Cursor as minimal-viable IDE adapter (project rules + git
    pre-commit; no tool-event API, so no write-time hooks).
 
-3. **Consumer repositories** (e.g. `~/projects/BuddyAI`,
-   `~/projects/personal`) — they use the methodology via
-   `--add-dir $FRAMEWORK_DIR` (Claude Code) or via `OPENCODE_CONFIG`.
-   **No re-implementation.**
+3. **Consumer repositories** (e.g. a code project,
+   `~/projects/personal`, an infra repo) — they use the methodology
+   via `--add-dir $FRAMEWORK_DIR` (Claude Code) or via
+   `OPENCODE_CONFIG`. **No re-implementation.**
 
 When you change something about Buddy, the change is immediately active
 in all repositories and under both harnesses — at the next session

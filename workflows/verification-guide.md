@@ -45,7 +45,7 @@ schemathesis run http://localhost:8000/openapi.json
 # tests/gateway/test_contracts.py
 import pytest
 import schemathesis
-from buddyai.gateway.app import create_app
+from myapp.gateway.app import create_app
 
 schema = schemathesis.openapi.from_asgi("/openapi.json", app=create_app())
 
@@ -88,10 +88,10 @@ pytest tests/gateway/test_contracts.py::test_schema_no_breaking_changes -v
 
 ```python
 # For every endpoint in scope:
-from buddyai.gateway.models import BrainEntryResponse  # matching model
+from myapp.gateway.models import EntityResponse  # matching model
 
-resp = client.get("/api/brain/entities/some-id")
-BrainEntryResponse.model_validate(resp.json())  # raises on schema mismatch
+resp = client.get("/api/entities/some-id")
+EntityResponse.model_validate(resp.json())  # raises on schema mismatch
 ```
 
 ### 1.5 Evaluation
@@ -119,7 +119,7 @@ docker compose -f docker-compose.test.yml ps
 # Expectation: postgres-test (healthy), nats-test (healthy)
 
 # Postgres reachable?
-psql "postgresql://buddyai_test:test@localhost:5433/buddyai_test" -c "SELECT 1"
+psql "postgresql://myapp_test:test@localhost:5433/myapp_test" -c "SELECT 1"
 
 # NATS reachable?
 curl -s http://localhost:8223/healthz
@@ -128,7 +128,7 @@ curl -s http://localhost:8223/healthz
 ### 2.2 Run migrations
 
 ```bash
-DATABASE_URL="postgresql://buddyai_test:test@localhost:5433/buddyai_test" alembic upgrade head
+DATABASE_URL="postgresql://myapp_test:test@localhost:5433/myapp_test" alembic upgrade head
 ```
 
 ### 2.3 Run tests

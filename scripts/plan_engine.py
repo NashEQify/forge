@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-plan_engine.py — Computed planning layer for BuddyAI.
+plan_engine.py — Computed planning layer for forge consumers.
 
 Reads docs/tasks/*.yaml + docs/plan.yaml, builds DAGs,
 computes milestone status, critical path, next actions.
@@ -69,22 +69,21 @@ except ImportError:
     print(f"  python3 -m venv {_venv_prefix} && {_venv_prefix}/bin/pip install pyyaml", file=sys.stderr)
     sys.exit(1)
 
-# Path resolution (Task 010 Part L0 — Pre-Split Refactor)
+# Path resolution
 #
-# PROJECT_ROOT   → where the user's docs/tasks/*.yaml and docs/plan.yaml live.
-#                  Derived from BUDDY_PROJECT_ROOT env-var, or --project-root
-#                  flag, or current working directory. Post-split this is the
-#                  product repo (e.g. ~/projects/buddyai).
+# PROJECT_ROOT   → where the consumer's docs/tasks/*.yaml and docs/plan.yaml
+#                  live. Derived from BUDDY_PROJECT_ROOT env-var, or
+#                  --project-root flag, or current working directory
+#                  (e.g. ~/projects/<consumer>).
 #
 # FRAMEWORK_ROOT → where plan_engine.py itself lives. Framework-internal files
 #                  (CLAUDE.md, AGENTS.md, framework/agent-autonomy.md,
 #                  agents/buddy/operational.md, etc.) are resolved against
-#                  this root. Post-split this is the framework repo
-#                  (e.g. ~/projects/forge).
+#                  this root (e.g. ~/projects/forge).
 #
-# Pre-Split Invariant: when invoked from the BuddyAI monolith root without
-# BUDDY_PROJECT_ROOT set, PROJECT_ROOT == FRAMEWORK_ROOT == BuddyAI root,
-# so existing behaviour is preserved (regression-free).
+# When PROJECT_ROOT and FRAMEWORK_ROOT happen to coincide (a session running
+# directly inside the framework repo), the same path is used for both —
+# tasks + plan land in the framework's own docs/ tree.
 PROJECT_ROOT = Path(os.environ.get("BUDDY_PROJECT_ROOT", Path.cwd())).resolve()
 FRAMEWORK_ROOT = Path(__file__).resolve().parent.parent
 
@@ -484,7 +483,7 @@ class Milestone:
     backend_refactor_components: list[str] = field(default_factory=list)
     app_status_post_milestone: str = ""
     sysadmin_methodology_import: str = ""        # M1.5-only
-    buddyai_infra_audit: str = ""                 # M1.5-only
+    infra_audit: str = ""                 # M1.5-only
     gap_ownership_anchor_task: int | None = None  # M1.5-only
 
     @property
@@ -545,7 +544,7 @@ _FEATURE_MILESTONE_KNOWN_FIELDS = {
     # Optional-Felder
     "cross_cutting", "parallel_to", "frontend_components",
     "backend_refactor_components", "sysadmin_methodology_import",
-    "buddyai_infra_audit", "gap_ownership_anchor_task",
+    "infra_audit", "gap_ownership_anchor_task",
     # Doku-only (akzeptiert ohne WARN)
     "title", "desc",
     # Dashboard-cluster assignment (2026-05-23): allow phases on feature_milestones
@@ -1140,8 +1139,8 @@ def load_plan(project_root: Path | None = None) -> PlanResult:
             sysadmin_methodology_import=_coerce_str(
                 fdata.get("sysadmin_methodology_import"), "sysadmin_methodology_import"
             ),
-            buddyai_infra_audit=_coerce_str(
-                fdata.get("buddyai_infra_audit"), "buddyai_infra_audit"
+            infra_audit=_coerce_str(
+                fdata.get("infra_audit"), "infra_audit"
             ),
             gap_ownership_anchor_task=gap_anchor,
         )
@@ -1255,7 +1254,7 @@ def load_aggregated(projects_arg: str | None = None) -> AggregateResult:
     """Task 367: Load multiple project repos and merge into unified tasks/milestones.
 
     Keying:
-      - Tasks: dict key is "<repo>#<id:03d>" string (e.g. "buddyai#358").
+      - Tasks: dict key is "<repo>#<id:03d>" string (e.g. "<consumer>#358").
       - Milestones: dict key is "<repo>:<milestone_key>" (colon separator to
         distinguish from task keys). Inter-milestone requires references are
         rewritten to the namespaced form when the referenced milestone belongs
@@ -4396,7 +4395,7 @@ def _run_task_schema_self_test() -> int:
 def main():
     _configure_stdio_for_windows()
 
-    parser = argparse.ArgumentParser(description="BuddyAI Plan Engine")
+    parser = argparse.ArgumentParser(description="forge Plan Engine")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--boot", action="store_true", help="Full boot hook")
     group.add_argument("--status", action="store_true", help="Milestone overview")

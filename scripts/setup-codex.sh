@@ -75,7 +75,7 @@ GREET. Use absolute paths for framework and personal-context reads.
 
 Mental model: Codex repository instructions come from AGENTS.md. Relative file
 paths resolve against the session CWD, not against the framework root. Consumer
-repos such as BuddyAI do not have a local agents/buddy/ framework tree.
+repos do not have a local agents/buddy/ framework tree.
 
 ## Project rules
 

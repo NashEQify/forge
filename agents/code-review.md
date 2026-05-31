@@ -197,27 +197,6 @@ drill at least 1 axis finding references a drill element.
 - **Memory:** large collections handled incrementally?
   Closures with unnecessary scope?
 
-### BuddyAI-specific (every axis)
-
-**Correctness + architecture:**
-- structlog instead of print/logging.
-- AppError instead of HTTPException.
-- 5-layer model: knowledge → runtime → intelligence →
-  cross-cutting → interface. Imports only downwards or within.
-- Package structure (GBWI): `models/` shared, `gateway/` not
-  `core/`, `core/` not `gateway/`, `db/` shared, `events/`
-  shared.
-- Brain facade: no direct DB access on brain tables.
-- Event schema: events defined in `events/`, not locally.
-
-**Performance:**
-- Token budget: greedy allocation correct? No category eating
-  everything?
-- Brain search: limit parameter? How many entities returned?
-- LLM calls: right model (qwen2:1.5b vs main)?
-- asyncpg pool: pool size? Acquire timeout? Pool exhaustion?
-- NATS: message-size limits? No unbounded payloads?
-
 ## Required output fields
 
 - **Per axis:** drill + trace sections with the bind rule

@@ -1,100 +1,132 @@
 <!-- Maintenance: informational only; not used in process.
      Update when repo structure or working model changes. -->
 
-# BuddyAI — Getting Started
+# forge — Getting Started
 
-## What BuddyAI is
+## What forge is
 
-**Memory Infrastructure for AI.** BuddyAI builds a knowledge graph from
-any data source and assembles a context-rich, intent-aware prompt for
-each LLM call. First instance: personal operating system. Target market:
-enterprise AI.
+A **skill + discipline layer** between human and LLM that bundles
+opinionated workflows and codified discipline patterns so that
+vibe-at-complexity and sustained quality become possible.
 
-Details: `intent.md` (vision), `docs/architecture/` (architecture docs).
+In small projects an unsteered LLM gets you far. In complex projects
+it crashes — not because capability is missing, but because *unsteered
+capability cannot design complex systems*. forge ships the steering:
+workflows that encode best-practice processes (build, solve, fix,
+review, …) and a discipline layer that mechanically prevents drift.
 
-## Repo structure
+Details: `intent.md` (vision + non-goals), `architecture-documentation/`
+(OSS-facing surface).
+
+## Topology
+
+forge runs as an **adapter** that consumers plug into their own
+project repos. Two repos in the topology:
+
+- **`forge_dev`** — private dev SoT. All framework development,
+  tasks, specs, and operational context live here.
+- **`forge`** — public OSS mirror, produced solely by
+  `scripts/release-sync.sh` from forge_dev. Consumers depend on this
+  one. Hand-edited only for one-time release hygiene.
+
+A consumer project (any code repo, personal project, infra repo,
+external adopter, …) keeps its own intent/specs/tasks under its own
+repo. The framework is referenced via path injection — see
+`architecture-documentation/05-installation.md` for the per-harness
+mechanisms (Claude Code `--add-dir`, OpenCode `OPENCODE_CONFIG_DIR`,
+Codex global wrappers).
 
 ```
-BuddyAI/
-  intent.md                 <- vision + non-goals + agent check
-  CLAUDE.md                 <- invariants (Tier 0, loaded every turn)
-  decisions.md              <- ADRs
+forge_dev/                       <- this repo (private dev SoT)
+  intent.md                      <- vision + non-goals
+  CLAUDE.md                      <- invariants (Tier 0, loaded every turn)
 
   docs/
-    plan.yaml               <- milestones, gates, requires DAG, target
-    tasks/                  <- task YAMLs + MDs (SoT for all work)
-    specs/                  <- design documents (board-reviewed)
-    architecture/           <- public architecture docs (consumer deploy target)
+    plan.yaml                    <- framework milestones, gates, DAG
+    tasks/                       <- task YAMLs + MDs
+    specs/                       <- spec corpus (board-reviewed)
 
-  scripts/
-    plan_engine.py          <- computed planning layer (--boot, --next, --check, etc.)
-    generate-control.py     <- operations center generator
-    deploy-docs.sh          <- MkDocs + dashboard -> consumer-configured remote
+  agents/                        <- agent definitions (tool-neutral)
+    buddy/                       <- Buddy (soul, operational, boot, context-rules)
+    main-code-agent.md
+    code-*.md                    <- Code Review Board personas
+    ...
 
-  agents/                   <- agent definitions (tool-neutral)
-    buddy/                  <- Buddy (soul, operational, boot, context-rules)
-    main-code-agent.md      <- development agent
-    tester.md, reviewer.md  <- quality agents
+  skills/                        <- capability + utility skills
+    build/, solve/, fix/, review/
+    spec_authoring/, spec_board/, code_review_board/
+    ...
 
-  context/                  <- domain knowledge (curated, max 200 lines/MD)
-    user/                   <- user profile, values
-    system/                 <- system knowledge
-    history/                <- session summaries (frozen zone)
-    session-log.md          <- decisions from recent sessions
+  workflows/                     <- runbooks per workflow
+    runbooks/build/WORKFLOW.md
+    runbooks/solve/WORKFLOW.md
+    ...
 
-  framework/                <- generic methodology, skills, workflows
-    milestone-execution.md  <- multi-task milestone orchestration
-    task-format.md          <- task YAML/MD schema
-    spec-engineering.md     <- spec methodology
-    workflows/runbooks/build/WORKFLOW.md  <- per-task flow: Direct/Standard/Full
+  framework/                     <- meta-methodology, navigation
+    boot-navigation.md
+    spec-engineering.md
+    process-map.md
+    ...
 
-  src/                      <- Python code (brain, events, gateway, worker)
+  orchestrators/                 <- per-harness adapter
+    claude-code/, opencode/, codex/, cursor/
+
+  scripts/                       <- engines + tooling
+    plan_engine.py, workflow_engine.py
+    release-sync.sh              <- forge_dev -> forge mirror
 ```
 
 ## First steps
 
-### 1. Understand current state
+### 1. Install the Claude Code adapter (most common)
 
 ```bash
-python3 scripts/plan_engine.py --boot
+bash $FRAMEWORK_DIR/scripts/setup-cc.sh
+```
+
+This generates the per-user `.claude/path-whitelist.txt` from the
+shipped example and wires the hook stack (PreToolUse +
+PostToolUse + UserPromptSubmit + pre-commit). Other harnesses:
+see `architecture-documentation/07-tool-integrations.md`.
+
+### 2. Open a forge-aware session
+
+```bash
+cc                  # start Buddy in the current directory
+cc <project-scope>  # start Buddy in a named scope (e.g. cc framework)
+```
+
+The `cc` launcher resolves the scope, sets `FRAMEWORK_DIR`, and
+injects the framework via `--add-dir`. Buddy boots: reads soul,
+operational, boot files; runs intent resolution against the active
+CWD; loads the active context.
+
+### 3. Understand current state (root sessions)
+
+```bash
+python3 $FRAMEWORK_DIR/scripts/plan_engine.py --boot
 ```
 
 Shows: active target, critical path, in-progress tasks, next actions,
-milestone status, warnings.
+milestone status, warnings. Same call runs automatically in Buddy's
+boot sequence for root sessions.
 
-### 2. Find the next task
+### 4. Pick a workflow
 
-```bash
-python3 scripts/plan_engine.py --next --limit 20
-```
+| Workflow | When |
+|---|---|
+| `build` | Implement a feature/task. Direct/Standard/Full paths. |
+| `solve` | Problem with open solution shape. Frame, refine, validate. |
+| `fix` | Bug/incident. Root-cause first, no symptom patching. |
+| `review` | Spec(s) without code. |
+| `research` | SOTA / spike. Output = knowledge, not code. |
+| `save` | End-of-session persistence. |
+| `docs-rewrite` | Rewrite docs, reader-journey-first. |
 
-Sorted by: critical path -> target path -> blocking score -> effort.
-Tasks on the target path rank higher than others.
+Routing rules: `framework/process-map.md`. Runbooks:
+`workflows/runbooks/<name>/WORKFLOW.md`.
 
-### 3. Work on a task
-
-```bash
-# Read task YAML
-cat docs/tasks/242.yaml
-
-# Read task MD (context, workflow, scope)
-cat docs/tasks/242.md
-
-# Read related spec (if spec_ref is set)
-cat docs/specs/archive/gateway-buddy-worker-impl.md
-```
-
-### 4. Create a task
-
-Create a new task: `docs/tasks/NNN.yaml` + `NNN.md`.
-Required fields: `id`, `title`, `status`, `milestone`, `blocked_by`,
-`created`, `updated`.
-`milestone` MUST be a key from `docs/plan.yaml`.
-Afterwards: `python3 scripts/plan_engine.py --validate` (0 errors).
-
-Details: `framework/task-format.md`.
-
-### 5. Development process
+### 5. Build path (per-task flow)
 
 | Path | When | Steps |
 |------|------|----------|
@@ -102,43 +134,17 @@ Details: `framework/task-format.md`.
 | **Standard** | 1 subsystem | interview -> spec -> board -> test -> implement |
 | **Full** | >1 subsystem, schema change | spec in 3 levels, board after each |
 
-Details: `workflows/runbooks/build/WORKFLOW.md` (per-task flow),
-`framework/milestone-execution.md` (milestone level).
-
-## Planning system
-
-**SoT:** task YAMLs (`docs/tasks/*.yaml`) + `docs/plan.yaml`.
-**Engine:** `scripts/plan_engine.py` computes everything — milestone status,
-critical path, next actions.
-**Dashboard:** generated via `scripts/generate-dashboard.py`, deployed via
-`scripts/deploy-dashboard-lite.sh` to a consumer-configured remote
-(env: `DASHBOARD_HOST` + `DASHBOARD_TARGET`).
-
-No manual backlog. No session handoff. Task state IS the plan.
-
-Details: `docs/architecture/project/planning.md`.
-
-## Roadmap
-
-Milestone DAG, not linear phases. S2/S3/S4 run in parallel. All feature
-milestones (intelligence, life-os, scale, middleware) technically require
-only S1. Strategic prioritization runs through `target` in plan.yaml.
-
-```
-S1 -> mvp -> memory-platform (fundraising) -> production
-```
-
-Details: `docs/architecture/project/roadmap.md`.
+Details: `workflows/runbooks/build/WORKFLOW.md`.
 
 ## Buddy (the agent)
 
-Buddy is the primary contact and orchestrator.
-Buddy knows the user, projects, and infrastructure.
-Buddy delegates code work to main-code-agent and reviews to board agents.
+Buddy is the primary contact and orchestrator. Buddy knows the user,
+the project, and the workflow surface. Buddy delegates code work to
+main-code-agent and reviews to board agents.
 
 ```bash
-cd ~/BuddyAI && cc          # start Buddy (BuddyAI development)
-cd ~/projects/foo && cc     # start Buddy (different project)
+cd ~/projects/<consumer> && cc   # start Buddy in a consumer project
+cd $FRAMEWORK_DIR && cc           # start Buddy in forge itself
 ```
 
 Boot sequence: `agents/buddy/boot.md`.
@@ -154,9 +160,16 @@ Working style: `agents/buddy/operational.md`.
    Artifact-type refinement: `framework/agent-autonomy.md`
 5. **Stale cleanup:** removed artifacts must be reference-free in the same commit
 6. **Deployment verification:** verify visually, not only via HTTP status
+7. **OSS-readable repo:** public-surface files carry content + reasoning, not session forensics
+8. **Public forge = read-only OSS mirror:** the consumer-facing repo
+   is produced solely by `scripts/release-sync.sh`, never hand-edited
+9. **Proportionality of effort:** decisions creating followup work need a value-floor justification
 
-**FACTS check:** in the Claude Code adapter this is mechanical via the
-Stop+SessionEnd hook (user-global in `~/.claude/settings.json`). In the
-OpenCode adapter it is prompt-level (`AGENTS.md` §2) — the OC plugin
-wires `tool.execute.{before,after}` to the bash hooks (PreToolUse +
-PostToolUse parity), but no Stop/SessionEnd equivalent for FACTS yet.
+## Per-harness mechanics
+
+Mechanical prevention (PreToolUse hooks) is Claude-Code-coupled and
+gives the discipline layer its early-signal property. Other harnesses
+degrade gracefully: OpenCode runs the discipline at full hook parity
+via the TS plugin; Cursor uses rules + pre-commit; Codex uses global
+wrappers + per-project `.codex/hooks.json`. Detail:
+`architecture-documentation/07-tool-integrations.md`.

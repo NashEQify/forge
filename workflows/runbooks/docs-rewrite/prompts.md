@@ -51,7 +51,7 @@ Back every claim with a source file.
 **Output:** finished markdown page as a file in `docs/architecture/framework/`
 
 ```
-Write the page "{title}" for the BuddyAI framework documentation.
+Write the page "{title}" for the forge framework documentation.
 Write the finished page to: {file_path}
 
 CORE QUESTION this page answers: {core_question}

@@ -28,7 +28,7 @@ Documents how this skill changes once the Brain is built (ARCH-009). No code —
 
 **LOCATE uses brain.search():** hybrid search (semantic + graph + fulltext) replaces navigation-guided file reading + grep. Graph traversal finds indirect impacts (2+ hops).
 
-**mode=user-signal Post-Brain:** the pipeline is taken over by the user-model worker (`src/buddyai/workers/user_model_worker.py`). The dispatcher routes `user.signal` events to NATS, the worker processes asynchronously.
+**mode=user-signal Post-Brain:** the pipeline is taken over by a user-model worker in the consumer repo. The dispatcher routes `user.signal` events to a broker, the worker processes asynchronously.
 
 ## Hybrid sync/async IMPACT CHAIN (Post-Brain)
 

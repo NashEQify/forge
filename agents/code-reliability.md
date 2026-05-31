@@ -72,12 +72,6 @@ the happy path?
 - Graceful degradation without non-critical dependencies?
 - State recovery: consistent state after crash?
 
-### BuddyAI-specific
-- pg_advisory_lock cleanup on connection drop.
-- NATS reconnect: messages lost? JetStream consumer resumed?
-- Ollama down: heuristic fallbacks active?
-- Worker healthcheck: file-based, touch interval correct?
-
 Additional output field on critical / high: `failure_scenario`.
 
 ## Finding prefix

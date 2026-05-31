@@ -28,7 +28,7 @@ Closing: "When you [trigger]: [correct action instead of rationalisation]."
 ## Anti-Patterns                                           [CC P3]
 
 Explicit "What you must NOT do" — concrete examples for this role.
-Not generic but role-specific + BuddyAI-specific.
+Not generic but role-specific.
 
 Format (P2 short imperatives):
 - DO NOT: [concrete anti-pattern]. INSTEAD: [correct action].
@@ -46,12 +46,10 @@ Each step phrased role-specifically — not generic.
 
 ## Check Focus                                             [OCR §What You Look For]
 
-### Generic
 Sub-sections with concrete checks. Not abstract — testable questions.
-Format: question that can be answered yes/no.
-
-### BuddyAI-specific
-Project-specific checklist. NATS, pg_advisory_lock, Pydantic, etc.
+Format: question that can be answered yes/no. Consumer repos may
+add a `### Consumer-specific` sub-section via override files; the
+framework template carries no consumer content.
 
 ## Output                                                  [CC P5]
 
@@ -105,7 +103,7 @@ REMEMBER: [the most critical constraint repeated — bookend closing.]
 
 | OCR section | Our section | Adaptation |
 |-------------|-------------|------------|
-| Focus Areas | Check Focus | + BuddyAI-specific |
+| Focus Areas | Check Focus | consumer-specific via override only |
 | Review Approach | Review Approach | Identical |
 | What You Look For | Check Focus (sub-sections) | Identical |
 | Output Style | Output Style | NEW — previously missing |

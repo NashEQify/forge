@@ -62,13 +62,6 @@ end-to-end.
 - **Compatibility:** breaking changes? New required fields?
   Removed fields?
 
-### BuddyAI-specific
-- `response_model` on every route?
-- AppError + ErrorResponse integrated?
-- SSE: `BuddyResponseChunk` / `DoneEvent` / `ErrorEvent`?
-- Zod pipeline: `check-schemas` runs?
-- `extra="forbid"` on public request models?
-
 ## Finding prefix
 
 F-CC-{NNN}

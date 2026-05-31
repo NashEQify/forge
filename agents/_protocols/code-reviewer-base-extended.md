@@ -53,9 +53,6 @@ required.]
 ## Check focus
 <persona-specific check points>
 
-### BuddyAI-specific (optional)
-<domain-specific BuddyAI patterns when relevant>
-
 ## Finding prefix
 <F-{ROLE-CODE}-{NNN}>
 
@@ -132,28 +129,25 @@ clear order**: what most often produces C/H findings comes first.
 
 ---
 
-## BuddyAI sub-section — convention
+## Consumer-specific extension point
 
-**Optional but recommended** when the persona's domain has
-recognizable specifics in BuddyAI / forge code patterns.
-Sub-section header: `### BuddyAI-specific`.
+**Optional extension point** for consumers that want to add domain-
+specific check patterns on top of the framework persona.
 
-Bullet list with concrete BuddyAI patterns / calls / schemas.
-Examples:
-- code-data: `asyncpg: $1, $2 parameters (no f-string)`,
-  `Alembic: migration order`, `pg_advisory_lock: lock-key
-  namespace`
-- code-reliability: `pg_advisory_lock cleanup on connection drop`,
-  `NATS reconnect resume logic`
+Framework personas do **not** carry a consumer section. Consumer
+repos that use the framework personas as a base may add a
+`### Consumer-specific` sub-section via persona-override files in
+their own repo with concrete patterns / calls / schemas for their
+stack (typical content: ORM parameterisation rules, lock-key
+namespace, schema migration order, framework-specific exception
+hierarchies, logging conventions, broker-reconnect logic). The
+framework SoT carries no consumer content.
 
-Generic BuddyAI checks (from `_protocols/code-reviewer-protocol.md`,
-do NOT replicate):
-- structlog instead of print/logging
-- asyncpg connection-pool patterns
-- Pydantic `model_dump` vs `dict`, `model_validate` vs constructor,
-  `extra="forbid"`
-- AppError instead of HTTPException
-- Resource cleanup with `async with`
+Language-stack conventions (e.g. Python structlog vs print, asyncpg
+pool patterns, Pydantic `model_dump`/`model_validate`/`extra="forbid"`)
+live in the matching language-stack skill (e.g.
+`skills/python_code_quality_enforcement/`), not under this
+extension point — they are stack-generic, not consumer-specific.
 
 ---
 

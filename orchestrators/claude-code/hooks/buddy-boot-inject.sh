@@ -5,15 +5,14 @@
 # --append-system-prompt FRAMEWORK_INJECT. claude-desktop / claude-web
 # run plain `claude` without those flags, so the persona-load never
 # fires. This hook recreates the inject as SessionStart additionalContext
-# for those entrypoints. Pattern adapted from BuddyAI's consumer-local
-# variant — generic so any forge-consuming repo can wire it from the
-# canonical framework location.
+# for those entrypoints. Generic so any forge-consuming repo can wire
+# it from the canonical framework location.
 #
 # Self-resolves FRAMEWORK_DIR via own location, so it works even when
 # CLAUDE_PROJECT_DIR is unset (which is the default in claude-desktop).
-# No marker gate — fires every SessionStart (matches BuddyAI behaviour;
-# the marker check in workflow-reminder.sh is unsafe in non-ephemeral
-# contexts where the filesystem persists across sessions).
+# No marker gate — fires every SessionStart; the marker check in
+# workflow-reminder.sh is unsafe in non-ephemeral contexts where the
+# filesystem persists across sessions.
 
 set -euo pipefail
 

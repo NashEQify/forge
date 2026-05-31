@@ -27,10 +27,11 @@ files, post-brain as structured queries — the logic stays.
 ## Context path
 
 Operates on the **active context path** (set by boot.md context
-routing). Project with its own `context/` → project path. In
-BuddyAI → BuddyAI path. Without `context/` → user context only.
-All paths relative to the active context path. **Exception —
-always global:** `context/user/` is always written in BuddyAI.
+routing). Project with its own `context/` → project path.
+Without `context/` → user context only. All paths relative to
+the active context path. **Exception — always global:**
+user-scope context (canonical `~/projects/personal/context/user/`)
+is always written there regardless of the active project path.
 
 ## Inputs
 

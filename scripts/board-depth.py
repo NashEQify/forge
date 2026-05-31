@@ -36,9 +36,6 @@ except ImportError:
 # repo-split the script lives in the framework repo but must still target
 # the active project for spec analysis.
 #
-# Pre-Split Invariant: when invoked from the BuddyAI monolith root without
-# BUDDY_PROJECT_ROOT set, PROJECT_ROOT == BuddyAI root, so existing
-# behaviour is preserved.
 PROJECT_ROOT = Path(os.environ.get("BUDDY_PROJECT_ROOT", Path.cwd())).resolve()
 SPECS_DIR = PROJECT_ROOT / "docs" / "specs"
 TASKS_DIR = PROJECT_ROOT / "docs" / "tasks"

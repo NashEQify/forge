@@ -66,18 +66,6 @@ error.
 - **Sorting / pagination:** off-by-one? Last page? Empty
   results?
 
-### BuddyAI-specific
-- **Session state machine:** transitions, SESSION_GATES,
-  closed→closed idempotency.
-- **Phase transitions:** 3-stage determination, marker
-  parsing, no marker?
-- **Greedy budget allocation:** priority order, budget not
-  enough? Audit invariant.
-- **Fact extraction (7e):** correct facts? False positives?
-  False negatives?
-- **Summary / compaction:** observation masking threshold,
-  fresh-tail protection.
-
 Additional output fields on critical / high: `concrete_input`,
 `expected_output`, `actual_output`.
 

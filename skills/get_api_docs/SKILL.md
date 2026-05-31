@@ -66,7 +66,7 @@ chub annotate <id> "<precise note>"
 Annotations show up on the next `chub get` automatically.
 Cross-session persistent.
 
-## Common doc IDs for the BuddyAI stack
+## Common doc IDs
 
 ```bash
 chub search "fastapi"
@@ -132,8 +132,8 @@ canonical first-party docs via WebFetch.
   API call in a new lib. Because: API assumptions from memory
   are often stale.
 - **NOT** ignore ANNOTATION blocks. INSTEAD read them; they
-  contain BuddyAI-specific conventions. Because: annotations
-  are the gap between lib defaults and our stack.
+  contain consumer-specific conventions. Because: annotations
+  are the gap between lib defaults and the consumer's stack.
 - **NOT** drop the docs on a "well-known" lib when the last
   check is >6 months old. INSTEAD lookup when uncertain.
   Because: APIs change.

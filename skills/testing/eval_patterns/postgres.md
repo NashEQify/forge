@@ -1,10 +1,12 @@
-# Eval Pattern: Postgres/Brain
+# Eval Pattern: Postgres
 
-Domain-specific quality criteria for Brain library tests (asyncpg, no ORM).
-The tester reads this file in execution mode and checks whether the written tests cover these criteria.
-Missing criteria → coverage-matrix gap → back to main-code-agent.
+Domain-specific quality criteria for asyncpg-based DB-layer tests
+(no ORM). The tester reads this file in execution mode and checks
+whether the written tests cover these criteria. Missing criteria →
+coverage-matrix gap → back to main-code-agent.
 
-SoT for Brain/Postgres testing quality. Referenced from `skills/testing/SKILL.md` (Eval Patterns section).
+SoT for Postgres testing quality. Referenced from
+`skills/testing/SKILL.md` (Eval Patterns section).
 
 **Stack context:** asyncpg directly (no ORM), parameterised queries, Postgres 16 + pgvector (768d nomic-embed-text), JSONB for metadata, UUID4 as primary keys.
 
@@ -29,7 +31,7 @@ from pathlib import Path
 
 def test_no_string_formatting_in_sql():
     """PG-U1: No f-strings or .format() in SQL queries."""
-    brain_src = Path("src/buddyai/brain/")
+    brain_src = Path("src/myapp/db/")
     violations = []
 
     for py_file in brain_src.rglob("*.py"):
@@ -46,7 +48,7 @@ def test_no_string_formatting_in_sql():
     assert violations == [], f"SQL injection risk:\n" + "\n".join(violations)
 ```
 
-**Note:** This test is static (L0-like) but domain-specific to Brain code. It runs as part of the L2 suite because it deliberately checks Brain modules, not generic repo structure.
+**Note:** This test is static (L0-like) but domain-specific to the DB-layer code. It runs as part of the L2 suite because it deliberately checks the project's DB modules, not generic repo structure.
 
 ### PG-U2: NULL Handling
 
@@ -183,7 +185,7 @@ import pytest
 @pytest.mark.integration
 async def test_pool_lifecycle():
     """PG-I1: Pool created, usable, and closed cleanly."""
-    from buddyai.brain.pool import create_pool, TEST_DSN
+    from myapp.db.pool import create_pool, TEST_DSN
 
     pool = await create_pool(dsn=TEST_DSN, min_size=1, max_size=3)
 
@@ -231,11 +233,11 @@ async def test_read_your_own_writes(brain):
 @pytest.mark.integration
 async def test_concurrent_writes_no_lost_updates(brain_pool):
     """PG-I2: Parallel updates do not lose data."""
-    from buddyai.brain.core import Brain
+    from myapp.db.core import Repo
 
     # Create a shared entity
     async with brain_pool.acquire() as conn:
-        b = Brain(conn)
+        b = Repo(conn)
         entity_id = await b.create_entity(name="concurrent-test", entity_type="counter")
 
     async def increment(pool, eid, field_value):
@@ -254,7 +256,7 @@ async def test_concurrent_writes_no_lost_updates(brain_pool):
     await asyncio.gather(*tasks)
 
     async with brain_pool.acquire() as conn:
-        b = Brain(conn)
+        b = Repo(conn)
         entity = await b.get_entity(entity_id)
     assert entity["metadata"]["counter"] == 10, "Lost update: not all increments counted"
 ```
@@ -331,7 +333,7 @@ async def test_alembic_upgrade_downgrade(live_services):
         result = subprocess.run(
             ["alembic", cmd, "head"] if cmd == "upgrade" else ["alembic", cmd, "-1"],
             capture_output=True, text=True,
-            env={"DATABASE_URL": "postgresql://test:test@localhost:5433/buddyai_test"},
+            env={"DATABASE_URL": "postgresql://test:test@localhost:5433/myapp_test"},
         )
         assert result.returncode == 0, f"alembic {cmd} failed:\n{result.stderr}"
         return result
@@ -372,7 +374,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-# Reusable strategy for Brain entities
+# Reusable strategy for example entities
 entity_names = st.text(
     alphabet=st.characters(categories=("L", "N", "P", "Z")),
     min_size=1,
@@ -540,7 +542,7 @@ These strategies can be placed in `tests/brain/strategies.py` and used via impor
 
 ```python
 # tests/brain/strategies.py
-"""Reusable hypothesis strategies for Brain models."""
+"""Reusable hypothesis strategies for domain models."""
 from hypothesis import strategies as st
 import numpy as np
 
@@ -578,7 +580,7 @@ relation_types = st.sampled_from(["depends_on", "related_to", "part_of", "derive
 
 ## Checklist for the Tester
 
-In execution mode for Brain/Postgres-related tests, walk through these criteria:
+In execution mode for Postgres-related tests, walk through these criteria:
 
 1. Every query in new code: PG-U1 (parameterised)? — static analysis.
 2. Optional fields: is PG-U2 (NULL handling) covered?

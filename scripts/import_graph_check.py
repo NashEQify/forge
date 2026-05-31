@@ -21,13 +21,13 @@ Usage:
 Examples:
     # "Does chat.state transitively reach audit.contracts.audit?"
     python3 scripts/import_graph_check.py \
-        --from buddyai.chat.state \
-        --to buddyai.audit.contracts.audit \
+        --from myapp.chat.state \
+        --to myapp.audit.contracts.audit \
         --root src/
 
     # "Are there any cycles starting from chat.state?"
     python3 scripts/import_graph_check.py \
-        --from buddyai.chat.state \
+        --from myapp.chat.state \
         --detect-cycles \
         --root src/
 
@@ -197,7 +197,7 @@ def main() -> int:
         "--from",
         dest="from_module",
         required=True,
-        help="dotted module name to start from (e.g. buddyai.chat.state)",
+        help="dotted module name to start from (e.g. myapp.chat.state)",
     )
     parser.add_argument(
         "--to",

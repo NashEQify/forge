@@ -35,7 +35,7 @@ Changes here -> call the model-switch skill -> adapters update automatically.
 Manual: update this table + both adapter files.
 With skill: call `skills/model_switch/SKILL.md`.
 
-## LiteLLM runtime router (BuddyAI harness)
+## LiteLLM runtime router (when used by a consumer)
 
 **Decision:** Day 1 with cloud fallback. Ollama local as primary, cloud API as fallback.
 LiteLLM container in docker-compose.yml. Model routing config: `config/litellm_config.yaml`.

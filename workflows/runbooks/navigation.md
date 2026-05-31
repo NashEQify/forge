@@ -34,7 +34,6 @@ belongs in a consumer repo). `project_bootstrap/` was removed
 | "Rewrite the architecture docs from scratch" | `docs-rewrite/` |
 | "Persist end of session" | `save/` |
 | "Maintain the context system" | `context_housekeeping/` |
-| "Bootstrap a new host (BuddyAI-specific)" | `selfhost/` (REPO-SCOPE-DRIFT) |
 
 ## Inventory (auto)
 

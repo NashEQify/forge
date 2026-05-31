@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# pre-commit.sh — Git pre-commit hook for BuddyAI [Task-292]
+# pre-commit.sh — Git pre-commit hook for forge consumers.
 #
-# Canonical location post-Task-011 Phase 2a: orchestrators/claude-code/hooks/.
-# `scripts/hooks/` remains as symlink-bridge until Phase 5 sunset.
+# Canonical location: orchestrators/claude-code/hooks/.
 # Symlink into .git/hooks/pre-commit (from any consumer repo):
 #   ln -sf $FRAMEWORK_DIR/orchestrators/claude-code/hooks/pre-commit.sh .git/hooks/pre-commit
 #
@@ -279,19 +278,17 @@ if [ -f "${COMMIT_MSG_FILE:-}" ]; then
   fi
 fi
 
-# ---------- Check 6: PERSIST-GATE (WARN) — Task-011 Phase 3b H3 ----------
+# ---------- Check 6: PERSIST-GATE (WARN) ----------
 #
 # When Check 2 detected a status/readiness change in a task YAML, verify
-# that the commit also touches context/overview.md or context/history/*
-# (framework-side or BuddyAI-side). If not → WARN "Persist Gate skipped".
+# that the commit also touches context/overview.md or context/history/*.
+# If not → WARN "Persist Gate skipped".
 # Re-uses STATUS_CHANGE_FOUND from Check 2.
 
 if [ "$STATUS_CHANGE_FOUND" -eq 1 ]; then
   CONTEXT_FILES=$(git diff --cached --name-only -- \
     'context/overview.md' \
     'context/history/*' \
-    'BuddyAI/context/overview.md' \
-    'BuddyAI/context/history/*' \
     2>/dev/null || true)
 
   if [ -z "$CONTEXT_FILES" ]; then

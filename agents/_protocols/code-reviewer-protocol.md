@@ -28,16 +28,6 @@ sections in the review file.
 Each role formulates these steps in domain-specific terms inside
 its persona.
 
-## BuddyAI-specific checks
-
-- structlog instead of print/logging
-- asyncpg: connection-pool patterns, transaction timeouts
-- Pydantic: `model_dump()` vs `dict()`, `model_validate()` vs
-  constructor, `extra="forbid"`
-- AppError instead of HTTPException
-- Resource cleanup: `async with` for connections, subscriptions,
-  locks
-
 ## Output format
 
 Layout: `per_finding` (default). Required frontmatter:

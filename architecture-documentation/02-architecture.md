@@ -111,7 +111,7 @@ via Buddy (Board, Council, Standalone). Buddy never leaves the phase model:
 ```
 ORIENT  → date '+%Y-%m-%d %H:%M %Z' + hostname + pwd
 RESOLVE → ls $CWD/intent.md (upward search)
-ROUTE   → context routing (inside BuddyAI / external with context/ / external without)
+ROUTE   → context routing (project with context/ / external with context/ / external without)
 LOAD    → always-load (values.md, profile.md, boot-navigation.md) + intent-load
 RESUME  → session-buffer + session-handoff + plan_engine --boot (root sessions)
 GREET   → short greeting (style: soul.md)
