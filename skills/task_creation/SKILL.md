@@ -143,6 +143,13 @@ Format: `docs/tasks/NNN.yaml` + `NNN.md` (see
 not here.
 
 **`milestone` MUST** be a key from `docs/plan.yaml` milestones.
+Pick the milestone that fits the task **inhaltlich** (read the task
+content, don't default to the last-used one). If no existing milestone
+fits → add a new milestone entry to `docs/plan.yaml`
+(`key + title + desc + phases + requires`) **before** running step 5.
+New-milestone justification belongs in the `desc:` field; existing
+milestones win on fit, a new one is only created when the task content
+genuinely doesn't belong anywhere.
 
 **`spec_ref` required check:** when the task implements an
 existing spec → `spec_ref` MUST point at the spec. `null` only

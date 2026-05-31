@@ -483,8 +483,9 @@ synthesis preconditions.
 | cross-task AC validation at spec-board | `skills/spec_board/SKILL.md` §4a Cross-task AC validation | codified (L-053) |
 | orchestrator architecture-comprehension as precondition for cross-component synthesis | `agents/buddy/operational.md` §Architecture-Comprehension (pre-dispatch + post-return) | codified (L-054) |
 | discipline-in-SKILL-text-first, hooks-as-last-resort-verifier (meta-rule) | `docs/dogfood-learnings/README.md` §Discipline-location rule | codified (L-055) |
+| council-discipline parity with board (uses-protocols + chief + adversary + pre-frame-check + cold-start brief + evidence-pointer mandate + post-council coherence) | `skills/council/SKILL.md` (rewrite) + `skills/council/REFERENCE.md` + `agents/council-chief.md` + `agents/council-adversary.md` + `agents/council-member.md` §Evidence-pointer mandate + `workflows/templates/council.yaml` phases 0/1/3 | codified (council-board-parity) |
 
-The meta-rule (last row) binds the rest: every entry above is
+The meta-rule (above) binds the rest: every entry above is
 codified in SKILL / agent / runbook text first; runtime hooks are
 mechanical verifiers, not the rule home. Cross-runtime parity gaps
 (Claude Code has more hook coverage than Codex / OpenCode) do not

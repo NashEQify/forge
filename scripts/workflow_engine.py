@@ -2481,7 +2481,24 @@ def cmd_guard(args: argparse.Namespace) -> None:
     # Named guards — extend as needed
     # For now, exit 1 (skip) for unknown guards
     if guard_name == "council-needed":
-        # Heuristic: skip council for now (no implementation yet)
+        # Council is Buddy-judgmental (skills/council/SKILL.md §1.0
+        # proportionality gate is the SoT, not an engine heuristic).
+        # Opt-in mechanism: Buddy writes `council-required: true` in the
+        # state file (frontmatter or body marker) when frame report's
+        # >1-path + hard-to-reverse criteria fire. Guard greps for it.
+        # Default = skip; council fires when Buddy explicitly marks it.
+        if task_id:
+            tid = resolve_task_id(task_id)
+            if tid:
+                # Try common solve state-file paths
+                for pattern in [f"*{tid}*.md", f"*-task-{tid:03d}-*.md"]:
+                    for state_file in (PROJECT_ROOT / "docs" / "solve").glob(pattern):
+                        try:
+                            content = state_file.read_text()
+                            if "council-required: true" in content or "council_required: true" in content:
+                                sys.exit(EXIT_SUCCESS)
+                        except OSError:
+                            continue
         sys.exit(1)
     elif guard_name == "delta-needed":
         sys.exit(1)

@@ -1,185 +1,109 @@
 ---
 name: council
 description: >
-  Structured decision-making. Two modes: (a) Architectural — 3-4
-  council-member subagents in parallel, context isolation, Buddy
-  consolidates. (b) Interactive — Buddy moderates a user dialog
-  with perspectives (phase 1-2-3).
-  Triggers when an architecture/strategy decision has more than one viable path and is hard to reverse; NOT for single-path or easily-reversible decisions (decide directly).
+  Structured architectural / strategic decision-making. Two modes:
+  (a) Architectural — 3-6 council-member subagents in parallel,
+  context-isolation, chief consolidates, Buddy decides.
+  (b) Interactive — Buddy moderates a user dialog with perspectives.
+  Triggers when an architecture/strategy decision has more than one viable path and is hard to reverse, AND Buddy is uncertain; NOT for single-path, easily-reversible, or current-scope-decidable cross-scope contradictions.
 status: active
+verification_tier: 1
+evidence_layout: per_finding
 relevant_for: ["solution-expert"]
 invocation:
   primary: workflow-step
   secondary: [user-facing]
 disable-model-invocation: false
-modes: [architectural, interactive]
-uses: []
+modes: [light, standard, full, interactive]
+uses: [_protocols/plan-review, _protocols/context-isolation, _protocols/dispatch-template, _protocols/consolidation-preservation, _protocols/content-preservation, _protocols/piebald-budget, _protocols/analysis-mode-gate, _protocols/evidence-pointer-schema, _protocols/discourse]
 ---
 
 # Skill: council
 
-Structured decision-making in two mode flavours.
+Buddy checklist. Detail mechanics: `REFERENCE.md`.
 
-## Mode choice (MUST — decide before calling)
+## 0. Plan + review (required without a frame)
 
-| Mode | When | How |
-|------|------|-----|
-| **Architectural Council** | Buddy has its own proposal but is uncertain; architecture decision with pattern debt; >1 layer; hard to reverse; user does NOT want to decide alone | 4 domain `council-member` subagents + **1 adversary member (required)** in parallel via the Agent tool. Each domain member has its own role (e.g. architecture, pragmatist, operations, pipeline-architect). The adversary runs the smart-but-wrong check + an explicit authority audit (no lean statement). Each is context-isolated. A briefing file is the input. Buddy consolidates the returns into the synthesis. |
-| **Interactive Council** | User wants to decide in dialog; perspectives should argue visibly; user feedback loop per round | Buddy moderates phase 1-2-3 (see below). Perspectives speak in first person. The user answers between rounds. |
+Direct council dispatch without prior `frame`: plan block (scope / tool / alternatives) + self-review + (non-trivial) `plan-adversary` dispatch. With existing frame report: reference, don't re-run. Templates + triggers: `_protocols/plan-review.md`.
 
-Default on a trigger from `operational.md` (architecture decision,
-Buddy uncertain): **Architectural Council**. Use Interactive only
-when the user explicitly asks for a dialog mode.
+## 1. Mode determination
 
-## Anti-patterns — when NOT to council
+### 1.0 Proportionality gate (MANDATORY — runs before §1.1)
 
-### Cross-scope contradiction ≠ current-scope undecidable
+Default = escalate. Answer 4:
 
-If the question presents as "spec corpus has multiple representations
-of X across different scopes", FIRST run the scope-check:
+1. >1 genuinely viable path AND hard to reverse?
+2. >1 layer / component affected by the decision?
+3. Substantial impact on security / sovereignty / simplicity / experience / compatibility / scale?
+4. Buddy genuinely uncertain (not "looking for confirmation")?
 
-1. Is the CURRENT-SCOPE path internally consistent? Check producer +
-   consumer + adjacent uses. If all use the same representation
-   internally, the path IS decidable.
-2. Are the contradicting representations in DIFFERENT scopes (legacy
-   code path / future planned work / cross-cutting infrastructure)?
-3. Is there a way to preserve the current-scope path + file the
-   cross-scope normalization as a separate follow-up task?
+**Answer pattern:**
+- **≥3 yes** → council (proceed to §1.1).
+- **≤2 yes** → no council. Document skip: *"Council nicht nötig: <rationale>"*. Decide directly.
 
-If 1 + 2 + 3 = yes: **NO council**. Preserve current-scope path; file
-the normalization task. Council is OVER-ESCALATION for cross-scope
-contradictions when current-scope is internally consistent.
+**Override floor (forces standard or full regardless of count):** security / sovereignty hard constraint AND multi-component · new state-vocabulary or new public-API contract · new normative cross-spec rule · foundational pattern replacement.
 
-Council IS triggered by: current-scope has no decidable path;
-multiple viable options exist WITHIN scope; choice is M-level-blocking;
-reversibility is low.
+**Anti-pattern (cross-scope vs current-scope):** if the question presents as "spec corpus has multiple representations of X" but current-scope path is internally consistent (producer + consumer + adjacent uses all aligned) and contradictions live in different scopes → **NO council**. Preserve current path, file normalisation task. Council on cross-scope when current is decidable wastes a cycle. Detail: REFERENCE.md.
 
-"Spec corpus has multiple representations" sounds like undecidability
-but can be just legacy + future + current-active living side by side.
-If the active scope's producer + consumer + adjacent uses all align
-on one representation, the path IS decidable; council on the broader
-contradiction wastes a cycle and introduces orchestrator-re-framing
-risk (a Council recommendation taken autonomously becomes a frame
-the user has to unwind). The check is mechanical:
-scope-internal-consistency first, cross-scope normalization second.
+### 1.1 Mode choice (after gate passes)
 
-## Architectural Council — spawn pattern
+| Mode | Team |
+|------|------|
+| **light** | 3 members + council-chief. No adversary, no frame-check, no discourse. **Default on §1.0 pass.** |
+| **standard** | 3 members + chief + **council-adversary** + pre-council frame check + post-council coherence check. Fires when ≥1 of §1.0 override-floor items, OR ≥2 of {hard-to-reverse, multi-component, security/sovereignty}. |
+| **full** | 4-6 members + chief + adversary + frame-check + coherence-check + discourse on dissent. >2 dimensions OR foundational pattern OR ≥2 hard constraints. |
+| **interactive** | Buddy moderates dialog (REFERENCE.md). User explicit ask only. |
 
-1. **Briefing file** (self-contained): `docs/reviews/council/{date}-{topic}-briefing.md`
-   — question, intent anchoring, context-file paths, Buddy's
-   proposal (to review, NOT to adopt), constraints, output format,
-   known conflicts.
-2. `mkdir -p docs/reviews/council/`.
-3. **Spawn N members in ONE tool block** (4 domain + 1 adversary):
-   - subagent_type: `council-member` (domain) or `code-adversary` (adversary)
-   - `run_in_background: true`
-   - prompt: role + briefing path + output path
-   - Adversary mandatory: smart-but-wrong + explicit authority audit,
-     no lean statement.
-4. Wait for returns.
-5. **Buddy synthesises** (required format):
-   - §1 Position map per member: Lean ("A+", "C+mitigations",
-     "no-lean" for adversary) + Primary rationale (1 sentence) +
-     Secondary-argument carriers (list with section ref + 3-5 words
-     per sub-issue).
-   - §2 Conflicts between members named.
-   - §3 Convergence points with member-file range citations
-     ("3/4 caught Y: dse + opsrel + pcc (pcc.md:63-95)").
-   - §4 Recommendation per sub-decision.
-   - §5 Required verify steps for the follow-up task (when lean
-     substantial).
-   - §6 User decides.
+Default = light (proportional release valve). Escalation is criterion-driven, not Buddy-uncertain.
 
-**Trigger consequence (NON-NEGOTIABLE):** Council trigger from
-`operational.md` (>1 path + hard to reverse + >1 layer + impact +
-Buddy uncertain) → spawn MUST be in the SAME tool block as other
-follow-up actions. Never "council later; X first". Forgetting →
-Buddy decides alone, user finds out too late.
+## 2. Pre-council frame check (standard / full)
 
-## Interactive Council — user dialog
+**Trigger:** Buddy-drafted briefing without upstream frame report. (When `frame/SKILL.md` already produced a frame-report for this question, reference it — don't re-run.) Mode determines whether the trigger applies; light skips frame-check by mode.
 
-When a decision has multiple valid paths and the user has to be
-involved. Not for clear-consensus questions (direct answer suffices).
+Buddy drafts briefing → dispatches `plan-adversary` cold-start on the draft (criteria 1-6 per `_protocols/plan-review.md`; focus: does question pre-decide by shape? option-set complete? stakeholders missing?) → persists return verbatim as `docs/reviews/council/<date>-<topic>-frame-check.md` → distills concerns into FINAL briefing.
 
-**Inputs (caller provides):** problem statement (1-3 sentences);
-intent anchoring (one-sentence derivation chain); 3-6 perspectives
-ordered by rank, each with identifier + key question. Optional:
-frame report (candidates from `frame/SKILL.md` §sub-step 7+8).
+Members see FINAL briefing only. Council-chief reads BOTH at CHIEF-1.0.
 
-**Perspective orientation:**
+## 3. Briefing format (cold-start clean — MANDATORY)
 
-| Decision type | Typical perspectives |
-|---|---|
-| Technical architecture | Security, sovereignty, simplicity, experience, compatibility, scale (→ solution-expert fixed) |
-| Project prioritization | Impact, effort, urgency, learning, risk |
-| Infrastructure / ops | Reliability, security, sovereignty, simplicity, cost |
-| Personal direction | Alignment, opportunity cost, reversibility, energy |
-| Buy / invest | Need, sovereignty, cost, quality, alternatives |
+**MUST:** question (1 sentence) · intent_chain anchoring · context-file paths · null option (1-2 sentences) · perspectives + ranks · per-option reversibility cost-band (S/M/L/XL effort × named consumers impacted — lets adversary §Reversibility-trap check verify the claim rather than reconstruct from scratch) · output paths · file-output OVERRIDE block (`_protocols/dispatch-template.md` §File-Output-OVERRIDE).
 
-Rank = default weighting on conflicts (higher wins). User can
-override; document it.
+**MUST NOT:** Buddy's proposal · pre-classified conflicts · severity tags · lean hints. Brief-contagion empirically demonstrated (L-046).
 
-### Phase 1 — Intake check
+## 4. Buddy checklist (dispatch)
 
-(1) **Derivation chain** — repeat intent anchoring; if missing/broken,
-STOP and clarify. (2) **Problem vs symptom** — name the suspected
-real problem if you smell one; don't continue until settled.
-(3) **Null option** — what if we do nothing? 1-2 sentences.
+1. §1.0 gate → mode pick.
+2. §2 pre-council frame check (standard / full).
+3. Write briefing per §3 (clean). Path: §7.
+4. Spawn N members + adversary in ONE tool block, parallel, `run_in_background: true` (subagent_type + perspective + briefing path + output path + file-output OVERRIDE).
+5. Wait, then spawn `council-chief` with all member outputs + adversary + (when present) frame-check artifact.
+6. Read chief consolidated → recommended verdict + tracking-table verification.
+7. (Full + dissent) Discourse one round per `_protocols/discourse.md`.
+8. Buddy decides. Post-council coherence check applies via `agents/buddy/operational.md` §Architecture-Comprehension B (unconditional Buddy-side rule — not duplicated as a council step). Risk carry-forward when positions unresolved. ADR per `documentation_and_adrs/SKILL.md` on substantial decisions.
 
-Then present candidates (2-4; frame-report candidates first if
-available; null option if realistic). 2-3 sentences each, no
-assessment.
+## 5. Anti-patterns
 
-Close: missing candidate? perspectives right? **Wait for user.**
+- **NOT** Buddy's proposal in briefing → cold-start per §3; proposal stays in frame-check artifact.
+- **NOT** consolidate without council-chief (≥3 members) → Inv 1 hard rule; chief is consolidator-tool.
+- **NOT** skip pre-council frame check on standard/full → frame-check IS how you find brief contamination.
+- **NOT** adopt chief recommendation without post-council coherence check per `agents/buddy/operational.md` §Architecture-Comprehension B → unconditional Buddy-side, escalate on topology contradiction.
+- **NOT** `code-adversary` for council adversary → `council-adversary` (architecture-decision-tuned).
+- **NOT** light mode on hard-to-reverse → standard or full.
 
-### Phase 2 — Council rounds
+## 6. Contract
 
-Per round:
-1. Pick 2-3 perspectives that contribute most; not all every time.
-2. Each speaks in first person, identifier prefixed, 2-4 sentences:
-   "**Reliability:** what worries me about option A is ...".
-3. Name conflicts immediately; default = rank wins; ask user if
-   they want to weigh differently.
-4. End with a concrete question (not "what do you think?"): "X says
-   A, Y says B. What weighs more here?". **Wait for user.**
+**INPUT:** decision-question + intent_chain + context-files. Optional: frame report, ADR catalogue, deploy-state observations.
 
-Moderation: user drifts against higher-ranked perspective → object,
-make it visible. Consensus forming → summarize, phase 3. User
-overrides a perspective → accept + document. No convergence after
-2 rounds → summarize open conflicts, ask user directly.
+**OUTPUT:** council-decision artifact (`docs/reviews/council/<date>-<topic>-decision.md`) with: chief consolidation + recommended-verdict label + Buddy's actual decision + rationale + risk carry-forward (when applicable) + ADR pointer (when substantial). Backward-compat: also valid for `docs/tasks/{task_id}-council-decision.md` per existing `workflows/templates/council.yaml`.
 
-### Phase 3 — Synthesis
+**DOES NOT:** implement; write spec; choose autonomously (user decides on user-facing decisions; Buddy decides on framework-internal per soul.md).
 
-(1) Recommendation (1-2 options). (2) What gets sacrificed (which
-perspective loses + what that means concretely). (3) Open risks.
-(4) Demand decision ("Are we going with X?", not "looks good?").
-Council finished only when user has chosen.
+**FAIL handling:** chief reports NO-CONVERGENCE → check whether briefing framing is wrong (re-frame + new council on revised question) OR escalate to user. Standard → Full on ≥1 adversary BLOCKER + member disagreement.
 
-## Done
+## 7. Output paths
 
-Intent anchoring documented; problem validated; perspectives
-argued + user responded; conflicts resolved (overridden ranks
-justified); trade-offs named; user chose. Substantial decisions →
-offer ADR in `decisions.md`.
+Base: `docs/reviews/council/<date>-<topic>-{briefing,frame-check,{perspective},consolidated,decision}.md`. Build-context backward-compat: `docs/tasks/{task_id}-council-*.md` per `workflows/templates/council.yaml`.
 
-## Contract
+## 8. Boundary
 
-**INPUT:** problem statement + intent anchoring + perspectives
-(required); optional frame report.
-
-**OUTPUT:** decision (1 sentence, user-confirmed) + rationale
-(references perspectives + rank weighting) + trade-offs + open risks
-+ overridden ranks (where applicable).
-
-**DOES NOT:** implement; write spec; choose autonomously (user
-always decides).
-
-**FAIL:** no convergence after 2 rounds → summarize conflicts, ask
-direct; user uncertainty → re-check null option, research handoff.
-
-## Relation to solution-expert
-
-`solution-expert` = preconfigured specialization for technical
-architecture (fixed perspectives: security, sovereignty, simplicity,
-experience, compatibility, scale). For other decision types: Buddy
-instantiates this skill directly with situational perspectives.
+Spec review → `spec_board`. Code diff → `code_review_board`. Pre-code plan → `impl_plan_review`. Technical architecture moderator → `solution-expert` (instantiates this skill, 6 fixed perspectives per `values.md`). Non-technical → this skill with situational perspectives (REFERENCE.md).

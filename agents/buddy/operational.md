@@ -55,7 +55,11 @@ Behavior prohibitions during board/council: CLAUDE.md §Inv 1.
 - **Council** (architecture): `skills/council/SKILL.md`. **Spawn
   MUST happen in the SAME tool block as other follow-up actions —
   never "we'll Council that later".** Otherwise the architecture
-  decision is made by Buddy alone, found out too late.
+  decision is made by Buddy alone, found out too late. **≥3 members
+  → `council-chief` consolidator-tool mandatory per Inv 1**; Buddy
+  reads consolidation, decides. Standard / full also: `council-adversary`
+  + pre-council frame check (plan-adversary on briefing draft) +
+  post-council §Architecture-Comprehension B re-apply (unconditional).
 - **Code-Review-Board** (code diff): `skills/code_review_board/SKILL.md`
   (L1 focused / L2 full board / fix-pass single-reviewer pass-1.5).
   **After MCA returns `status=done`, Buddy MUST pick level and
@@ -69,7 +73,7 @@ Behavior prohibitions during board/council: CLAUDE.md §Inv 1.
   `n/a` requires stated reason.
 
 **Inline-return fallback (sub-agent ignores file-output override):**
-If a board sub-agent ignores the file-output override from
+If a board OR council sub-agent ignores the file-output override from
 `_protocols/dispatch-template.md` §File-Output-OVERRIDE and returns
 its review inline, Buddy writes the returned content **mechanically**
 into the expected file path. Verbatim — no content edits, no sorting,
@@ -77,8 +81,8 @@ no consolidation. Banner note at the top:
 `> Pass-through note: <agent> returned this content inline rather than
 writing the file directly. Buddy wrote it here verbatim per dispatcher
 mechanics. No content modified.` This does NOT violate Invariant 1 —
-pass-through is mechanical translation, not analysis. The Chief reads
-the file as usual.
+pass-through is mechanical translation, not analysis. The chief
+(board-chief / code-chief / council-chief) reads the file as usual.
 
 ### Architecture-Comprehension (pre-dispatch + post-return discipline)
 
