@@ -211,10 +211,10 @@ drill at least 1 axis finding references a drill element.
 
 `F-CR-{NNN}` — axis marker in the body (see above).
 
-**Migration note 2026-04-30:** F-CQ (formerly code-quality),
-F-CR (formerly code-architecture), F-CP (formerly
-code-performance) consolidated to F-CR. On pre-2026-04-30
-audit files: the old prefixes stay in frozen zones.
+**Migration note:** F-CQ (formerly code-quality), F-CR
+(formerly code-architecture), F-CP (formerly code-performance)
+consolidated to F-CR. Historical audit files in frozen zones
+keep the old prefixes.
 
 ---
 

@@ -10,7 +10,6 @@
 `_protocols/code-reviewer-protocol.md` (code-specific) with the
 code-reviewer persona conventions. Loaded in addition to both.
 
-**Created:** 2026-04-30 (Cluster 5 council hybrid migration).
 **Purpose:** code-reviewer persona standard pattern as a single
 source of truth — pattern replication in persona files reduced,
 consistency centralized.

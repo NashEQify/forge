@@ -192,9 +192,9 @@ per-turn gate, no hook.
 
 Background: an earlier active FACTUAL pipeline (Stop+SessionEnd
 hooks, background agent on user transcripts) was retired without
-replacement on 2026-05-03 — it worked unreliably, wrote silently
-into a user path without per-session authorization, and the outcome
-was not verifiable.
+replacement — it worked unreliably, wrote silently into a user
+path without per-session authorization, and the outcome was not
+verifiable.
 
 ### Brain logic during incidents
 

@@ -132,7 +132,7 @@ ux-reviewer-protocol, first-principles-check, reviewer-reasoning-trace
 knowledge_processor, knowledge_capture, task_creation, task_status_update,
 get_api_docs, youtube_subtitles, documentation_and_adrs
 
-**Deleted (2026-04-05):** selective_review (-> spec_board + cross-ref brief),
+**Deleted:** selective_review (-> spec_board + cross-ref brief),
 backlog_management (-> plan_engine, task_creation, task_status_update)
 
 ---

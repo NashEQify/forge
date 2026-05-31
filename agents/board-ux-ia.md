@@ -11,8 +11,7 @@ findability, content strategy.
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/ux-reviewer-protocol.md`.
 
-**Intentional protocol exception** (documented 2026-05-01 after
-the 366-BC tier-3 clarification): board-ux-ia does **not** load
+**Intentional protocol exception:** board-ux-ia does **not** load
 `reviewer-reasoning-trace.md` and does **not** load
 `first-principles-check.md`, in contrast to board-ux-heuristic
 (who runs as primus with full drill+trace discipline).
@@ -22,8 +21,7 @@ interaction are focused sub-reviewers with their own check
 focus (IA: navigation / findability / 2-click rule; IX: flows /
 A11y / dark theme). The consolidation step by ux-heuristic
 delivers the drill+trace synthesis for the overall UX-Board
-verdict. The pre-2026-05-01 file did not document this rationale
-(366-C2 observation 4).
+verdict.
 
 ## Anti-rationalization
 

@@ -12,7 +12,7 @@ Protocols: `_protocols/reviewer-base.md`,
 `_protocols/code-reviewer-protocol.md`,
 `_protocols/code-reviewer-base-extended.md`.
 
-## Cross-board mode (docs clarification 2026-05-01, 366-BC tier-3)
+## Cross-board mode
 
 This persona runs cross-board with two distinct invocation
 paths — per call **one mode active, not both at once**:
