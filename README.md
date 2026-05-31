@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="assets/vibeforge-logo.png" width="240" alt="forge mascot — a friendly furnace with headphones smithing code on a circuit-board anvil. The forged code reads: def forge(vibes): build(); ship()." />
-</p>
+<img src="assets/vibeforge-logo.png" align="right" width="200" alt="forge mascot — a friendly furnace with headphones smithing code on a circuit-board anvil. The forged code reads: def forge(vibes): build(); ship()." />
 
 # forge
 
