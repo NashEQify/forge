@@ -199,7 +199,7 @@ generates the user-specific `opencode.jsonc` (gitignored).
 
 | Aspect | OC behaviour |
 |---|---|
-| PreToolUse hooks | **None.** The CC-Terminal-only PreToolUse layer was dropped. The `forge-hooks.ts` TS plugin used to translate `tool.execute.{before,after}` events into CC-shaped JSON; it is now obsolete (slated for removal) |
+| PreToolUse hooks | **None.** No tool-event hook layer on either harness — the CC-Terminal PreToolUse/PostToolUse layer was dropped framework-wide |
 | Pre-commit hook | Identical — git-side, runs the same 5 checks |
 | Consumer context | manual via `--add-dir <consumer-repo>` |
 | Project AGENTS.md | applies in addition, never instead |

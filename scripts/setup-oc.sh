@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# setup-oc.sh — Setup fuer den oc-Launcher (OpenCode), opencode.jsonc und
-# die forge-hooks Plugin-Voraussetzungen.
+# setup-oc.sh — Setup fuer den oc-Launcher (OpenCode) und opencode.jsonc.
 #
 # Was es tut:
 #   1. Erkennt FRAMEWORK_DIR aus eigenem Standort.
@@ -8,9 +7,7 @@
 #      (substituiert ${FRAMEWORK_DIR} und ${HOME}).
 #   3. Kopiert orchestrators/opencode/bin/oc nach ~/.local/bin/oc mit
 #      install-time FRAMEWORK_DIR-Substitution (analog zu setup-cc.sh).
-#   4. Verifiziert das forge-hooks Plugin
-#      (.opencode/plugins/forge-hooks.ts).
-#   5. Pruefe Bun (OpenCode-Runtime) und opencode CLI Verfuegbarkeit.
+#   4. Pruefe opencode CLI Verfuegbarkeit.
 #
 # Idempotent. Safe to re-run.
 #
@@ -18,7 +15,6 @@
 #
 # Voraussetzungen:
 #   - opencode CLI installiert (`opencode --version`)
-#   - Bun runtime (kommt mit OpenCode)
 #   - ~/.local/bin/ im PATH (sonst Warnung)
 
 set -euo pipefail
@@ -31,7 +27,6 @@ INSTALL_PATH="$INSTALL_DIR/oc"
 TEMPLATE="$FRAMEWORK_DIR/orchestrators/opencode/opencode.jsonc.example"
 TARGET="$FRAMEWORK_DIR/orchestrators/opencode/opencode.jsonc"
 LAUNCHER_SOURCE="$FRAMEWORK_DIR/orchestrators/opencode/bin/oc"
-PLUGIN_FILE="$FRAMEWORK_DIR/orchestrators/opencode/.opencode/plugins/forge-hooks.ts"
 
 # --- Checks ---
 if [ ! -f "$FRAMEWORK_DIR/CLAUDE.md" ]; then
@@ -77,14 +72,6 @@ if ! grep -q "^FRAMEWORK_DIR_INSTALLED=\"$FRAMEWORK_DIR\"" "$INSTALL_PATH"; then
   exit 1
 fi
 
-# --- Plugin presence check ---
-if [ -f "$PLUGIN_FILE" ]; then
-  echo "forge-hooks plugin: $PLUGIN_FILE (auto-loaded by OpenCode)"
-else
-  echo "WARNUNG: forge-hooks plugin fehlt at $PLUGIN_FILE — Hook-Discipline-Layer NICHT aktiv." >&2
-  echo "         Das Methodology-Layer (agents/skills/workflows) laeuft trotzdem." >&2
-fi
-
 # --- PATH check ---
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
   echo ""
@@ -101,21 +88,7 @@ else
   echo "opencode: $(command -v opencode)"
 fi
 
-# Bun runtime: OpenCode bundles its own Bun, but a system Bun is also fine.
-# The plugin uses Bun.spawn which is OpenCode-runtime-provided either way.
-# This check is informational only.
-if command -v bun &>/dev/null; then
-  echo "bun (system): $(command -v bun) — OK fuer Plugin-Entwicklung"
-else
-  echo "Info: 'bun' nicht im PATH. OpenCode bringt eigenen Bun — Plugin laeuft trotzdem."
-fi
-
 echo ""
 echo "Verwendung:"
 echo "  oc                 → OpenCode mit forge-Config (alias: ~/.local/bin/oc)"
 echo "  oc <opencode-args> → durchgereicht an opencode"
-echo ""
-echo "Smoke-Test (Hook-Discipline-Layer auf CC-JSON-Kontrakt):"
-echo "  bash $FRAMEWORK_DIR/orchestrators/opencode/tests/smoke-shim.sh"
-echo ""
-echo "Plugin-Doku: $FRAMEWORK_DIR/orchestrators/opencode/PLUGIN.md"
