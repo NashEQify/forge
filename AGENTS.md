@@ -74,7 +74,7 @@ launcher (`$FRAMEWORK_DIR/orchestrators/opencode/bin/oc`, with
 A consumer's project-level AGENTS.md (in the consumer repo root) adds
 to this framework AGENTS.md, it doesn't replace it. Commands are
 trigger words without a prefix (wakeup, save, checkpoint, think!).
-OpenCode runs identically to CC-Terminal on the discipline layer; the
-earlier `forge-hooks.ts` Bun-TS plugin that
-translated `tool.execute.{before,after}` into CC-shaped JSON is
-obsolete (slated for removal).
+OpenCode runs identically to CC-Terminal on the discipline layer:
+protocol-anchored discipline plus the shared git pre-commit hook.
+There is no tool-event (PreToolUse/PostToolUse) hook layer on either
+harness.

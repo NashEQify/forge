@@ -197,7 +197,7 @@ git clone https://github.com/NashEQify/forge ~/forge
 #               wires forge's git pre-commit hooks
 bash ~/forge/scripts/setup-cc.sh
 
-# OpenCode — installs `oc` launcher, opencode.jsonc, forge-hooks plugin
+# OpenCode — installs `oc` launcher + opencode.jsonc
 bash ~/forge/scripts/setup-oc.sh
 
 # Codex Desktop / CLI — agent + skill wrappers under ~/.codex, ~/.agents

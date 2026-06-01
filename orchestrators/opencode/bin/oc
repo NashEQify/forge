@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 # oc — OpenCode launcher for forge
 #
-# Points OpenCode at the framework's opencode.jsonc config and exports
-# CLAUDE_PROJECT_DIR=$FRAMEWORK_DIR so the forge-hooks plugin's spawned
-# bash hooks resolve their state files (whitelist, frozen zones,
-# workflow engine) against the right tree.
+# Points OpenCode at the framework's opencode.jsonc config and the
+# .opencode/ wrapper dir via OPENCODE_CONFIG / OPENCODE_CONFIG_DIR.
 #
 # FRAMEWORK_DIR resolution priority (analog to cc):
 #   1. env var (override, e.g. testing alternate checkout)
@@ -46,13 +44,6 @@ fi
 
 export OPENCODE_CONFIG_DIR="$OC_CONFIG_DIR"
 export OPENCODE_CONFIG="$OC_CONFIG"
-
-# Forge-hooks plugin (.opencode/plugins/forge-hooks.ts) spawns the CC bash
-# hooks, which resolve state files (whitelist, frozen zones, workflow engine)
-# relative to CLAUDE_PROJECT_DIR. Export it from FRAMEWORK_DIR so the hooks
-# find the right files even when OpenCode is launched from a consumer
-# project under ~/projects/<name>/.
-export CLAUDE_PROJECT_DIR="$FRAMEWORK_DIR"
 
 if ! command -v opencode &>/dev/null; then
   echo "oc: WARNUNG — 'opencode' nicht im PATH." >&2

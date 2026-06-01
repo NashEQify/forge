@@ -67,7 +67,7 @@ forge/
 │   │   └── hooks/                 # 3 hook scripts: buddy-boot-inject + session-start-remote + pre-commit.sh
 │   ├── opencode/
 │   │   ├── bin/oc                 # OC launcher
-│   │   ├── .opencode/             # agent + command wrappers + plugins/forge-hooks.ts (PreToolUse parity)
+│   │   ├── .opencode/             # agent + command wrappers
 │   │   └── opencode.jsonc.example
 │   └── cursor/
 │       └── rules/                 # Cursor rules (no PreToolUse API)
