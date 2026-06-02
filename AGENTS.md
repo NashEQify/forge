@@ -57,8 +57,9 @@ Format and types are enforced by the `pre-commit` hook (CG-CONV).
 
 Forge ships 3 hook scripts: `buddy-boot-inject.sh` +
 `session-start-remote.sh` (SessionStart) + `pre-commit.sh` (git
-pre-commit + commit-msg, 5 checks: PLAN-VALIDATE / CG-CONV /
-SKILL-FM-VALIDATE BLOCK; SECRET-SCAN / SOURCE-VERIFICATION WARN). All
+pre-commit + commit-msg, 6 checks: PLAN-VALIDATE / CG-CONV /
+SKILL-FM-VALIDATE BLOCK; SECRET-SCAN / SOURCE-VERIFICATION /
+ANTI-PHANTOM WARN). All
 universally portable across CC-Terminal, claude-desktop, claude-web,
 OpenCode, Codex, Cursor. The framework runs no tool-event hooks
 (PreToolUse / PostToolUse / UserPromptSubmit); write-time discipline is

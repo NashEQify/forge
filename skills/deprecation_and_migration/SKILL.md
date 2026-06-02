@@ -197,9 +197,21 @@ Only **after** every consumer has migrated:
 ```
 
 **STALE-CLEANUP invariant (CLAUDE.md §5) in the same commit:**
-clean every active ref in non-frozen files. `grep -rn
-<artifact>` + frozen-zone filter + fix the rest. This is
-discipline-only — there's no pre-commit check for it.
+clean every active ref in non-frozen files. `grep -rn <artifact>`
++ frozen-zone filter finds the obvious refs — but it does NOT prove
+the cleanup is complete. A retired name lives in an OPEN form-space
+(canonical, label, spaced, prose paraphrase); a name-grep that returns
+zero proves only the canonical form is gone, not the variants. Prove
+completeness by the INVENTORY-FLIP: enumerate a PINNED listing of what
+still EXISTS (`ls agents/`, the skill dirs, the named pre-commit-check
+headers) and flag any surviving doc CLAIM of a mechanism not in that
+listing. Pin the membership definition — where the listing is
+unambiguous the flip closes the form-space; where membership is itself a
+judgment it only narrows it (honest bound in §8.2.1). The "all clean"
+claim ships the inventory-check shown (command + output) with its pinned
+definition, and the verifier lens must differ from the name-grep that
+did the removal. This is discipline-only — there's no pre-commit check
+for it. Detail: `skills/_protocols/evidence-pointer-schema.md` §8.2.
 
 ### Phase 4: migration patterns
 
@@ -343,8 +355,9 @@ removal.
 - All active consumers migrated (verified by metrics /
   logs / grep).
 - Old code + tests + docs + config completely removed.
-- No references to the deprecated system in the codebase
-  (`grep -rn`).
+- No references to the deprecated system in the codebase —
+  completeness proven by inventory-flip (claim of mechanism vs
+  closed real inventory), not name-grep alone (§Phase 3 Step 4).
 - Deprecation notices themselves removed (they served
   their purpose).
 - STALE-CLEANUP complete in the removal commit.

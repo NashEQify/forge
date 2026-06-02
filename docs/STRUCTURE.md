@@ -89,7 +89,7 @@ the framework default.
   (`context/`, `docs/tasks/*.{yaml,md}`,
   `docs/tasks/archive/`, `docs/plan.yaml`). Public
   keeps only `docs/tasks/.gitkeep` + a `docs/plan.yaml`
-  north_star stub. Topology: `CLAUDE.md` Invariant 8.
+  north_star stub. Topology: §Repo topology above.
 - **Auto-discoverable:** `docs/STRUCTURE.md` is the only
   lookup for "where does what go".
 - **Drift-robust:** consistency_check check 9 catches

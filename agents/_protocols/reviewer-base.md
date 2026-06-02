@@ -146,7 +146,9 @@ misses or that grew between brief and review.
 
 **Boundary:** this is REVIEWER-LAYER discipline. It does NOT replace
 the brief-time architecture lens (preventive, plan-phase) NOR the
-piebald-budget hook (mechanical, commit-phase for skill files).
-Three layers, one discipline: prevention (brief), reporting
-(reviewer), enforcement (hook). Reviewer-layer is the curative
-backstop.
+piebald-budget protocol (`skills/_protocols/piebald-budget.md`) — the
+per-file length budget applied at review/commit time (`[DISCIPLINE]`,
+not a hook; the former pre-commit budget check was dropped in the hook
+paradigm shift). Three layers, one discipline: prevention (brief),
+reporting (reviewer), budget (protocol). Reviewer-layer is the
+curative backstop.

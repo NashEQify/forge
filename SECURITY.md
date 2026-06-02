@@ -77,7 +77,7 @@ If you don't hear back within 14 days, follow up via a different channel
   workflow phase model + git pre-commit checks are the mechanical
   layer there; path-write discipline is workflow-driven rather than
   blocked at the tool call.
-- **Pre-commit `--no-verify`** can bypass all 5 checks. Discipline-only
+- **Pre-commit `--no-verify`** can bypass all 6 checks. Discipline-only
   protection.
 
 ## Maintainer commitment

@@ -7,8 +7,8 @@ set -euo pipefail
 # Symlink into .git/hooks/pre-commit AND .git/hooks/commit-msg from any
 # consumer repo. Idempotent installer: scripts/install-git-hooks.sh.
 #
-# Post-2026-05-31 (ADR-004 hook paradigm shift): only 5 checks remain.
-# 3 BLOCK + 2 WARN. Universally portable (git is on every harness).
+# Post-2026-05-31 (ADR-004 hook paradigm shift): 6 checks.
+# 3 BLOCK + 3 WARN. Universally portable (git is on every harness).
 #
 # Checks (ordered):
 #   1. PLAN-VALIDATE        (BLOCK) — plan_engine.py --validate must show 0 errors
@@ -18,6 +18,9 @@ set -euo pipefail
 #                                     gitleaks is not installed.
 #   5. SOURCE-VERIFICATION  (WARN)  — board/council reviews must cite source
 #                                     files (line-numbered evidence pointers).
+#   6. ANTI-PHANTOM         (WARN)  — staged docs must not bind a live
+#                                     enforcement verb to a purged hook-name
+#                                     (enforcement-honesty, ADR-005).
 #
 # Dropped 2026-05-31 (8 checks, see docs/decisions/ADR-004-hook-paradigm-shift.md):
 #   TASK-SYNC, OBLIGATIONS, STALE-CLEANUP, PERSIST-GATE, ENGINE-USE,
@@ -223,6 +226,49 @@ if [ -f "$VALIDATOR" ]; then
         WARNINGS+=("$ew")
       done
     fi
+  fi
+fi
+
+# ---------- Check 6: ANTI-PHANTOM (WARN) ----------
+#
+# Enforcement-honesty tripwire: flags staged docs that bind a
+# present-tense enforcement verb to a hook-name with no runnable
+# artifact (purged in the hook paradigm shift, ADR-004). An honest
+# marker — a historical note or an enforcement-class tag — suppresses
+# the warning. WARN-only (advisory, never blocks).
+#
+# Scope is deliberately narrow: only names with NO legitimate live
+# meaning are listed. Names that double as live concepts (the
+# STALE-CLEANUP invariant, the PERSIST-GATE discipline gate, the
+# piebald-budget protocol) are NOT listed here — class-tagging in
+# framework/enforcement-registry.md is the SoT for those. Extend
+# PHANTOM_NAMES only with names that have no runnable artifact at all.
+
+PHANTOM_NAMES='BRIEF-CLAIMS|path-whitelist-guard|frozen-zone-guard'
+LIVE_VERB='BLOCKs|BLOCKS|blocks|guards|re-runs|reruns|enforces|enforced'
+HONEST_MARK='purged|dropped|former|formerly|no longer|removed|historical|was a|used to|phantom|\[DISCIPLINE\]|\[GATE\]|\[WORKFLOW\]|\[STRUCTURAL\]'
+
+# Active-surface only. Forensic/review zones (audit, reviews, build logs,
+# dogfood-learnings, context) legitimately QUOTE phantom claims as
+# evidence — they are append-only records, not docs that mislead a
+# reader about live enforcement. Exclude them.
+STAGED_DOCS=$(git diff --cached --name-only --diff-filter=AM 2>/dev/null \
+  | grep -E '\.md$' \
+  | grep -vE '^(docs/(audit|reviews|build|dogfood-learnings)|context)/' || true)
+if [ -n "$STAGED_DOCS" ]; then
+  PHANTOM_HITS=()
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    [ ! -f "$f" ] && continue
+    while IFS= read -r hit; do
+      [ -z "$hit" ] && continue
+      echo "$hit" | grep -qiE "$HONEST_MARK" && continue
+      PHANTOM_HITS+=("${f}:${hit}")
+    done < <(grep -nE "(${PHANTOM_NAMES}).{0,40}(${LIVE_VERB})|(${LIVE_VERB}).{0,40}(${PHANTOM_NAMES})" "$f" 2>/dev/null)
+  done <<< "$STAGED_DOCS"
+  if [ ${#PHANTOM_HITS[@]} -gt 0 ]; then
+    RENDERED=$(printf '    %s\n' "${PHANTOM_HITS[@]}" | head -10)
+    WARNINGS+=("ANTI-PHANTOM: doc(s) state live enforcement for a purged hook-name. Reframe to an honest enforcement-class statement (see framework/enforcement-registry.md) or add a historical marker:"$'\n'"${RENDERED}")
   fi
 fi
 

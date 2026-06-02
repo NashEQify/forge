@@ -5,7 +5,7 @@ workflow_engine.py — Workflow Engine for forge.
 YAML-driven workflow orchestration: reads definitions, tracks state,
 tells the LLM what step comes next.
 
-Spec: docs/specs/workflow-engine.md v0.2.2
+Engine shape SoT: framework/workflow-engine-cookbook.md
 
 Usage:
     python3 scripts/workflow_engine.py --start <workflow> [--task <id>]

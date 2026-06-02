@@ -59,8 +59,9 @@ The framework anchors important rules in three layers:
   on dispatch (`_protocols/dispatch-template.md`, `mca-brief-template.md`,
   `evidence-pointer-schema.md`, `context-isolation.md`,
   `plan-review.md`, etc.).
-- **Pre-commit (5 checks, universal):** PLAN-VALIDATE, CG-CONV,
-  SKILL-FM-VALIDATE (BLOCK); SECRET-SCAN, SOURCE-VERIFICATION (WARN).
+- **Pre-commit (6 checks, universal):** PLAN-VALIDATE, CG-CONV,
+  SKILL-FM-VALIDATE (BLOCK); SECRET-SCAN, SOURCE-VERIFICATION,
+  ANTI-PHANTOM (WARN).
 - **SessionStart hooks** for boot on claude-desktop / claude-web /
   Codex.
 
@@ -151,7 +152,7 @@ parallel. `code-chief` consolidates. Buddy reads **only the chief
 signal**.
 
 On PASS: Phase Close with `task_status_update → done`, commit. The
-pre-commit hook runs (5 checks). On BLOCK: Buddy fixes, then makes a
+pre-commit hook runs (6 checks). On BLOCK: Buddy fixes, then makes a
 new commit attempt.
 
 That is what a typical session looks like. The framework gives you the
@@ -197,8 +198,9 @@ solve:
   forge has 3 hook scripts:
   buddy-boot-inject + session-start-remote (SessionStart, portable on
   CC-Terminal / claude-desktop / claude-web / Codex) and pre-commit.sh
-  (git pre-commit, 5 checks: PLAN-VALIDATE / CG-CONV / SKILL-FM-VALIDATE
-  BLOCK; SECRET-SCAN / SOURCE-VERIFICATION WARN). All universally
+  (git pre-commit, 6 checks: PLAN-VALIDATE / CG-CONV / SKILL-FM-VALIDATE
+  BLOCK; SECRET-SCAN / SOURCE-VERIFICATION / ANTI-PHANTOM WARN). All
+  universally
   portable. Discipline replaces the earlier CC-Terminal-only WARN /
   BLOCK PreToolUse layer.
 - **Anti-inflation.** Skill-bag allows "more skills = better". forge

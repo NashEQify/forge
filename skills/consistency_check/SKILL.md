@@ -52,7 +52,7 @@ Gate enforcement: pre-harness via
 (blocking). Post-harness via the pre-commit hook (when
 implemented).
 
-## The 10 checks (short form)
+## The 11 checks (short form)
 
 1. **Dead references** — scan `*.md` for path refs (backticks,
    "load and follow", SoT tables). Miss → ERROR.
@@ -102,6 +102,14 @@ implemented).
    exit on drift). Mirrors the skill-map idempotence sub-check.
    Drift → **WARNING** (WARN-first calibration; escalate to
    BLOCK after burn-in). Detail: `REFERENCE.md` §10.
+11. **Enforcement-registry integrity** — every Live-table row in
+   `framework/enforcement-registry.md` carries a valid class tag
+   (`[STRUCTURAL]`/`[GATE]`/`[WORKFLOW]`/`[DISCIPLINE]`) and an
+   artifact pointer that resolves on disk. Stale pointer or bad tag
+   → **ERROR**. Mechanically `scripts/consistency_check.py --check
+   enforcement-registry` (non-zero exit on failure). Guards against
+   the phantom-enforcement class — a registry that claims a mechanism
+   whose artifact was renamed or removed.
 
 Running checks 3b, 5, 6, 7, 8, and 10 requires `REFERENCE.md`
 to be co-loaded (sub-checks, scan targets, checklist items,

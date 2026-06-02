@@ -159,11 +159,15 @@ steps:
     completion:
       type: compound
       checks:
+        # Engine-facing pointer keys on {task_id} — the board names its verdict
+        # by task-id (skills/code_review_board/SKILL.md §7), independent of the
+        # specify-gate type; {spec_name} mis-derived it when spec-name != task-id.
+        # Canonical verdict name = [DISCIPLINE] (writer follows SKILL §7); this
+        # pointer_check = [WORKFLOW] safety net (blocks → --force on a missing/
+        # non-canonical name, engine-run only). No separate consolidated pointer.
+        # (Mirror of the build workflow code-review-board step.)
         - type: pointer_check
-          source_file: "docs/reviews/code/{spec_name}-verdict.md"
-        - type: pointer_check
-          source_file: "docs/reviews/code/{spec_name}-consolidated.md"
-          when: "level == L2"
+          source_file: "docs/reviews/code/{task_id}-verdict.md"
         - type: manual
     on_fail: block
 

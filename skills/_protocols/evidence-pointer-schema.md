@@ -253,3 +253,96 @@ the output frontmatter.
 - Validator: `scripts/validate_evidence_pointers.py`
 - Pre-commit Check 5 SOURCE-VERIFICATION:
   `orchestrators/claude-code/hooks/pre-commit.sh`
+
+---
+
+## 8. Author-side pointers (Buddy-authored artifacts)
+
+§§1-6 define the pointer format the **reviewer** owes in a review
+output (machine-checked by the validator + pre-commit Check 5
+SOURCE-VERIFICATION). This section extends the same evidence discipline
+to the **author** — the orchestrator writing an artifact a downstream
+consumer will trust as authority for code behaviour. It is
+discipline-only (no validator enforces it), the prose-level sibling of
+the machine-checked reviewer mandate. SoT for the author obligation:
+`CLAUDE.md` Inv 5 (completeness/absence) + Inv 10 (positive claims).
+
+The author is the worst checker of their own mechanical claims (shared
+lens): the same reading that produced a wrong claim re-reads it as
+correct. Two failure shapes, two author obligations:
+
+### 8.1 Positive claim — pointer at write time (Inv 10)
+
+A load-bearing mechanical claim about how code behaves, written into a
+Buddy-authored ADR / decision-record / handoff / consequential inline
+assertion, carries its verifying command or `file:line` INLINE next to
+the claim. The pointer need not be the YAML mapping of §2 — a prose
+`(scripts/workflow_engine.py:796)` or a shown `grep`/`ls` line is
+enough. The point is auditability: the next reader can open the cited
+line and check the claim instead of re-trusting the author.
+
+| Without pointer | With pointer |
+|---|---|
+| "The engine treats `guard` as a stub — it never reads it." | "The engine reads `guard` in `evaluate_guard` at `scripts/workflow_engine.py:796` (`grep -n 'def evaluate_guard'`) — so the 'stub' reading is checkable in one line." |
+
+**Honest limit:** a pointer makes a claim auditable but does NOT prevent
+a MISREAD. The author can cite the right line and still conclude wrong.
+Only an independent reader catches the misread → §Independent
+verify-pass in `skills/documentation_and_adrs/SKILL.md`. (b) and (c) are
+complementary, not redundant.
+
+### 8.2 Completeness / absence claim — inventory-flip (Inv 5)
+
+You cannot prove absence over an OPEN form-space by matching a retired
+name: it has many surface-forms (canonical, label, spaced, prose
+paraphrase), and a name-grep that finds zero hits proves only that the
+*canonical* form is gone — not the variants. Prove completeness by the
+INVENTORY-FLIP instead:
+
+1. Enumerate a PINNED listing of what EXISTS in the dimension the
+   retired artifact lived in: the files in a dir (`ls agents/`, the
+   skill dirs), the named section-headers of a script. No knowledge of
+   the dead artifact's name-forms needed.
+2. Walk the doc's mechanism nouns (hook names, check names, skill/agent
+   names, engine-field names) and confirm each resolves to an entry in
+   that listing — a referential-integrity walk. Flag any claim that
+   resolves to nothing (a dangling mechanism-claim). The name-grep still
+   finds the obvious hits; it just cannot prove the absence — this walk
+   does.
+3. A "fully removed / all clean" claim ships the inventory-check shown
+   (command + output), not asserted.
+4. The verifier lens differs from the actor lens — don't verify a
+   name-removal with the same name-grep that did the removal.
+
+### 8.2.1 Honest bound — the flip does not magically close every dimension
+
+The flip is only as closed as its listing. **Pin the membership
+definition you used**, because for some dimensions "what counts as a
+member" is itself a judgment, and an unpinned count re-opens the very
+form-space the flip was supposed to close — one level up.
+
+Worked example (real): "the pre-commit checks" is NOT a single number.
+`grep -cE '^# -+ Check [0-9]+'` (section headers) → **6**; `grep -c
+'BLOCK=1'` → **4**; `grep -c 'WARNINGS+='` → **6**. Three lenses, three
+counts. The flip is sound ONLY when you pin which one you mean ("checks
+= the 6 `# Check N` section-headers in `pre-commit.sh`"). Unpinned, you
+have reproduced bedrock root-cause #1 (open-form-space by enumeration)
+inside the supposed fix.
+
+**Two tiers of dimension:**
+
+- **Closed-listing dimensions** — files in a dir, named section-headers,
+  skill/agent dirs: the flip genuinely closes the form-space. Strong.
+- **Judgment-membership dimensions** — "what counts as a check", a
+  config-key with no registry, a workflow-step name scattered across
+  many `workflow.yaml` files with no single index: there is no closed
+  listing to enumerate. Here the flip DEGRADES to a best-effort
+  referential walk against whatever partial listing you can assemble —
+  it NARROWS the open-ness, it does not prove absence. Say so; do not
+  claim a closed proof you do not have. If the dimension matters and has
+  no authoritative listing, that missing index is the real defect to
+  file, not something the flip papers over.
+
+This is the council L3 *live-state-vs-claim* axiom turned on the docs:
+validate claims-of-mechanism against a pinned real listing — and stay
+honest about which dimensions actually have one.

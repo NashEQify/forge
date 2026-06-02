@@ -34,41 +34,27 @@ skills/, context/, docs/) Buddy writes directly. Detail:
 
 ### 5. Stale cleanup
 When an artifact is retired/replaced/sunset, clean up every live
-reference in non-frozen files in the same commit. `grep -rn <artifact>`,
-filter frozen zones, fix the rest. Discipline-only.
+reference in non-frozen files in the same commit. `grep -rn <artifact>`
+finds the obvious refs — but it does NOT prove completeness: a retired
+name lives in an OPEN form-space (canonical, label, spaced, prose
+paraphrase), so matching the name misses the variants. Prove
+completeness by INVENTORY-FLIP — enumerate a PINNED listing of what
+exists in the dimension the artifact lived in (`ls agents/`, the skill
+dirs, the named pre-commit-check headers) and walk the doc's mechanism
+nouns against it: flag any CLAIM resolving to no entry (referential
+integrity — no knowledge of the dead name-forms needed). Pin the
+membership definition you used: where the listing is unambiguous the
+flip closes the form-space; where membership is itself a judgment
+("what counts as a check") it only NARROWS it — so ship the
+inventory-check (command + output) WITH its pinned definition, not a
+bare "all clean", and keep the verifier lens different from the
+name-grep that did the removal. Discipline-only. Detail + honest bound:
+`skills/_protocols/evidence-pointer-schema.md` §8.2 +
+`skills/deprecation_and_migration/SKILL.md` (Phase 3 Step 4).
 
 ### 6. Deployment verification
 After a deploy, look at it. HTTP 200 isn't proof. If you can't see it,
 say so and ask the user to check.
-
-### 7. OSS-readable repo — no forensic refs
-`agents/`, `framework/`, `skills/`, `workflows/`, `_protocols/` are
-public-surface (note: `docs/specs/` AND `docs/decisions/` (ADRs) are
-excluded from the public mirror by `scripts/release-sync.sh` — both
-live in `forge_dev` only and the Inv-7 discipline still applies for
-forensic hygiene, but they are NOT OSS-readable). Content + reasoning
-belong; session forensics do not.
-**Banned in those files:** "closes the gap surfaced by Audit NNN",
-"per Spec 306 §X.Y" (when an ID-only ref carries no content), "after
-Task 469", session-handoff dates, commit hashes,
-internal-task-ID-as-justification. Reformulate as the underlying
-reason or drop. Cross-spec pointers ARE allowed when they carry
-content (§ + topic), not when they smuggle session history.
-Session-internal context lives in `context/`, `docs/audit/`,
-`docs/build/` — those are not public surface.
-
-### 8. Public forge = read-only OSS mirror
-Two repos: `forge_dev` is the private dev SoT — all development,
-tasks, plan, and context live here. Public `forge` is the OSS mirror,
-produced **solely** by `scripts/release-sync.sh` (forge_dev → forge,
-rsync `--delete`, explicit exclude list). Public forge is never
-hand-edited except one-time release hygiene. No internal operational
-state reaches it: `context/` (whole tree), `docs/tasks/*.{yaml,md}`,
-`docs/tasks/archive/`, and a live `docs/plan.yaml` are excluded by
-the sync. Public forge carries only `docs/tasks/.gitkeep` and a
-hand-maintained `docs/plan.yaml` north_star stub. Topology and
-enforcement: `docs/STRUCTURE.md`; sync mechanism: the exclude list
-in `scripts/release-sync.sh`.
 
 ### 9. Proportionality of effort
 Effort matches stakes. Every decision boundary that creates followup
@@ -90,6 +76,20 @@ class. Reviewers carry an evidence-pointer mandate
 (`_protocols/evidence-pointer-schema.md`); this is the Buddy-side
 equivalent — every load-bearing fact costs one verifying command, not
 "sounds right".
+
+**Evidence-pointer at write time (author side).** When a load-bearing
+mechanical claim about how code behaves goes into a Buddy-authored
+artifact the reader will act on — an ADR, a decision record, a handoff,
+a consequential inline assertion — carry the verifying command or
+`file:line` INLINE next to the claim, so the next reader can audit the
+cited line. This extends the review-only evidence-pointer mandate
+(`_protocols/evidence-pointer-schema.md` §8) to the author.
+Limit, stated honestly: the pointer raises the floor and makes a claim
+auditable, but it does NOT catch a MISREAD — the author can look at the
+right line and still draw the wrong conclusion. Only an independent
+reader catches the misread (the default verify-pass,
+`skills/documentation_and_adrs/SKILL.md` §Independent verify-pass). The
+two are complementary, not redundant.
 
 ## Observability
 For state-changing actions, leave a one-liner:
@@ -124,13 +124,14 @@ SessionStart (CC-Terminal, claude-desktop, claude-web, Codex via hooks.json):
 - `session-start-remote` — resume nudge (active workflow / recent
   session-handoff check).
 
-git pre-commit (5 checks, 3 BLOCK + 2 WARN):
+git pre-commit (6 checks, 3 BLOCK + 3 WARN):
 - BLOCK: PLAN-VALIDATE (plan_engine schema integrity), CG-CONV
   (Conventional-Commits format), SKILL-FM-VALIDATE (Skill frontmatter
   validation; also C3 description trigger-marker WARN — active skills
   must carry `Use when`/`Triggers when`/`Trigger:`).
 - WARN: SECRET-SCAN (gitleaks), SOURCE-VERIFICATION (board/council
-  review evidence-pointer schema).
+  review evidence-pointer schema), ANTI-PHANTOM (narrow tripwire — 3
+  hardcoded purged hook-names × a fixed verb list; enforcement-honesty).
 
 Everything else is carried by discipline, not hooks:
 - Path: Buddy writes within intent-scope; deliberate-action for anything else.

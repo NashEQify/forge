@@ -320,7 +320,22 @@ L2: optional (Buddy). L1: none. Mechanic: `_protocols/discourse.md`.
 ## 7. Output paths
 
 Agent reviews: `docs/reviews/code/{task-id}-{role}.md`.
-Verdict: `docs/reviews/code/{task-id}-verdict.md`.
+Verdict: `docs/reviews/code/{task-id}-verdict.md` — the **canonical
+engine-facing pointer**. Writing it at exactly this path (task-id,
+undated) is a `[DISCIPLINE]` convention the verdict author follows;
+re-review passes UPDATE this file in place. The workflow completion gate
+is the `[WORKFLOW]` safety net: its `pointer_check` blocks `--complete`
+(→ `--force`) when the canonical file is missing — so a dated or
+pass-suffixed name (`<date>-{task-id}-rereviewN-*.md`, kept only as
+supplementary history) fails-safe rather than passing wrongly. There is
+**no** mechanical interception that renames a deviant verdict to
+canonical: no proportional enforcement class exists for it post-hook (a
+`[WORKFLOW]` rename would need a fuzzy task-id glob — the false-match the
+council rejected; the glob-free path collapses back to this
+`[DISCIPLINE]` write-canonical rule). See
+`framework/enforcement-registry.md`. On L2 the chief also writes
+`{task-id}-consolidated.md` (REFERENCE.md §Extended output paths), but
+the gate keys on the **verdict only**.
 
 ## 8. Contract
 

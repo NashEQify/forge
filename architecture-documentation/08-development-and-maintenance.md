@@ -176,7 +176,7 @@ universal-portable-only sweep:
 ```
 buddy-boot-inject.sh           SessionStart — Buddy boot on claude-desktop / claude-web / Codex
 session-start-remote.sh        SessionStart — resume-nudge (recent handoff check)
-pre-commit.sh                  git pre-commit + commit-msg, 5 checks (3 BLOCK + 2 WARN)
+pre-commit.sh                  git pre-commit + commit-msg, 6 checks (3 BLOCK + 3 WARN)
 ```
 
 The hook layer is universal-portable only. Each hook is self-contained

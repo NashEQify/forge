@@ -310,9 +310,9 @@ shape: [`07-tool-integrations.md`](07-tool-integrations.md) §Cursor.
 
 ## When the framework is blocking you
 
-The 5 pre-commit checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE,
-SECRET-SCAN, SOURCE-VERIFICATION) exist to catch schema + format
-drift before it ships. If you are pushing back against a BLOCK:
+The 6 pre-commit checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE,
+SECRET-SCAN, SOURCE-VERIFICATION, ANTI-PHANTOM) exist to catch schema +
+format drift before it ships. If you are pushing back against a BLOCK:
 re-examine the assumption that you are really on the right path. Most
 of the time the conflict is in a drift in your mental model of the
 repo, not in the framework.

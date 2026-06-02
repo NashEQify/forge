@@ -11,7 +11,7 @@
 ┌─────────────────────────────────────────────────────────────────────┐
 │  HARNESS-ADAPTER (orchestrators/<name>/)                            │
 │  - cc / oc: scope-routing, --add-dir composition                    │
-│  - hooks/: SessionStart (boot) + git pre-commit (5 checks)          │
+│  - hooks/: SessionStart (boot) + git pre-commit (6 checks)          │
 │  - ~/.claude/settings.json (user-global) registers SessionStart     │
 └──────────────────────────────┬──────────────────────────────────────┘
                                │ loads
@@ -420,11 +420,11 @@ Write-time discipline is protocol-anchored (`agents/buddy/operational.md`).
 |---|---|---|
 | `buddy-boot-inject.sh` | SessionStart | Triggers Buddy boot in claude-desktop / claude-web (where `--agent buddy` isn't an entrypoint flag). Load-bearing for boot on non-Terminal entrypoints. |
 | `session-start-remote.sh` | SessionStart | Resume-nudge — checks for recent session-handoff at session start. |
-| `pre-commit.sh` | git pre-commit + commit-msg | 5 checks (see below) — universally available across harnesses (git is portable). |
+| `pre-commit.sh` | git pre-commit + commit-msg | 6 checks (see below) — universally available across harnesses (git is portable). |
 
-### Pre-Commit 5 Checks
+### Pre-Commit 6 Checks
 
-`orchestrators/claude-code/hooks/pre-commit.sh` — 3 BLOCK + 2 WARN.
+`orchestrators/claude-code/hooks/pre-commit.sh` — 3 BLOCK + 3 WARN.
 
 | # | Check | Severity | Implementation |
 |---|---|---|---|
@@ -433,6 +433,7 @@ Write-time discipline is protocol-anchored (`agents/buddy/operational.md`).
 | 3 | SKILL-FM-VALIDATE | BLOCK | `skill_fm_validate.py` mandatory fields + invocation + `relevant_for` |
 | 4 | SECRET-SCAN | WARN | `gitleaks protect --staged` (skipped when gitleaks not installed, 24h-suppressed note WARN) |
 | 5 | SOURCE-VERIFICATION | WARN | Board/council reviews must cite source files (line-numbered evidence pointers per `_protocols/evidence-pointer-schema.md`) |
+| 6 | ANTI-PHANTOM | WARN | Active-surface docs must not bind a live-enforcement verb to a purged hook-name with no runnable artifact (enforcement-honesty); honest framing or an enforcement-class tag suppresses |
 
 ## Engines + Generators
 
