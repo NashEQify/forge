@@ -39,7 +39,7 @@ has a `navigation.md` with reader-journey sections (`## What lives here?`,
 | **review** | `workflows/runbooks/review/WORKFLOW.md` | Review/validate spec(s). No code. |
 | **research** | `workflows/runbooks/research/WORKFLOW.md` | Research, SOTA, spike. Output = knowledge, not code. |
 | **docs-rewrite** | `workflows/runbooks/docs-rewrite/WORKFLOW.md` | Rewrite docs, reader-journey-first. |
-| **save** | `workflows/runbooks/save/WORKFLOW.md` | End-of-session persistence. Includes quicksave variant. |
+| **save** | `workflows/runbooks/save/WORKFLOW.md` | Session persistence — one adaptive command for mid- and end-of-session. |
 | **context_housekeeping** | `workflows/runbooks/context_housekeeping/WORKFLOW.md` | Periodic maintenance of the context system. |
 
 **Routing:** `framework/process-map.md` (I-want table -> workflow).

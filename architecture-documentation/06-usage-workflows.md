@@ -64,48 +64,12 @@ Skip list (engine NOT active):
 
 - DIRECT path build/fix (≤3 files, no spec, no new behaviour) —
   executed inline
-- save/quicksave/checkpoint/wakeup/sleep — no multi-step state
+- save/checkpoint/wakeup/sleep — no multi-step state
 - context_housekeeping — maintenance with no pause points
 - frame/bedrock_drill standalone — sub-skills
 - think! — open discussion
 
 This is discipline-only.
-
-## Deploy lifecycle (optional)
-
-The framework can generate a dashboard (HTML from tasks + plan +
-workflows). Default mode: **generate locally, view locally**. Server
-push is optional.
-
-**Local mode** (default, no server setup needed):
-
-```bash
-# Generate the dashboard once
-python3 $FRAMEWORK_DIR/scripts/generate-dashboard.py \
-    --output $FRAMEWORK_DIR/_site/dashboard/index.html \
-    --projects forge
-xdg-open $FRAMEWORK_DIR/_site/dashboard/index.html
-```
-
-**Server mode** (optional, for multi-device / sharing): config in
-`~/.config/forge/deploy.env` with `DEPLOY_REMOTE`,
-`DEPLOY_REMOTE_PATH`, `DASHBOARD_PROJECTS`, `DASHBOARD_HOST_REPO`. Then:
-
-```bash
-bash $FRAMEWORK_DIR/scripts/deploy-docs.sh
-```
-
-The script sources deploy.env automatically (`deploy-dashboard-lite.sh`) or
-expects the variables exported (`deploy-docs.sh` does not yet have an
-auto-source block — drift note, ACTIONABLE spawn).
-
-**Dashboard regen cadence:** regenerate manually when you want a fresh
-dashboard, or wire a periodic cron / Ansible job to call
-`generate-dashboard.py`. Buddy discipline covers redeploy when
-plan/dashboard files change.
-
-**When server push is worth it:** multiple devices, sharing use case,
-Hetzner / own-server setup. Otherwise local is enough.
 
 ## 5-phase model (producer class)
 
@@ -259,7 +223,7 @@ When `research` is invoked as a sub-workflow from `solve` step 6 or
 
 ### F. End the session — `save`
 
-**Trigger:** user says `save` or `quicksave`.
+**Trigger:** user says `save` (the single command for mid- and end-of-session).
 
 **Three groups** (group order is mandatory; group B in parallel):
 
@@ -278,7 +242,9 @@ C. Post-Write
    7. Commit (pre-commit hooks run)
 ```
 
-`quicksave` is the same path with reduced depth.
+Run `save` mid-session too — it's the same command; the footprint
+adapts (the history entry fires on task-closeout, buffer cleanup
+skips when empty).
 
 ## Patterns
 
@@ -345,7 +311,7 @@ generator bug. The validator hook (`consistency_check` Check 6/8) catches that.
 
 ### Pattern 6 — Hook + handoff (session continuity)
 
-`framework/agent-patterns.md §Pattern: Hook + Handoff`:
+The session-continuity pattern:
 
 - **Hook (computed):** `plan_engine --boot` returns a machine-readable session state.
 - **Handoff (narrative):** `session-handoff.md` contains a 9-point structure with

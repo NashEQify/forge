@@ -134,8 +134,8 @@ The cost of bringing weak input is high — the multi-perspective machinery
 amplifies the input quality. Sharp input + 4 reviewers = 4× sharp signal.
 Mush input + 4 reviewers = 4× confused noise.
 
-Pattern detail: see [`../framework/agent-patterns.md`](../framework/agent-patterns.md)
-(in particular *Reader-Facing-Surface-Detection* for documentation drift detection).
+Pattern overview: see [`../framework/agent-patterns.md`](../framework/agent-patterns.md)
+— the agent failure modes forge hardens against.
 
 ---
 
@@ -148,8 +148,7 @@ trigger words, defined in `agents/buddy/operational.md §Commands`:
 |---|---|
 | (initial greeting) | Boot sequence ORIENT → RESOLVE → ROUTE → LOAD → STATUS-CHECK → RESUME → GREET |
 | `wakeup` | Re-boot session continuity from `session-handoff.md` + `plan_engine --boot` |
-| `save` | End-of-session persist via `workflows/runbooks/save/WORKFLOW.md` |
-| `quicksave` | Mid-session light persist (subset of save) |
+| `save` | Session persist (mid + end of session, one adaptive command) via `workflows/runbooks/save/WORKFLOW.md` |
 | `checkpoint` | Save + drift-check + sculpting (deep version) |
 | `sleep` | Forget the session (no persist) |
 | `think!` | THINK-Stance: deeper analysis mode (`agents/buddy/think-operational.md`) |
@@ -172,8 +171,8 @@ trigger words, defined in `agents/buddy/operational.md §Commands`:
   statement. Empirically: ~20-30% catch rate for drift the domain
   members miss.
 
-Detail of council patterns:
-[`../framework/agent-patterns.md`](../framework/agent-patterns.md).
+Detail of the council discipline:
+[`../skills/council/SKILL.md`](../skills/council/SKILL.md).
 
 Workflow-Engine has CLI commands too:
 
@@ -278,7 +277,7 @@ python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --find --task 123
 
 **Optional / skip-eligible**:
 - `build` DIRECT path (≤3 files, no spec, no new behaviour)
-- `save` / `quicksave` (lifecycle workflows, no multi-session continuity)
+- `save` (lifecycle workflow, no multi-session continuity)
 - `context_housekeeping` (ad-hoc maintenance)
 
 When in doubt: trigger the engine. CLI overhead is low (~3 calls per
@@ -391,11 +390,8 @@ that repo, with the same methodology.
 ### What you do once
 
 ```bash
-# 1. Pre-commit hook — same hook everywhere
+# Pre-commit hook — same hook everywhere
 bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh ~/projects/personal
-
-# 2. (optional) post-commit dashboard hook
-bash $FRAMEWORK_DIR/scripts/install-dashboard-hooks.sh
 ```
 
 That's it. No vendoring. No version pinning. No re-install on framework
@@ -609,4 +605,4 @@ You've reached the end of the reader-journey set. From here:
 - [`../intent.md`](../intent.md) for the framework's stated identity
   (vision, pillars, non-goals).
 - [`../framework/agent-patterns.md`](../framework/agent-patterns.md)
-  for the rolling pattern catalogue (real drift cases).
+  for the agent failure modes forge hardens against.

@@ -82,7 +82,7 @@ Buddy actively returns to an in-flight workflow.
 ## Skip allowed for
 
 - `build` DIRECT path (≤3 files, no spec, no new behavior)
-- `save` / `quicksave` / `checkpoint` / `wakeup` / `sleep`
+- `save` / `checkpoint` / `wakeup` / `sleep`
   (lifecycle commands without long continuity)
 - `context_housekeeping` (ad hoc, no multi-session state)
 - `frame` / `bedrock_drill` standalone (sub-skills, not standalone

@@ -1,7 +1,12 @@
 # Workflow: save
 
-End-of-session persistence. The context window is the primary
-source — no redundant reads.
+Session persistence — the single command for both mid-session and
+end-of-session saves (there is no separate `quicksave`). The context
+window is the primary source — no redundant reads. The footprint
+self-adapts on real signals, not a mode flag: the handoff merge is
+always safe to re-run, the history entry fires on task-closeout, and
+buffer cleanup skips when the buffer is empty. Running `save`
+mid-session and at session end is the same command.
 
 ## Steps
 
@@ -23,6 +28,11 @@ parallel (one tool-call batch).
      the session log → warning + correct via the skill now.
      Content edits (scope, description, notes) are NOT a
      status change.
+   - **Task-graph integrity:** `plan_engine --validate` must
+     PASS — a sanity gate only. Substantive critical-path
+     placement + blocked_by reconciliation live in
+     `task_creation` / `task_status_update` at mutation time,
+     not here.
 3. **Workflow state** —
    `python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --handoff-context`
    when active workflows exist. Output goes into step 4.
@@ -58,47 +68,22 @@ parallel (one tool-call batch).
    - **Parallel session:** write failed → re-read, second
      merge, write. The `.bak` then shows the
      second-to-last version.
-5. **History entry** —
-   `<CWD>/context/history/YYYY-MM-DD-<slug>.md`. Guard:
-   the active context path must support history
-   (otherwise skip).
+5. **History entry** (on task-closeout) —
+   `<CWD>/context/history/YYYY-MM-DD-<slug>.md`. Fires when a
+   task closed out this session (Persist Gate, operational.md);
+   a mid-session save with no closeout skips it. Guard: the
+   active context path must support history (otherwise skip).
 
 ### C. Post-write (sequential)
 
-6. **Convoy** — update when an objective task was active.
-7. **Commit + push** — convention: CLAUDE.md §commit
-   convention. Push MUST come before deploy (Hetzner does
-   `git pull`). SSH passphrase failure → ask the user to
-   push manually.
-8. **Dashboard deploy** (BACKGROUND, conditional) — only
-   when dashboard-relevant content changed:
-   `git diff <last-deploy-tag>..HEAD -- docs/tasks/ docs/plan.yaml`
-   (without the tag: last 5 commits). Hit →
-   `bash $FRAMEWORK_DIR/scripts/deploy-dashboard-lite.sh`
-   via `run_in_background`. The script is idempotent —
-   re-running is only network latency. Precondition: step 7
-   succeeded. Result as a notification — error in the
-   handoff note.
-9. **Buffer cleanup** — remove `PROCESSED` entries from
+6. **Commit + push** — per CLAUDE.md §commit convention.
+   `git add` the relevant files → commit → push. SSH
+   passphrase failure → ask the user to push manually.
+7. **Buffer cleanup** — remove `PROCESSED` entries from
    `docs/session-buffer.md`. The header stays. Empty →
    skip.
 
 ---
-
-## quicksave — mid-session checkpoint
-
-Trigger: the user says `quicksave`. Proportional, not a
-full cycle.
-
-Steps: **1 (dispatcher) → 2 (recon) → 3 (handoff, like
-step 4 above with `.bak` + merge default)** sequentially.
-
-What quicksave does NOT do: history entry, convoy,
-deploy, buffer cleanup. No replacement for full `save`
-at end of session.
-
-When: secure state while continuing to work, before a
-context switch, intermediate save on a large context.
 
 ## Checkpoint aggregation
 

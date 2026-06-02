@@ -1,7 +1,7 @@
 name: save
-description: "End-of-session persistence. The context window is the primary source. Parallel where possible."
+description: "Session persistence — one command for mid-session and end-of-session (no separate quicksave). The context window is the primary source. Footprint self-adapts: handoff merge always safe, history on task-closeout, buffer cleanup skips when empty."
 trigger: ["save"]
-derived_from: "WORKFLOW.md@2026-05-09"
+derived_from: "WORKFLOW.md@2026-06-02"
 
 steps:
   # ==========================================================================
@@ -24,11 +24,15 @@ steps:
     name: "Validate + reconciliation"
     category: content
     instruction: >
-      Two checks against the context window (no reads):
+      Three checks against the context window (no reads):
       (1) Gap check: is there information in the context window that is
           not on disk? → write it immediately.
       (2) Task-status reconciliation: every status change made this session
           MUST be reflected in the task YAMLs.
+      (3) Task-graph integrity: `plan_engine --validate` must PASS — a
+          sanity gate only. Substantive critical-path placement +
+          blocked_by reconciliation live in task_creation /
+          task_status_update at mutation time, not here.
     completion:
       type: manual
     on_fail: block
@@ -100,61 +104,35 @@ steps:
     category: content
     group: parallel-writes
     instruction: >
-      Write the history entry: context/history/YYYY-MM-DD-<slug>.md.
-      Guard: the active context path must support history; otherwise skip.
-      Workspace sessions: history always lives under
-      <consumer>/context/history/ (global); the filename includes the
-      workspace name.
+      Write the history entry (on task-closeout): context/history/YYYY-MM-DD-<slug>.md.
+      Fires when a task closed out this session (Persist Gate); a
+      mid-session save with no closeout skips it. Guard: the active
+      context path must support history; otherwise skip. Workspace
+      sessions: history always lives under <consumer>/context/history/
+      (global); the filename includes the workspace name.
     completion:
       type: file_created_matching
       pattern: "context/history/*"
     commit_gate: false
-    required: true
-    on_fail: block
+    required: false
+    on_fail: skip
 
   # ==========================================================================
   # Group C: post-write (sequential)
   # ==========================================================================
 
-  - id: convoy
-    name: "Convoy update"
-    category: deterministic
-    instruction: >
-      Update the convoy file when an objective-level task was active this
-      session. Otherwise skip.
-    completion:
-      type: manual
-    required: false
-    on_fail: skip
-
   - id: commit-push
     name: "Commit + push"
     category: deterministic
     instruction: >
-      git add relevant files + git commit + git push. If push fails on an
-      SSH passphrase prompt, ask the user to push manually. Push MUST
-      happen BEFORE deploy (deploy-docs.sh runs `git pull` on the
-      remote).
+      git add the relevant files + git commit + git push, per CLAUDE.md
+      commit convention. If push fails on an SSH passphrase prompt, ask
+      the user to push manually.
     completion:
       type: exit_code
       command: "git log -1 --oneline"
     commit_gate: false
     on_fail: escalate
-
-  - id: deploy-async
-    name: "Deploy docs (background)"
-    category: deterministic
-    instruction: >
-      Run `$FRAMEWORK_DIR/scripts/deploy-docs.sh` via run_in_background.
-      Buddy reports "deploy running in the background" and closes save.
-      The deploy result arrives as a notification. On error: handoff note.
-      Requirement: push must succeed. Without push: deploy skip.
-    completion:
-      type: exit_code
-      command: "bash $FRAMEWORK_DIR/scripts/deploy-docs.sh"
-    depends_on: [commit-push]
-    required: false
-    on_fail: warn
 
   - id: buffer-cleanup
     name: "Session-buffer cleanup"
@@ -167,17 +145,3 @@ steps:
     required: false
     on_fail: skip
 
-# ==========================================================================
-# quicksave variant
-# ==========================================================================
-variants:
-  quicksave:
-    trigger: ["quicksave"]
-    description: "Mid-session checkpoint without a full persistence cycle"
-    steps: [dispatcher-final, validate-reconciliation, handoff-write]
-    notes: >
-      No history entry, no convoy update, no deploy, no session-buffer
-      cleanup. quicksave is NOT a substitute for save at session end.
-      quicksave uses the same handoff-write step as save — meaning the
-      .bak copy + merge-default apply identically (no blind overwrite,
-      even on quicksave).

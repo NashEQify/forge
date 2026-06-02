@@ -56,7 +56,7 @@ grep -B2 "Status: in_progress" docs/plan.yaml
 **Check 5 — hook consistency:**
 Read `docs/plan_engine --boot`. If not idle: check the referenced task in
 the workflow checklist. Hook step ≠ checklist step → FLAG.
-(Reconciliation rule: checklist wins, see `framework/agent-patterns.md`.)
+(Reconciliation rule: checklist wins.)
 
 ### Proof block (MUST)
 

@@ -5,7 +5,8 @@ description: >
   `status` in task YAMLs. On terminal status (done, superseded,
   wontfix, absorbed) it also sweeps cross-task `blocked_by` and
   `docs/plan.yaml` inline refs so the task-graph and plan stay
-  consistent.
+  consistent. On every status change it surfaces the task's
+  critical-path blast radius (`plan_engine --after`).
   Triggers when a task's status must change (the only allowed path); NOT for content edits to task bodies of OPEN tasks — the terminal-status sweep of `blocked_by` / cross-refs on OTHER tasks IS in scope.
 status: active
 relevant_for: ["main-code-agent"]
@@ -35,7 +36,7 @@ terminal.
 | readiness | enum | no | raw, specced, reviewed, implementing, done. |
 | reason | string | no | Free text for traceability; not stored. |
 | workflow_phase | string | no | Current workflow phase. Soft-validated. |
-| spec_phase_update | object | no | Spec-phase transition (see Step 4). |
+| spec_phase_update | object | no | Spec-phase transition (see Step 3). |
 | closure_ref | int | conditional | Successor / absorbing task ID. Required when `new_status` ∈ {superseded, absorbed}. |
 
 ## Flow
@@ -60,12 +61,7 @@ Validate the touched task against `framework/task-schema.yaml` via
 `plan_engine --validate <id>`; on schema FAIL, fix before
 reporting.
 
-### Step 3: convoy update (conditional)
-
-YAML carries `objective: <name>` → update
-`workspaces/{objective}/convoy.md`. Absent → skip.
-
-### Step 4: spec_phase_update (conditional)
+### Step 3: spec_phase_update (conditional)
 
 Only when `spec_phase_update` is in the input. Writes to the task's
 `spec_states` map. Valid transitions (each may fire a counter):
@@ -79,7 +75,12 @@ Only when `spec_phase_update` is in the input. Writes to the task's
 `spec_name` is created at `raw` if absent. Invalid transition or
 unknown `current_phase` → abort.
 
-### Step 4.5: cross-task + plan.yaml sweep (MUST on terminal status)
+### Step 4: cross-task graph closure + critical-path blast radius
+
+Two parts: **(A)** graph closure on terminal status (MUST), **(B)**
+critical-path blast-radius visibility on every status change.
+
+#### (A) Graph closure — MUST on terminal status
 
 Lifecycle-symmetric with `task_creation` Step 1b — that step
 **builds** the `blocked_by` graph, this step **closes** it.
@@ -126,6 +127,17 @@ descs inhaltlich. No hit → skip.
 After the sweep: `plan_engine --validate` (whole tree, no `<id>`
 arg) must PASS — dangling `blocked_by` is a graph error.
 
+#### (B) Critical-path blast radius — every status change
+
+A status change on a task that gates the critical path shifts what
+`plan_engine` computes downstream. On `in_progress` / `blocked` /
+terminal of a path-gating task, run `plan_engine.py --after
+{task_id}` and read what it un/blocks; a `blocked` on a path-gating
+task surfaces the stalled downstream set rather than passing
+silently. Non-terminal transitions change no `blocked_by` edges —
+this is visibility (path-position seen now), not a YAML write, and
+not deferred to `save`.
+
 ### Step 5: auto-archive / reverse move
 
 Lifecycle move between `docs/tasks/` (active) and
@@ -165,9 +177,9 @@ Status update: [{task_id}] {title}
   status: {old} -> {new}
   updated: {today}
   board_result | readiness | workflow_phase | spec_states: ... | unchanged
-  convoy: updated | n/a
   cross-task sweep: N blocked_by + M closure entries | n/a (non-terminal)
   plan.yaml sweep: K descs rewritten | n/a
+  critical-path: on-path | off-path | gates {ids} via --after | n/a
   archive: forward | reverse | no-op
 ```
 
@@ -189,3 +201,9 @@ Status update: [{task_id}] {title}
 - **NOT** skip the cross-task sweep on superseded/absorbed because
   *"there are probably no dependents"* — run the scan; cold-graph
   assumptions break silently.
+- **NOT** change a task's scope or dependencies via a raw body edit
+  and skip the graph. Open-body content edits go through neither
+  task skill; if a scope edit adds or drops a real dependency, run
+  the `task_creation` §1b-style pairwise check by hand plus
+  `plan_engine --validate`. The skills fire on create + status —
+  content-edit reconciliation is manual.

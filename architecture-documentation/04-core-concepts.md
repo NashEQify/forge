@@ -614,7 +614,7 @@ skill") were aspirational and no such mechanism was ever built.
 fires from `agents/buddy/operational.md` §Source-Grounding and from the
 relevant skill steps. The proportionality principle fires from
 `CLAUDE.md` Invariant 9 (Tier 0, always loaded) and the per-gate
-mechanisms registered in `framework/agent-patterns.md` §Pattern family.
+mechanisms in their skill SoTs.
 
 **Use case for the historical reference:** design conversations,
 onboarding context, tracing the rationale behind a given skill's
@@ -651,7 +651,8 @@ The trigger is NOT file extension (false positive on SKILL.md), but the
   consumer; require a presentation-audit when consumer is
   "human-without-context".
 
-Detail spec: pattern 7 in [`../framework/agent-patterns.md`](../framework/agent-patterns.md).
+This is the reader-facing-surface-detection discipline: classify the
+artifact's primary consumer before choosing a verify strategy.
 
 ## 28. Triage Checklist (Pattern Lift)
 
