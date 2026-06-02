@@ -179,7 +179,7 @@ steps:
     category: deterministic
     instruction: >
       Task-YAML board_result + readiness aktualisieren.
-      Nur via task_status_update Skill (CLAUDE.md TASK-SYNC).
+      Nur via task_status_update Skill.
       Dann: git add + commit (Review-Files + Fixes + Task-YAML).
       Commit-Guard aus CLAUDE.md durchgehen.
     completion:

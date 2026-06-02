@@ -166,9 +166,7 @@ Drift protection: `consistency_check` Check 8 (existence + idempotency + manual-
 
 ### Frozen Zones (convention)
 
-`.claude/frozen-zones.txt` was the SoT for the
-`frozen-zone-guard.sh` PreToolUse hook (BLOCK on writes inside listed
-glob patterns). That hook has been removed. The convention persists:
+`.claude/frozen-zones.txt` lists the WORM glob patterns by convention.
 `context/history/**` is WORM (write-once-read-many); corrections via
 `.correction.md` sidecar. Discipline-enforced by Buddy; no mechanical
 block.

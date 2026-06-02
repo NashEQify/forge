@@ -71,7 +71,7 @@ to materialise their assumptions before invoking a sub-agent.
 | STANDARD | gate file (`docs/tasks/<id>-gates.yaml`) + state file (`docs/build/...`) |
 | FULL | gate file + state file + multi-phase spec (E1→Board→E2→...) |
 
-Quality discipline: brief shape is enforced in `_protocols/dispatch-template.md` + `mca-brief-template.md`. An earlier `delegation-prompt-quality.sh` hook warned at PreToolUse time when sub-agent prompts were under 200 characters; it has been removed, and discipline now lives in operational.md §Delegation hygiene.
+Quality discipline: brief shape is enforced in `_protocols/dispatch-template.md` + `mca-brief-template.md`, with discipline in operational.md §Delegation hygiene.
 
 ## 3. Single-class skill model
 
@@ -214,12 +214,10 @@ WORM zones (write-once-read-many). Convention:
 context/history/**
 ```
 
-Corrections via `.correction.md` sidecar. The `frozen-zone-guard.sh`
-PreToolUse BLOCK that used to enforce this has been removed; the
-convention is now enforced by Buddy discipline (don't write into
-history zones) + occasional grep-audit during `stale-cleanup` passes.
-The `.claude/frozen-zones.txt` glob-list was the hook SoT; it is no
-longer enforced, kept as a convention reference.
+Corrections via `.correction.md` sidecar. The convention (don't write
+into history zones) is carried by Buddy discipline + occasional
+grep-audit during `stale-cleanup` passes. The `.claude/frozen-zones.txt`
+glob-list is kept as a convention reference.
 
 **Context-system mechanism:** pattern per area `context/<area>/navigation.md`
 + `overview.md` + detail files. Detail + loading order:
@@ -230,8 +228,7 @@ longer enforced, kept as a convention reference.
 > When an artefact is declared retired/replaced/dying: clean up all live
 > references in non-frozen files in the same commit.
 
-This is discipline-only — the earlier STALE-CLEANUP pre-commit WARN (and
-its opt-in marker mechanism) was dropped; Buddy sweeps references by hand.
+This is discipline-only; Buddy sweeps references by hand.
 
 **Practical consequence:** when you archive `skills/old_skill/`,
 all live refs belong cleaned up in a single commit — `grep -rn old_skill`
@@ -383,9 +380,8 @@ is the runtime layer:
 | State file | `.workflow-state/<wf>-<task-id>-<ts>.json`, atomic-write + flock-locked |
 | Step pointer | `current_step` index, advanced via `--complete` |
 | Boot resume | `--boot-context` injects a resume line at every boot |
-| Per-turn reminder | Removed — Buddy reads workflow_engine state on demand via `--boot-context` / `--next`; the earlier `workflow-reminder.sh` UserPromptSubmit hook injected next-step per turn but was CC-Terminal-CLI only |
+| State on demand | Buddy reads workflow_engine state on demand via `--boot-context` / `--next` |
 | Pre-commit gate | `commit_gate: true` steps block the commit until done |
-| Engine-use detector | Removed — an earlier pre-commit Check 8 WARNed on feat/fix/refactor + `[Task-NNN]` without an active workflow |
 
 **Anti-pattern:** "Buddy should remember." Discipline-as-mechanism: the engine
 forces the path mechanically — forgetting is impossible because every turn
@@ -433,8 +429,7 @@ markers in opt-in agent defs:
 
 Plus the aggregated `framework/agent-skill-map.md` as a reverse-lookup map.
 
-**Enforcement:** discipline-only — the earlier AGENT-SKILL-DRIFT
-pre-commit WARN was dropped. Run `generate_agent_skill_map.py --check`
+**Enforcement:** discipline-only. Run `generate_agent_skill_map.py --check`
 manually after touching `relevant_for:` frontmatter or agent files.
 
 **Maintenance loop on a new skill:**
@@ -487,10 +482,7 @@ naming_collisions, return_format_spec, stop_conditions). Each class:
 
 **Discipline enforcement:** brief discipline lives in
 `skills/_protocols/mca-brief-template.md` and is enforced by Buddy
-reading the protocol during brief authoring. An earlier
-`delegation-prompt-quality.sh` Check C (PreToolUse regex for section
-presence + 6-class completeness) was removed — discipline replicates
-without the hook.
+reading the protocol during brief authoring.
 
 **Anti-pattern (why NOT a persona spawn instead of a template):** a persona costs
 +5-15k tokens per dispatch, is probabilistic, can be wrongly tuned
@@ -545,10 +537,7 @@ in the next wave.
 **Pattern:** Buddy reads MCA return summaries himself
 per `agents/buddy/operational.md` §Sub-Agent Return — incident-block
 keywords (Stop-Condition, ESCALATE, ARCH-CONFLICT, AUTO-FIXED) route
-to documented next actions. The earlier `mca-return-stop-condition.sh`
-PostToolUse hook flagged these keywords via stderr WARN; it has been
-removed. Discipline replicates by Buddy reading
-the return.
+to documented next actions.
 
 ## 22. Board-Output Mechanical
 
@@ -560,9 +549,7 @@ has Buddy's pass-through fallback (recovery), but not prevention.
 output files after each dispatch per `agents/buddy/operational.md`
 §Inline-return fallback — the pass-through mechanic (Buddy writes the
 returned content verbatim into the expected file path with a banner
-note) is the discipline-level recovery. The earlier
-`board-output-check.sh` PostToolUse hook listed missing files via
-stderr WARN; it has been removed. Buddy's post-dispatch read of
+note) is the discipline-level recovery. Buddy's post-dispatch read of
 chief.md is the load-bearing check.
 
 ## 23. Adversary-Driven Test Plan
@@ -662,11 +649,7 @@ The trigger is NOT file extension (false positive on SKILL.md), but the
 - solve workflow.yaml `dispatch-board` artifact_class branching
 - Buddy discipline: pre-dispatch classify the artifact's primary
   consumer; require a presentation-audit when consumer is
-  "human-without-context". The earlier `engine-bypass-block.sh`
-  PreToolUse hook attempted to BLOCK multi-file reader-facing-edits
-  without an active workflow; it has been removed (the workflow_engine
-  was in usage standby anyway, and the hook produced friction without
-  delivering protection).
+  "human-without-context".
 
 Detail spec: pattern 7 in [`../framework/agent-patterns.md`](../framework/agent-patterns.md).
 

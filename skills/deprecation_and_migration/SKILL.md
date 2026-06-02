@@ -37,16 +37,15 @@ good at removing. This skill closes the gap.
 
 Formalizes the existing STALE-CLEANUP invariant (CLAUDE.md
 §5) at the skill level — when / how to deprecate is a
-methodology question, not just a hook trigger.
+methodology question, not just a cleanup sweep.
 
 ## Source
 
 Lifted from `github.com/addyosmani/agent-skills`
 (`skills/deprecation-and-migration/SKILL.md`).
 **Adapted** to the forge reality:
-- STALE-CLEANUP invariant (CLAUDE.md §5) as a mechanical
-  companion.
-- pre-commit check 5 (STALE-CLEANUP) as a hook corridor.
+- STALE-CLEANUP invariant (CLAUDE.md §5) as the
+  same-commit cleanup discipline.
 - Default to `git rm` on consolidation — git history is
   the archive; no `_archived/` shadow tree.
 
@@ -60,9 +59,10 @@ Distinct from:
   describes the skill-as-mode-absorbed mechanism.
   deprecation-and-migration is broader (also code, APIs,
   modules, whole systems — not just skills).
-- pre-commit check 5 STALE-CLEANUP hook — mechanical
-  detection. The skill is the **decision discipline**
-  (when / how) behind the hook.
+- STALE-CLEANUP invariant (CLAUDE.md §5) — the same-commit
+  ref-cleanup discipline Buddy applies on removal. This
+  skill is the **decision discipline** (when / how) behind
+  that cleanup.
 
 What only this skill delivers:
 - Deprecation-decision framework (5 questions before
@@ -92,8 +92,8 @@ What only this skill delivers:
 - Pure skill-as-mode consolidation (e.g. ux_review →
   spec_board mode=ux) →
   `framework/skill-anatomy.md` §Consolidation mechanic.
-- Mechanical STALE-CLEANUP after a rename → pre-commit check
-  5 + the stale-cleanup sweep (invariant 5).
+- Mechanical STALE-CLEANUP after a rename → the
+  stale-cleanup sweep (invariant 5).
 
 ## Process
 
@@ -327,8 +327,7 @@ removal.
 - ADR on a substantial deprecation decision.
 
 **DOES NOT DELIVER:**
-- No pure STALE-cleanup sweep — that's invariant 5 +
-  pre-commit check 5.
+- No pure STALE-cleanup sweep — that's invariant 5.
 - No skill-as-mode consolidation in detail — see
   `framework/skill-anatomy.md` §consolidation mechanic.
 
@@ -363,8 +362,8 @@ removal.
 
 ## See also
 
-- `CLAUDE.md` invariant §5 STALE-CLEANUP — mechanical
-  companion.
+- `CLAUDE.md` invariant §5 STALE-CLEANUP — the same-commit
+  ref-cleanup discipline.
 - `skills/shipping_and_launch/SKILL.md` phase 2
   feature-flag strategy — same mechanism, pre-migration use
   case.

@@ -21,10 +21,8 @@ parallel (one tool-call batch).
      `git diff HEAD -- docs/tasks/*.yaml | grep -E '^[+-]\s*(status|readiness):'`.
      A hit without a visible `task_status_update` call in
      the session log → warning + correct via the skill now.
-     (The pre-commit hook TASK-SYNC additionally warns
-     mechanically — CLAUDE.md §commit-guard.) Content
-     edits (scope, description, notes) are NOT a status
-     change.
+     Content edits (scope, description, notes) are NOT a
+     status change.
 3. **Workflow state** —
    `python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --handoff-context`
    when active workflows exist. Output goes into step 4.
@@ -78,8 +76,7 @@ parallel (one tool-call batch).
    (without the tag: last 5 commits). Hit →
    `bash $FRAMEWORK_DIR/scripts/deploy-dashboard-lite.sh`
    via `run_in_background`. The script is idempotent —
-   the redundant call alongside the `post-commit-dashboard`
-   hook is only network latency. Precondition: step 7
+   re-running is only network latency. Precondition: step 7
    succeeded. Result as a notification — error in the
    handoff note.
 9. **Buffer cleanup** — remove `PROCESSED` entries from

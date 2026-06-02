@@ -188,7 +188,18 @@ questions in order:
 judgment across five axes, not a numeric threshold:
 - **context-locality** — Buddy already holds the context live
   (diagnose + implement same thread); transferring it as a brief
-  costs more than it conveys.
+  costs more than it conveys. **Bound (ADR-005):** this axis does
+  NOT license inline brief-authoring for a brief that touches
+  EXISTING code. Spec-derived held context ≠ as-is grounding (the
+  spec is the least-trustworthy source for a brief's code claims —
+  see L-064). Any code-touching brief above the §4.1 DIRECT
+  anti-triggers → dispatch `brief-architect` (context-isolated,
+  greps `src/`), with a dispatch package of spec authority + ACs +
+  scope + intent_chain + optional lens_output ONLY — never a
+  Buddy-authored draft/spec-summary. Inline stays only for genuine
+  greenfield/trivial DIRECT (≤3 files AND no spec AND no new
+  behaviour). Ambiguous classification → escalate UP to
+  brief-architect, never inline.
 - **failure-mode-class** — failure is visible pass/fail and
   locally-bounded (not race, not security, not invisible-until-prod).
 - **specialization-need** — the task does not need MCA's toolchain
@@ -292,10 +303,8 @@ Brief-quality gate for MCA dispatches: when engagement applies per
 `## Implicit-Decisions-Surfaced` with 4 standard classes
 (schema_and_contract, error_and_stop, layer_discipline,
 structural_invariants). Template SoT (incl. its own trigger):
-`skills/_protocols/mca-brief-template.md`. Discipline-only post-ADR-004
-(2026-05-31): Buddy self-checks the 4 classes before dispatch by
-reading the protocol — the earlier `delegation-prompt-quality.sh`
-Check C PreToolUse WARN was removed.
+`skills/_protocols/mca-brief-template.md`. Buddy self-checks the 4
+classes before dispatch by reading the protocol.
 
 ---
 
@@ -306,8 +315,7 @@ Check C PreToolUse WARN was removed.
 After state-changing actions:
 - **Context:** learned something new → write it (active context path).
 - **History:** task closeout → Persist Gate.
-- **Backlog:** task status change → Persist Gate (pre-commit TASK-SYNC
-  as a mechanical fallback).
+- **Backlog:** task status change → Persist Gate.
 
 ### Persist Gate
 

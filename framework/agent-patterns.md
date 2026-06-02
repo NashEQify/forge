@@ -339,7 +339,7 @@ and broken cross-session continuity.
 
 Spec author writes a claim about mechanical behaviour ("the
 sub-build route inherits brief-architect via the parent's gate";
-"the path-whitelist hook scopes per-agent"; "this validator
+"the gate blocks a commit on a missing field"; "this validator
 rejects malformed input"). The claim is internally coherent in
 prose. Reviewer reads the prose, finds it consistent with the
 spec's other prose, and signs off.
@@ -485,7 +485,7 @@ synthesis preconditions.
 | cross-task AC validation at spec-board | `skills/spec_board/SKILL.md` §4a Cross-task AC validation | codified (L-053) |
 | orchestrator architecture-comprehension as precondition for cross-component synthesis | `agents/buddy/operational.md` §Architecture-Comprehension (pre-dispatch + post-return) | codified (L-054) |
 | discipline-in-SKILL-text-first, hooks-as-last-resort-verifier (meta-rule) | `docs/dogfood-learnings/README.md` §Discipline-location rule | codified (L-055) |
-| council-discipline parity with board (uses-protocols + chief + adversary + pre-frame-check + cold-start brief + evidence-pointer mandate + post-council coherence) | `skills/council/SKILL.md` (rewrite) + `skills/council/REFERENCE.md` + `agents/council-chief.md` + `agents/council-adversary.md` + `agents/council-member.md` §Evidence-pointer mandate + `workflows/templates/council.yaml` phases 0/1/3 | codified (council-board-parity) |
+| council-discipline parity with board (uses-protocols + chief + adversary + pre-frame-check + cold-start brief + evidence-pointer mandate + post-council coherence) | `skills/council/SKILL.md` (rewrite) + `agents/council-chief.md` + `agents/council-adversary.md` + `agents/council-member.md` §Evidence-pointer mandate + `workflows/templates/council.yaml` phases 0/1/3 | codified (council-board-parity) |
 
 The meta-rule (above) binds the rest: every entry above is
 codified in SKILL / agent / runbook text first; runtime hooks are

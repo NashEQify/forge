@@ -134,32 +134,47 @@ class TestAdversaryV1Cluster:
         """
         TC-061: Constraint MUST NOT — kein PreToolUse-Hook fuer evidence-capture.
 
+        Evidence-Pointer-Enforcement laeuft via Validator + Engine
+        `pointer_check` + Pre-commit Check 5 (Spec 299 §2, §5, §6) — NICHT
+        via einen PreToolUse-Capture-Hook (sieht keinen `tool_response`).
+
         Level: L0 (Structural)
         Quelle: §8.2
         Adversary-Target: Smart-but-Wrong
         evidence:
           - kind: file_range
             path: docs/specs/299-fabrication-mitigation.md
-            lines: 506-507
+            lines: 544-544
             quote: "Kein PreToolUse-Hook fuer Capture"
         """
-        hook = framework_root / "orchestrators/claude-code/hooks/evidence-pointer-check.sh"
-        assert hook.is_file(), "Hook fehlt"
-        text = hook.read_text(encoding="utf-8")
+        import json
 
-        # Hook darf NICHT PreToolUse referenzieren (sieht keinen tool_response)
-        assert "PreToolUse" not in text, \
-            "Hook enthaelt PreToolUse — Constraint §8.2 verletzt"
-
-        # settings.json: Hook nicht in PreToolUse registriert
-        settings = framework_root / ".claude/settings.json"
-        if settings.is_file():
-            import json
+        # Kein Hook-Settings-File registriert ein PreToolUse-Event fuer
+        # evidence-capture. Geprueft werden alle Settings-Files die der
+        # Framework als Hook-Registration nutzt.
+        settings_files = (
+            framework_root / "orchestrators/claude-code/settings.json.template",
+            framework_root / ".codex/hooks.json",
+            framework_root / ".claude/settings.json",
+        )
+        for settings in settings_files:
+            if not settings.is_file():
+                continue
             data = json.loads(settings.read_text(encoding="utf-8"))
             pre = data.get("hooks", {}).get("PreToolUse", [])
-            for entry in pre:
-                assert "evidence-pointer-check" not in str(entry), \
-                    "evidence-pointer-check.sh in PreToolUse — verboten"
+            assert not pre, \
+                f"{settings.name} registriert PreToolUse — Constraint §8.2 verletzt"
+
+        # Kein Hook-Skript im Hooks-Verzeichnis ist ein PreToolUse-
+        # evidence-capture-Hook.
+        hooks_dir = framework_root / "orchestrators/claude-code/hooks"
+        for script in hooks_dir.glob("*.sh"):
+            text = script.read_text(encoding="utf-8")
+            if "PreToolUse" in text and "evidence" in text.lower():
+                raise AssertionError(
+                    f"{script.name} ist ein PreToolUse-evidence-Hook — "
+                    "Constraint §8.2 verletzt"
+                )
 
     def test_TC_062_no_llm_audit_layer_in_new_code_paths(
         self, framework_root: Path
@@ -168,17 +183,21 @@ class TestAdversaryV1Cluster:
         TC-062: Constraint MUST NOT — keine LLM-getriebene Audit-Schicht als
         primary.
 
+        Die Validation-Mechanik (Validator-Wrapper + Library) ist reines
+        deterministisches Python (grep / range / existence) — kein LLM-API-
+        Aufruf.
+
         Level: L1 (Logic)
         Quelle: §8.2
         evidence:
           - kind: file_range
             path: docs/specs/299-fabrication-mitigation.md
-            lines: 504-505
+            lines: 542-542
             quote: "Keine LLM-getriebene Audit-Schicht als primary mechanism"
         """
         for rel in (
             "scripts/validate_evidence_pointers.py",
-            "orchestrators/claude-code/hooks/evidence-pointer-check.sh",
+            "scripts/lib/evidence_pointers.py",
         ):
             f = framework_root / rel
             assert f.is_file(), f"File fehlt: {rel}"
@@ -508,87 +527,6 @@ class TestAdversaryEngine:
             f"got ok={ok} msg={msg!r}"
         assert "unresolved" in msg.lower() or "resolved source_file" in msg.lower(), \
             f"CC-004: msg should mention unresolved/resolved: {msg!r}"
-
-
-class TestAdversaryHook:
-    def test_ADV_TC_006_hook_race_two_parallel_tier1_subagent_tasks(
-        self, framework_root: Path, tmp_path: Path
-    ):
-        """
-        ADV-TC-006: Hook-Race — zwei parallele Tier-1-Sub-Agent-Tasks,
-        gleiche Output-Pfad-Inferenz.
-
-        Pattern: NEW-V-001
-        Phase: E
-        Level: L4
-        v1-Gap: TC-044 ist sequential. Parallel-Spawn-Race nicht modelliert.
-        evidence:
-          - kind: file_range
-            path: docs/specs/299-fabrication-mitigation.md
-            lines: 290-294
-            quote: "PostToolUse-Trigger auf Tool=Task"
-        """
-        # Concurrency-Verifikation: Hook ist stateless (kein shared cache,
-        # kein gemeinsames temp-File pro Hook-Run), daher race-frei
-        # konstruktion-bedingt. 2x serielle Calls mit unterschiedlichen
-        # Outputs verifizieren: Task-A → Task-A-Pfad, Task-B → Task-B-Pfad,
-        # keine Cross-Validation moeglich.
-        import json
-        import subprocess
-
-        hook = framework_root / "orchestrators/claude-code/hooks/evidence-pointer-check.sh"
-        assert hook.is_file()
-
-        # Task-A Output (valid)
-        out_a = tmp_path / "task_a.md"
-        out_a.write_text(
-            "---\nschema_version: 1\nevidence:\n"
-            "  - kind: file_exists\n"
-            f"    path: {out_a.name}\n---\nbody\n",
-            encoding="utf-8",
-        )
-        # Task-B Output (fabricated quote)
-        out_b = tmp_path / "task_b.md"
-        out_b.write_text(
-            "---\nschema_version: 1\nevidence:\n"
-            "  - kind: file_range\n"
-            f"    path: {out_b.name}\n"
-            "    lines: 1-1\n"
-            '    quote: "fabricated content"\n---\nbody\n',
-            encoding="utf-8",
-        )
-
-        # Hook A
-        evt_a = json.dumps({
-            "tool_name": "Task",
-            "tool_input": {"subagent_type": "spec-board",
-                           "prompt": f"framework/skills/spec_board/SKILL.md output_file={out_a}"},
-            "tool_response": {"output_file": str(out_a)},
-        })
-        r_a = subprocess.run(
-            [str(hook)], input=evt_a, capture_output=True, text=True,
-            cwd=str(framework_root), timeout=10,
-        )
-
-        # Hook B
-        evt_b = json.dumps({
-            "tool_name": "Task",
-            "tool_input": {"subagent_type": "code-review-board",
-                           "prompt": f"framework/skills/code_review_board/SKILL.md output_file={out_b}"},
-            "tool_response": {"output_file": str(out_b)},
-        })
-        r_b = subprocess.run(
-            [str(hook)], input=evt_b, capture_output=True, text=True,
-            cwd=str(framework_root), timeout=10,
-        )
-
-        # Hook A: Task-A valid → no WARN
-        assert "warn" not in r_a.stderr.lower() or "task_a" in r_a.stderr.lower(), \
-            f"Hook A: kein cross-validation auf Task-B: {r_a.stderr!r}"
-        # Hook B: Task-B fabricated → WARN, ABER nur fuer Task-B-Pfad
-        if "warn" in r_b.stderr.lower():
-            assert "task_b" in r_b.stderr.lower() or "fabricated" in r_b.stderr.lower(), \
-                f"Hook B WARN muss Task-B-Pfad referenzieren, nicht Task-A: {r_b.stderr!r}"
 
 
 class TestAdversaryYamlLoader:

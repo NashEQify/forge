@@ -431,9 +431,8 @@ name: task_creation
 - `framework/boot-navigation.md` (boot index)
 - `agents/buddy/operational.md` (operational anti-inflation behavior)
 - `framework/spec-engineering.md` (5 primitives spirit)
-- `skills/_protocols/piebald-budget.md` (length-budget SoT — the
-  earlier PIEBALD-BUDGET pre-commit WARN was dropped, so the per-type
-  / single-class-v2 threshold is now discipline-enforced)
+- `skills/_protocols/piebald-budget.md` (length-budget SoT — the per-type
+  / single-class-v2 threshold is discipline-enforced)
 
 ---
 

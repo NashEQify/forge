@@ -13,11 +13,7 @@ on Full / Standard.
 
 **Pre-dispatch check (discipline):**
 Buddy verifies presence + completeness of all 4 classes before
-dispatching the brief. An earlier
-`orchestrators/claude-code/hooks/delegation-prompt-quality.sh` Check
-C performed this as a CC PreToolUse WARN; it was removed (CC-Terminal-
-only, observability not enforcement). Discipline now lives at
-brief-authoring time: Buddy reads this protocol before drafting
+dispatching the brief: Buddy reads this protocol before drafting
 and self-checks all 4 classes against the dispatch.
 
 ---
@@ -302,11 +298,9 @@ Producer is `code-architect-lens` (fresh-context-isolated reads
 code / spec, runs grep — see lens §Claim-Verifications, single
 merged table). Brief-architect copies the verbatim rows. **Adversary
 re-verifies at L2 dispatch** per `agents/code-adversary.md`
-§Cold-start pre-mission — two-pass author / verifier separation. The
-earlier `brief-claims-guard.sh` PreToolUse hook re-ran the embedded
-Command at write time and BLOCKed on output mismatch; it was removed.
-SKILL text remains binding; adversary's L2
-re-verification is now the load-bearing check.
+§Cold-start pre-mission — two-pass author / verifier separation.
+SKILL text remains binding; adversary's L2 re-verification is the
+load-bearing check.
 
 Any `FALSIFIED` row → brief is INCOMPLETE, return to author for AC
 re-scope before MCA dispatch.

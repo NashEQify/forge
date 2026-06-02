@@ -290,10 +290,8 @@ checkout). Schema:
 - **Atomic write**: write to `<file>.tmp` + `os.replace(tmp, file)` (POSIX
   guarantees rename atomicity, anti-corruption against crash mid-write)
 - **Locking**: `fcntl.flock` via `_state_lock()` context manager around
-  all read/write operations — historically protected against
-  concurrent access (the earlier `workflow-reminder.sh` UserPromptSubmit
-  hook + Buddy could both read state). That hook is gone now; the lock
-  remains as defense-in-depth against parallel CLI invocations
+  all read/write operations — defense-in-depth against parallel CLI
+  invocations reading or writing state concurrently
 - **Corrupt warning**: corrupt state files are reported (stderr) instead of
   silently skipped — the user notices the problem, rather than "workflow vanished"
 
@@ -309,18 +307,12 @@ review/research/docs-rewrite **MUST go through the engine**. Skip list:
 - think! (open discussion)
 
 Enforcement: the engine itself is in usage standby; discipline-only.
-An earlier pre-commit Check 8 (ENGINE-USE) WARN was removed alongside
-the workflow-engine reinforcement layer.
 
 ### Cross-Session Resume
 
 - Boot step 5 STATUS-CHECK + step 6 RESUME → `--boot-context` injects a
   resume line that `Step 7 RESUME` hands to the user
-- The earlier `workflow-reminder.sh` UserPromptSubmit hook (which
-  rendered `WORKFLOW-ENGINE: NEXT: <wf> [Task N] > step-i/n:
-  <instruction>` as `additionalContext` every turn) was removed —
-  Buddy reads workflow state on demand via `--boot-context` / `--next`
-  rather than per-turn injection.
+- Buddy reads workflow state on demand via `--boot-context` / `--next`.
 
 ### Multi-Machine Constraint
 
@@ -419,10 +411,10 @@ about which path is right.
 
 ## Hooks (Mechanism)
 
-`orchestrators/claude-code/hooks/` — **3 hook scripts on disk**. An
-earlier CC-Terminal-CLI-only PreToolUse / PostToolUse / UserPromptSubmit
-layer was removed in favor of universally-portable enforcement.
-Discipline replicates via protocols and `agents/buddy/operational.md`.
+`orchestrators/claude-code/hooks/` — **3 hook scripts on disk**. The
+hooks are universally portable (SessionStart + git pre-commit); there are
+no tool-event hooks (PreToolUse / PostToolUse / UserPromptSubmit).
+Write-time discipline is protocol-anchored (`agents/buddy/operational.md`).
 
 | Hook | Trigger | Behaviour |
 |---|---|---|
@@ -441,15 +433,6 @@ Discipline replicates via protocols and `agents/buddy/operational.md`.
 | 3 | SKILL-FM-VALIDATE | BLOCK | `skill_fm_validate.py` mandatory fields + invocation + `relevant_for` |
 | 4 | SECRET-SCAN | WARN | `gitleaks protect --staged` (skipped when gitleaks not installed, 24h-suppressed note WARN) |
 | 5 | SOURCE-VERIFICATION | WARN | Board/council reviews must cite source files (line-numbered evidence pointers per `_protocols/evidence-pointer-schema.md`) |
-
-**Dropped (8 checks):** TASK-SYNC, OBLIGATIONS, STALE-CLEANUP,
-PERSIST-GATE, ENGINE-USE, RUNBOOK-DRIFT, AGENT-SKILL-DRIFT,
-PIEBALD-BUDGET. Most were observability-WARN that
-discipline replaces; ENGINE-USE was tied to the workflow_engine state
-file which is in usage standby; AGENT-SKILL-DRIFT covered only ~12.5%
-of personas (`relevant_for:` opt-in coverage); PIEBALD-BUDGET dropped
-in favor of a loosened budget for SKILL.md (REFERENCE.md fold-back is
-a parallel change).
 
 ## Engines + Generators
 
@@ -524,10 +507,9 @@ not by deploy-docs).
 
 ### Dashboard-redeploy reminder
 
-An earlier pre-commit OBLIGATIONS WARN fired when `docs/dashboard/` or
-plan-relevant files (tasks, plan) changed in a commit — a reminder that
-the dashboard should be redeployed (otherwise the hosted version drifts
-from the repo state). That check was dropped; redeploy is now discipline.
+When `docs/dashboard/` or plan-relevant files (tasks, plan) change in a
+commit, the dashboard should be redeployed — otherwise the hosted version
+drifts from the repo state. Redeploy is discipline.
 
 ## Data Flows (Three Examples)
 

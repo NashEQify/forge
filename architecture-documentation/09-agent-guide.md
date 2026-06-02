@@ -38,8 +38,7 @@ needed, Tier 2 is on-demand.
    plan block or scope/goal/agent stated explicitly in the turn.
    Standard/Full: gate file. Routing: `framework/process-map.md`.
 
-4. **Code delegation.** Product code → main-code-agent. The earlier
-   `path-whitelist-guard` PreToolUse hook was removed — Buddy writes
+4. **Code delegation.** Product code → main-code-agent. Buddy writes
    within intent-scope by discipline.
    Orchestrator work (agents/, framework/, skills/, context/, docs/)
    Buddy writes directly.
@@ -168,17 +167,14 @@ CLAUDE.md §3. Violation = constraints get forgotten, sub-agent does
 
 ### DON'T 4: Writes outside intent scope
 
-There is no `path-whitelist-guard` PreToolUse hook — it was removed,
-and the path-whitelist mechanism with it. Buddy writes within
-`intent.md` scope by discipline; out-of-scope writes are self-flagged
-or user-flagged at review.
+Buddy writes within `intent.md` scope by discipline; out-of-scope
+writes are self-flagged or user-flagged at review.
 
 ### DON'T 5: Writes into frozen zones
 
 Convention: `context/history/**` is WORM (write-once-read-many).
-Corrections via a `.correction.md` sidecar (convention). The earlier
-`frozen-zone-guard.sh` PreToolUse hook was removed; the convention is
-now discipline-enforced.
+Corrections via a `.correction.md` sidecar (convention,
+discipline-enforced).
 
 ### DON'T 6: Raw edits on task YAMLs (status/readiness)
 

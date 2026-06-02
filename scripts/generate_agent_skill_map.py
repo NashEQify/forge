@@ -29,7 +29,7 @@ Usage:
     python3 generate_agent_skill_map.py --check    # exit 1 on drift
     python3 generate_agent_skill_map.py --agent main-code-agent  # subset
 
-Drift-detection (pre-commit Check 10): runs --check, WARNs on diff.
+Drift-detection: run --check manually, exits 1 on diff.
 
 Pattern follows generate_skill_map.py + generate_navigation.py
 (Generator+Validator, drift-anfaellige Indizes mechanisch generiert).
@@ -220,8 +220,8 @@ def build_aggregate_map(
         "",
         "Reverse map of skill `relevant_for:` frontmatter — which skills each",
         "agent should know about when spawned. SoT: skill frontmatter.",
-        "Regenerate via `scripts/generate_agent_skill_map.py`. Pre-commit",
-        "Check 10 (AGENT-SKILL-DRIFT) detects out-of-date AUTO-blocks.",
+        "Regenerate via `scripts/generate_agent_skill_map.py`; run",
+        "`--check` to detect out-of-date AUTO-blocks.",
         "",
         "Agent-Definitionen (`agents/<name>.md`) participate via",
         f"`{AUTO_START}` / `{AUTO_END}` markers — opt-in per agent.",

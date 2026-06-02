@@ -3,8 +3,8 @@
 
 Reverse map of skill `relevant_for:` frontmatter — which skills each
 agent should know about when spawned. SoT: skill frontmatter.
-Regenerate via `scripts/generate_agent_skill_map.py`. Pre-commit
-Check 10 (AGENT-SKILL-DRIFT) detects out-of-date AUTO-blocks.
+Regenerate via `scripts/generate_agent_skill_map.py`; run
+`--check` to detect out-of-date AUTO-blocks.
 
 Agent-Definitionen (`agents/<name>.md`) participate via
 `<!-- AGENT-SKILLS-AUTO-START -->` / `<!-- AGENT-SKILLS-AUTO-END -->` markers — opt-in per agent.

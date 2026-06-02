@@ -23,7 +23,7 @@ from the **repository root** (not relative to `framework/`).
 | Review/validate spec(s) | **Review** | `workflows/runbooks/review/WORKFLOW.md` |
 | Fix a bug / handle an incident | **Fix** | `workflows/runbooks/fix/WORKFLOW.md` |
 | Research / evaluate / spike | **Research** | `workflows/runbooks/research/WORKFLOW.md` |
-| Rewrite documentation (reader-journey-first) | **Docs-Rewrite** | `workflows/runbooks/docs-rewrite/WORKFLOW.md` |
+| Rewrite reader-facing docs / README / positioning (reader-journey-first) | **Docs-Rewrite** | `workflows/runbooks/docs-rewrite/WORKFLOW.md` |
 
 ### Housekeeping (1)
 

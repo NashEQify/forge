@@ -267,8 +267,7 @@ python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --find --task 123
 - **Boot-Step `WORKFLOW-RESUME`** (`agents/buddy/boot.md` §6 RESUME) calls
   `--boot-context` automatically. Active workflows surface in GREET.
 - **On-demand step read** — Buddy calls `--next --brief` to surface the
-  current step as `WORKFLOW-ENGINE: <step info>` when needed (the earlier
-  per-turn `workflow-reminder.sh` injection was removed).
+  current step as `WORKFLOW-ENGINE: <step info>` when needed.
 - **Save-Workflow Step A.3** calls `--handoff-context` to bake state into
   session-handoff.
 
@@ -372,8 +371,8 @@ Phase Close:
   - PLAN-VALIDATE: 0 errors → PASS
   - CG-CONV: commit message format → PASS
   - SKILL-FM-VALIDATE: no skill changes → SKIP
-  - TASK-SYNC: status changed via skill → PASS (no warn)
-  - PERSIST-GATE: context updated → PASS
+  - SECRET-SCAN: no secrets staged → PASS
+  - SOURCE-VERIFICATION: no board/council review → SKIP
 - Commit lands.
 
 Total turns: ~15-25 depending on depth. The framework adds 5-10 turns of
@@ -454,7 +453,7 @@ If you're used to vanilla Claude Code, here's what changes:
 | Skill management | text in prompts | Single-class skills with `invocation` axis, frontmatter mechanically validated |
 | Cross-repo | duplicate everything | Single SoT + adapters; consumers point at framework |
 | Drift detection | none | `consistency_check` skill with 10 checks |
-| Stale cleanup | manual sweep | Stale-Cleanup invariant (discipline; the pre-commit STALE-CLEANUP WARN was dropped) |
+| Stale cleanup | manual sweep | Stale-Cleanup invariant (discipline) |
 
 The cost is higher per-task overhead. The win is that work compounds:
 nothing falls through the cracks, multi-session continuity is real,
@@ -540,8 +539,8 @@ Buddy: → save workflow
 
 ## When the framework gets in your way
 
-Pre-Commit-Hook BLOCKs your commit. Path-whitelist denies a write.
-`consistency_check` flags drift. Generators show diff after running.
+Pre-Commit-Hook BLOCKs your commit. `consistency_check` flags
+drift. Generators show a diff after running.
 
 These are not bugs in the framework. They're the framework working — it's
 catching something that would have been latent drift in your repo.

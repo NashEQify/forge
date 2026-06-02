@@ -32,9 +32,8 @@ Routing rules in `framework/process-map.md`; path detail in
 `workflows/runbooks/build/WORKFLOW.md`.
 
 ### 4. Code delegation
-Product code goes to main-code-agent. The earlier `path-whitelist-guard`
-PreToolUse hook was removed; Buddy writes within intent-scope by
-discipline. Orchestrator work (agents/, framework/,
+Product code goes to main-code-agent. Buddy writes within intent-scope
+by discipline. Orchestrator work (agents/, framework/,
 skills/, context/, docs/) Buddy writes directly. Detail:
 `framework/agent-autonomy.md`.
 
@@ -123,16 +122,12 @@ locked 2026-05-23.
 
 ## Active Hooks
 
-The framework's hook layer was narrowed to universally-portable only:
-git pre-commit (works on every harness) plus SessionStart (CC-Terminal,
-claude-desktop, claude-web, Codex via hooks.json). The CC-Terminal-only
-PreToolUse / PostToolUse / UserPromptSubmit layer has been removed —
-discipline replicates via protocols and `agents/buddy/operational.md`.
+Two hook layers, both universally portable.
 
-SessionStart (CC + claude-desktop + claude-web + Codex):
-- `buddy-boot-inject` — triggers the Buddy boot sequence on entrypoints
-  where `--agent buddy` isn't an explicit flag (claude-desktop /
-  claude-web). Load-bearing for boot.
+SessionStart (CC-Terminal, claude-desktop, claude-web, Codex via hooks.json):
+- `buddy-boot-inject` — triggers the Buddy boot sequence where `--agent
+  buddy` isn't an explicit flag (claude-desktop / claude-web). Load-bearing
+  for boot.
 - `session-start-remote` — resume nudge (active workflow / recent
   session-handoff check).
 
@@ -144,45 +139,25 @@ git pre-commit (5 checks, 3 BLOCK + 2 WARN):
 - WARN: SECRET-SCAN (gitleaks), SOURCE-VERIFICATION (board/council
   review evidence-pointer schema).
 
-**Dropped (the earlier CC-Terminal-only layer — 13 hook scripts + 8
-pre-commit checks):** PreToolUse path-whitelist-guard / frozen-zone-guard
-/ brief-claims-guard / engine-bypass-block / state-write-block /
-delegation-prompt-quality / plan-adversary-reminder; PostToolUse
-mca-return-stop-condition / board-output-check / evidence-pointer-check;
-UserPromptSubmit workflow-reminder; git pre-commit workflow-commit-gate;
-git post-commit post-commit-dashboard. Pre-commit checks dropped:
-TASK-SYNC, OBLIGATIONS, STALE-CLEANUP, PERSIST-GATE, ENGINE-USE,
-RUNBOOK-DRIFT, AGENT-SKILL-DRIFT, PIEBALD-BUDGET.
-
-**Replacement disciplines** for what the hooks used to attempt:
-- Path discipline: Buddy writes within intent-scope; deliberate-action
-  for anything else.
-- History / WORM zones (`context/history/**`): convention not
-  mechanism — corrections via `.correction.md` sidecars (rare).
+Everything else is carried by discipline, not hooks:
+- Path: Buddy writes within intent-scope; deliberate-action for anything else.
+- History / WORM zones (`context/history/**`): convention — corrections via
+  `.correction.md` sidecars (rare).
 - Delegation prompt quality: `_protocols/dispatch-template.md` +
-  `mca-brief-template.md` carry the brief shape; Buddy authors with
-  the protocol open.
-- Plan-adversary: Buddy invokes `plan-adversary` explicitly on
-  non-trivial Tier-1 edits per `_protocols/plan-review.md`.
-- MCA return / Stop-Condition: Buddy reads the return summary
-  himself per `operational.md` §Sub-Agent Return.
-- Board output / evidence-pointer: chief consolidates; chief reads
-  the files (Invariant 1); inline-return fallback is documented in
-  `operational.md` §Multi-perspective engagement.
-- Workflow-reminder: handoff + boot-resume carry cross-turn
-  continuity; `workflow_engine.py --boot-context` available on demand.
+  `mca-brief-template.md` carry the brief shape; Buddy authors with the
+  protocol open.
+- Plan-adversary: Buddy invokes `plan-adversary` explicitly on non-trivial
+  Tier-1 edits per `_protocols/plan-review.md`.
+- MCA return: Buddy reads the return summary himself per `operational.md`
+  §Sub-Agent Return.
+- Board / council output: chief consolidates and reads the files;
+  inline-return fallback in `operational.md` §Multi-perspective engagement.
+- Workflow continuity: handoff + boot-resume carry it across turns;
+  `workflow_engine.py --boot-context` on demand.
 
-Buddy acts, the 3 remaining hooks catch what's universally catchable;
-discipline carries the rest.
-
-<!-- Hook paradigm: the framework runs identically on every supported
-harness. Only SessionStart hooks (for
-boot on claude-desktop / claude-web / Codex) and git pre-commit (5
-checks, universally portable) remain. The previous CC-Terminal-only
-PreToolUse / PostToolUse / UserPromptSubmit layer is gone — discipline
-replicates via protocols and operational.md. Source of truth for
-what's wired: orchestrators/claude-code/settings.json.template. -->
+<!-- Source of truth for what's wired:
+orchestrators/claude-code/settings.json.template. -->
 
 ```
 
-*Status: 2026-05-31. Source: CLAUDE.md*
+*Status: 2026-06-01. Source: CLAUDE.md*

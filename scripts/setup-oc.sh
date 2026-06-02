@@ -80,7 +80,7 @@ if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
   echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
 fi
 
-# --- Runtime checks ---
+# --- Runtime check ---
 if ! command -v opencode &>/dev/null; then
   echo ""
   echo "WARNUNG: 'opencode' nicht im PATH. Install: https://opencode.ai" >&2

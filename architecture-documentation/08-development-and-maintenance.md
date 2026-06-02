@@ -137,7 +137,7 @@ Skip on repos without `skills/` (graceful degradation for consumers).
 
 ### generate_agent_skill_map.py
 
-Generator + validator for agent-skill awareness (`--check` mode; the earlier AGENT-SKILL-DRIFT pre-commit WARN was dropped).
+Generator + validator for agent-skill awareness (`--check` mode).
 
 ```bash
 python3 scripts/generate_agent_skill_map.py            # write
@@ -179,10 +179,8 @@ session-start-remote.sh        SessionStart — resume-nudge (recent handoff che
 pre-commit.sh                  git pre-commit + commit-msg, 5 checks (3 BLOCK + 2 WARN)
 ```
 
-An earlier CC-Terminal-only PreToolUse / PostToolUse / UserPromptSubmit
-layer was dropped in the move to universal-portable hooks. Each
-remaining hook is self-contained with a header doc block + exit-code
-convention.
+The hook layer is universal-portable only. Each hook is self-contained
+with a header doc block + exit-code convention.
 
 ### Hook care
 
@@ -232,10 +230,9 @@ The pre-commit hook BLOCKS on the wrong form.
 
 ### Frozen zones
 
-`.claude/frozen-zones.txt` is a convention reference — the
-`frozen-zone-guard.sh` hook that once enforced it was removed, and
-`context/history/**` stays WORM by discipline. The path-whitelist
-mechanism was retired with its hook.
+`.claude/frozen-zones.txt` is a convention reference;
+`context/history/**` stays WORM by discipline. Writes stay within
+intent-scope by discipline.
 
 ### Skill anatomy (v2)
 

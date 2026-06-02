@@ -39,10 +39,10 @@ An adapter delivers three things: persona / skill discovery,
 tier-0-anchor loading, and — for the SessionStart + git pre-commit
 hooks — universal wiring. **Only universal-portable hooks are wired:**
 SessionStart (boot inject + resume nudge) and git pre-commit (5
-checks). The earlier CC-Terminal-only PreToolUse / PostToolUse /
-UserPromptSubmit layer was dropped. All supported
-harnesses (CC-Terminal, claude-desktop, claude-web, OpenCode, Codex,
-Cursor) now run discipline + protocols + the same 3 hooks (Cursor
+checks). There are no tool-event hooks (PreToolUse / PostToolUse /
+UserPromptSubmit); write-time discipline is protocol-anchored. All
+supported harnesses (CC-Terminal, claude-desktop, claude-web, OpenCode,
+Codex, Cursor) run discipline + protocols + the same 3 hooks (Cursor
 lacks SessionStart, so it boots via project rules; pre-commit fires
 identically).
 
@@ -69,7 +69,7 @@ orchestrators/claude-code/
 `.claude/` (in the repo root) additionally contains:
 - `agents/` — 40 persona wrapper files (each `<name>.md` is a wrapper)
 - `skills/` — skill wrappers for user-level discovery
-- `frozen-zones.txt` — legacy SoT (hook removed; convention-only now)
+- `frozen-zones.txt` — legacy SoT (convention-only; no hook)
 - `settings.json` — SessionStart hook registration
 
 ### Wrapper pattern
@@ -215,10 +215,9 @@ generates the user-specific `opencode.jsonc` (gitignored).
 CC and OC now run identically — both have only the pre-commit hook
 universally wired (OC lacks SessionStart, so the boot mechanism is
 prompt-side via `oc` launcher rather than hook-injected). Discipline +
-protocols carry everything that the old translator-plugin was
-attempting to mirror. The earlier "OC has UserPromptSubmit gap" /
-"OC parity is uneven" caveats are obsolete; the framework no longer
-relies on those surfaces.
+protocols carry everything on the discipline layer. OC has no
+tool-event surface (no UserPromptSubmit); the framework does not rely
+on one.
 
 ## Codex
 
@@ -293,9 +292,9 @@ Operations:
 |---|---|
 | `SessionStart` | `buddy-boot-inject.sh` + `session-start-remote.sh` |
 
-The earlier PreToolUse / PostToolUse / UserPromptSubmit wiring (8+ hook
-entries) was removed. Discipline + protocols
-+ git pre-commit (5 checks, universally available) carry the rest.
+There are no PreToolUse / PostToolUse / UserPromptSubmit hooks.
+Discipline + protocols + git pre-commit (5 checks, universally
+available) carry the write-time layer.
 
 ### Discovery + tool use
 
@@ -362,11 +361,9 @@ discipline + protocols + skills + workflows + personas are 1:1.
 
 ### Status
 
-Cursor adapter is feature-complete — Cursor was the
-"limited" adapter when the framework relied on CC-Terminal-only
-PreToolUse hooks; with those gone, Cursor has parity with CC on the
-substantive layer. Personas resolve via `@`-mention into `agents/<name>.md`
-directly.
+Cursor adapter is feature-complete — the framework runs no tool-event
+hooks, so Cursor has parity with CC on the substantive layer. Personas
+resolve via `@`-mention into `agents/<name>.md` directly.
 
 ## Adding a new adapter
 
