@@ -175,12 +175,15 @@ steps:
       <topic>-consolidated.md + decision.md.
 
       DOCUMENTATION-ONLY ROUTING: this is Buddy-side discipline. The
-      engine itself reads only `skill_ref` below; `council-needed` guard
-      at scripts/workflow_engine.py is a `sys.exit(1)` stub (L-058 open).
-      When council substitutes, Buddy MUST start the engine manually
+      engine itself reads only `skill_ref` below; the `council-needed`
+      guard (scripts/workflow_engine.py cmd_guard) IS implemented as an
+      opt-in for the solve workflow (greps the solve state file for
+      `council-required: true`), but is NOT wired into this build board
+      step (L-058 open). When council substitutes here, Buddy MUST start
+      the engine manually
       (`python3 scripts/workflow_engine.py --start build --task <id>`)
       and update completion via the manual check. Stage 2 wires the
-      engine; until then this step's automation is board-only.
+      guard into build; until then this step's automation is board-only.
     skill_ref: skills/spec_board/SKILL.md
     # alternative_skill_refs: documentation-only, not consumed by engine.
     # Engine wire-up is L-058 Stage 2 (workflow_engine.py council-needed guard).
@@ -260,26 +263,51 @@ steps:
     name: "Brief authoring (architect-authored when substantial; Buddy-inline on DIRECT)"
     category: content
     instruction: >
-      Per spec 306 §4.3 + §4.1 trigger evaluation:
-      - On DIRECT path (≤3 files, no spec, no new behaviour): Buddy
-        authors brief inline as today (legacy delegation-artefact
-        path, preserved for trivial work).
-      - On STANDARD or FULL path with §4.1 trigger fired AND below
-        §4.2 escalation: dispatch `agents/brief-architect.md` (single)
-        via Agent tool with perspective=generalist.
-      - On FULL path with §4.2 escalation triggers fired: dispatch
-        `agents/brief-architect.md` three times in parallel via Agent
-        tool calls in one message, each with perspective parameter
-        pattern | integration | scope.
-      - On AUTHORITY-ONLY path: skip via skip_when clause (no MCA
-        boundary at this path).
+      Per spec 306 §4.3 + §4.1. The inline-vs-architect branch is
+      governed by a DIRECT-eligibility predicate, not by Buddy's
+      discretion:
+
+        direct_eligible := scope_files <= 3
+                           AND no docs/specs/*.md touched
+                           AND no new behaviour introduced
+
+      - direct_eligible TRUE → Buddy authors the brief inline (legacy
+        delegation-artefact path; trivial work only).
+      - direct_eligible FALSE or unclassifiable → dispatch
+        `agents/brief-architect.md`. Fail-safe direction is UP: any
+        ambiguity routes to the architect, never inline. A FULL-shape
+        task (e.g. 7 files / 5 spec amendments) is therefore routed to
+        brief-architect — it cannot be relabelled DIRECT.
+      - The `context-locality` delegation-hygiene axis does NOT license
+        inline authoring for a brief that touches existing code:
+        spec-derived held context is not as-is grounding — the spec is
+        the least-trustworthy source for a brief's code claims,
+        especially when the task exists because the spec drifted from
+        the code.
+      - STANDARD/FULL below §4.2 escalation: single brief-architect
+        (perspective=generalist). FULL with §4.2 escalation: three
+        brief-architect dispatches in parallel via Agent tool calls in
+        one message (perspective pattern | integration | scope).
+      - AUTHORITY-ONLY: full gate skipped via skip_when (no MCA
+        boundary, no brief authored).
       The architect's brief covers required sections per spec 306
       §5.1 (qualitative content guidance, not strict schema). MCA
       input validation per main-code-agent.md is "delegation input
       exists" only.
+
+      Enforcement class [DISCIPLINE]: this predicate is applied by
+      Buddy — the engine does not evaluate skip_when (the
+      architect-lens skip_when is the same class). The structural
+      teeth are in the agent topology: a context-isolated
+      brief-architect must read src/ to author anything
+      ([STRUCTURAL]).
     skill_ref: agents/brief-architect.md
     completion:
       type: manual
+    # skip_when fires only the full-gate skip (AUTHORITY-ONLY). The
+    # DIRECT-eligibility predicate above is the inline-vs-architect
+    # branch, applied by Buddy [DISCIPLINE]; the engine does not
+    # evaluate either clause.
     skip_when: "path == AUTHORITY-ONLY"
     on_fail: block
 
@@ -380,11 +408,19 @@ steps:
     completion:
       type: compound
       checks:
+        # Engine-facing pointer keys on {task_id}: the board names its verdict
+        # by task-id (skills/code_review_board/SKILL.md §7), independent of the
+        # specify-phase gate type. Keying on {spec_name} mis-derived the pointer
+        # whenever spec-name != task-id — sharpest when the specify gate was an
+        # architectural decision, whose artifact has no task-id-shaped name.
+        # The canonical verdict name is a [DISCIPLINE] convention the writer
+        # follows (SKILL §7); this pointer_check is the [WORKFLOW] safety net —
+        # it blocks --complete (→ --force) when the verdict is missing or
+        # non-canonical, but only while the engine drives the run. The L2 chief
+        # consolidation behind the verdict is [DISCIPLINE] too (its tracking
+        # table is convention the engine cannot read) — not a separate pointer.
         - type: pointer_check
-          source_file: "docs/reviews/code/{spec_name}-verdict.md"
-        - type: pointer_check
-          source_file: "docs/reviews/code/{spec_name}-consolidated.md"
-          when: "level == L2"
+          source_file: "docs/reviews/code/{task_id}-verdict.md"
         - type: manual
     commit_gate: true
     on_fail: block

@@ -61,4 +61,4 @@
 | test-skeleton-writer | name: test-skeleton-writer description: TDD red phase — writes test skeletons from a test plan. | agents/test-skeleton-writer.md |
 | tester | name: tester description: "Spec-driven test engineer with three modes (design, eval, execution). | agents/tester.md |
 
-*Status: 2026-06-01*
+*Status: 2026-06-02*

@@ -17,7 +17,7 @@ asks what's up. Whatever you say, he routes through three phases:
 **RECEIVE** (incident? substantive? trivial?), **ACT** (delegate, dispatch
 boards, work skills), **BOUNDARY** (persist context, update task state,
 close the loop). A thin hook layer boots Buddy on session start and
-validates every commit against 5 pre-commit checks. When
+validates every commit against 6 pre-commit checks. When
 Buddy needs to do something non-trivial, he writes a Plan-Block before
 acting. When he needs multiple perspectives, he dispatches a Board and
 reads only the chief signal — never the individual reviewer outputs.
@@ -102,7 +102,7 @@ dispatch Personas. Three layers, clear contract.
 | Level | Mechanism | Examples |
 |---|---|---|
 | Boot-time | SessionStart hooks | `buddy-boot-inject`, `session-start-remote` |
-| Commit-time | git pre-commit hook | 5 checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE = BLOCK; SECRET-SCAN, SOURCE-VERIFICATION = WARN) |
+| Commit-time | git pre-commit hook | 6 checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE = BLOCK; SECRET-SCAN, SOURCE-VERIFICATION, ANTI-PHANTOM = WARN) |
 | Index-level | Generator + Validator | `generate_skill_map.py` + `consistency_check` Check 6, `generate_navigation.py` + Check 8 |
 
 Vanilla Claude Code has none of these. They are user-installed during
@@ -152,7 +152,7 @@ trigger words, defined in `agents/buddy/operational.md §Commands`:
 | `checkpoint` | Save + drift-check + sculpting (deep version) |
 | `sleep` | Forget the session (no persist) |
 | `think!` | THINK-Stance: deeper analysis mode (`agents/buddy/think-operational.md`) |
-| `consistency check` | Invoke `consistency_check` skill (10 checks) |
+| `consistency check` | Invoke `consistency_check` skill (11 checks) |
 | `solve <problem>` | Trigger solve-Workflow (problem with open solution-form) |
 | `build <task>` | Trigger build-Workflow |
 | `fix <bug>` | Trigger fix-Workflow (root-cause-first) |
@@ -448,7 +448,7 @@ If you're used to vanilla Claude Code, here's what changes:
 | Config drift | "let me update the prompt" | Tier-0 invariants + Tier-1 operational + Skill-Anatomy enforced via hook |
 | Skill management | text in prompts | Single-class skills with `invocation` axis, frontmatter mechanically validated |
 | Cross-repo | duplicate everything | Single SoT + adapters; consumers point at framework |
-| Drift detection | none | `consistency_check` skill with 10 checks |
+| Drift detection | none | `consistency_check` skill with 11 checks |
 | Stale cleanup | manual sweep | Stale-Cleanup invariant (discipline) |
 
 The cost is higher per-task overhead. The win is that work compounds:
@@ -591,7 +591,7 @@ When in doubt: `framework/process-map.md` (workflow routing) or `agents/navigati
 | Code-Review-Board mechanics | [`../skills/code_review_board/SKILL.md`](../skills/code_review_board/SKILL.md) |
 | Council mechanics | [`../skills/council/SKILL.md`](../skills/council/SKILL.md) |
 | Convergence loop | [`../skills/convergence_loop/SKILL.md`](../skills/convergence_loop/SKILL.md) |
-| Consistency check (10 checks) | [`../skills/consistency_check/SKILL.md`](../skills/consistency_check/SKILL.md) |
+| Consistency check (11 checks) | [`../skills/consistency_check/SKILL.md`](../skills/consistency_check/SKILL.md) |
 | Pre-commit hook script | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
 | Workflow-Engine source | [`../scripts/workflow_engine.py`](../scripts/workflow_engine.py) |
 | Workflow-YAML schema example | [`../workflows/runbooks/solve/workflow.yaml`](../workflows/runbooks/solve/workflow.yaml) |

@@ -18,6 +18,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -237,13 +238,88 @@ def check_tier1_multi_workflow_drift(
     return 0, ["OK: kein multi-workflow tier1-drift"]
 
 
+_VALID_CLASSES = {"STRUCTURAL", "GATE", "WORKFLOW", "DISCIPLINE"}
+
+
+def check_enforcement_registry(
+    registry_path: Path | None = None,
+) -> tuple[int, list[str]]:
+    """Check 11: validate framework/enforcement-registry.md integrity.
+
+    Every row of the Live table must (a) carry exactly one valid class
+    tag and (b) name an artifact pointer that resolves on disk. A stale
+    pointer is the phantom-enforcement failure class the registry exists
+    to prevent → ERROR.
+    """
+    registry_path = registry_path or (
+        _FRAMEWORK_ROOT / "framework" / "enforcement-registry.md"
+    )
+    if not registry_path.is_file():
+        return 1, [f"ERROR enforcement-registry: not found at {registry_path}"]
+
+    text = registry_path.read_text(encoding="utf-8")
+    lines = text.splitlines()
+
+    # Slice the Live-mechanisms section (## Live ... until next ## ).
+    in_live = False
+    table_rows: list[str] = []
+    for ln in lines:
+        if ln.startswith("## "):
+            in_live = ln.startswith("## Live")
+            continue
+        if in_live and ln.lstrip().startswith("|"):
+            table_rows.append(ln.strip())
+
+    if not table_rows:
+        return 1, ["ERROR enforcement-registry: no Live table found"]
+
+    errors: list[str] = []
+    checked = 0
+    for row in table_rows:
+        cells = [c.strip() for c in row.strip("|").split("|")]
+        if len(cells) < 5:
+            continue
+        mechanism, cls_raw, _sev, artifact_raw = cells[0], cells[1], cells[2], cells[3]
+        # Skip header + separator rows.
+        if mechanism.lower() == "mechanism" or set(mechanism) <= {"-", ":", " "}:
+            continue
+        checked += 1
+
+        cls = cls_raw.strip("`[] ")
+        if cls not in _VALID_CLASSES:
+            errors.append(
+                f"ERROR enforcement-registry: row {mechanism!r} has invalid "
+                f"class {cls_raw!r} (must be one of {sorted(_VALID_CLASSES)})"
+            )
+
+        # Extract the first backticked token as the artifact path; strip a
+        # trailing '§...' section suffix.
+        m = re.search(r"`([^`]+)`", artifact_raw)
+        if not m:
+            errors.append(
+                f"ERROR enforcement-registry: row {mechanism!r} has no "
+                f"backticked artifact pointer (got {artifact_raw!r})"
+            )
+            continue
+        path_token = m.group(1).split("§", 1)[0].strip()
+        if not (_FRAMEWORK_ROOT / path_token).exists():
+            errors.append(
+                f"ERROR enforcement-registry: row {mechanism!r} artifact "
+                f"{path_token!r} does not resolve on disk"
+            )
+
+    if errors:
+        return 1, errors
+    return 0, [f"OK: enforcement-registry — {checked} live rows resolve + tagged"]
+
+
 def _main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="consistency_check — Repo-Integritaet (Spec 299 Phase D).",
     )
     parser.add_argument(
         "--check",
-        choices=("tier1-drift", "tier1-multi-workflow-drift"),
+        choices=("tier1-drift", "tier1-multi-workflow-drift", "enforcement-registry"),
         required=True,
         help="Welcher Check ausgefuehrt werden soll.",
     )
@@ -262,6 +338,8 @@ def _main(argv: list[str] | None = None) -> int:
         exit_code, warnings = check_tier1_multi_workflow_drift(
             workflows_root=workflows_root,
         )
+    elif args.check == "enforcement-registry":
+        exit_code, warnings = check_enforcement_registry()
     else:
         print(f"ERROR: unknown check {args.check!r}", file=sys.stderr)
         return 2

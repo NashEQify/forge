@@ -146,9 +146,9 @@ decision.
                                     RESULT
 
   ── HOOKS (universal-portable only) ──
-     SessionStart (boot inject) · git pre-commit (5 checks)
+     SessionStart (boot inject) · git pre-commit (6 checks)
      PLAN-VALIDATE BLOCK · CG-CONV BLOCK · SKILL-FM-VALIDATE BLOCK
-     SECRET-SCAN WARN · SOURCE-VERIFICATION WARN
+     SECRET-SCAN WARN · SOURCE-VERIFICATION WARN · ANTI-PHANTOM WARN
 ```
 
 ## Cross-session continuity

@@ -79,7 +79,7 @@ are engine-internal and do not appear here.
 | 3 | board | Specify | `spec_board/SKILL.md` (Standard or Deep) | — |
 | 4 | test-design | Prepare | `testing/SKILL.md` (+ `adversary_test_plan` + `test-skeleton-writer` on substantial dispatch) | adversary mode: ≥3 ACs OR schema change OR cross-module OR sub-build |
 | 4a | architect-lens | Prepare | `agents/code-architect-lens.md` (preventive plan-time module lens per spec 372) | scope-shape: ≥3 touched modules OR new subsystem OR effort L\|XL; idle on DIRECT, AUTHORITY-ONLY, and below-threshold work |
-| 5 | brief-author | Prepare | `agents/brief-architect.md` (single OR multi-mode per spec 306 §4.2) | DIRECT path: Buddy-inline; STANDARD/FULL with §4.1 trigger fired: architect dispatched; AUTHORITY-ONLY: skipped via `skip_when` |
+| 5 | brief-author | Prepare | `agents/brief-architect.md` (single OR multi-mode per spec 306 §4.2) | inline only if `direct_eligible` (≤3 files AND no spec touched AND no new behaviour); FALSE or unclassifiable → architect (fail-safe UP); AUTHORITY-ONLY: skipped via `skip_when`. Predicate is Buddy-applied [DISCIPLINE]; structural teeth = architect's cold src/ read |
 | 6 | brief-signoff | Prepare | gate (user approval) per spec 306 §4.4 | mirrors upstream Plan Mode Step 4; user approves before MCA dispatch (DIRECT path skips) |
 | 7 | mca-implementation | Execute | `main-code-agent` inline (Plan + impl_plan_review + Implement + L0) | impl_plan_review: ≥3 ACs OR schema change OR cross-module |
 | 8 | code-review-board | Verify | `code_review_board/SKILL.md` (light / L1 / L2 per §1) | level: light on ≤2 files mechanical-trigger / L1 ≤5 files / L2 otherwise |
@@ -247,7 +247,7 @@ alone is NOT an L2 trigger (per skill §1.2 NEW MODULE vs NEW
 SUBSYSTEM rule). **Shape-preserving extractions** — brief
 declares `shape-preserving: true` AND wire contract unchanged AND
 existing tests cover the moved behavior — stay at L1 regardless
-of module-count. Output: `docs/reviews/code/{spec_name}-verdict.md`.
+of module-count. Output: `docs/reviews/code/{task-id}-verdict.md`.
 
 **Coverage rule (post-build):** reviewers verify the pre-build
 test plan was honored (every planned TC is in `tests/` and green).

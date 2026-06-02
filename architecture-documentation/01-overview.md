@@ -28,8 +28,8 @@ replaces "remember to" rules with mechanical enforcement.
 - A workflow runbook system (8 active workflows, e.g. solve / build / fix /
   review / research / save) with explicit phase models.
 - 3 hook scripts: `buddy-boot-inject` + `session-start-remote`
-  (SessionStart) + `pre-commit.sh` (git pre-commit, 5 checks: 3 BLOCK
-  + 2 WARN). All three are universally portable — git pre-commit runs
+  (SessionStart) + `pre-commit.sh` (git pre-commit, 6 checks: 3 BLOCK
+  + 3 WARN). All three are universally portable — git pre-commit runs
   on every harness, SessionStart works on CC-Terminal / claude-desktop
   / claude-web / Codex. There are no tool-event hooks (PreToolUse /
   PostToolUse / UserPromptSubmit); write-time discipline is
@@ -92,7 +92,7 @@ supposed to prevent.
 methodology anchored in protocols (`_protocols/dispatch-template.md`,
 `context-isolation.md`, `mca-brief-template.md`, `plan-review.md`,
 `evidence-pointer-schema.md`), backed by a thin universal-portable
-reinforcement layer (git pre-commit 5 checks + SessionStart hooks).
+reinforcement layer (git pre-commit 6 checks + SessionStart hooks).
 Buddy's reasoning is the load-bearing substrate; protocols carry the
 rules; hooks catch what's mechanically cheap-and-cross-portable.
 
@@ -181,7 +181,7 @@ state). The honest trade-offs:
 - **Cross-session state** (workflow engine + state file + session-handoff)
   adds operational complexity; the win is that a multi-day build resumes
   where it stood. For one-shot tasks the overhead is unjustified.
-- **Universal-portable hooks** (git pre-commit 5 checks + SessionStart
+- **Universal-portable hooks** (git pre-commit 6 checks + SessionStart
   for boot) impose a small setup cost (`scripts/setup-cc.sh` plus a
   git-hook symlink per consumer repo) and require investigating BLOCKs
   rather than bypassing. There are no tool-event hooks.

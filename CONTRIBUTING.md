@@ -67,9 +67,9 @@ steps.) Idempotent, worktree-safe, includes a self-probe. Both
 via `$0` basename. The hook itself is harness-agnostic (lives under
 `orchestrators/claude-code/hooks/` for historical reasons).
 
-5 checks (3 BLOCK + 2 WARN): PLAN-VALIDATE (BLOCK) · CG-CONV (BLOCK) ·
+6 checks (3 BLOCK + 3 WARN): PLAN-VALIDATE (BLOCK) · CG-CONV (BLOCK) ·
 SKILL-FM-VALIDATE (BLOCK) · SECRET-SCAN (WARN) · SOURCE-VERIFICATION
-(WARN).
+(WARN) · ANTI-PHANTOM (WARN).
 
 Don't `--no-verify`. If a hook blocks, fix the underlying issue.
 

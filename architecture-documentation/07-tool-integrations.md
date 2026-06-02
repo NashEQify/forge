@@ -38,7 +38,7 @@ and the harness-neutral methodology.
 An adapter delivers three things: persona / skill discovery,
 tier-0-anchor loading, and — for the SessionStart + git pre-commit
 hooks — universal wiring. **Only universal-portable hooks are wired:**
-SessionStart (boot inject + resume nudge) and git pre-commit (5
+SessionStart (boot inject + resume nudge) and git pre-commit (6
 checks). There are no tool-event hooks (PreToolUse / PostToolUse /
 UserPromptSubmit); write-time discipline is protocol-anchored. All
 supported harnesses (CC-Terminal, claude-desktop, claude-web, OpenCode,
@@ -61,7 +61,7 @@ orchestrators/claude-code/
 │   ├── cc                   # main launcher (191 LoC)
 │   └── sysadmin             # sysadmin variant
 └── hooks/                  # 3 scripts only
-    ├── pre-commit.sh        # git pre-commit + commit-msg, 5 checks
+    ├── pre-commit.sh        # git pre-commit + commit-msg, 6 checks
     ├── buddy-boot-inject.sh # SessionStart — Buddy boot trigger
     └── session-start-remote.sh # SessionStart — resume nudge
 ```
@@ -136,7 +136,7 @@ Plus git hooks (not in `settings.json` but via symlink in `.git/hooks/`):
 
 | Trigger | Hook |
 |---|---|
-| `pre-commit` + `commit-msg` | `pre-commit.sh` (5 checks) |
+| `pre-commit` + `commit-msg` | `pre-commit.sh` (6 checks) |
 
 ### Install the pre-commit hook
 
@@ -146,9 +146,9 @@ bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh
 ```
 
 Wires `.git/hooks/{pre-commit,commit-msg}` to
-`orchestrators/claude-code/hooks/pre-commit.sh`. The 5 checks run on
+`orchestrators/claude-code/hooks/pre-commit.sh`. The 6 checks run on
 the next `git commit`. Detail:
-[`02-architecture.md`](02-architecture.md) §Pre-Commit 5 Checks.
+[`02-architecture.md`](02-architecture.md) §Pre-Commit 6 Checks.
 
 ### Discovery + tool use
 
@@ -200,7 +200,7 @@ generates the user-specific `opencode.jsonc` (gitignored).
 | Aspect | OC behaviour |
 |---|---|
 | PreToolUse hooks | **None.** No tool-event hook layer on either harness — the CC-Terminal PreToolUse/PostToolUse layer was dropped framework-wide |
-| Pre-commit hook | Identical — git-side, runs the same 5 checks |
+| Pre-commit hook | Identical — git-side, runs the same 6 checks |
 | Consumer context | manual via `--add-dir <consumer-repo>` |
 | Project AGENTS.md | applies in addition, never instead |
 | Commands | trigger words without prefix (`wakeup`, `save`, `checkpoint`, `think!`) |
@@ -293,7 +293,7 @@ Operations:
 | `SessionStart` | `buddy-boot-inject.sh` + `session-start-remote.sh` |
 
 There are no PreToolUse / PostToolUse / UserPromptSubmit hooks.
-Discipline + protocols + git pre-commit (5 checks, universally
+Discipline + protocols + git pre-commit (6 checks, universally
 available) carry the write-time layer.
 
 ### Discovery + tool use

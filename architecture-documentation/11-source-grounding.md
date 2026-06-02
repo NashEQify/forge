@@ -81,8 +81,8 @@ to a file path. The mapping below is the audit table.
 | Claim | Evidence |
 |---|---|
 | 3 hook scripts | `ls orchestrators/claude-code/hooks/*.sh` |
-| Pre-commit 5 checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE, SECRET-SCAN, SOURCE-VERIFICATION) | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
-| 3 checks BLOCK (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE), 2 checks WARN | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
+| Pre-commit 6 checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE, SECRET-SCAN, SOURCE-VERIFICATION, ANTI-PHANTOM) | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
+| 3 checks BLOCK (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE), 3 checks WARN | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
 | frozen-zones legacy SoT (hook removed; convention-only) | [`../.claude/frozen-zones.txt`](../.claude/frozen-zones.txt) |
 
 ### Adapter

@@ -381,13 +381,13 @@ def generate_invariants() -> str:
         lines.append("")
         return "\n".join(lines)
 
-    # Try to extract the Invarianten section
+    # Try to extract the Invariants section
     md_lines = text.splitlines()
     in_section = False
     invariants: list[str] = []
 
     for line in md_lines:
-        if re.match(r"^## Invarianten", line):
+        if re.match(r"^## Invariants", line):
             in_section = True
             continue
         if in_section and re.match(r"^## ", line):
@@ -406,7 +406,7 @@ def generate_invariants() -> str:
         lines.extend(invariants)
     else:
         # Fallback: embed entire CLAUDE.md as code block
-        warnings.warn("No Invarianten section found in CLAUDE.md, using fallback", stacklevel=2)
+        warnings.warn("No Invariants section found in CLAUDE.md, using fallback", stacklevel=2)
         lines.append("```markdown")
         lines.append(text)
         lines.append("```")

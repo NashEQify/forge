@@ -188,9 +188,9 @@ Resolution (board recommends, author / orchestrator chooses):
 ACs in owning tasks. (b) **Move** — full AC reassigned to whichever
 task owns the LAST subsystem to land. (c) **Conditional (task-YAML ACs only)** — prefix
 "(after `<blocking-task>` ships) ...". Applies to task-YAML ACs
-only. For spec-level ACs in L1+ specs (public-surface OSS mirror per
-CLAUDE.md Inv 7+8), use (a) Split or (b) Move — NEVER (c) in a spec,
-to keep forensic task-IDs out of public surface. Spec-level ACs
+only. For spec-level ACs in L1+ specs (durable shared surface — specs
+outlive transient task-IDs), use (a) Split or (b) Move — NEVER (c) in
+a spec, to keep forensic task-IDs out of the spec. Spec-level ACs
 needing dependency: use semantic phrasing ("when consumer-side X is
 wired") instead of task-ID prefix.
 
