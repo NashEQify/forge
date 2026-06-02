@@ -84,3 +84,32 @@ skip with one-line rationale.
 | Architecture coherence | `skills/architecture_coherence_review/SKILL.md` |
 | Convergence loop | `skills/convergence_loop/SKILL.md` |
 | Workflow engine CLI | `framework/workflow-engine-cookbook.md` |
+
+## Workflow-Engine Integration
+
+This runbook is tracked by `scripts/workflow_engine.py` when engine-driven
+(some lifecycle / ad-hoc runs are skip-eligible — see the cookbook's *Skip
+allowed for* list). The engine holds step state in `.workflow-state/<id>.json`
+(SoT for the step pointer; persistent + cross-session-recoverable) and is
+**Buddy-driven `[WORKFLOW]`** — it advances only when Buddy drives
+`--complete`, a discipline-run state-tracker, not an autonomous runtime
+(ADR-007 O-4, affirming ADR-004: no force-gate).
+
+Generic cycle (identical across every workflow):
+
+```bash
+python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --start <name> --task <id> [--route <path>]
+python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --next                       # current step + instruction
+python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --complete <step> --evidence "<short>"
+#   classification step (mid-flow route): --complete <step> --route <key>
+#   skip-eligible step: --skip <step> --reason "<why>"   ·   re-run: --retry <step> --reason "<why>"
+```
+
+`on_fail` per step: `block` (fix + retry), `warn` (`--complete --force` + reason),
+`skip` (auto `warn_skipped`), `escalate` (pauses, user decision). Cross-session
+resume surfaces active workflows at session start (`--boot-context`).
+
+Full CLI + path-routing + extension API (`--guard` / `--handoff-context`) +
+multi-machine constraint + skip-eligible list:
+`framework/workflow-engine-cookbook.md`. Operational invariant:
+`agents/buddy/operational.md` §Workflow engine.

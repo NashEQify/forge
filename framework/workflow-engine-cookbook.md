@@ -79,6 +79,39 @@ Boot step `WORKFLOW-RESUME` reads active workflows automatically
 carries continuity across sessions; the engine state-file is read when
 Buddy actively returns to an in-flight workflow.
 
+## Extension API — `--guard` / `--handoff-context`
+
+`--start` / `--next` / `--complete` / `--skip` / `--retry` are the generic
+cycle every workflow uses. Two **named, stable extension commands** sit
+alongside them — a sanctioned contract (ADR-007 O-4), not per-workflow
+ad-hoc special-casing:
+
+**`--guard <name> [<task_id>]`** — a named guard predicate referenced from a
+step's `guard:` block (`type: script`, `command: "… --guard <name> {task_id}"`).
+Exit `0` → the step proceeds; exit `≠0` → the step is skipped (see
+`evaluate_guard`). Named guards today:
+
+| Guard | Returns 0 (proceed) when |
+|---|---|
+| `council-needed` | the **solve** state file (`docs/solve/*.md`) carries the opt-in marker `council-required: true` (Buddy writes it when frame's >1-path + hard-to-reverse criteria fire). NOTE: greps `docs/solve/` only — solve-scoped today |
+| `task-yaml-ok` | `docs/tasks/<id>.yaml` exists |
+
+Adding a guard: add a branch in `cmd_guard` + reference it from the step's
+`guard:` block. **Design rule (the `delta-needed` retirement lesson):** a
+guard whose trigger is a *judgment* the engine cannot compute (e.g. "≥1 MAJOR
+finding fixed") must NOT be a bare predicate — make it an **opt-in marker**
+the guard greps (like `council-needed`), or drop the guard and let Buddy
+`--skip` / `--complete` a `required: false` step by judgment. A guard that
+always `sys.exit(1)` is a dead surface masquerading as a gate, not enforcement.
+
+**`--handoff-context`** — emits a text block of every active workflow state
+(workflow, id, task, current step + instruction, progress) for embedding in
+the session-handoff. Consumed by `save`; the boot-side counterpart is
+`--boot-context` (cross-session resume, surfaced at session start).
+
+`skip_when` is NOT part of this API: it stays a Buddy-applied `[DISCIPLINE]`
+predicate the engine does not evaluate (`framework/enforcement-registry.md`).
+
 ## Skip allowed for
 
 - `build` DIRECT path (≤3 files, no spec, no new behavior)

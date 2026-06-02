@@ -93,10 +93,16 @@ Behavior prohibitions during board/council: CLAUDE.md §Inv 1.
   post-council §Architecture-Comprehension B re-apply (unconditional).
 - **Code-Review-Board** (code diff): `skills/code_review_board/SKILL.md`
   (L1 focused / L2 full board / fix-pass single-reviewer pass-1.5).
-  **After MCA returns `status=done`, Buddy MUST pick level and
-  dispatch** — MCA self-test does not substitute (cancellation-path
-  bugs, double timeouts, PII leaks, data-loss edges surface only
-  through reviewer diversity).
+  **A load-bearing code change MUST get a board before it is trusted —
+  keyed on the change, not the author.** Whether the code came back from
+  MCA (`status=done`) OR Buddy wrote it directly on the orchestrator path,
+  Buddy MUST pick a level (§1.0 proportionality decides L1 / L2 / light)
+  and dispatch. Author self-test does not substitute — neither MCA's
+  self-test nor Buddy's own dry-run: cancellation-path bugs, double
+  timeouts, PII leaks, data-loss edges, and state-machine / route-skip
+  edges surface only through reviewer diversity. The author is the worst
+  checker of their own mechanical code — same principle ADR-008 applies to
+  code-claims in authored artifacts.
 - **Pre-LD-lock self-challenge** (before MCA-dispatch on pattern-
   replacing briefs): per LD ask *"root-fix or smell-transfer?
   what alternative was considered?"* — `structural_invariants` in

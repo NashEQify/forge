@@ -1515,10 +1515,51 @@ def retry_step(
     step_state["started_at"] = _utcnow()
     step_state["iterations"] = iterations + 1
     step_state["retry_history"] = retry_history
+    # Capture the prior route selection BEFORE clearing it — the classification
+    # re-pristine below needs it.
+    prior_route = step_state.get("selected_route")
     # Clear terminal-state fields so retry is clean
     for field in ("completed_at", "evidence", "warn_reason", "skipped_reason",
                   "force_completed", "selected_route"):
         step_state.pop(field, None)
+
+    # Classification retry: re-pristine the route-children whose state is a
+    # CONSEQUENCE of the prior route selection, so a re-route re-activates
+    # cleanly. Reset set =
+    #   (a) children currently ROUTE_SKIPPED — the prior route excluded them;
+    #       _apply_route_skip only marks PENDING, so on re-selection they would
+    #       stay skipped → the newly-selected route silently does not run + the
+    #       workflow wedges (the original CRITICAL); PLUS
+    #   (b) children EXCLUSIVE to the prior selected route — abandoned work on
+    #       the path being left; otherwise they linger non-terminal.
+    # Steps SHARED with other routes are left untouched: a re-route may still
+    # need them, and resetting a completed shared step would wipe its evidence +
+    # audit trail. Correct for every route topology — disjoint (build `board`),
+    # fully-shared (review/research), and 3+-route partial-overlap.
+    step_def = _get_step_def(workflow_def, step_id)
+    if step_def and step_def.get("category") == "classification":
+        routes = {
+            k: set(v) for k, v in (step_def.get("routes") or {}).items()
+            if isinstance(v, list)
+        }
+        if routes:
+            all_children: set[str] = set().union(*routes.values())
+            others: set[str] = set().union(
+                *[v for k, v in routes.items() if k != prior_route]
+            )
+            prior_exclusive = routes.get(prior_route, set()) - others
+            route_skipped = {
+                cid for cid in all_children
+                if steps.get(cid, {}).get("status") == STATUS_ROUTE_SKIPPED
+            }
+            for child_id in prior_exclusive | route_skipped:
+                child = steps.get(child_id)
+                if not child or child.get("status") == STATUS_PENDING:
+                    continue
+                child["status"] = STATUS_PENDING
+                for f in ("completed_at", "started_at", "evidence", "warn_reason",
+                          "skipped_reason", "force_completed", "selected_route"):
+                    child.pop(f, None)
 
     # Update current_step pointer
     state["current_step"] = step_id
@@ -2499,8 +2540,6 @@ def cmd_guard(args: argparse.Namespace) -> None:
                                 sys.exit(EXIT_SUCCESS)
                         except OSError:
                             continue
-        sys.exit(1)
-    elif guard_name == "delta-needed":
         sys.exit(1)
     elif guard_name == "task-yaml-ok":
         # Check if task YAML exists

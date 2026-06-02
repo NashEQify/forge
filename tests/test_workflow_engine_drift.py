@@ -458,3 +458,106 @@ def test_module_imports_cleanly():
     accidental top-level breakage from the merge.
     """
     importlib.reload(we)
+
+
+# ---------------------------------------------------------------------------
+# Classification retry re-pristine.
+# --retry on a classification step must re-pristine its route-children so a
+# re-route re-activates cleanly, WITHOUT wiping completed steps that the
+# re-selected route still needs. Reset set = route_skipped children ∪
+# prior-selected-route-exclusive children. Correct for every route topology.
+# ---------------------------------------------------------------------------
+
+
+def _cls(step_id, routes):
+    return {"id": step_id, "category": "classification", "routes": routes,
+            "completion": {"type": "manual"}, "on_fail": "block"}
+
+
+def _manual_step(step_id):
+    return {"id": step_id, "category": "content",
+            "completion": {"type": "manual"}, "on_fail": "block"}
+
+
+def _drive(state, wdef, step_id, route=None):
+    """Activate (if needed) then force-complete a step (force bypasses the
+    manual completion check; the test exercises routing state, not gates)."""
+    st = state["steps"][step_id]
+    if st.get("status") != we.STATUS_IN_PROGRESS:
+        st["status"] = we.STATUS_IN_PROGRESS
+    ok, msg = we.complete_step(state, wdef, step_id, route=route, force=True)
+    assert ok, msg
+
+
+def test_cls_retry_reroute_disjoint(isolated_project):
+    """Disjoint routes — re-route after retry activates the new route's
+    child, skips the old, does not wedge."""
+    wdef = _make_workflow_def([
+        _cls("cls", {"spec": ["a"], "council": ["b"]}),
+        _manual_step("a"), _manual_step("b"), _manual_step("tail"),
+    ])
+    state = we.create_state("test-workflow", wdef, task_id=8801)
+    _drive(state, wdef, "cls", route="spec")
+    assert state["steps"]["b"]["status"] == we.STATUS_ROUTE_SKIPPED
+    we.retry_step(state, wdef, "cls", "reroute")
+    _drive(state, wdef, "cls", route="council")
+    assert state["steps"]["b"]["status"] == we.STATUS_PENDING   # council reachable
+    assert state["steps"]["a"]["status"] == we.STATUS_ROUTE_SKIPPED
+    assert state["steps"]["tail"]["status"] == we.STATUS_PENDING  # untouched
+
+
+def test_cls_retry_reroute_shared_preserves_completed(isolated_project):
+    """Fully-shared routes — retry must NOT wipe completed steps."""
+    wdef = _make_workflow_def([
+        _cls("cls", {"r1": ["x", "y"], "r2": ["x", "y"]}),
+        _manual_step("x"), _manual_step("y"),
+    ])
+    state = we.create_state("test-workflow", wdef, task_id=8802)
+    _drive(state, wdef, "cls", route="r1")
+    _drive(state, wdef, "x")
+    _drive(state, wdef, "y")
+    we.retry_step(state, wdef, "cls", "reroute")
+    assert state["steps"]["x"]["status"] == we.STATUS_COMPLETE   # NOT wiped
+    assert state["steps"]["y"]["status"] == we.STATUS_COMPLETE
+
+
+def test_cls_retry_reroute_partial_overlap_preserves_shared(isolated_project):
+    """3-route partial overlap — a step shared by some-but-not-all
+    routes that the re-selected route still needs must survive retry."""
+    wdef = _make_workflow_def([
+        _cls("cls", {"light": ["a", "z"], "heavy": ["a", "p", "z"],
+                     "audit": ["a", "p", "z", "s"]}),
+        _manual_step("a"), _manual_step("p"), _manual_step("z"), _manual_step("s"),
+    ])
+    state = we.create_state("test-workflow", wdef, task_id=8803)
+    _drive(state, wdef, "cls", route="heavy")
+    assert state["steps"]["s"]["status"] == we.STATUS_ROUTE_SKIPPED
+    for sid in ("a", "p", "z"):
+        _drive(state, wdef, sid)
+    we.retry_step(state, wdef, "cls", "upgrade to audit")
+    # p is shared by heavy+audit; the re-selected route still needs it → survives
+    assert state["steps"]["p"]["status"] == we.STATUS_COMPLETE
+    assert state["steps"]["s"]["status"] == we.STATUS_PENDING   # re-pristined
+    _drive(state, wdef, "cls", route="audit")
+    assert state["steps"]["p"]["status"] == we.STATUS_COMPLETE  # still intact
+
+
+def test_top_level_route_unknown_step_flagged():
+    """A top-level `routes:` entry referencing a non-existent step id must be
+    flagged (previously only classification-step routes were checked)."""
+    from scripts.lib import yaml_loader
+
+    data = {
+        "name": "wf", "description": "d", "trigger": ["wf"],
+        "routes": {"standard": ["a", "ghost"]},
+        "steps": [
+            {"id": "a", "category": "content",
+             "completion": {"type": "manual"}, "on_fail": "block"},
+        ],
+    }
+    errors = yaml_loader.validate_workflow_schema(data)
+    assert any("ghost" in e for e in errors), errors
+    # a valid top-level route (all step-ids exist) must NOT be flagged
+    data["routes"] = {"standard": ["a"]}
+    errors_ok = yaml_loader.validate_workflow_schema(data)
+    assert not any("ghost" in e or "route references unknown" in e for e in errors_ok), errors_ok
