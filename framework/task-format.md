@@ -96,7 +96,7 @@ plan_engine DEAD_DEP warns if blocked_by points at terminal status other than do
 
 ### Cross-reference fields (terminal-status closure)
 
-Optional YAML fields written by `task_status_update` Step 4.5 when a
+Optional YAML fields written by `task_status_update` Step 4 when a
 task reaches a terminal status. All three are `int_or_null`; declared
 in `framework/task-schema.yaml`.
 
@@ -202,8 +202,7 @@ main-code-agent can create subtasks:
 1. Create new `NNN.yaml` + `NNN.md` (next free ID)
 2. Set `parent_task` to the parent task ID
 3. Extend `sub_tasks` in the parent YAML
-4. Add subtask to objective `convoy.md`
-5. Set `ephemeral: true` if no permanent artifact is created
+4. Set `ephemeral: true` if no permanent artifact is created
 
 ## Example
 
@@ -212,7 +211,7 @@ docs/tasks/NNN.yaml:
   id: NNN
   title: Add session-handoff persistence
   status: in_progress
-  objective: cross-session-continuity
+  milestone: cross-session-continuity
   assignee: main-code-agent
   ephemeral: false
   workflow_template: build
@@ -251,20 +250,12 @@ docs/tasks/NNN.md:
   ## Not yet
   - Multi-machine sync (separate task)
 
-## Convoy update requirement
+## Task-graph reconciliation
 
-On EVERY task status change: if the task is mapped to an objective
-(`objective` in YAML is not null), `workspaces/<objective>/convoy.md`
-MUST be updated.
-
-This applies to:
-- status transitions (pending -> in_progress, in_progress -> done, etc.)
-- new task assigned to an objective
-- subtask creation (new row in convoy.md tasks table)
-
-Owner: whoever changes the status (Buddy, main-code-agent via
-`task_status_update` skill).
-Post-harness: NATS event `task.status.changed` triggers automatic convoy updates.
-
-No separate skill � convoy update is a required side effect of every
-status mutation.
+The `blocked_by` graph and `docs/plan.yaml` refs are kept consistent
+at mutation time by the two task skills, not batched later:
+`task_creation` **builds** the graph (§1b pairwise dependency check +
+§1.7 critical-path placement); `task_status_update` **closes** it on
+terminal status (§4 cross-task + plan.yaml sweep) and surfaces
+critical-path blast radius on every status change. `plan_engine
+--validate` is the integrity gate after either.

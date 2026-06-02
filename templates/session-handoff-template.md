@@ -1,6 +1,6 @@
 # Session-Handoff Template
 
-Written by save (Step 4) and quicksave (Step 3).
+Written by save (Step 4: handoff).
 Loaded at boot (RESUME step).
 Path is CWD-based: `BuddyAI/context/session-handoff[-<workspace>].md` (CWD under BuddyAI/) or `<CWD>/context/session-handoff.md` (CWD external).
 
@@ -21,9 +21,9 @@ what is open, where we stand.
    not in their own 9-point block.
 4. **Concrete on open topics** — file names, code snippets, user quotes
    verbatim where relevant. No summary of summaries.
-5. **Overwrite** — the file is fully overwritten on every save/quicksave,
-   not appended.
-6. **Checkpoint aggregation** — if quicksave intermediates exist,
+5. **Merge-default** — written merge-default on every save (`.bak`
+   copy + merge of open topics), never blind-overwritten or appended.
+6. **Checkpoint aggregation** — if checkpoint intermediates exist,
    use them as input rather than reconstructing from scratch.
 
 ## Format

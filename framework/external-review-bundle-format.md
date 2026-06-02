@@ -1,11 +1,10 @@
 # External Review Bundle Format Spec
 
-**Tier:** 1 (operational, next to `agent-patterns.md`)
+**Tier:** 1 (operational)
 **Status:** Active — required format when external discipline review
-is triggered (Pattern 5 + 6 in `agent-patterns.md`).
+is triggered.
 
-**See also:** [arch-doc/04 §25 External-Review-Bundle mechanics](../architecture-documentation/04-core-concepts.md) (concept context) ·
-[Pattern: External reviewer bundle in agent-patterns.md](agent-patterns.md) (bundle mechanic)
+**See also:** [arch-doc/04 §25 External-Review-Bundle mechanics](../architecture-documentation/04-core-concepts.md) (concept context).
 
 ---
 
@@ -227,16 +226,17 @@ On failure: do not dispatch bundle, fix first.
 
 ---
 
-## Relation to Pattern 5 + 6 (`agent-patterns.md`)
+## When this format applies
 
-- Pattern 5 (external discipline review): WHEN external review is worth it
-  (4 trigger conditions). This format spec becomes relevant when trigger fires.
-- Pattern 6 (external-reviewer bundle mechanics): HOW the bundle must be
-  prepared. This format spec implements those mechanics.
+- **When external review is worth it** — the format becomes relevant
+  once external discipline review is triggered (the trigger conditions
+  live with the review-board discipline in the SoTs).
+- **How the bundle must be prepared** — this spec is the mechanics: the
+  required upload list, reviewer self-check, output markers, upload
+  inventory verification, and filename convention.
 
-Plus Pattern 4 (§1 position-map consolidation visibility): synthesis must
-include secondary argument carriers so bundle reviewers can spot-check via
-member-file range citations.
+Synthesis must include secondary argument carriers (with member-file
+range citations) so bundle reviewers can spot-check the consolidation.
 
 ---
 

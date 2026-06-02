@@ -363,9 +363,8 @@ class GateCondition:
             # 2026-05-07: Archive-Awareness. Archivierte Tasks sind per
             # archive-Semantik terminal-done (Frozen Zone WORM-Pattern).
             # Wenn gate `want: done` (default) UND task-id ist archiviert →
-            # pass. Konsistent mit Dashboard-archive_done-Set in
-            # generate-dashboard.py:1378+. Ohne dieses Verhalten wird jeder
-            # Milestone mit archiviertem Gate-Task als ORPHAN klassifiziert.
+            # pass. Ohne dieses Verhalten wird jeder Milestone mit
+            # archiviertem Gate-Task als ORPHAN klassifiziert.
             want = self.want or "done"
             if want == "done":
                 archived_ids = _get_archived_ids_cached()

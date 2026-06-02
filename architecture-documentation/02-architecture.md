@@ -301,7 +301,7 @@ Per `agents/buddy/operational.md` §Workflow Engine: build/fix/refactor/solve/
 review/research/docs-rewrite **MUST go through the engine**. Skip list:
 
 - DIRECT-path build/fix (≤3 files, no spec, no new behaviour)
-- save/quicksave/checkpoint/wakeup/sleep (no multi-step state)
+- save/checkpoint/wakeup/sleep (no multi-step state)
 - context_housekeeping (maintenance workflow without pause points)
 - frame/bedrock_drill standalone (sub-skills)
 - think! (open discussion)
@@ -449,7 +449,7 @@ Write-time discipline is protocol-anchored (`agents/buddy/operational.md`).
 | `skill_fm_validate.py` (~300 LoC) | Pre-commit Check 3 (SKILL-FM-VALIDATE) — frontmatter validator incl. `relevant_for` |
 | `validate_runbook_consistency.py` (~300 LoC) | `consistency_check` Check 9 — workflow.yaml ↔ WORKFLOW.md drift heuristic |
 | `generate-architecture.py` (475 LoC) | architecture-doc generator |
-| `generate-control.py` / `generate-dashboard.py` / `generate-status.py` | dashboard + control + status generation |
+| `generate-control.py` / `generate-status.py` | control + status doc generation |
 
 **Generator + validator pattern**: drift-prone indices are generated
 (disk = SoT), validator hooks check idempotency. `consistency_check` Check 6
@@ -474,42 +474,6 @@ returns the status block ("In Progress / Critical Path / Next Actions /
 Milestones"). Plus pre-commit Check 1 (PLAN-VALIDATE BLOCK) enforces
 consistency: blocked_by cycles, missing spec_ref, invalid status values
 are caught at commit time.
-
-### `docs/dashboard/` + `generate-dashboard.py`
-
-Tasks-based visualisation as static HTML
-(`docs/dashboard/index.html`, ~1.8 MB). The generator reads plan/tasks from
-one or more repos (multi-repo via the `DASHBOARD_PROJECTS` env var)
-and writes the HTML.
-
-**Local vs server**: the dashboard can be viewed **locally** —
-`generate-dashboard.py` produces the HTML, `xdg-open docs/dashboard/index.html`
-opens it in the browser. Server push is optional via `deploy-docs.sh`
-and only useful for multi-device setups or sharing.
-
-**Hacky caveat**: the dashboard is one big script without
-component architecture. Deliberate pragmatism (read-only visualisation,
-nothing production-grade) — for a serious dashboard a framework-native
-rebuild would be needed.
-
-### `deploy-docs.sh` + `deploy-dashboard-lite.sh`
-
-Optional deploy scripts for users who want to push the dashboard to their own
-server. Configuration via `~/.config/forge/deploy.env`
-(env-driven, **no user-specific defaults in the code**). Script-required:
-`DEPLOY_REMOTE`, `DEPLOY_REMOTE_PATH`, `DASHBOARD_PROJECTS`,
-`DASHBOARD_HOST_REPO`. Without deploy.env: the script fails fast with a clear
-error message, no default Hetzner push.
-
-**Can be ignored**: anyone who only works locally does not need this.
-The dashboard is generated regardless (by `generate-dashboard.py`,
-not by deploy-docs).
-
-### Dashboard-redeploy reminder
-
-When `docs/dashboard/` or plan-relevant files (tasks, plan) change in a
-commit, the dashboard should be redeployed — otherwise the hosted version
-drifts from the repo state. Redeploy is discipline.
 
 ## Data Flows (Three Examples)
 

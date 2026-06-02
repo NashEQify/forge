@@ -7,8 +7,8 @@ of them isn't a bigger model — it's orchestration. That's what forge
 is: **disciplined LLM capabilities** between you and your coding agent.
 It lets a solo dev vibe reliably, at a level of complexity a standard
 agent can't hold together. It spends more tokens and time running
-opinionated, battle-tested workflows over the LLM, and gives back
-cleaner code, less rework, and more autonomous execution. The benefit:
+opinionated workflows over the LLM, and gives back cleaner code, less
+rework, and more autonomous execution. The benefit:
 you get far more out of the same model than you would by just plain
 prompting or a stock agent.
 
@@ -81,8 +81,7 @@ the input (discuss / incident / substantial) and routes to a workflow:
 | `fix bug X` | root-cause first, no symptom-patching |
 | `review spec X` | multi-perspective spec-board (4-7 personas + chief) |
 | `research X` | knowledge artifact, not code |
-| `save` | end-of-session: writes the session-handoff so the next session picks up the thread |
-| `quicksave` | mid-session checkpoint: same handoff format, lighter footprint |
+| `save` | writes the session-handoff so the next session picks up the thread — run it mid-session or at session end (one command, the footprint adapts) |
 
 For standalone frame / drill / council use, just ask in plain language;
 Buddy picks the entry point.
@@ -90,9 +89,9 @@ Buddy picks the entry point.
 **`save` is the session-end skill.** Without it, the next session
 starts cold — workflow state in `.workflow-state/<id>.json` still
 resumes, but the discussion thread, open decisions, and "where I was
-heading" don't. Type `save` before you close the terminal; type
-`quicksave` when you're switching context mid-day and want to leave a
-breadcrumb without the full wrap-up. See
+heading" don't. Type `save` before you close the terminal — or any
+time mid-day when you're switching context and want to leave a
+breadcrumb; it's the same command, and the footprint adapts. See
 [Cross-session continuity](#cross-session-continuity) below.
 
 ## How it works
@@ -157,12 +156,12 @@ decision.
 Multi-session work doesn't restart from scratch — but only if you end
 sessions with `save`.
 
-- **`save` / `quicksave`** — the user-triggered session-end /
-  mid-session skill. Type `save` before closing the terminal; Buddy writes a
+- **`save`** — the user-triggered persistence skill for both
+  session-end and mid-session. Type `save` before closing the terminal; Buddy writes a
   structured session-handoff (meta-summary, open topics, decisions,
   next steps). The next session reads it on boot and picks up the
-  thread. `quicksave` is the lighter mid-day variant for context
-  switches.
+  thread. Run it mid-day for a context switch too — same command, a
+  lighter footprint when there's nothing to close out.
 - **Workflow engine** — non-trivial workflows (`build`, `fix`,
   `solve`, `review`, `research`, `docs-rewrite`) persist state per
   task in `.workflow-state/<id>.json`. Pause a multi-day build
@@ -252,7 +251,7 @@ Adapter-based on top of an existing harness, not a re-implementation.
 | **Want to understand the model** | [`01-overview.md`](architecture-documentation/01-overview.md) → [`02-architecture.md`](architecture-documentation/02-architecture.md) |
 | **Building a skill** | [`04-core-concepts.md`](architecture-documentation/04-core-concepts.md) + [`08-development-and-maintenance.md`](architecture-documentation/08-development-and-maintenance.md) |
 | **Adding an adapter** | [`07-tool-integrations.md`](architecture-documentation/07-tool-integrations.md) |
-| **Patterns from real drift cases** | [`framework/agent-patterns.md`](framework/agent-patterns.md) |
+| **Agent patterns forge hardens against** | [`framework/agent-patterns.md`](framework/agent-patterns.md) |
 
 ## Read more
 
@@ -263,7 +262,7 @@ Adapter-based on top of an existing harness, not a re-implementation.
 3. [`framework/skill-anatomy.md`](framework/skill-anatomy.md) —
    strict shape every skill follows (mechanically validated).
 4. [`framework/agent-patterns.md`](framework/agent-patterns.md) —
-   14 patterns from real drift cases.
+   the agent failure modes forge hardens against.
 5. [`references/agentic-design-principles.md`](references/agentic-design-principles.md) —
    research-derived design principles backing the framework's skill /
    persona / runbook design. Historical reference, not consulted in

@@ -350,8 +350,7 @@ request.
 
 | Command | Action |
 |---------|--------|
-| save | → `save/WORKFLOW.md` |
-| quicksave | mid-session → `save/WORKFLOW.md` |
+| save | mid + end of session → `save/WORKFLOW.md` |
 | checkpoint | deep: light + drift check + sculpting |
 | sleep | forget the session |
 | think! | → buddy-thinking (`agents/buddy-thinking.md`) |

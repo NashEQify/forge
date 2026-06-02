@@ -82,7 +82,7 @@ fields:
   workflow_phase:      {type: str,            required: false}
   workflow_template:   {type: str,            required: false}
   # Cross-reference fields (terminal-status closure, written by
-  # task_status_update Step 4.5 sweep on the focal task and the
+  # task_status_update Step 4 sweep on the focal task and the
   # named counterpart task).
   superseded_by:       {type: int_or_null,    required: false}
   supersedes:          {type: int_or_null,    required: false}

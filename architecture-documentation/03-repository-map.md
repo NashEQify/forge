@@ -29,7 +29,6 @@ forge/
 │   ├── agent-patterns.md          # Tier 1 — pattern catalogue
 │   ├── intent-tree.md             # Tier 1 — intent inheritance
 │   ├── milestone-execution.md     # Tier 1 — multi-task orchestration
-│   ├── convoy.md                  # Objective-progress tracking
 │   ├── spec-engineering.md        # Spec theory (5 primitives)
 │   ├── spec-authoring.md          # Redirect → skills/spec_authoring/
 │   ├── task-format.md             # Task-format SoT
@@ -83,7 +82,7 @@ forge/
 │   ├── generate_skill_map.py      # AUTO-block skill-map
 │   ├── generate_navigation.py     # AUTO-block navigation
 │   ├── skill_fm_validate.py       # Pre-commit skill-frontmatter validator
-│   ├── generate-{architecture,control,dashboard,status}.py
+│   ├── generate-{architecture,control,status}.py
 │   ├── consistency_check.py
 │   ├── import_graph_check.py
 │   ├── validate_evidence_pointers.py

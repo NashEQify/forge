@@ -32,7 +32,7 @@ Specify → Prepare → Execute → Verify → Close.
 
 | User says | Buddy interprets as |
 |---|---|
-| "save" / "quicksave" | save-Workflow |
+| "save" | save-Workflow (mid + end of session) |
 | "wakeup" | session-continuity boot |
 | "checkpoint" | save with deeper drift-check |
 | "think!" | THINK-Stance (`agents/buddy/think-operational.md`) |

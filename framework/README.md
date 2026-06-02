@@ -20,12 +20,11 @@ through wrappers.
 | `skill-anatomy.md` | format standard for skills |
 | `boot-navigation.md` | boot index (workflows + skills) |
 | `agent-autonomy.md` | permission/gate/routing triple per artifact type |
-| `agent-patterns.md` | active agent patterns from real drift cases |
+| `agent-patterns.md` | the agent failure modes forge hardens against |
 | `intent-tree.md` | intent inheritance + constraint hierarchy |
 | `milestone-execution.md` | multi-task orchestration |
 | `models.md` | model assignment (agent -> model, CC + OC + Codex) |
 | `context-and-loading.md` | context mechanics + loading order |
-| `convoy.md` | objective progress tracking format |
 | `spec-engineering.md` | spec theory (5 primitives) |
 | `task-format.md` | task format SoT |
 | `test-plan-format.md` | test plan SoT |

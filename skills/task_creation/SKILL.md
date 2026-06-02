@@ -61,7 +61,7 @@ Trigger questions + worked example: `REFERENCE.md`.
 
 **Lifecycle symmetry:** this step **builds** the `blocked_by`
 graph; closure on terminal status (replace on superseded/absorbed,
-remove on wontfix, keep on done) is `task_status_update` Step 4.5.
+remove on wontfix, keep on done) is `task_status_update` Step 4.
 
 ### 1.5. Value floor (MUST)
 
@@ -97,6 +97,34 @@ PreToolUse hooks were purged in ADR-004; per ADR-005 enforcement-
 honesty, no doc claims a `BLOCK` for a non-existent mechanism. The
 real safeguard is this C-VERIFY discipline + the optional
 pre-commit WARN anti-phantom check.)
+
+### 1.7. Critical-path placement (MUST)
+
+`milestone` + `priority` encode **path-position**, not topic-fit.
+Before writing (§4), read `plan_engine.py --boot` (critical path +
+milestone gates + next-actions) and place the task against the path,
+not by subject-matter resemblance:
+
+- **Milestone by dependency, not topic.** Pick the `milestone` where
+  the task's dependencies actually sit, not the topically-nearest
+  one. `--critical-path` shows where the target runs and which
+  milestone gates it.
+- **On-path vs off-path.** If the task is NOT on the critical path to
+  the target, say so in the MD body. Off-path work defaults
+  `priority` **away from `high`** unless a *named active consumer*
+  demands it (same L→G→C floor as §1.5, applied to placement, not
+  filing).
+- **Priority semantics.** Name which the `priority:` field means:
+  critical-path-priority (gates the path) vs user-value-priority
+  (valuable but off-path). A high-user-value off-path task is not
+  `priority: high`.
+- **Forward blast radius.** When the new task blocks or unblocks
+  existing work, `plan_engine.py --after <id>` shows what unblocks
+  downstream — set `blocked_by` edges deliberately from that, not
+  pairwise guesses alone.
+
+The result feeds §4: `milestone` + `priority` justified against
+path-position, not topic.
 
 ### 2. Triage (MUST)
 
