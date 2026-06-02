@@ -41,18 +41,25 @@ parallel (one tool-call batch).
 ### B. Content writes (PARALLEL — one batch)
 
 4. **Session handoff** — primary artifact. **Merge default,
-   never blind overwrite.**
+   never blind overwrite.** The handoff is the CURRENT working
+   state for the next session, NOT a session log or archive — it
+   stays lean. Closed blocks are **deleted**, not accumulated;
+   their durable record is `context/history/` + git.
    - **Path:** `<CWD>/context/session-handoff.md` (auto-create
      `context/` if absent, per `boot.md` §Context routing).
    - **Merge protocol:**
      1. `cp <handoff> <handoff>.bak` (gitignored).
      2. Read the handoff fully.
      3. Per 9-point block: **closed** (task done / closed /
-        superseded, explicit user "done", PR merged) →
-        out, one-liner in the meta-summary. **Open, not
-        touched** → unchanged. **Open, worked on** →
-        update. When in doubt, leave it (overkeep >
-        overkill).
+        superseded, explicit user "done", PR merged,
+        work committed+pushed) → **DELETE the block** (record
+        lives in `context/history/` + git); at most a one-liner
+        in the current meta-summary. **Open, not touched** →
+        unchanged. **Open, worked on** → update. The
+        "when in doubt keep" leniency applies ONLY to genuinely
+        ambiguous OPEN items — never to a clearly-closed session.
+        Long-lived open work belongs in a **task** (plan_engine
+        surfaces it at boot), not as perpetual handoff prose.
      4. New open topics appended at the bottom.
      5. Rewrite the meta-summary (3-5 sentences: this
         session + continuity).
