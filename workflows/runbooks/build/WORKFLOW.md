@@ -228,8 +228,7 @@ test-plan-ref, spec-ref, and on substantial dispatch the required
 `## Implicit-Decisions-Surfaced` section with 4 standard classes
 (`schema_and_contract`, `error_and_stop`, `layer_discipline`,
 `structural_invariants`). Buddy verifies presence at brief-authoring
-time (the earlier `delegation-prompt-quality.sh` hook was removed).
-Template SoT: `skills/_protocols/mca-brief-template.md`.
+time. Template SoT: `skills/_protocols/mca-brief-template.md`.
 
 ### Execute phase
 

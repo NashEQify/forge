@@ -74,10 +74,8 @@ When in doubt: read `--status` or check `--next`.
 ## Boot integration
 
 Boot step `WORKFLOW-RESUME` reads active workflows automatically
-(`--boot-context`). The earlier per-turn UserPromptSubmit injection
-(`workflow-reminder.sh`) was removed —
-Buddy reads workflow state on demand via `--next` / `--status` /
-`--boot-context` when relevant, rather than every turn. Session-handoff
+(`--boot-context`). Buddy reads workflow state on demand via `--next` /
+`--status` / `--boot-context` when relevant, rather than every turn. Session-handoff
 carries continuity across sessions; the engine state-file is read when
 Buddy actively returns to an in-flight workflow.
 

@@ -64,16 +64,15 @@ If you don't hear back within 14 days, follow up via a different channel
   --validate`, commit-convention + SKILL-frontmatter validation (BLOCK)
   plus secret-scan + source-verification (WARN) before a commit lands.
 - **Frozen Zones** — `context/history/**` is append-only WORM by
-  convention (the earlier `frozen-zone-guard` hook was removed; the
-  discipline persists, corrections via `.correction.md` sidecars).
+  convention (corrections via `.correction.md` sidecars).
 - **No external network calls** in hooks.
 
 ## Known weak points
 
-- **No write-time enforcement on any harness** — the earlier
-  CC-Terminal-only PreToolUse / PostToolUse layer was removed; path-write
-  discipline is now protocol-anchored, not blocked at the tool call. The
-  mechanical layer is git pre-commit (universal) + SessionStart boot.
+- **No write-time enforcement on any harness** — the framework runs no
+  tool-event hooks (PreToolUse / PostToolUse); path-write discipline is
+  protocol-anchored, not blocked at the tool call. The mechanical layer
+  is git pre-commit (universal) + SessionStart boot.
 - **Cursor adapter** (and any harness without a tool-event API): the
   workflow phase model + git pre-commit checks are the mechanical
   layer there; path-write discipline is workflow-driven rather than

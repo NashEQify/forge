@@ -89,9 +89,14 @@ If the task body uses any of: `supersedes`, `reuses existing`,
 `already implemented`, `wraps existing`, `delivered in Task`,
 `existing-code verifications confirm` — each claim MUST be paired
 with a `C-VERIFY` block (claim text + verbatim `grep -rn` command
-+ verbatim output + `CONFIRMED|FALSIFIED` disposition). Hook
-BRIEF-CLAIMS re-runs the grep at write/commit and BLOCKs on
-mismatch.
++ verbatim output + `CONFIRMED|FALSIFIED` disposition).
+`[DISCIPLINE]` — this is an authoring rule applied by the agent, NOT
+a hook. (Historical note: a `BRIEF-CLAIMS` PreToolUse hook was
+described here but never existed as a runnable artifact, and
+PreToolUse hooks were purged in ADR-004; per ADR-005 enforcement-
+honesty, no doc claims a `BLOCK` for a non-existent mechanism. The
+real safeguard is this C-VERIFY discipline + the optional
+pre-commit WARN anti-phantom check.)
 
 ### 2. Triage (MUST)
 

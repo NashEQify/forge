@@ -31,9 +31,9 @@ replaces "remember to" rules with mechanical enforcement.
   (SessionStart) + `pre-commit.sh` (git pre-commit, 5 checks: 3 BLOCK
   + 2 WARN). All three are universally portable — git pre-commit runs
   on every harness, SessionStart works on CC-Terminal / claude-desktop
-  / claude-web / Codex. An earlier CC-Terminal-only PreToolUse /
-  PostToolUse / UserPromptSubmit layer was removed in favor of this
-  portable set; discipline replicates via protocols.
+  / claude-web / Codex. There are no tool-event hooks (PreToolUse /
+  PostToolUse / UserPromptSubmit); write-time discipline is
+  protocol-anchored.
 
 It is consumed by other repos (code projects, personal-management
 repos, infra/sysadmin setups) without re-installation: consumers point
@@ -93,12 +93,8 @@ methodology anchored in protocols (`_protocols/dispatch-template.md`,
 `context-isolation.md`, `mca-brief-template.md`, `plan-review.md`,
 `evidence-pointer-schema.md`), backed by a thin universal-portable
 reinforcement layer (git pre-commit 5 checks + SessionStart hooks).
-The earlier CC-Terminal-only mechanical hooks (`path-whitelist-guard`,
-`frozen-zone-guard`, etc.) were dropped because (a) they only fired on
-one harness, breaking forge's adapter promise, and (b) several had
-bypass vectors and gave false trust. Buddy's reasoning is the
-load-bearing substrate; protocols carry the rules; hooks catch what's
-mechanically cheap-and-cross-portable.
+Buddy's reasoning is the load-bearing substrate; protocols carry the
+rules; hooks catch what's mechanically cheap-and-cross-portable.
 
 For methodology correctness (content-quality, completeness): mandatory
 multi-perspective review via Spec-Board / Code-Review-Board / Council
@@ -127,10 +123,7 @@ No sub-agent call without a Plan-Block (Scope, Tool, Alternatives,
 Expected Artefacts) or a Gate-File. The orchestrator must materialize
 constraints into an artefact before delegating. Brief shape is
 codified in `_protocols/mca-brief-template.md` (with 6 standard
-decision classes). An earlier `delegation-prompt-quality.sh` PreToolUse
-hook warned when sub-agent prompts were under 200 chars; it has been
-removed — discipline now lives in Buddy reading the protocol before
-each dispatch.
+decision classes). Buddy reads the protocol before each dispatch.
 
 ### Problem 5 — Skill-class inflation
 
@@ -191,8 +184,7 @@ state). The honest trade-offs:
 - **Universal-portable hooks** (git pre-commit 5 checks + SessionStart
   for boot) impose a small setup cost (`scripts/setup-cc.sh` plus a
   git-hook symlink per consumer repo) and require investigating BLOCKs
-  rather than bypassing. An earlier CC-Terminal-only PreToolUse layer
-  has been removed.
+  rather than bypassing. There are no tool-event hooks.
 - **Single-class skill model + anatomy validation** prevents skill
   inflation; the cost is a learning curve for skill authors.
 

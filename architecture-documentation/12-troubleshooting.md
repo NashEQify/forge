@@ -77,7 +77,6 @@ causes:
 | `pre-commit` Check 2 (CG-CONV, commit-msg) | Commit message format | Use conventional-commit form (`feat(scope): msg`) |
 | `pre-commit` Check 3 (SKILL-FM-VALIDATE) | SKILL frontmatter incomplete or unknown invocation | Check the frontmatter against `framework/skill-anatomy.md` |
 | `pre-commit` Check 5 (SOURCE-VERIFICATION) | Board/council review missing line-numbered evidence pointers | Add evidence pointers per `_protocols/evidence-pointer-schema.md` |
-| (removed) `path-whitelist-guard` / `frozen-zone-guard` | These hooks no longer exist | Discipline-only: write within intent scope; corrections in frozen paths via `.correction.md` sidecar |
 
 ### Pre-commit hook BLOCKs with "PLAN-VALIDATE"
 
@@ -125,20 +124,17 @@ The boot did not run. Check:
 
 ### Buddy writes to the wrong directory
 
-There is no mechanical hook for this; discipline replaces the earlier
-`path-whitelist-guard`. If you see it happening: tell
-Buddy directly that the write was out of scope; check whether
-`intent.md` scope is unclear or the touched file's intent isn't
-documented.
+Scope is held by discipline. If you see it happening: tell Buddy
+directly that the write was out of scope; check whether `intent.md`
+scope is unclear or the touched file's intent isn't documented.
 
 ### Buddy runs a board without a plan-block
 
 CLAUDE.md §3 violated. Fix: explicitly tell Buddy to "write a
-plan-block first and then trigger the board". The earlier
-`delegation-prompt-quality.sh` WARN hook was removed — discipline
-lives in `_protocols/plan-review.md`; if Buddy repeatedly
-skips plan-blocks, the discipline is being internalized poorly and
-needs explicit reinforcement.
+plan-block first and then trigger the board". The discipline lives in
+`_protocols/plan-review.md`; if Buddy repeatedly skips plan-blocks,
+the discipline is being internalized poorly and needs explicit
+reinforcement.
 
 ## Skill / workflow problems
 
@@ -293,12 +289,12 @@ For external contributions the setup would have to be extended:
 
 ### Cursor: harness parity
 
-The framework runs identically on every supported harness. The earlier
-CC-Terminal-only PreToolUse /
-PostToolUse / UserPromptSubmit hook layer was removed; only universally-
-portable hooks remain (git pre-commit + SessionStart). Cursor no longer
-needs a special "limitation" note — write-time discipline lives in
-Buddy reasoning + protocols, identical to CC-Terminal. Full adapter
+The framework runs identically on every supported harness. The only
+hooks are universally-portable ones (git pre-commit + SessionStart);
+there are no tool-event hooks (PreToolUse / PostToolUse /
+UserPromptSubmit). Cursor needs no special "limitation" note —
+write-time discipline lives in Buddy reasoning + protocols, identical
+to CC-Terminal. Full adapter
 shape: [`07-tool-integrations.md`](07-tool-integrations.md) §Cursor.
 
 ## When nothing helps

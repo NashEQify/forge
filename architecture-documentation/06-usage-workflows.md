@@ -51,11 +51,11 @@ What you see as a user:
   — at session start you immediately know where you left off
 - **On demand:** Buddy reads workflow state via `--boot-context` /
   `--next` and can surface `WORKFLOW-ENGINE: NEXT: build [task <id>] >
-  <step-name>: <instruction>` — no longer auto-injected every turn.
-- **Commit discipline:** there is no `workflow-commit-gate.sh` hook —
-  the workflow_engine is in usage standby. If you use the engine for a
-  build, advance step pointers via `--complete` before commit;
-  otherwise the engine isn't blocking your commit.
+  <step-name>: <instruction>`.
+- **Commit discipline:** the workflow_engine is in usage standby. If
+  you use the engine for a build, advance step pointers via
+  `--complete` before commit; otherwise the engine isn't blocking your
+  commit.
 - **Cross-session resume:** if you close the session mid-flow and reopen
   later — the engine puts you on the same step. State lives in
   `.workflow-state/<id>.json` (gitignored, per checkout)
@@ -69,9 +69,7 @@ Skip list (engine NOT active):
 - frame/bedrock_drill standalone — sub-skills
 - think! — open discussion
 
-This is discipline-only — the earlier ENGINE-USE pre-commit WARN (which
-flagged a `feat|fix|refactor` commit carrying a `[Task-NNN]` ref but no
-active workflow) was dropped.
+This is discipline-only.
 
 ## Deploy lifecycle (optional)
 
@@ -101,13 +99,10 @@ The script sources deploy.env automatically (`deploy-dashboard-lite.sh`) or
 expects the variables exported (`deploy-docs.sh` does not yet have an
 auto-source block — drift note, ACTIONABLE spawn).
 
-**Dashboard regen cadence:** the earlier `post-commit-dashboard.sh`
-hook (auto-regen after every commit) was removed. Regenerate manually
-when you want a fresh dashboard, or wire a periodic cron / Ansible
-job to call `generate-dashboard.py`. The earlier pre-commit
-OBLIGATIONS WARN (which reminded to redeploy when plan/dashboard
-files changed) was also dropped — relying on Buddy discipline +
-manual regen instead.
+**Dashboard regen cadence:** regenerate manually when you want a fresh
+dashboard, or wire a periodic cron / Ansible job to call
+`generate-dashboard.py`. Buddy discipline covers redeploy when
+plan/dashboard files change.
 
 **When server push is worth it:** multiple devices, sharing use case,
 Hetzner / own-server setup. Otherwise local is enough.
@@ -362,7 +357,7 @@ Both are written on `save`, loaded on `wakeup`.
 
 On task status change (e.g. `pending` → `in_progress` or `→ done`):
 - 2 writes: `overview.md` + `history/`
-- This is discipline-only — the earlier PERSIST-GATE pre-commit WARN was dropped
+- This is discipline-only
 
 ## Anti-patterns
 
@@ -435,10 +430,8 @@ copy. On hook update the consumer is automatically in sync.
 
 ### BP4 — Respect frozen zones
 
-Never write actively into `context/history/**`. The
-`frozen-zone-guard.sh` PreToolUse hook used to block mechanically; it
-has been removed. Convention is now discipline-only — don't attempt
-writes inside frozen paths.
+Never write actively into `context/history/**`. The convention is
+discipline-only — don't attempt writes inside frozen paths.
 
 ### BP5 — Stale cleanup in the same commit
 

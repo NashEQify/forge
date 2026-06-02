@@ -1,8 +1,10 @@
 # Workflow: docs-rewrite
 
-Rewrite architecture documentation from scratch.
-Reader-journey-first: structure follows the audience, not
-the system.
+Rewrite reader-facing documentation reader-journey-first:
+structure follows the audience, not the system. Covers the
+architecture-doc site, the README, and positioning / intent
+surfaces — a full from-scratch rewrite or an audience-driven
+re-frame.
 
 ## Trigger
 
@@ -200,8 +202,9 @@ Steps:
 2. BUILD-TEST —
    `mkdocs build --strict -f mkdocs-framework.yml`
    locally.
-3. COMMIT-GUARD — OBLIGATIONS, PERSIST, TASK-SYNC,
-   PLAN-VALIDATE, FACTS.
+3. COMMIT-GUARD — the pre-commit hook (PLAN-VALIDATE,
+   CG-CONV, SKILL-FM-VALIDATE BLOCK; SECRET-SCAN,
+   SOURCE-VERIFICATION WARN).
 4. COMMIT — `git commit + push`.
 5. DEPLOY — `$FRAMEWORK_DIR/scripts/deploy-docs.sh`.
 6. VERIFY — ask the user to check visually (Buddy has

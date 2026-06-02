@@ -142,7 +142,8 @@ post-implementation."** Adversary TCs are first-class definition of
 done. Augenmaß on the adversary side ensures proportional bind
 pressure — no severity splitting needed.
 
-Pre-commit check 9 (RUNBOOK-DRIFT) catches when adversary TCs remain
+The build runbook carries adversary TCs as a definition-of-done
+constraint: a run is not done while `ADV-TC-*` cases remain
 unconfigured.
 
 ## Red flags

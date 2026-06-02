@@ -27,18 +27,15 @@ Routing rules in `framework/process-map.md`; path detail in
 `workflows/runbooks/build/WORKFLOW.md`.
 
 ### 4. Code delegation
-Product code goes to main-code-agent. The earlier `path-whitelist-guard`
-PreToolUse hook was removed; Buddy writes within intent-scope by
-discipline. Orchestrator work (agents/, framework/,
+Product code goes to main-code-agent. Buddy writes within intent-scope
+by discipline. Orchestrator work (agents/, framework/,
 skills/, context/, docs/) Buddy writes directly. Detail:
 `framework/agent-autonomy.md`.
 
 ### 5. Stale cleanup
 When an artifact is retired/replaced/sunset, clean up every live
 reference in non-frozen files in the same commit. `grep -rn <artifact>`,
-filter frozen zones, fix the rest. Discipline-only (the earlier
-pre-commit STALE-CLEANUP WARN check was dropped along with its opt-in
-marker mechanism).
+filter frozen zones, fix the rest. Discipline-only.
 
 ### 6. Deployment verification
 After a deploy, look at it. HTTP 200 isn't proof. If you can't see it,
@@ -63,9 +60,9 @@ Forge ships 3 hook scripts: `buddy-boot-inject.sh` +
 pre-commit + commit-msg, 5 checks: PLAN-VALIDATE / CG-CONV /
 SKILL-FM-VALIDATE BLOCK; SECRET-SCAN / SOURCE-VERIFICATION WARN). All
 universally portable across CC-Terminal, claude-desktop, claude-web,
-OpenCode, Codex, Cursor. An earlier CC-Terminal-only PreToolUse /
-PostToolUse / UserPromptSubmit layer was removed; discipline replicates
-via protocols + operational.md.
+OpenCode, Codex, Cursor. The framework runs no tool-event hooks
+(PreToolUse / PostToolUse / UserPromptSubmit); write-time discipline is
+protocol-anchored via protocols + operational.md.
 
 ## OC Constraints
 The consumer repo is the CWD; the framework is mounted via the OpenCode

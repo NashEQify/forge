@@ -2,65 +2,114 @@
 
 <img src="assets/vibeforge-logo.png" align="right" width="294" alt="forge mascot — a friendly furnace with headphones smithing code on a circuit-board anvil. The forged code reads: def forge(vibes): build(); ship()." />
 
-forge is **disciplined LLM capabilities** between you and your coding
-agent — an opinionated orchestration layer that gives the LLM
-*more reach*, not *less rope*. Aimed at a single dev who wants
-vibe-at-complexity: the velocity of vibe-coding with the coherence of
-process when the work outgrows a single session.
+Coding models are already very capable. The lever for getting more out
+of them isn't a bigger model — it's orchestration. That's what forge
+is: **disciplined LLM capabilities** between you and your coding agent.
+It lets a solo dev vibe reliably, at a level of complexity a standard
+agent can't hold together. It spends more tokens and time running
+opinionated, battle-tested workflows over the LLM, and gives back
+cleaner code, less rework, and more autonomous execution. The benefit:
+you get far more out of the same model than you would by just plain
+prompting or a stock agent.
 
-Eight workflows (`build`, `solve`, `fix`, `review`, `research`,
-`docs-rewrite`, `save`, `context-housekeeping`) walk the same arc
-every time. Three review boards (Spec-Board, Code-Review-Board,
-UX-Board) and an Architectural Council provide a multi-perspective
-reasoning substrate when one model can't hold the whole thing
-coherently. A small set of universally-portable hooks (git pre-commit
-plus SessionStart for boot) catches drift where mechanical catching is
-both cheap and reliable across harnesses.
+The workflows are everyday dev work — build, fix, review, solve — and
+their top-level shape follows familiar software practice. What's tuned
+to how coding agents actually behave is **how each step is wired
+underneath**, built to control for the ways agents go wrong — both the
+well-known agentic behaviours and the ones observed dogfooding forge in
+productive use ([the tendencies, described](framework/agent-patterns.md)).
+Hard-to-undo decisions get a multi-perspective board or a council
+before they land; when you're unsure, you can put the question to the
+council yourself — decision-support, not a replacement for your
+judgment. You stay in the driver's seat.
 
-The point: when the work outgrows a single session — multi-day builds,
-multi-repo refactors, anything where coherence-across-context-loss is
-the bottleneck — unsteered vibe-coding stops scaling. forge augments
-the LLM's reasoning with skills + boards + council, so the LLM stays
-in the driver's seat while drift gets caught at the boundaries.
+Work that outgrows a single session keeps its thread. At session end
+you trigger the `save` skill; it writes a structured handoff the next
+session reads on boot. Alongside it, the workflow engine tracks where
+each multi-step workflow stands — which step, what state — so a paused
+build resumes exactly there, and the work itself is organized as tasks
+with dependencies: a validated plan with milestones and a critical
+path, surfaced at every start. A multi-day, multi-step build doesn't
+lose its place.
 
-Dogfooded. Opinionated. Pre-1.0.
+It stays simple to use and understand — a small set of processes, not a
+cage. Aimed at a single dev on complex work, whether you're shipping a
+product or building a system to last: the velocity of vibe-coding with
+the coherence of process.
 
-## What's in the workshop
+forge is dogfooded — developed by using it on real work. The core is
+stable and won't shift out from under you; what keeps improving is the
+nitty-gritty detail. Opinionated. Pre-1.0.
 
-**Eight opinionated workflows.** A `build` walks the same arc every
-time: scoping → spec interview → spec-board (4-7 reviewer personas in
-parallel + chief consolidator) → MCA implements → code-review-board →
-close. The 8 workflows carry the methodology; the 41 active skills
-carry the moves inside each phase. Workflow state can persist per
-task in `.workflow-state/<id>.json` (atomic-write + flock) for
-genuinely-multi-day-multi-phase builds — currently in usage standby;
-Buddy's reasoning + the `save` session-handoff cover most cross-
-session needs without ceremony.
+## What you actually get
 
-**Multi-perspective decision substrate.** Three boards (Spec-Board,
-Code-Review-Board, UX-Board) and an Architectural Council are the
-framework's reasoning layer for irreversible or multi-path decisions.
-Anti-anchoring discipline (`_protocols/dispatch-template.md` +
-`context-isolation.md`) keeps Buddy from coloring the reviewers'
-findings; the orchestrator reads only the chief consolidator's signal
-(Invariant 1). Council has four modes (light / standard / full /
-interactive) with proportionality gates and an explicit
-*council-before-user-escalation* rule when Buddy hits a multi-path
-uncertainty.
+Cleaner code, less rework, more autonomous execution. That comes from
+how the workflow steps are wired — controls against the ways coding
+agents go wrong. The major ones:
 
-**Reinforcement at the boundaries — universal-portable only.** Git
-pre-commit catches convention + schema drift before it ships on any
-harness. SessionStart hooks bootstrap Buddy on claude-desktop /
-claude-web / Codex where the `--agent buddy` flag isn't an
-entrypoint. The rest of the discipline lives in protocols and Buddy's
-operating rules rather than harness-coupled hooks, so forge runs
-identically on every supported harness.
+- **Reviews run cold and adversarial** — reviewers derive findings
+  without inheriting the orchestrator's framing, and one reviewer's
+  whole job is to attack the premise, so a plausible-but-wrong frame
+  doesn't slip through.
+- **Claims are checked against the real code, with receipts** — against
+  what's actually on disk, not the model's belief about it, and every
+  finding cites a file and line. No hand-waving.
+- **Structure before code** — a deep-modules lens makes a
+  structural-purity pass that feeds a two-stage brief, so the work
+  carries architectural awareness before a line is written;
+  Architecture-Comprehension then checks coherence at the milestone
+  layer, catching breaks a local view misses — a producer wired with no
+  consumer, a deploy-state that can't support the change.
+- **Multiple perspectives on the hard calls** — a spec-board on the
+  spec, a code-review-board on the diff, a council on architecture
+  decisions, instead of a single-view tunnel. You can also convene a
+  council by hand any time you want fresh perspectives on a question.
+- **Effort scales to the stakes** — small things don't get
+  over-processed. That's the "stays simple" anchor.
+
+→ [how the review apparatus works](architecture-documentation/02-architecture.md)
+
+## Quick Start
+
+You don't call commands. You tell Buddy what you want; Buddy classifies
+the input (discuss / incident / substantial) and routes to a workflow:
+
+| You say | Workflow |
+|---|---|
+| `solve <problem>` | open-ended: frame → refine → artifact → execute |
+| `build task X` | spec → spec-board → code → code-review-board → close |
+| `fix bug X` | root-cause first, no symptom-patching |
+| `review spec X` | multi-perspective spec-board (4-7 personas + chief) |
+| `research X` | knowledge artifact, not code |
+| `save` | end-of-session: writes the session-handoff so the next session picks up the thread |
+| `quicksave` | mid-session checkpoint: same handoff format, lighter footprint |
+
+For standalone frame / drill / council use, just ask in plain language;
+Buddy picks the entry point.
+
+**`save` is the session-end skill.** Without it, the next session
+starts cold — workflow state in `.workflow-state/<id>.json` still
+resumes, but the discussion thread, open decisions, and "where I was
+heading" don't. Type `save` before you close the terminal; type
+`quicksave` when you're switching context mid-day and want to leave a
+breadcrumb without the full wrap-up. See
+[Cross-session continuity](#cross-session-continuity) below.
 
 ## How it works
 
 Every session enters through **Buddy** — the single orchestrator persona.
 Buddy handles intake, classifies the request, and routes to one of the
 eight workflows; sub-agents do the actual work.
+
+A `build`, for example, walks the same arc every time: scoping → spec
+interview → a spec-board (4–7 reviewer personas in parallel + a chief
+consolidator) → main-code-agent implements → a code-review-board on the
+diff → close. The eight workflows carry the methodology; the 41 active
+skills carry the moves inside each phase. The boards and the council run
+context-isolated — Buddy doesn't colour the reviewers' findings and
+reads only the chief's consolidated signal — and the council runs in
+four modes (light / standard / full / interactive), scaled to the
+decision.
 
 ```
                    ┌─────────────────────────────────────────┐
@@ -108,8 +157,8 @@ eight workflows; sub-agents do the actual work.
 Multi-session work doesn't restart from scratch — but only if you end
 sessions with `save`.
 
-- **`save` / `quicksave`** — the explicit session-end / mid-session
-  ritual. Type `save` before closing the terminal; Buddy writes a
+- **`save` / `quicksave`** — the user-triggered session-end /
+  mid-session skill. Type `save` before closing the terminal; Buddy writes a
   structured session-handoff (meta-summary, open topics, decisions,
   next steps). The next session reads it on boot and picks up the
   thread. `quicksave` is the lighter mid-day variant for context
@@ -125,195 +174,43 @@ sessions with `save`.
 
 ## Setup
 
-forge runs on top of an existing coding-agent harness. Three are
-supported out of the box: **Claude Code**, **OpenCode**, and **Codex**
-(Desktop / CLI). Buddy is the orchestrator persona in all three — same
-methodology, same workflows, same boards.
-
-**One command provisions the whole Claude Code adapter:**
-
-```bash
-bash ~/forge/scripts/setup-cc.sh
-```
-
-After that, opening **any** folder in **any** Claude Code entrypoint
-(`cc` terminal launcher, `claude` CLI, claude-desktop, claude-web)
-triggers Buddy boot. The SessionStart hooks (boot-inject +
-resume-nudge) fire globally — they live in `~/.claude/settings.json`,
-not in per-project files, and resolve to absolute forge paths so the
-folder you opened is irrelevant.
-
-How the boot signal actually reaches Buddy still differs per
-entrypoint, but every path lands on the same boot:
-
-| Entrypoint | Boot trigger |
-|---|---|
-| `cc` (terminal launcher) | launcher passes `--agent buddy` + framework inject |
-| `claude --agent buddy --add-dir` (CLI direct) | user's explicit `--agent buddy` flag |
-| claude-desktop / claude-web | SessionStart hook `buddy-boot-inject.sh` (gated on `CLAUDE_CODE_ENTRYPOINT in {claude-desktop, claude-web}`) |
-
-What `setup-cc.sh` does (idempotent — re-run any time to repair or
-re-apply):
-
-- installs the `cc` launcher at `~/.local/bin/cc` (absolute forge path
-  substituted in)
-- **merges forge's SessionStart hooks into `~/.claude/settings.json`**
-  using `jq`; preserves your other keys (`effortLevel`, `voiceEnabled`,
-  custom `permissions`, …); backs the prior file up with a timestamp
-  before rewriting
-- links `~/.claude/agents` and `~/.claude/skills` to forge's persona
-  and skill SoTs (so the `Task` and `Skill` tools discover them)
-- wires forge's git pre-commit and commit-msg hooks in the forge
-  checkout itself
-
-The reason setup-cc.sh writes hooks **globally** rather than into a
-per-project file: forge's SessionStart hooks should fire in every claude-code session
-regardless of which folder you opened, and the absolute paths must be
-substituted at setup time (the same value the agent stores in
-`FRAMEWORK_DIR`). Per-project `.claude/settings.json` files are not
-required by forge — if you want project-specific overrides, drop them
-into `.claude/settings.local.json` (which CC merges over the global)
-and they'll layer on top.
-
-Two setup paths:
-
-- **Full** — one setup script per harness. Installs a launcher
-  (`cc` / `oc`), wires persona + skill discovery, merges forge's
-  SessionStart boot hook into the global config, and wires the git
-  pre-commit checks. This is the canonical install and gets you boot
-  automation plus the commit-time discipline layer.
-- **Quick (Claude Code only)** — two symlinks, no scripts, no
-  install-time magic. Personas and skills discoverable, but no
-  launcher, no SessionStart boot hook, and no git pre-commit. Fastest
-  way to try forge in a one-off project.
-
-### Full setup
+forge runs on top of an existing coding-agent harness — Claude Code,
+OpenCode, Codex, or Cursor. You need `git`, `bash`, `jq`, and Python
+3.10+. One command provisions the Claude Code adapter — the `cc`
+launcher, persona + skill discovery, the SessionStart boot hook, and
+the git pre-commit checks:
 
 ```bash
 git clone https://github.com/NashEQify/forge ~/forge
-
-# Claude Code — installs cc launcher + symlinks, merges forge's
-#               SessionStart hooks into ~/.claude/settings.json,
-#               wires forge's git pre-commit hooks
 bash ~/forge/scripts/setup-cc.sh
-
-# OpenCode — installs `oc` launcher + opencode.jsonc
-bash ~/forge/scripts/setup-oc.sh
-
-# Codex Desktop / CLI — agent + skill wrappers under ~/.codex, ~/.agents
-bash ~/forge/scripts/setup-codex.sh
-# optional: also wire the project-local hooks into a specific project
-bash ~/forge/scripts/setup-codex.sh ~/your-project
 ```
-
-Each script is idempotent and self-contained: it detects
-`FRAMEWORK_DIR` from its own location, installs the launcher and
-adapter pieces, and verifies prerequisites. Re-run any time to repair
-the install. (Codex has no `--add-dir` equivalent, so `FRAMEWORK_DIR`
-is baked in at install time — the reason a script is mandatory there.)
 
 Then start a session in any repo:
 
 ```bash
-cc <project>        # Claude Code via launcher (or bare `cc` for cwd)
-oc                  # OpenCode via launcher (forge config auto-loaded)
-codex               # Codex Desktop / CLI — Buddy discovered globally
+cc <project>        # Claude Code (or bare `cc` for the current dir)
 ```
 
-The `cc` / `oc` launchers default to `~/projects/<project>` for the
-project root. If yours live elsewhere, override `$PROJECTS_DIR` or
-edit the launcher — both are short shell scripts. Per-repo git
-pre-commit hooks for a consumer project (any harness):
-`bash ~/forge/scripts/install-git-hooks.sh`. Launcher details:
-[`docs/cc-launcher.md`](docs/cc-launcher.md).
+Other harnesses: `setup-oc.sh` (OpenCode), `setup-codex.sh` (Codex);
+Cursor ships rules under `orchestrators/cursor/`. Each script is
+idempotent — re-run any time to repair.
 
-### Quick (Claude Code CLI only)
-
-This path is for the terminal CLI (`claude` binary) — **not** for
-claude-desktop / claude-web, which need `bash setup-cc.sh` (see the
-boot-mechanics table above). The trade-off below also applies: no
-launcher, no SessionStart boot hook, no git pre-commit.
-
-```bash
-git clone https://github.com/NashEQify/forge ~/forge
-
-mkdir -p ~/.claude \
-  && ln -sn ~/forge/.claude/agents ~/.claude/agents \
-  && ln -sn ~/forge/.claude/skills ~/.claude/skills
-```
-
-Then in any project:
-
-```bash
-cd ~/your-project
-claude --agent buddy --add-dir ~/forge
-```
-
-Buddy boots, reads `agents/buddy/{soul,operational,boot}.md`, loads
-the workflows + skills, and starts orchestrating. If the project has
-no `intent.md` yet, Buddy offers a short interview to create one.
-
-Trade-off vs. full setup: no `cc` launcher, no SessionStart boot hook
-(claude-desktop / claude-web won't auto-boot Buddy — see the
-boot-mechanics table above), and no git pre-commit checks. Methodology
-and the workflow engine carry the discipline either way. To add the
-git pre-commit layer per repo: `bash ~/forge/scripts/install-git-hooks.sh`.
-
-Why the symlinks are needed: `--add-dir ~/forge` grants read access
-to the framework tree, but Claude Code discovers personas via
-`~/.claude/agents/` — not via `--add-dir`. Without the symlinks the
-`Task` tool can't dispatch `board-chief` / `main-code-agent` / any
-forge persona, and the `Skill` tool sees zero forge skills. (The
-agent can still read `skills/<name>/SKILL.md` via the Read tool and
-follow the methodology manually — the SoT-read fallback documented in
-[`agents/buddy/operational.md`](agents/buddy/operational.md) — but
-proactive skill discovery is off.)
-
-### Prerequisites
-
-- the harness itself:
-  [Claude Code](https://docs.anthropic.com/en/docs/claude-code),
-  [OpenCode](https://opencode.ai), or Codex (Desktop / CLI)
-- **git**, **bash**, **jq**
-- **Python 3.10+ + `pyyaml`** — for the workflow / plan engines
-- Optional: **`chub` CLI** for `get_api_docs`,
-  **`gitleaks`** for the SECRET-SCAN pre-commit check
-
-## Quick Start
-
-You don't call commands. You tell Buddy what you want; Buddy classifies
-the input (discuss / incident / substantial) and routes to a workflow:
-
-| You say | Workflow |
-|---|---|
-| `solve <problem>` | open-ended: frame → refine → artifact → execute |
-| `build task X` | spec → spec-board → code → code-review-board → close |
-| `fix bug X` | root-cause first, no symptom-patching |
-| `review spec X` | multi-perspective spec-board (4-7 personas + chief) |
-| `research X` | knowledge artifact, not code |
-| `save` | end-of-session: writes the session-handoff so the next session picks up the thread |
-| `quicksave` | mid-session checkpoint: same handoff format, lighter footprint |
-
-For standalone frame / drill / council use, just ask in plain language;
-Buddy picks the entry point.
-
-**`save` is the session-end ritual.** Without it, the next session
-starts cold — workflow state in `.workflow-state/<id>.json` still
-resumes, but the discussion thread, open decisions, and "where I was
-heading" don't. Type `save` before you close the terminal; type
-`quicksave` when you're switching context mid-day and want to leave a
-breadcrumb without the full wrap-up. See
-[Cross-session continuity](#cross-session-continuity) above.
+**Full details** — prerequisites, per-harness setup, consumer-repo
+wiring, verification:
+[`05-installation.md`](architecture-documentation/05-installation.md).
 
 ## Honest cost & scope
 
 The discipline layer isn't free. A `build` for a substantial task
 spawns a 4-7 persona spec-board (5-15k tokens each), a code-review-
-board on the diff, and persists workflow state across phases.
+board on the diff, and persists workflow state across phases. When a
+hard architectural decision comes up it can also convene a council
+(3-7 context-isolated members + adversary + chief) — conditional, but
+another multiplier on the turns it touches.
 **50-200k tokens go to the discipline layer per substantial build, on
-top of the actual implementation.** That earns its keep when a board
-catches a spec-violation worth a day of re-work; it's wasteful on a
-typo-fix.
+top of the actual implementation** (more when a council is convened).
+That earns its keep when a board catches a spec-violation worth a day
+of re-work; it's wasteful on a typo-fix.
 
 For a 30-minute script, a slash-command catalog is faster. forge is
 for the work where coherence across sessions is the bottleneck — long

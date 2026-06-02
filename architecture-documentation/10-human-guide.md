@@ -64,9 +64,8 @@ The framework anchors important rules in three layers:
 - **SessionStart hooks** for boot on claude-desktop / claude-web /
   Codex.
 
-An earlier CC-Terminal-only PreToolUse / PostToolUse / UserPromptSubmit
-layer was removed: it ran on a single harness, which broke forge's
-adapter promise. The universal-portable set above is what every harness
+There are no tool-event hooks (PreToolUse / PostToolUse /
+UserPromptSubmit). The universal-portable set above is what every harness
 gets; the rest is carried by protocol-anchored discipline.
 
 What cannot be checked mechanically (content quality, spec

@@ -180,8 +180,7 @@ on the parallel pass — meaningful but not blocking).
 ### 2.2 Why a 7th decision class, not a separate gate
 
 The 6 existing decision classes are carried by the brief template +
-Buddy's pre-dispatch discipline (the earlier `delegation-prompt-quality.sh`
-Check C that enforced them was removed). Adding a 7th class inherits that
+Buddy's pre-dispatch discipline. Adding a 7th class inherits that
 shape for free. A standalone gate would need its own mechanism.
 
 The 7th class — `structural_invariants` — forces Buddy to write down,

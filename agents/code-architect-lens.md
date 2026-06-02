@@ -56,7 +56,9 @@ parameterized:
 | `heuristik` | Target spec lacks the section (legacy / L0 / pre-373) | No TARGET anchor; you run Ousterhout deep-modules heuristik against IST alone |
 
 Detection step (first action after reading the dispatch): grep the
-target spec for `^## §Module-Decomposition`. Present → `anchor`
+target spec (extended regex) for `^## (§[0-9]+ )?§Module-Decomposition`
+— the heading carries a §-number prefix (`## §10 §Module-Decomposition`),
+so the optional `§N ` group is required to match it. Present → `anchor`
 mode. Absent → `heuristik` mode. Both modes return the same output
 shape; only the §Authority-sources block reports which mode applied.
 
@@ -262,8 +264,12 @@ Disposition values:
   (spec-cite only; escalation flag for council / user)
 
 Disposition is a lens judgment, but Source-ref + Command + Output
-must be verbatim. Hook `BRIEF-CLAIMS` re-runs the Command at brief
-write-time and commit-time, BLOCKs on output mismatch. Adversary
+must be verbatim. `[DISCIPLINE]` — the C-VERIFY rows are an
+authoring rule, NOT a hook (the `BRIEF-CLAIMS` hook described here
+never existed as a runnable artifact; PreToolUse hooks were purged
+in ADR-004; per ADR-005 enforcement-honesty no doc claims a `BLOCK`
+for a non-existent mechanism). The real cross-check is the
+two-pass author/verifier separation: Adversary
 re-verifies at L2 dispatch per `agents/code-adversary.md`
 §Cold-start pre-mission §3 — two-pass author / verifier separation.
 Any FALSIFIED row flips lens sign-off to `escalate: claim-falsified`.

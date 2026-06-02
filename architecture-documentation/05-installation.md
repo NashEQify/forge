@@ -96,7 +96,7 @@ bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh --uninstall   # remove symlinks
 ```
 
 On the next `git commit` the pre-commit checks run (see
-[`02-architecture.md`](02-architecture.md) §Pre-Commit 13 Checks).
+[`02-architecture.md`](02-architecture.md) §Pre-Commit 5 Checks).
 
 #### 3. Hook registration (`~/.claude/settings.json`)
 

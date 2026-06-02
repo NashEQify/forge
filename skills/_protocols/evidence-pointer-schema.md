@@ -8,9 +8,7 @@ is consumed by the engine check
 (`scripts/workflow_engine.py` `pointer_check`), the standalone
 validator (`scripts/validate_evidence_pointers.py`), and pre-commit
 Check 5 SOURCE-VERIFICATION
-(`orchestrators/claude-code/hooks/pre-commit.sh`). An earlier
-PostToolUse hook `evidence-pointer-check.sh` was removed; pre-commit
-Check 5 is the universally-portable replacement.
+(`orchestrators/claude-code/hooks/pre-commit.sh`).
 
 Canonical spec authority:
 `docs/specs/299-fabrication-mitigation.md` §1.
@@ -255,5 +253,3 @@ the output frontmatter.
 - Validator: `scripts/validate_evidence_pointers.py`
 - Pre-commit Check 5 SOURCE-VERIFICATION:
   `orchestrators/claude-code/hooks/pre-commit.sh`
-  (an earlier PostToolUse hook `evidence-pointer-check.sh` was removed;
-  pre-commit is the universal-portable replacement)

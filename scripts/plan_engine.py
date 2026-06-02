@@ -2301,7 +2301,12 @@ def validate(
     # Task 367: iterate via t.key (polymorphic int/str).
     in_deg = dict.fromkeys(tasks, 0)
     for t in tasks.values():
-        for dep in t.blocked_by:
+        # set(): count each DISTINCT dependency once. The drain loop below
+        # uses a membership test (`if tk in t2.blocked_by`) which fires once
+        # per dependent, so the build loop must be dedup-symmetric — otherwise
+        # a duplicate blocked_by entry (e.g. [1, 1], not a real cycle) inflates
+        # the in-degree, the node never reaches 0, and a phantom CYCLE fires.
+        for dep in set(t.blocked_by):
             if dep in in_deg:
                 in_deg[t.key] += 1
     queue = deque(tk for tk, d in in_deg.items() if d == 0)

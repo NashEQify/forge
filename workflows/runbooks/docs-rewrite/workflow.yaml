@@ -1,6 +1,6 @@
 name: docs-rewrite
-description: "Rewrite architecture documentation. Reader-journey-first — structure follows the audience, not the system."
-trigger: ["docs-rewrite"]
+description: "Rewrite reader-facing documentation reader-journey-first — structure follows the audience, not the system. Covers the architecture-doc site, the README, and positioning / intent surfaces; a from-scratch rewrite or an audience-driven re-frame."
+trigger: ["docs-rewrite", "readme-rewrite", "positioning-rewrite"]
 derived_from: "WORKFLOW.md@2026-05-09"
 
 steps:
