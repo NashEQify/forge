@@ -21,6 +21,8 @@ routes:
     - interview
     - spec-write
     - board
+    - board-spec
+    - board-council
     - phase-prepare
     - test-design
     - architect-lens
@@ -41,6 +43,8 @@ routes:
     - interview
     - spec-write
     - board
+    - board-spec
+    - board-council
     - phase-close
     - close-bookkeeping
     - commit-deploy
@@ -51,6 +55,8 @@ routes:
     - interview
     - spec-write
     - board
+    - board-spec
+    - board-council
     - phase-prepare
     - test-design
     - architect-lens
@@ -160,39 +166,60 @@ steps:
     on_fail: block
 
   - id: board
-    name: "Spec quality gate — spec_board OR council (architectural, Buddy-routed)"
+    name: "Spec-quality gate routing — spec_board OR council"
+    category: classification
+    routes:
+      spec: [board-spec]
+      council: [board-council]
+    instruction: >
+      Route the specify-phase quality gate by the shape of the specify
+      output:
+      - spec-quality artifact (a written spec) → route 'spec' → spec_board.
+      - architectural decision (ADR / design-shape, with no spec-quality
+        artifact to review) → route 'council' → council per §1.0.
+      Pick mid-flow via `--complete board --route <spec|council>`. The
+      non-selected board step is ROUTE_SKIPPED; both routes converge on
+      phase-prepare (downstream steps are governed by the top-level route,
+      not by this classification). This is the engine-recognized form of
+      the spec_board-OR-council gate: a council-substitute build no longer
+      hits the spec_board-shaped completion pointer.
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: board-spec
+    name: "Spec quality gate — spec_board"
     category: content
     instruction: >
-      Default: spec_board/SKILL.md (spec-quality review). Convergence_loop
-      max 3 passes. Output: docs/reviews/board/{spec_name}-consolidated*.md
-      with 0C+0H = PASS.
-
-      Buddy-routed substitute: skills/council/SKILL.md (architectural
-      decision review) when the specify-phase output shape is an
-      architectural decision (ADR / design-shape) rather than a
-      spec-quality artifact. Council mode per §1.0 proportionality
-      (light / standard / full). Output: docs/reviews/council/<date>-
-      <topic>-consolidated.md + decision.md.
-
-      DOCUMENTATION-ONLY ROUTING: this is Buddy-side discipline. The
-      engine itself reads only `skill_ref` below; the `council-needed`
-      guard (scripts/workflow_engine.py cmd_guard) IS implemented as an
-      opt-in for the solve workflow (greps the solve state file for
-      `council-required: true`), but is NOT wired into this build board
-      step (L-058 open). When council substitutes here, Buddy MUST start
-      the engine manually
-      (`python3 scripts/workflow_engine.py --start build --task <id>`)
-      and update completion via the manual check. Stage 2 wires the
-      guard into build; until then this step's automation is board-only.
+      spec_board/SKILL.md (spec-quality review). Convergence_loop max 3
+      passes. Output: docs/reviews/board/{spec_name}-consolidated*.md with
+      0C+0H = PASS.
     skill_ref: skills/spec_board/SKILL.md
-    # alternative_skill_refs: documentation-only, not consumed by engine.
-    # Engine wire-up is L-058 Stage 2 (workflow_engine.py council-needed guard).
     completion:
       type: compound
       checks:
         - type: pointer_check
           source_file: "docs/reviews/board/{spec_name}-consolidated-pass1.md"
         - type: manual
+    on_fail: block
+
+  - id: board-council
+    name: "Architectural-decision gate — council"
+    category: content
+    instruction: >
+      skills/council/SKILL.md (architectural decision review) when the
+      specify-phase output shape is an architectural decision (ADR /
+      design-shape) rather than a spec-quality artifact. Council mode per
+      §1.0 proportionality (light / standard / full). Output:
+      docs/reviews/council/<date>-<topic>-consolidated.md + decision.md.
+    skill_ref: skills/council/SKILL.md
+    completion:
+      # Manual (Buddy attests the council decision artifact), NOT a
+      # pointer_check: the council output path is <date>-<topic>-keyed,
+      # not an engine variable — a pointer_check here would re-introduce a
+      # stale-pointer class. Consistent with ADR-007 O-4 (engine stays
+      # Buddy-driven [WORKFLOW], not pointer-enforced).
+      type: manual
     on_fail: block
 
   # ============================================================================

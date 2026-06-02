@@ -164,9 +164,9 @@ steps:
       Beide MUESSEN Drill liefern (first-principles-check.md).
       Acceptance: 0 neue BLOCKER + 0 neue MAJOR.
       Ref: SKILL.md SS3a.
-    guard:
-      type: script
-      command: "python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --guard delta-needed {task_id}"
+      Buddy-judged (kein Engine-Guard — der Trigger ist eine Bewertung,
+      nicht mechanisch berechenbar): Trigger nicht erfuellt → `--skip
+      delta-verify`; erfuellt → Mini-Board ausfuehren, dann `--complete`.
     completion:
       type: file_created_matching
       pattern: "docs/reviews/board/*-delta-*.md"

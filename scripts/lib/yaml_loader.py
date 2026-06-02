@@ -240,6 +240,23 @@ def validate_workflow_schema(data: dict[str, Any]) -> list[str]:
         if on_fail and on_fail not in VALID_ON_FAIL:
             errors.append(f"step '{sid}': invalid on_fail '{on_fail}'")
 
+    # Top-level path-routes (build/fix): validate shape + fold the referenced
+    # step-ids into the existence check below. Previously only classification-
+    # step routes were checked, so a typo in a top-level `routes:` entry was a
+    # silent dangling reference.
+    top_routes = data.get("routes")
+    if top_routes is not None:
+        if not isinstance(top_routes, dict) or not top_routes:
+            errors.append("top-level 'routes' must be a non-empty mapping")
+        else:
+            for route_key, route_steps in top_routes.items():
+                if not isinstance(route_steps, list):
+                    errors.append(
+                        f"top-level route '{route_key}' must be a list of step ids"
+                    )
+                    continue
+                all_route_step_ids.update(route_steps)
+
     # depends_on: check references exist
     for step in steps:
         if not isinstance(step, dict):

@@ -1,0 +1,53 @@
+name: context_housekeeping
+description: "Periodic upkeep of the context system — analysis (read-only) then curation."
+trigger: ["context_housekeeping", "context-housekeeping"]
+derived_from: "WORKFLOW.md@2026-06-02"
+
+# Engine-state-machine version of runbooks/context_housekeeping/WORKFLOW.md.
+# No top-level routes — a single linear path (ad-hoc maintenance, no path
+# variants). The markdown is the human-prose SoT; this yaml is engine-readable
+# for state tracking + cross-session continuity: every non-trivial workflow
+# has a workflow.yaml so the generic --start/--next/--complete cycle works
+# uniformly.
+
+steps:
+
+  - id: phase-analysis
+    name: "Phase 1 — analysis (read-only)"
+    category: content
+    instruction: >
+      Check the entire context system (read-only, no writes): line counts
+      (>200 lines), navigation consistency (every file linked in its
+      navigation.md), orphan files, dead links, currency (facts still
+      correct?), structure assessment (areas sensibly cut?). Emit a report
+      of problems + recommendations. Ref: WORKFLOW.md §Phase 1.
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: phase-curation
+    name: "Phase 2 — curation (knowledge_processor per area)"
+    category: content
+    instruction: >
+      Create the status file (workspace/.housekeeping-progress.md) listing
+      every area from the phase-1 report as pending. Per problem area, call
+      knowledge_processor (diff before write; asks before changing existing
+      files). After EVERY area: update the status file (done / skipped +
+      reason) — checkpoint obligation on this long-running step. No automatic
+      bulk fixes — review every change. Skip (required: false) when phase-1
+      found nothing actionable. Ref: WORKFLOW.md §Phase 2.
+    skill_ref: skills/knowledge_processor/SKILL.md
+    completion:
+      type: manual
+    on_fail: block
+    required: false
+
+  - id: phase-close
+    name: "Close — delete status file, commit"
+    category: deterministic
+    instruction: >
+      Delete the status file once every area is done / skipped (leave no
+      artifacts). Commit the curation changes if any were made.
+    completion:
+      type: manual
+    on_fail: block
