@@ -1,4 +1,4 @@
-# vibe forge
+# forge
 
 <img src="assets/vibeforge-logo.png" align="right" width="294" alt="forge mascot — a friendly furnace with headphones smithing code on a circuit-board anvil. The forged code reads: def forge(vibes): build(); ship()." />
 
@@ -36,6 +36,12 @@ It stays simple to use and understand — a small set of processes, not a
 cage. Aimed at a single dev on complex work, whether you're shipping a
 product or building a system to last: the velocity of vibe-coding with
 the coherence of process.
+
+If you write all your code by hand, the full forge workflow is overkill —
+it earns its weight when an agent is doing the work. The exception is the
+decision layer: the **council** (hard architecture and strategy calls) and
+the **boards** (multi-perspective spec and code review) work as standalone
+decision-support, whoever wrote the code.
 
 forge is dogfooded — developed by using it on real work. The core is
 stable and won't shift out from under you; what keeps improving is the
