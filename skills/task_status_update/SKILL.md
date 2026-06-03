@@ -33,11 +33,16 @@ terminal.
 | task_id | int | yes | Task ID (NNN). |
 | new_status | enum | yes | pending, in_progress, done, blocked, superseded, wontfix, absorbed. |
 | board_result | string | no | APPROVED, APPROVED_WITH_RISKS, REJECTED, PASS_WITH_RISKS, null. |
-| readiness | enum | no | raw, specced, reviewed, implementing, done. |
+| readiness | enum | no | raw, specced, reviewed, ready, implementing, done. |
 | reason | string | no | Free text for traceability; not stored. |
 | workflow_phase | string | no | Current workflow phase. Soft-validated. |
 | spec_phase_update | object | no | Spec-phase transition (see Step 3). |
 | closure_ref | int | conditional | Successor / absorbing task ID. Required when `new_status` ∈ {superseded, absorbed}. |
+
+**Vocab SoT:** the `new_status` and `readiness` value sets mirror
+`framework/task-schema.yaml` (the authoritative vocab). When the schema
+changes a value set, update this table in the same change — there is no
+automated guard (the same hand-sync discipline as `task-format.md`).
 
 ## Flow
 

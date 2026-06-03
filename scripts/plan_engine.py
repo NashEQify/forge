@@ -1203,7 +1203,12 @@ def discover_projects(projects_arg: str | None = None) -> list[tuple[str, Path]]
                 continue
             intent_md = entry / "intent.md"
             tasks_dir = entry / "docs" / "tasks"
-            if intent_md.exists() and tasks_dir.exists():
+            plan_yaml = entry / "docs" / "plan.yaml"
+            # Aggregate is a PLAN view — only plan-managed repos qualify. A
+            # repo with docs/tasks/ but no docs/plan.yaml (e.g. an analysis /
+            # notes repo) has no milestones to validate against, so scanning it
+            # only yields spurious NO_MILESTONE / UNKNOWN_REQUIRES errors.
+            if intent_md.exists() and tasks_dir.exists() and plan_yaml.exists():
                 candidates.append((entry.name, entry.resolve()))
 
     # Validate: drop entries that don't look like project repos.
@@ -1301,7 +1306,21 @@ def load_aggregated(projects_arg: str | None = None) -> AggregateResult:
         # to same-repo namespaced keys.
         for mkey, m in repo_plan.milestones.items():
             namespaced_key = f"{repo_name}:{mkey}"
-            namespaced_requires = [f"{repo_name}:{r}" for r in m.requires]
+            # requires entries reference either a milestone (str key) or a task
+            # (int / digit-str). Milestone refs namespace with ':'; task refs
+            # MUST namespace as '<repo>#<id:03d>' to match the task /
+            # archived_ids key format — else they never resolve (false
+            # UNKNOWN_REQUIRES on a done+archived gate task). Branch order is
+            # load-bearing: milestone-membership is tested BEFORE the digit
+            # branch, so a digit-named milestone key is never taken for a task.
+            namespaced_requires = []
+            for r in m.requires:
+                if isinstance(r, str) and r in repo_plan.milestones:
+                    namespaced_requires.append(f"{repo_name}:{r}")
+                elif isinstance(r, int) or (isinstance(r, str) and r.isdigit()):
+                    namespaced_requires.append(f"{repo_name}#{int(r):03d}")
+                else:
+                    namespaced_requires.append(f"{repo_name}:{r}")
             new_m = Milestone(
                 key=namespaced_key,
                 title=m.title,
@@ -2370,6 +2389,10 @@ def validate(
         # Task existiert (im tasks-dict oder in archived_ids).
         for req in m.requires:
             if isinstance(req, str) and req in milestones:
+                continue
+            # Namespaced task-ref (aggregate mode): "<repo>#<id:03d>" matches
+            # the task / archived_ids key format directly.
+            if isinstance(req, str) and (req in tasks or req in archived_ids):
                 continue
             # Numerischer String: als Task-Id behandeln
             if isinstance(req, str) and req.isdigit():
