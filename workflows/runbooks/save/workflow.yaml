@@ -1,5 +1,6 @@
 name: save
 description: "Session persistence — one command for mid-session and end-of-session (no separate quicksave). The context window is the primary source. Footprint self-adapts: handoff merge always safe, history on task-closeout, buffer cleanup skips when empty."
+need_phrase: "persist a session"
 trigger: ["save"]
 derived_from: "WORKFLOW.md@2026-06-02"
 

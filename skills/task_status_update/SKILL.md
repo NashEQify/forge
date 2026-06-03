@@ -122,7 +122,7 @@ re-run`.
 ugrep / GNU / BSD — the project shell's `grep` is a ugrep wrapper).
 Inspect each hit in `operational_intent.goal`,
 `operational_intent.done`, each milestone's `desc`. Rewrite stale
-descs inhaltlich. No hit → skip.
+descs substantively. No hit → skip.
 
 After the sweep: `plan_engine --validate` (whole tree, no `<id>`
 arg) must PASS — dangling `blocked_by` is a graph error.

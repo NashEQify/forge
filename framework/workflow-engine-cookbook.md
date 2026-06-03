@@ -38,6 +38,18 @@ If the workflow has a top-level `routes:` block, the route is picked at
 are eagerly marked `STATUS_ROUTE_SKIPPED`. Default without `--route`:
 `"standard"`.
 
+**Limit — top-level routes are NOT re-routable mid-flow.** A top-level
+route is fixed at `--start` (it IS stored at state-root as
+`selected_route`, but there is no `--complete --route` re-selection and
+no re-pristine for it). If a top-level route turns out wrong after
+`--start` (e.g. `build --route authority-only` but the work needs
+code), the path is `--abort` + re-`--start` with the right route — not
+an in-flight switch. Only **classification routes** (`--complete <step>
+--route <key>`) re-route mid-flow and re-pristine prior-route children
+on retry. This asymmetry is accepted (no live trigger needs in-flight
+top-level re-routing); absorbing top-level routes into the
+classification primitive is a deferred option, not done.
+
 | Workflow | Routes | Default | Use-case |
 |---|---|---|---|
 | `build` | standard, full, sub-build | standard | sub-build = nested on an existing locked spec (skips interview/spec-write/board + task-status-done) |
@@ -95,6 +107,11 @@ Exit `0` → the step proceeds; exit `≠0` → the step is skipped (see
 |---|---|
 | `council-needed` | the **solve** state file (`docs/solve/*.md`) carries the opt-in marker `council-required: true` (Buddy writes it when frame's >1-path + hard-to-reverse criteria fire). NOTE: greps `docs/solve/` only — solve-scoped today |
 | `task-yaml-ok` | `docs/tasks/<id>.yaml` exists |
+
+**Retired:** `delta-needed` — removed (its trigger was a judgment the engine
+cannot compute; see the design rule below). It has no `cmd_guard` branch now,
+so referencing `--guard delta-needed` falls to "Unknown guard" → exit ≠0 (the
+step is skipped, fail-safe). No `workflow.yaml` references it.
 
 Adding a guard: add a branch in `cmd_guard` + reference it from the step's
 `guard:` block. **Design rule (the `delta-needed` retirement lesson):** a

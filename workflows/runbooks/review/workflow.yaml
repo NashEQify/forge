@@ -1,5 +1,6 @@
 name: review
 description: "Review / validate spec(s). No code — only spec quality."
+need_phrase: "review or validate a spec"
 trigger: ["review"]
 derived_from: "WORKFLOW.md@2026-05-09"
 
@@ -54,6 +55,12 @@ steps:
       - sectional_deep_review    → docs/reviews/sectional/{spec_name}-deep.md
       - architecture_coherence_review → docs/reviews/architecture/{spec_name}-coherence.md
     skill_ref: skills/spec_board/SKILL.md
+    # This step dispatches the routed skill; the pointer_check completion below
+    # backs whichever runs. alternative_skill_refs declares the other Tier-1
+    # reviewers it can route to (consumed by consistency_check tier1-drift).
+    alternative_skill_refs:
+      - skills/sectional_deep_review/SKILL.md
+      - skills/architecture_coherence_review/SKILL.md
     completion:
       type: compound
       checks:

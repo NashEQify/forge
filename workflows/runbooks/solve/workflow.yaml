@@ -1,5 +1,6 @@
 name: solve
 description: "Problem-driven workflow: frame → refine → artifact → validate → execute"
+need_phrase: "solve a problem whose solution shape is still open"
 trigger: ["solve"]
 derived_from: "WORKFLOW.md@2026-05-09"
 

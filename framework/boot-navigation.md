@@ -46,7 +46,7 @@ has a `navigation.md` with reader-journey sections (`## What lives here?`,
 
 ---
 
-## Skills (42 in tree — 41 active + 1 deprecated)
+## Skills (43 in tree — 41 active + 1 draft + 1 deprecated)
 
 Type legend: **Capability** = multi-phase, callable from workflow steps.
 **Utility** = single function, directly callable by Buddy.
@@ -108,6 +108,7 @@ see "Retired / deprecated skills" at the end of this section.
 | `show_open_tasks` | fast terminal overview of OPEN tasks in a `docs/tasks/` tree, grouped by priority, newest first | Buddy directly on task-list/overview request |
 | `zoom_out` | wider context / higher abstraction level for an unfamiliar code area | Buddy directly on "zoom out" / "bigger picture" request |
 | `caveman` | ultra-compressed communication mode (~75% token reduction, technical accuracy kept) | Buddy directly on "caveman mode" / "be brief" / `/caveman` |
+| `workflow_router` | injected workflow-discovery sign-post — need-phrased catalog of the 8 workflows (generated, points to `process-map.md`) | injected into available-skills reminder; surfaces a workflow on a matching need |
 
 **Not listed here:**
 
@@ -119,7 +120,7 @@ see "Retired / deprecated skills" at the end of this section.
 Deprecated (still in tree, do not invoke):
 - `spec_update` — split into `spec_authoring` (new spec/section) +
   `retroactive_spec_update` (code-as-evidence catch-up). Counted in the
-  42 tree files; not an active skill.
+  43 tree files; not an active skill.
 
 Retired (removed from tree; available in git history):
 - `ux_review` — absorbed into `spec_board` as `mode=ux`.

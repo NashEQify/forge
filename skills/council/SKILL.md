@@ -3,8 +3,8 @@ name: council
 description: >
   Structured architectural / strategic decision-making. Four modes:
   (a) light — 3 council-members + chief, default on §1.0 proportionality pass.
-  (b) standard — 4 members + adversary + chief + frame-check, escalation tier.
-  (c) full — 5-7 members + adversary + chief + discourse + frame-check, foundational decisions.
+  (b) standard — 3 members + adversary + chief + frame-check, escalation tier.
+  (c) full — 4-6 members + adversary + chief + discourse + frame-check, foundational decisions.
   (d) interactive — Buddy moderates a user dialog with perspectives.
   All non-interactive modes use context-isolated members; chief consolidates;
   Buddy decides per CLAUDE.md Invariant 1.
@@ -44,7 +44,7 @@ Default = escalate. Answer 4:
 
 **Answer pattern:**
 - **≥3 yes** → council (proceed to §1.1).
-- **≤2 yes** → no council. Document skip: *"Council nicht nötig: <rationale>"*. Decide directly.
+- **≤2 yes** → no council. Document skip: *"Council not needed: <rationale>"*. Decide directly.
 
 **Override floor (forces standard or full regardless of count):** security / sovereignty hard constraint AND multi-component · new state-vocabulary or new public-API contract · new normative cross-spec rule · foundational pattern replacement.
 
@@ -199,8 +199,8 @@ Default = skip (council is Buddy-judgmental per §1.0; engine does not auto-fire
 ## 14. Skip rationales (template)
 
 Acceptable §1.0 skip phrases (write inline at decision point):
-- `"Council nicht nötig: single viable path (X), reversible (Y)."`
-- `"Council nicht nötig: cross-scope contradiction, current-scope decidable (producer/consumer/adjacent all aligned on X)."`
-- `"Council nicht nötig: HARD constraint already binds choice (sovereignty rules out cloud-only options)."`
+- `"Council not needed: single viable path (X), reversible (Y)."`
+- `"Council not needed: cross-scope contradiction, current-scope decidable (producer/consumer/adjacent all aligned on X)."`
+- `"Council not needed: HARD constraint already binds choice (sovereignty rules out cloud-only options)."`
 
 Unacceptable: silent skip, "obvious", "no time".

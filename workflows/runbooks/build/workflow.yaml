@@ -1,5 +1,6 @@
 name: build
 description: "Implement a feature / task — specify → prepare → execute → verify → close."
+need_phrase: "implement a feature or task"
 trigger: ["build"]
 derived_from: "WORKFLOW.md@2026-05-09"
 

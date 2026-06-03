@@ -1534,8 +1534,13 @@ def retry_step(
     #       the path being left; otherwise they linger non-terminal.
     # Steps SHARED with other routes are left untouched: a re-route may still
     # need them, and resetting a completed shared step would wipe its evidence +
-    # audit trail. Correct for every route topology — disjoint (build `board`),
-    # fully-shared (review/research), and 3+-route partial-overlap.
+    # audit trail. Correct for every FLAT (leaf-classification) route topology —
+    # disjoint (build `board`), fully-shared (review/research), and 3+-route
+    # partial-overlap. NOT recursive: were a reset child itself a classification
+    # step, its own route-children would not be re-pristined. No current
+    # workflow.yaml nests a classification inside a route (all are leaf), so
+    # this is latent, not live; a nested classification would need this reset
+    # made recursive (or a validate_runbook_consistency rule forbidding nesting).
     step_def = _get_step_def(workflow_def, step_id)
     if step_def and step_def.get("category") == "classification":
         routes = {
@@ -2531,15 +2536,21 @@ def cmd_guard(args: argparse.Namespace) -> None:
         if task_id:
             tid = resolve_task_id(task_id)
             if tid:
-                # Try common solve state-file paths
-                for pattern in [f"*{tid}*.md", f"*-task-{tid:03d}-*.md"]:
-                    for state_file in (PROJECT_ROOT / "docs" / "solve").glob(pattern):
-                        try:
-                            content = state_file.read_text()
-                            if "council-required: true" in content or "council_required: true" in content:
-                                sys.exit(EXIT_SUCCESS)
-                        except OSError:
-                            continue
+                # Resolve the state file via the canonical task_ref resolver,
+                # NOT a filename glob. Solve state files follow the
+                # YYYY-MM-DD-<slug> convention and carry the task linkage in
+                # `task_ref:` frontmatter, not the filename — a glob on the
+                # task id never matches that convention and silently skips
+                # council (the dead-gate anti-pattern). _discover_state_file
+                # is the same resolver the rest of the engine uses.
+                rel = _discover_state_file(tid)
+                if rel:
+                    try:
+                        content = (PROJECT_ROOT / rel).read_text(errors="replace")
+                        if "council-required: true" in content or "council_required: true" in content:
+                            sys.exit(EXIT_SUCCESS)
+                    except OSError:
+                        pass
         sys.exit(1)
     elif guard_name == "task-yaml-ok":
         # Check if task YAML exists

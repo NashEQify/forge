@@ -8,8 +8,6 @@ description: >
   definition of done). Pattern lesson 388 NEW-V-001 5x replay.
   Triggers when a tester design output exists and RED edge-case TCs are needed before implementation (build prepare); NOT for post-implementation review (use code_review_board).
 status: active
-verification_tier: 1
-evidence_layout: per_finding
 relevant_for: ["main-code-agent"]
 invocation:
   primary: workflow-step

@@ -91,8 +91,17 @@ scoped without naming the producer task (or vice versa) = finding
   `TODO`, `FIXME`, `for now`, `until X ships`, `stub` adjacent to
   test-touching or boundary-translation code.
 
-### 3. Claim re-verify (spec-citations + live-state)
+### 3. Claim re-verify (spec-citations + cross-producer co-location + live-state)
 
+- **Cross-producer co-location re-verify (table):** for every
+  `## Claim-Verifications` row of the cross-producer dedup / collision /
+  reconcile class, this is NOT a single-grep re-run. Re-grep EACH
+  producer's key-assignment site independently, quote the literal
+  value, and re-derive the co-location verdict yourself — confirm the
+  quoted values actually land under the SAME key. Flag `FALSIFIED` if
+  they do not co-locate (the seam is a production no-op). A row that
+  carries only one producer's grep, or asserts co-location without both
+  quoted values present, is itself a finding.
 - **Spec-citation re-verify (table + prose):** verify two surfaces.
   (1) Every row in the brief's `## Claim-Verifications` table —
   re-run the cited grep Command, compare Output, flag drift if the

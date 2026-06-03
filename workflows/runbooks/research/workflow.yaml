@@ -1,5 +1,6 @@
 name: research
 description: "Research / evaluate / spike. Result = knowledge, not code."
+need_phrase: "research, evaluate or spike"
 trigger: ["research"]
 derived_from: "WORKFLOW.md@2026-05-09"
 

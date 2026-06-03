@@ -35,7 +35,7 @@ through wrappers.
 
 ## Skills (`../skills/`)
 
-41 active skills (42 in tree, 1 deprecated). Full inventory + composition:
+41 active skills (43 in tree, 1 draft + 1 deprecated). Full inventory + composition:
 [`skill-map.md`](skill-map.md). Reader-journey lookup:
 [`../skills/navigation.md`](../skills/navigation.md).
 

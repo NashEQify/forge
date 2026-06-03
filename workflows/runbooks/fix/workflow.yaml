@@ -1,5 +1,6 @@
 name: fix
 description: "Fix a bug / handle an incident — root-cause-first, no symptom patching."
+need_phrase: "fix a bug or handle an incident"
 trigger: ["fix"]
 derived_from: "WORKFLOW.md@2026-05-09"
 

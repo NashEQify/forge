@@ -248,6 +248,19 @@ at `skills/_protocols/mca-brief-template.md` §Claim-Verifications):
   `existing-code verifications confirm`.
 - **Spec-citation triggers:** `spec requires X`, `AC says Y`,
   `per <file>.md §Z`, `<file>.md:N`.
+- **Cross-producer dedup/collision/reconcile triggers:** any AC/brief
+  that dedups, collides, or reconciles facts/events from ≥2 producers
+  on a shared key (`reconcile`, `dedup`, `collapse the fork`,
+  `more-specific-wins`, `same (key) different (type)`). Emit **one row
+  per producer** (≥2 rows): for each, grep the *key-assignment site* —
+  the line where that producer constructs the value that becomes the
+  shared key (grep the key field-name, not a `build_*`/`emit_*` naming
+  convention) — and quote the literal value. Then add a **co-location
+  verdict** line: do the quoted values land under the SAME key?
+  `FALSIFIED` = they do NOT co-locate (the seam is a production no-op).
+  The key is often *derived* (`normalize(name)`, a tuple) — quote the
+  value AFTER the derivation the seam keys on, not the raw emit. A
+  premise inherited from a council/ADR is a claim, not a settled fact.
 
 For each occurrence, the lens (fresh-context-isolated, read-only)
 MUST grep the cited target and emit one row:

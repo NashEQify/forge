@@ -390,8 +390,8 @@ Structured architectural / strategic decision. Four modes:
 | Mode | Team | When |
 |---|---|---|
 | **light** | 3 `council-member` + `council-chief` (no adversary, no frame-check) | default on §1.0 proportionality pass — single-component, mid-reversible decisions |
-| **standard** | 4 members + `council-adversary` + `council-chief` + pre-council frame-check (plan-adversary on briefing draft) | escalation tier: ≥2 of {hard-to-reverse, multi-component, security/sovereignty} |
-| **full** | 5-7 members + `council-adversary` + `council-chief` + discourse + frame-check | foundational decisions / ≥2 hard constraints / >2 dimensions |
+| **standard** | 3 members + `council-adversary` + `council-chief` + pre-council frame-check (plan-adversary on briefing draft) | escalation tier: ≥2 of {hard-to-reverse, multi-component, security/sovereignty} |
+| **full** | 4-6 members + `council-adversary` + `council-chief` + discourse + frame-check | foundational decisions / ≥2 hard constraints / >2 dimensions |
 | **interactive** | Buddy moderates a user dialog with perspectives (phase 1-2-3) | user wants to think through together, not parallel-isolation |
 
 **Consolidator-tool mandatory for ≥3 members** per CLAUDE.md Invariant 1
