@@ -56,8 +56,6 @@ forge/
 ├── references/                    # Reference docs (a11y, perf, orch, ctx-md)
 │   └── navigation.md
 │
-├── templates/                     # session-handoff-template.md
-│
 ├── tests/                         # TESTCASES.md + hook tests + fabrication-mitigation
 │
 ├── orchestrators/                 # Adapter layer
