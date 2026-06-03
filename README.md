@@ -216,10 +216,13 @@ top of the actual implementation** (more when a council is convened).
 That earns its keep when a board catches a spec-violation worth a day
 of re-work; it's wasteful on a typo-fix.
 
-For a 30-minute script, a slash-command catalog is faster. forge is
-for the work where coherence across sessions is the bottleneck — long
-multi-day builds, multi-repo work, anything where context loss costs
-more than the discipline overhead.
+For a 30-minute script, a slash-command catalog is faster — forge is
+overkill there. It earns its keep on **complex, agent-driven work**:
+tasks big enough that a stock agent loses the thread, and builds that
+span many sessions where context loss costs more than the discipline
+overhead. And yes, it's **for vibe coding** — not a brake on it, but the
+thing that keeps you vibing when the work gets too complex to hold
+together in a single session.
 
 **Adapters.** forge's discipline lives in several layers: skills
 (markdown + YAML), workflow runbooks, the workflow engine (Python +

@@ -79,7 +79,7 @@ Three tiers in descending binding strength:
 | Tier | Examples | Binding |
 |---|---|---|
 | **0 — Invariants** | `CLAUDE.md`, `AGENTS.md` | never overridden; every wrapper-adapter loads them automatically |
-| **1 — Operational** | `agents/buddy/operational.md`, `framework/process-map.md`, `framework/skill-map.md`, `framework/skill-anatomy.md`, `framework/boot-navigation.md`, `framework/agent-autonomy.md`, `framework/agent-patterns.md`, `framework/agentic-design-principles.md`, `framework/external-review-bundle-format.md` | loaded at boot or on demand; refines tier 0 |
+| **1 — Operational** | `agents/buddy/operational.md`, `framework/process-map.md`, `framework/skill-map.md`, `framework/skill-anatomy.md`, `framework/boot-navigation.md`, `framework/agent-autonomy.md`, `framework/agent-patterns.md`, `framework/external-review-bundle-format.md` | loaded at boot or on demand; refines tier 0 |
 | **2 — Detail** | `agents/buddy/context-rules.md`, skill `REFERENCE.md` files | on-demand; refines tier 1 |
 
 **Consultation cascade** (`framework/agent-autonomy.md` §Consultation Cascade):

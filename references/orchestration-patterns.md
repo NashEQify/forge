@@ -1,40 +1,18 @@
 # Orchestration Patterns
 
-> **Source:** lift from `github.com/addyosmani/agent-skills`
-> (`references/orchestration-patterns.md`, 2026-05-01). MIT licence.
->
-> **Adaptation status:** content adopted 1:1 — the patterns are
-> orchestrator-agnostic and map our multi-agent stack (spec board /
-> code review board / council / sub-skills) well. The **mapping table**
-> below shows how our existing patterns map to Addy's catalog.
+forge's catalog of the multi-agent orchestration patterns it endorses,
+plus the anti-patterns it avoids. Read this before adding a workflow step
+that coordinates multiple personas, or a persona that "wraps" existing
+ones.
 
-Reference catalog of agent orchestration patterns this repo endorses, plus
-anti-patterns to avoid. Read this before adding a new slash command that
-coordinates multiple personas, or before introducing a new persona that
-"wraps" existing ones.
+The governing rule: **Buddy (the orchestrator) drives every multi-persona
+run; personas do not invoke other personas.** Skills are the mandatory
+hops inside a workflow.
 
-The governing rule: **the user (or a slash command) is the orchestrator.
-Personas do not invoke other personas.** Skills are mandatory hops inside a
-persona's workflow.
-
----
-
-## Mapping to forge patterns
-
-| Addy pattern | Our equivalent |
-|---|---|
-| Direct invocation | Buddy delegates directly to a single persona (e.g. `code-review`, `security`, `solution-expert`) |
-| Single-persona slash command | Skills like `frame`, `task_creation`, `youtube_subtitles` (user-invocable) |
-| Parallel fan-out with merge | `spec_board` (standard 4 / deep 7 personas) + `code_review_board` (L1 core / L2 full) + `council` architectural mode + UX board |
-| Sequential lifecycle | `build` / `solve` / `fix` / `review` workflows (user-driven phase by phase) |
-| Agent teams (debate) | Not adopted — council is parallel fan-out, not debate. Phase-G council synthesis is Buddy consolidation, not direct teammate-message. |
-
-| Addy anti-pattern | Our risk |
-|---|---|
-| Router persona | Before the multi-axis consolidation: code-review-board pattern replication across 14 personas had a similar smell, resolved through the hybrid (1 skill with 3 axes + 11 specialists) |
-| Persona calling persona | Strictly upheld — every multi-persona run goes through Buddy as the orchestrator |
-| Sequential orchestrator paraphrases | Workflows have user gates (e.g. root_cause_fix phase A → B user gate) — anti-pattern actively avoided |
-| Deep persona trees | spec_board → board-chief consolidation is 1-layer; no deep nesting |
+> Provenance: the pattern vocabulary was seeded from
+> `github.com/addyosmani/agent-skills` (MIT, © Addy Osmani 2025) and has
+> since been adapted to forge's stack — spec board, code-review board,
+> council, sub-agents.
 
 ---
 
@@ -99,7 +77,7 @@ user → /command ┼──→ persona-B → report-B ─┼→ main agent merge
 - **Spec board:** standard (adversary + implementer + impact + chief) or deep (+ adversary-2 + adversary-sonnet + consumer).
 - **Code review board L2:** core (code-review + code-adversary) + specialists (code-security / code-data / code-reliability / code-domain-logic / code-api-contract / code-ai-llm / code-docs-consumer) + code-chief consolidation.
 - **UX board:** board-ux-heuristic (primus + consolidator) + board-ux-ia + board-ux-interaction.
-- **Council architectural mode:** 3–7 council-members in parallel + Buddy consolidates.
+- **Council:** 3–7 context-isolated council-members (+ adversary on standard and up) consolidated by `council-chief`; Buddy reads only the chief signal.
 
 **Validation checklist (before a new fan-out):**
 - [ ] Each persona contributes a **distinct** perspective (not paraphrases of each other).
@@ -138,25 +116,13 @@ user → /spec → spec.md → review → /plan → plan.md → /build → code 
 
 Multiple personas spawned as **teammates** (not subagents) that can message each other directly. Used for adversarial investigation where the right answer must emerge from cross-examination.
 
-**Status in forge:** **Not yet adopted.** Our council is parallel fan-out (pattern 3) — Buddy consolidates the isolated outputs. **Council is decision-making, not adversarial investigation.**
+**Status in forge:** **Not yet adopted.** Our council is parallel fan-out (pattern 3) — the chief consolidates the isolated outputs and Buddy reads only the signal. **Council is decision-making, not adversarial investigation.**
 
 A use case that might benefit from agent teams: a multi-axis council
 with 4 council-members. On convergent recommendations, pattern-sharing
 insights would stay siloed (no direct teammate-message). On a complex
 council with divergent perspectives: check whether an agent-teams setup
 fits better.
-
-**Setup note (carried over from Addy):** Agent Teams is experimental. In `~/.claude/settings.json`:
-
-```json
-{
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  }
-}
-```
-
-Requires Claude Code v2.1.32 or later.
 
 ---
 
@@ -269,7 +235,7 @@ Premature catalog entries become aspirational documentation that no one follows.
 
 ## See Also
 
-- `framework/agentic-design-principles.md` — DRs (design rules) for agent architecture.
+- `references/agentic-design-principles.md` — design principles for agent architecture (historical).
 - `skills/spec_board/SKILL.md` — pattern 3 example.
 - `skills/code_review_board/SKILL.md` — pattern 3 example.
 - `skills/council/SKILL.md` — pattern 3 example (architecture council).
