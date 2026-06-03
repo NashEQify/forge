@@ -96,7 +96,7 @@ for reference only.
 
 | Category | Who edits | Who must review | On conflict |
 |---|---|---|---|
-| **Orchestrator-text** (`agents/`, `framework/`, `skills/`, `workflows/`, `references/`, `templates/`, `context/`, `docs/`) | Buddy directly | spec_board on substantive changes; none on wording/typo | run `plan_engine --validate`; on disagreement, escalate to user |
+| **Orchestrator-text** (`agents/`, `framework/`, `skills/`, `workflows/`, `references/`, `context/`, `docs/`) | Buddy directly | spec_board on substantive changes; none on wording/typo | run `plan_engine --validate`; on disagreement, escalate to user |
 | **Consumer code** (`src/`, `scripts/` consumer-side, `tests/`) | main-code-agent (NOT Buddy) | code_review_board post-write | MCA iterates; spec change ⇒ escalate to Buddy |
 | **Spec** (`docs/specs/*.md`) | Buddy via build-workflow Specify | spec_board pre-write (Standard or Deep) | convergence_loop max 3 → user escalation |
 | **ADR** (`docs/decisions/`, `decisions.md`) | Buddy | council on architecture decisions; none on small docs | council decision binds |
