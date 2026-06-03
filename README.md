@@ -2,11 +2,17 @@
 
 <img src="assets/vibeforge-logo.png" align="right" width="294" alt="forge mascot — a friendly furnace with headphones smithing code on a circuit-board anvil. The forged code reads: def forge(vibes): build(); ship()." />
 
+**Sharp intent in, coherent result out — forge manages the complexity in
+between.** Your half of the deal is the *what* and the *why*: the sharper
+the intent, the more of the *how* forge takes off your hands. It's not a
+vending machine — you still make the judgment calls at the gates — but the
+coordination that would otherwise drown a single session, forge carries.
+
 Coding models are already very capable. The lever for getting more out
 of them isn't a bigger model — it's orchestration. That's what forge
 is: **disciplined LLM capabilities** between you and your coding agent.
-It lets a solo dev vibe reliably, at a level of complexity a standard
-agent can't hold together. It spends more tokens and time running
+It lets a solo dev vibe reliably on work a standard agent can't hold
+together. It spends more tokens and time running
 opinionated workflows over the LLM, and gives back cleaner code, less
 rework, and more autonomous execution. The benefit:
 you get far more out of the same model than you would by just plain
@@ -152,6 +158,9 @@ decision.
 
  HOOKS (portable):  SessionStart boot · git pre-commit (3 BLOCK + 3 WARN)
 ```
+
+*Intent in at the top, result out at the bottom — the workflow is the home
+that carries everything in between.*
 
 → each workflow drawn in full — phases, steps, loops, where boards / council
 spawn: [per-workflow diagrams](architecture-documentation/workflow-diagrams.md)
