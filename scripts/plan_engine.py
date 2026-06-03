@@ -2813,6 +2813,7 @@ def validate_task_schema_conformance(
     known_fields = _schema_known_field_names(schema)
     required_always = list(schema.get("required_always") or [])
     required_when_open = list(schema.get("required_when_open") or [])
+    required_when_terminal = list(schema.get("required_when_terminal") or [])
     terminal_statuses = _schema_terminal_statuses(schema)
 
     validator_raw = schema.get("validator")
@@ -2950,8 +2951,13 @@ def validate_task_schema_conformance(
             is_open = False
         # raw_status not in the schema status enum → unknown → stays open.
 
-        # Required-set checks.
-        for fname in required_always:
+        # Required-set checks. Terminal tasks (done / superseded / wontfix /
+        # absorbed) enforce ONLY required_when_terminal (id + status): history
+        # is not rewritten, so a missing field on a closed task is not a defect
+        # and cannot be meaningfully backfilled. Open tasks enforce
+        # required_always (+ required_when_open below).
+        base_required = required_always if is_open else required_when_terminal
+        for fname in base_required:
             if data.get(fname) is None:
                 # 'id' already handled structurally above.
                 if fname == "id":
@@ -2959,7 +2965,7 @@ def validate_task_schema_conformance(
                 issues.append(ValidationIssue(
                     "SCHEMA_MISSING_REQUIRED", soft_severity,
                     task_id=tid_for_issue,
-                    detail=(f"required-always field '{fname}' missing in "
+                    detail=(f"required field '{fname}' missing in "
                             f"{yaml_path.name}")))
         if is_open:
             for fname in required_when_open:
