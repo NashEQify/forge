@@ -806,7 +806,7 @@ def load_tasks(project_root: Path | None = None, repo_name: str = "") -> dict:
             continue
         try:
             data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
-        except (yaml.YAMLError, OSError):
+        except (yaml.YAMLError, OSError, ValueError):  # ValueError = UnicodeDecodeError
             continue
         tid, task = _construct_task_from_dict(data, repo_name)
         if task is None:
@@ -859,7 +859,7 @@ def load_archived_tasks(
             continue
         try:
             data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
-        except (yaml.YAMLError, OSError) as e:
+        except (yaml.YAMLError, OSError, ValueError) as e:
             _emit_warn(f"ARCHIVED_TASK_PARSE_FAIL: {yaml_path}: {e}")
             continue
         tid, task = _construct_task_from_dict(data, repo_name)
@@ -947,7 +947,7 @@ def load_plan(project_root: Path | None = None) -> PlanResult:
         )
     try:
         data = yaml.safe_load(plan_path.read_text(encoding="utf-8"))
-    except (yaml.YAMLError, OSError) as e:
+    except (yaml.YAMLError, OSError, ValueError) as e:
         _emit_warn(f"PLAN_PARSE_FAIL: {plan_path}: {e}")
         return PlanResult(
             milestones={},
@@ -2644,7 +2644,7 @@ def _load_task_schema(schema_path: Path | None = None) -> dict | None:
     path = schema_path if schema_path is not None else TASK_SCHEMA_PATH
     try:
         raw = path.read_text(encoding="utf-8")
-    except OSError:
+    except (OSError, ValueError):  # ValueError = UnicodeDecodeError (non-UTF-8)
         return None
     try:
         data = yaml.safe_load(raw)
@@ -2681,6 +2681,41 @@ def _schema_enum_values(field_def: object) -> list | None:
         if isinstance(vals, list):
             return vals
     return None
+
+
+def _load_repo_extension_fields(tasks_dir: Path) -> set:
+    """Per-repo task-field extension allowlist.
+
+    The schema (`task-schema.yaml`) is a lean, framework-universal core;
+    a consumer repo declares its own domain field names in
+    `<repo>/docs/task-schema-extensions.yaml` (`extension_fields:` — a
+    list of names). Those names are treated as known for THAT repo only,
+    so the shared schema stays clean and an unknown-field WARN means a
+    genuine typo or an undeclared field, not a domain-vocabulary mismatch.
+
+    Optional + fail-safe: absent, unparseable, or malformed → empty set
+    (a broken extension file never bricks validation; it only loses its
+    own allowances). Repo-local; excluded from the OSS mirror by
+    release-sync.sh.
+    """
+    ext_path = tasks_dir.parent / "task-schema-extensions.yaml"
+    try:
+        raw = ext_path.read_text(encoding="utf-8")
+    except (OSError, ValueError):
+        # ValueError covers UnicodeDecodeError (non-UTF-8 bytes): the
+        # extension file is optional + fail-safe; a malformed one must
+        # never crash the validator (which is a pre-commit BLOCK gate).
+        return set()
+    try:
+        data = yaml.safe_load(raw)
+    except yaml.YAMLError:
+        return set()
+    if not isinstance(data, dict):
+        return set()
+    names = data.get("extension_fields")
+    if not isinstance(names, list):
+        return set()
+    return {n for n in names if isinstance(n, str)}
 
 
 def validate_task_schema_conformance(
@@ -2781,6 +2816,11 @@ def validate_task_schema_conformance(
     else:
         tasks_dir = project_root / "docs" / "tasks"
 
+    # Lean framework core (schema fields) + repo-local domain fields:
+    # union the per-repo extension allowlist so a consumer's declared
+    # vocabulary is known for its own tree without a framework-schema edit.
+    known_fields = known_fields | _load_repo_extension_fields(tasks_dir)
+
     if single_id is not None:
         # F-CA-003b (belt): a single-id target has an explicit name that
         # MUST resolve or error — it may never silently `continue`. The
@@ -2843,7 +2883,7 @@ def validate_task_schema_conformance(
 
         try:
             data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
-        except (yaml.YAMLError, OSError):
+        except (yaml.YAMLError, OSError, ValueError):
             # A pure-numeric file that won't parse is a structural ERROR
             # (calibration-independent) — it claims to be a task.
             issues.append(ValidationIssue(
@@ -2914,7 +2954,8 @@ def validate_task_schema_conformance(
                 issues.append(ValidationIssue(
                     "SCHEMA_UNKNOWN_FIELD", "WARN", task_id=tid_for_issue,
                     detail=(f"unknown field '{key}' in {yaml_path.name} "
-                            "(not in task-schema.yaml fields/required sets)")))
+                            "(not in task-schema.yaml fields/required sets "
+                            "or the repo task-schema-extensions.yaml)")))
 
         # Value-vocabulary checks. Every enum field's vocab is read from
         # the schema. priority is write-strict: read_aliases are tolerant
@@ -4522,7 +4563,7 @@ def main():
     if not args.aggregate and PLAN_PATH.exists():
         try:
             plan_data_for_cp = yaml.safe_load(PLAN_PATH.read_text(encoding="utf-8")) or {}
-        except (yaml.YAMLError, OSError):
+        except (yaml.YAMLError, OSError, ValueError):
             plan_data_for_cp = {}
         if not isinstance(plan_data_for_cp, dict):
             plan_data_for_cp = {}

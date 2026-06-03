@@ -2,9 +2,9 @@
 #
 # THE single machine-readable definition of a task YAML. This file is
 # the artifact the validator parses; `framework/task-format.md` is the
-# human SoT (prose) and MUST stay in sync with it (consistency_check
-# guards the pair). Field names, required-set, and value vocabularies
-# live HERE, in exactly one place.
+# human SoT (prose) and must be hand-synced with it (there is no
+# automated guard — keep both edits in the same change). Field names,
+# required-set, and value vocabularies live HERE, in exactly one place.
 #
 # Consumed by:
 #   - scripts/plan_engine.py --validate   (post-hoc tree check, SoT)
@@ -66,8 +66,8 @@ fields:
       lo: low
   readiness:
     type: enum
-    values: [raw, specced, reviewed, implementing, done]
-    required: false
+    values: [raw, specced, reviewed, ready, implementing, done]
+    required: false   # `ready` = reviewed + queued for implementation
   # Optional, not vocab-enforced (presence/shape only if present):
   area:                {type: str,            required: false}
   assignee:            {type: str_or_null,    required: false}
@@ -87,7 +87,26 @@ fields:
   superseded_by:       {type: int_or_null,    required: false}
   supersedes:          {type: int_or_null,    required: false}
   absorbed_by:         {type: int_or_null,    required: false}
-  # Unlisted keys: passed through, not an error (forward-compatible).
+  # --- Universal task-convention fields. Presence-only, NOT
+  # vocab-enforced. The generic task-authoring vocabulary any forge repo
+  # may use; the schema is the canonical set the writer draws from
+  # (shaping-contract — the writer references this set, the validator
+  # warns on names outside it).
+  acceptance_criteria: {type: list,           required: false}
+  out_of_scope:        {type: list,           required: false}
+  blocks:              {type: list_int,       required: false}  # inverse of blocked_by
+  objective:           {type: str_or_null,    required: false}  # top-level; cf. intent_chain.objective
+  notes:               {type: list,           required: false}
+  discoveries:         {type: list,           required: false}
+  status_notes:        {type: str_or_null,    required: false}
+  context_manifest:    {type: object_or_list, required: false}
+  ephemeral:           {type: bool,           required: false}
+  test_plan_spec_ref:  {type: str_or_null,    required: false}
+  # Unlisted keys: WARN (SCHEMA_UNKNOWN_FIELD) — advisory only, never
+  # BLOCK. The blessed set above is the canonical authoring vocabulary
+  # (shaping-contract): the writer draws from it; the warning surfaces
+  # typos/aliases plus per-repo-domain fields a repo has not declared in
+  # its extension list. Forward-compatible additions are not rejected.
 
 # --- Validator behaviour ---------------------------------------------
 validator:

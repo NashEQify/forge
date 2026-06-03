@@ -2,10 +2,12 @@
 
 Purpose: unified format for all tasks.
 Applies to: all files in `docs/tasks/` (forge_dev + every consumer repo).
-SoT (human): this file — prose + rationale.
-SoT (machine): `framework/task-schema.yaml` — the single artifact the
-validator parses (field names, required-set, value vocab). This prose
-MUST stay in sync with it; `consistency_check` guards the pair.
+SoT (human): this file — prose, semantics, and rationale.
+SoT (machine): `framework/task-schema.yaml` — the single authoritative
+field set (names, required-set, value vocab) the validator parses. The
+schema wins on which fields exist; this prose documents their semantics
+and must be hand-synced when a field is blessed (there is no automated
+guard — keep both edits in the same change).
 Validation: `plan_engine --validate` (post-hoc, SoT) + the task skills
 (`task_creation`, `task_status_update`) validate the touched task
 inline against the same schema.
@@ -58,7 +60,7 @@ Optional fields:
   assignee: [string]           # buddy | main-code-agent | human | null
   spec_ref: [string|null]      # path to design spec (e.g. "personal-chat-backend.md").
   board_result: [string|null]  # pass | pass_with_risks | needs_work | null
-  readiness: [enum|null]       # raw | specced | reviewed | implementing | done
+  readiness: [enum|null]       # raw | specced | reviewed | ready | implementing | done
   summary: [string|null]       # one-liner: current state for boot output and dashboard.
   intent_chain: [object|list]  # context for agents/humans (domain, objective, action).
   sub_tasks: [int[]]           # empty: []
@@ -74,6 +76,19 @@ Optional fields:
   spec_version: [string]       # start value v1, increment on semantic spec changes.
   workflow_template: [string]  # templates from workflows/templates/
   test_plan_spec_ref: [string] # which spec_version the test plan covers.
+
+Task-content fields (presence-only, not vocab-enforced — the generic
+authoring vocabulary; `task-schema.yaml` is the authoritative set):
+
+  acceptance_criteria: [list]  # ACs (also fine as a `## Acceptance` block in the .md).
+  out_of_scope: [list]         # explicit scope boundary (mirrors the `## Not yet` block).
+  objective: [string|null]     # top-level objective (cf. intent_chain.objective).
+  notes: [list]                # free-form authoring notes / provenance.
+  discoveries: [list]          # findings surfaced during the work.
+  status_notes: [string|null]  # short status annotation.
+  blocks: [int[]]              # task IDs this task blocks (inverse of blocked_by).
+  context_manifest: [object]   # required/available context + skills (see task_creation).
+  ephemeral: [bool]            # subtask without a permanent artifact (see Lifecycle below).
 
 Status enum:
 - pending: not started yet
@@ -122,6 +137,7 @@ Readiness levels (dashboard):
 - raw: idea, no spec
 - specced: spec written, no board
 - reviewed: board-reviewed
+- ready: reviewed + queued for implementation
 - implementing: implementation in progress
 - done: completed
 

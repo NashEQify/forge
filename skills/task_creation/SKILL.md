@@ -193,6 +193,20 @@ blocked_by refs existing tasks, no cycle, schema conformance).
 blocked_by IDs vs `docs/tasks/`) and re-validate. Repeated FAIL →
 delete the task files; escalate to the user (NNN is reused).
 
+**Field vocabulary (schema-aware — MUST).** The canonical task-field set
+is `framework/task-schema.yaml`; draw field names from it rather than
+inventing them. A `SCHEMA_UNKNOWN_FIELD` WARN is not noise — it means
+one of three things, each with a defined response:
+- **typo / alias** (e.g. `ac`, `note`) → fix the name.
+- **genuine repo-domain field** (meaningful only in this consumer) →
+  declare it in the repo's `docs/task-schema-extensions.yaml`
+  (`extension_fields:`), never leave it ad-hoc.
+- **genuinely universal new field** → add it to `task-schema.yaml`
+  (+ sync `task-format.md`) as a framework change, not a per-task
+  improvisation.
+This is the producer half of the shaping-contract: the schema shapes
+what gets written; it is not a trailing log of whatever was improvised.
+
 ## Output
 
 ```
