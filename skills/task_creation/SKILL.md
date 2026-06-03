@@ -89,7 +89,12 @@ If the task body uses any of: `supersedes`, `reuses existing`,
 `already implemented`, `wraps existing`, `delivered in Task`,
 `existing-code verifications confirm` — each claim MUST be paired
 with a `C-VERIFY` block (claim text + verbatim `grep -rn` command
-+ verbatim output + `CONFIRMED|FALSIFIED` disposition).
++ verbatim output + `CONFIRMED|FALSIFIED` disposition). The canonical
+trigger set — incl. the spec-citation and cross-producer
+dedup/collision/reconcile classes — lives in
+`agents/code-architect-lens.md` §Claim-Verifications; a task that
+locks a reconcile/dedup premise triggers the cross-producer class
+(verify producer key-assignment co-location, not mere existence).
 `[DISCIPLINE]` — this is an authoring rule applied by the agent, NOT
 a hook. (Historical note: a `BRIEF-CLAIMS` PreToolUse hook was
 described here but never existed as a runnable artifact, and

@@ -56,6 +56,14 @@ name-grep that did the removal. Discipline-only. Detail + honest bound:
 After a deploy, look at it. HTTP 200 isn't proof. If you can't see it,
 say so and ask the user to check.
 
+> Invariants 7 and 8 (forensic hygiene on public surface; private-dev-SoT /
+> OSS-mirror topology) were relocated to `intent.md` (§Forensic hygiene on
+> public surface; §Public mirror = read-only OSS mirror). The numbers 9 and 10
+> are kept stable here — corpus-wide references cite "Inv 9"/"Inv 10", so the
+> gap is intentional, not a renumber. `AGENTS.md` (public-mirror surface)
+> carries only Invariants 1–6; Inv 9 (Proportionality) and Inv 10 (Verify
+> mechanical claims) are CLAUDE.md-only and have no AGENTS.md counterpart.
+
 ### 9. Proportionality of effort
 Effort matches stakes. Every decision boundary that creates followup
 work (task, gate, test, route, lens-binding) needs a value-floor

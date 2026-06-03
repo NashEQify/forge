@@ -1,5 +1,6 @@
 name: context_housekeeping
 description: "Periodic upkeep of the context system — analysis (read-only) then curation."
+need_phrase: "do periodic context-system maintenance"
 trigger: ["context_housekeeping", "context-housekeeping"]
 derived_from: "WORKFLOW.md@2026-06-02"
 

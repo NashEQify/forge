@@ -125,13 +125,25 @@ def _step_has_top_level_pointer_check(step: dict) -> bool:
     return comp.get("type") == "pointer_check"
 
 
-def _step_skill_ref_matches(step: dict, skill_dir_name: str) -> bool:
-    """True wenn step.skill_ref auf skill_dir_name zeigt (egal welcher
-    Pfad-Prefix: 'skills/<n>/SKILL.md', 'framework/skills/<n>/SKILL.md')."""
-    ref = step.get("skill_ref", "")
+def _ref_points_at(ref: str, skill_dir_name: str) -> bool:
     if not isinstance(ref, str):
         return False
     return f"/{skill_dir_name}/" in ref or ref.endswith(f"/{skill_dir_name}/SKILL.md")
+
+
+def _step_skill_ref_matches(step: dict, skill_dir_name: str) -> bool:
+    """True wenn step.skill_ref ODER ein Eintrag in step.alternative_skill_refs
+    auf skill_dir_name zeigt. alternative_skill_refs deklariert die weiteren
+    Skills, die ein Routing-/Dispatch-Step fahren kann (z.B. review board-dispatch
+    routet spec_board / sectional_deep_review / architecture_coherence_review) —
+    sie teilen das pointer_check-completion dieses Steps, also zaehlen sie als
+    Tier-1-backed."""
+    if _ref_points_at(step.get("skill_ref", ""), skill_dir_name):
+        return True
+    alts = step.get("alternative_skill_refs") or []
+    if isinstance(alts, list):
+        return any(_ref_points_at(a, skill_dir_name) for a in alts)
+    return False
 
 
 def check_tier1_drift(

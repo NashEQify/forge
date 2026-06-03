@@ -63,8 +63,9 @@ Contract schema:
 
 ## Skills — AUTO (frontmatter SoT)
 
-42 skill dirs in tree: 41 active + 1 deprecated. Deprecated skills
-stay in the count (dir still present) but are bucketed separately.
+43 skill dirs in tree: 41 active + 1 draft (`knowledge_capture`) +
+1 deprecated (`spec_update`). Draft and deprecated skills stay in
+the dir count (dir still present) but are bucketed separately.
 
 <!-- SKILL-MAP-AUTO-START -->
 
@@ -74,7 +75,7 @@ Canonical for `consistency_check` §Skill-Map; sub-sections derived from `invoca
 
 ### Direct-Invokable Capabilities (`invocation.primary: user-facing`)
 
-`api_and_interface_design`, `caveman`, `deprecation_and_migration`, `frontend_design_tty`, `improve_codebase_architecture`, `scoping`, `shipping_and_launch`, `show_open_tasks`, `task_creation`, `youtube_subtitles`, `zoom_out`
+`api_and_interface_design`, `caveman`, `deprecation_and_migration`, `frontend_design_tty`, `improve_codebase_architecture`, `scoping`, `shipping_and_launch`, `show_open_tasks`, `task_creation`, `workflow_router`, `youtube_subtitles`, `zoom_out`
 
 ### Workflow-Step / Sub-skill (`workflow-step` | `sub-skill`)
 
@@ -122,7 +123,15 @@ _protocols/discourse, _protocols/context-isolation,
 _protocols/content-preservation, _protocols/dispatch-template,
 _protocols/consolidation-preservation, _protocols/piebald-budget,
 _protocols/skill-guardrails, _protocols/analysis-mode-gate,
-_protocols/cross-phase-source-grounding, _protocols/plan-review
+_protocols/cross-phase-source-grounding, _protocols/plan-review,
+_protocols/evidence-pointer-schema, _protocols/fix-brief-template,
+_protocols/mca-brief-template, _protocols/risk-watch-template,
+_protocols/spec-amendment-discipline
+
+(15 skill-level protocols. `skills/_protocols/` holds 16 `*.md`;
+`navigation.md` is the generated nav index — excluded from the
+protocol count, same membership as `intent.md` and
+`architecture-documentation/11-source-grounding.md`.)
 
 **Agent protocols (in `agents/_protocols/`):**
 reviewer-base, spec-reviewer-protocol, code-reviewer-protocol,

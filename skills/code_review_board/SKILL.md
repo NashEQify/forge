@@ -78,6 +78,16 @@ Detail (incl. post-MCA-return trigger consequence): REFERENCE.md.
 3. **RISK ASSESSMENT** — concurrent access, error paths, interface
    breaks, state machines, external deps.
 4. **REQUIREMENTS MAP** — spec_ref ACs + delegation done-criteria.
+   For any AC describing a producer→consumer / cross-process wire
+   (integration / end-to-end), a GREEN wire-proving test is required
+   evidence — a `skip`/`xfail` stub does NOT satisfy it (skipped E2E
+   silently counts as "tests green"). Tripwire: a new
+   `*Consumer`/`*Worker`/producer symbol with no instantiation outside
+   `tests/` (grep the durable/consumer registry + app factory → no
+   hit) = the wire is absent regardless of unit-green. This is the
+   BOARD-stage catch; running the same grep tripwire earlier at the
+   build Verify gate (before the board) is a noted follow-up — until
+   then the board is the earliest net, not the cheapest one.
 5. **TEAM COMPOSITION** — risk → agents + focus points.
 
 ## 3. Team composition
@@ -103,7 +113,10 @@ L2 minimum: core + 2. Maximum: core + all.
 
 **Specialist names MUST resolve to real `agents/code-*.md`.**
 Hallucinated labels (`code-async`, `code-concurrency`) fall through
-silently — verify at dispatch-prep. Substitution table: REFERENCE.md.
+silently — `ls agents/code-*.md` at dispatch-prep to verify. On a
+non-matching name, substitute by risk-area from the §3 table above
+(infra/worker → `code-reliability`; async/race → `code-adversary` +
+`code-architect-roots`); log the substitution in the dispatch header.
 
 ## 4. Buddy checklist
 
@@ -139,6 +152,34 @@ silently — verify at dispatch-prep. Substitution table: REFERENCE.md.
 **Fix-pass dispatch (post-FAIL):** scope-focused tests + L0 on touched
 files only, full-suite once at convergence-end, single-reviewer-per-cluster
 re-review. Detail: REFERENCE.md.
+
+**Disposition-respect + guarantee-carrier rigor on the fix-pass (MUST).**
+Two guards, the first unconditional:
+
+1. **Guarantee-carrier rigor (any fix, any disposition — even a mid-fix
+   observation with no prior finding).** Before a fix adds a gate /
+   claim / lock to a path that carries a delivery guarantee (always-emit,
+   at-least-once, exactly-once), it MUST inherit the guarantee's
+   failure-model — an explicit failure / redelivery / timeout (e.g. TTL)
+   trace showing the added mechanism cannot strand the guaranteed item
+   (a claim that out-lives its redelivery budget → silent permanent
+   loss). Identify a carrier by consulting the spec's invariant /
+   guarantee section (e.g. a §"always-publish" clause), NOT by recall.
+   Name the carrier paths + the spec clause in the fix-pass brief prose.
+2. **Disposition-respect (the narrower case).** A finding already
+   dispositioned `accept` / `watch` (contained, non-blocking) defaults
+   to **no new mechanism** on the fix-pass; re-opening it to "harden it
+   while we're here" requires a stated NEW failure mode. "Symmetry
+   between two paths" / "defense-in-depth" is an aesthetic pull, not a
+   correctness argument — the asymmetry is often load-bearing (a
+   deterministic path genuinely needs no claim; only the expensive /
+   uncertain path does).
+
+Root: Inv 9 proportionality + anti-goldplating (hand-wavy "symmetry" /
+"defense-in-depth" re-routes, same family as the Inv-9 "follows
+convention" reject). DIFFERENT root from §Claim-Verifications: that
+verifies whether a *claim* is true; these guard whether a *change*
+should exist at all.
 
 ## 4a. L2 dispatch — pre-board frame check + board
 
@@ -192,18 +233,12 @@ against the brief's framing, not against spec → code).
 
 The anti-dilution mechanism is the **chief audit at consolidation**:
 chief reads frame-check artifact AND board reviews, cross-references
-by substance + severity (per `agents/code-chief.md` §CHIEF-1.0
-audit), surfaces unaddressed artifact concerns at their original
-severity. Severity carries the weight via the chief's existing §5 +
-CHIEF-1.5 consolidation — without needing severity-tags in the brief.
-
-The board reviewers receive the enriched brief. They do their normal
-persona Check focus on what the brief shows them — no "frame-
-challenges to verify or reject" framing, because special framing
-invites special handling and the substantive concerns are already
-in the brief content with their severity tags. They do NOT read the
-frame-check artifact — that's chief-audit surface, not reviewer-
-input surface.
+by substance + severity (per `agents/code-chief.md` §CHIEF-1.0 audit),
+surfaces unaddressed artifact concerns at original severity. Reviewers
+receive the enriched brief and do normal persona Check focus on it — no
+"frame-challenge" framing (special framing invites special handling); they
+do NOT read the frame-check artifact (chief-audit surface, not reviewer
+input).
 
 **Board dispatch** (parallel, cold-start): code-review + risk
 specialists per team composition.
@@ -321,21 +356,13 @@ L2: optional (Buddy). L1: none. Mechanic: `_protocols/discourse.md`.
 
 Agent reviews: `docs/reviews/code/{task-id}-{role}.md`.
 Verdict: `docs/reviews/code/{task-id}-verdict.md` — the **canonical
-engine-facing pointer**. Writing it at exactly this path (task-id,
-undated) is a `[DISCIPLINE]` convention the verdict author follows;
-re-review passes UPDATE this file in place. The workflow completion gate
-is the `[WORKFLOW]` safety net: its `pointer_check` blocks `--complete`
-(→ `--force`) when the canonical file is missing — so a dated or
-pass-suffixed name (`<date>-{task-id}-rereviewN-*.md`, kept only as
-supplementary history) fails-safe rather than passing wrongly. There is
-**no** mechanical interception that renames a deviant verdict to
-canonical: no proportional enforcement class exists for it post-hook (a
-`[WORKFLOW]` rename would need a fuzzy task-id glob — the false-match the
-council rejected; the glob-free path collapses back to this
-`[DISCIPLINE]` write-canonical rule). See
-`framework/enforcement-registry.md`. On L2 the chief also writes
-`{task-id}-consolidated.md` (REFERENCE.md §Extended output paths), but
-the gate keys on the **verdict only**.
+engine-facing pointer** (task-id, undated; a `[DISCIPLINE]` write-canonical
+convention, updated in place on re-review). The `[WORKFLOW]` completion gate's
+`pointer_check` blocks `--complete` (→ `--force`) when the canonical file is
+missing, so a deviant dated/suffixed name fails-safe rather than passing
+wrongly. No mechanical rename-to-canonical exists (a fuzzy task-id glob was
+rejected; see `framework/enforcement-registry.md`). On L2 the chief also writes
+`{task-id}-consolidated.md`; the gate keys on the **verdict only**.
 
 ## 8. Contract
 

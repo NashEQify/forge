@@ -93,15 +93,24 @@ implemented).
 9. **Folder-taxonomy drift** — `docs/` subdirs/files vs
    `docs/STRUCTURE.md`. Undeclared path → **WARNING**; drift
    alias → **ERROR**. Detail: `REFERENCE.md` §9.
-10. **Wrapper drift** — CC skill-wrappers
-   (`.claude/skills/*/SKILL.md`) vs a fresh
+10. **Wrapper + router drift** — two chained generators.
+   (a) `skills/workflow_router/SKILL.md` (the workflow-router SoT)
+   vs a fresh `scripts/generate_workflow_router.py` run; (b) CC
+   skill-wrappers (`.claude/skills/*/SKILL.md`) vs a fresh
    `scripts/generate_skill_wrappers.py` run. A missing wrapper
    for an eligible skill, an orphan wrapper, or a hand-edited /
-   stale wrapper that doesn't match generator output → drift.
-   Mechanically `generate_skill_wrappers.py --check` (non-zero
-   exit on drift). Mirrors the skill-map idempotence sub-check.
-   Drift → **WARNING** (WARN-first calibration; escalate to
-   BLOCK after burn-in). Detail: `REFERENCE.md` §10.
+   stale wrapper/router that doesn't match generator output →
+   drift. Mechanically `generate_workflow_router.py --check` THEN
+   `generate_skill_wrappers.py --check` (non-zero exit on drift).
+   **Chained-run ordering (discipline, not mechanically enforced):**
+   when REgenerating, run router-gen before wrapper-gen — wrapper-gen
+   reads the router SoT, so regenerating the wrapper from a stale
+   router SoT bakes in stale content. This *check* still catches it
+   (router `--check` fires non-zero on a stale router SoT), so the
+   check is order-independent; the ordering only matters on the
+   write/regen path. Mirrors the skill-map idempotence sub-check.
+   Drift → **WARNING** (WARN-first calibration; escalate to BLOCK
+   after burn-in). Detail: `REFERENCE.md` §10.
 11. **Enforcement-registry integrity** — every Live-table row in
    `framework/enforcement-registry.md` carries a valid class tag
    (`[STRUCTURAL]`/`[GATE]`/`[WORKFLOW]`/`[DISCIPLINE]`) and an

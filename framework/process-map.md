@@ -5,6 +5,12 @@ Consumer: Buddy (orchestrator). Agents do not read this document.
 
 Skills, composition, maturity -> `framework/skill-map.md`.
 
+**Discovery entry point:** the `workflow_router` skill
+(`skills/workflow_router/SKILL.md`, generated) is the injected sign-post
+into this map — its need-phrased catalog is pushed into the
+available-skills reminder, so a workflow is reached for at the moment of
+need; the router then points back here for routing.
+
 **Path convention:** all runbook and skill paths in the tables below are
 from the **repository root** (not relative to `framework/`).
 
@@ -12,7 +18,7 @@ from the **repository root** (not relative to `framework/`).
 
 ## Workflow routing
 
-### Workflows (6)
+### Workflows (8)
 
 | I want to... | Workflow | Runbook |
 |-------------|---------|---------|

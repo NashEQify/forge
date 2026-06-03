@@ -474,31 +474,60 @@ instead of `docs/reviews/`) → **ERROR**: "drift alias
 exists (SoT requirement). Missing STRUCTURE.md → **ERROR**:
 "consistency_check check 9 needs docs/STRUCTURE.md as SoT".
 
-### 10. Wrapper drift
+### 10. Wrapper + router drift
 
 **Purpose:** prevents re-drift of the Claude-Code skill-wrapper
-layer (`.claude/skills/<kebab>/SKILL.md`). Wrappers were a
-hand-authored side-artifact; skills got built without one (so
-they were invisible to the `Skill` tool) and existing wrappers
-drifted from their source frontmatter. Re-introduction was only
-accepted with a generator + validator together, mirroring the
-skill-map and navigation-layer patterns.
+layer (`.claude/skills/<kebab>/SKILL.md`) AND of the
+workflow-router SoT it depends on. Wrappers were a hand-authored
+side-artifact; skills got built without one (so they were
+invisible to the `Skill` tool) and existing wrappers drifted
+from their source frontmatter. Re-introduction was only accepted
+with a generator + validator together, mirroring the skill-map
+and navigation-layer patterns. The workflow-router
+(`skills/workflow_router/SKILL.md`) is a second whole-file
+generated SoT whose `description` catalog is built from the 8
+`workflows/runbooks/*/workflow.yaml` `need_phrase:` fields; it
+feeds the wrapper generator, so it joins this check.
 
 **SoT:**
-- Generator: `scripts/generate_skill_wrappers.py` (sole writer
-  under `.claude/skills/`).
+- Router generator: `scripts/generate_workflow_router.py` (sole
+  writer of `skills/workflow_router/SKILL.md`; whole-file
+  emission from the `need_phrase:` catalog source).
+- Wrapper generator: `scripts/generate_skill_wrappers.py` (sole
+  writer under `.claude/skills/`).
 - Inclusion predicate + wrapper contract:
   `framework/skill-anatomy.md` §Wrapper — required derived
   artifact.
 
+**Chained-run ordering (discipline, not mechanically enforced):** on
+the REGEN path, run router-gen before wrapper-gen. The router writes
+its SKILL.md SoT; `generate_skill_wrappers.py` then reads that SoT (it
+is just another `skills/*/SKILL.md`) and emits the injected CC wrapper.
+If wrapper-gen regenerates first from a STALE router SoT, its own
+`--check` passes GREEN on stale content. This `consistency_check` step
+still catches the drift because it runs router-gen `--check` too (which
+fires non-zero on a stale router SoT) — so the CHECK is order-
+independent; only the regen/write path needs router-gen first. No seam
+sequences them; the discipline is "run router-gen, then wrapper-gen".
+
 **The check (generator idempotency, parallel to check 6's
 skill-map sub-check):**
-Re-running the generator must produce no diff, and `--check`
-must agree.
+Re-running each generator must produce no diff, and `--check`
+must agree. Run router `--check` first, then wrapper `--check`.
 
 ```bash
+python3 scripts/generate_workflow_router.py --check
 python3 scripts/generate_skill_wrappers.py --check
 ```
+
+Router `--check` non-zero exit → **WARNING**: "router SoT drift
+in `skills/workflow_router/`". Drift kinds:
+- `+ missing router SKILL.md` — the router SoT is absent.
+- `~ stale router SKILL.md` — the SoT diverged from generator
+  output (hand-edit, a changed `need_phrase:`, or an added /
+  removed workflow). A missing / empty `need_phrase:` in any
+  `workflow.yaml` is a HARD error (non-zero, no write), not a
+  drift line.
 
 Non-zero exit → **WARNING**: "wrapper drift in
 `.claude/skills/`". The `--check` output enumerates the drift
@@ -536,10 +565,14 @@ wrappers are discovery hints, not load-bearing routing).
 
 ```bash
 # Idempotency: a fresh run must leave the tree unchanged.
+# Router-gen FIRST (the wrapper reads the router SoT), then wrapper-gen.
+python3 scripts/generate_workflow_router.py >/dev/null && \
 python3 scripts/generate_skill_wrappers.py >/dev/null && \
-  git diff --quiet -- .claude/skills/ || echo "wrapper drift"
+  git diff --quiet -- skills/workflow_router/ .claude/skills/ \
+  || echo "router/wrapper drift"
 
-# Or non-mutating: --check exits non-zero on any drift.
+# Or non-mutating: --check exits non-zero on any drift (router first).
+python3 scripts/generate_workflow_router.py --check && \
 python3 scripts/generate_skill_wrappers.py --check
 ```
 
