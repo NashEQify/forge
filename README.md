@@ -12,8 +12,8 @@ rework, and more autonomous execution. The benefit:
 you get far more out of the same model than you would by just plain
 prompting or a stock agent.
 
-The workflows are everyday dev work — build, fix, review, solve — and
-their top-level shape follows familiar software practice. What's tuned
+The workflows are everyday dev work — build, fix, review, solve, research,
+docs — and their top-level shape follows familiar software practice. What's tuned
 to how coding agents actually behave is **how each step is wired
 underneath**, built to control for the ways agents go wrong — both the
 well-known agentic behaviours and the ones observed dogfooding forge in
@@ -49,9 +49,10 @@ nitty-gritty detail. Opinionated. Pre-1.0.
 
 ## What you actually get
 
-Cleaner code, less rework, more autonomous execution. That comes from
-how the workflow steps are wired — controls against the ways coding
-agents go wrong. The major ones:
+Cleaner code, less rework, more autonomous execution — and work that
+keeps its place across sessions. Most of it is how the workflow steps
+are wired (controls against the ways coding agents go wrong); the rest
+is session-spanning state. The major pieces:
 
 - **Reviews run cold and adversarial** — reviewers derive findings
   without inheriting the orchestrator's framing, and one reviewer's
@@ -72,6 +73,11 @@ agents go wrong. The major ones:
   council by hand any time you want fresh perspectives on a question.
 - **Effort scales to the stakes** — small things don't get
   over-processed. That's the "stays simple" anchor.
+- **Sessions don't start cold** — `save` writes a structured handoff the
+  next session reads on boot; the workflow engine holds each multi-step
+  workflow's place; work is a validated task plan with milestones and a
+  critical path. A paused multi-day build resumes where it stopped, instead
+  of re-deriving context.
 
 → [how the review apparatus works](architecture-documentation/02-architecture.md)
 
