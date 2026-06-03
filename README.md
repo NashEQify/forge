@@ -123,45 +123,38 @@ four modes (light / standard / full / interactive), scaled to the
 decision.
 
 ```
-                   ┌─────────────────────────────────────────┐
-  plain-text  ───► │  BUDDY  (single orchestrator persona)   │
-  intent           │  intake-gate · routing · pre-delegation │
-                   └────────────────────┬────────────────────┘
-                                        │
-                   ┌────────────────────▼────────────────────┐
-                   │  WORKFLOW   build · solve · fix ·       │
-                   │             review · research ·         │
-                   │             docs-rewrite · save · …     │
-                   │  multi-phase, cross-session state       │
-                   │  (.workflow-state/<id>.json)            │
-                   └────────────────────┬────────────────────┘
-                                        │  per phase
-               ┌────────────────────────┼────────────────────────┐
-               ▼                        ▼                        ▼
-        ┌─────────────┐          ┌─────────────┐         ┌─────────────┐
-        │  SKILLS     │          │  BOARDS     │         │  COUNCIL    │
-        │  41 active  │          │  spec/UX/   │         │  arch deci- │
-        │  single-    │          │  code, 4-14 │         │  sions, 4-5 │
-        │  purpose    │          │  personas   │         │  members +  │
-        │             │          │  + chief    │         │  adversary  │
-        └──────┬──────┘          └──────┬──────┘         └──────┬──────┘
-               │                        │                        │
-               └────────────────────────┼────────────────────────┘
-                                        ▼
-                              ┌──────────────────┐
-                              │   SUB-AGENTS     │   main-code-agent,
-                              │   do the work    │   council-member,
-                              │                  │   reviewers, …
-                              └────────┬─────────┘
-                                       │
-                                       ▼
-                                    RESULT
+ plain-text             ┌───────────────────────────────────────────┐
+ intent  ─────────────► │ BUDDY   intake · classify · route · path  │
+                        └────────────────────┬──────────────────────┘
+                                             │  --start <workflow> --route <path>
+                                             ▼
+┌─ WORKFLOW · the home (1 of 8 — shared 5-phase shape) ─────────────────────────────┐
+│  state persisted per step (.workflow-state) → pause & resume                      │
+│                                                                                   │
+│  ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐              │
+│  │ Specify │──►│ Prepare │──►│ Execute │──►│ Verify  │──►│  Close  │              │
+│  └────┬────┘   └─────────┘   └────▲────┘   └────┬────┘   └────┬────┘              │
+│       │ steps                     │             │             │                   │
+│       │                  re-fix   └─────────────┘ review      │                   │
+│       │    converge / retry ≤3  → else escalate               │                   │
+│       │                                                       │                   │
+│       └─ a step spawns a COLD sub-routine, reads ONE signal:  │                   │
+│            spec-board · code-board · council · code-agent     │                   │
+│            context-isolated personas + a chief → one signal   │                   │
+└───────────────────────────────────────────────────────────────┼───────────────────┘
+                                                                ▼
+                                                             RESULT — committed, deployed
 
-  ── HOOKS (universal-portable only) ──
-     SessionStart (boot inject) · git pre-commit (6 checks)
-     PLAN-VALIDATE BLOCK · CG-CONV BLOCK · SKILL-FM-VALIDATE BLOCK
-     SECRET-SCAN WARN · SOURCE-VERIFICATION WARN · ANTI-PHANTOM WARN
+ same backbone, 8 workflows:
+   build · fix · review · solve · research  →  Specify·Prepare·Execute·Verify·Close
+   docs-rewrite → 7 phases ·  save → 3 groups ·  context_housekeeping → 2 groups
+   path sets depth:  DIRECT skips the apparatus  …  FULL runs every gate
+
+ HOOKS (portable):  SessionStart boot · git pre-commit (3 BLOCK + 3 WARN)
 ```
+
+→ each workflow drawn in full — phases, steps, loops, where boards / council
+spawn: [per-workflow diagrams](architecture-documentation/workflow-diagrams.md)
 
 ## Cross-session continuity
 

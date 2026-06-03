@@ -54,6 +54,9 @@ Practitioner level (methodology + daily use):
   consumer repos actually consume the framework.
 
 Appendix:
+- [`workflow-diagrams.md`](workflow-diagrams.md) — one
+  diagram per workflow (phases, steps, loops, where
+  boards / council spawn).
 - [`11-source-grounding.md`](11-source-grounding.md) —
   which claims are backed by which files.
 - [`12-troubleshooting.md`](12-troubleshooting.md) —
