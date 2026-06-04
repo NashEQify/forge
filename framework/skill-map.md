@@ -79,7 +79,7 @@ Canonical for `consistency_check` §Skill-Map; sub-sections derived from `invoca
 
 ### Workflow-Step / Sub-skill (`workflow-step` | `sub-skill`)
 
-`adversary_test_plan`, `architecture_coherence_review`, `bedrock_drill`, `code_review_board`, `convergence_loop`, `council`, `cross_spec_consistency_check`, `documentation_and_adrs`, `frame`, `frontend_ui_engineering`, `get_api_docs`, `impl_plan_review`, `knowledge_capture`, `pre_build_spec_audit`, `python_code_quality_enforcement`, `retroactive_spec_update`, `return_summary`, `risk_followup_routing`, `root_cause_fix`, `sectional_deep_review`, `security_and_hardening`, `source_spec_reduce`, `spec_amendment_verification`, `spec_authoring`, `spec_board`, `testing`
+`adversary_test_plan`, `architecture_coherence_review`, `bedrock_drill`, `close_retro`, `code_review_board`, `convergence_loop`, `council`, `cross_spec_consistency_check`, `documentation_and_adrs`, `frame`, `frontend_ui_engineering`, `get_api_docs`, `impl_plan_review`, `knowledge_capture`, `pre_build_spec_audit`, `python_code_quality_enforcement`, `retroactive_spec_update`, `return_summary`, `risk_followup_routing`, `root_cause_fix`, `sectional_deep_review`, `security_and_hardening`, `source_spec_reduce`, `spec_amendment_verification`, `spec_authoring`, `spec_board`, `testing`
 
 ### Service Skills (`disable-model-invocation: true`)
 

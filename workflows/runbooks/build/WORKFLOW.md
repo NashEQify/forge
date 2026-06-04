@@ -94,7 +94,7 @@ detail + conditions = the step `instruction:` in `workflow.yaml`.
 | 8 | mca-implementation | Execute | `main-code-agent` (Plan → impl_plan_review cond. → Implement → L0) |
 | 9 | code-review-board | Verify | `code_review_board/SKILL.md` (light / L1 / L2 per §1) |
 | 10 | spec-drift-check | Verify | `spec_amendment_verification/SKILL.md` (when diff changes spec-defined behaviour) |
-| 11 | close-bookkeeping | Close | `documentation_and_adrs` + `task_creation` + `knowledge_processor` + `risk_followup_routing` (each skip-eligible) |
+| 11 | close-bookkeeping | Close | **distill** `close_retro` (FULL / new-pattern-STANDARD; skip-eligible) → **emit** `documentation_and_adrs` + `task_creation` + `knowledge_processor` + `risk_followup_routing` (consume the retro; each skip-eligible) |
 | 12 | commit-deploy | Close | engine + git pre-commit hooks |
 
 `board` is a mid-flow classification: `--complete board --route
@@ -109,7 +109,7 @@ than authoring inline; sub-threshold edits stay Buddy-direct.
 - **Prepare** — what do we test, how do we hand off (test-design → delegation)?
 - **Execute** — implement the change (MCA writes code, runs L0).
 - **Verify** — does the code do what the spec said (review → spec-drift)?
-- **Close** — bookkeeping + commit (ADR + risk follow-up + knowledge → commit).
+- **Close** — distill→emit bookkeeping + commit (`close_retro` distill → ADR + risk + knowledge → commit).
 
 ## Conditional sub-flows folded into named gates
 
@@ -118,7 +118,7 @@ mechanical and lives in the parent gate's `instruction:`:
 - **cross-spec-consistency-check** → interview (frame step 4 source-grounding).
 - **source-spec-reduce** → final sub-step of spec-write.
 - **adversary-test-plan + test-skeleton-write** → optional adversary mode of test-design.
-- **adr-check + risk-followup-routing + knowledge-process** → close-bookkeeping.
+- **close_retro distill + adr-check + risk-followup-routing + knowledge-process** → close-bookkeeping (distill→emit).
 - **spec-amendment-verify + spec-co-evolve-check** → one spec-drift-check.
 
 **Coverage rule (post-build):** reviewers verify the pre-build test plan was

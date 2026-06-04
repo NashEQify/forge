@@ -39,6 +39,12 @@ is always written there regardless of the active project path.
   (raw input or summary).
 - **mode:** `process` | `wrap-up` | `user-signal`.
 
+**Close-phase input (build / fix / solve, when `close_retro` fired):** the
+`information` is the retro's **§Patterns-Emerged** section
+(`docs/<workflow>/<slug>-retro.md`) — already distilled — consumed via
+`mode=process` rather than re-extracting from raw artifacts. Other
+invocations (standalone, save, agent-return) are unchanged. (spec 374 §6.)
+
 ## Mode routing
 
 | Mode | Loads | Pipeline |
