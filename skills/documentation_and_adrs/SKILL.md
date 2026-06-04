@@ -123,6 +123,15 @@ documentation theatre.
 - Build hosting / infra with high switching cost.
 - Any decision that is expensive to undo.
 
+#### Close-phase: consume the close_retro retro (build / solve)
+
+At a build or solve close where `close_retro` fired, run the triple over the
+retro's **§Stale-Decisions** rows (each = a T0 decision + a T1 invalidator,
+`docs/<workflow>/<slug>-retro.md`) instead of re-extracting from raw
+artifacts: which of those met hard-to-reverse + surprising-without-context +
+result-of-real-trade-off → write the ADR. No retro present, or no qualifying
+row → one-line skip. (spec 374 §6.)
+
 ### ADR template
 
 ADRs in `docs/decisions/` with an incrementing number (prefix

@@ -482,26 +482,43 @@ steps:
     on_fail: block
 
   - id: close-bookkeeping
-    name: "Close bookkeeping (ADR + risk follow-up + knowledge process)"
+    name: "Close bookkeeping (distill → emit)"
     category: content
     instruction: >
-      Three close-phase sub-checks, each one-liner-skippable:
+      Distill → emit: first the distill (close_retro), then the emit
+      sub-checks consume it; each one-liner-skippable.
 
-      (a) ADR-discipline triple — was an architecture decision made that meets
-      hard-to-reverse + surprising-without-context + result-of-real-trade-off?
-      Yes → write ADR via documentation_and_adrs/SKILL.md. Otherwise: one-line
-      skip ("ephemeral / self-evident / reversible").
+      DISTILL — close_retro (skill: skills/close_retro/SKILL.md; spec 374).
+      Fires on FULL, or STANDARD with a new-pattern signal (brief LD
+      pattern-class new-class-*, brief-architect.md §3); else skip with a
+      one-liner. On fire: Buddy dispatches the read-only agents/close-retro.md
+      with this build's artifacts (brief, RETURN-SUMMARY, verdict, spec-drift,
+      ACs, optional docs/build/<slug>-observations.md); it returns a retro
+      1-pager inline; Buddy writes it to docs/build/<slug>-retro.md
+      (§Stale-Decisions T0×T1 + §Patterns-Emerged + §Framework-Feed).
 
-      (b) Risk follow-up — for every verdict file in this build's Verify phase,
-      check `remaining_findings:` block. Non-empty → file ONE follow-up task
-      via task_creation. No remaining: skip with rationale.
+      EMIT — consume the retro when present, else current raw-artifact
+      behaviour (no regression):
 
-      (c) Knowledge process — extract findings into the context system via
-      knowledge_processor mode=process.
+      (a) ADR-discipline triple — consume the retro's §Stale-Decisions: which
+      decision meets hard-to-reverse + surprising-without-context +
+      result-of-real-trade-off? Yes → write ADR via
+      documentation_and_adrs/SKILL.md. Otherwise one-line skip.
 
-      (d) Workflow retro (safety net) — primary write is on-notice during
-      the work (see workflow preamble). Here: capture-now only entries
-      missed during the work. Skip if none.
+      (b) Risk follow-up — for every verdict file in Verify, check
+      `remaining_findings:`. Non-empty → file ONE follow-up task via
+      task_creation. Orthogonal to close_retro (routes REVIEW findings, not
+      lessons). No remaining: skip.
+
+      (c) Knowledge process — pass the retro's §Patterns-Emerged as
+      `information` to knowledge_processor mode=process (or extract directly
+      if close_retro was skipped).
+
+      (d) §Framework-Feed — the retro's forge-feed-format entries land as
+      forge-feed entries (this replaces the old workflow-retro safety net).
+      When close_retro is SKIPPED, (d) reverts to the safety net: capture-now
+      only the on-notice forge-feed entries missed during the work; skip if
+      none.
     completion:
       type: manual
     on_fail: warn
