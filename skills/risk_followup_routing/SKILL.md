@@ -1,12 +1,10 @@
 ---
 name: risk-followup-routing
 description: >
-  Routes chief-verdict `remaining_findings:` entries per their
-  `target:` annotation (7-value enum: spec_text / new_task /
-  watch_item / accept / absorb_next / closes_with / re_review). Replaces
-  the legacy `risk-followup-task` step which mechanically created
-  one task per finding regardless of finding type.
-  Triggers when a chief verdict carries remaining_findings: entries to route by their target: annotation; NOT for creating tasks directly (use task_creation).
+  Route a chief verdict's `remaining_findings:` entries by their `target:`
+  annotation (instead of one task per finding). Triggers when a chief verdict
+  carries remaining_findings: to route (build close, fix close); NOT for
+  creating tasks directly (use task_creation).
 status: active
 invocation:
   primary: workflow-step

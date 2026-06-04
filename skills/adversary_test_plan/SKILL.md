@@ -1,12 +1,11 @@
 ---
 name: adversary-test-plan
 description: >
-  Adversary-driven test-plan extension BEFORE implementation.
-  Code-adversary reviews the tester design output and adds
-  edge-case TCs the implementer's cognitive bias systematically
-  misses. RED tests are a required pre-fix gate (mechanical
-  definition of done). Pattern lesson 388 NEW-V-001 5x replay.
-  Triggers when a tester design output exists and RED edge-case TCs are needed before implementation (build prepare); NOT for post-implementation review (use code_review_board).
+  Adversary extension of a test plan BEFORE implementation — a code-adversary
+  adds the edge-case tests the implementer's bias systematically misses (RED
+  tests as a required pre-fix gate). Triggers when a tester design output exists
+  and needs adversarial edge-case coverage (build prepare); NOT for
+  post-implementation review (use code_review_board).
 status: active
 relevant_for: ["main-code-agent"]
 invocation:
@@ -183,6 +182,12 @@ Skill-violations (full list with detail: `REFERENCE.md`):
 - **NOT** "include in case it's needed" default. INSTEAD on
   uncertainty: leave out. Because: default-to-include is the
   TC-inflation root.
+- **NOT** generate a TC that asserts on the content of a PM/workflow
+  artifact (`docs/tasks/*.yaml`, `.workflow-state/*`, test-plan files).
+  INSTEAD assert on code behaviour or structure only. Because: "is the
+  hazard documented" is process-discipline (home: spec/ADR +
+  `consistency_check`), not a code test — and a doc-presence "theater"
+  TC breaks CI on a fresh tree the moment the artifact is archived.
 
 ## Boundary
 

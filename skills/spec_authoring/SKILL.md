@@ -1,12 +1,10 @@
 ---
 name: spec-authoring
 description: >
-  Interview-based authoring of a NEW spec. Solution-space
-  exploration, artifact checklist, intent_chain + intent
-  alignment validation. For updating existing specs: spec_update
-  skill. For review: spec_board. For brief authoring at
-  delegation time: agents/brief-architect.
-  Triggers when a NEW spec or a new spec section is needed (the code does not exist yet); NOT for syncing specs to code (use retroactive_spec_update) or review (use spec_board).
+  Interview-based authoring of a NEW spec or spec section — solution-space
+  exploration + intent_chain / intent alignment. Triggers when a NEW spec is
+  needed (the code does not exist yet); NOT for syncing a spec to code (use
+  retroactive_spec_update) or reviewing one (use spec_board).
 status: active
 relevant_for: ["main-code-agent"]
 invocation:

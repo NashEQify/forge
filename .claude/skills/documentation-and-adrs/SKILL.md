@@ -1,6 +1,6 @@
 ---
 name: documentation-and-adrs
-description: 'Capture decisions and documentation — why, alternatives, trade-offs. ADR discipline, README / changelog, API docs, agent-ready rules (CLAUDE.md). Adapted from addyosmani/agent-skills; MIT, see ## Source. Triggers when an architecture/API decision needs capturing (ADR / README / changelog) after the decision or before save; NOT for inline code comments.'
+description: Capture decisions + documentation with the why, alternatives, and trade-offs — ADRs, README / changelog, API docs, agent-ready rules (CLAUDE.md). Triggers when an architecture/API decision needs capturing (after the decision, or before save); NOT for inline code comments.
 ---
 
 # Skill: documentation-and-adrs (Wrapper)

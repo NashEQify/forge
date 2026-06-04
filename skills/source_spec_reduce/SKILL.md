@@ -1,11 +1,10 @@
 ---
 name: source-spec-reduce
 description: >
-  Post-authoring source-spec reduction: cut each absorbed section
-  + leave a pointer stub. Required output: drift-items.yaml with
-  3-way triage (existing-task / new-task / die). When the source
-  is fully dissolved: archive it.
-  Triggers when a source spec's sections have been absorbed post-authoring and need pointer-stub reduction (build specify); NOT for greenfield specs with no source predecessor.
+  Post-authoring source-spec reduction — cut each absorbed section, leave a
+  pointer stub, archive the source when fully dissolved. Triggers when a source
+  spec's sections have been absorbed and need pointer-stub reduction (build
+  specify); NOT for a greenfield spec with no source predecessor.
 status: active
 relevant_for: ["main-code-agent", "buddy"]
 invocation:

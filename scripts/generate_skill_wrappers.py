@@ -16,7 +16,7 @@ The wrapper is a DERIVED artifact: this script is the sole generator,
 Inclusion contract (framework/skill-anatomy.md §Frontmatter schema,
 locked decision Option C). A skill is wrapper-eligible iff:
 
-  status not in {archived, deprecated}
+  status not in {archived, deprecated}   # `archived` = defensive guard (non-status)
   AND disable-model-invocation != true
   AND ( invocation.primary in {user-facing, cross-cutting}
         OR invocation.secondary contains {user-facing, cross-cutting}
@@ -57,7 +57,7 @@ except ImportError:
     yaml = None  # type: ignore
 
 ELIGIBLE_PRIMARY = {"user-facing", "cross-cutting"}
-EXCLUDED_STATUS = {"archived", "deprecated"}
+EXCLUDED_STATUS = {"archived", "deprecated"}  # `archived` kept as a defensive guard (not a live status value)
 
 # Stable body sentinel. Every wrapper this generator emits carries
 # this exact line. The orphan-sweep only `rmtree`s a directory whose

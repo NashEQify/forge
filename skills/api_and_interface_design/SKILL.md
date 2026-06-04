@@ -1,12 +1,10 @@
 ---
 name: api-and-interface-design
 description: >
-  API and interface design discipline. Hyrum's law +
-  one-version rule + contract-first + validate-at-boundaries
-  + prefer-addition-over-modification + predictable-naming.
-  Use when designing new APIs, module boundaries, type
-  contracts between modules, REST / SSE endpoints, schema
-  pipeline boundaries.
+  API and interface design discipline (Hyrum's law, contract-first, validate at
+  boundaries, prefer addition over modification). Use when designing a new API,
+  module boundary, type contract between modules, REST/SSE endpoint, or schema
+  pipeline boundary.
 status: active
 invocation:
   primary: user-facing

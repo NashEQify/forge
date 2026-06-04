@@ -1,6 +1,6 @@
 ---
 name: retroactive-spec-update
-description: Retroactively update existing specs to match the as-is code state. Git commits give SCOPE, source code is the EVIDENCE. Walk through the spec section by section, read the relevant source files completely, compare, update. Prevents feature creep by never asking "what could be added" — only "what does the code already do that the spec does not describe". Triggers when an existing spec must be synced to the as-is code state (code = evidence); NOT for authoring new specs (use spec_authoring) or amending locked specs by intent (use spec-amendment-discipline).
+description: Sync an EXISTING spec to the as-is code (code = evidence, git = scope) — only "what does the code already do that the spec omits", never "what could be added". Use when a spec has drifted from the code and must catch up; reach for it instead of hand-patching the spec. NOT for authoring a new spec (use spec_authoring) or amending a locked spec by intent (use spec-amendment-discipline).
 ---
 
 # Skill: retroactive-spec-update (Wrapper)

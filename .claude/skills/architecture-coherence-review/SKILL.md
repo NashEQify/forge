@@ -1,6 +1,6 @@
 ---
 name: architecture-coherence-review
-description: Cross-spec coherence review for specs that share contracts. 7-dimension extraction, interface-contract assembly, advisory board. Triggers when 2+ specs share contracts/interfaces and cross-spec coherence must be checked (review execute, type=arch); NOT for single-spec quality (use spec_board).
+description: Cross-spec coherence review for specs that share contracts or interfaces. Triggers when 2+ specs share contracts and their interfaces must be checked for coherence (review execute, type=arch); NOT for single-spec quality (use spec_board).
 ---
 
 # Skill: architecture-coherence-review (Wrapper)

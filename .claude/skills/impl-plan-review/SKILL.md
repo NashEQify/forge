@@ -1,6 +1,6 @@
 ---
 name: impl-plan-review
-description: 'Multi-perspective review of the implementation plan BEFORE coding. Closes the code-synthesis gap: MCA''s interpretation of the spec is validated before code is written. Triggers when an MCA implementation plan must be validated before coding (build execute, conditional); NOT for spec review (use spec_board) or code review (use code_review_board).'
+description: Multi-perspective review of an implementation plan BEFORE coding — validate the implementer's reading of the spec before code is written. Triggers when an MCA implementation plan must be validated before coding (build execute, conditional); NOT for spec review (use spec_board) or code review (use code_review_board).
 ---
 
 # Skill: impl-plan-review (Wrapper)

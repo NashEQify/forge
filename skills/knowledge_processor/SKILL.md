@@ -1,10 +1,10 @@
 ---
 name: knowledge-processor
 description: >
-  Brain logic as agent behaviour. Process new information against
-  existing knowledge. Keeps `context/` accurate. Pre-brain: LLM on
-  files; post-brain: queries.
-  Triggers when new information must be reconciled into context/ (task status change, save, agent return); NOT a user-callable workflow — it is the cross-cutting context-write mechanism.
+  The context-write mechanism — reconcile new information against existing
+  knowledge so `context/` stays accurate. Triggers when new information must be
+  folded into context/ (task status change, save, agent return); NOT a
+  user-callable workflow — it is cross-cutting infrastructure.
 status: active
 relevant_for: ["solution-expert"]
 invocation:

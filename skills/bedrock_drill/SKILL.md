@@ -1,5 +1,5 @@
 ---
-name: bedrock_drill
+name: bedrock-drill
 aliases: [rfp]
 description: >
   Recursive first-principles drill with bottom-up synthesis.

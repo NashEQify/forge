@@ -1,6 +1,6 @@
 ---
 name: knowledge-capture
-description: Persist knowledge from context windows, conversations, and research sessions. Larger knowledge artifacts (research, SOTA, solve states, interview insights) — not single facts (that's knowledge_processor).
+description: Persist a larger knowledge artifact (research, SOTA map, solve state, interview insights) from a context window or session. Use when a research or solve session produced knowledge worth keeping beyond the conversation; NOT for a single fact (use knowledge_processor) or session bookkeeping.
 ---
 
 # Skill: knowledge-capture (Wrapper)

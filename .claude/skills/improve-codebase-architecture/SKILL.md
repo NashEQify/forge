@@ -1,6 +1,6 @@
 ---
 name: improve-codebase-architecture
-description: Codebase-wide architecture improvement via the deep-modules pattern (Ousterhout / Feathers). Strict glossary (module / interface / implementation / depth / seam / adapter / leverage / locality). Deletion test. 3 phases (explore / present / grill). Use when refactoring opportunities, consolidating tightly-coupled modules, making the codebase more testable + AI-navigable. Periodic (every few days), not diff-centric.
+description: Codebase-wide architecture improvement via the deep-modules pattern (Ousterhout / Feathers) — find tightly-coupled modules worth consolidating and deepening. Use when looking for refactor opportunities or to make the codebase more testable + AI-navigable; run periodically (every few days), not diff-centric.
 ---
 
 # Skill: improve-codebase-architecture (Wrapper)

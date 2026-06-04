@@ -1,11 +1,10 @@
 ---
 name: deprecation-and-migration
 description: >
-  Deprecation and migration discipline. Code-as-liability mantra
-  + compulsory-vs-advisory decision + strangler / adapter /
-  feature-flag patterns + churn rule + zombie-code handling.
-  Use when removing old systems / APIs / features, migrating
-  users to new implementations, deciding maintain vs sunset.
+  Deprecation and migration discipline (code-as-liability; strangler / adapter /
+  feature-flag patterns; churn + zombie-code handling). Use when removing an old
+  system / API / feature, migrating users to a new implementation, or deciding
+  maintain vs sunset.
 status: active
 invocation:
   primary: user-facing

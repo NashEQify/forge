@@ -1,6 +1,6 @@
 ---
 name: cross-spec-consistency-check
-description: 'Pre-authoring conflict detection between specs in the source-grounding set of the current build run. Four pattern classes (API naming drift, concept double authority, schema drift, authority overlap). Output: drift-list- cross.md with severity triage. Block on high severity. Triggers when a build run has a source-grounding set of 2+ specs to check pre-authoring (build specify); NOT for greenfield specs with no source set.'
+description: Pre-authoring conflict detection across the specs in a build's source-grounding set — API naming drift, double authority, schema drift, authority overlap. Triggers when a build run has 2+ source specs to check before authoring (build specify); NOT for a greenfield spec with no source set.
 ---
 
 # Skill: cross-spec-consistency-check (Wrapper)

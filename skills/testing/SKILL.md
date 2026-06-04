@@ -185,6 +185,12 @@ DESIGN → PRE-IMPL EVAL → Decomposition → Delegation`.
   produces tests of imagined behaviour, not actual.
 - **NOT** wave through vague/contradictory ACs. INSTEAD trigger spec
   review first (TCs on vague ACs = guessing).
+- **NOT** assert on the content of a PM/workflow artifact
+  (`docs/tasks/*.yaml`, `.workflow-state/*`, test-plan files). INSTEAD
+  assert on code behaviour or code structure only. "Is hazard X
+  documented / is decision Y recorded" is process-discipline — its home
+  is the spec/ADR + `consistency_check`, not `pytest` (a `tests/` file
+  that reads `docs/tasks/` breaks CI the moment the artifact is archived).
 
 Extended anti-patterns (eval script persistence, run-strategy scope
 discipline): REFERENCE.md.

@@ -1,14 +1,11 @@
 ---
 name: pre-build-spec-audit
 description: >
-  Concept mining + MVP reconciliation against pre-existing specs.
-  Looks at pre-MVP / pre-build specs for methodology, architecture
-  ideas, and patterns — compared in the current MVP scope, not as
-  a compliance check. Phase 1 inventory, phase 2 parallel concept
-  extraction, phase 3 triage (MATCH / MVP-INTEGRATE /
-  NEW-METHODOLOGY / POST-MVP-VISION / PRE-MVP-DROPPED), phase 4
-  conditional council.
-  Triggers when pre-MVP / pre-build specs may carry methodology or architecture ideas relevant to the current build scope; NOT a compliance check against old specs.
+  Mine pre-MVP / pre-build specs for methodology, architecture, and pattern
+  ideas worth carrying into the current build scope (a concept harvest, NOT
+  a compliance check against old specs). Use when a build's source set
+  includes older specs that may carry reusable ideas. NOT for checking the
+  build against an old spec's requirements.
 status: active
 invocation:
   primary: workflow-step
