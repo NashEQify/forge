@@ -45,7 +45,7 @@ are engine-internal.
 | 5 | fix-execute | `root_cause_fix/SKILL.md` (Phase B); MCA inline OR Buddy direct per architect-authored fix-brief | retest as inline sub-step (regression suite green) |
 | 6 | code-review | `code_review_board/SKILL.md` (light / L1 / L2 per §1) | level: light on ≤2 files mechanical-trigger; L1 default for fixes effort S-M; L2 on schema/cross-spec or larger scope |
 | 7 | spec-drift-check | `spec_amendment_verification/SKILL.md` | when fix changes spec-defined behaviour OR authority log exists with new spec edits |
-| 8 | close-bookkeeping | `knowledge_processor/SKILL.md` + `task_creation/SKILL.md` + `risk_followup_routing/SKILL.md` (per spec 306 §4.7) | each sub-check skip-eligible |
+| 8 | close-bookkeeping | **distill** `close_retro` (skip-eligible) → **emit** `knowledge_processor/SKILL.md` + `task_creation/SKILL.md` + `risk_followup_routing/SKILL.md` (consume the retro; each skip-eligible) |
 | 9 | commit-deploy | git pre-commit hooks | sub-fix route skips this gate |
 
 ## Detail per gate
@@ -83,13 +83,20 @@ regression suite is green.
 defined in a spec? Yes → spec patch in the SAME block-commit. No
 spec-defined behaviour touched: skip with rationale.
 
-**6. close-bookkeeping** — three skip-eligible sub-checks:
-(a) lessons-learned via `knowledge_processor` (root cause + pattern
-lesson into context);
+**6. close-bookkeeping** — distill → emit. **Distill:** `close_retro`
+(skill `skills/close_retro/SKILL.md`, spec 374) fires on FULL / a
+decision-heavy fix (else skip the common small fix with a one-liner) →
+read-only `close-retro` agent on the RCA + verdict + ACs → retro 1-pager at
+`docs/fix/<slug>-retro.md`; fix has no ADR sub-step → §Stale-Decisions stays
+noted in the retro. **Emit** (consume the retro when present, else current
+behaviour):
+(a) lessons-learned via `knowledge_processor` ← §Patterns-Emerged (root
+cause + pattern lesson into context);
 (b) risk follow-up — file ONE follow-up task per non-empty
-`remaining_findings:` block in the verdict;
-(c) workflow-retro (safety net) — primary write is on-notice (see
-preamble). Capture-now only entries missed. Skip if none.
+`remaining_findings:` block (orthogonal to close_retro — routes review
+findings, not lessons);
+(c) §Framework-Feed — forge-feed entries (replaces the old workflow-retro
+safety net; on skip, reverts to capture-now of missed entries).
 
 **7. commit-deploy** — `git commit + push`. Deploy conditional on
 docs/ changes. Engine auto-advances `workflow_phase=done`; task-level

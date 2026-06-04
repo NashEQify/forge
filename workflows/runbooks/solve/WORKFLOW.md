@@ -45,7 +45,7 @@ are engine-internal.
 | 3 | write-artifact | `spec_authoring/SKILL.md` or build sub-workflow (with registration plan as inline sub-step) | artefact type drives skill choice |
 | 4 | validate | classify → board → convergence → delta-verify (per artifact_class) | board: spec_board / code_review_board / impl_plan_review / spec_board(mode=ux) per artifact_class |
 | 5 | apply-artifact | direct / handoff to build / handoff to docs-rewrite / self-apply | per `framework/agent-autonomy.md` |
-| 6 | close-bookkeeping | `documentation_and_adrs/SKILL.md` + `knowledge_processor/SKILL.md` | each sub-check (ADR, knowledge processor) skip-eligible |
+| 6 | close-bookkeeping | **distill** `close_retro` (skip-eligible) → **emit** `documentation_and_adrs/SKILL.md` + `knowledge_processor/SKILL.md` (consume the retro; each skip-eligible) |
 | 7 | commit-deploy | git pre-commit hooks | — |
 
 ## State file
@@ -97,13 +97,19 @@ direct (process-map register + stale cleanup + deploy), handoff to
 build (spec/plan → build workflow), handoff to docs-rewrite,
 self-apply.
 
-**6. close-bookkeeping** — three skip-eligible sub-checks:
-(a) ADR-discipline triple — solve hits this trigger more often than
-build (open-solution shape → real trade-off decisions);
-(b) `knowledge_processor` wrap-up — history entry with
-frame-report-ref + IMPACT CHAIN under `context/history/`;
-(c) workflow-retro (safety net) — primary write is on-notice (see
-preamble). Capture-now only entries missed. Skip if none.
+**6. close-bookkeeping** — distill → emit. **Distill:** `close_retro`
+(skill `skills/close_retro/SKILL.md`, spec 374) fires on a decision-heavy /
+new-pattern solve (else skip with a one-liner) → read-only `close-retro`
+agent on the frame report + verdict + ACs → retro 1-pager at
+`docs/solve/<slug>-retro.md`. **Emit** (consume the retro when present, else
+current behaviour):
+(a) ADR-discipline triple ← §Stale-Decisions — solve hits this trigger more
+often than build (open-solution shape → real trade-off decisions);
+(b) `knowledge_processor` wrap-up ← §Patterns-Emerged — history entry with
+frame-report-ref + IMPACT CHAIN under `context/history/` (this is the gate's
+completion artifact; the retro does not satisfy it);
+(c) §Framework-Feed — forge-feed entries (replaces the old workflow-retro
+safety net; on skip, reverts to capture-now of missed entries).
 
 **7. commit-deploy** — `git commit + push` + dashboard deploy. Engine
 auto-advances `workflow_phase=done`; task-level `status=done` is set
