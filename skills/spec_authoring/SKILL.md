@@ -171,6 +171,26 @@ threshold fires.
 **Amendment discipline** (pre-edit gate, dispatch threshold, dispatch
 shape, greenfield-direct rationale): `_protocols/spec-amendment-discipline.md`.
 
+## Why orchestrator-direct (no fresh-context architect)
+
+Greenfield authoring is run by Buddy (interview + draft), not handed to
+a fresh-context architect — deliberately, not as a gap. A fresh-context
+architect (`brief-architect`) earns its keep where its value applies:
+reading existing code + the spec corpus end-to-end and grounding claims
+against them — its `brief`, `spec_amendment`, and `retro_spec_update`
+modes each ground against an **existing** artifact. Greenfield authoring
+has **no existing artifact to ground against** — the spec is being born —
+so that value is moot. And the front-half is an irreducibly interactive
+interview (multi-turn, user-in-the-loop); a one-shot context-isolated
+agent cannot run it. Author-anchoring — the one real risk of Buddy
+drafting what Buddy just interviewed — is caught by the independent
+`spec_board` review, not by a redundant drafting handoff. Substantial
+amendments to *locked* specs DO get the architect (`brief-architect
+mode=spec_amendment`): there the existing spec + code are exactly what
+must be ground against. So the "no architect at authoring" asymmetry is
+principled — architect = grounding against an existing artifact;
+greenfield has none.
+
 ## Contract
 
 **INPUT:** user intent, no existing spec file for this scope,
