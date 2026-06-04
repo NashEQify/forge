@@ -150,6 +150,13 @@ direct user conversation. Format + rules (build + life variants):
 Format: `docs/tasks/NNN.yaml` + `NNN.md`. Schema SoT:
 `framework/task-schema.yaml`. Body SoT: `framework/task-format.md`.
 
+**ID selection (MUST):** `NNN` = highest numeric basename across **both**
+`docs/tasks/*.yaml` AND `docs/tasks/archive/*.yaml`, + 1. Archived IDs are
+retired, never recycled — scanning only the top-level silently collides
+with an archived task and breaks the WORM archive move at close. §5
+`--validate` flags a live↔archive collision (`ID_REUSED_FROM_ARCHIVE`)
+as the safety net.
+
 YAML field names + value vocab live in the schema, not here. New
 tasks are open → MUST carry `effort` (`S|M|L|XL`) and `priority`
 (`high|medium|low`) alongside the always-required fields (`id`,

@@ -198,7 +198,7 @@ process:
       skills/council/SKILL.md §3: question + intent_chain + context-paths
       + null option + perspectives. MUST NOT: Buddy's proposal,
       pre-classified conflicts, severity tags, lean hints. Brief-contagion
-      empirisch demonstriert (L-046).
+      empirisch demonstriert.
     output: "docs/reviews/council/{date}-{topic}-briefing-draft.md"
     modes: [standard, full]  # light skips frame-check, goes direct to final
 

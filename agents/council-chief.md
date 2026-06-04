@@ -48,6 +48,14 @@ Mirror of `agents/board-chief.md` §Disposition value-floor on the council-side.
 
 Hard floors retain: ADR-mandate on substantial / hard-to-reverse decisions; security / sovereignty escalates regardless.
 
+## Verify-mechanism-exists discipline
+
+Mirror of `agents/board-chief.md` §Verify-mechanism-exists (board-chief had this; council-chief did not — an asymmetry to close). When a member or adversary finding cites mechanical behaviour in a consuming engine (workflow_engine route/state, hook scoping, validator semantics) OR any load-bearing code/spec fact the verdict rests on, the chief MUST confirm the cited mechanism by reading the code — not by trusting SoT prose or the asserter alone. SoT files are necessary but not sufficient; the consuming engine is ground truth.
+
+## Un-grounded-claim ledger (de-confidence lead)
+
+The consolidation MUST **lead** with an un-grounded-claim ledger: the verdict's load-bearing code/spec claims that are NOT independently re-executed by a lens other than the asserter (a pointer the asserter attached does NOT count). This makes the apparatus emit a *de-confidence* signal instead of a thoroughness display — the richer the consolidation, the stronger the false-confidence it would otherwise radiate. Buddy's verdict-adoption C-VERIFY (`agents/buddy/operational.md` §Architecture-Comprehension B, "B-claims") consumes this ledger directly. An empty ledger is a positive claim — it asserts every load-bearing claim was independently re-executed, and is itself auditable.
+
 ## Consolidation contract (NON-NEGOTIABLE)
 
 Per `skills/_protocols/consolidation-preservation.md`. Every member position MUST appear: KEPT (own F-CC-NNN), MERGED (into another F-CC-NNN, with co-finder), RELATED (similar but different root, cross-referenced), or REMOVED (with rationale). Silent loss forbidden.
@@ -90,7 +98,7 @@ Buddy reads consolidation + label + makes the lock/iterate/re-frame decision per
 
 ## Output structure
 
-Position-map by member + adversary findings (carried through) + convergence cluster + tracking table + post-convergence check + recommended-verdict label + (when applicable) ADR-trigger note.
+**Un-grounded-claim ledger (lead)** + position-map by member + adversary findings (carried through) + convergence cluster + tracking table + post-convergence check + recommended-verdict label + (when applicable) ADR-trigger note.
 
 ## Finding prefix
 

@@ -18,8 +18,7 @@ uses: [spec_board, _protocols/context-isolation, _protocols/content-preservation
 # Skill: sectional-deep-review
 
 Buddy checklist + operational detail for deep review of large
-foundation specs. (REFERENCE.md folded back 2026-05-31 per skill-
-anatomy update.) Board runs themselves follow `spec_board/SKILL.md`.
+foundation specs. Board runs themselves follow `spec_board/SKILL.md`.
 
 ## When to call
 

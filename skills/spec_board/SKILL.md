@@ -164,6 +164,9 @@ findings in same consolidated.
    + dispatch-template. Chief additionally: consolidation-preservation
    + piebald-budget.
 9. Dispatch parallel (context-isolated) → spawn chief → read signal
+   → **decision-grounding C-VERIFY** on the verdict's pivotal code/spec
+   claims (`agents/buddy/operational.md` §Architecture-Comprehension B:
+   re-execute unless independently re-executed; FALSIFIED → re-frame)
    → SAVE (NON-NEGOTIABLE).
 10. NEEDS-WORK: fix → next pass; CONVERGED: DONE.
 

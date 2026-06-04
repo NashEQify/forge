@@ -22,9 +22,7 @@ uses: [_protocols/plan-review, _protocols/context-isolation, _protocols/dispatch
 
 # Skill: council
 
-Buddy checklist + operational detail. (REFERENCE.md folded back into
-SKILL.md per ADR-004 / piebald-budget update 2026-05-31 — REFERENCE
-pattern deprecated; everything substantive lives here.)
+Buddy checklist + operational detail.
 
 ## 0. Plan + review (required without a frame)
 
@@ -88,7 +86,7 @@ Members see FINAL briefing only. Council-chief reads BOTH at CHIEF-1.0.
 
 **MUST:** question (1 sentence) · intent_chain anchoring · context-file paths · null option (1-2 sentences) · perspectives + ranks · per-option reversibility cost-band (S/M/L/XL effort × named consumers impacted — lets adversary §Reversibility-trap check verify the claim rather than reconstruct from scratch) · output paths · file-output OVERRIDE block (`_protocols/dispatch-template.md` §File-Output-OVERRIDE).
 
-**MUST NOT:** Buddy's proposal · pre-classified conflicts · severity tags · lean hints. Brief-contagion empirically demonstrated (L-046).
+**MUST NOT:** Buddy's proposal · pre-classified conflicts · severity tags · lean hints. Brief-contagion empirically demonstrated.
 
 ## 4. Buddy checklist (dispatch)
 
@@ -106,7 +104,7 @@ Members see FINAL briefing only. Council-chief reads BOTH at CHIEF-1.0.
 - **NOT** Buddy's proposal in briefing → cold-start per §3; proposal stays in frame-check artifact.
 - **NOT** consolidate without council-chief (≥3 members) → Inv 1 hard rule; chief is consolidator-tool.
 - **NOT** skip pre-council frame check on standard/full → frame-check IS how you find brief contamination.
-- **NOT** adopt chief recommendation without post-council coherence check per `agents/buddy/operational.md` §Architecture-Comprehension B → unconditional Buddy-side, escalate on topology contradiction.
+- **NOT** adopt chief recommendation without post-council coherence check per `agents/buddy/operational.md` §Architecture-Comprehension B → unconditional Buddy-side, escalate on topology contradiction. §B also requires the **decision-grounding C-VERIFY** on the verdict's pivotal code/spec claims before adoption: re-execute each unless a non-asserter lens already did (a present/`file_exists` pointer ≠ verified); FALSIFIED or hard-to-reverse+un-groundable → re-frame / escalate to user, never self-adopt.
 - **NOT** `code-adversary` for council adversary → `council-adversary` (architecture-decision-tuned).
 - **NOT** light mode on hard-to-reverse → standard or full.
 
