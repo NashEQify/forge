@@ -74,7 +74,10 @@ workflow state-file's slug). Sections:
   + `Action: supersede | amend-spec | re-open-task | accept-shift | no-action`.
   A row **without** a cited T1 invalidator is NOT a stale-decision — it is a
   pattern (→ §Patterns-Emerged). The cross-temporal link is artifact-derived,
-  not session-memory.
+  not session-memory. **Invalidator, not mention:** the cited T1 statement
+  must assert a fact that makes the T0 decision *wrong* (or moots it) — a
+  verdict that merely comments on the decision's topic or area is not an
+  invalidator (that is a pattern, not a stale-decision).
 - **§Patterns-Emerged** — `Pattern` + `Evidence (file:line)`. → consumed by
   `knowledge_processor` (mode=process) as its `information` input.
 - **§Framework-Feed** — forge-feed-format candidate entries (pre-write filter
