@@ -109,7 +109,7 @@ tags, port numbers, marker vocabulary, custom fixtures) live in the
 example: a consumer's `docs/test-conventions/postgres-fixtures.md`
 documenting its concrete DSN, fixture name, and transaction wrapper.
 
-### Fixture-availability preflight (the L-025 discipline)
+### Fixture-availability preflight
 
 **Trap:** the skeleton-writer (or any test author) writes
 `pytest.skip("STUB — needs <fixture>")` while a canonical

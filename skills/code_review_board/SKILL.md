@@ -228,7 +228,7 @@ emphasis. The brief contains SUBSTANCE, NOT findings-with-severity
 or other finding-shaped framing. Severity stays in the frame-check
 artifact for chief audit. Adding `[severity:CRITICAL]` or other
 finding-shaped framing into brief content would re-create the
-brief-contagion L-046's cold-start rule prevents (reviewer reads
+brief-contagion the cold-start rule prevents (reviewer reads
 against the brief's framing, not against spec → code).
 
 The anti-dilution mechanism is the **chief audit at consolidation**:
@@ -248,6 +248,13 @@ specialists per team composition.
 (1-3 lines). Chief rejects claim-without-quote and re-dispatches.
 
 ## 5. Verdict
+
+**Before adopting the verdict** Buddy applies the decision-grounding
+C-VERIFY (`agents/buddy/operational.md` §Architecture-Comprehension B):
+for the pivotal code claims the verdict rests on, re-execute any not
+already independently re-executed by a non-asserter lens (a present
+pointer ≠ verified); SILENT rendered loud; FALSIFIED → re-frame, don't
+adopt.
 
 ```
 PASS:            0C + 0H

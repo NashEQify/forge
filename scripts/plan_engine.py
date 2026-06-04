@@ -2440,6 +2440,21 @@ def validate(
     issues = []
     task_keys = set(tasks.keys())
 
+    # ID_REUSED_FROM_ARCHIVE (L-073): an active task id must not also exist in
+    # docs/tasks/archive/. Archived IDs are retired, never recycled — a live id
+    # colliding with an archived one breaks the WORM archive move at close (the
+    # `git mv -> archive/<id>.yaml` hits an existing path) and silently
+    # duplicates an id across the active+archive sets. task_keys and
+    # archived_ids share one identity space by construction (int in single-repo,
+    # "<repo>#<id:03d>" in aggregate — the same space the BROKEN_DEP silent-pass
+    # below relies on), so the intersection is collision-exact in both modes.
+    for reused in sorted(task_keys & archived_ids, key=str):
+        issues.append(ValidationIssue(
+            "ID_REUSED_FROM_ARCHIVE", "ERROR", task_id=reused,
+            detail="active task id also present in docs/tasks/archive/ — "
+                   "archived ids are retired; pick the next free id "
+                   "(max over docs/tasks/ + docs/tasks/archive/, + 1)"))
+
     for t in tasks.values():
         tid_for_issue = t.key  # Task 367: namespaced in aggregate mode
         # NO_MILESTONE (terminal tasks may have null milestone — they're completed)
@@ -4399,6 +4414,27 @@ def _run_self_test() -> int:
         _ok("Smoke-7: _render_cp_item alle 4 Item-Types")
     else:
         _fail(f"Smoke-7: out_int={out_int!r} out_str={out_str!r} out_list={out_list!r} out_post={out_post!r}")
+
+    # Smoke-8 (L-073): ID_REUSED_FROM_ARCHIVE — an active task id that also
+    # exists in docs/tasks/archive/ is flagged ERROR. archived_ids passed
+    # explicitly (no disk coupling). status=done -> terminal, so no unrelated
+    # NO_MILESTONE / NO_EFFORT noise.
+    reuse_issues = validate(
+        {385: Task(id=385, title="t", status="done", milestone="")},
+        {}, archived_ids={385})
+    if any(i.check == "ID_REUSED_FROM_ARCHIVE" and i.severity == "ERROR"
+           for i in reuse_issues):
+        _ok("Smoke-8: active id colliding with archive/ -> ID_REUSED_FROM_ARCHIVE ERROR")
+    else:
+        _fail(f"Smoke-8: no ID_REUSED_FROM_ARCHIVE for 385: "
+              f"{[(i.check, i.severity) for i in reuse_issues]}")
+    clean_issues = validate(
+        {386: Task(id=386, title="t", status="done", milestone="")},
+        {}, archived_ids={385})
+    if not any(i.check == "ID_REUSED_FROM_ARCHIVE" for i in clean_issues):
+        _ok("Smoke-8: non-colliding id -> no ID_REUSED_FROM_ARCHIVE")
+    else:
+        _fail("Smoke-8: false ID_REUSED_FROM_ARCHIVE on non-colliding id")
 
     # Task 387: active-milestone task-chain self-test suite (RED-first).
     # Synthetic in-memory fixture (Task/Milestone/GateCondition objects) — no

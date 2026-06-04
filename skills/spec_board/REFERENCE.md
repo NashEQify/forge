@@ -210,7 +210,7 @@ the actual engine API).
   cross-layer / interface triggers. **Because:** any YES → Deep is
   risky-by-default; bookkeeping edits (amendment-log row, Step-alt
   example, clarification) systematically fire cross-layer / interface
-  checks without justifying a Deep board (L-033 failure mode).
+  checks without justifying a Deep board.
   Security and full-path remain hard overrides.
 - **NOT** skip the §Module-Decomposition OR §Test-Strategy pre-gate
   check on a NEW L1+ spec by assuming legacy. INSTEAD verify

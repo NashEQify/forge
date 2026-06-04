@@ -10,9 +10,9 @@ architecture_coherence_review.
 Chief consolidation loses findings, especially single-agent
 findings. The word "consolidate" triggers a compression mode.
 Without an explicit preservation rule, findings without a
-chief-internal tracking mechanism get "forgotten". Demonstrated on
-solve-framing pass 1 (session 98): 4 of 34 raw findings silently
-lost, all single-agent.
+chief-internal tracking mechanism get "forgotten". Demonstrated in a
+real consolidation pass: 4 of 34 raw findings silently lost, all
+single-agent.
 
 ## Preservation contract (NON-NEGOTIABLE)
 

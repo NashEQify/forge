@@ -172,6 +172,65 @@ the topology that delivers (or fails to deliver) the outcome.
 Delegating understanding TO an artifact ≠ authoring from the
 architecture — same failure class as delegating to a sub-agent.
 
+**B-claims) Decision-grounding C-VERIFY (verdict-adoption returns only).**
+A specialization of §B for one return-class: a council / code-board /
+spec-board **chief-consolidated verdict** Buddy is about to ADOPT (write
+an ADR / decision-record / MCA brief from, or lock as a decision) AND
+that rests on factual claims about code or spec. This is **Inv 10 made
+salient at the verdict-adoption boundary — not a new rule.** Inv 10 binds
+at the brief layer because a mechanism instantiates it there (the
+architect-lens C-VERIFY); it had no instantiation at the adoption
+boundary — the gap this closes. The trigger fires ONLY on this verdict-adoption
+return (NOT every §B return — that keeps it low-frequency, the durability
+condition; a rote high-frequency check frays).
+
+Walk the claims under the chief's **recommended-verdict rows** (the
+tracking-table positions for the winning cluster + its load-bearing
+risks — not the whole corpus). For each:
+
+- **Pivotal?** — can you name the decision it flips if false? Unsure →
+  treat as pivotal (**fail toward checking, never toward skipping**). A
+  claim that flips no decision is not pivotal; skip it.
+- **Independently re-executed?** — has a lens OTHER than the one that
+  asserted it already re-executed it and shown the output (a grep/read
+  result, not a citation the asserter attached)? A bare pointer — and
+  especially a `file_exists`-trivial one — is **not** grounding:
+  `_protocols/evidence-pointer-schema.md` §8.1 says a pointer makes a
+  claim auditable but does NOT prevent a misread, and the motivating-incident claims
+  carried pointers and were misread.
+
+Pivotal AND not-independently-re-executed → **Buddy re-executes it**
+(grep/read) and emits one `Claim | command | output |
+CONFIRMED/FALSIFIED/SILENT` row (the architect-lens C-VERIFY form). A
+**SILENT / NOT-CHECKED disposition is rendered LOUD**, never absent — an
+un-fired check must never read as a clean pass. (Honest scope: for
+pivotal claims this is "re-verify *unless* independently re-executed" —
+D-with-a-dedup, not a pointer-presence skip; it fires only where no
+independent re-execution exists, so it is not blanket re-verification.)
+
+- **FALSIFIED** → the framing was wrong upstream; re-frame or escalate,
+  do NOT adopt.
+- **Hard-to-reverse / ADR-level** → "grounded" requires actually OPENING
+  the cited pointer (auditable ≠ audited), AND the narrow slice
+  *hard-to-reverse + ≥1 pivotal claim Buddy cannot ground (SILENT)* is
+  **escalated to the user**, NOT self-adopted. The rule does not replace
+  the human gate on that slice — it routes there (the one control that
+  actually fired in the motivating incident).
+- **Cap** (intent: catch an *under-grounded consolidation*, not a complex
+  one): if the un-grounded fraction of pivotal claims is the majority, OR
+  a first re-grep returns ≥1 FALSIFIED → the consolidation itself is
+  under-grounded → escalate / re-dispatch rather than grind claim-by-claim.
+
+**Why (keep it load-bearing, not the next polish layer):** a polished
+consolidation is not verification — the chief *consolidates* findings, it
+does not *re-grep* them; the richer the apparatus (chief + adversary +
+frame-check), the stronger the false-thoroughness it radiates and the
+more it suppresses your own grounding. A clean executed table is
+**not** a substitute for the human "are you sure?" on the hard slice. The
+chief feeding this leads with its **un-grounded-claim ledger**
+(`agents/council-chief.md` §Un-grounded-claim ledger) so the apparatus
+emits a de-confidence signal, not a thoroughness display.
+
 ### Delegation
 
 Routing lookup:
@@ -197,8 +256,8 @@ judgment across five axes, not a numeric threshold:
   costs more than it conveys. **Bound (ADR-005):** this axis does
   NOT license inline brief-authoring for a brief that touches
   EXISTING code. Spec-derived held context ≠ as-is grounding (the
-  spec is the least-trustworthy source for a brief's code claims —
-  see L-064). Any code-touching brief above the §4.1 DIRECT
+  spec is the least-trustworthy source for a brief's code claims).
+  Any code-touching brief above the §4.1 DIRECT
   anti-triggers → dispatch `brief-architect` (context-isolated,
   greps `src/`), with a dispatch package of spec authority + ACs +
   scope + intent_chain + optional lens_output ONLY — never a
