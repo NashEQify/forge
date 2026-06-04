@@ -152,6 +152,22 @@ Lifecycle move between `docs/tasks/` (active) and
 - `new_status != done` from archive/ → reverse move back.
 - Otherwise → no-op.
 
+**Terminal-close integrity guard (atomicity, forward move only).** The
+split-failure mode: writing `status` at the OLD path and THEN `git mv`
+stages the rename from the *original* blob — the status edit is stranded as
+an unstaged working-tree modification (`RM` in `git status`) and never
+reaches the commit, so the task is archived at a non-terminal status
+(silent corruption; the archive is WORM, so it then sits wrong
+indefinitely). A working-tree read does NOT catch this — the working file
+shows the new status while the index still holds the old. Guard: after the
+forward move, `git add` the archived YAML, then assert the **staged** blob
+carries the terminal status —
+`git show :docs/tasks/archive/{id}.yaml | grep -q '^status: {new_status}'`
+(the index is the layer the commit reads). Mismatch → re-write
+`status: {new_status}` + `git add` + re-verify; emit a LOUD warning. The
+close is thus self-correcting at the index level, so a split can never
+reach a commit.
+
 Aux files (`{id}-gates.md`, `{id}-delegation.md`,
 `{id}-test-plan.md`) stay at the source path — gitignored,
 operational state.

@@ -233,20 +233,44 @@ steps:
       - framework/agent-autonomy.md
 
   - id: close-bookkeeping
-    name: "Close bookkeeping (ADR + knowledge processor + retro)"
+    name: "Close bookkeeping (distill → emit)"
     category: content
     instruction: >
-      Three skip-eligible sub-checks:
-      (a) ADR-discipline triple — was an architecture decision made that
-          meets hard-to-reverse + surprising-without-context + result-
-          of-real-trade-off? Yes → write ADR via documentation_and_adrs.
-          Solve is the workflow most likely to hit this trigger
-          (open-solution shape → real trade-off decisions).
-      (b) knowledge processor wrap-up — write a history entry with
-          frame-report-ref + IMPACT CHAIN under context/history/.
-      (c) workflow retro (safety net) — primary write is on-notice during
-          the work (see workflow preamble). Here: capture-now only entries
-          missed. Skip if none.
+      Distill → emit: first the distill (close_retro), then the emit
+      sub-checks consume it; each one-liner-skippable.
+
+      DISTILL — close_retro (skill: skills/close_retro/SKILL.md; spec 374).
+      Fires on a decision-heavy / new-pattern solve (orchestrator judgment;
+      solve is the highest §Stale-Decisions-value workflow — exploration-heavy,
+      early framings go stale); else skip with a one-liner. On fire: Buddy
+      dispatches the read-only agents/close-retro.md with this solve's artifacts
+      (frame report, review verdict, ACs, optional
+      docs/solve/<slug>-observations.md; solve has no MCA RETURN-SUMMARY); it
+      returns a retro 1-pager inline; Buddy writes it to
+      docs/solve/<slug>-retro.md (§Stale-Decisions T0×T1 + §Patterns-Emerged +
+      §Framework-Feed).
+
+      EMIT — consume the retro when present, else current raw-artifact
+      behaviour (no regression):
+
+      (a) ADR-discipline triple — consume the retro's §Stale-Decisions: which
+      decision meets hard-to-reverse + surprising-without-context +
+      result-of-real-trade-off? Yes → write ADR via documentation_and_adrs.
+      Solve hits this trigger more than any workflow (open-solution shape →
+      real trade-off decisions). Otherwise one-line skip.
+
+      (b) Knowledge process — pass the retro's §Patterns-Emerged as
+      `information` to knowledge_processor mode=process (or extract directly if
+      close_retro was skipped). MUST write a history entry with frame-report-ref
+      + IMPACT CHAIN under context/history/ — this is the step's completion
+      artifact (the retro at docs/solve/<slug>-retro.md does NOT satisfy
+      completion).
+
+      (c) §Framework-Feed — the retro's forge-feed-format entries land as
+      forge-feed entries (this replaces the old workflow-retro safety net).
+      When close_retro is SKIPPED, (c) reverts to the safety net: capture-now
+      only the on-notice forge-feed entries missed during the work; skip if
+      none.
     skill_ref: skills/knowledge_processor/SKILL.md
     completion:
       type: file_created_matching

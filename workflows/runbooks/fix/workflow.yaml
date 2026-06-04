@@ -195,18 +195,41 @@ steps:
     on_fail: block
 
   - id: close-bookkeeping
-    name: "Close bookkeeping (lessons + risk follow-up + retro)"
+    name: "Close bookkeeping (distill → emit)"
     category: content
     instruction: >
-      Three skip-eligible sub-checks:
-      (a) lessons-learned via knowledge_processor — what was the root
-          cause? what pattern-lesson applies? Persist to context.
+      Distill → emit: first the distill (close_retro), then the emit
+      sub-checks consume it; each one-liner-skippable.
+
+      DISTILL — close_retro (skill: skills/close_retro/SKILL.md; spec 374).
+      Fires on FULL or a decision-heavy fix (orchestrator judgment); skip the
+      common small fix with a one-liner (fix is the lowest §Stale-Decisions
+      value — RCA-short, no ADR sub-step). On fire: Buddy dispatches the
+      read-only agents/close-retro.md with this fix's artifacts (RCA root-cause
+      instead of a brief, RETURN-SUMMARY, review verdict, spec-drift, ACs,
+      optional docs/fix/<slug>-observations.md); it returns a retro 1-pager
+      inline; Buddy writes it to docs/fix/<slug>-retro.md. Fix has no ADR
+      sub-step → §Stale-Decisions stays noted in the retro (not dispatched to a
+      missing ADR step).
+
+      EMIT — consume the retro when present, else current raw-artifact
+      behaviour (no regression):
+
+      (a) lessons-learned — pass the retro's §Patterns-Emerged as `information`
+      to knowledge_processor mode=process (or extract directly if close_retro
+      was skipped): what was the root cause? what pattern-lesson applies?
+      Persist to context.
+
       (b) risk follow-up — read code-review verdict file; non-empty
-          `remaining_findings:` → file ONE follow-up task via
-          task_creation. No remaining: skip with rationale.
-      (c) workflow retro (safety net) — primary write is on-notice during
-          the work (see workflow preamble). Here: capture-now only entries
-          missed. Skip if none.
+      `remaining_findings:` → file ONE follow-up task via task_creation.
+      Orthogonal to close_retro (routes REVIEW findings, not lessons). No
+      remaining: skip with rationale.
+
+      (c) §Framework-Feed — the retro's forge-feed-format entries land as
+      forge-feed entries (this replaces the old workflow-retro safety net).
+      When close_retro is SKIPPED, (c) reverts to the safety net: capture-now
+      only the on-notice forge-feed entries missed during the work; skip if
+      none.
     skill_ref: skills/knowledge_processor/SKILL.md
     completion:
       type: manual

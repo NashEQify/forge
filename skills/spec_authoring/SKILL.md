@@ -125,6 +125,23 @@ that recommends X claims X exists, is current, does what spec says.
 Verify; do not carry from training memory. SoT principle:
 `agents/buddy/operational.md` §Source-Grounding.
 
+### Integration-surface grounding (REQUIRED)
+
+`Verify-before-recommend` covers *external* surfaces; this covers the
+framework's *own*. When the spec names an existing internal surface it
+plugs into — an enum value, a contract field, a gate / close sub-step, a
+skill / agent name, a config key — **ground each against the live SoT
+before board**: open the authoritative file, confirm the surface exists
+*as named*, and cite `file:line` in the spec next to the claim. A spec
+that says "feeds the N-value `target:` enum" or "consumes sub-step (b)"
+asserts that enum / sub-step exists as named — verify it. Do NOT carry it
+from a source task's framing or from training memory: a source task's
+claim about a *third* surface is the least-trustworthy source (it may
+itself be stale, and the drift then propagates verbatim into the new
+spec). Ungrounded → `[integration-pending]` marker; resolve before board
+(the chief raises a finding if the marker is present). SoT principle:
+`agents/buddy/operational.md` §Source-Grounding.
+
 ### Mediator pass-through audit
 
 When spec captures state downstream of a proxy / aggregator / broker /
@@ -237,6 +254,10 @@ sharpening.
 - **NOT** generate two-option questions from handoff/spec disagreement
   without code-grounding first.
 - **NOT** assume mediator pass-through; verify it (3-question audit).
+- **NOT** name an existing framework surface (enum / contract / gate /
+  skill) without grounding it against the live SoT and citing `file:line`;
+  a source task's claim about a third surface may be stale and propagates
+  verbatim into the new spec.
 
 Extended anti-patterns + Lessons-table (full failure-shape +
 discipline-rule rows): REFERENCE.md.
