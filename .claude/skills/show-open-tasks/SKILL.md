@@ -1,6 +1,6 @@
 ---
 name: show-open-tasks
-description: 'Render a fast terminal overview of the OPEN tasks in a docs/tasks/ tree (status not in a terminal set), grouped by priority and sorted by created date descending (newest first). Columns: ID, title, dep (blocked_by IDs), status, created, touched. Script-less: the methodology below is run directly. Triggers when the user wants a task list/overview/status table ("liste aller tasks", "zeig offene tasks", "task overview"); NOT for changing task status (use task-status-update) or creating a task (use task-creation).'
+description: Fast terminal overview of the OPEN tasks in a docs/tasks/ tree, grouped by priority, newest first. Triggers when the user wants a task list / overview / status table ("liste aller tasks", "zeig offene tasks", "task overview"); NOT for changing a task's status (use task_status_update) or creating one (use task_creation).
 ---
 
 # Skill: show-open-tasks (Wrapper)

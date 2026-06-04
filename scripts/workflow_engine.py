@@ -711,7 +711,10 @@ def check_completion(comp: dict[str, Any], state: dict[str, Any], step_state: di
         workflow_start = state.get("started", "")
         start_ts = 0.0 if not workflow_start else _parse_utc(workflow_start).timestamp()
         for pat in patterns:
-            for match_path in Path(PROJECT_ROOT / pat).parent.glob(Path(pat).name):
+            # Recursive glob from the repo root so `**` patterns resolve.
+            # `Path(ROOT / pat).parent.glob(name)` silently never matched a
+            # `**` pattern (parent became a literal `**` dir) — L-069.
+            for match_path in PROJECT_ROOT.glob(pat):
                 if match_path.exists() and match_path.stat().st_mtime >= start_ts:
                     rel = str(match_path.relative_to(PROJECT_ROOT))
                     state.setdefault("variables", {})["artifact_path"] = rel
@@ -803,7 +806,12 @@ def evaluate_guard(guard: dict[str, Any], state: dict[str, Any], variables: dict
     if gtype == "file_exists":
         path_pattern = guard.get("path", "")
         resolved = _resolve_vars(path_pattern, variables)
-        matches = list(Path(PROJECT_ROOT / resolved).parent.glob(Path(resolved).name))
+        # Recursive glob so `**` guard patterns resolve (sibling of L-069).
+        # An absolute resolved path can't be a repo-relative glob (pathlib
+        # raises on it) — honour the (False, ...) contract instead of crashing.
+        if Path(resolved).is_absolute():
+            return False, f"file not found (path must be repo-relative): {resolved}"
+        matches = list(PROJECT_ROOT.glob(resolved))
         if matches:
             return True, f"file exists: {resolved}"
         return False, f"file not found: {resolved}"

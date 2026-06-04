@@ -1,6 +1,6 @@
 ---
 name: adversary-test-plan
-description: Adversary-driven test-plan extension BEFORE implementation. Code-adversary reviews the tester design output and adds edge-case TCs the implementer's cognitive bias systematically misses. RED tests are a required pre-fix gate (mechanical definition of done). Pattern lesson 388 NEW-V-001 5x replay. Triggers when a tester design output exists and RED edge-case TCs are needed before implementation (build prepare); NOT for post-implementation review (use code_review_board).
+description: Adversary extension of a test plan BEFORE implementation — a code-adversary adds the edge-case tests the implementer's bias systematically misses (RED tests as a required pre-fix gate). Triggers when a tester design output exists and needs adversarial edge-case coverage (build prepare); NOT for post-implementation review (use code_review_board).
 ---
 
 # Skill: adversary-test-plan (Wrapper)

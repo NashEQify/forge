@@ -1,14 +1,13 @@
 ---
 name: council
 description: >
-  Structured architectural / strategic decision-making. Four modes:
-  (a) light — 3 council-members + chief, default on §1.0 proportionality pass.
-  (b) standard — 3 members + adversary + chief + frame-check, escalation tier.
-  (c) full — 4-6 members + adversary + chief + discourse + frame-check, foundational decisions.
-  (d) interactive — Buddy moderates a user dialog with perspectives.
-  All non-interactive modes use context-isolated members; chief consolidates;
-  Buddy decides per CLAUDE.md Invariant 1.
-  Triggers when an architecture/strategy decision has more than one viable path and is hard to reverse, AND Buddy is uncertain; NOT for single-path, easily-reversible, or current-scope-decidable cross-scope contradictions.
+  Structured architectural / strategic decision-making — context-isolated
+  members + a chief consolidation, you decide (light / standard / full /
+  interactive modes). Use when a decision has more than one viable path AND
+  is hard to reverse AND you're uncertain — spawn it yourself when stuck on
+  an architecture/strategy call, before escalating to the user. NOT for a
+  single-path or easily-reversible choice, or a cross-scope contradiction
+  you can settle in the current scope.
 status: active
 verification_tier: 1
 evidence_layout: per_finding

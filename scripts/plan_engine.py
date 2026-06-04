@@ -1803,6 +1803,241 @@ def compute_critical_path(
     return _topo_sort_legacy(tasks, milestones, target)
 
 
+def _resolve_active_milestone(
+    milestones: dict[str, Milestone], target: str
+) -> Milestone | None:
+    """Task 387: pick the milestone whose live task chain to surface.
+
+    The "active milestone" is the milestone that GATES the target — i.e. the
+    target's own gating milestone, NOT the earliest open one on the spine. This
+    is grounded in `compute_milestone_status`'s real emission semantics rather
+    than a literal `status == "active"` (the loader only emits "active" when a
+    member task is `in_progress`; the AC-1 all-`pending` tree never reaches it).
+
+    Status vocab emitted by `compute_milestone_status` (1465-1515):
+      - done    -> closed; skip.
+      - future  -> a `requires` predecessor is deep-blocked; not the frontier.
+      - blocked -> a `requires` predecessor is still open; the target's OWN gate
+                   chain is still the thing AC-1 asks to surface (M3=blocked ->
+                   surface M3's chain 550->...->429).
+      - ready   -> gate unmet, no member `in_progress`; the live frontier.
+      - active  -> a member is `in_progress`; the live frontier.
+
+    Resolution order:
+      1. The target milestone itself, when it is non-done — it IS the thing the
+         "what gates this" query is about (covers the AC-1 all-`pending` M3 tree,
+         which the loader emits as `blocked`/`ready`, never `active`).
+      2. else (target already done) the nearest open milestone on target's
+         requires-spine, walking from the target end (latest gating milestone
+         first, deps last) — the next thing that has to close.
+    Returns None when nothing gating resolves -> renderers degrade to the
+    milestone-spine-only behaviour (AC-4 graceful degradation).
+    """
+    tm = milestones.get(target)
+    if tm is not None and tm.status != "done":
+        return tm
+
+    # Target is done (or absent): fall back to the nearest open gating milestone
+    # on the requires-spine. _build_milestone_order is deps-first, so reverse it
+    # to walk from the target end (the gating milestone closest to target first).
+    spine = _build_milestone_order(milestones, target)
+    for k in reversed(spine):
+        m = milestones.get(k)
+        if m is not None and m.status != "done":
+            return m
+    return None
+
+
+def _resolve_gate_task_keys(m: Milestone, tasks: dict) -> list:
+    """Task 387: resolve ALL `type: task` gate dict-keys for milestone `m`.
+
+    A `type: task` gate carries the gate task id as a raw int (GateCondition.id).
+    The tasks dict is keyed by task.key — int in single-repo, '<repo>#<id>' in
+    aggregate mode (Task 367). m.tasks holds those same keys, so we match the
+    gate id against the milestone's own task keys to stay mode-agnostic. Falls
+    back to a direct int-key lookup for milestones whose tasks list is empty.
+
+    C-004: a milestone can carry multiple `type: task` gates (Milestone.gate is a
+    list, AC-4 says gate task(s)). All of them block closure, so all of their
+    chains must be surfaced — returning only the first silently under-reports.
+    Returns the resolved keys in gate-declaration order (deduped), or [].
+    """
+    gate_ids = [g.id for g in m.gate if getattr(g, "type", "") == "task"]
+    keys: list = []
+    seen: set = set()
+    for gid in gate_ids:
+        resolved = None
+        # Aggregate + single-repo: m.tasks entries are valid dict keys; match by
+        # the underlying task id so we never assume the key shape.
+        for key in m.tasks:
+            t = tasks.get(key)
+            if t is not None and t.id == gid:
+                resolved = key
+                break
+        # Single-repo direct lookup (gate task id == int key) for the case where
+        # the gate task is present in `tasks` but not listed in m.tasks.
+        if resolved is None and gid in tasks:
+            resolved = gid
+        if resolved is not None and resolved not in seen:
+            seen.add(resolved)
+            keys.append(resolved)
+    return keys
+
+
+@dataclass(frozen=True)
+class ActiveChain:
+    """Task 387 (F-CA-101): the full render-ready result of one active-milestone
+    chain computation. The renderer needs all three from a SINGLE call so the
+    production path == the tested path (no re-implemented orchestration twin):
+
+      - milestone: the resolved active Milestone (for the header label `m.key`),
+        or None when nothing gating resolves (spine-only degrade).
+      - chain: ordered task keys (roots-first, gate last), or [] on degrade.
+      - cycle_seen: True iff the blocked_by walk hit a real back-edge (the WARN
+        was already emitted by compute_active_milestone_task_chain — the
+        orchestration owner — so a consumer must NOT re-emit it).
+    """
+    milestone: Milestone | None
+    chain: list
+    cycle_seen: bool
+
+
+def compute_active_milestone_task_chain(
+    tasks: dict,
+    milestones: dict[str, Milestone],
+    target: str,
+) -> ActiveChain:
+    """Task 387: ordered task-level path through the ACTIVE milestone.
+
+    Resolves the active milestone's gate task and walks its blocked_by chain
+    transitively back to the nearest unblocked root(s), returning an
+    `ActiveChain(milestone, chain, cycle_seen)`: the resolved milestone (for the
+    header label), the ordered list of task keys (roots-first, gate last —
+    e.g. 550->551->552->553->429), and the cycle flag.
+
+    F-CA-101: this is the SINGLE source of the resolve -> gate -> topo -> WARN
+    sequence. `_fmt_active_chain_block` (the production render path that
+    `--critical-path`/`--boot` execute) consumes this one call instead of
+    re-implementing the orchestration — so the self-test TCs that exercise this
+    function exercise exactly what ships. The cycle WARN is emitted HERE (the
+    orchestration owner); consumers read `cycle_seen` and must not re-emit.
+
+    This is a SEPARATE computed view from compute_critical_path: it does NOT
+    feed _hashable_cp_set / _sequences_consistent / NEXT-ACTIONS cp_flag /
+    dashboard_json. The milestone spine stays the critical-path authority; this
+    only adds the live next-actions task chain nested under the active milestone.
+
+    C-004: when the milestone has multiple `type: task` gates, every gate's
+    chain is surfaced (the union of their predecessor sets, topo-ordered) — a
+    single milestone with two blocking gates is not silently truncated to one.
+
+    C-006: the active milestone is resolved exactly ONCE (here). Consumers reuse
+    the returned `.milestone` for the label rather than resolving again — a
+    second resolve is the latent label/content divergence trap.
+
+    Edge handling (AC-4):
+      - no active milestone resolvable -> milestone=None, chain=[] (degrade)
+      - no gate task resolves -> chain=[] (spine-only degrade)
+      - gate task has empty blocked_by -> chain=[gate-task-key] (gate alone)
+      - cycle in blocked_by -> break the walk + WARN, never loop
+
+    Mode-agnostic (Task 367): resolves keys via m.tasks / task.key, so it works
+    in single-repo (int keys) and aggregate ('<repo>#<id>' keys) alike.
+    """
+    m = _resolve_active_milestone(milestones, target)
+    if m is None:
+        return ActiveChain(None, [], False)
+    gate_keys = _resolve_gate_task_keys(m, tasks)
+    if not gate_keys:
+        return ActiveChain(m, [], False)
+
+    chain, cycle_seen = _topo_blocked_by_chain(gate_keys, tasks)
+    if cycle_seen:
+        _emit_warn(
+            f"ACTIVE_CHAIN_CYCLE: blocked_by cycle in milestone {m.key!r} "
+            f"gate-task chain — walk truncated at {len(chain)} task(s)"
+        )
+    return ActiveChain(m, chain, cycle_seen)
+
+
+def _topo_blocked_by_chain(gate_keys: list, tasks: dict) -> tuple[list, bool]:
+    """Task 387 (C-002): reverse-topo over `blocked_by` from the gate task(s).
+
+    Returns (ordered_keys, cycle_seen). For the acyclic portion the order is
+    roots-first — every dependency precedes its dependents (AC-1: 550 -> 551 ->
+    ... -> gate). A diamond / shared blocker (in-degree > 1, acyclic) is ordered
+    correctly and does NOT report a cycle; a real back-edge DOES (AC-4 keeps the
+    WARN).
+
+    F-CA-102 caveat: when cycle_seen is True, the nodes on the cycle never drain
+    from the Kahn queue, so they CANNOT be topo-ordered. They are appended as a
+    deterministic residue (sorted by str) AFTER the drained prefix — within that
+    residue the "dependency precedes dependent" guarantee does NOT hold. This is
+    bounded: the residue only appears alongside an always-emitted
+    ACTIVE_CHAIN_CYCLE WARN (the caller emits it whenever cycle_seen is True), so
+    a mis-ordered tail is never presented silently as a valid topo order.
+
+    Two-phase, mirroring the DAG pattern in _compute_critical_path_dag:
+      1. Collect the reachable predecessor subgraph from the gate(s) via BFS on
+         blocked_by, recording the dependency edges (dep -> dependent).
+      2. Kahn topological sort over those edges. Nodes that never drain (still
+         have unmet predecessors when the queue empties) are exactly the nodes
+         on a cycle — that, and only that, sets cycle_seen. This distinguishes a
+         re-convergence (DAG, legal) from a back-edge (true cycle); the old
+         single black `visited` set could not.
+    """
+    # Phase 1: reachable predecessor subgraph (nodes + dep->dependent edges).
+    reachable: set = set()
+    # children[dep] = dependents that list `dep` in their blocked_by.
+    children: dict = defaultdict(list)
+    in_deg: dict = {}
+    queue: deque = deque()
+    for gk in gate_keys:
+        if gk not in reachable:
+            reachable.add(gk)
+            in_deg[gk] = 0
+            queue.append(gk)
+    while queue:
+        key = queue.popleft()
+        t = tasks.get(key)
+        if t is None:
+            continue
+        # blocked_by entries are valid task keys in both modes (int single-repo,
+        # '<repo>#<id>' aggregate after rewrite).
+        for dep in t.blocked_by:
+            children[dep].append(key)
+            in_deg[key] = in_deg.get(key, 0) + 1
+            if dep not in reachable:
+                reachable.add(dep)
+                in_deg.setdefault(dep, 0)
+                queue.append(dep)
+
+    # Phase 2: Kahn topo sort (roots-first). Tie-break popped roots by a stable
+    # key so the order is deterministic across runs.
+    ready: list = sorted((k for k in reachable if in_deg.get(k, 0) == 0), key=str)
+    ordered: list = []
+    while ready:
+        key = ready.pop(0)
+        ordered.append(key)
+        newly_ready = []
+        for child in children.get(key, []):
+            in_deg[child] -= 1
+            if in_deg[child] == 0:
+                newly_ready.append(child)
+        # Keep deterministic order as nodes free up.
+        for nk in sorted(newly_ready, key=str):
+            ready.append(nk)
+
+    # Any node not emitted is on a cycle (its predecessors never all drained).
+    cycle_seen = len(ordered) < len(reachable)
+    if cycle_seen:
+        # Append the cycle residue (deterministic) so the gate(s) still surface
+        # rather than vanishing — the walk is truncated, not dropped.
+        residue = sorted((k for k in reachable if k not in set(ordered)), key=str)
+        ordered.extend(residue)
+    return ordered, cycle_seen
+
+
 def _compute_critical_path_dag(
     tasks: dict,
     milestones: dict[str, Milestone],
@@ -3499,14 +3734,19 @@ def fmt_boot(tasks, milestones, target, north_star, op_intent, critical_path,
     if critical_path:
         cp_labels = [_render_cp_item(item, tasks) for item in critical_path]
         total_effort = 0
+        has_effort_item = False  # C-003: any int task-id item that carries effort.
         for item in critical_path:
             if isinstance(item, int) and not isinstance(item, bool):
                 t = tasks.get(item)
                 if t is not None:
                     total_effort += t.effort_weight
+                    has_effort_item = True
         lines.append(f"CRITICAL PATH -> {target}:")
         lines.append(f"  {' -> '.join(cp_labels)}")
-        lines.append(f"  Effort-weighted length: {total_effort}")
+        # AC-3 (C-003): suppress the effort line for a milestone-key (string)
+        # spine — a structural 0 reads as a real metric when it is not one.
+        if has_effort_item:
+            lines.append(f"  Effort-weighted length: {total_effort}")
         # Bottleneck: first non-done task on path (only int items count)
         for item in critical_path:
             if isinstance(item, int) and not isinstance(item, bool):
@@ -3514,6 +3754,10 @@ def fmt_boot(tasks, milestones, target, north_star, op_intent, critical_path,
                 if t is not None and not t.is_done:
                     lines.append(f"  Bottleneck: Task {_format_tid(t)} ({t.title[:40]})")
                     break
+        # Task 387 (AC-2): nest the live active-milestone task chain under the
+        # milestone spine so a boot read answers "what's the next critical-path
+        # task" without a manual plan.yaml read.
+        lines.extend(_fmt_active_chain_block(tasks, milestones, target))
     lines.append("")
 
     # In progress
@@ -3622,21 +3866,97 @@ def fmt_next(tasks, next_actions, critical_path, blocking_scores):
     return "\n".join(lines)
 
 
-def fmt_critical_path(tasks, critical_path, target):
+_VALID_EFFORTS = frozenset(EFFORT_WEIGHTS)  # {"S","M","L","XL"}
+
+
+def _fmt_active_chain_block(tasks, milestones, target, indent="  "):
+    """Task 387: render the active-milestone task chain as nested lines.
+
+    Returns a list of rendered lines (possibly empty when no chain resolves —
+    AC-4 degrade). Shared by fmt_critical_path + fmt_boot.
+
+    F-CA-101: the data comes from a SINGLE compute_active_milestone_task_chain
+    call — the same function the 13 self-test TCs exercise. This renderer does
+    NOT re-implement the resolve -> gate -> topo orchestration, so the shipped
+    path is exactly the tested path (no divergence twin). The header label
+    (`m.key`), the chain content, and the cycle flag all come from that one
+    result.
+
+    C-006: the active milestone is resolved exactly ONCE — inside the public
+    function — and reused here via `result.milestone` for the header. This
+    renderer does NOT resolve again, so the label and the content can never
+    point at different milestones, AND the resolve (a BFS+topo over the
+    requires-graph) runs once per render, not twice. The cycle WARN is emitted
+    by the public function (orchestration owner); this renderer must not
+    re-emit it.
+    """
+    result = compute_active_milestone_task_chain(tasks, milestones, target)
+    m = result.milestone
+    chain = result.chain
+    if m is None or not chain:
+        return []
+    lines = [f"{indent}ACTIVE-MILESTONE TASK PATH ({m.key}):"]
+    # Known limitation (C-007, deferred to Task 388): in aggregate mode
+    # _render_cp_item's str-branch returns the bare '<repo>#<id>' key (no title);
+    # the status mark below is appended outside the renderer. Single-repo int
+    # keys render '[id] title' inside _render_cp_item. Cosmetic only — the id is
+    # present and `Next on chain:` still renders the title. Not widened here.
+    labels = []
+    chain_effort = 0
+    unset_effort = 0  # C-005: tasks with no explicit {S,M,L,XL} effort.
+    for key in chain:
+        t = tasks.get(key)
+        if t is not None:
+            chain_effort += t.effort_weight
+            if t.effort not in _VALID_EFFORTS:
+                unset_effort += 1
+            status_mark = "done" if t.is_done else t.status
+            labels.append(f"{_render_cp_item(key, tasks)} [{status_mark}]")
+        else:
+            labels.append(_render_cp_item(key, tasks))
+    lines.append(f"{indent}  {' -> '.join(labels)}")
+    # AC-3 (C-005): the chain-effort metric must be honest. A task with no
+    # explicit {S,M,L,XL} effort silently contributes the default weight (3);
+    # presenting that as an exact number is the same misleading-metric class as
+    # the zero placeholder. Mark it estimated and name the unset count so the
+    # reader never reads a defaulted weight as a measured estimate.
+    if unset_effort:
+        plural = "s" if unset_effort != 1 else ""
+        lines.append(
+            f"{indent}  Chain effort-weighted length: ~{chain_effort} "
+            f"({unset_effort} task{plural} effort-unset, counted as M)"
+        )
+    else:
+        lines.append(f"{indent}  Chain effort-weighted length: {chain_effort}")
+    # Bottleneck: first non-done task on the chain.
+    for key in chain:
+        t = tasks.get(key)
+        if t is not None and not t.is_done:
+            lines.append(f"{indent}  Next on chain: [{_format_tid(t)}] {t.title[:40]}")
+            break
+    return lines
+
+
+def fmt_critical_path(tasks, critical_path, target, milestones=None):
     """Task 435 (F-C-P2-003): Mixed-Item-Render via _render_cp_item.
     Items koennen sein: int task-id, str milestone-key, list[str] parallel,
     str post-MVP-Beschreibung.
+
+    Task 387: when `milestones` is supplied, the live active-milestone task
+    chain (gate -> blocked_by) is nested under the milestone spine.
     """
     if not critical_path:
         return f"No critical path to {target} (no pending tasks in scope)"
     lines = [f"CRITICAL PATH -> {target}:"]
     total = 0
+    has_effort_item = False  # C-003: any int task-id item that carries effort.
     for item in critical_path:
         rendered = _render_cp_item(item, tasks)
         if isinstance(item, int) and not isinstance(item, bool):
             t = tasks.get(item)
             if t is not None:
                 total += t.effort_weight
+                has_effort_item = True
                 done_mark = "done" if t.is_done else t.status
                 lines.append(f"  {rendered} ({t.milestone}) effort:{t.effort} [{done_mark}]")
             else:
@@ -3646,7 +3966,18 @@ def fmt_critical_path(tasks, critical_path, target):
             lines.append(f"  {rendered}  [parallel]")
         else:
             lines.append(f"  {rendered}")
-    lines.append(f"\nTotal effort-weighted length: {total}")
+    # AC-3 (C-003): a milestone-key (string) spine has no effort-bearing items,
+    # so the sum is a structural 0 — a rendered "0" reads as a real metric when
+    # it is not one. Only show the effort line when the spine actually carries
+    # effort-bearing task items.
+    if has_effort_item:
+        lines.append(f"\nTotal effort-weighted length: {total}")
+    # Task 387: nest the active-milestone task chain under the spine.
+    if milestones is not None:
+        chain_lines = _fmt_active_chain_block(tasks, milestones, target)
+        if chain_lines:
+            lines.append("")
+            lines.extend(chain_lines)
     return "\n".join(lines)
 
 
@@ -4069,6 +4400,13 @@ def _run_self_test() -> int:
     else:
         _fail(f"Smoke-7: out_int={out_int!r} out_str={out_str!r} out_list={out_list!r} out_post={out_post!r}")
 
+    # Task 387: active-milestone task-chain self-test suite (RED-first).
+    # Synthetic in-memory fixture (Task/Milestone/GateCondition objects) — no
+    # coupling to a consumer repo's live docs/tasks/ tree (AC-4).
+    chain_rc = _run_active_milestone_chain_self_test()
+    if chain_rc != 0:
+        failures.append("active-milestone-chain self-test suite")
+
     # Task 327: task-schema conformance adversary suite (RED-first).
     schema_rc = _run_task_schema_self_test()
     if schema_rc != 0:
@@ -4078,6 +4416,329 @@ def _run_self_test() -> int:
         print(f"\n{len(failures)} self-test failure(s).")
         return 1
     print("\nAll smoke-tests passed.")
+    return 0
+
+
+def _run_active_milestone_chain_self_test() -> int:
+    """Task 387: adversary suite for compute_active_milestone_task_chain.
+
+    Synthetic in-memory fixture (no plan.yaml / docs/tasks coupling, AC-4):
+    builds Task / Milestone / GateCondition objects directly and exercises
+    the gate -> blocked_by walk plus its edge cases. Mirrors the inline
+    object-construction style of Smoke-5. Returns 0 on all-PASS, 1 otherwise.
+    """
+    failures: list[str] = []
+
+    def _ok(msg: str) -> None:
+        print(f"  [PASS] {msg}")
+
+    def _fail(msg: str) -> None:
+        print(f"  [FAIL] {msg}")
+        failures.append(msg)
+
+    def _t(tid: int, status: str, blocked_by: list, *, effort: str = "M",
+           milestone: str = "M3", repo: str = "") -> Task:
+        return Task(id=tid, title=f"task {tid}", status=status,
+                    milestone=milestone, blocked_by=list(blocked_by),
+                    effort=effort, _repo=repo)
+
+    def _ms(key: str, gate_task_ids, task_keys: list,
+            requires: list | None = None) -> Milestone:
+        """Build a Milestone WITHOUT a hand-set status.
+
+        gate_task_ids: None | int | list[int] -> one or more `type: task` gates.
+        Status is left "" so the caller MUST derive it via
+        compute_milestone_status (the live-loader path). The old helper hand-set
+        status="active" — a value the loader never emits for an all-`pending`
+        gate chain — which is exactly what masked C-001.
+        """
+        if gate_task_ids is None:
+            gate = []
+        elif isinstance(gate_task_ids, int):
+            gate = [GateCondition(type="task", id=gate_task_ids)]
+        else:
+            gate = [GateCondition(type="task", id=g) for g in gate_task_ids]
+        m = Milestone(key=key, title=key, gate=gate,
+                      requires=list(requires or []))
+        m.tasks = list(task_keys)
+        return m
+
+    def _derive(tasks: dict, ms: dict) -> None:
+        """Live-loader path: populate m.tasks + compute statuses the way the
+        real pipeline does. NO hand-set status anywhere (kills the C-001 mask)."""
+        assign_tasks_to_milestones(tasks, ms)
+        compute_milestone_status(ms, tasks)
+
+    print("\nplan_engine --self-test (Task 387 active-milestone task chain)")
+
+    # TC-1 (AC-1 happy path, LOADER-DRIVEN — RED-confirms C-001): the AC-1 tree
+    # gate task 429 blocked_by 553; chain 550(done)->551->552->553->429, ALL
+    # non-done tasks `pending` (none in_progress). Status is derived by
+    # compute_milestone_status — which emits "blocked"/"ready" for M3, NEVER
+    # "active". The resolver must still surface M3's own chain (the target's
+    # gating milestone), NOT the earliest open milestone M2.
+    tasks = {
+        500: _t(500, "pending", [], milestone="M2"),   # M2 has an open task ->
+        550: _t(550, "done", [], milestone="M3"),       # M2 not done -> M3 blocked
+        551: _t(551, "pending", [550], milestone="M3"),
+        552: _t(552, "pending", [551], milestone="M3"),
+        553: _t(553, "pending", [552], milestone="M3"),
+        429: _t(429, "pending", [553], milestone="M3"),
+    }
+    ms = {
+        "M1": _ms("M1", None, [], requires=[]),
+        "M2": _ms("M2", 500, [500], requires=["M1"]),
+        "M3": _ms("M3", 429, [550, 551, 552, 553, 429], requires=["M2"]),
+    }
+    _derive(tasks, ms)
+    # Precondition guard: prove the loader does NOT emit "active" for M3 (so a
+    # status=="active" resolver would fall through to the wrong milestone).
+    if ms["M3"].status == "active":
+        _fail("TC-1 precondition: loader emitted M3=active "
+              "(expected blocked/ready) — fixture not loader-shaped")
+    resolved = _resolve_active_milestone(ms, "M3")
+    # F-CA-101: take the full ActiveChain (the single-call result the renderer
+    # consumes). C-006: the result's own `.milestone` must equal the milestone
+    # the independent resolver returns — proving the public fn resolves the SAME
+    # milestone the header will label with, so the renderer can reuse `.milestone`
+    # without a second resolve.
+    result = compute_active_milestone_task_chain(tasks, ms, "M3")
+    chain = result.chain
+    if resolved is not None and resolved.key == "M3" \
+            and result.milestone is not None and result.milestone.key == "M3" \
+            and chain == [550, 551, 552, 553, 429]:
+        _ok(f"TC-1: loader-driven AC-1 tree resolves to gating M3 "
+            f"(status={ms['M3'].status!r}), chain 550..429 roots-first; "
+            f"single-call .milestone == resolved (C-006 single-resolve)")
+    else:
+        _fail(f"TC-1: resolved={resolved.key if resolved else None!r} "
+              f"result.milestone={result.milestone.key if result.milestone else None!r} "
+              f"chain={chain!r} (M3 status={ms['M3'].status!r}) "
+              f"expected M3 + [550,551,552,553,429]")
+
+    # TC-2 (AC-3 honest effort): effort summed over the real task chain
+    # (all int items carry effort_weight) — never a zero placeholder.
+    effort = sum(tasks[k].effort_weight for k in chain)
+    if effort == 5 * EFFORT_WEIGHTS["M"]:
+        _ok(f"TC-2: chain effort summed over real tasks ({effort})")
+    else:
+        _fail(f"TC-2: effort={effort} expected {5 * EFFORT_WEIGHTS['M']}")
+
+    # TC-3 (AC-2 boot parity): fmt_boot renders the chain block; fmt_critical_path
+    # renders the same chain. cp is the milestone spine (unchanged contract).
+    spine = ["M3"]
+    boot_out = fmt_boot(tasks, ms, "M3", "", "", spine, {}, [], [])
+    cp_out = fmt_critical_path(tasks, spine, "M3", ms)
+    if "[429]" in boot_out and "[550]" in boot_out and "[429]" in cp_out:
+        _ok("TC-3: --boot and --critical-path both surface the task chain")
+    else:
+        _fail("TC-3: chain not surfaced in fmt_boot/fmt_critical_path output")
+
+    # TC-3b (AC-3 / C-003): the milestone-key spine must NOT render a zero-valued
+    # effort line (a structural 0 reads as a real metric). The honest per-chain
+    # effort line still appears.
+    if "Total effort-weighted length: 0" not in cp_out \
+            and "Effort-weighted length: 0" not in boot_out \
+            and "Chain effort-weighted length:" in cp_out:
+        _ok("TC-3b: no misleading zero spine-effort line; honest chain metric present")
+    else:
+        _fail(f"TC-3b: misleading zero effort line rendered for a string spine\n"
+              f"cp_out={cp_out!r}")
+
+    # TC-4 (AC-4 cycle-guard, LOADER-DRIVEN): a real blocked_by back-edge
+    # 553 -> 552 -> 553 must break + WARN. Status derived (no hand-set active).
+    cyc = {
+        429: _t(429, "pending", [553]),
+        553: _t(553, "pending", [552]),
+        552: _t(552, "pending", [553]),
+    }
+    cyc_ms = {"M3": _ms("M3", 429, [429, 553, 552], requires=[])}
+    _derive(cyc, cyc_ms)
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        cyc_chain = compute_active_milestone_task_chain(cyc, cyc_ms, "M3").chain
+    cyc_warn = [w for w in caught if "CYCLE" in str(w.message)]
+    if 429 in cyc_chain and len(cyc_chain) == len(set(cyc_chain)) and cyc_warn:
+        _ok("TC-4: real cycle in blocked_by breaks the walk + WARN, no loop")
+    else:
+        _fail(f"TC-4: chain={cyc_chain!r} warns={[str(w.message) for w in cyc_warn]}")
+
+    # TC-5 (AC-4 missing gate task): gate id points to a non-existent task ->
+    # empty chain (degrade to spine-only), no crash.
+    miss_tasks = {550: _t(550, "done", [])}
+    miss_ms = {"M3": _ms("M3", 999, [550], requires=[])}
+    _derive(miss_tasks, miss_ms)
+    miss_chain = compute_active_milestone_task_chain(miss_tasks, miss_ms, "M3").chain
+    if miss_chain == []:
+        _ok("TC-5: missing gate task -> empty chain (spine-only degrade)")
+    else:
+        _fail(f"TC-5: chain={miss_chain!r} expected []")
+
+    # TC-6 (AC-4 empty blocked_by): gate task resolves but has no blocked_by ->
+    # the gate task alone.
+    solo = {429: _t(429, "pending", [])}
+    solo_ms = {"M3": _ms("M3", 429, [429], requires=[])}
+    _derive(solo, solo_ms)
+    solo_chain = compute_active_milestone_task_chain(solo, solo_ms, "M3").chain
+    if solo_chain == [429]:
+        _ok("TC-6: empty blocked_by -> gate task alone")
+    else:
+        _fail(f"TC-6: chain={solo_chain!r} expected [429]")
+
+    # TC-7 (AC-4 no active milestone): the only milestone is done (no gating
+    # frontier) -> empty chain, no crash (renderers fall back to spine-only).
+    done_only = {"M0": _ms("M0", None, [], requires=[])}
+    _derive({}, done_only)
+    none_chain = compute_active_milestone_task_chain({}, done_only, "M0").chain
+    if none_chain == [] and done_only["M0"].status == "done":
+        _ok("TC-7: no gating milestone (M0 done) -> empty chain (no crash)")
+    else:
+        _fail(f"TC-7: chain={none_chain!r} (M0={done_only['M0'].status!r}) expected []")
+
+    # TC-8 (done-target degrade, LOADER-DRIVEN — grounded on the status DAG):
+    # a milestone is loader-"done" only when its gate passes AND all tasks are
+    # terminal AND all `requires` are done. So a done TARGET implies every
+    # predecessor on its requires-spine is also done — there is no open frontier
+    # among its deps. The resolver must therefore return None (-> spine-only
+    # degrade, AC-4), never a stale or arbitrary milestone. This pins the actual
+    # loader invariant rather than the old hand-set status="ready" fixture.
+    fb_tasks = {
+        700: _t(700, "done", [], milestone="M1"),
+        701: _t(701, "done", [700], milestone="M2"),
+    }
+    fb_ms = {
+        "M1": _ms("M1", 700, [700], requires=[]),
+        "M2": _ms("M2", 701, [701], requires=["M1"]),
+    }
+    _derive(fb_tasks, fb_ms)
+    fb_resolved = _resolve_active_milestone(fb_ms, "M2")  # target M2 is loader-done
+    fb_chain = compute_active_milestone_task_chain(fb_tasks, fb_ms, "M2").chain
+    if fb_ms["M2"].status == "done" and fb_resolved is None and fb_chain == []:
+        _ok("TC-8: loader-done target (all spine deps done) -> None, spine-only degrade")
+    else:
+        _fail(f"TC-8: M2={fb_ms['M2'].status!r} "
+              f"resolved={fb_resolved.key if fb_resolved else None!r} "
+              f"chain={fb_chain!r} expected done+None+[]")
+
+    # TC-9 (aggregate-mode keying, Task 367): tasks keyed by '<repo>#<id>',
+    # blocked_by rewritten to the same key form; gate id is still a raw int.
+    # The walk must resolve via m.tasks keys, not by assuming int keys.
+    agg = {
+        "repoA#553": _t(553, "pending", ["repoA#552"], repo="repoA"),
+        "repoA#552": _t(552, "done", [], repo="repoA"),
+        "repoA#429": _t(429, "in_progress", ["repoA#553"], repo="repoA"),
+    }
+    agg_ms = {"repoA:M3": _ms("repoA:M3", 429,
+                              ["repoA#552", "repoA#553", "repoA#429"], requires=[])}
+    # compute_milestone_status' annotation is dict[int, Task] (pre-Task-367); in
+    # aggregate mode the keys are '<repo>#<id>' strings at runtime, which the
+    # function handles. Narrow ignore — the out-of-scope signature is unchanged.
+    compute_milestone_status(agg_ms, agg)  # type: ignore[arg-type]
+    agg_chain = compute_active_milestone_task_chain(agg, agg_ms, "repoA:M3").chain
+    if agg_chain == ["repoA#552", "repoA#553", "repoA#429"]:
+        _ok("TC-9: aggregate-mode str keys resolve gate + walk correctly")
+    else:
+        _fail(f"TC-9: chain={agg_chain!r} expected repoA#552->553->429")
+
+    # TC-10 (AC-1 stop at done root): the AC-1 chain's first element is the done
+    # root 550; the walk includes it but does not over-walk past its empty deps.
+    if chain[0] == 550 and tasks[550].is_done:
+        _ok("TC-10: walk terminates at done root (550) — bounded, no over-walk")
+    else:
+        _fail(f"TC-10: chain[0]={chain[0]!r} done={tasks[550].is_done}")
+
+    # TC-11 (C-002 DIAMOND — RED-confirms the false-cycle + mis-order): a shared
+    # blocker. gate 429 blocked_by [2,3]; 2,3 both blocked_by 1 (root). Acyclic.
+    # MUST order roots-first (1 before 2 and 3, gate 429 last) and MUST NOT warn.
+    diamond = {
+        1: _t(1, "done", []),
+        2: _t(2, "pending", [1]),
+        3: _t(3, "pending", [1]),
+        429: _t(429, "in_progress", [2, 3]),
+    }
+    dia_ms = {"M3": _ms("M3", 429, [1, 2, 3, 429], requires=[])}
+    _derive(diamond, dia_ms)
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        dia_chain = compute_active_milestone_task_chain(diamond, dia_ms, "M3").chain
+    dia_warn = [w for w in caught if "CYCLE" in str(w.message)]
+    pos = {k: i for i, k in enumerate(dia_chain)}
+    ordered_ok = (
+        set(dia_chain) == {1, 2, 3, 429}
+        and pos[1] < pos[2] and pos[1] < pos[3]
+        and pos[2] < pos[429] and pos[3] < pos[429]
+    )
+    if ordered_ok and not dia_warn:
+        _ok(f"TC-11: diamond ordered roots-first {dia_chain} + NO false cycle warn")
+    else:
+        _fail(f"TC-11: diamond chain={dia_chain!r} warns="
+              f"{[str(w.message) for w in dia_warn]} (expected roots-first, no warn)")
+
+    # TC-12 (C-004 MULTI-GATE — RED-confirms silent under-report): milestone M3
+    # has TWO type:task gates 429 and 600, both fanning off a shared root 500.
+    # BOTH gate chains must surface — not just the first.
+    mg = {
+        500: _t(500, "done", []),
+        429: _t(429, "in_progress", [500]),
+        600: _t(600, "pending", [500]),
+    }
+    mg_ms = {"M3": _ms("M3", [429, 600], [500, 429, 600], requires=[])}
+    _derive(mg, mg_ms)
+    mg_chain = compute_active_milestone_task_chain(mg, mg_ms, "M3").chain
+    if set(mg_chain) == {500, 429, 600} and mg_chain.index(500) == 0:
+        _ok(f"TC-12: multi-gate surfaces ALL gate chains {mg_chain} (no under-report)")
+    else:
+        _fail(f"TC-12: multi-gate chain={mg_chain!r} expected all of "
+              f"{{500,429,600}} (gate 600 must not be dropped)")
+
+    # TC-13 (C-005 — invalid/blank effort must not silently inflate): gate task
+    # has effort="" (non-{S,M,L,XL}). The rendered chain-effort line MUST mark it
+    # estimated (~N + "effort-unset"), not present a clean exact number.
+    be = {900: _t(900, "in_progress", [], effort="")}
+    be_ms = {"M3": _ms("M3", 900, [900], requires=[])}
+    _derive(be, be_ms)
+    be_lines = _fmt_active_chain_block(be, be_ms, "M3")
+    be_blob = "\n".join(be_lines)
+    if "effort-unset" in be_blob and "~" in be_blob:
+        _ok("TC-13: blank-effort task marks chain-effort estimated (no silent fabricated number)")
+    else:
+        _fail(f"TC-13: blank-effort not marked estimated\nlines={be_lines!r}")
+
+    # TC-14 (F-CA-101 — RENDER-PATH parity for the C-002 + C-004 guarantees):
+    # TC-11/TC-12 prove diamond-order + multi-gate on compute_*; this drives the
+    # ACTUAL shipped renderer (_fmt_active_chain_block, the path --critical-path/
+    # --boot execute) on those two shapes and asserts the ORDERING (not mere
+    # presence) shows up in the rendered text. After the collapse the renderer
+    # routes through compute_active_milestone_task_chain, so a regression in the
+    # tested fn now also breaks this — the proof is on what ships.
+    #   Diamond: root 1 must render before both 2 and 3, gate 429 after both.
+    dia_render = "\n".join(_fmt_active_chain_block(diamond, dia_ms, "M3"))
+    chain_line = next((ln for ln in dia_render.splitlines() if " -> " in ln), "")
+    p1, p2, p3, p429 = (chain_line.find(f"[{n}]") for n in (1, 2, 3, 429))
+    diamond_render_ok = (
+        "ACTIVE-MILESTONE TASK PATH (M3)" in dia_render
+        and -1 not in (p1, p2, p3, p429)
+        and p1 < p2 and p1 < p3 and p2 < p429 and p3 < p429
+    )
+    #   Multi-gate: BOTH gate chains (429 AND 600) must appear in the render,
+    #   shared root 500 first — gate 600 must not be silently dropped.
+    mg_render = "\n".join(_fmt_active_chain_block(mg, mg_ms, "M3"))
+    mg_line = next((ln for ln in mg_render.splitlines() if " -> " in ln), "")
+    m500, m429, m600 = (mg_line.find(f"[{n}]") for n in (500, 429, 600))
+    multigate_render_ok = (
+        -1 not in (m500, m429, m600) and m500 < m429 and m500 < m600
+    )
+    if diamond_render_ok and multigate_render_ok:
+        _ok("TC-14: shipped renderer (_fmt_active_chain_block) preserves "
+            "diamond roots-first + multi-gate fan-out (production==tested path)")
+    else:
+        _fail(f"TC-14: render-path order mismatch\n"
+              f"diamond_line={chain_line!r} ok={diamond_render_ok}\n"
+              f"multigate_line={mg_line!r} ok={multigate_render_ok}")
+
+    if failures:
+        print(f"\n{len(failures)} active-milestone-chain failure(s).")
+        return 1
     return 0
 
 
@@ -4642,7 +5303,7 @@ def main():
     elif args.next:
         print(fmt_next(tasks, next_actions, critical_path, blocking_scores))
     elif args.critical_path:
-        print(fmt_critical_path(tasks, critical_path, target))
+        print(fmt_critical_path(tasks, critical_path, target, milestones))
     elif args.check is not None:
         key = None if args.check == "__all__" else args.check
         output, all_pass = fmt_check(milestones, tasks, key)

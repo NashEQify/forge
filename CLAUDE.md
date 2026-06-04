@@ -116,10 +116,16 @@ shortcuts.
 Before any commit, Buddy must **PERSIST** → operational.md §Post-Action
 Obligations (Context · History · Backlog).
 
-**No branching ceremony.** Single-dev workflow — commit directly to
-`main` when the user authorises. The Claude-Code session-guidance rule
-"If on the default branch, branch first" does NOT apply here. Override
-locked 2026-05-23.
+**No branching ceremony.** Single-dev workflow — Buddy commits directly
+to `main` autonomously at workflow phase boundaries (the runbooks
+prescribe per-phase commits) and at logical work boundaries; no
+per-commit authorisation is needed — this overrides the harness "ask
+before committing" default. The Claude-Code session-guidance rule "If on
+the default branch, branch first" does NOT apply here. Bounds:
+Conventional-Commit format (CG-CONV), the pre-commit hook must pass,
+never bypass hooks; `git push` and genuinely destructive / irreversible
+git ops (force-push, `reset --hard`, history rewrite) still warrant a
+heads-up. Override locked 2026-05-23.
 
 ## Active Hooks
 

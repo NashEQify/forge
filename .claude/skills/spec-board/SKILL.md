@@ -1,6 +1,6 @@
 ---
 name: spec-board
-description: 'Multi-perspective spec quality review. Checks whether an existing spec is rebuild-ready: can an implementer rebuild it 1:1 from the spec alone? 5 dimensions: completeness, consistency, implementability, interface contracts, dependencies. NOT for spec authoring (new specs) and NOT for retroactive code sync — those are spec_authoring and retroactive_spec_update. The board is the quality check AFTER writing. Triggers when an existing spec must be checked for rebuild-readiness AFTER writing; NOT for spec authoring (use spec_authoring) or retroactive code sync (use retroactive_spec_update).'
+description: Multi-perspective review of whether an EXISTING spec is rebuild-ready — could an implementer rebuild it 1:1 from the spec alone? Use when a spec needs a quality check after writing and before build (completeness / consistency / contract / dependency gaps); reach for it instead of eyeballing a spec yourself. NOT for authoring a new spec (use spec_authoring) or syncing a spec to code (use retroactive_spec_update).
 ---
 
 # Skill: spec-board (Wrapper)

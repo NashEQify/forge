@@ -1,6 +1,6 @@
 ---
 name: task-creation
-description: Structured task creation. Self-contained tasks with ACs, intent_chain, and a duplicate + dependency check. Task quality determines downstream quality. Triggers when actionable work needs tracking as a new task (intake ACTIONABLE, root-cause fix-task, spec decomposition); NOT for direct YAML edits or sofort-fixes.
+description: Create a new, self-contained task (acceptance criteria + duplicate / dependency check). Use when actionable work needs tracking as a new task — at intake, as a fix-task, or from spec decomposition; reach for it instead of free-flow-adding a task by hand. NOT for editing an existing task (use task_status_update) or a fix you can just do now.
 ---
 
 # Skill: task-creation (Wrapper)
