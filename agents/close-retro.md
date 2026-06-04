@@ -92,6 +92,10 @@ or
 - "This looks like a stale-decision" — no T0×T1 cross-temporal link (a cited
   T0 decision AND a cited T1 invalidator) → it is a pattern, not a
   stale-decision. Put it in §Patterns-Emerged.
+- "The verdict mentions this decision, so it's the invalidator" — mention is
+  not invalidation. The cited T1 statement must assert a fact that makes the
+  T0 decision *wrong* or moot, not merely touch its topic. If it only comments
+  on the area → pattern (§Patterns-Emerged), not a stale-decision.
 - "I'll route this framework-feed entry via the router" — NO. §Framework-Feed
   is forge-feed-format; `risk_followup_routing` routes review findings, not
   your lessons. Do not call or mimic it.
