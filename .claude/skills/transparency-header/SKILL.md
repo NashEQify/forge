@@ -1,6 +1,6 @@
 ---
 name: transparency-header
-description: Header formats for delegation, execution, and direct conversation. Print on every delegation and task start. No opt-in. Triggers when a delegation or task start occurs (every time, no opt-in); NOT a conditional or skippable step.
+description: Header formats for delegation, execution, and direct action — the user's at-a-glance scan of what was done and why across parallel sessions. Triggers when a turn delegates, executes, or takes a state-changing / decision-bearing direct action; pure discussion and acknowledgements are exempt (the prose is the record).
 ---
 
 # Skill: transparency-header (Wrapper)

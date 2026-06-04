@@ -344,7 +344,12 @@ Mechanical, not a per-turn gate:
   (pre-edit code-source-grounding gate + architect-dispatch threshold);
   sub-threshold amendments stay Buddy-direct, the gate still applies.
   Theory + 5 primitives: `framework/spec-engineering.md`.
-- **Transparency header:** every turn → `transparency_header/SKILL.md`.
+- **Transparency header:** on action / delegation / decision turns,
+  pure discussion exempt → `transparency_header/SKILL.md`. Why-at-
+  trigger: the header is the user's cross-session thread-tracking, not
+  Buddy's task — a reader-serving step is the first thing to drop under
+  load, so the why rides with the rule here rather than living only in
+  the SKILL. Same action-bound frequency as §Observability.
 
 ### Workflow engine (required for non-trivial workflows)
 
