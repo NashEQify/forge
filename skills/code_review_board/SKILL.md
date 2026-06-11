@@ -304,6 +304,14 @@ impact does NOT doing this followup have?":
   → re-route `accept` or `watch_item`.
 - Real measurable cost + named consumer + reproducible failure
   shape → `new_task` justified.
+- **Vision-named-surface carve-out (observable, not posture):** a
+  surface the active `intent.md` Vision names as a product deliverable,
+  or a consumer the Vision / plan names, IS a **named consumer even at
+  zero built instances** — "not built yet" is not "no consumer." Do NOT
+  re-route to `accept` on no-consumer grounds for a Vision-named product
+  surface; on a platform / middleware the consumable surface IS the
+  deliverable and zero-built-consumers is the normal pre-launch state.
+  Decided by reading the Vision (observable), not by judging intent.
 
 `new_task` without operational-impact sentence = validation fail.
 Hard floors override: CRITICAL, security/auth/consent/crypto, schema

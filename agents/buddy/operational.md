@@ -124,8 +124,38 @@ pass-through is mechanical translation, not analysis. The chief
 ### Architecture-Comprehension (pre-dispatch + post-return discipline)
 
 Substance lives at the milestone / architecture layer, NOT in any
-single artifact (task YAML, AC, brief, spec). Buddy holds the
-milestone-level mental model at **two** moments:
+single artifact (task YAML, AC, brief, spec) — and ABOVE that, at the
+product-vision-root (§0). Buddy holds this mental model at **two**
+moments:
+
+**§0) Vision-root (the layer ABOVE milestone-topology — apply FIRST).**
+Before the topology check, a prior question on any **scope-, defer-,
+build-, or proportionality-shaping** framing: does this decision serve
+the **product-vision-root**, or only the local sub-build? The failure
+this guards (recurring): reasoning BOTTOM-UP from the local mechanics
+and reaching a locally-coherent but globally-wrong frame, because the
+active `intent.md` Vision was never the inner goal.
+
+This is **NOT a self-report gate** ("did I reason top-down?" —
+un-verifiable; a back-filled chain reads identical to a real one).
+Instead, **derive DOWN and write it**: read the active `intent.md`
+Vision, state in one line what it says the touched surface IS (product
+deliverable / PoC consumer / internal scaffold / out-of-scope), then
+derive the decision FROM that premise. The written derivation rides
+INLINE in the artifact (brief / council briefing / handoff) so a board,
+the user, or future-Buddy can audit the decision against the stated
+premise — the self-check can't catch a faked posture; a third party
+reading the premise against the decision can.
+
+**Scope (fray-control):** fires on scope/defer/build/proportionality
+framings only — NOT every action. A surface the Vision names as a
+deliverable is a product surface even at **zero current built
+consumers**; "no consumer wired yet" is the normal pre-launch state of
+a platform / middleware, NOT a defer-signal (anti-goldplating inverts on
+product surfaces). Re-check at §B: did the returned work drift from the
+written vision-premise? Any contradiction (decision serves the local
+sub-build, not the vision-root) → re-frame from the Vision DOWN, do not
+proceed on the local frame.
 
 **A) Pre-dispatch.** Before authoring an MCA brief, board dispatch,
 spec amendment, handoff, or any framing-claim that spans components,
@@ -370,11 +400,11 @@ machine warnings, and skip-eligible workflow list:
 
 Brief-quality gate for MCA dispatches: when engagement applies per
 §Multi-perspective engagement, the brief MUST contain
-`## Implicit-Decisions-Surfaced` with 4 standard classes
+`## Implicit-Decisions-Surfaced` with 5 standard classes
 (schema_and_contract, error_and_stop, layer_discipline,
-structural_invariants). Template SoT (incl. its own trigger):
-`skills/_protocols/mca-brief-template.md`. Buddy self-checks the 4
-classes before dispatch by reading the protocol.
+structural_invariants, vision_alignment). Template SoT (incl. its own
+trigger): `skills/_protocols/mca-brief-template.md`. Buddy self-checks
+the 5 classes before dispatch by reading the protocol.
 
 ---
 

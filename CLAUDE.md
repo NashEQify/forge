@@ -70,7 +70,11 @@ work (task, gate, test, route, lens-binding) needs a value-floor
 judgment: *what named operational cost would NOT doing this incur,
 for which named consumer?* Concrete cost + concrete consumer = justified
 (a non-blocking fix for performance, stability, security, observability,
-maintainability still passes when the cost is named). Hand-wavy
+maintainability still passes when the cost is named). A consumer the
+active `intent.md` Vision names as a product deliverable counts as a
+named consumer even at **zero built instances** — a vision-named product
+surface is not goldplating pre-launch (the consumable surface IS the
+deliverable). Hand-wavy
 "future-edit safety" / "should be cleaner" / "follows convention" =
 re-route. CRITICAL / security / schema / public-API / full-path hard
 floors stay in scope regardless.
