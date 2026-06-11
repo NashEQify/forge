@@ -19,7 +19,7 @@
 set -uo pipefail
 
 # Targets: framework + active CWD (canonical-deduped via realpath).
-# String-compare alone misses symlink<->target equivalence — see F-H-008.
+# String-compare alone misses symlink<->target equivalence.
 FRAMEWORK_DIR_RAW="${FRAMEWORK_DIR:-$HOME/projects/forge}"
 FRAMEWORK_DIR="$(realpath "$FRAMEWORK_DIR_RAW" 2>/dev/null || echo "$FRAMEWORK_DIR_RAW")"
 CWD="$(realpath "$(pwd)" 2>/dev/null || pwd)"

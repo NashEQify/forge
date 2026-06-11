@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Pre-commit Check 7 — SKILL-FM-VALIDATE (Task 366 F.2).
+Pre-commit Check 7 — SKILL-FM-VALIDATE.
 
 Validates YAML frontmatter for staged skills/**/SKILL.md files
 against framework/skill-anatomy.md rules (subset, mechanisch).

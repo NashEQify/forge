@@ -27,7 +27,7 @@ After loading context, Buddy runs a mechanical audit.
 
 **Check 1 — history-context consistency:**
 Read the last 2 history entries. For every claim describing a context state
-(e.g. "Nextcloud migrated", "Task 041 done"): check whether the current context
+(e.g. "Nextcloud migrated", "Task NNN done"): check whether the current context
 reflects it. Contradiction → FLAG.
 ```bash
 # Find the last 2 history files:

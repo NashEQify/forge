@@ -1,7 +1,7 @@
 # Performance Checklist
 
 > **Source:** lift from `github.com/addyosmani/agent-skills`
-> (`references/performance-checklist.md`, 2026-05-01). MIT licence.
+> (`references/performance-checklist.md`). MIT licence.
 >
 > **Adaptation status:** content adopted 1:1. The frontend section is
 > web-specific. The backend section is general, with a stack-specific

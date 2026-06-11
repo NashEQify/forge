@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """validate_evidence_pointers.py — Standalone Evidence-Pointer-Validator.
 
-Spec 299 Phase C3 (Schicht 1+2 Backstop). Orchestrator-neutral.
+Schicht 1+2 Backstop. Orchestrator-neutral.
 
 Validation-Mechanik fuer Pointer-Schema (`skills/_protocols/evidence-pointer-
 schema.md`). 4 kinds: file_range, grep_match, dir_listing, file_exists.
@@ -12,7 +12,7 @@ Re-Use:
   pro staged File-Batch (nargs="+" Multi-File-Mode).
 
 Quote-Length-Cap-Metrik: Codepoints (`len(quote)` in Python). Nicht Bytes,
-nicht Grapheme-Cluster. Documented decision (ADV-TC-008).
+nicht Grapheme-Cluster. Documented decision.
 
 Exit-Codes (CLI):
   0 — alle pointers valid (oder schema_version: 0 = legacy)
@@ -23,7 +23,7 @@ Usage:
   python3 scripts/validate_evidence_pointers.py <file> [<file>...] \\
       [--strict] [--layout per_finding|top_level|auto] [--repo-root <path>]
 
-Layer-Hinweis (CC-017 Pass-1-Fix Pointer-Note): dieses Modul lebt aktuell
+Layer-Hinweis (Pointer-Note): dieses Modul lebt aktuell
 unter `scripts/` (top-level), wird aber von `workflow_engine.py` als Library
 importiert (siehe `scripts.lib.yaml_loader`-Pattern). Phase-2-Refactor:
 Validator nach `scripts/lib/evidence_pointers.py` schieben, Top-Level-CLI als
@@ -75,9 +75,9 @@ class EvidenceValidationError(Exception):
 
 
 def quote_length_cap_ok(quote: str) -> tuple[bool, str]:
-    """Enforce <=3 lines AND <=200 codepoints (Spec 299 §1.3).
+    """Enforce <=3 lines AND <=200 codepoints (Spec §1.3).
 
-    Metrik-Decision (ADV-TC-008): Python-Codepoints via `len(quote)`. Nicht
+    Metrik-Decision: Python-Codepoints via `len(quote)`. Nicht
     Bytes, nicht Grapheme-Cluster. Combining-Marks-Bypass (200 Codepoints =
     1 Grapheme) ist akzeptiertes Trade-off.
     """
@@ -141,7 +141,7 @@ def _eval_expected_count(actual: int, expr: str | int | None) -> tuple[bool, str
 
 
 # ---------------------------------------------------------------------------
-# Path-Resolution mit Repo-Boundary (TC-053, ADV-TC-005)
+# Path-Resolution mit Repo-Boundary
 # ---------------------------------------------------------------------------
 
 
@@ -181,7 +181,7 @@ def validate_pointer(
 
     Returns (ok, reason). reason ist leer-string bei ok=True.
 
-    CC-015 (F-CR-006) fix: optional `_file_cache`-Dict reduziert N-fache
+    optional `_file_cache`-Dict reduziert N-fache
     `read_text()`-Calls auf dieselbe target-source. AC-8 verlangt <10%
     Mehrkosten + <5s Worst-Case fuer 50 staged-Files; multi-pointer-Outputs
     auf grosse source-files (z.B. workflow_engine.py ~70k chars) wuerden
@@ -235,7 +235,7 @@ def validate_pointer(
             return False, (
                 f"file_range 'lines' invalid range: {start}-{end}"
             )
-        # CC-015 cache-aware read
+        # cache-aware read
         cache_key = str(resolved)
         if _file_cache is not None and cache_key in _file_cache:
             content = _file_cache[cache_key]
@@ -282,7 +282,7 @@ def validate_pointer(
         pattern = pointer.get("pattern")
         if pattern is None:
             return False, "grep_match requires 'pattern'"
-        # CC-019 (F-CR-011) fix: file-targets via in-process re.findall —
+        # file-targets via in-process re.findall —
         # subprocess `grep` cold-start ~5-10ms pro Aufruf, ratio ~10x vs
         # in-process re-Match. dir-recursive bleibt subprocess (rekursive
         # Datei-Iteration in Python ist hier mehr Aufwand als nutzen, und
@@ -356,11 +356,11 @@ def _extract_frontmatter_text(content: str) -> str | None:
 def _parse_frontmatter(content: str) -> dict[str, Any]:
     """Parse YAML-frontmatter; raise EvidenceParseError on YAML-error.
 
-    C2-002 fix (Pass-2): `_normalize_fm_indent` wurde entfernt. Pre-Pass-2 hat
+    `_normalize_fm_indent` wurde entfernt. Pre-fix hat
     der Helper mixed-indent silent gefixt — das maskierte kaputtes YAML als
     valides. Real-World mixed-indent Frontmatter ist ein Authoring-Bug und
     sollte als parse-error sichtbar sein, nicht silent normalisiert werden.
-    Conftest `_write_top_level_pointer_file` wurde im Pass-1-Fix bereits
+    Conftest `_write_top_level_pointer_file` wurde bereits
     auf explizite 0-indented YAML-Konstruktion umgebaut, Helper war im
     Production-Pfad nicht mehr noetig.
     """
@@ -383,7 +383,7 @@ def _parse_frontmatter(content: str) -> dict[str, Any]:
 def _detect_layout(content: str) -> str:
     """Auto-detect: per_finding | top_level.
 
-    CC-010 fix: pre-fix had two bugs.
+    pre-fix had two bugs.
     1. Frontmatter `^evidence:` regex matched `evidence_layout: per_finding`
        because Python regex `^evidence:` matches the prefix `evidence:` of
        `evidence_layout:`. Fix: anchor on word-boundary or end-of-key by
@@ -408,7 +408,7 @@ def _detect_layout(content: str) -> str:
     body = content[fm_match.end():] if fm_match else content
 
     # Per-finding evidence: match BOTH bullet-list-item form `- evidence:` and
-    # block-header form `evidence:` per CC-001 fix. Indent-tolerant.
+    # block-header form `evidence:`. Indent-tolerant.
     if re.search(r"(?m)^[ \t]*(?:-\s+)?evidence\s*:(?:\s|$)", body):
         return "per_finding"
 
@@ -424,7 +424,7 @@ def parse_evidence_block(
 ) -> list[dict[str, Any]]:
     """Extract pointer-list from file. Layout: per_finding | top_level | auto.
 
-    Task 301 C2-005 fix: optional pre-loaded `content` Argument konsolidiert
+    optional pre-loaded `content` Argument konsolidiert
     den File-Read mit `validate_file`. Pre-fix: validate_file rief get_schema_version
     (1 Read) + parse_evidence_block (2. Read). Mit `content` parameter wird
     parse_evidence_block ohne Disk-IO aufgerufen — single-read-pattern Spec
@@ -454,15 +454,15 @@ def parse_evidence_block(
         # Greedy grep: find each `evidence:` block + parse following YAML-list
         # lines until indent level drops or non-list line found.
         #
-        # Match BOTH forms (CC-001 fix, Spec 299 §1.5 + reviewer-protocols):
+        # Match BOTH forms (Spec §1.5 + reviewer-protocols):
         #   1. `<indent>evidence:` (block-header form)
         #   2. `<indent>- evidence:` (markdown-list-item form, prescribed by
         #      spec/code/ux-reviewer-protocol.md "Output-Format" sections)
         # Real-formatted reviewer-outputs use form (2). Pre-fix the regex
         # rejected form (2) silently which made per_finding-defense
-        # structurally ineffective — see verdict CC-001 / F-CR-002+F-CA-001.
+        # structurally ineffective.
         #
-        # Empty-evidence detection (CC-009 fix): also match
+        # Empty-evidence detection: also match
         #   `evidence: ~` (YAML null), `evidence: []` (empty list),
         #   `- evidence: ~`, `- evidence: []`
         # and emit a parse-error so per-finding null-evidence is not silent.
@@ -477,7 +477,7 @@ def parse_evidence_block(
         while i < len(body_lines):
             line = body_lines[i]
 
-            # Inline-empty per-finding evidence (CC-009): treat as parse-error
+            # Inline-empty per-finding evidence: treat as parse-error
             # so AC-3 Test-6 semantics (schema_version: 1 + empty evidence
             # → fail) extends from top_level to per_finding granularity.
             ie = inline_empty_re.match(line)
@@ -540,7 +540,7 @@ def parse_evidence_block(
     raise EvidenceParseError(f"unknown layout: {layout}")
 
 
-# Task 301 C2-006 fix: Per-Finding-Counter — `### F-<TAG>-<NNN>` Heading-Pattern
+# Per-Finding-Counter — `### F-<TAG>-<NNN>` Heading-Pattern
 # matched zu Findings die einen evidence-Block haben sollten (Spec §2.1 Schritt 4).
 # Pattern: `### F-<TAG>-<NNN>` mit optionalen Trailing-Tokens (Severity-Tag,
 # Doppelpunkt-Description). Beispiele:
@@ -551,7 +551,7 @@ _FINDING_HEADING_RE = re.compile(r"(?m)^###\s+F-[A-Z][A-Z0-9]*-\d+\b")
 
 
 def count_finding_headings(content: str) -> int:
-    """Task 301 C2-006: Count `### F-<TAG>-<NNN>` finding-headings in body.
+    """Count `### F-<TAG>-<NNN>` finding-headings in body.
 
     Returns count of finding-headings (Spec §2.1 Schritt 4 — pro Finding ein
     evidence-Block). Caller compares against pointer-count (per_finding-Layout)
@@ -586,7 +586,7 @@ def get_schema_version(file_path: str) -> int | None:
 
 
 def _detect_repo_root(file_path: Path) -> str | None:
-    """CC-002 fix: walk up from file_path looking for .git/ or pyproject.toml.
+    """walk up from file_path looking for .git/ or pyproject.toml.
 
     Pre-fix the CLI default was `parent of file`, which made every
     repo-relative pointer in `docs/reviews/<dir>/foo.md` resolve to
@@ -624,7 +624,7 @@ def validate_file(
 
     Legacy-Pfad: wenn schema_version: 0 ODER fehlend → exit 0 (silent skip).
 
-    repo_root resolution (CC-002 fix):
+    repo_root resolution:
       1. Explicit caller-provided repo_root (Engine-Library-Import path) wins.
       2. CLI default: walk up from file_path for .git/ or pyproject.toml.
       3. Last resort fallback: parent-of-file (preserves pre-fix behaviour
@@ -640,10 +640,10 @@ def validate_file(
         detected = _detect_repo_root(p)
         repo = detected if detected else str(p.parent.resolve())
 
-    # CC-020 (F-CA-009) Pass-1-Fix + C2-005 Pass-3-Fix: single-read-pattern.
+    # single-read-pattern.
     # Pre-fix: get_schema_version liest, validate_file liest, parse_evidence_block
     # liest noch einmal — 3 Reads mit Race-Window. Wir lesen einmal und reichen
-    # `content` an parse_evidence_block durch (Task 301 C2-005).
+    # `content` an parse_evidence_block durch.
     try:
         content = p.read_text(encoding="utf-8", errors="replace")
     except OSError as exc:
@@ -653,7 +653,7 @@ def validate_file(
     except EvidenceParseError as exc:
         return EXIT_PARSE_ERROR, [f"parse-error: yaml frontmatter: {exc}"]
 
-    # Task 301 F-CA-PASS3-001 fix: Validator-Acceptor schmaeler — nur exakt
+    # Validator-Acceptor schmaeler — nur exakt
     # int(1) oder string `"1"`. Pre-fix akzeptierte `isdigit()` (also "01" als
     # sv=1) was Pre-Filter-Strictness-Drift produziert (Filter rejected "01",
     # Validator akzeptiert). Plus float (z.B. `schema_version: 1.0`) wurde
@@ -702,7 +702,7 @@ def validate_file(
             f"unsupported schema_version: {sv} (only 0 + 1 known in v1)"
         ]
 
-    # schema_version: 1 — full validation. C2-005 Pass-3 fix: pass pre-loaded
+    # schema_version: 1 — full validation. pass pre-loaded
     # `content` an parse_evidence_block damit kein 2. File-Read passiert
     # (single-read-pattern Spec §6.5 wirklich erfuellt).
     try:
@@ -716,7 +716,7 @@ def validate_file(
             "non-empty evidence required for schema_version: 1"
         ]
 
-    # Task 301 C2-006 fix: Per-Finding-Counter (CC-009 Option b).
+    # Per-Finding-Counter.
     # Layout per_finding: pro `### F-<TAG>-<NNN>` Heading erwarten wir
     # mindestens ein evidence-Block. Pre-fix: Findings ohne evidence-Block
     # passieren silent (Validator zaehlt Pointer, nicht Findings).
@@ -745,7 +745,7 @@ def validate_file(
 
     errors: list[str] = []
     file_exists_only = True
-    # CC-015 cache: shared dict across pointers in this file
+    # cache: shared dict across pointers in this file
     file_cache: dict[str, str] = {}
     for idx, pointer in enumerate(pointers, start=1):
         if pointer.get("kind") != "file_exists":
@@ -759,7 +759,7 @@ def validate_file(
     if any("fail" in e for e in errors):
         return EXIT_INVALID, errors
 
-    # All-pointers-pass: emit Discipline-WARN if file_exists-only (F-I-015)
+    # All-pointers-pass: emit Discipline-WARN if file_exists-only
     if file_exists_only and len(pointers) >= 1:
         errors.append(
             "WARN discipline F-I-015: all pointers are kind=file_exists "
@@ -779,7 +779,7 @@ def _main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Validate evidence pointers per Spec 299 schema.",
     )
-    # CC-018 fix: nargs="+" so pre-commit Check 13 can validate N staged
+    # nargs="+" so pre-commit Check 13 can validate N staged
     # files in 1 subprocess instead of N — saves N-1 python cold-starts.
     parser.add_argument(
         "files", nargs="+",
@@ -795,7 +795,7 @@ def _main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--repo-root", default=None,
-        help="Repo-root for path-boundary check. CC-002: default walks up "
+        help="Repo-root for path-boundary check. Default walks up "
              "from <file> looking for .git or pyproject.toml; falls back to "
              "parent-of-file. Override is the most reliable path.",
     )

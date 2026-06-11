@@ -2,8 +2,7 @@
 
 > **Source:** pattern from `github.com/mattpocock/skills`
 > (formerly `skills/deprecated/ubiquitous-language/SKILL.md` plus
-> `skills/engineering/grill-with-docs/CONTEXT-FORMAT.md`,
-> 2026-05-01). MIT licence.
+> `skills/engineering/grill-with-docs/CONTEXT-FORMAT.md`). MIT licence.
 >
 > **Adaptation status:** the `ubiquitous_language` skill is
 > self-deprecated by Pocock, **but the pattern lives on** in

@@ -9,9 +9,8 @@
 # Gated on $CLAUDE_CODE_REMOTE=true — terminal sessions install via the
 # cc launcher's own setup flow and don't need this.
 #
-# Smoke-test status (2026-05-28): first iteration, sync mode. Marker
-# lines [session-start-remote] are intentional so the next session can
-# verify in the transcript that the hook actually fired.
+# Sync mode. Marker lines [session-start-remote] are intentional so the
+# next session can verify in the transcript that the hook actually fired.
 
 set -euo pipefail
 

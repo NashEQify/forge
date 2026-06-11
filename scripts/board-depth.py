@@ -28,7 +28,7 @@ except ImportError:
     print("ERROR: PyYAML not installed", file=sys.stderr)
     sys.exit(2)
 
-# Path resolution (Task 010 Part L0b — Pre-Split Refactor)
+# Path resolution
 #
 # board-depth.py reads exclusively from project data (docs/specs/,
 # docs/tasks/, SPEC-MAP.md), so it only needs PROJECT_ROOT. Derived from
@@ -171,7 +171,7 @@ def main():
     )
     args = parser.parse_args()
 
-    # Task 010 Part L0b: explicit --project-root override rebinds the
+    # explicit --project-root override rebinds the
     # module-level data dirs so every check resolves against the new root.
     if args.project_root:
         global PROJECT_ROOT, SPECS_DIR, TASKS_DIR, SPEC_MAP

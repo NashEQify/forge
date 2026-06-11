@@ -40,7 +40,7 @@ not migrated — on resume, Buddy adds the fields inline.
 - `<kebab-case-short-topic>`
 - At most 40 characters, lowercase, no special characters
 - Derivation: first 3-5 significant words of the problem description
-- Examples: `2026-04-05-solve-bootstrap.md`, `2026-04-12-dashboard-perf.md`
+- Examples: `YYYY-MM-DD-solve-bootstrap.md`, `YYYY-MM-DD-dashboard-perf.md`
 - On naming collision: counter suffix (`-2`, `-3`) or timestamp
   (`YYYY-MM-DD-HHMM-<slug>.md`)
 

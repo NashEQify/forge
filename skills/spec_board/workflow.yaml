@@ -1,7 +1,7 @@
 name: spec-board
 description: "Multi-Perspektiven Spec Review + Fix — Dispatch-Workflow (2 Modi, 2 Tiefen)"
 trigger: ["spec-board", "spec_board", "board"]
-derived_from: "SKILL.md@d6c73bc"
+derived_from: "SKILL.md"
 
 steps:
   - id: plan-review

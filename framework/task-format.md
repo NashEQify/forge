@@ -179,9 +179,8 @@ If no template is set, Buddy writes the workflow manually.
 
 **Archive location:** `docs/tasks/archive/NNN.yaml` + `docs/tasks/archive/NNN.md`.
 
-**Status `tracked`:** archive/ is committed in the OSS repo (historical
-work record). Rationale: see
-`docs/solve/2026-05-03-doc-folder-taxonomy.md`.
+**Status `tracked`:** archive/ is committed in the OSS repo as the
+project's historical work record.
 
 **Frozen zone (WORM):** consistency_check reports Modify/Rename/Delete in
 archive/ as INCIDENT � except task_status_update-driven moves and modifies
@@ -241,8 +240,8 @@ docs/tasks/NNN.yaml:
     available:
       - docs/specs/session-handoff.md
     skills: [task_status_update, knowledge_processor]
-  created: 2026-05-01
-  updated: 2026-05-09
+  created: YYYY-MM-DD
+  updated: YYYY-MM-DD
   parent_task: null
   sub_tasks: []
   blocked_by: []

@@ -5,7 +5,7 @@ prompts. Loaded by: spec_board, code_review_board,
 sectional_deep_review, architecture_coherence_review. Applied by
 the board review to every review target whose type has a budget.
 
-> **2026-05-31 policy update.** SKILL.md budget loosened from ≤120
+> **Policy update.** SKILL.md budget loosened from ≤120
 > to **≤400 lines** following empirical evidence that the earlier
 > tight cap drove content into REFERENCE.md split-files that the
 > framework's skill-loading mechanism never auto-loads (Buddy reads
@@ -27,7 +27,7 @@ intended benefit.
 Skill *count* inflation is the higher-leverage concern now, not
 *size* — inflation guard sits in `skill-anatomy.md` §Inflation guard.
 
-## Budget table (hard gate, post-2026-05-31)
+## Budget table (hard gate)
 
 | Artifact type | Budget | Path pattern |
 |---------------|--------|--------------|
@@ -43,13 +43,12 @@ Skill *count* inflation is the higher-leverage concern now, not
 | Assembled prompt (protocol + persona + dispatch) | ≤500 lines | runtime check on dispatch |
 
 **Per-skill REFERENCE.md fold-back triage** (12 active files, 2444
-LoC total as of 2026-05-31 policy switch; 2 done as of late-evening
-sweep):
+LoC total; 2 done):
 
 | Skill | REF lines | Status |
 |---|---|---|
-| council | 102 | **DONE 2026-05-31** — folded into SKILL (206 LoC merged) |
-| sectional_deep_review | 87 | **DONE 2026-05-31** — folded into SKILL (259 LoC merged) |
+| council | 102 | **DONE** — folded into SKILL (206 LoC merged) |
+| sectional_deep_review | 87 | **DONE** — folded into SKILL (259 LoC merged) |
 | consistency_check | 636 | TODO — heaviest: triage forensic history; likely 80% drop, 20% inline |
 | code_review_board | 313 | TODO — review-mode detail merges into SKILL §Process |
 | testing | 282 | TODO — L0-L5 pyramid detail belongs in SKILL |

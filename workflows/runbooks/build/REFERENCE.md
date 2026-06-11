@@ -97,6 +97,6 @@ Complementary, not redundant. gates.yaml is ADR-protected.
 |---|---|
 | Task format | `framework/task-format.md` |
 | Task status update | `skills/task_status_update/SKILL.md` |
-| State model (Layer-1 ADR) | `docs/solve/2026-04-09-workflow-state-model.md` |
+| State model | `framework/workflow-engine-cookbook.md` |
 | Workflow template (compliance) | `workflows/workflow-template.md` |
 | Gate template | `workflows/templates/gates-template.yaml` |

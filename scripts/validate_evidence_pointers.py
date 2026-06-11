@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """validate_evidence_pointers.py — CLI wrapper for scripts.lib.evidence_pointers.
 
-Spec 299 Task 301 C2-007 fix: Validator-Modul ist nach `scripts/lib/`
+Validator-Modul ist nach `scripts/lib/`
 gewandert (Layer-Discipline analog `scripts.lib.yaml_loader`). Dieses
 File bleibt als CLI-Wrapper + Backwards-Compat-Shim (Top-Level-Imports
 `from scripts.validate_evidence_pointers import ...` weiter funktional)
@@ -9,7 +9,7 @@ damit:
   - Pre-commit + Hook-Skripte (orchestrators/claude-code/hooks/) unverandert
     `python3 scripts/validate_evidence_pointers.py` aufrufen koennen.
   - Tests die `from scripts.validate_evidence_pointers import X` nutzen
-    weiter laufen (keine Bulk-Test-Aenderung in Task 301 noetig).
+    weiter laufen (keine Bulk-Test-Aenderung noetig).
   - Engine-Library-Import-Pfad weiter funktional bleibt.
 
 Phase-3-Refactor (separater Task): Konsumenten direkt auf

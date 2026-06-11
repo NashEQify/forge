@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """consistency_check.py — Strukturelle Repo-Integritaet.
 
-Library + CLI entry. Spec 299 Phase D extension: tier1-drift Check
+Library + CLI entry. Tier1-drift Check
 (Spec §3.2). Pro `verification_tier: 1`-Skill prueft ob mindestens ein
 workflow.yaml-Step Skill referenziert mit `completion.compound`-Sub-Check
 `pointer_check`. Fehlt → WARN.
@@ -94,7 +94,7 @@ def _step_has_pointer_check(step: dict) -> bool:
     """True wenn step.completion Spec §2.2 Convention erfuellt:
     `compound` mit `pointer_check` UND `manual` als sub-checks.
 
-    CC-011 (F-CA-007) Pass-1-Fix: pre-fix akzeptierte top-level pointer_check
+    pre-fix akzeptierte top-level pointer_check
     auch als "protected", obwohl Spec §2.2 explizit sagt "Convention bleibt
     aber `compound` mit `pointer_check VOR manual` fuer alle Tier-1-Reviewer-
     Steps damit Reviewer-Persona explizit manuell abschliessen muss."
@@ -118,7 +118,7 @@ def _step_has_pointer_check(step: dict) -> bool:
 def _step_has_top_level_pointer_check(step: dict) -> bool:
     """True wenn step.completion direkt pointer_check ohne compound-wrapper
     ist. Spec §2.2 erlaubt das schema-permissiv (auto-complete-on-pass), aber
-    Convention prefer compound. CC-011 separater WARN-Pfad fuer Drift-Check."""
+    Convention prefer compound. Separater WARN-Pfad fuer Drift-Check."""
     comp = step.get("completion", {})
     if not isinstance(comp, dict):
         return False
@@ -174,7 +174,7 @@ def check_tier1_drift(
         # Find any step that refs this skill AND has pointer_check
         protected = False
         any_ref = False
-        # Track top-level pointer_check refs separately (CC-011 soft-WARN)
+        # Track top-level pointer_check refs separately (soft-WARN)
         top_level_only_steps: list[str] = []
         for _wf_path, _wf_data, step in steps:
             if _step_skill_ref_matches(step, skill_name):
@@ -229,7 +229,7 @@ def check_tier1_multi_workflow_drift(
     for skill_name in sorted(tier1):
         # Per-workflow-file: hat dieser Workflow den Skill referenziert? Wenn
         # ja, hat min. einer dieser Refs pointer_check (compound + manual,
-        # CC-011 strikter)?
+        # strikter)?
         per_wf: dict[Path, dict[str, bool]] = {}
         for wf_path, _wf, step in steps:
             if _step_skill_ref_matches(step, skill_name):
@@ -327,7 +327,7 @@ def check_enforcement_registry(
 
 def _main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="consistency_check — Repo-Integritaet (Spec 299 Phase D).",
+        description="consistency_check — Repo-Integritaet.",
     )
     parser.add_argument(
         "--check",

@@ -15,7 +15,7 @@ except ImportError:
 from scripts.lib import FRAMEWORK_ROOT
 
 # ---------------------------------------------------------------------------
-# YAML Discovery (Task 010 Part L0b)
+# YAML Discovery
 # ---------------------------------------------------------------------------
 #
 # Workflow YAML definitions live inside the framework tree, so discovery is
@@ -64,7 +64,7 @@ VALID_CATEGORIES = {"deterministic", "classification", "content", "gate"}
 VALID_COMPLETION_TYPES = {
     "file_modified_after", "file_created_matching", "file_content_check",
     "exit_code", "compound", "manual",
-    # Spec 299 Phase C1: pointer_check sub-Check fuer Source-Verifikation.
+    # Spec 299: pointer_check sub-Check fuer Source-Verifikation.
     # Pflichtfeld: source_file. Validation-Mechanik im Engine-Check
     # (workflow_engine.py check_completion) gegen Schema-SoT
     # skills/_protocols/evidence-pointer-schema.md.
@@ -115,7 +115,7 @@ def _validate_completion(comp: dict[str, Any], step_id: str) -> list[str]:
             for i, sub in enumerate(checks):
                 if isinstance(sub, dict):
                     errors.extend(_validate_completion(sub, f"{step_id}.compound[{i}]"))
-            # Spec 299 §2.2 ADV-TC-007 — Reihenfolge-Pflicht: pointer_check
+            # Spec 299 §2.2 — Reihenfolge-Pflicht: pointer_check
             # MUSS vor manual stehen (Race-Mitigation: File muss existieren
             # bevor manual-complete erlaubt). Reverse-order ist Race-Bug-Konfig.
             sub_types = [

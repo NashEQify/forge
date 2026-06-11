@@ -273,7 +273,7 @@ Trigger: research on agentic frameworks completed.
 Scan:
   1. Framework analysis (14 frameworks) → Research, EXTEND <active-context>/research/agentic-workflow-frameworks-2026.md
   2. Leoplo interview → Interview, NEW <active-context>/research/leoplo-interview-insights-2026-04.md
-  3. RFP result → Solve, NEW docs/solve/2026-04-09-workflow-design-rfp.md
+  3. RFP result → Solve, NEW docs/solve/<date>-workflow-design-rfp.md
   4. SOTA placement → SOTA, NEW <active-context>/research/sota-agentic-frameworks-2026-04.md
 
 Writing: 4 files, ~600 lines total.
