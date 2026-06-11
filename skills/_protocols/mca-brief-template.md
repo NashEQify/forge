@@ -12,9 +12,9 @@ template fields > LLM persona review.
 on Full / Standard.
 
 **Pre-dispatch check (discipline):**
-Buddy verifies presence + completeness of all 4 classes before
+Buddy verifies presence + completeness of all 5 classes before
 dispatching the brief: Buddy reads this protocol before drafting
-and self-checks all 4 classes against the dispatch.
+and self-checks all 5 classes against the dispatch.
 
 ---
 
@@ -48,6 +48,9 @@ implicit_decisions_surfaced:
     locked: "<status>"
     value: "<decision>"
   structural_invariants:
+    locked: "<status>"
+    value: "<decision>"
+  vision_alignment:
     locked: "<status>"
     value: "<decision>"
   other:
@@ -136,9 +139,30 @@ Three pattern classes the invariant should defend against (mirror
 - **State-vocabulary half-coverage:** initial state squeezed into a
   working state. State the lifecycle vocabulary explicitly.
 
-### 5. other (free-text list)
+### 5. vision_alignment
 
-Task-specific decision classes that don't fit the standard 4.
+What the active `intent.md` Vision says the touched surface IS, so MCA
+decides the forks the brief leaves OPEN top-down, not local-default —
+the product-vision-root as an INPUT to in-flight decisions. MCA is the
+one decision point where a sub-agent decides scope / defer / build
+without Buddy in the loop, so the Vision-premise must travel IN the
+brief.
+
+Observable, not posture: name what the Vision calls this surface
+(product deliverable / PoC consumer / internal scaffold / out-of-scope)
+and the decision that follows from it. A surface the Vision names as a
+deliverable is a product surface even at zero built consumers — "no
+consumer yet" is not a defer-signal (cross-ref `CLAUDE.md` Inv 9 +
+`code_review_board` value-floor Vision-named-surface carve-out). Uses
+the standard `locked` enum.
+
+**Required when the brief touches a product surface** the Vision names;
+`n/a (<why — internal / mechanical / no product surface>)` otherwise.
+Bare `n/a` invalid.
+
+### 6. other (free-text list)
+
+Task-specific decision classes that don't fit the standard 5.
 Examples: idempotency-guarantee (event-driven systems), retry-policy
 (NATS consumer config), state-machine-transitions (workflow specs),
 ordering-guarantees (concurrent flows). Format: list of mappings with
