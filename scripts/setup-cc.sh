@@ -183,7 +183,7 @@ fi
 # --- Git Hooks (pre-commit + commit-msg) ---
 # Wires .git/hooks/{pre-commit,commit-msg} in this framework checkout
 # to orchestrators/claude-code/hooks/pre-commit.sh (the script self-
-# detects mode via $0 basename, F-102). The dedicated installer handles
+# detects mode via $0 basename). The dedicated installer handles
 # worktrees, idempotency, broken-symlink correction, and a self-probe.
 # Consumer repos call the SAME script from their own checkout:
 #   bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh

@@ -429,7 +429,7 @@ Write-time discipline is protocol-anchored (`agents/buddy/operational.md`).
 | # | Check | Severity | Implementation |
 |---|---|---|---|
 | 1 | PLAN-VALIDATE | BLOCK | `plan_engine.py --validate` must report 0 errors |
-| 2 | CG-CONV | BLOCK | Conventional-Commits format (commit-msg authoritative; pre-commit mode skips to avoid F-102 amend-with-m stale-message false-positive) |
+| 2 | CG-CONV | BLOCK | Conventional-Commits format (commit-msg authoritative; pre-commit mode skips to avoid amend-with-m stale-message false-positive) |
 | 3 | SKILL-FM-VALIDATE | BLOCK | `skill_fm_validate.py` mandatory fields + invocation + `relevant_for` |
 | 4 | SECRET-SCAN | WARN | `gitleaks protect --staged` (skipped when gitleaks not installed, 24h-suppressed note WARN) |
 | 5 | SOURCE-VERIFICATION | WARN | Board/council reviews must cite source files (line-numbered evidence pointers per `_protocols/evidence-pointer-schema.md`) |

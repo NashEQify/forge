@@ -129,7 +129,7 @@ the default branch, branch first" does NOT apply here. Bounds:
 Conventional-Commit format (CG-CONV), the pre-commit hook must pass,
 never bypass hooks; `git push` and genuinely destructive / irreversible
 git ops (force-push, `reset --hard`, history rewrite) still warrant a
-heads-up. Override locked 2026-05-23.
+heads-up. Override locked.
 
 ## Active Hooks
 

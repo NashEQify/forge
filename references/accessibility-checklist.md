@@ -1,7 +1,7 @@
 # Accessibility Checklist (WCAG 2.1 AA)
 
 > **Source:** lift from `github.com/addyosmani/agent-skills`
-> (`references/accessibility-checklist.md`, 2026-05-01). MIT licence.
+> (`references/accessibility-checklist.md`). MIT licence.
 >
 > **Adaptation status:** content adopted 1:1 — the pattern is a web
 > standard and linguistically generic. Cross-refs to

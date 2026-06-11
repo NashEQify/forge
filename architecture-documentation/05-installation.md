@@ -79,7 +79,7 @@ What it does:
 
 - Symlinks `.git/hooks/{pre-commit,commit-msg}` to
   `orchestrators/claude-code/hooks/pre-commit.sh` (same file serves
-  both hook events — F-102 mode-detection via `$0` basename).
+  both hook events — mode-detection via `$0` basename).
 - Idempotent. Re-running is a no-op with `OK` output. Broken symlinks
   and wrong-target symlinks are auto-corrected; existing non-symlink
   files at the hook path are NOT overwritten (operator action

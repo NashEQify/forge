@@ -486,7 +486,7 @@ reading the protocol during brief authoring.
 
 **Anti-pattern (why NOT a persona spawn instead of a template):** a persona costs
 +5-15k tokens per dispatch, is probabilistic, can be wrongly tuned
-(plan-adversary is plan-tuned, not brief-tuned — F-PA-005 pattern).
+(plan-adversary is plan-tuned, not brief-tuned).
 A protocol template is deterministic, falsifiable, 0-token cost.
 **Protocol-as-substrate beats persona-as-substrate** when the failure
 mode is catchable via structural fields the author can re-read.
@@ -628,8 +628,8 @@ Detail: [`../references/agentic-design-principles.md`](../references/agentic-des
 correctness (validators, schema, regen-clean) — not whether the artefact
 has a reader-experience layer. Tier-1 spec rollout in public docs passes
 all validators but fails on findability/recognition (orphan
-specs, one-sided cross-refs, lack of TOC). Empirically commit 82657bc:
-6 HIGH UX findings post-commit, 4 of them catchable pre-commit.
+specs, one-sided cross-refs, lack of TOC). Empirically, such a rollout
+surfaced 6 HIGH UX findings post-commit, 4 of them catchable pre-commit.
 
 **Pattern:** the verify phase classifies before validator selection:
 

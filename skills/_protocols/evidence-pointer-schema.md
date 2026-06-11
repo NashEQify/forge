@@ -55,7 +55,7 @@ Existence check + range check + `grep -F "$quote" $path`.
 - `quote` is a literal text snippet from the file. The validator
   uses fixed-string matching (substring check, semantically like
   `grep -F`); special chars (`$`, `*`, `[]`) match literally.
-- **Quote-match scope (CC-013, pass-1 fix):** the quote match is
+- **Quote-match scope:** the quote match is
   RESTRICTED to the declared line range `lines: <start>-<end>`,
   not the whole file. Rationale: self-affirmation mitigation —
   without range restriction the quote could accidentally match
@@ -91,7 +91,7 @@ Existence check + range check + `grep -F "$quote" $path`.
 
 ```yaml
 - kind: dir_listing
-  path: docs/reviews/council/2026-05-04-fabrication-mitigation/
+  path: docs/reviews/council/<date>-<topic>/
   expected_files: [briefing.md, synthesis.md]
 ```
 
@@ -106,7 +106,7 @@ Existence check + range check + `grep -F "$quote" $path`.
   path: docs/specs/299-fabrication-mitigation.md
 ```
 
-**F-I-015 discipline note:** `kind: file_exists` is
+**Discipline note:** `kind: file_exists` is
 explicit-trivial — the mechanically cheapest pointer. Reviewer
 personas should have at least one non-trivial pointer (`file_range`
 OR `grep_match`) per finding. The validator + hook emit a

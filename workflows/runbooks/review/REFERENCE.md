@@ -78,7 +78,7 @@ read patterns:
 
 | Topic | SoT |
 |---|---|
-| State model (Layer-1 ADR) | `docs/solve/2026-04-09-workflow-state-model.md` |
+| State model | `framework/workflow-engine-cookbook.md` |
 | Task status update | `skills/task_status_update/SKILL.md` |
 | Workflow template (compliance) | `workflows/workflow-template.md` |
 | Spec board | `skills/spec_board/SKILL.md` |

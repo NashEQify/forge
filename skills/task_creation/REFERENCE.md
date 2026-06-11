@@ -53,12 +53,14 @@ possible).
 - plan_engine --validate (Step 5) checks cycles — dependency errors are
   caught there
 
-**Example (Tasks 365/366, 2026-04-09):**
-- Task 366 (framework rationalisation) was created before Task 365 (/dev doc review),
-  but 365 changes documentation about a framework state that 366
-  alters. Without the dependency check, 365 would have started in parallel -> duplicate
-  work (docs against a stale state, then again after 366).
-- Correction: `365.yaml` -> `blocked_by: [366]`, `365.md` -> `## Dependency` block
+**Example:**
+- A "framework rationalisation" task was created before a "/dev doc review"
+  task, but the doc-review changes documentation about a framework state that
+  the rationalisation alters. Without the dependency check, the doc-review would
+  have started in parallel -> duplicate work (docs against a stale state, then
+  again after the rationalisation).
+- Correction: the doc-review task gets `blocked_by: [<rationalisation-task>]` +
+  a `## Dependency` block in its MD body.
   with justification. The user had to flag the missing dependency manually —
   the skill did not have the check as a mandatory step. Fix: this REFERENCE.md
   section + Step 1b in SKILL.md.
@@ -102,7 +104,7 @@ If ALL "fix immediately" criteria apply -> fix immediately (Light Plan). Otherwi
 
 Does the task introduce a new external dependency with >1 integration point? -> Check whether a spike task (PoC/eval) needs to sit before it as `blocked_by`. The spike validates integration assumptions that are not derivable from documentation (undocumented config behaviour, implicit constraints, API deviations).
 
-**Not needed** for well-documented, stable libraries (requests, click, pydantic). **Examples:** Task 049 (Cognee eval) -> 050 (Cognee integration), Task 110 (rlm eval) -> 111 (rlm integration).
+**Not needed** for well-documented, stable libraries (requests, click, pydantic). **Examples:** an eval task -> its integration task ("Cognee eval" -> "Cognee integration", "rlm eval" -> "rlm integration").
 
 ## "Not yet" check
 

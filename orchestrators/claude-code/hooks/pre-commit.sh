@@ -7,7 +7,7 @@ set -euo pipefail
 # Symlink into .git/hooks/pre-commit AND .git/hooks/commit-msg from any
 # consumer repo. Idempotent installer: scripts/install-git-hooks.sh.
 #
-# Post-2026-05-31 (ADR-004 hook paradigm shift): 6 checks.
+# Post hook-paradigm-shift (capability-first, hooks-minimal): 6 checks.
 # 3 BLOCK + 3 WARN. Universally portable (git is on every harness).
 #
 # Checks (ordered):
@@ -22,7 +22,7 @@ set -euo pipefail
 #                                     enforcement verb to a purged hook-name
 #                                     (enforcement-honesty, ADR-005).
 #
-# Dropped 2026-05-31 (8 checks, see docs/decisions/ADR-004-hook-paradigm-shift.md):
+# Dropped in the hook paradigm shift (was 8 checks):
 #   TASK-SYNC, OBLIGATIONS, STALE-CLEANUP, PERSIST-GATE, ENGINE-USE,
 #   RUNBOOK-DRIFT, AGENT-SKILL-DRIFT, PIEBALD-BUDGET — discipline replaces
 #   observability WARN signals; Piebald budget loosened in same commit.
@@ -33,13 +33,13 @@ PLAN_ENGINE="${FRAMEWORK_ROOT}/scripts/plan_engine.py"
 BLOCK=0
 WARNINGS=()
 
-# ---------- Hook-Mode-Detection (F-102 fix) ----------
+# ---------- Hook-Mode-Detection ----------
 #
 # This script handles BOTH pre-commit and commit-msg hook invocations:
 #   - pre-commit hook: $0 basename = "pre-commit", no args
 #   - commit-msg hook: $0 basename = "commit-msg", $1 = path to commit-msg file
 #
-# F-102 root cause: `git commit --amend -m "msg"` doesn't write the new message
+# Root cause: `git commit --amend -m "msg"` doesn't write the new message
 # to .git/COMMIT_EDITMSG before pre-commit fires — pre-commit reads STALE old
 # message. Workaround was `echo "msg" > .git/COMMIT_EDITMSG` before commit.
 #

@@ -20,8 +20,7 @@ follows the rule, not the citation. The principles below remain a
 useful design vocabulary for council / spec-board / framework
 discussions.
 
-The proportionality principle (formerly DR-14, codified after the
-L-031..L-033 / L-039..L-041 drift-case cluster) lifted to
+The proportionality principle (formerly DR-14) lifted to
 `CLAUDE.md` Invariant 9 — Tier 0, always loaded — when this file
 left the runtime loop.
 
@@ -81,8 +80,7 @@ other sessions or by other agents.
 Pre-harness: prompt rule in soul.md ("you decide nothing alone") + this DR.
 Post-harness: pre-delete hook enforcing user confirmation.
 
-*(DR-14 was added during the L-031..L-033 / L-039..L-041 codification
-session, then lifted to CLAUDE.md Invariant 9 when this file left the
+*(DR-14 was lifted to CLAUDE.md Invariant 9 when this file left the
 runtime loop. The principle "proportionality of effort to stakes" now
 lives Tier 0; live instances cite Inv 9 directly. Kept here as a
 pointer for design-lineage readers.)*

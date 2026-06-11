@@ -49,7 +49,7 @@ def _configure_stdio_for_windows() -> None:
 
 
 def _emit_warn(msg: str, stacklevel: int = 3) -> None:
-    """Task 435: zentraler Wrapper fuer warnings.warn mit konsistentem
+    """zentraler Wrapper fuer warnings.warn mit konsistentem
     stacklevel (B028 ruff-clean). Caller ruft mit stacklevel=2 wenn er
     direkt aus User-Code-Pfad warnt; default 3 reflektiert Aufrufer-Stack."""
     warnings.warn(msg, stacklevel=stacklevel)
@@ -95,7 +95,7 @@ REPO_ROOT = PROJECT_ROOT
 TASKS_DIR = PROJECT_ROOT / "docs" / "tasks"
 PLAN_PATH = PROJECT_ROOT / "docs" / "plan.yaml"
 
-# Task 327: machine-readable task-schema SoT. The validator parses THIS
+# machine-readable task-schema SoT. The validator parses THIS
 # file — field names, required-sets, value vocab, filename grammar and
 # calibration switches are read FROM the parsed dict, never re-encoded
 # in Python. Framework-internal → FRAMEWORK_ROOT (mirror AUTONOMY_SOT_PATH).
@@ -105,6 +105,12 @@ EFFORT_WEIGHTS = {"S": 1, "M": 3, "L": 8, "XL": 20}
 DEFAULT_EFFORT_WEIGHT = 3  # M equivalent
 
 TERMINAL_STATUSES = {"done", "superseded", "wontfix", "absorbed"}
+# The full sanctioned task-status vocabulary (task_status_update SKILL §enum).
+# The critical-path / next-actions core keys on the literal `pending`, so a
+# status outside this set is silently treated as non-pending and drops off the
+# live frontier with no signal — KNOWN_TASK_STATUSES lets validate() flag it.
+NONTERMINAL_STATUSES = {"pending", "in_progress", "blocked"}
+KNOWN_TASK_STATUSES = TERMINAL_STATUSES | NONTERMINAL_STATUSES
 
 SPEC_PHASE_ENUM = {"raw", "reviewing", "fixing", "ready"}
 SPEC_PHASE_TRANSITIONS: dict[str, set[str]] = {
@@ -148,13 +154,13 @@ class Task:
     ac_schema_validation: str = ""
     spec_version: str = ""
     spec_states: dict[str, dict] = field(default_factory=dict)
-    # Task 367: Namespace marker for aggregate-mode. Empty string in single-repo.
+    # Namespace marker for aggregate-mode. Empty string in single-repo.
     _repo: str = ""
-    # Task 367: Tracks unresolved blocked_by_external entries that couldn't be
+    # Tracks unresolved blocked_by_external entries that couldn't be
     # resolved in aggregate-mode (repo missing or task not found). Used as an
     # additional "permanently blocked" signal alongside legacy simple-list entries.
     _unresolved_external: list = field(default_factory=list)
-    # Task 435 (F-C-014, AC-A.9): Sub-Tags fuer POST-MVP Mass-Migration.
+    # Sub-Tags fuer POST-MVP Mass-Migration.
     # legacy_milestone_key: Pre-Greenfield-Key, behalten zur Re-Klassifizierung.
     # migration_note: Menschenlesbarer Migrations-Audit-Trail.
     legacy_milestone_key: str = ""
@@ -162,7 +168,7 @@ class Task:
 
     @classmethod
     def from_dict(cls, data: dict) -> Task:
-        """Build Task from yaml-loaded dict. Type-Coercion-disziplin (F-CA-003):
+        """Build Task from yaml-loaded dict. Type-Coercion-disziplin:
         - int-fields: int(raw) with ValueError-fallback
         - str-fields: explicit None-Check -> "" default
         - list-fields: isinstance-check, sonst [] default
@@ -249,11 +255,11 @@ class Task:
 
     @property
     def has_external_deps(self) -> bool:
-        """Task 367: True if task has unresolved external deps that block it.
+        """True if task has unresolved external deps that block it.
 
         In single-repo mode: any non-empty blocked_by_external entry blocks
-        (unchanged from pre-367 behaviour — both legacy simple-list and new
-        dict-form entries are treated as unresolved).
+        (both legacy simple-list and new dict-form entries are treated as
+        unresolved).
 
         In aggregate mode: only entries that couldn't be resolved (stored in
         _unresolved_external) count as blockers. Resolved dict-form entries
@@ -269,26 +275,26 @@ class Task:
 
     @property
     def key(self):
-        """Task 367: Canonical dict key. Int in single-repo, str '<repo>#<id>' in aggregate."""
+        """Canonical dict key. Int in single-repo, str '<repo>#<id>' in aggregate."""
         if self._repo:
             return f"{self._repo}#{self.id:03d}"
         return self.id
 
 
-# Task 367: TaskKey = int | str (single-repo uses int, aggregate uses '<repo>#<id>').
+# TaskKey = int | str (single-repo uses int, aggregate uses '<repo>#<id>').
 # Keeping as type alias for readability; Python's dicts handle mixed transparently.
 TaskKey = object  # documentation alias only
 
 
 def _format_tid(t: Task) -> str:
-    """Task 367: Render task ID. Prefixes with '<repo>#' in aggregate mode."""
+    """Render task ID. Prefixes with '<repo>#' in aggregate mode."""
     if t._repo:
         return f"{t._repo}#{t.id:03d}"
     return f"{t.id:03d}"
 
 
 def _parse_external_entry(entry) -> tuple[str, int] | None:
-    """Task 367: Parse a blocked_by_external entry.
+    """Parse a blocked_by_external entry.
 
     Returns (repo, id) tuple if entry is a dict with 'repo' + 'id' keys
     (new schema), None if it's legacy simple-list form (string/placeholder).
@@ -301,7 +307,6 @@ def _parse_external_entry(entry) -> tuple[str, int] | None:
     return None
 
 
-# Task 435 (B-2 Lock, F-C-006, Amendment-003):
 # Type-Whitelist fuer GateCondition. Bekannte Types werden in check() geroutet,
 # unbekannte werfen WARN UNKNOWN_GATE_TYPE in check() (kein Crash).
 GATE_TYPE_WHITELIST = {"task", "validate", "coverage", "spec_review", "file", "script"}
@@ -313,7 +318,7 @@ class GateCondition:
     path: str = ""
     id: int = 0
     want: str = ""
-    # Task 435 (Amendment-003): additive Felder fuer Pre-Set-Gates pro feature_milestone.
+    # additive Felder fuer Pre-Set-Gates pro feature_milestone.
     # ref:         Beschreibungs-/Reference-String (z.B. "plan_engine clean")
     # preliminary: True -> Gate gibt (True, "preliminary") zurueck (blockiert nicht)
     # desc:        Menschenlesbare Beschreibung
@@ -322,7 +327,7 @@ class GateCondition:
     desc: str = ""
 
     def __post_init__(self) -> None:
-        # F-CA-003: explicit Type-Coercion fuer preliminary (yaml liefert bool ODER
+        # explicit Type-Coercion fuer preliminary (yaml liefert bool ODER
         # string). String 'true'/'false' soll zu bool kasten + WARN ausloesen.
         # `True is True` Disziplin verhindert truthy-string-Fallthrough.
         # warnings via _emit_warn
@@ -355,12 +360,12 @@ class GateCondition:
     def check(self, tasks: dict, milestones: dict | None = None) -> tuple[bool, str]:  # noqa: ARG002
         # Backward-compat: accept (tasks) or (tasks, milestones). milestones-Parameter
         # ist Reserve fuer zukuenftige Cross-Milestone-Gate-Checks.
-        # Task 435 (B-2 Lock): preliminary-Gates pass (blockieren Status-Compute nicht).
+        # preliminary-Gates pass (blockieren Status-Compute nicht).
         if self.preliminary:
             return True, "preliminary"
 
         if self.type == "task":
-            # 2026-05-07: Archive-Awareness. Archivierte Tasks sind per
+            # Archive-Awareness. Archivierte Tasks sind per
             # archive-Semantik terminal-done (Frozen Zone WORM-Pattern).
             # Wenn gate `want: done` (default) UND task-id ist archiviert →
             # pass. Ohne dieses Verhalten wird jeder Milestone mit
@@ -402,7 +407,7 @@ class GateCondition:
             except (OSError, subprocess.SubprocessError) as e:
                 return False, str(e)
         elif self.type in ("validate", "coverage", "spec_review"):
-            # Task 435 (B-2 Lock): non-preliminary Pflicht-Gates dieser Types
+            # non-preliminary Pflicht-Gates dieser Types
             # haben aktuell keine Default-Logik; sie sind nur als preliminary
             # spezifiziert. Nicht-preliminary => no-op pass mit Hinweis-Detail.
             return True, f"{self.type}: noop (non-preliminary fallback)"
@@ -466,9 +471,8 @@ class Milestone:
     status: str = ""
     tasks: list = field(default_factory=list)
     dependents: list[str] = field(default_factory=list)    # inverted requires
-    # Task 435 (B-3 Lock Strategy A flat, F-C-007):
     # 13 Optional-Felder direkt typisiert in Dataclass mit Default-Werten.
-    # KEIN extra-dict, KEIN Hybrid (User-Override 2026-05-03).
+    # KEIN extra-dict, KEIN Hybrid.
     # Plus: id (Synthetic-IDs M1=2100 etc., Doku-only — kein Code-Konsument iteriert per id).
     id: int = 0
     name: str = ""
@@ -517,8 +521,7 @@ class PlanResult:
 # Loading
 # ---------------------------------------------------------------------------
 
-# Task 435 (F-C-P2-001 User-Lock 2026-05-03 Variante c):
-# Synthetic-IDs fuer Feature-Milestones M1-M7+M1.5 (Schema-File §1, B-1 Lock).
+# Synthetic-IDs fuer Feature-Milestones M1-M7+M1.5.
 # 8 IDs, KEIN 2090, KEIN M0-cross-cutting in feature_milestones-Block.
 FEATURE_MILESTONE_SYNTHETIC_IDS: dict[str, int] = {
     "M1": 2100,
@@ -531,13 +534,12 @@ FEATURE_MILESTONE_SYNTHETIC_IDS: dict[str, int] = {
     "M7": 2170,
 }
 
-# Task 435 (Schema-File §1, F-C-014):
 # Whitelist erlaubter Feldnamen pro feature_milestone-Eintrag. Unbekannte
 # Felder loesen WARN UNKNOWN_FIELD aus, kein ERR. Pflicht-Felder sind
-# implizit (Schema-File §1) — fehlende Pflicht-Felder werden tolerant
+# implizit — fehlende Pflicht-Felder werden tolerant
 # behandelt (Default-Werte).
 _FEATURE_MILESTONE_KNOWN_FIELDS = {
-    # Pflicht-Felder per Schema-File §1
+    # Pflicht-Felder
     "name", "feature", "capabilities", "specs", "fallback_strategy",
     "requires", "blocked_by", "gate", "app_status_post_milestone",
     # Optional-Felder
@@ -546,7 +548,7 @@ _FEATURE_MILESTONE_KNOWN_FIELDS = {
     "infra_audit", "gap_ownership_anchor_task",
     # Doku-only (akzeptiert ohne WARN)
     "title", "desc",
-    # Dashboard-cluster assignment (2026-05-23): allow phases on feature_milestones
+    # Dashboard-cluster assignment: allow phases on feature_milestones
     # entries so view-buckets like council-mod can opt out of the feature-milestones
     # pseudo-phase and cluster under a normal phase (e.g. post-mvp-backlog).
     "phases",
@@ -554,13 +556,11 @@ _FEATURE_MILESTONE_KNOWN_FIELDS = {
 
 
 def load_archived_task_ids(project_root: Path) -> set[int]:
-    """Task 435 (F-C-P2-001 User-Lock 2026-05-03 Variante c, F-CA-001 Mitigation):
-
-    Liest IDs aus <project_root>/docs/tasks/archive/*.yaml (NICHT recursive,
+    """Liest IDs aus <project_root>/docs/tasks/archive/*.yaml (NICHT recursive,
     NICHT legacy_milestones_archive.yaml). Reine ID-Sammlung, kein Stub-Read.
     Used by validate-Loop fuer Silent-Pass von BROKEN_DEP wenn Target archived.
 
-    PROJECT_ROOT-relativ (F-CA-001): project_root MUSS explicit uebergeben
+    PROJECT_ROOT-relativ: project_root MUSS explicit uebergeben
     werden — kein implicit cwd-Resolve. Verhindert Cycle-Entry-Point-Sensitivity.
 
     Anti-Pattern-9-Disambiguation: docs/tasks/archive/*.yaml ist NICHT
@@ -579,7 +579,7 @@ def load_archived_task_ids(project_root: Path) -> set[int]:
             with open(path, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
         except (FileNotFoundError, yaml.YAMLError, OSError) as e:
-            # F-CA-002 Mitigation: explizite Exception-Klassen, NICHT silent except.
+            # explizite Exception-Klassen, NICHT silent except.
             # WARN ARCHIVED_ID_PARSE_FAIL emittiert (sichtbar im Test-Output).
             _emit_warn(f"ARCHIVED_ID_PARSE_FAIL: {path}: {e}")
             continue
@@ -590,7 +590,7 @@ def load_archived_task_ids(project_root: Path) -> set[int]:
         if raw_id is None:
             # Old-Format-File ohne id — Skip (legitim, kein WARN noetig)
             continue
-        # CA-001 Iteration 2: yaml-bool-id explizit reject VOR Coercion.
+        # yaml-bool-id explizit reject VOR Coercion.
         # Python int(True)=1 / int(False)=0 -> ohne Reject wuerde Task #1
         # bzw. #0 stumm als archiviert markiert.
         if isinstance(raw_id, bool):
@@ -599,7 +599,7 @@ def load_archived_task_ids(project_root: Path) -> set[int]:
                 "(yaml-bool ist nie valide id)"
             )
             continue
-        # F-CA-003 Type-Coercion-Disziplin: _coerce_int_or_none statt raw int().
+        # Type-Coercion-Disziplin: _coerce_int_or_none statt raw int().
         coerced = _coerce_int_or_none(raw_id, f"archive[{path.name}].id")
         if coerced is None:
             # WARN bereits emittiert von _coerce_int_or_none (oder bool-reject oben)
@@ -609,7 +609,7 @@ def load_archived_task_ids(project_root: Path) -> set[int]:
     return archived_ids
 
 
-# 2026-05-07: Module-level Cache fuer archived task IDs, used by
+# Module-level Cache fuer archived task IDs, used by
 # GateCondition.check zur Archive-Awareness (archived gate-task = terminal-done).
 # Per-PROJECT_ROOT keyed; _swap_plan_engine_globals (aggregate-mode) wechselt
 # PROJECT_ROOT und damit den Cache-Key, daher kein manuelles Invalidate noetig.
@@ -636,14 +636,14 @@ def _get_archived_ids_cached() -> set[int]:
 
 
 def _coerce_str(raw, field_name: str = "") -> str:  # noqa: ARG001
-    """F-CA-003 Helper: yaml-Field zu str mit None-Default. Kein Crash auf None."""
+    """yaml-Field zu str mit None-Default. Kein Crash auf None."""
     if raw is None:
         return ""
     return str(raw)
 
 
 def _coerce_str_list(raw, field_name: str = "") -> list[str]:
-    """F-CA-003 Helper: yaml-Field zu list[str]. Bei string-statt-list:
+    """yaml-Field zu list[str]. Bei string-statt-list:
     explicit None|empty -> [] ohne WARN; non-empty string -> [string] (auto-wrap)
     + WARN SCHEMA_TYPE_MISMATCH (yaml-Tippfehler-Detection)."""
     # warnings via _emit_warn
@@ -670,9 +670,9 @@ def _coerce_str_list(raw, field_name: str = "") -> list[str]:
 
 
 def _coerce_int_or_none(raw, field_name: str = "") -> int | None:
-    """F-CA-003 Helper: yaml-Field zu int|None. String 'abc' -> None + WARN.
+    """yaml-Field zu int|None. String 'abc' -> None + WARN.
 
-    Iteration 2 (CA-001 + CA-004 Fix): yaml-bool wird explizit REJECTED.
+    yaml-bool wird explizit REJECTED.
     Python-Quirk: bool ist int-Subtyp -> int(True)=1, int(False)=0.
     Ohne expliziten bool-Reject wuerde 'id: true' silent als id=1 archiviert
     bzw. als Gate-Target gerendert. Wir emittieren WARN
@@ -684,7 +684,7 @@ def _coerce_int_or_none(raw, field_name: str = "") -> int | None:
     if raw is None:
         return None
     if isinstance(raw, bool):
-        # CA-001/CA-004 Mitigation: yaml-bool ist NIE eine valide id.
+        # yaml-bool ist NIE eine valide id.
         # MUST be checked BEFORE isinstance(raw, int) (bool ist int-Subtyp).
         _emit_warn(
             f"SCHEMA_TYPE_MISMATCH: field {field_name!r} expected int|None, got "
@@ -717,7 +717,7 @@ def _construct_task_from_dict(
     raw_id = data.get("id")
     if raw_id is None:
         return None, None
-    # F-CA-003 Type-Coercion-Disziplin: _coerce_int_or_none statt raw int().
+    # Type-Coercion-Disziplin: _coerce_int_or_none statt raw int().
     # Aggregate-Mode (`{tid:03d}`) erwartet int — str-ids in YAML (z.B.
     # `id: "098"`) wuerden sonst beim f-string crashen.
     if isinstance(raw_id, bool):
@@ -768,7 +768,7 @@ def _construct_task_from_dict(
         spec_version=str(data.get("spec_version", "") or ""),
         spec_states=data.get("spec_states") if isinstance(data.get("spec_states"), dict) else {},  # type: ignore[arg-type]
         _repo=repo_name,
-        # Task 435 (F-C-014, AC-A.9): Sub-Tags-Propagation in Task-Dataclass.
+        # Sub-Tags-Propagation in Task-Dataclass.
         legacy_milestone_key=_coerce_str(data.get("legacy_milestone_key"), "legacy_milestone_key"),
         migration_note=_coerce_str(data.get("migration_note"), "migration_note"),
     )
@@ -778,7 +778,7 @@ def _construct_task_from_dict(
 def load_tasks(project_root: Path | None = None, repo_name: str = "") -> dict:
     """Load tasks from a single project root.
 
-    Task 367: project_root parameter allows loading tasks from arbitrary
+    project_root parameter allows loading tasks from arbitrary
     directories (used by aggregate mode). When None, falls back to the
     module-level TASKS_DIR (current PROJECT_ROOT). repo_name, when set,
     marks each Task with _repo for namespacing — used only by aggregate mode.
@@ -787,7 +787,7 @@ def load_tasks(project_root: Path | None = None, repo_name: str = "") -> dict:
       - Single-repo (repo_name=""): dict[int, Task] keyed by integer task id
       - Aggregate (repo_name set): dict[str, Task] keyed by "<repo>#<id:03d>"
     """
-    # Task 435 (F-C-010a): non-recursive Path-Filter via tasks_dir.glob("*.yaml").
+    # non-recursive Path-Filter via tasks_dir.glob("*.yaml").
     # Explizit NICHT rglob, NICHT docs/tasks/archive/**.
     # Archived tasks live in docs/tasks/archive/ — read via load_archived_tasks().
     # Path-Flexibilitaet: project_root kann sein:
@@ -873,9 +873,9 @@ def load_archived_tasks(
 
 
 def _build_gate_from_dict(g: dict) -> GateCondition:
-    """Build GateCondition from yaml-loaded dict. Type-Coercion-disziplin (F-CA-003).
+    """Build GateCondition from yaml-loaded dict. Type-Coercion-disziplin.
 
-    Schema-File §3 Pre-Set-Gate-Format:
+    Pre-Set-Gate-Format:
       {type: task, id: <int>, desc: <str>}
       {type: validate|coverage|spec_review, ref: <str>, preliminary: true|false}
     """
@@ -884,8 +884,8 @@ def _build_gate_from_dict(g: dict) -> GateCondition:
         # warnings via _emit_warn
         _emit_warn(f"GATE_TYPE_MISMATCH: gate-entry expected dict, got {type(g).__name__}: {g!r}")
         return GateCondition(type="")
-    # CA-004 Iteration 2: yaml-bool-id explizit reject VOR int()-Coercion
-    # (gleiche Bug-Class wie CA-001 in load_archived_task_ids, anderer Pfad).
+    # yaml-bool-id explizit reject VOR int()-Coercion
+    # (gleiche Bug-Class wie in load_archived_task_ids, anderer Pfad).
     raw_id = g.get("id", 0)
     if isinstance(raw_id, bool):
         _emit_warn(
@@ -912,21 +912,21 @@ def _build_gate_from_dict(g: dict) -> GateCondition:
 def load_plan(project_root: Path | None = None) -> PlanResult:
     """Returns PlanResult (backward-compatible with tuple unpacking).
 
-    Task 367: project_root parameter allows loading plan from arbitrary
+    project_root parameter allows loading plan from arbitrary
     directories (used by aggregate mode). When None, falls back to the
     module-level PLAN_PATH.
 
-    Task 435 (F-C-007, F-C-010a, B-1, F-CA-003): liest zusaetzlich
+    liest zusaetzlich
     `feature_milestones:`-Block und erzeugt Synthetic-Milestones mit IDs
     2100/2150/2110/2120/2130/2140/2160/2170. Bei Key-Kollision mit
-    `milestones:`-Pointern: feature_milestones gewinnt (B-1 Lock).
+    `milestones:`-Pointern: feature_milestones gewinnt.
 
     Path-Flexibilitaet: project_root kann sein:
       - None: nutzt module-level PLAN_PATH
       - Path zu Verzeichnis: liest <root>/docs/plan.yaml
       - Path zu yaml-File: liest direkt diese Datei (Test-Fixture-Use-Case)
 
-    Graceful degradation (Task 010 Part L0 + Task 435 F-C-010a):
+    Graceful degradation:
     Bei fehlendem feature_milestones-Block: kein Crash, kein WARN.
     """
     # warnings via _emit_warn
@@ -989,7 +989,7 @@ def load_plan(project_root: Path | None = None) -> PlanResult:
     milestones: dict[str, Milestone] = {}
 
     # Step 1: Legacy `milestones:`-Liste (Pointer-Format).
-    # Wird zuerst geladen — feature_milestones gewinnt bei Kollision (B-1 Lock).
+    # Wird zuerst geladen — feature_milestones gewinnt bei Kollision.
     for entry in data.get("milestones", []) or []:
         if not isinstance(entry, dict):
             continue
@@ -998,7 +998,7 @@ def load_plan(project_root: Path | None = None) -> PlanResult:
             continue
         gates = [_build_gate_from_dict(g) for g in entry.get("gate", []) or []]
         # Pre-Greenfield Pointer-Eintraege koennen 'id' haben (Synthetic 2090-2170).
-        # CA-004 Iteration 2: yaml-bool-id explizit reject VOR int()-Coercion.
+        # yaml-bool-id explizit reject VOR int()-Coercion.
         raw_id = entry.get("id", 0)
         if isinstance(raw_id, bool):
             _emit_warn(
@@ -1022,7 +1022,7 @@ def load_plan(project_root: Path | None = None) -> PlanResult:
             id=mid,
         )
 
-    # Step 2 (Task 435, B-1 Lock): feature_milestones-Block native lesen.
+    # Step 2: feature_milestones-Block native lesen.
     # Bei Key-Kollision mit milestones:-Liste: feature_milestones gewinnt (overwrite).
     feature_block = data.get("feature_milestones", {})
     if not isinstance(feature_block, dict):
@@ -1040,7 +1040,7 @@ def load_plan(project_root: Path | None = None) -> PlanResult:
         synthetic_id = FEATURE_MILESTONE_SYNTHETIC_IDS.get(fkey, 0)
 
         # Type-Whitelist: unbekannte Felder triggern WARN UNKNOWN_FIELD.
-        # F-CA-003 Anti-Pattern: yaml-Felder mit Python-Reservierten-Namen
+        # Anti-Pattern: yaml-Felder mit Python-Reservierten-Namen
         # (__class__, __init__) NICHT via setattr propagieren.
         unknown_fields = set(fdata.keys()) - _FEATURE_MILESTONE_KNOWN_FIELDS
         for ufield in sorted(unknown_fields):
@@ -1056,7 +1056,7 @@ def load_plan(project_root: Path | None = None) -> PlanResult:
                     f"Feld {ufield!r}"
                 )
 
-        # Default-Regel F-C-016: requires := requires_field or blocked_by_field or [].
+        # Default-Regel: requires := requires_field or blocked_by_field or [].
         # Beide duerfen co-existieren; bei Konflikt gewinnt requires.
         requires_raw = fdata.get("requires")
         blocked_by_raw = fdata.get("blocked_by")
@@ -1067,12 +1067,12 @@ def load_plan(project_root: Path | None = None) -> PlanResult:
         else:
             requires = []
 
-        # Gate parsen (Pre-Set-Gates Schema-File §3)
+        # Gate parsen (Pre-Set-Gates)
         gate_raw = fdata.get("gate", []) or []
         feature_gates: list[GateCondition] = []
         if isinstance(gate_raw, list):
             if "gate" in fdata and not gate_raw:
-                # TC-ADV-024: Schema sagt 'Pflicht-Felder: gate'. Leere Liste WARN.
+                # Schema sagt 'Pflicht-Felder: gate'. Leere Liste WARN.
                 _emit_warn(
                     f"MILESTONE_NO_GATE: feature_milestones[{fkey!r}] hat leeres gate"
                 )
@@ -1143,7 +1143,7 @@ def load_plan(project_root: Path | None = None) -> PlanResult:
             ),
             gap_ownership_anchor_task=gap_anchor,
         )
-        # B-1 Lock: feature_milestones gewinnt bei Key-Kollision (overwrite).
+        # feature_milestones gewinnt bei Key-Kollision (overwrite).
         milestones[fkey] = m
 
     return PlanResult(
@@ -1156,11 +1156,11 @@ def load_plan(project_root: Path | None = None) -> PlanResult:
 
 
 # ---------------------------------------------------------------------------
-# Task 367: Multi-Repo Aggregation
+# Multi-Repo Aggregation
 # ---------------------------------------------------------------------------
 
 def discover_projects(projects_arg: str | None = None) -> list[tuple[str, Path]]:
-    """Task 367: Discover project repos for aggregate mode.
+    """Discover project repos for aggregate mode.
 
     Returns a list of (repo_name, project_root) tuples.
 
@@ -1229,7 +1229,7 @@ def discover_projects(projects_arg: str | None = None) -> list[tuple[str, Path]]
 
 @dataclass
 class AggregateResult:
-    """Task 367: Result of load_aggregated.
+    """Result of load_aggregated.
 
     Contains merged tasks, merged milestones, and metadata about the aggregate
     scope. Unlike PlanResult (single-repo), this does not expose a single
@@ -1249,13 +1249,13 @@ class AggregateResult:
     target: str = ""
     north_star: str = ""
     operational_intent: dict = field(default_factory=dict)
-    # Task 435 Iteration 2 (CA-002 Fix): Union der per-repo archived task-IDs,
+    # Union der per-repo archived task-IDs,
     # namespaced als "<repo>#<id:03d>" damit validate-Loop direkt match macht.
     archived_ids: set[str] = field(default_factory=set)
 
 
 def load_aggregated(projects_arg: str | None = None) -> AggregateResult:
-    """Task 367: Load multiple project repos and merge into unified tasks/milestones.
+    """Load multiple project repos and merge into unified tasks/milestones.
 
     Keying:
       - Tasks: dict key is "<repo>#<id:03d>" string (e.g. "<consumer>#358").
@@ -1271,8 +1271,8 @@ def load_aggregated(projects_arg: str | None = None) -> AggregateResult:
         entries are stashed in _unresolved_external and count as blockers
         via has_external_deps.
 
-    Task 435 Iteration 2 (CA-002 Fix): per-repo archived_ids gesammelt + zu
-    einem namespaced set ("<repo>#<id:03d>") gemerged. Variante c Silent-Pass
+    per-repo archived_ids gesammelt + zu
+    einem namespaced set ("<repo>#<id:03d>") gemerged. Silent-Pass
     funktioniert damit auch im Aggregate-Pfad — cross-repo blocked_by-Refs
     auf in einem Repo archivierte Tasks erzeugen kein BROKEN_DEP mehr.
     Ergebnis liegt in result.archived_ids (set[str]).
@@ -1289,7 +1289,7 @@ def load_aggregated(projects_arg: str | None = None) -> AggregateResult:
         repo_plan = load_plan(project_root=root)
         result.per_repo[repo_name] = repo_plan
 
-        # CA-002 Iteration 2: per-repo archived_ids sammeln + namespacen.
+        # per-repo archived_ids sammeln + namespacen.
         # Format identisch zur blocked_by-Rewrite ("<repo>#<id:03d>") damit
         # validate-Loop direkt matched.
         repo_archived = load_archived_task_ids(root)
@@ -1356,7 +1356,7 @@ def load_aggregated(projects_arg: str | None = None) -> AggregateResult:
             parsed = _parse_external_entry(entry)
             if parsed is None:
                 # Legacy simple-list form: can't resolve without schema, keep
-                # as unresolved (preserves pre-367 semantics: always blocks).
+                # as unresolved (preserves semantics: always blocks).
                 unresolved.append(entry)
                 continue
             ext_repo, ext_id = parsed
@@ -1430,7 +1430,7 @@ def compute_phase_progress(
 def assign_tasks_to_milestones(tasks: dict, milestones: dict[str, Milestone]):
     """Populate milestone.tasks lists.
 
-    Task 367: Uses t.key (namespaced in aggregate mode, int in single-repo).
+    Uses t.key (namespaced in aggregate mode, int in single-repo).
     m.tasks entries are therefore dict keys valid against the tasks dict.
     """
     for m in milestones.values():
@@ -1551,7 +1551,7 @@ def _build_milestone_order(milestones: dict[str, Milestone], target: str) -> lis
     return order
 
 
-# Task 435 (F-C-P2-003): Mixed-Item-Render-Helper fuer Critical-Path-Items.
+# Mixed-Item-Render-Helper fuer Critical-Path-Items.
 # Items koennen sein:
 #   - int task-id (legacy + post-1980-mode)
 #   - str milestone-key (z.B. "M1", "M1.5", "POST-MVP")
@@ -1560,8 +1560,7 @@ def _build_milestone_order(milestones: dict[str, Milestone], target: str) -> lis
 def _render_cp_item(item, tasks: dict) -> str:
     """Render Critical-Path-Item zu String fuer fmt_boot/fmt_status/fmt_critical_path.
 
-    F-C-P2-003 (Mixed-Items) + F-CA-005 (Subset/Superset-Behavior).
-    F-CA-001 Mitigation: explicit None-Branch (yaml-null wuerde 'None'-string).
+    explicit None-Branch (yaml-null wuerde 'None'-string).
     """
     # warnings via _emit_warn
     if item is None:
@@ -1577,88 +1576,53 @@ def _render_cp_item(item, tasks: dict) -> str:
         title = getattr(t, "title", "") or ""
         return f"[{item}] {title}"
     if isinstance(item, list):
-        # Items zu str kasten (TypeError-Schutz F-CA-005 / TC-ADV-018)
+        # Items zu str kasten (TypeError-Schutz)
         return "[" + " || ".join(str(x) for x in item) + "]"
     if isinstance(item, str):
         return item
     if isinstance(item, dict):
-        # F-CA-005 / TC-ADV-016: dict-Item -> WARN UNKNOWN_CP_ITEM_TYPE,
+        # dict-Item -> WARN UNKNOWN_CP_ITEM_TYPE,
         # rendern via str(item) (raw repr).
         _emit_warn(f"UNKNOWN_CP_ITEM_TYPE: dict {item!r}")
         return str(item)
     return str(item)
 
 
-def _sequences_consistent(explicit: list, dag_sort: list) -> tuple[bool, list]:
-    """Vergleicht explicit (YAML-deklarierte critical_path) mit dag_sort
-    (DAG-Topo-Sort). Returns (is_consistent: bool, mismatch_items: list).
+def _explicit_order_violations(explicit: list, milestones: dict) -> list:
+    """Real `requires`-edge violations in the explicit critical_path order.
 
-    F-CA-005 Subset/Superset/Reihenfolge-Inversion-Logic:
-    - Items in BEIDEN Listen muessen in gleicher Reihenfolge sein (gemeinsame Subsequenz).
-    - Items NUR in explicit (z.B. POST-MVP-strings) -> kein Mismatch.
-    - Items NUR in dag_sort (z.B. Tasks die explicit auslaesst) -> kein Mismatch.
-    - Reihenfolge-Inversion in gemeinsamen Items -> mismatch_items + WARN.
-    - Parallel-Listen [M1, M1.5] in explicit werden als Set behandelt
-      (Reihenfolge innerhalb parallel egal).
+    A violation = a milestone whose `requires` predecessor — itself a milestone
+    present in the explicit list — appears AFTER it. Topologically-parallel
+    milestones (no requires-path between them) impose no order, so their relative
+    position is free; only a real edge inversion is flagged. Returns a list of
+    `(predecessor, dependent)` pairs (the predecessor that must precede but
+    follows), or [] when the order is a valid topological ordering.
+
+    This replaces a positional compare against ONE arbitrary topo-sort, which
+    false-flagged the tie-break order of parallel milestones (e.g. M1/M1.5, both
+    gating M2 with no edge between them) as drift even though every order of two
+    independent milestones is valid. Ignored, because they impose no milestone
+    ordering: non-milestone entries on the path (task ids, POST-MVP strings) and
+    task-id `requires`. Nested parallel groups ([M1, M1.5]) share one position.
     """
-    if not explicit or not dag_sort:
-        return True, []
+    pos: dict[str, int] = {}
+    for idx, item in enumerate(explicit):
+        members = item if isinstance(item, list) else [item]
+        for m in members:
+            key = str(m) if m is not None else ""
+            if key not in pos:
+                pos[key] = idx
 
-    # Normalisiere explicit: parallel-Listen werden zu Sets (frozenset fuer hashability)
-    def _flat_items(seq):
-        """Flatten parallel-Listen aber merken welche Items parallel sind."""
-        flat = []
-        for item in seq:
-            if isinstance(item, list):
-                # Parallel-Liste: alle items zaehlen einzeln, aber als gemeinsamer Set-Marker
-                for sub in item:
-                    flat.append(("parallel", str(sub)))
-            else:
-                flat.append(("seq", str(item) if item is not None else ""))
-        return flat
-
-    flat_explicit = _flat_items(explicit)
-    flat_dag = _flat_items(dag_sort)
-
-    # Common items (str-key): die gemeinsame Subsequenz
-    explicit_keys = [key for _, key in flat_explicit]
-    dag_keys = [key for _, key in flat_dag]
-    common = set(explicit_keys) & set(dag_keys)
-    if not common:
-        return True, []  # keine Ueberschneidung -> kein Drift
-
-    # Reihenfolge-Vergleich der gemeinsamen Items
-    # Filter: nur common-Items aus beiden Sequenzen
-    explicit_common = [k for k in explicit_keys if k in common]
-    dag_common = [k for k in dag_keys if k in common]
-
-    # Parallel-Items in explicit: setze sie als "frei rotierbar".
-    # Vereinfachung: wenn explicit_common != dag_common in Reihenfolge UND
-    # nicht via parallel-Slot erklaert: mismatch.
-    parallel_keys = {key for kind, key in flat_explicit if kind == "parallel"}
-
-    mismatch = []
-    # Brute-force: walk parallel beide Sequenzen, sammle mismatching Positionen.
-    # Wenn beide gleich -> consistent.
-    if explicit_common == dag_common:
-        return True, []
-
-    # Bevor wir mismatch melden: wenn alle "abweichende" Positionen reine
-    # parallel-Slot-Permutationen sind, akzeptieren wir.
-    # Heuristik: wenn nach Entfernen aller parallel_keys aus beiden Sequenzen
-    # die Reste gleich sind -> consistent.
-    e_seq_only = [k for k in explicit_common if k not in parallel_keys]
-    d_seq_only = [k for k in dag_common if k not in parallel_keys]
-    if e_seq_only == d_seq_only:
-        return True, []
-
-    # Mismatch: liste die divergierenden Items
-    for pos, (e, d) in enumerate(zip(explicit_common, dag_common, strict=False)):
-        if e != d:
-            mismatch.append({"pos": pos, "explicit": e, "dag": d})
-    if len(explicit_common) != len(dag_common):
-        mismatch.append({"length_diff": len(explicit_common) - len(dag_common)})
-    return False, mismatch
+    violations: list = []
+    for key, p in pos.items():
+        m = milestones.get(key)
+        if m is None:
+            continue  # not a milestone (task id / POST-MVP string) -> no edge
+        for req in m.requires:
+            rkey = str(req)
+            if rkey in pos and pos[rkey] > p:
+                violations.append((rkey, key))  # rkey must precede key but follows
+    return violations
 
 
 def _topo_sort_legacy(
@@ -1675,7 +1639,7 @@ def _topo_sort_legacy(
 
 
 def _hashable_cp_set(critical_path: list) -> set:
-    """Task 435 (F-C-P2-003): build set fuer 'in cp' Lookup ohne TypeError
+    """build set fuer 'in cp' Lookup ohne TypeError
     auf Mixed-Items. parallel-Listen werden zu frozenset, dict-items zu repr,
     None wird ignoriert."""
     out: set = set()
@@ -1709,8 +1673,7 @@ def compute_critical_path(
     target: str,
     plan_data: dict | None = None,
 ) -> list:
-    """Task 435 (F-C-003 Option 1, Amendment-001):
-    4-stufiger Lookup mit Konsistenz-Validation.
+    """4-stufiger Lookup mit Konsistenz-Validation.
 
     Stufen:
       1. plan_data["critical_path"] (Greenfield-Authority) -> 1:1 als Authority
@@ -1718,10 +1681,11 @@ def compute_critical_path(
       3. plan_data["legacy_critical_path_sequence"] (legacy)
       4. DAG-Topological-Sort (Last-Resort)
 
-    Konsistenz-Validation: vergleicht explicit mit DAG-Sort,
-    WARN CRITICAL_PATH_MISMATCH bei Drift.
+    Konsistenz-Validation: prueft ob explicit eine gueltige topologische
+    Reihenfolge der Milestone-`requires`-Kanten ist; WARN CRITICAL_PATH_MISMATCH
+    nur bei echter Kanten-Verletzung (Tie-Break paralleler Milestones ist frei).
 
-    Skip-Conditions (F-C-P2-004 + F-CA-005 Mitigation):
+    Skip-Conditions:
       - target leer -> skip Drift-Detection
       - tasks empty -> skip
       - DAG-Sort empty -> skip
@@ -1733,7 +1697,7 @@ def compute_critical_path(
         plan_data = {}
 
     # Stufe 1-3: explicit Top-Level-Keys.
-    # F-CA-005 Edge-Case TC-ADV-007: leere Liste critical_path: [] is legitim.
+    # Edge-Case: leere Liste critical_path: [] is legitim.
     # Wir nutzen `if "key" in dict` Pattern statt `or`-Fallthrough fuer Stufe 1.
     explicit: list | None = None
     if "critical_path" in plan_data:
@@ -1753,11 +1717,11 @@ def compute_critical_path(
         # Konsistenz-Validation skip-Conditions
         skip_drift = False
 
-        # F-C-P2-004: target leer -> skip
+        # target leer -> skip
         if not target:
             skip_drift = True
 
-        # F-CA-005 / TC-ADV-019 UNKNOWN_TARGET: target ist weder Milestone-Key
+        # UNKNOWN_TARGET: target ist weder Milestone-Key
         # noch Task-Id im scope -> WARN, skip Drift.
         target_known = (
             (target in milestones)
@@ -1776,27 +1740,19 @@ def compute_critical_path(
             skip_drift = True
 
         if not skip_drift:
-            # Milestone-DAG-Sort: nutzt requires-Felder der Milestones zur
-            # Reihenfolge-Drift-Detection auf Milestone-Key-Ebene.
-            # Faellt auf Task-DAG zurueck wenn Milestone-Drift-Sort leer.
-            dag_sort: list = []
-            if target in milestones:
-                try:
-                    dag_sort = _build_milestone_order(milestones, target)
-                except Exception:
-                    dag_sort = []
-            if not dag_sort and tasks:
-                try:
-                    dag_sort = _topo_sort_legacy(tasks, milestones, target)
-                except Exception:
-                    dag_sort = []
-            if dag_sort:
-                consistent, mismatch = _sequences_consistent(explicit, dag_sort)
-                if not consistent:
-                    _emit_warn(
-                        f"CRITICAL_PATH_MISMATCH: YAML={explicit} DAG={dag_sort} "
-                        f"mismatch_items={mismatch}"
-                    )
+            # Validate the explicit order against the requires-DAG itself, not
+            # against one arbitrary topo-sort: only a REAL requires-edge inversion
+            # is a mismatch. Topologically-parallel milestones (no requires-path
+            # between them — e.g. M1/M1.5, both gating M2) impose no order, so any
+            # relative position is valid; the old positional compare false-flagged
+            # that tie-break as drift.
+            violations = _explicit_order_violations(explicit, milestones)
+            if violations:
+                edges = ", ".join(f"{dep} -> {m}" for dep, m in violations)
+                _emit_warn(
+                    f"CRITICAL_PATH_MISMATCH: explicit critical_path violates "
+                    f"requires-edges (must hold: {edges}); explicit={explicit}"
+                )
         return explicit
 
     # Stufe 4: DAG-Topological-Sort (Last-Resort)
@@ -1806,42 +1762,29 @@ def compute_critical_path(
 def _resolve_active_milestone(
     milestones: dict[str, Milestone], target: str
 ) -> Milestone | None:
-    """Task 387: pick the milestone whose live task chain to surface.
+    """pick the milestone whose live task chain to surface — the
+    FRONTIER, i.e. the earliest non-`done` milestone on the target's
+    requires-spine.
 
-    The "active milestone" is the milestone that GATES the target — i.e. the
-    target's own gating milestone, NOT the earliest open one on the spine. This
-    is grounded in `compute_milestone_status`'s real emission semantics rather
-    than a literal `status == "active"` (the loader only emits "active" when a
-    member task is `in_progress`; the AC-1 all-`pending` tree never reaches it).
+    The `target` is the program north-star (e.g. M8 Distribution); the milestone
+    the user actually works at is the nearest unfinished prerequisite (e.g. M3),
+    not the far target. So the active milestone is the live frontier: walk the
+    spine deps-first and return the first milestone that is not yet `done`. When
+    the target IS the frontier (all predecessors done), this returns the target.
+    When every spine milestone is done, returns None -> renderers degrade to the
+    milestone-spine-only view (graceful degradation).
 
-    Status vocab emitted by `compute_milestone_status` (1465-1515):
-      - done    -> closed; skip.
-      - future  -> a `requires` predecessor is deep-blocked; not the frontier.
-      - blocked -> a `requires` predecessor is still open; the target's OWN gate
-                   chain is still the thing AC-1 asks to surface (M3=blocked ->
-                   surface M3's chain 550->...->429).
-      - ready   -> gate unmet, no member `in_progress`; the live frontier.
-      - active  -> a member is `in_progress`; the live frontier.
+    (Earlier this returned the target itself whenever non-done, which mislabels
+    a far north-star target as the active milestone — surfacing M8's gate chain
+    while the work is at M3. Frontier-resolution makes the label and chain follow
+    the live frontier regardless of how distant the target is set.)
 
-    Resolution order:
-      1. The target milestone itself, when it is non-done — it IS the thing the
-         "what gates this" query is about (covers the AC-1 all-`pending` M3 tree,
-         which the loader emits as `blocked`/`ready`, never `active`).
-      2. else (target already done) the nearest open milestone on target's
-         requires-spine, walking from the target end (latest gating milestone
-         first, deps last) — the next thing that has to close.
-    Returns None when nothing gating resolves -> renderers degrade to the
-    milestone-spine-only behaviour (AC-4 graceful degradation).
+    Status vocab from `compute_milestone_status` (done/future/blocked/ready/
+    active); only `done` is skipped — every non-done state can be the frontier.
     """
-    tm = milestones.get(target)
-    if tm is not None and tm.status != "done":
-        return tm
-
-    # Target is done (or absent): fall back to the nearest open gating milestone
-    # on the requires-spine. _build_milestone_order is deps-first, so reverse it
-    # to walk from the target end (the gating milestone closest to target first).
-    spine = _build_milestone_order(milestones, target)
-    for k in reversed(spine):
+    # _build_milestone_order is deps-first, so the first non-done milestone is
+    # the earliest unfinished prerequisite = the live frontier.
+    for k in _build_milestone_order(milestones, target):
         m = milestones.get(k)
         if m is not None and m.status != "done":
             return m
@@ -1849,16 +1792,16 @@ def _resolve_active_milestone(
 
 
 def _resolve_gate_task_keys(m: Milestone, tasks: dict) -> list:
-    """Task 387: resolve ALL `type: task` gate dict-keys for milestone `m`.
+    """resolve ALL `type: task` gate dict-keys for milestone `m`.
 
     A `type: task` gate carries the gate task id as a raw int (GateCondition.id).
     The tasks dict is keyed by task.key — int in single-repo, '<repo>#<id>' in
-    aggregate mode (Task 367). m.tasks holds those same keys, so we match the
+    aggregate mode. m.tasks holds those same keys, so we match the
     gate id against the milestone's own task keys to stay mode-agnostic. Falls
     back to a direct int-key lookup for milestones whose tasks list is empty.
 
-    C-004: a milestone can carry multiple `type: task` gates (Milestone.gate is a
-    list, AC-4 says gate task(s)). All of them block closure, so all of their
+    a milestone can carry multiple `type: task` gates (Milestone.gate is a
+    list, gate task(s)). All of them block closure, so all of their
     chains must be surfaced — returning only the first silently under-reports.
     Returns the resolved keys in gate-declaration order (deduped), or [].
     """
@@ -1886,7 +1829,7 @@ def _resolve_gate_task_keys(m: Milestone, tasks: dict) -> list:
 
 @dataclass(frozen=True)
 class ActiveChain:
-    """Task 387 (F-CA-101): the full render-ready result of one active-milestone
+    """the full render-ready result of one active-milestone
     chain computation. The renderer needs all three from a SINGLE call so the
     production path == the tested path (no re-implemented orchestration twin):
 
@@ -1907,7 +1850,7 @@ def compute_active_milestone_task_chain(
     milestones: dict[str, Milestone],
     target: str,
 ) -> ActiveChain:
-    """Task 387: ordered task-level path through the ACTIVE milestone.
+    """ordered task-level path through the ACTIVE milestone.
 
     Resolves the active milestone's gate task and walks its blocked_by chain
     transitively back to the nearest unblocked root(s), returning an
@@ -1915,7 +1858,7 @@ def compute_active_milestone_task_chain(
     header label), the ordered list of task keys (roots-first, gate last —
     e.g. 550->551->552->553->429), and the cycle flag.
 
-    F-CA-101: this is the SINGLE source of the resolve -> gate -> topo -> WARN
+    this is the SINGLE source of the resolve -> gate -> topo -> WARN
     sequence. `_fmt_active_chain_block` (the production render path that
     `--critical-path`/`--boot` execute) consumes this one call instead of
     re-implementing the orchestration — so the self-test TCs that exercise this
@@ -1923,25 +1866,25 @@ def compute_active_milestone_task_chain(
     orchestration owner); consumers read `cycle_seen` and must not re-emit.
 
     This is a SEPARATE computed view from compute_critical_path: it does NOT
-    feed _hashable_cp_set / _sequences_consistent / NEXT-ACTIONS cp_flag /
+    feed _hashable_cp_set / _explicit_order_violations / NEXT-ACTIONS cp_flag /
     dashboard_json. The milestone spine stays the critical-path authority; this
     only adds the live next-actions task chain nested under the active milestone.
 
-    C-004: when the milestone has multiple `type: task` gates, every gate's
+    when the milestone has multiple `type: task` gates, every gate's
     chain is surfaced (the union of their predecessor sets, topo-ordered) — a
     single milestone with two blocking gates is not silently truncated to one.
 
-    C-006: the active milestone is resolved exactly ONCE (here). Consumers reuse
+    the active milestone is resolved exactly ONCE (here). Consumers reuse
     the returned `.milestone` for the label rather than resolving again — a
     second resolve is the latent label/content divergence trap.
 
-    Edge handling (AC-4):
+    Edge handling:
       - no active milestone resolvable -> milestone=None, chain=[] (degrade)
       - no gate task resolves -> chain=[] (spine-only degrade)
       - gate task has empty blocked_by -> chain=[gate-task-key] (gate alone)
       - cycle in blocked_by -> break the walk + WARN, never loop
 
-    Mode-agnostic (Task 367): resolves keys via m.tasks / task.key, so it works
+    Mode-agnostic: resolves keys via m.tasks / task.key, so it works
     in single-repo (int keys) and aggregate ('<repo>#<id>' keys) alike.
     """
     m = _resolve_active_milestone(milestones, target)
@@ -1961,15 +1904,15 @@ def compute_active_milestone_task_chain(
 
 
 def _topo_blocked_by_chain(gate_keys: list, tasks: dict) -> tuple[list, bool]:
-    """Task 387 (C-002): reverse-topo over `blocked_by` from the gate task(s).
+    """reverse-topo over `blocked_by` from the gate task(s).
 
     Returns (ordered_keys, cycle_seen). For the acyclic portion the order is
-    roots-first — every dependency precedes its dependents (AC-1: 550 -> 551 ->
+    roots-first — every dependency precedes its dependents (550 -> 551 ->
     ... -> gate). A diamond / shared blocker (in-degree > 1, acyclic) is ordered
-    correctly and does NOT report a cycle; a real back-edge DOES (AC-4 keeps the
+    correctly and does NOT report a cycle; a real back-edge DOES (keeps the
     WARN).
 
-    F-CA-102 caveat: when cycle_seen is True, the nodes on the cycle never drain
+    caveat: when cycle_seen is True, the nodes on the cycle never drain
     from the Kahn queue, so they CANNOT be topo-ordered. They are appended as a
     deterministic residue (sorted by str) AFTER the drained prefix — within that
     residue the "dependency precedes dependent" guarantee does NOT hold. This is
@@ -2051,7 +1994,7 @@ def _compute_critical_path_dag(
     in-scope blocked_by) get a virtual dependency on the exit task of R
     (task with highest dist in R).
 
-    Task 367: In aggregate mode, blocked_by entries can cross repo boundaries.
+    In aggregate mode, blocked_by entries can cross repo boundaries.
     """
     if not target:
         return []
@@ -2070,7 +2013,7 @@ def _compute_critical_path_dag(
     if not scope:
         return []
 
-    # Task 367: In aggregate mode ONLY, expand scope via backward-walk on
+    # In aggregate mode ONLY, expand scope via backward-walk on
     # blocked_by to include cross-repo predecessor milestones. Single-repo
     # mode keeps its original semantics (critical path scoped strictly to
     # milestones on target's requires-chain) to preserve regression.
@@ -2244,7 +2187,7 @@ def compute_blocking_score(
     Includes cross-milestone effects: if completing task X causes milestone M
     to become done, then tasks in milestones that require M become unblocked.
 
-    Task 367: Uses t.key (namespaced string in aggregate mode, int in single-
+    Uses t.key (namespaced string in aggregate mode, int in single-
     repo) so the same graph code works for both modes.
     """
     # Build reverse graph: task → tasks that are blocked by it
@@ -2366,7 +2309,7 @@ def compute_next_actions(
     This ensures MVP-path tasks rank above non-MVP tasks even when milestones
     like intelligence/life-os are technically unblocked.
 
-    Task 367: Uses t.key throughout so the same logic applies to aggregate mode.
+    Uses t.key throughout so the same logic applies to aggregate mode.
     """
     cp_set = _hashable_cp_set(critical_path)
     done_keys = {t.key for t in tasks.values() if t.is_done}
@@ -2421,26 +2364,26 @@ def validate(
 ) -> list[ValidationIssue]:
     """Validate tasks + milestones.
 
-    Task 367: uses t.key (namespaced in aggregate).
-    Task 435 (F-C-P2-001 Variante c): archived_ids -> Silent-Pass fuer
+    uses t.key (namespaced in aggregate).
+    archived_ids -> Silent-Pass fuer
     BROKEN_DEP wenn target_id in archived_ids set. Wenn archived_ids=None:
-    auto-load aus PROJECT_ROOT (F-CA-001 explicit project_root via module-global).
+    auto-load aus PROJECT_ROOT (explicit project_root via module-global).
 
-    Task 435 Iteration 2 (CA-002 Fix): archived_ids ist ein set[int] in
+    archived_ids ist ein set[int] in
     Single-Repo-Mode UND set[str] in Aggregate-Mode (namespaced
     "<repo>#<id:03d>"). Membership-Check via direktem `dep in archived_ids` —
     set-Lookup ist type-safe (Bool-Werte werden in load_archived_task_ids
     bereits gerejected, also keine Pythonic 0==False/1==True-Kollision moeglich).
     """
     if archived_ids is None:
-        # Auto-load: Variante c muss automatisch greifen — caller ohne explicit
+        # Auto-load: muss automatisch greifen — caller ohne explicit
         # archived_ids bekommt trotzdem Silent-Pass-Verhalten (CLI-Pfade,
-        # Test-direkt-Aufrufe wie ADV_029). PROJECT_ROOT-relativ (F-CA-001).
+        # Test-direkt-Aufrufe). PROJECT_ROOT-relativ.
         archived_ids = load_archived_task_ids(PROJECT_ROOT)
     issues = []
     task_keys = set(tasks.keys())
 
-    # ID_REUSED_FROM_ARCHIVE (L-073): an active task id must not also exist in
+    # ID_REUSED_FROM_ARCHIVE: an active task id must not also exist in
     # docs/tasks/archive/. Archived IDs are retired, never recycled — a live id
     # colliding with an archived one breaks the WORM archive move at close (the
     # `git mv -> archive/<id>.yaml` hits an existing path) and silently
@@ -2456,7 +2399,7 @@ def validate(
                    "(max over docs/tasks/ + docs/tasks/archive/, + 1)"))
 
     for t in tasks.values():
-        tid_for_issue = t.key  # Task 367: namespaced in aggregate mode
+        tid_for_issue = t.key  # namespaced in aggregate mode
         # NO_MILESTONE (terminal tasks may have null milestone — they're completed)
         if not t.milestone and not t.is_terminal:
             issues.append(ValidationIssue("NO_MILESTONE", "ERROR", task_id=tid_for_issue,
@@ -2469,11 +2412,11 @@ def validate(
             # milestone keys after a reorg; that is audit-trail, not a defect.
             issues.append(ValidationIssue("UNKNOWN_MILESTONE", "ERROR", task_id=tid_for_issue,
                                           detail=f"milestone '{t.milestone}' not in plan.yaml"))
-        # BROKEN_DEP (Task 435 Variante c Silent-Pass: archived Tasks skipped)
+        # BROKEN_DEP (Silent-Pass: archived Tasks skipped)
         for dep in t.blocked_by:
             if dep not in task_keys:
-                # F-C-P2-001 Silent-Pass: archived id -> kein ERR.
-                # CA-002 Iteration 2: archived_ids ist set[int] (single-repo)
+                # Silent-Pass: archived id -> kein ERR.
+                # archived_ids ist set[int] (single-repo)
                 # ODER set[str] (aggregate, "<repo>#<id:03d>"). Direkter
                 # set-Membership-Check funktioniert in beiden Modi.
                 if dep in archived_ids:
@@ -2486,6 +2429,16 @@ def validate(
             if dep_t and dep_t.status in TERMINAL_STATUSES - {"done"}:
                 issues.append(ValidationIssue("DEAD_DEP", "ERROR", task_id=tid_for_issue,
                                               detail=f"blocked_by {dep} is {dep_t.status}"))
+        # INVALID_STATUS: a status outside the sanctioned enum is silently
+        # mis-handled — the pending-keyed critical-path / next-actions logic
+        # excludes it, so a rogue/typo'd status (e.g. `open`) drops the task off
+        # the live frontier with no signal. Flag it loudly so it can't corrupt
+        # the plan view unseen. (Terminal tasks are validated the same way.)
+        if t.status not in KNOWN_TASK_STATUSES:
+            issues.append(ValidationIssue("INVALID_STATUS", "WARN", task_id=tid_for_issue,
+                                          detail=f"status {t.status!r} not in sanctioned enum "
+                                                 f"{sorted(KNOWN_TASK_STATUSES)} — excluded from "
+                                                 f"critical-path/next-actions (treated as non-pending)"))
         # NO_EFFORT
         if t.status in ("pending", "in_progress") and not t.effort:
             issues.append(ValidationIssue("NO_EFFORT", "ERROR", task_id=tid_for_issue,
@@ -2566,7 +2519,7 @@ def validate(
             ))
 
     # Cycle detection (simplified — check if topo sort covers all).
-    # Task 367: iterate via t.key (polymorphic int/str).
+    # iterate via t.key (polymorphic int/str).
     in_deg = dict.fromkeys(tasks, 0)
     for t in tasks.values():
         # set(): count each DISTINCT dependency once. The drain loop below
@@ -2633,7 +2586,7 @@ def validate(
                                               detail=f"gate script not found: {g.path}"))
 
         # Requires reference check
-        # Task 435 (B-1, F-CA-005): feature_milestones requires-Eintraege
+        # feature_milestones requires-Eintraege
         # koennen sein: milestone-key (str) ODER task-id (int oder digit-str).
         # Task-ID-Refs werden NICHT als UNKNOWN_REQUIRES gewertet wenn die
         # Task existiert (im tasks-dict oder in archived_ids).
@@ -2669,7 +2622,7 @@ def validate(
 # vocabulary / filename rule / calibration switch is dereferenced from
 # the parsed schema dict; zero schema knowledge is hardcoded here.
 #
-# Trust boundary (Task 327 — Approach C). `_load_task_schema` returns
+# Trust boundary. `_load_task_schema` returns
 # `dict | None`; "is a dict" is NOT "is a valid schema". Every `.get()`
 # after the load is otherwise an unenforced trust assumption. Rather
 # than scattering per-site isinstance guards (which provably recurse one
@@ -2690,7 +2643,7 @@ def validate(
 # with `type: enum` but the `values:` key entirely ABSENT) is
 # type-valid by this grammar and passes — the consumer then silently
 # drops that field's vocab. That is a KNOWN, owner-ACCEPTED residual
-# (code-adversary F-CA-009, MEDIUM, accepted): the descriptor grammar
+# (MEDIUM, accepted): the descriptor grammar
 # below has no "required-because-of-a-sibling" construct, and adding
 # one WOULD be a new code branch. The accepted trigger is human
 # damage to the LOCKED framework/task-schema.yaml, not a code path.
@@ -2722,20 +2675,20 @@ _TASK_SCHEMA_VERSION = 1
 #               (mapping-of-mappings, e.g. fields.<name>)
 #   when      : (sibling_key, sibling_value) — sibling-LOCALITY only:
 #               the node is type-checked ONLY when the sibling key
-#               equals that value (e.g. enum `values`). F-CR-001:
+#               equals that value (e.g. enum `values`).
 #               `when` does NOT make the key conditionally REQUIRED —
 #               if the gated key is ABSENT it is simply skipped, never
 #               flagged. Conditional requiredness is not expressible
-#               in this grammar (see F-CA-009 residual note below).
+#               in this grammar (see residual note below).
 #
-# Provenance + scope (F-CA-009, accepted residual). _TASK_SCHEMA_SHAPE
+# Provenance + scope (accepted residual). _TASK_SCHEMA_SHAPE
 # (and _FIELD_DEF_SHAPE) is the structural MIRROR of
 # framework/task-schema.yaml — a SECOND structural description of the
 # schema in Python that MUST NOT silently drift from the YAML SoT. It
 # validates structural TYPE ONLY (a present key whose value is the
 # wrong type, at any depth); it deliberately does NOT validate
 # conditional-requiredness (a sibling-gated key being entirely
-# absent). That gap is the owner-accepted residual F-CA-009 (MEDIUM):
+# absent). That gap is the owner-accepted residual (MEDIUM):
 # extreme edge case, trigger is human damage to the LOCKED schema, no
 # behavioural fix. A `schema_version` bump REQUIRES revisiting this
 # constant (the version pin enforces it); the self-test positive
@@ -2747,8 +2700,8 @@ _FIELD_DEF_SHAPE: dict = {
         "type": {"type": str, "what": "a string"},
         # enum vocab: a list ONLY when this field-def declares
         # type==enum. A scalar here pre-fix silently disabled that
-        # field's vocab enforcement (F-CA-008) — now ESCALATE. NOTE
-        # (F-CA-009, accepted): `when` gates only the TYPE check. If
+        # field's vocab enforcement — now ESCALATE. NOTE
+        # (accepted): `when` gates only the TYPE check. If
         # `values` is entirely ABSENT under type==enum this descriptor
         # does NOT flag it (no conditional-requiredness construct); the
         # consumer then silently drops that field's vocab. Accepted
@@ -2774,7 +2727,7 @@ _TASK_SCHEMA_SHAPE: dict = {
             "what": "a mapping",
             "children": {
                 # task_basename feeds re.compile() — a non-str pre-fix
-                # raised an uncaught TypeError (F-CA-008 crash class).
+                # raised an uncaught TypeError (crash class).
                 "task_basename": {"type": str, "what": "a string"},
                 "id_matches_basename": {"type": bool, "what": "a bool"},
             },
@@ -2804,7 +2757,7 @@ _TASK_SCHEMA_SHAPE: dict = {
             "type": dict,
             "what": "a mapping",
             "children": {
-                # F-CA-002 locked: non-bool present -> defect/ESCALATE,
+                # locked: non-bool present -> defect/ESCALATE,
                 # NEVER bool()/string-literal coercion.
                 "strict_after_backfill": {"type": bool, "what": "a bool"},
             },
@@ -2886,7 +2839,7 @@ def _validate_schema_structure(schema: dict) -> str | None:
     through `_schema_defect` -> SCHEMA_FILE ERROR + ESCALATE — no
     divergent error path).
 
-    Two-part drift defense (Task 327's own thesis):
+    Two-part drift defense:
       1. Generic walk of _TASK_SCHEMA_SHAPE (the structural mirror).
       2. schema_version pin: the loaded version MUST equal the version
          the descriptor was authored against, so an intentional schema
@@ -3031,17 +2984,17 @@ def validate_task_schema_conformance(
                     "ESCALATE: cannot validate task conformance with a "
                     "malformed schema; tree NOT silently passed"))]
 
-    # THE trust boundary (Task 327 — Approach C). Ordering is
+    # THE trust boundary. Ordering is
     # load-bearing: None-check FIRST (above, unchanged), structural
     # check SECOND, both BEFORE any `_schema_*` consumer or re.compile.
     # The expected shape is declarative DATA (_TASK_SCHEMA_SHAPE) walked
     # by a single generic checker — there is no per-site isinstance
-    # ladder here, so a deeper nesting level cannot recur the F-CA-001/
-    # 007/008 defect class (it would be a missing DATA node, caught by
+    # ladder here, so a deeper nesting level cannot recur the
+    # defect class (it would be a missing DATA node, caught by
     # the §4 positive anchor self-test, not a missing code branch). A
     # present-but-wrong-type node (including filename.task_basename,
     # fields.<name>.values, validator.strict_after_backfill — the
-    # F-CA-002/008 keys) is fail-safe to the SAME contract as a missing
+    # keys) is fail-safe to the SAME contract as a missing
     # schema: SCHEMA_FILE ERROR + ESCALATE, never a traceback, never a
     # silent degrade. Absent optional key != malformed (over-fire-safe).
     if (d := _validate_schema_structure(schema)) is not None:
@@ -3068,7 +3021,7 @@ def validate_task_schema_conformance(
 
     validator_raw = schema.get("validator")
     validator_cfg = validator_raw if isinstance(validator_raw, dict) else {}
-    # F-CA-002 (locked): the calibration switch is a Python bool by
+    # (locked): the calibration switch is a Python bool by
     # schema contract. The trust boundary already rejected a present
     # non-bool (-> SCHEMA_FILE ERROR + ESCALATE, NO bool()/string
     # coercion). Absent -> warn-first default (False).
@@ -3096,7 +3049,7 @@ def validate_task_schema_conformance(
     known_fields = known_fields | _load_repo_extension_fields(tasks_dir)
 
     if single_id is not None:
-        # F-CA-003b (belt): a single-id target has an explicit name that
+        # (belt): a single-id target has an explicit name that
         # MUST resolve or error — it may never silently `continue`. The
         # negative/zero argv case is rejected at the dispatch boundary
         # (exit 2); this guard is defence-in-depth for direct callers.
@@ -3108,7 +3061,7 @@ def validate_task_schema_conformance(
                         "ESCALATE: single-id has an explicit target that "
                         "must resolve or error, never silently skipped")))
             return issues
-        # F-CA-004: archived terminal tasks live in
+        # archived terminal tasks live in
         # docs/tasks/archive/<id>.yaml. In single-id mode, fall back to
         # the archive when the primary path is absent — an archived task
         # is terminal (only id+status enforced), NOT a 'file not found'
@@ -3127,7 +3080,7 @@ def validate_task_schema_conformance(
     else:
         candidates = sorted(p for p in tasks_dir.glob("*.yaml"))
 
-    # F-CA-005e: zero-pad duplicate-logical-id collision. `327.yaml` and
+    # zero-pad duplicate-logical-id collision. `327.yaml` and
     # `0327.yaml` both map to int(basename)=327 — pre-fix BOTH were
     # silently validated as task 327. Detect as a duplicate-id ERROR
     # (calibration-independent structural defect).
@@ -3266,7 +3219,7 @@ def validate_task_schema_conformance(
 
 # SoT-Datei der Autonomy-Regeln. Mirror-Check, Existenz-Check, Referenz-
 # Integritaet und Drift-Warnung werden gegen dieses Dokument gefahren.
-# Framework-intern → FRAMEWORK_ROOT (Task 010 Part L0).
+# Framework-intern → FRAMEWORK_ROOT.
 AUTONOMY_SOT_PATH = FRAMEWORK_ROOT / "framework" / "agent-autonomy.md"
 
 # Dateien, in denen der Verweis auf framework/agent-autonomy.md existieren
@@ -3313,7 +3266,7 @@ def _extract_sections_containing(text: str, needle: str) -> dict[str, str]:
     (`5. `, `5.1 `, etc.) — das erlaubt robustes Matching zwischen zwei
     Dateien, auch wenn die Nummerierung auseinanderlaeuft.
 
-    Hintergrund (F-C-014): Der Mirror-Check darf nicht mehr an die feste
+    Hintergrund: Der Mirror-Check darf nicht mehr an die feste
     Header-Nummer `### 5. Code-Delegation` gebunden sein. Stattdessen werden
     alle Sektionen gespiegelt, die den SoT-Pfad `framework/agent-autonomy.md`
     erwaehnen.
@@ -3387,7 +3340,7 @@ def _extract_autonomy_table_routing(text: str) -> list[str]:
 def _extract_autonomy_table_gate_peers(text: str) -> list[str]:
     """Extrahiere `peer:<agent>` Targets aus der Gate-Spalte der Haupttabelle.
 
-    Hintergrund (F-C-002): Die Gate-Polymorphie in agent-autonomy.md erlaubt
+    Hintergrund: Die Gate-Polymorphie in agent-autonomy.md erlaubt
     Merger-Faelle, bei denen ein Peer-Konsultations-Gate gleichzeitig die
     Routing-Antwort traegt (z.B. `peer:council`, `peer:solution-expert`).
     Ein Drift-Check, der nur die Routing-Spalte liest, meldet diese Agenten
@@ -3452,7 +3405,7 @@ def _extract_operational_routing_agents(text: str) -> list[str]:
 
 
 def validate_autonomy_consistency() -> list[ValidationIssue]:
-    """Autonomy-Consistency-Checks (framework-ambiguity-audit Fund 1, Phase 3).
+    """Autonomy-Consistency-Checks.
 
     Prueffaelle:
       Check 1 — Mirror-Check CLAUDE.md §5 ↔ AGENTS.md §5 (ERROR bei Abweichung)
@@ -3464,7 +3417,7 @@ def validate_autonomy_consistency() -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
 
     # Check 1: Mirror-Check CLAUDE.md ↔ AGENTS.md
-    # F-C-014: Scope ist nicht mehr die feste Sektion "### 5. Code-Delegation",
+    # Scope ist nicht mehr die feste Sektion "### 5. Code-Delegation",
     # sondern alle `###`-Sektionen, die den SoT-Pfad `framework/agent-autonomy.md`
     # erwaehnen. Matching der korrespondierenden Sektionen erfolgt ueber den
     # normalisierten Header-Text (Nummer entfernt), damit Nummer-Aenderungen
@@ -3623,7 +3576,7 @@ def validate_autonomy_consistency() -> list[ValidationIssue]:
         if op_section is not None:
             op_agents_raw = _extract_operational_routing_agents(op_section)
             autonomy_routing_raw = _extract_autonomy_table_routing(autonomy_text)
-            # F-C-002: Merger-Faelle mitzaehlen — Agenten, die in der
+            # Merger-Faelle mitzaehlen — Agenten, die in der
             # Gate-Spalte als `peer:X` auftauchen, sind ebenfalls "bekannt".
             autonomy_gate_peers = _extract_autonomy_table_gate_peers(autonomy_text)
 
@@ -3670,7 +3623,7 @@ def validate_autonomy_consistency() -> list[ValidationIssue]:
                 if token in known_roles:
                     return True
                 # Workflow/Runbook/Skill-Suffixe sind keine Agenten
-                # (F-C-003): Zellen wie `handoff:build-workflow oder
+                # Zellen wie `handoff:build-workflow oder
                 # fix-workflow` koennen `fix-workflow` als hyphen-Token
                 # produzieren, das faelschlich als Agent durchrutscht.
                 for suffix in ("-workflow", "-runbook", "-skill"):
@@ -3698,7 +3651,7 @@ def validate_autonomy_consistency() -> list[ValidationIssue]:
                     if norm:
                         autonomy_agents_norm.add(norm)
 
-            # F-C-002: Gate-Peer-Targets als bekannte Agenten mitfuehren
+            # Gate-Peer-Targets als bekannte Agenten mitfuehren
             # (Merger-Fall Gate = Routing). Peers durchlaufen dieselbe
             # Normalisierung wie Routing-Zellen.
             for peer in autonomy_gate_peers:
@@ -3745,11 +3698,11 @@ def fmt_boot(tasks, milestones, target, north_star, op_intent, critical_path,
     lines.append(f"TARGET: {target} ({milestones[target].title})" if target in milestones else f"TARGET: {target}")
     lines.append("")
 
-    # Critical path (Task 435 F-C-P2-003: Mixed-Items via _render_cp_item)
+    # Critical path (Mixed-Items via _render_cp_item)
     if critical_path:
         cp_labels = [_render_cp_item(item, tasks) for item in critical_path]
         total_effort = 0
-        has_effort_item = False  # C-003: any int task-id item that carries effort.
+        has_effort_item = False  # any int task-id item that carries effort.
         for item in critical_path:
             if isinstance(item, int) and not isinstance(item, bool):
                 t = tasks.get(item)
@@ -3758,7 +3711,7 @@ def fmt_boot(tasks, milestones, target, north_star, op_intent, critical_path,
                     has_effort_item = True
         lines.append(f"CRITICAL PATH -> {target}:")
         lines.append(f"  {' -> '.join(cp_labels)}")
-        # AC-3 (C-003): suppress the effort line for a milestone-key (string)
+        # suppress the effort line for a milestone-key (string)
         # spine — a structural 0 reads as a real metric when it is not one.
         if has_effort_item:
             lines.append(f"  Effort-weighted length: {total_effort}")
@@ -3769,7 +3722,7 @@ def fmt_boot(tasks, milestones, target, north_star, op_intent, critical_path,
                 if t is not None and not t.is_done:
                     lines.append(f"  Bottleneck: Task {_format_tid(t)} ({t.title[:40]})")
                     break
-        # Task 387 (AC-2): nest the live active-milestone task chain under the
+        # nest the live active-milestone task chain under the
         # milestone spine so a boot read answers "what's the next critical-path
         # task" without a manual plan.yaml read.
         lines.extend(_fmt_active_chain_block(tasks, milestones, target))
@@ -3817,7 +3770,7 @@ def fmt_boot(tasks, milestones, target, north_star, op_intent, critical_path,
         status_sym = {"done": "done", "active": "active", "ready": "ready",
                       "blocked": "BLOCKED", "future": "future"}.get(m.status, m.status)
         lines.append(f"  {status_sym:8s} {m.key:{ms_width}s} {done_count}/{task_count}{detail}")
-        # Task 435 (B-3 flat, AC-A.7c): feature_milestones-spezifische Sub-Zeilen
+        # feature_milestones-spezifische Sub-Zeilen
         if getattr(m, "feature", ""):
             lines.append(f"             feature: {m.feature[:80]}")
         if getattr(m, "app_status_post_milestone", ""):
@@ -3830,7 +3783,7 @@ def fmt_boot(tasks, milestones, target, north_star, op_intent, critical_path,
     if errors or warns:
         lines.append("WARNINGS:")
         for issue in (errors + warns)[:10]:
-            loc = _fmt_issue_loc(issue)  # Task 367: shared helper handles global issues
+            loc = _fmt_issue_loc(issue)  # shared helper handles global issues
             prefix = f"{loc} — " if loc else ""
             lines.append(f"  {issue.check}: {prefix}{issue.detail}")
         remaining = len(errors) + len(warns) - 10
@@ -3841,7 +3794,7 @@ def fmt_boot(tasks, milestones, target, north_star, op_intent, critical_path,
 
 
 def fmt_status(tasks, milestones):
-    """Milestone-Overview. Task 435 (F-C-008, AC-A.7c): zeigt
+    """Milestone-Overview. zeigt
     feature_milestones-spezifische Felder (feature, app_status_post_milestone)
     inline wenn vorhanden."""
     lines = []
@@ -3853,14 +3806,14 @@ def fmt_status(tasks, milestones):
         task_count = len(m.tasks)
         done_count = sum(1 for tid in m.tasks if tid in tasks and tasks[tid].is_terminal)
         lines.append(f"  {m.status:8s} {m.key:{ms_width}s} {m.title:30s} {done_count}/{task_count}")
-        # Task 435 (B-3 flat): feature_milestones-spezifische Sub-Zeilen
+        # feature_milestones-spezifische Sub-Zeilen
         if getattr(m, "feature", ""):
             lines.append(f"           feature: {m.feature}")
         if getattr(m, "app_status_post_milestone", ""):
             lines.append(f"           app_status: {m.app_status_post_milestone}")
         if getattr(m, "parallel_to", []):
             lines.append(f"           parallel_to: {', '.join(m.parallel_to)}")
-        # Pre-Set-Gates mit preliminary-Marker (B-2 Lock)
+        # Pre-Set-Gates mit preliminary-Marker
         if any(getattr(g, "preliminary", False) for g in m.gate):
             preliminary_count = sum(1 for g in m.gate if getattr(g, "preliminary", False))
             lines.append(f"           gates: {preliminary_count} preliminary")
@@ -3885,19 +3838,19 @@ _VALID_EFFORTS = frozenset(EFFORT_WEIGHTS)  # {"S","M","L","XL"}
 
 
 def _fmt_active_chain_block(tasks, milestones, target, indent="  "):
-    """Task 387: render the active-milestone task chain as nested lines.
+    """render the active-milestone task chain as nested lines.
 
     Returns a list of rendered lines (possibly empty when no chain resolves —
-    AC-4 degrade). Shared by fmt_critical_path + fmt_boot.
+    degrade). Shared by fmt_critical_path + fmt_boot.
 
-    F-CA-101: the data comes from a SINGLE compute_active_milestone_task_chain
+    the data comes from a SINGLE compute_active_milestone_task_chain
     call — the same function the 13 self-test TCs exercise. This renderer does
     NOT re-implement the resolve -> gate -> topo orchestration, so the shipped
     path is exactly the tested path (no divergence twin). The header label
     (`m.key`), the chain content, and the cycle flag all come from that one
     result.
 
-    C-006: the active milestone is resolved exactly ONCE — inside the public
+    the active milestone is resolved exactly ONCE — inside the public
     function — and reused here via `result.milestone` for the header. This
     renderer does NOT resolve again, so the label and the content can never
     point at different milestones, AND the resolve (a BFS+topo over the
@@ -3911,14 +3864,14 @@ def _fmt_active_chain_block(tasks, milestones, target, indent="  "):
     if m is None or not chain:
         return []
     lines = [f"{indent}ACTIVE-MILESTONE TASK PATH ({m.key}):"]
-    # Known limitation (C-007, deferred to Task 388): in aggregate mode
+    # Known limitation: in aggregate mode
     # _render_cp_item's str-branch returns the bare '<repo>#<id>' key (no title);
     # the status mark below is appended outside the renderer. Single-repo int
     # keys render '[id] title' inside _render_cp_item. Cosmetic only — the id is
     # present and `Next on chain:` still renders the title. Not widened here.
     labels = []
     chain_effort = 0
-    unset_effort = 0  # C-005: tasks with no explicit {S,M,L,XL} effort.
+    unset_effort = 0  # tasks with no explicit {S,M,L,XL} effort.
     for key in chain:
         t = tasks.get(key)
         if t is not None:
@@ -3930,7 +3883,7 @@ def _fmt_active_chain_block(tasks, milestones, target, indent="  "):
         else:
             labels.append(_render_cp_item(key, tasks))
     lines.append(f"{indent}  {' -> '.join(labels)}")
-    # AC-3 (C-005): the chain-effort metric must be honest. A task with no
+    # the chain-effort metric must be honest. A task with no
     # explicit {S,M,L,XL} effort silently contributes the default weight (3);
     # presenting that as an exact number is the same misleading-metric class as
     # the zero placeholder. Mark it estimated and name the unset count so the
@@ -3953,18 +3906,18 @@ def _fmt_active_chain_block(tasks, milestones, target, indent="  "):
 
 
 def fmt_critical_path(tasks, critical_path, target, milestones=None):
-    """Task 435 (F-C-P2-003): Mixed-Item-Render via _render_cp_item.
+    """Mixed-Item-Render via _render_cp_item.
     Items koennen sein: int task-id, str milestone-key, list[str] parallel,
     str post-MVP-Beschreibung.
 
-    Task 387: when `milestones` is supplied, the live active-milestone task
+    when `milestones` is supplied, the live active-milestone task
     chain (gate -> blocked_by) is nested under the milestone spine.
     """
     if not critical_path:
         return f"No critical path to {target} (no pending tasks in scope)"
     lines = [f"CRITICAL PATH -> {target}:"]
     total = 0
-    has_effort_item = False  # C-003: any int task-id item that carries effort.
+    has_effort_item = False  # any int task-id item that carries effort.
     for item in critical_path:
         rendered = _render_cp_item(item, tasks)
         if isinstance(item, int) and not isinstance(item, bool):
@@ -3977,17 +3930,17 @@ def fmt_critical_path(tasks, critical_path, target, milestones=None):
             else:
                 lines.append(f"  {rendered} (archived)")
         elif isinstance(item, list):
-            # Parallel-Liste: explizit als parallel-Marker rendern (TC-L1-003)
+            # Parallel-Liste: explizit als parallel-Marker rendern
             lines.append(f"  {rendered}  [parallel]")
         else:
             lines.append(f"  {rendered}")
-    # AC-3 (C-003): a milestone-key (string) spine has no effort-bearing items,
+    # a milestone-key (string) spine has no effort-bearing items,
     # so the sum is a structural 0 — a rendered "0" reads as a real metric when
     # it is not one. Only show the effort line when the spine actually carries
     # effort-bearing task items.
     if has_effort_item:
         lines.append(f"\nTotal effort-weighted length: {total}")
-    # Task 387: nest the active-milestone task chain under the spine.
+    # nest the active-milestone task chain under the spine.
     if milestones is not None:
         chain_lines = _fmt_active_chain_block(tasks, milestones, target)
         if chain_lines:
@@ -4026,7 +3979,7 @@ def fmt_check(milestones, tasks, milestone_key=None):
 
 
 def fmt_after(tasks, milestones, task_id, blocking_scores):
-    # Task 367: task_id may be int (single-repo) or str "repo#id" (aggregate).
+    # task_id may be int (single-repo) or str "repo#id" (aggregate).
     t = tasks.get(task_id)
     if not t:
         return f"Task {task_id} not found"
@@ -4078,7 +4031,7 @@ def fmt_spec_pipeline(tasks: dict) -> str:
     Only includes tasks with non-empty spec_states and non-terminal status
     (excluding superseded/absorbed). Detects duplicate spec ownership.
 
-    Task 367: uses t.key (namespaced in aggregate mode) for task references.
+    uses t.key (namespaced in aggregate mode) for task references.
     """
     # Collect specs from active tasks
     spec_entries: list = []  # (spec_name, state, task_key)
@@ -4227,12 +4180,12 @@ def fmt_dashboard_json(tasks, milestones, target, north_star, op_intent,
             "dependents": m.dependents,
             "phases": m.phases,
             "blocking_milestones": blocking_ms,
-            "tasks": sorted(milestone_tasks, key=str),  # Task 367: str-sort handles both modes
+            "tasks": sorted(milestone_tasks, key=str),  # str-sort handles both modes
         })
 
     cp_set = _hashable_cp_set(critical_path)
     task_list = []
-    # Task 367: sort by (repo, id) so aggregate mode groups by namespace
+    # sort by (repo, id) so aggregate mode groups by namespace
     for t in sorted(tasks.values(), key=lambda x: (x._repo, x.id)):
         task_list.append({
             "id": t.id, "title": t.title, "status": t.status,
@@ -4242,8 +4195,8 @@ def fmt_dashboard_json(tasks, milestones, target, north_star, op_intent,
             "blocked_by": t.blocked_by, "spec_ref": t.spec_ref,
             "board_result": t.board_result, "readiness": t.readiness,
             "summary": t.summary,
-            "repo": t._repo,  # Task 367: namespace (empty in single-repo)
-            "namespaced_id": _format_tid(t),  # Task 367: full rendered ID
+            "repo": t._repo,  # namespace (empty in single-repo)
+            "namespaced_id": _format_tid(t),  # full rendered ID
         })
 
     na_list = []
@@ -4304,14 +4257,14 @@ def fmt_dashboard_json(tasks, milestones, target, north_star, op_intent,
 
 
 # ---------------------------------------------------------------------------
-# Self-Test (Task 435 B-5 Lock — Inline Smoke-Tests)
+# Self-Test (Inline Smoke-Tests)
 # ---------------------------------------------------------------------------
 
 def _run_self_test() -> int:
-    """Task 435 (B-5 Lock): inline Smoke-Tests fuer feature_milestones-Schema.
+    """inline Smoke-Tests fuer feature_milestones-Schema.
 
     Laeuft 5-7 Smoke-TCs gegen tests/fixtures/feature_milestones_minimal.yaml.
-    Kein pytest-Setup im framework-Repo Pflicht (B-5 Lock). Returnt exit-code 0
+    Kein pytest-Setup im framework-Repo Pflicht. Returnt exit-code 0
     bei Pass, 1 bei Fail.
     """
     fixtures_dir = FRAMEWORK_ROOT / "tests" / "fixtures"
@@ -4415,7 +4368,7 @@ def _run_self_test() -> int:
     else:
         _fail(f"Smoke-7: out_int={out_int!r} out_str={out_str!r} out_list={out_list!r} out_post={out_post!r}")
 
-    # Smoke-8 (L-073): ID_REUSED_FROM_ARCHIVE — an active task id that also
+    # Smoke-8: ID_REUSED_FROM_ARCHIVE — an active task id that also
     # exists in docs/tasks/archive/ is flagged ERROR. archived_ids passed
     # explicitly (no disk coupling). status=done -> terminal, so no unrelated
     # NO_MILESTONE / NO_EFFORT noise.
@@ -4436,14 +4389,14 @@ def _run_self_test() -> int:
     else:
         _fail("Smoke-8: false ID_REUSED_FROM_ARCHIVE on non-colliding id")
 
-    # Task 387: active-milestone task-chain self-test suite (RED-first).
+    # active-milestone task-chain self-test suite (RED-first).
     # Synthetic in-memory fixture (Task/Milestone/GateCondition objects) — no
-    # coupling to a consumer repo's live docs/tasks/ tree (AC-4).
+    # coupling to a consumer repo's live docs/tasks/ tree.
     chain_rc = _run_active_milestone_chain_self_test()
     if chain_rc != 0:
         failures.append("active-milestone-chain self-test suite")
 
-    # Task 327: task-schema conformance adversary suite (RED-first).
+    # task-schema conformance adversary suite (RED-first).
     schema_rc = _run_task_schema_self_test()
     if schema_rc != 0:
         failures.append("task-schema self-test suite")
@@ -4456,9 +4409,9 @@ def _run_self_test() -> int:
 
 
 def _run_active_milestone_chain_self_test() -> int:
-    """Task 387: adversary suite for compute_active_milestone_task_chain.
+    """adversary suite for compute_active_milestone_task_chain.
 
-    Synthetic in-memory fixture (no plan.yaml / docs/tasks coupling, AC-4):
+    Synthetic in-memory fixture (no plan.yaml / docs/tasks coupling):
     builds Task / Milestone / GateCondition objects directly and exercises
     the gate -> blocked_by walk plus its edge cases. Mirrors the inline
     object-construction style of Smoke-5. Returns 0 on all-PASS, 1 otherwise.
@@ -4486,7 +4439,7 @@ def _run_active_milestone_chain_self_test() -> int:
         Status is left "" so the caller MUST derive it via
         compute_milestone_status (the live-loader path). The old helper hand-set
         status="active" — a value the loader never emits for an all-`pending`
-        gate chain — which is exactly what masked C-001.
+        gate chain.
         """
         if gate_task_ids is None:
             gate = []
@@ -4501,21 +4454,21 @@ def _run_active_milestone_chain_self_test() -> int:
 
     def _derive(tasks: dict, ms: dict) -> None:
         """Live-loader path: populate m.tasks + compute statuses the way the
-        real pipeline does. NO hand-set status anywhere (kills the C-001 mask)."""
+        real pipeline does. NO hand-set status anywhere (kills the mask)."""
         assign_tasks_to_milestones(tasks, ms)
         compute_milestone_status(ms, tasks)
 
     print("\nplan_engine --self-test (Task 387 active-milestone task chain)")
 
-    # TC-1 (AC-1 happy path, LOADER-DRIVEN — RED-confirms C-001): the AC-1 tree
-    # gate task 429 blocked_by 553; chain 550(done)->551->552->553->429, ALL
-    # non-done tasks `pending` (none in_progress). Status is derived by
-    # compute_milestone_status — which emits "blocked"/"ready" for M3, NEVER
-    # "active". The resolver must still surface M3's own chain (the target's
-    # gating milestone), NOT the earliest open milestone M2.
+    # TC-1 (frontier == target, LOADER-DRIVEN): M2 is done, so M3 is the live
+    # frontier (ready) AND the target — the resolver returns M3 and surfaces its
+    # gate chain 550(done)->551->552->553->429. Status is derived by
+    # compute_milestone_status (emits "ready" for M3 — no member in_progress —
+    # never "active"). TC-1b covers the far-target case where the frontier is an
+    # EARLIER milestone than the target.
     tasks = {
-        500: _t(500, "pending", [], milestone="M2"),   # M2 has an open task ->
-        550: _t(550, "done", [], milestone="M3"),       # M2 not done -> M3 blocked
+        500: _t(500, "done", [], milestone="M2"),       # M2 done -> M3 is frontier
+        550: _t(550, "done", [], milestone="M3"),
         551: _t(551, "pending", [550], milestone="M3"),
         552: _t(552, "pending", [551], milestone="M3"),
         553: _t(553, "pending", [552], milestone="M3"),
@@ -4527,14 +4480,14 @@ def _run_active_milestone_chain_self_test() -> int:
         "M3": _ms("M3", 429, [550, 551, 552, 553, 429], requires=["M2"]),
     }
     _derive(tasks, ms)
-    # Precondition guard: prove the loader does NOT emit "active" for M3 (so a
-    # status=="active" resolver would fall through to the wrong milestone).
+    # Precondition guard: loader emits "ready" for M3 (no member in_progress),
+    # never "active" — the frontier walk keys on != "done", not == "active".
     if ms["M3"].status == "active":
         _fail("TC-1 precondition: loader emitted M3=active "
-              "(expected blocked/ready) — fixture not loader-shaped")
+              "(expected ready) — fixture not loader-shaped")
     resolved = _resolve_active_milestone(ms, "M3")
-    # F-CA-101: take the full ActiveChain (the single-call result the renderer
-    # consumes). C-006: the result's own `.milestone` must equal the milestone
+    # take the full ActiveChain (the single-call result the renderer
+    # consumes). the result's own `.milestone` must equal the milestone
     # the independent resolver returns — proving the public fn resolves the SAME
     # milestone the header will label with, so the renderer can reuse `.milestone`
     # without a second resolve.
@@ -4552,7 +4505,7 @@ def _run_active_milestone_chain_self_test() -> int:
               f"chain={chain!r} (M3 status={ms['M3'].status!r}) "
               f"expected M3 + [550,551,552,553,429]")
 
-    # TC-2 (AC-3 honest effort): effort summed over the real task chain
+    # TC-2 (honest effort): effort summed over the real task chain
     # (all int items carry effort_weight) — never a zero placeholder.
     effort = sum(tasks[k].effort_weight for k in chain)
     if effort == 5 * EFFORT_WEIGHTS["M"]:
@@ -4560,7 +4513,7 @@ def _run_active_milestone_chain_self_test() -> int:
     else:
         _fail(f"TC-2: effort={effort} expected {5 * EFFORT_WEIGHTS['M']}")
 
-    # TC-3 (AC-2 boot parity): fmt_boot renders the chain block; fmt_critical_path
+    # TC-3 (boot parity): fmt_boot renders the chain block; fmt_critical_path
     # renders the same chain. cp is the milestone spine (unchanged contract).
     spine = ["M3"]
     boot_out = fmt_boot(tasks, ms, "M3", "", "", spine, {}, [], [])
@@ -4570,7 +4523,7 @@ def _run_active_milestone_chain_self_test() -> int:
     else:
         _fail("TC-3: chain not surfaced in fmt_boot/fmt_critical_path output")
 
-    # TC-3b (AC-3 / C-003): the milestone-key spine must NOT render a zero-valued
+    # TC-3b: the milestone-key spine must NOT render a zero-valued
     # effort line (a structural 0 reads as a real metric). The honest per-chain
     # effort line still appears.
     if "Total effort-weighted length: 0" not in cp_out \
@@ -4581,7 +4534,36 @@ def _run_active_milestone_chain_self_test() -> int:
         _fail(f"TC-3b: misleading zero effort line rendered for a string spine\n"
               f"cp_out={cp_out!r}")
 
-    # TC-4 (AC-4 cycle-guard, LOADER-DRIVEN): a real blocked_by back-edge
+    # TC-1b (frontier-resolution, far-target case — pins the NEW semantics):
+    # the TARGET is M3 but an EARLIER milestone on its spine is still open (M2
+    # has a pending gate task), so the active milestone is the frontier M2 — the
+    # earliest non-done milestone that must close next — NOT the target M3. This
+    # is the user-facing scenario (target = far north-star, work at an earlier
+    # milestone) the frontier semantics exist to deliver; the old target-preferring
+    # resolver returned M3 here.
+    far_tasks = {
+        500: _t(500, "pending", [], milestone="M2"),    # M2 open -> M2 is frontier
+        429: _t(429, "pending", [], milestone="M3"),
+    }
+    far_ms = {
+        "M1": _ms("M1", None, [], requires=[]),
+        "M2": _ms("M2", 500, [500], requires=["M1"]),
+        "M3": _ms("M3", 429, [429], requires=["M2"]),
+    }
+    _derive(far_tasks, far_ms)
+    far_resolved = _resolve_active_milestone(far_ms, "M3")
+    far_result = compute_active_milestone_task_chain(far_tasks, far_ms, "M3")
+    if far_resolved is not None and far_resolved.key == "M2" \
+            and far_result.milestone is not None and far_result.milestone.key == "M2" \
+            and far_result.chain == [500]:
+        _ok("TC-1b: far target M3 with open earlier M2 resolves to frontier M2, chain [500]")
+    else:
+        _fail(f"TC-1b: resolved={far_resolved.key if far_resolved else None!r} "
+              f"result.milestone={far_result.milestone.key if far_result.milestone else None!r} "
+              f"chain={far_result.chain!r} (M2={far_ms['M2'].status!r} M3={far_ms['M3'].status!r}) "
+              f"expected M2 + [500]")
+
+    # TC-4 (cycle-guard, LOADER-DRIVEN): a real blocked_by back-edge
     # 553 -> 552 -> 553 must break + WARN. Status derived (no hand-set active).
     cyc = {
         429: _t(429, "pending", [553]),
@@ -4599,7 +4581,7 @@ def _run_active_milestone_chain_self_test() -> int:
     else:
         _fail(f"TC-4: chain={cyc_chain!r} warns={[str(w.message) for w in cyc_warn]}")
 
-    # TC-5 (AC-4 missing gate task): gate id points to a non-existent task ->
+    # TC-5 (missing gate task): gate id points to a non-existent task ->
     # empty chain (degrade to spine-only), no crash.
     miss_tasks = {550: _t(550, "done", [])}
     miss_ms = {"M3": _ms("M3", 999, [550], requires=[])}
@@ -4610,7 +4592,7 @@ def _run_active_milestone_chain_self_test() -> int:
     else:
         _fail(f"TC-5: chain={miss_chain!r} expected []")
 
-    # TC-6 (AC-4 empty blocked_by): gate task resolves but has no blocked_by ->
+    # TC-6 (empty blocked_by): gate task resolves but has no blocked_by ->
     # the gate task alone.
     solo = {429: _t(429, "pending", [])}
     solo_ms = {"M3": _ms("M3", 429, [429], requires=[])}
@@ -4621,7 +4603,7 @@ def _run_active_milestone_chain_self_test() -> int:
     else:
         _fail(f"TC-6: chain={solo_chain!r} expected [429]")
 
-    # TC-7 (AC-4 no active milestone): the only milestone is done (no gating
+    # TC-7 (no active milestone): the only milestone is done (no gating
     # frontier) -> empty chain, no crash (renderers fall back to spine-only).
     done_only = {"M0": _ms("M0", None, [], requires=[])}
     _derive({}, done_only)
@@ -4636,7 +4618,7 @@ def _run_active_milestone_chain_self_test() -> int:
     # terminal AND all `requires` are done. So a done TARGET implies every
     # predecessor on its requires-spine is also done — there is no open frontier
     # among its deps. The resolver must therefore return None (-> spine-only
-    # degrade, AC-4), never a stale or arbitrary milestone. This pins the actual
+    # degrade), never a stale or arbitrary milestone. This pins the actual
     # loader invariant rather than the old hand-set status="ready" fixture.
     fb_tasks = {
         700: _t(700, "done", [], milestone="M1"),
@@ -4656,7 +4638,7 @@ def _run_active_milestone_chain_self_test() -> int:
               f"resolved={fb_resolved.key if fb_resolved else None!r} "
               f"chain={fb_chain!r} expected done+None+[]")
 
-    # TC-9 (aggregate-mode keying, Task 367): tasks keyed by '<repo>#<id>',
+    # TC-9 (aggregate-mode keying): tasks keyed by '<repo>#<id>',
     # blocked_by rewritten to the same key form; gate id is still a raw int.
     # The walk must resolve via m.tasks keys, not by assuming int keys.
     agg = {
@@ -4666,7 +4648,7 @@ def _run_active_milestone_chain_self_test() -> int:
     }
     agg_ms = {"repoA:M3": _ms("repoA:M3", 429,
                               ["repoA#552", "repoA#553", "repoA#429"], requires=[])}
-    # compute_milestone_status' annotation is dict[int, Task] (pre-Task-367); in
+    # compute_milestone_status' annotation is dict[int, Task]; in
     # aggregate mode the keys are '<repo>#<id>' strings at runtime, which the
     # function handles. Narrow ignore — the out-of-scope signature is unchanged.
     compute_milestone_status(agg_ms, agg)  # type: ignore[arg-type]
@@ -4676,14 +4658,14 @@ def _run_active_milestone_chain_self_test() -> int:
     else:
         _fail(f"TC-9: chain={agg_chain!r} expected repoA#552->553->429")
 
-    # TC-10 (AC-1 stop at done root): the AC-1 chain's first element is the done
+    # TC-10 (stop at done root): the chain's first element is the done
     # root 550; the walk includes it but does not over-walk past its empty deps.
     if chain[0] == 550 and tasks[550].is_done:
         _ok("TC-10: walk terminates at done root (550) — bounded, no over-walk")
     else:
         _fail(f"TC-10: chain[0]={chain[0]!r} done={tasks[550].is_done}")
 
-    # TC-11 (C-002 DIAMOND — RED-confirms the false-cycle + mis-order): a shared
+    # TC-11 (DIAMOND — RED-confirms the false-cycle + mis-order): a shared
     # blocker. gate 429 blocked_by [2,3]; 2,3 both blocked_by 1 (root). Acyclic.
     # MUST order roots-first (1 before 2 and 3, gate 429 last) and MUST NOT warn.
     diamond = {
@@ -4710,7 +4692,7 @@ def _run_active_milestone_chain_self_test() -> int:
         _fail(f"TC-11: diamond chain={dia_chain!r} warns="
               f"{[str(w.message) for w in dia_warn]} (expected roots-first, no warn)")
 
-    # TC-12 (C-004 MULTI-GATE — RED-confirms silent under-report): milestone M3
+    # TC-12 (MULTI-GATE — RED-confirms silent under-report): milestone M3
     # has TWO type:task gates 429 and 600, both fanning off a shared root 500.
     # BOTH gate chains must surface — not just the first.
     mg = {
@@ -4727,7 +4709,7 @@ def _run_active_milestone_chain_self_test() -> int:
         _fail(f"TC-12: multi-gate chain={mg_chain!r} expected all of "
               f"{{500,429,600}} (gate 600 must not be dropped)")
 
-    # TC-13 (C-005 — invalid/blank effort must not silently inflate): gate task
+    # TC-13 (invalid/blank effort must not silently inflate): gate task
     # has effort="" (non-{S,M,L,XL}). The rendered chain-effort line MUST mark it
     # estimated (~N + "effort-unset"), not present a clean exact number.
     be = {900: _t(900, "in_progress", [], effort="")}
@@ -4740,7 +4722,7 @@ def _run_active_milestone_chain_self_test() -> int:
     else:
         _fail(f"TC-13: blank-effort not marked estimated\nlines={be_lines!r}")
 
-    # TC-14 (F-CA-101 — RENDER-PATH parity for the C-002 + C-004 guarantees):
+    # TC-14 (RENDER-PATH parity for the guarantees):
     # TC-11/TC-12 prove diamond-order + multi-gate on compute_*; this drives the
     # ACTUAL shipped renderer (_fmt_active_chain_block, the path --critical-path/
     # --boot execute) on those two shapes and asserts the ORDERING (not mere
@@ -4779,10 +4761,10 @@ def _run_active_milestone_chain_self_test() -> int:
 
 
 def _run_task_schema_self_test() -> int:
-    """Task 327: adversary suite for the schema-driven task-conformance pass.
+    """adversary suite for the schema-driven task-conformance pass.
 
-    Fixture-harness pattern (no pytest in framework repo, B-5 Lock).
-    Exercises TC-1..TC-12 from docs/tasks/327-delegation.md against
+    Fixture-harness pattern (no pytest in framework repo).
+    Exercises TC-1..TC-12 against
     tests/fixtures/task_schema/. Returns 0 on all-PASS, 1 otherwise.
     """
     base = FRAMEWORK_ROOT / "tests" / "fixtures" / "task_schema"
@@ -4922,9 +4904,9 @@ def _run_task_schema_self_test() -> int:
         _fail(f"TC-12: missing-schema issues={[(i.check, i.severity, i.detail) for i in sf]}")
 
     # -------------------------------------------------------------------
-    # Code-adversary fix-pass RED-first cases (F-CA-001..006).
+    # fix-pass RED-first cases.
     # Each was RED against pre-fix code and is GREEN after the
-    # corresponding root-fix. See docs/reviews/code/327-code-adversary.md.
+    # corresponding root-fix.
     # -------------------------------------------------------------------
     malformed = base / "malformed"
 
@@ -4934,7 +4916,7 @@ def _run_task_schema_self_test() -> int:
                 and all(i.severity == "ERROR" for i in sfx)
                 and any("ESCALATE" in i.detail for i in sfx))
 
-    # F-CA-001a: `validator` is a scalar string (truthy non-dict). The
+    # `validator` is a scalar string (truthy non-dict). The
     # top-level doc is a valid mapping, so this is NOT the missing-file
     # path — it is the partial-corruption path that pre-fix crashed with
     # an uncaught AttributeError. Expect SCHEMA_FILE ERROR + ESCALATE.
@@ -4950,7 +4932,7 @@ def _run_task_schema_self_test() -> int:
     except Exception as exc:  # noqa: BLE001 — the bug IS an uncaught exc
         _fail(f"F-CA-001a: validator-as-scalar CRASHED ({exc!r}) — not fail-safe")
 
-    # F-CA-001b: same class on `filename` (the second live instance).
+    # same class on `filename` (the second live instance).
     try:
         ca1b = validate_task_schema_conformance(
             project_root=conformant,
@@ -4963,7 +4945,7 @@ def _run_task_schema_self_test() -> int:
     except Exception as exc:  # noqa: BLE001
         _fail(f"F-CA-001b: filename-as-scalar CRASHED ({exc!r}) — not fail-safe")
 
-    # F-CA-007: the F-CA-001 root cause (no escalate on a malformed
+    # the root cause (no escalate on a malformed
     # trusted-config nested key) generalized to EVERY sibling
     # nested-structure key the SAME function reads. A present-but-wrong-
     # type key must fail-safe to SCHEMA_FILE ERROR + ESCALATE, never a
@@ -4989,8 +4971,8 @@ def _run_task_schema_self_test() -> int:
             _fail(f"F-CA-007: {ca7_fix} CRASHED ({exc!r}) — not fail-safe")
 
     # -------------------------------------------------------------------
-    # Task 327 STRUCTURAL trust-boundary (Approach C). The per-site-guard
-    # strategy failed convergence 3x (F-CA-001 -> 007 -> 008, same class
+    # STRUCTURAL trust-boundary. The per-site-guard
+    # strategy failed convergence 3x (same class
     # one nesting level deeper each pass). The fix is ONE declarative
     # trust boundary: _validate_schema_structure walks the DATA constant
     # _TASK_SCHEMA_SHAPE. Coverage scales with the descriptor by
@@ -5001,7 +4983,7 @@ def _run_task_schema_self_test() -> int:
     # the REAL framework/task-schema.yaml must itself PASS the structural
     # walker. If the locked schema and the descriptor ever disagree this
     # fails loudly (closes the descriptor-DRIFT failure mode). NOTE: this
-    # does NOT close F-CA-009 (conditional-requiredness — a sibling-gated
+    # does NOT close (conditional-requiredness — a sibling-gated
     # key absent); that is an owner-accepted residual, not covered here.
     real_schema = _load_task_schema(schema_path)
     if real_schema is not None \
@@ -5030,7 +5012,7 @@ def _run_task_schema_self_test() -> int:
     # SCHEMA_FILE ERROR + ESCALATE (no crash, no silent degrade). This
     # makes checker coverage proportional to the spec by construction —
     # adding a schema node = adding a data node = adding a fixture row.
-    # Includes the two F-CA-008 repros explicitly: schema-task-basename-
+    # Includes the two repros explicitly: schema-task-basename-
     # int (re.compile TypeError class) and schema-enum-values-scalar
     # (silent vocab-loss class). schema-version-mismatch exercises the
     # §4 version pin (well-formed, version != descriptor -> ESCALATE).
@@ -5070,7 +5052,7 @@ def _run_task_schema_self_test() -> int:
             _fail(f"327-node: {fx} ({node_label}) CRASHED ({exc!r}) "
                   "— not fail-safe")
 
-    # F-CA-002: strict_after_backfill is the YAML *string* "false".
+    # strict_after_backfill is the YAML *string* "false".
     # bool("false") is True -> pre-fix this silently inverted calibration
     # to strict. Locked decision: non-bool -> SCHEMA_FILE ERROR + ESCALATE
     # (NOT silent strict, NOT WARN-coerced, NOT bool()-coerced).
@@ -5086,7 +5068,7 @@ def _run_task_schema_self_test() -> int:
     except Exception as exc:  # noqa: BLE001
         _fail(f"F-CA-002: non-bool calibration CRASHED ({exc!r})")
 
-    # F-CA-003a: `--validate -1` / `--validate 0` at the argv/dispatch
+    # `--validate -1` / `--validate 0` at the argv/dispatch
     # boundary -> exit 2 (same path as a non-int value), NOT CLEAN exit 0.
     import subprocess
     engine = str(FRAMEWORK_ROOT / "scripts" / "plan_engine.py")
@@ -5100,7 +5082,7 @@ def _run_task_schema_self_test() -> int:
             _fail(f"F-CA-003a: --validate {bad_id} rc={proc.returncode} "
                   f"stdout={proc.stdout.strip()!r}")
 
-    # F-CA-003b (belt): single-id mode with a target that fails the name
+    # (belt): single-id mode with a target that fails the name
     # grammar must NOT silently continue -> SCHEMA_FILE ERROR. Drive via
     # the function with a negative single_id (defence in depth below argv).
     ca3b = validate_task_schema_conformance(
@@ -5111,7 +5093,7 @@ def _run_task_schema_self_test() -> int:
         _fail(f"F-CA-003b: single_id=-1 issues="
               f"{[(i.check, i.severity) for i in ca3b]}")
 
-    # F-CA-004: archived single-id. id resolves ONLY in
+    # archived single-id. id resolves ONLY in
     # docs/tasks/archive/<id>.yaml -> clean terminal result, NOT a false
     # SCHEMA_FILE 'task file not found' ERROR.
     sa_root = base / "single_archived"
@@ -5123,7 +5105,7 @@ def _run_task_schema_self_test() -> int:
         _fail(f"F-CA-004: archived id 299 issues="
               f"{[(i.check, i.severity, i.detail) for i in ca4]}")
 
-    # F-CA-005e: zero-pad duplicate-logical-id collision. `327.yaml` and
+    # zero-pad duplicate-logical-id collision. `327.yaml` and
     # `0327.yaml` both -> int(basename)=327. Chosen behaviour: detect as
     # a duplicate-id ERROR (SCHEMA_ID_MISMATCH, calibration-independent),
     # never silently validate both as task 327.
@@ -5139,7 +5121,7 @@ def _run_task_schema_self_test() -> int:
         _fail(f"F-CA-005e: dup-id issues="
               f"{[(i.check, i.severity, i.detail) for i in ca5e]}")
 
-    # F-CA-006: the dead full-tree not-exists guard must be gone.
+    # the dead full-tree not-exists guard must be gone.
     # Source-level assertion: the unreachable `if <none-check> ... :`
     # statement followed by `continue` no longer exists as code. The
     # needle is assembled at runtime so this comment cannot self-match.
@@ -5186,7 +5168,7 @@ def main():
     group.add_argument("--spec-pipeline", action="store_true",
                        help="Spec review pipeline status")
     group.add_argument("--self-test", action="store_true",
-                       help="Task 435 B-5 Lock: inline smoke-tests fuer "
+                       help="inline smoke-tests fuer "
                             "feature_milestones-Schema-Erweiterung")
     parser.add_argument("--limit", type=int, default=10, help="Limit for --next")
     parser.add_argument(
@@ -5196,25 +5178,25 @@ def main():
         help="Override PROJECT_ROOT (where docs/tasks + docs/plan.yaml live). "
              "Takes precedence over BUDDY_PROJECT_ROOT env-var.",
     )
-    # Task 367: Multi-Repo Aggregation
+    # Multi-Repo Aggregation
     parser.add_argument(
         "--aggregate",
         action="store_true",
-        help="Task 367: Multi-repo aggregate mode. Scans multiple project repos "
+        help="Multi-repo aggregate mode. Scans multiple project repos "
              "and builds a unified view with namespaced IDs <repo>#<id>.",
     )
     parser.add_argument(
         "--projects",
         type=str,
         default=None,
-        help="Task 367: Comma-separated list of project repos for --aggregate "
+        help="Comma-separated list of project repos for --aggregate "
              "mode. Each entry can be a repo name (resolved against $PROJECTS_DIR) "
              "or an absolute/relative path. Default: auto-discovery in "
              "$PROJECTS_DIR (~/projects by default).",
     )
     args = parser.parse_args()
 
-    # Task 010 Part L0: explicit --project-root override. Rebinds the three
+    # explicit --project-root override. Rebinds the three
     # project-scoped module globals so that load_tasks/load_plan + all
     # GateCondition.check calls resolve against the new root.
     if args.project_root:
@@ -5224,12 +5206,12 @@ def main():
         PLAN_PATH = PROJECT_ROOT / "docs" / "plan.yaml"
         REPO_ROOT = PROJECT_ROOT  # keep back-compat alias in sync
 
-    # Task 435 (B-5 Lock): --self-test entry-point.
+    # --self-test entry-point.
     if getattr(args, "self_test", False):
         rc = _run_self_test()
         sys.exit(rc)
 
-    # Task 327: single-id schema-only mode. `--validate <id>` short-
+    # single-id schema-only mode. `--validate <id>` short-
     # circuits BEFORE the full load — no milestone / cycle / cross-repo.
     # Exit 0/1 strictly on schema ERROR (calibration applies: vocab /
     # missing-required are WARN while strict_after_backfill is false, so
@@ -5241,7 +5223,7 @@ def main():
             print(f"ERROR: --validate expects an integer task id, got "
                   f"{args.validate!r}", file=sys.stderr)
             sys.exit(2)
-        # F-CA-003a (locked): a task id is a positive int. <= 0 is an
+        # (locked): a task id is a positive int. <= 0 is an
         # argv error on the SAME path as a non-int value (exit 2) — never
         # a silent CLEAN exit 0 (the pre-fix false-PASS on `--validate -1`).
         if single_id <= 0:
@@ -5255,7 +5237,7 @@ def main():
 
     # Load
     if args.aggregate:
-        # Task 367: Multi-Repo Aggregate Mode
+        # Multi-Repo Aggregate Mode
         aggregate = load_aggregated(projects_arg=args.projects)
         tasks = aggregate.tasks
         milestones = aggregate.milestones
@@ -5273,9 +5255,8 @@ def main():
     compute_milestone_dependents(milestones)
     compute_milestone_status(milestones, tasks)
 
-    # Task 435 (F-C-P2-001 User-Lock 2026-05-03 Variante c):
     # Load archived task IDs fuer Silent-Pass von BROKEN_DEP.
-    # Iteration 2 (CA-002 Fix): Aggregate-Mode sammelt per-repo archived_ids
+    # Aggregate-Mode sammelt per-repo archived_ids
     # in load_aggregated und stellt sie als namespaced set[str] bereit.
     archived_ids: set
     if args.aggregate:
@@ -5283,7 +5264,6 @@ def main():
     else:
         archived_ids = load_archived_task_ids(PROJECT_ROOT)
 
-    # Task 435 (F-C-003 Option 1, Amendment-001):
     # Pass plan_data fuer 4-stufigen Critical-Path-Lookup.
     plan_data_for_cp: dict = {}
     if not args.aggregate and PLAN_PATH.exists():
@@ -5298,26 +5278,26 @@ def main():
     critical_path = compute_critical_path(tasks, milestones, target, plan_data_for_cp)
     blocking_scores = compute_blocking_score(tasks, milestones)
     issues = validate(tasks, milestones, archived_ids=archived_ids)
-    # Autonomy-Consistency-Checks (framework-ambiguity-audit Fund 1, Phase 3).
+    # Autonomy-Consistency-Checks.
     # Additiv — keine Beeinflussung bestehender Task/Milestone-Checks.
     # Skipped in aggregate mode (operates on FRAMEWORK_ROOT, not per-repo).
     if not args.aggregate:
         issues.extend(validate_autonomy_consistency())
     else:
-        # Task 367: surface aggregate-mode warnings (stale external refs, etc.)
+        # surface aggregate-mode warnings (stale external refs, etc.)
         for w in aggregate.warnings:
             issues.append(ValidationIssue(
                 "AGGREGATE_WARN", "WARN", detail=w))
 
-    # Task 327: full-tree task-schema conformance. Additive and scoped
+    # full-tree task-schema conformance. Additive and scoped
     # to the --validate full path ONLY. It is intentionally NOT fed into
     # the shared issue stream that --boot / --dashboard-json render: the
-    # forge_dev + consumer trees are pre-backfill (AC-4), so schema WARNs
+    # forge_dev + consumer trees are pre-backfill, so schema WARNs
     # would otherwise inject a WARNINGS block into the boot-critical path
     # before strict_after_backfill is flipped — exactly the repo-brick
     # the strict-after-backfill ordering exists to prevent. WARN-first
-    # calibration keeps exit-code 0 on --validate (AC-5 PASS) while still
-    # surfacing the drift (AC-3). Per-repo in aggregate mode.
+    # calibration keeps exit-code 0 on --validate (PASS) while still
+    # surfacing the drift. Per-repo in aggregate mode.
     if args.validate == "__full__":
         if args.aggregate:
             for repo_name, repo_root in discover_projects(args.projects):
@@ -5346,7 +5326,7 @@ def main():
         print(output)
         sys.exit(0 if all_pass else 1)
     elif args.after is not None:
-        # Task 367: accept int or "repo#id" for --after
+        # accept int or "repo#id" for --after
         after_key: object = args.after
         import contextlib
         with contextlib.suppress(TypeError, ValueError):

@@ -151,8 +151,7 @@ def extract_frontmatter(text: str, src_dir: str = "?") -> dict | None:
     The fence is detected LINE-WISE on the first two ``^---$`` lines
     (the YAML document delimiters), never a bare substring split — a
     literal ``---`` inside a description value must NOT mis-split and
-    silently un-discover an otherwise-eligible skill (Task 326's whole
-    purpose).
+    silently un-discover an otherwise-eligible skill.
 
     A fence line is the literal ``---`` at column 0 (only trailing
     whitespace / ``\\r`` tolerated). An *indented* ``---`` — e.g. a

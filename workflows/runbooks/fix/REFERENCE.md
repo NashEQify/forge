@@ -8,8 +8,7 @@ is the checklist — this file is the reference.
 At every phase boundary: `task_status_update workflow_phase=<phase>`.
 Valid phases: `specify`, `prepare`, `execute`, `verify`, `close`, `done`.
 
-Prerequisite: the `task_status_update` skill supports the workflow_phase parameter
-(migration point from `docs/solve/2026-04-09-workflow-state-model.md` §Migration plan).
+Prerequisite: the `task_status_update` skill supports the workflow_phase parameter.
 
 ## State file (PROPORTIONAL)
 
@@ -79,7 +78,7 @@ knowledge) with different TTLs.
 
 | Topic | SoT |
 |---|---|
-| State model (Layer-1 ADR) | `docs/solve/2026-04-09-workflow-state-model.md` |
+| State model | `framework/workflow-engine-cookbook.md` |
 | Task status update | `skills/task_status_update/SKILL.md` |
 | Workflow template (compliance) | `workflows/workflow-template.md` |
 | Root-cause-fix primitive | `skills/root_cause_fix/SKILL.md` |

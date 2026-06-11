@@ -286,8 +286,7 @@ The alternative to check 6 would be a
 `scripts/generate-boot-navigation.py` that regenerates the
 boot map automatically from
 `workflows/runbooks/*/WORKFLOW.md` + `skills/*/SKILL.md`
-frontmatter (approach E from
-`docs/solve/2026-04-09-boot-context-map.md`). That script
+frontmatter. That script
 would make drift impossible because the map would derive
 from disk.
 

@@ -24,7 +24,7 @@
 #      CWD) are unaffected and keep the installed release path.
 #
 # Cross-harness note: OpenCode/Codex inject the framework root through
-# their own adapter layer (see orchestrators/{opencode,...}; Task 298/313).
+# their own adapter layer (see orchestrators/{opencode,...}).
 # This role-aware + injected-value binding is the Claude Code adapter's
 # mechanism; the principle (hand the agent the concrete root before its
 # first read) is cross-harness, the mechanism is not.
@@ -135,7 +135,7 @@ elif [ -z "$scope" ]; then
   # Kein Scope: CWD wird verwendet. intent.md-Check + ggf. Anlage liegt
   # bei Buddy (boot.md Step 4 RESOLVE). Kein Silent-Fallback —
   # das wuerde Cross-Wiring erzeugen wenn User in projekt-Dir ohne intent.md
-  # arbeitet (Bug Session 18.04.2026, Task 372).
+  # arbeitet.
   session_name="$(basename "$(pwd)")"
 else
   # Dynamischer Projekt-Lookup unter $PROJECTS_DIR.

@@ -144,7 +144,7 @@ ADRs in `docs/decisions/` with an incrementing number (prefix
 Accepted | Superseded by ADR-XXX | Deprecated
 
 ## Date
-2025-01-15
+YYYY-MM-DD
 
 ## Context
 We need a primary database for the task management application. Key requirements:

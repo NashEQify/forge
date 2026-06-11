@@ -36,7 +36,7 @@ External review bundle lives under
 ```yaml
 ---
 review_topic: <council-topic>
-council_id: <council-folder-name, e.g. "2026-05-02-388-d5-recouncil">
+council_id: <council-folder-name, e.g. "<date>-<task>-<phase>-recouncil">
 created: YYYY-MM-DD
 maintainer: <who prepared bundle>
 upload_inventory_verified: <YYYY-MM-DD by name>
@@ -119,15 +119,15 @@ not structural pass rate. Example:
 ```markdown
 ## §4 Anti-Pattern Checks
 
-For architectural re-council with inversion pattern (e.g. 388/421/423):
+For architectural re-council with inversion pattern:
 
 | # | Anti-pattern | Required check |
 |---|---|---|
-| 1 | argument-decisive override (388 H2) | §4.4 STOP check visible in synthesis; override against voting majority only when argument-decisive converges |
-| 2 | §1 position-map consolidation visibility (421 #4) | §1 has secondary-argument carrier per member; §3 convergence claims carry member-file range citations |
-| 3 | adversary sole-found pattern (388/423 replicated) | discovery in synthesis correlates with adversary output |
-| 4 | NEW-V-001 test-confirms-spec | re-lean reasons are risk-cap self-triggering, not first-position confirmation |
-| 5 | external-reviewer member-file access (423 #5) | self-sanity-check §2 executed; substantive-vs-structural markers set |
+| 1 | argument-decisive override | §4.4 STOP check visible in synthesis; override against voting majority only when argument-decisive converges |
+| 2 | §1 position-map consolidation visibility | §1 has secondary-argument carrier per member; §3 convergence claims carry member-file range citations |
+| 3 | adversary sole-found pattern | discovery in synthesis correlates with adversary output |
+| 4 | test-confirms-spec | re-lean reasons are risk-cap self-triggering, not first-position confirmation |
+| 5 | external-reviewer member-file access | self-sanity-check §2 executed; substantive-vs-structural markers set |
 ```
 
 #### §5 Audit trail (optional but recommended)
@@ -135,12 +135,12 @@ For architectural re-council with inversion pattern (e.g. 388/421/423):
 ```markdown
 ## §5 Audit-Trail
 
-- 2026-05-02T10:00 — bundle created, 8 files in §1 required upload list
-- 2026-05-02T10:15 — maintainer inventory check: all 8 files present
-  in source paths, filename conflict with 388 council avoided by
+- <ts> — bundle created, 8 files in §1 required upload list
+- <ts+15m> — maintainer inventory check: all 8 files present
+  in source paths, filename conflict with a parallel council avoided by
   council-id subfolder
-- 2026-05-02T10:30 — reviewer dispatch via sparring partner session
-- 2026-05-02T11:00 — reviewer output: 7/8 substantive PASS + 1 PASS
+- <ts+30m> — reviewer dispatch via sparring partner session
+- <ts+60m> — reviewer output: 7/8 substantive PASS + 1 PASS
   with sub-observation
 ```
 

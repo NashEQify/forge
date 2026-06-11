@@ -18,7 +18,7 @@ task_id: 115
 spec: docs/specs/navigate-mode.md
 spec_version: v1
 test_plan_spec_ref: v1          # Freshness: must == spec_version
-created: 2026-03-14
+created: YYYY-MM-DD
 status: active                  # active | superseded
 tc_count: 24                    # total TCs — mechanically verifiable
 coverage_complete: true         # every AC + every FM has at least one TC

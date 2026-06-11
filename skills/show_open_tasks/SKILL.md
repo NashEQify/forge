@@ -53,7 +53,7 @@ docs routing).
 word, lowercased; the alias map (`mid|med|normal → medium`,
 `hi → high`, `lo → low`) is **defined there, not here** — this skill
 applies it, the schema owns it. Trailing notes (e.g.
-`high (2026-05-18)`) stripped. Missing/unrecognized → `unknown`.
+`high (YYYY-MM-DD)`) stripped. Missing/unrecognized → `unknown`.
 
 ## Columns
 

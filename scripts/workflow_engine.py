@@ -263,7 +263,7 @@ def archive_state(workflow_id: str) -> None:
 def _resolve_vars(text: str, variables: dict[str, Any]) -> str:
     """Replace {var_name} placeholders with values from variables dict.
 
-    Task 301 C2-003 Fix: empty-string-Resolution wird wie None/missing
+    empty-string-Resolution wird wie None/missing
     behandelt — Placeholder bleibt unaufgeloest. Pre-fix: empty-string
     `{spec_name}` resolved zu "" → Pfad wurde `docs/reviews/board/-foo.md`
     → `_has_unresolved_vars` fand nichts → pointer_check produzierte
@@ -278,7 +278,7 @@ def _resolve_vars(text: str, variables: dict[str, Any]) -> str:
         if val is None:
             return m.group(0)
         s = str(val)
-        # C2-003: empty-string wird wie missing behandelt
+        # empty-string wird wie missing behandelt
         if s == "":
             return m.group(0)
         return s
@@ -288,13 +288,13 @@ def _resolve_vars(text: str, variables: dict[str, Any]) -> str:
 def _has_unresolved_vars(text: str) -> list[str]:
     """Return list of unresolved {var_name} placeholders in text.
 
-    Spec 299 Phase C2 + CC-014/CC-016 Pass-1-Fix: variables-Dict-Lookup
+    variables-Dict-Lookup
     geschieht via `_resolve_completion_vars()` VOR diesem Aufruf, das die
     Variablen im Text ersetzt. Diese Funktion ist die Restpruefung —
     findet die Placeholder die nach Resolution noch im Text stehen.
 
     Pre-fix hatte ein optional `variables` Argument das im Hot-Path nirgends
-    genutzt wurde (CC-016 dead-code im Hot-Path); ueber 1 Pass entfernt.
+    genutzt wurde (dead-code im Hot-Path); ueber 1 Pass entfernt.
     Whitelist-Erweiterung ist semantisch via variables-Dict in
     _resolve_completion_vars (Spec §2.1).
     """
@@ -304,7 +304,7 @@ def _has_unresolved_vars(text: str) -> list[str]:
 def _ensure_state_variables_resolved(state: dict[str, Any]) -> bool:
     """Lazy-resolve `spec_name` + `state_file` in state["variables"].
 
-    Spec 299 Task 301 F-ENGINE-001 Fix: pre-fix war diese Resolution NUR
+    pre-fix war diese Resolution NUR
     in `find_next_step()`. `cmd_complete` ruft direkt `complete_step()`
     auf — wenn der Schritt-Completion-Check `pointer_check` mit
     `{spec_name}` enthaelt, blockiert HARD-policy weil die Variable
@@ -321,7 +321,7 @@ def _ensure_state_variables_resolved(state: dict[str, Any]) -> bool:
     variables = state.setdefault("variables", {})
     changed = False
 
-    # Spec 299 Phase C2 (F-I-013) — lazy spec_name lookup
+    # lazy spec_name lookup
     if not variables.get("spec_name"):
         try:
             spec_name = _resolve_spec_name(int(task_id))
@@ -331,7 +331,7 @@ def _ensure_state_variables_resolved(state: dict[str, Any]) -> bool:
             variables["spec_name"] = spec_name
             changed = True
 
-    # F-100 lazy state_file re-discovery
+    # lazy state_file re-discovery
     if not variables.get("state_file"):
         try:
             discovered = _discover_state_file(int(task_id))
@@ -347,7 +347,7 @@ def _ensure_state_variables_resolved(state: dict[str, Any]) -> bool:
 
 
 def _resolve_spec_name(task_id: int) -> str | None:
-    """Spec 299 Phase C2 (F-I-013) — resolve {spec_name} variable.
+    """resolve {spec_name} variable.
 
     Liest docs/tasks/<task_id>.yaml + extrahiert spec_ref-Field, returnt
     Basename ohne Extension (z.B. 'docs/specs/299-fabrication-mitigation.md'
@@ -388,7 +388,7 @@ def _resolve_spec_name(task_id: int) -> str | None:
 # `workflows/runbooks/<workflow>/REFERENCE.md` Frontmatter-Schema sections —
 # extend when a new workflow defines its state-file dir.
 #
-# Pre-Fix war diese Liste hardcoded auf `docs/solve/` (Task 459 surface):
+# Pre-Fix war diese Liste hardcoded auf `docs/solve/`:
 # build/fix/review/research/docs-rewrite-State-Files wurden nie gefunden,
 # Strategy 2 fired im falschen Dir. Multi-Dir-Search behebt das.
 STATE_FILE_DIRS = (
@@ -408,7 +408,7 @@ def _discover_state_file(task_id: int) -> str | None:
     1. Files with `task_ref: <task_id>` in YAML frontmatter (canonical key per
        `workflows/workflow-template.md` line 159 + 4 workflow REFERENCE.md).
        Legacy `parent_task: <task_id>` is ALSO accepted as fallback so existing
-       state-files written before Task 459's convention-fix keep resolving.
+       state-files written before the convention-fix keep resolving.
     2. Most recent file with literal `task-<N>` or `task_<N>` prefix in the
        filename (across all workflow dirs).
 
@@ -447,14 +447,14 @@ def _discover_state_file(task_id: int) -> str | None:
         tr_match = re.search(r"^\s*task_ref:\s*(\d+)\s*$", frontmatter, re.MULTILINE)
         if tr_match and int(tr_match.group(1)) == task_id:
             return str(md_file.relative_to(PROJECT_ROOT))
-        # Legacy fallback: parent_task (pre-Task-459 convention)
+        # Legacy fallback: parent_task (pre-fix convention)
         pt_match = re.search(r"^\s*parent_task:\s*(\d+)\s*$", frontmatter, re.MULTILINE)
         if pt_match and int(pt_match.group(1)) == task_id:
             return str(md_file.relative_to(PROJECT_ROOT))
 
-    # Strategy 2: explicit `task-<N>` prefix (e.g., 2026-04-07-task-331-foo.md).
+    # Strategy 2: explicit `task-<N>` prefix (e.g., <date>-task-<N>-<slug>.md).
     # Previous regex `(?:^|[-_])0*N(?:[-_]|$)` had false-positives on date
-    # components (e.g., task_id=1 matched "2026-05-01-..." via the "01" digits).
+    # components (e.g., task_id=1 matched "...-01-..." via the "01" digits).
     # Now we require the literal "task-" or "task_" prefix to anchor the match.
     task_str = str(task_id)
     for md_file in md_files:
@@ -498,13 +498,13 @@ def _resolve_completion_vars(comp: dict[str, Any], variables: dict[str, Any]) ->
 def _resolve_evidence_layout(
     state: dict[str, Any], step_state: dict[str, Any],
 ) -> str:
-    """Read evidence_layout from skill-frontmatter (F-I-014).
+    """Read evidence_layout from skill-frontmatter.
 
     Lookup-Pfad: state["current_step"]["skill_ref"] ODER step_state["skill_ref"].
     Bei fehlendem skill_ref ODER File nicht lesbar: Default 'auto'.
     Bei Skill-Frontmatter ohne evidence_layout: Default 'per_finding' (Spec §1.5).
 
-    CC-021 (F-CA-011) Pass-1-Fix: Snapshot-Pattern. Wenn step_state
+    Snapshot-Pattern. Wenn step_state
     "evidence_layout_snapshot" enthaelt (geschrieben bei --start), nutze den
     Snapshot statt fresh-read — Mid-Flight-Layout-Mutation wird so abgefangen
     UND geloggt.
@@ -519,7 +519,7 @@ def _resolve_evidence_layout(
             print(
                 f"WARNING: evidence_layout drift mid-flight — snapshot was "
                 f"{snapshot!r}, current Skill-FM says {fresh!r}. Honoring "
-                f"snapshot (CC-021 Pass-1-Fix).",
+                f"snapshot.",
                 file=sys.stderr,
             )
         return snapshot
@@ -568,7 +568,7 @@ def _detect_evidence_layout_now(
 def _check_pointer(
     comp: dict[str, Any], state: dict[str, Any], step_state: dict[str, Any],
 ) -> tuple[bool, str]:
-    """pointer_check Completion-Type — Spec 299 §2.1 Schicht-2.
+    """pointer_check Completion-Type — Spec §2.1 Schicht-2.
 
     1. source_file resolved (mit unresolved-vars-graceful — siehe loop oben).
     2. Layout via Skill-Frontmatter (default per_finding).
@@ -585,7 +585,7 @@ def _check_pointer(
 
     # Resolve relativ zu PROJECT_ROOT
     abs_source = (PROJECT_ROOT / str(source_file)).resolve()
-    # CC-003 (F-CA-002) fix: asymmetric-boundary-check — Validator hatte
+    # asymmetric-boundary-check — Validator hatte
     # _resolve_within_repo, Engine source_file aber nicht. Symlink-Drop in
     # docs/reviews/board/ konnte source_file auf /etc/passwd zeigen lassen.
     # Spec §1.3 sagt "Path-Format: repo-relativ" generell, nicht
@@ -631,7 +631,7 @@ def _check_pointer(
         # Engine NIE crash — return (False, msg) per Spec §5.2 error_handling
         return False, f"pointer_check internal error: {exc}"
 
-    # CC-007 fix: separate WARN-Channel von errors. Validator-Library appended
+    # separate WARN-Channel von errors. Validator-Library appended
     # WARN-Strings ans messages-Array; engine-Pfad sollte sie NICHT als Teil
     # des Success-Detail propagieren (sonst log-greps nach `WARN` produzieren
     # false-positives, User sieht "ok: WARN..." was kontraintuitiv ist).
@@ -660,7 +660,7 @@ def check_completion(comp: dict[str, Any], state: dict[str, Any], step_state: di
     ctype = comp.get("type", "manual")
 
     # Check for unresolved variables in path/command/pattern/source_file fields
-    # — graceful degradation. Spec 299 Phase C2 erweitert die Whitelist um
+    # — graceful degradation. Die Whitelist umfasst
     # source_file (pointer_check Pflichtfeld).
     for field in ("path", "command", "pattern", "source_file"):
         val = comp.get(field)
@@ -713,7 +713,7 @@ def check_completion(comp: dict[str, Any], state: dict[str, Any], step_state: di
         for pat in patterns:
             # Recursive glob from the repo root so `**` patterns resolve.
             # `Path(ROOT / pat).parent.glob(name)` silently never matched a
-            # `**` pattern (parent became a literal `**` dir) — L-069.
+            # `**` pattern (parent became a literal `**` dir).
             for match_path in PROJECT_ROOT.glob(pat):
                 if match_path.exists() and match_path.stat().st_mtime >= start_ts:
                     rel = str(match_path.relative_to(PROJECT_ROOT))
@@ -755,14 +755,14 @@ def check_completion(comp: dict[str, Any], state: dict[str, Any], step_state: di
             return False, f"command error: {e}"
 
     if ctype == "pointer_check":
-        # Spec 299 Phase C2 — Schicht-2 Engine-Check fuer Evidence-Pointer.
+        # Schicht-2 Engine-Check fuer Evidence-Pointer.
         # Library-Import von scripts.validate_evidence_pointers (Spec §6.5
         # Library-bevorzugt). Bei ImportError: silent-degrade auf manual
         # damit Engine NIE crasht.
         return _check_pointer(comp, state, step_state)
 
     if ctype == "compound":
-        # CC-004 (F-CA-003) fix: graceful-degradation-Konflikt mit
+        # graceful-degradation-Konflikt mit
         # spec-§2.2-Race-Mitigation. Pre-fix: pointer_check mit unresolved
         # `{spec_name}` returnt (True, "manual: unresolved...") → manual
         # passt → compound passes silent. Konsequenz: jeder Task ohne
@@ -806,7 +806,7 @@ def evaluate_guard(guard: dict[str, Any], state: dict[str, Any], variables: dict
     if gtype == "file_exists":
         path_pattern = guard.get("path", "")
         resolved = _resolve_vars(path_pattern, variables)
-        # Recursive glob so `**` guard patterns resolve (sibling of L-069).
+        # Recursive glob so `**` guard patterns resolve.
         # An absolute resolved path can't be a repo-relative glob (pathlib
         # raises on it) — honour the (False, ...) contract instead of crashing.
         if Path(resolved).is_absolute():
@@ -993,7 +993,7 @@ def create_state(
         if discovered:
             variables["state_file"] = discovered
 
-        # Spec 299 Phase C2 (F-I-013) — befuelle spec_name aus
+        # befuelle spec_name aus
         # task.spec_ref Basename ohne Extension. Conditional damit Tasks
         # ohne spec_ref keine KeyError/None-Probleme produzieren.
         spec_name = _resolve_spec_name(task_id)
@@ -1040,10 +1040,10 @@ def find_next_step(state: dict[str, Any], workflow_def: dict[str, Any]) -> str |
             steps[sid] = {"status": STATUS_PENDING}
     state["steps"] = steps
 
-    # F-100 (lazy state_file re-discovery) + Spec 299 Phase C2 (F-I-013) lazy
+    # lazy state_file re-discovery + lazy
     # spec_name lookup. Konsolidiert in `_ensure_state_variables_resolved`
     # damit `--complete` (cmd_complete) denselben Resolution-State sieht
-    # (Task 301 F-ENGINE-001 Fix: pre-fix war Resolution NUR hier; `--complete`
+    # (pre-fix war Resolution NUR hier; `--complete`
     # mit pointer_check + `{spec_name}` blockierte ohne `--force`).
     if _ensure_state_variables_resolved(state):
         # Persist immediately so downstream callers and concurrent reads
@@ -1062,7 +1062,7 @@ def find_next_step(state: dict[str, Any], workflow_def: dict[str, Any]) -> str |
     # whose evaluation is side-effect-free / file-based. Manual & compound
     # are excluded by spec (manual cannot be auto-checked, compound may
     # contain manual sub-checks).
-    # CC-023 (F-CF-003) Pass-1-Fix: pointer_check als top-level type ist per
+    # pointer_check als top-level type ist per
     # Spec §2.2 schema-permissiv mit auto-complete-on-pass — wenn Pointer
     # mechanisch valid sind, passiert der Step ohne expliziten manual-step.
     # Aufgenommen ins Set damit die Spec-Zusage tatsaechlich greift.
@@ -1166,7 +1166,7 @@ def find_next_step(state: dict[str, Any], workflow_def: dict[str, Any]) -> str |
         # Activate this step
         steps[sid]["status"] = STATUS_IN_PROGRESS
         steps[sid]["started_at"] = _utcnow()
-        # CC-021 Pass-1-Fix: snapshot evidence_layout fuer pointer_check
+        # snapshot evidence_layout fuer pointer_check
         # Steps damit Mid-Flight-Skill-FM-Mutation nicht das Layout flippen
         # kann. Snapshot wird in _resolve_evidence_layout konsultiert.
         try:
@@ -2059,7 +2059,7 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    # Task 010 Part L0b: explicit --project-root override. Rebinds the
+    # explicit --project-root override. Rebinds the
     # project-scoped module globals so that state discovery + completion
     # checks resolve against the new root.
     if args.project_root:
@@ -2195,7 +2195,7 @@ def cmd_complete(args: argparse.Namespace) -> None:
 
     set_vars = dict(args.set) if args.set else None
 
-    # Task 301 F-ENGINE-001 Fix: lazy-resolve spec_name + state_file VOR
+    # lazy-resolve spec_name + state_file VOR
     # complete_step damit pointer_check-Steps mit `{spec_name}` nicht
     # mit "Unresolved variable(s)" blockieren wenn der Workflow ohne
     # vorheriges --next/--status auf --complete gestartet wurde.
@@ -2460,7 +2460,7 @@ def cmd_resume(args: argparse.Namespace) -> None:
     """Resume a paused workflow (F4).
 
     Uses dedicated paused-workflow lookup instead of find_active_workflow_for_next,
-    which prefers leaf workflows regardless of paused status (F-CQ-001 fix).
+    which prefers leaf workflows regardless of paused status.
     """
     if args.wf_id:
         # Explicit --id: load directly and check paused flag

@@ -15,7 +15,7 @@
 # Exit codes:
 #   0 — always (graceful — never blocks boot)
 #
-# Background: build-468 L-007 — chub is a get_api_docs prerequisite
+# Background: chub is a get_api_docs prerequisite
 # but not installed by default; mid-build install adds turn-cost.
 # Boot-time check converts the runtime surprise into a boot-time nudge.
 

@@ -188,7 +188,7 @@ SIGNAL: [what is signalled / "no signal"] — [action or "none"]
 **Example:**
 ```
 EXTRACT: Brave apt instead of Snap on T480s, PWA functional — 3 entities
-IMPACT: CONTRADICTS t14.md "PWA does not work" / EXTENDS t480s.md / IMPLIES - / ENABLES PWA migration T14 / OBSOLETES - / ACTIONABLE Task 081
+IMPACT: CONTRADICTS t14.md "PWA does not work" / EXTENDS t480s.md / IMPLIES - / ENABLES PWA migration T14 / OBSOLETES - / ACTIONABLE Task NNN
 SIGNAL: no signal — no action
 ```
 

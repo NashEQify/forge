@@ -3,7 +3,7 @@
 #
 # Symlinks .git/hooks/{pre-commit,commit-msg} into the framework's
 # orchestrators/claude-code/hooks/pre-commit.sh. The hook script self-
-# detects the invocation mode via $0 basename (F-102 fix), so the same
+# detects the invocation mode via $0 basename, so the same
 # file serves both hook events.
 #
 # Usage:

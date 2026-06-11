@@ -22,7 +22,7 @@ What this spec does not do:
 - define workflow routing standard (`process-map.md` does)
 - provide semantic content validator (Spec-Board L1 does)
 
-## Files in a skill directory (post-2026-05-31)
+## Files in a skill directory
 
 A skill is a single `skills/<name>/SKILL.md` file. The earlier optional
 `REFERENCE.md` tier-2 split-file pattern is **deprecated** — Buddy's
