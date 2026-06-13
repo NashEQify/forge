@@ -49,6 +49,12 @@ sections optional, brief author writes a one-line rationale why.
 
 Three mandatory sections (in addition to the pointer block + authority refs):
 
+**Workflow scope (instance stamping):** when the fix runs inside a workflow step
+and `workflow_engine.py --next` reports a `NOT-YOURS:` line (≥2 workflows live),
+paste the engine's `SCOPE:` + `NOT-YOURS:` block into the brief verbatim — same
+rule as `mca-brief-template.md` §Workflow scope. Stamps the agent with its own
+file pointers so it does not trip over a sibling workflow's files.
+
 ### Section 1: Anti-pattern phrase check
 
 Brief author audits the brief text against 4 anti-pattern classes **before**

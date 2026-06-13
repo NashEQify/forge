@@ -73,6 +73,26 @@ implicit_decisions_surfaced:
 
 **`value`** is the concrete decision content (1-3 sentences).
 
+## Workflow scope (instance stamping — when a sibling workflow is live)
+
+When this brief dispatches an agent **inside a workflow step** and
+`workflow_engine.py --next` reports a `NOT-YOURS:` line (≥2 workflows live in
+the checkout), paste the engine's `SCOPE:` + `NOT-YOURS:` block from `--next`
+verbatim into the brief. This **stamps the agent with its own file pointers** so
+it never reconstructs "which files are mine" by browsing `docs/<workflow>/` or
+`.workflow-state/` — the failure that let a parallel workflow's agent (solve-593)
+trip over a sibling's files (solve-594).
+
+- Hand the agent its OWN concrete paths (state file, task file). Do **not** hand
+  it a directory to browse — fewer cues beat more warnings.
+- The `NOT-YOURS:` line names the sibling files to ignore.
+- `--next` shows no `NOT-YOURS:` (single workflow live): omit the block —
+  nothing to disambiguate.
+
+This is content the agent NEEDS, so it lives **here in the brief**, never in the
+anti-bias `dispatch-template.md` (whose contract is to STRIP Buddy's context out,
+the opposite operation).
+
 ## Decision classes — detail
 
 Decision classes are load-bearing downstream: MCA references

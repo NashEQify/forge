@@ -13,14 +13,17 @@ python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --start <name> --task <id>
 # 1a. With explicit path-route (build/sub-build, build/full):
 python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --start <name> --task <id> --route <path>
 
-# 2. Step-loop until everything is done:
+# 2. Step-loop until everything is done. With >=2 workflows live in the checkout
+#    the engine REFUSES a keyless --next/--complete/--skip/--retry/--pause
+#    (exit 5 EXIT_AMBIGUOUS) + prints a copy-paste --id list. Pass --id <wf>
+#    (the `ID:` line from --next) or --task <id>. Single workflow: key optional.
 while WF_HAS_PENDING; do
-  python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --next     # shows current step + instruction
+  python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --next [--id <wf>]   # current step + instruction (+ SCOPE/NOT-YOURS when siblings live)
   # → Buddy executes the instruction (call skill_ref, write content, etc.)
-  python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --complete <step-id> --evidence "<short>"
+  python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --complete <step-id> [--id <wf>] --evidence "<short>"
   # For classification steps (mid-flow): --complete --route <key>
-  # For skip-eligible: --skip <step-id> --reason "<why>"
-  # For re-iteration (step has to run again): --retry <step-id> --reason "<why>"
+  # For skip-eligible: --skip <step-id> [--id <wf>] --reason "<why>"
+  # For re-iteration (step has to run again): --retry <step-id> [--id <wf>] --reason "<why>"
   # Iteration cap defaults to 3, override via --reason "override: <rationale>"
 done
 
@@ -29,7 +32,38 @@ python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --status            # all acti
 python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --recover           # after a crash
 python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --pause / --resume
 python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --abort <wf-id> --reason "..."
+python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --reap [--max-age-hours N] [--dry-run]
+#   --reap archives long-idle stale workflows (default > 168h / 7d; paused never reaped)
 ```
+
+## Parallel workflows (instance resolution + agent scope)
+
+`.workflow-state/` is per-checkout, so two `cc` sessions (or a build + a fix) on
+the same repo share it. The engine is instance-aware so a parallel workflow's
+files never bleed into the wrong place:
+
+- **Resolution refuses, never guesses.** With >=2 workflows live and no
+  `--id`/`--task`, `--next` / `--complete` / `--skip` / `--retry` / `--pause`
+  exit `5` (`EXIT_AMBIGUOUS`) with a copy-paste `--id` candidate list, instead of
+  silently picking first-match / most-recent-leaf (the solve-593-vs-594 silent
+  wrong-instance bug). Pass `--id <wf>` (the `ID:` line `--next` prints) or
+  `--task <id>`. A single live workflow resolves with no key (fast-path).
+- **Agent scope rides `--next`.** When a sibling workflow is live, `--next` adds
+  a `SCOPE:` line (this instance's own files) + a `NOT-YOURS:` line (the sibling
+  files to ignore). When Buddy dispatches an agent inside a workflow step, that
+  block goes into the brief (`mca-brief-template.md` / `fix-brief-template.md`
+  §Workflow scope) so the agent never reconstructs "which files are mine" by
+  browsing `docs/<workflow>/` — the failure that let solve-593's agent trip over
+  solve-594's files.
+- **Stale workflows are reapable.** Abandoned workflows (left `in_progress` for
+  days) pollute `list_active_states()` and the agent's perception, and force an
+  ambiguity refusal next to a genuinely-live one. `--reap` archives any active
+  workflow idle past the threshold (default 7d, floor 1h; `--dry-run` to preview;
+  paused never reaped). It re-reads + re-checks each candidate immediately before
+  acting — a workflow advanced since the scan is left alone — and only ARCHIVES
+  (reversible from `.workflow-state/archive/`), never deletes. Idleness is a
+  heuristic on step transitions, not a liveness heartbeat; fit for
+  `context_housekeeping`.
 
 ## Path routing
 

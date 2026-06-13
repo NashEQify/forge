@@ -4,6 +4,18 @@
 ## Boot
 Load and follow: `agents/buddy/soul.md`, `agents/buddy/operational.md`, `agents/buddy/boot.md`.
 
+## Intent-driven
+forge's contract: a sharp intent in, a coherent result out. Every agent reasons
+**from the active `intent.md`** — the repo's goal is the load-bearing input to
+scope / build / defer / proportionality calls, so work serves the goal end-to-end
+rather than a locally-coherent-but-globally-wrong frame. The `intent.md` is the
+central enabler: keep it well-formed (created with the user at `boot.md` RESOLVE,
+formatted per `framework/intent-tree.md` — state the goal as **extractable facts**,
+not only argued) and actually consulted. Framing mechanics: `operational.md`
+§Architecture-Comprehension. Cold review seats receive the standing `intent_chain`
+anchor, not decision-curated intent (the author-separability line — a standing
+standardized anchor is not the proposer's per-decision framing; a curated slice is).
+
 ## Language Policy
 - Default language for all new work is English.
 - Write code comments, specs, ADRs, task content, and review artifacts in English.
