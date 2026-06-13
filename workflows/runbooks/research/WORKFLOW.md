@@ -121,6 +121,7 @@ python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --next                       #
 python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --complete <step> --evidence "<short>"
 #   classification step (mid-flow route): --complete <step> --route <key>
 #   skip-eligible step: --skip <step> --reason "<why>"   ·   re-run: --retry <step> --reason "<why>"
+#   >=2 workflows live? add --id <wf> (from --next `ID:`) — engine refuses keyless (exit 5)
 ```
 
 `on_fail` per step: `block` (fix + retry), `warn` (`--complete --force` + reason),

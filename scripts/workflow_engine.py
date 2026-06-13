@@ -26,7 +26,8 @@ Usage:
     python3 scripts/workflow_engine.py --find --task <id>
     python3 scripts/workflow_engine.py --guard <guard-name> [<task-id>]
 
-Exit Codes: 0=success, 1=validation-fail, 2=not-found, 3=schema-error, 4=corrupt-state
+Exit Codes: 0=success, 1=validation-fail, 2=not-found, 3=schema-error,
+            4=corrupt-state, 5=ambiguous (>=2 active workflows, no --id/--task)
 """
 
 from __future__ import annotations
@@ -38,7 +39,7 @@ import os
 import re
 import subprocess
 import sys
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -102,6 +103,7 @@ EXIT_VALIDATION_FAIL = 1
 EXIT_NOT_FOUND = 2
 EXIT_SCHEMA_ERROR = 3
 EXIT_CORRUPT_STATE = 4
+EXIT_AMBIGUOUS = 5  # >=2 active workflows match and no --id/--task narrows to one
 
 STATE_DIR = PROJECT_ROOT / ".workflow-state"
 ARCHIVE_DIR = STATE_DIR / "archive"
@@ -149,6 +151,38 @@ def _parse_utc(ts: str) -> datetime:
     raise ValueError(f"Cannot parse timestamp: {ts}")
 
 
+def _parse_utc_safe(ts: Any) -> datetime | None:
+    """Parse a UTC timestamp, returning None on missing/malformed (no raise)."""
+    if not isinstance(ts, str):
+        return None
+    try:
+        return _parse_utc(ts)
+    except ValueError:
+        return None
+
+
+def _last_activity(state: dict[str, Any]) -> datetime | None:
+    """Most recent timestamp across `started` + every step's started_at /
+    completed_at — the last recorded step *transition* (for --reap staleness).
+
+    NOT a liveness heartbeat: a step merely sitting `in_progress` refreshes
+    nothing, so a workflow parked on one long step ages like an abandoned one.
+    --reap therefore only ARCHIVES (reversible), never deletes.
+    """
+    stamps: list[datetime] = []
+    t = _parse_utc_safe(state.get("started"))
+    if t:
+        stamps.append(t)
+    for ss in state.get("steps", {}).values():
+        if not isinstance(ss, dict):
+            continue
+        for key in ("started_at", "completed_at"):
+            t = _parse_utc_safe(ss.get(key))
+            if t:
+                stamps.append(t)
+    return max(stamps) if stamps else None
+
+
 def _generate_workflow_id(workflow_name: str, task_id: int | None) -> str:
     ts = datetime.now(UTC).strftime("%Y%m%dT%H%M")
     parts = [workflow_name]
@@ -181,6 +215,21 @@ def load_state(workflow_id: str) -> dict[str, Any]:
     return data
 
 
+def _load_state_quiet(workflow_id: str) -> dict[str, Any] | None:
+    """Load a state file, returning None on missing/corrupt (never exits/raises).
+
+    Used by --reap to re-read a candidate fresh before archiving, without the
+    sys.exit semantics of load_state.
+    """
+    path = _state_path(workflow_id)
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
 @contextlib.contextmanager
 def _state_lock():
     """Acquire an exclusive flock on STATE_DIR/_lock for atomic state ops.
@@ -202,14 +251,29 @@ def _state_lock():
         os.close(fd)
 
 
-def save_state(state: dict[str, Any]) -> None:
+def save_state(state: dict[str, Any], is_new: bool = False) -> None:
     """Write state to disk atomically (tmp + os.replace) under flock.
 
     Atomicity prevents kill-9-mid-write corruption. Concurrent --next /
     --complete / --boot-context calls serialise via _state_lock.
+
+    Resurrection guard (TOCTOU): on an UPDATE (`is_new=False`), if this
+    workflow's active file has vanished but an archive entry exists, another
+    process archived it (abort / completion) between our load and this write.
+    Writing would resurrect a terminated workflow as a zombie active file — skip
+    + warn instead. `create_state` passes `is_new=True` (a fresh id has no
+    active file yet, so the guard must not fire). The check + write share the
+    same flock, so no further race window remains.
     """
     with _state_lock():
         path = _state_path(state["workflow_id"])
+        if not is_new and not path.exists() and (ARCHIVE_DIR / path.name).exists():
+            print(
+                f"WARNING: refusing to resurrect workflow {state['workflow_id']} "
+                f"— archived by another process mid-flight. State not written.",
+                file=sys.stderr,
+            )
+            return
         tmp_path = path.with_suffix(path.suffix + ".tmp")
         tmp_path.write_text(
             json.dumps(state, indent=2, ensure_ascii=False) + "\n",
@@ -248,12 +312,21 @@ def list_active_states() -> list[dict[str, Any]]:
 
 
 def archive_state(workflow_id: str) -> None:
-    """Move state file to archive atomically (os.replace, single-step)."""
+    """Move state file to archive atomically (os.replace, single-step).
+
+    Never clobbers an existing archive record of the same id (minute-granularity
+    id collision: an archived run + a later run sharing the id) — a second entry
+    is timestamp-suffixed so the prior archived record survives.
+    """
     with _state_lock():
         src = _state_path(workflow_id)
-        if src.exists():
-            dst = ARCHIVE_DIR / src.name
-            os.replace(str(src), str(dst))
+        if not src.exists():
+            return
+        dst = ARCHIVE_DIR / src.name
+        if dst.exists():
+            stamp = _utcnow().replace(":", "").replace("-", "")
+            dst = ARCHIVE_DIR / f"{src.stem}.{stamp}{src.suffix}"
+        os.replace(str(src), str(dst))
 
 
 # ---------------------------------------------------------------------------
@@ -1018,7 +1091,7 @@ def create_state(
         "force_count": 0,
     }
 
-    save_state(state)
+    save_state(state, is_new=True)
     return state
 
 
@@ -1680,6 +1753,44 @@ def _last_step_evidence(steps: dict[str, dict[str, Any]]) -> str:
     return best_ev
 
 
+def _active_siblings(
+    state: dict[str, Any], all_states: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Other workflows live in the same checkout (all active minus self)."""
+    wf_id = state.get("workflow_id", "")
+    pool = all_states if all_states is not None else list_active_states()
+    return [s for s in pool if s.get("workflow_id") != wf_id]
+
+
+def _scope_lines(state: dict[str, Any], siblings: list[dict[str, Any]]) -> list[str]:
+    """SCOPE (this instance's own files) + NOT-YOURS (sibling live workflows).
+
+    C1 of the task-awareness design: a dispatched agent is TOLD its files so it
+    never reconstructs "which files are mine" by browsing the shared
+    `docs/<workflow>/` + `.workflow-state/`, which is how the solve-593 agent
+    tripped over solve-594. Emitted only when a sibling is actually live.
+    """
+    wf_id = state.get("workflow_id", "")
+    task_id = state.get("task_id")
+    own: list[str] = []
+    sf = state.get("variables", {}).get("state_file")
+    if sf:
+        own.append(sf)
+    if task_id is not None:
+        own.append(f"docs/tasks/{task_id}.yaml")
+    own_str = ", ".join(own) if own else "(your state file only)"
+    locs = [
+        s.get("variables", {}).get("state_file")
+        or f"workflow {s.get('workflow_id')}"
+        for s in siblings
+    ]
+    return [
+        f"SCOPE: you are in workflow {wf_id} (task {task_id}). Your files: {own_str}.",
+        f"NOT-YOURS: {len(siblings)} other workflow(s) live in this checkout — do NOT "
+        f"read or act on their files: {'; '.join(locs)}.",
+    ]
+
+
 def fmt_next(state: dict[str, Any], workflow_def: dict[str, Any], brief: bool = False) -> str:
     """Format the --next output."""
     step_id = state.get("current_step")
@@ -1707,6 +1818,7 @@ def fmt_next(state: dict[str, Any], workflow_def: dict[str, Any], brief: bool = 
     category = step_def.get("category", "content")
     skill = step_def.get("skill_ref", "")
     comp = step_def.get("completion", {})
+    siblings = _active_siblings(state)
     if brief:
         task_str = f" [Task {task_id}]" if task_id else ""
         wf_id = state.get("workflow_id", "")
@@ -1724,6 +1836,10 @@ def fmt_next(state: dict[str, Any], workflow_def: dict[str, Any], brief: bool = 
 
         # F12: workflow_id for CLI usage
         parts.append(f"ID: {wf_id}")
+
+        # C1: warn when sibling workflows are live — pass --id to disambiguate
+        if siblings:
+            parts.append(f"NOT-YOURS: {len(siblings)} other workflow(s) live — pass --id")
 
         return " | ".join(parts)
 
@@ -1745,6 +1861,11 @@ def fmt_next(state: dict[str, Any], workflow_def: dict[str, Any], brief: bool = 
     # Completion expectation
     if isinstance(comp, dict):
         lines.append(f"COMPLETION: {_format_completion(comp, variables)}")
+
+    # C1: instance scope — own files + sibling NOT-YOURS, so a dispatched agent
+    # never reconstructs "which files are mine" by browsing shared dirs.
+    if siblings:
+        lines.extend(_scope_lines(state, siblings))
 
     lines.append(f"PROGRESS: {done}/{total} done | {total - done} remaining")
 
@@ -1972,13 +2093,115 @@ def fmt_boot_context(states: list[dict[str, Any]]) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Finding the right active workflow for --next
+# Instance resolution — refuse-on-ambiguity (no silent wrong-instance guess)
+# ---------------------------------------------------------------------------
+
+class AmbiguousWorkflowError(Exception):
+    """Raised when a command cannot resolve to a single workflow instance.
+
+    >=2 candidate workflows are active and the caller gave neither --id nor a
+    --task that narrows to one. The engine REFUSES rather than silently picking
+    first-match / most-recent-leaf — the silent wrong-instance bug
+    (solve-593 vs solve-594, both `solve`, sharing step ids in one checkout).
+    Carries the candidate list for a copy-paste `--id` hint.
+    """
+
+    def __init__(self, candidates: list[dict[str, Any]], context: str = ""):
+        self.candidates = candidates
+        self.context = context
+        super().__init__(
+            f"ambiguous workflow resolution: {len(candidates)} candidates"
+        )
+
+
+def _resolve_unique(
+    candidates: list[dict[str, Any]],
+    wf_id: str | None,
+    task_id: int | None,
+    context: str = "",
+) -> dict[str, Any] | None:
+    """Resolve a candidate workflow list to exactly one instance, or refuse.
+
+    Order: explicit `wf_id` wins; else `task_id` filters; else the N==1
+    fast-path (single active candidate = the common single-workflow session,
+    frictionless); else REFUSE (AmbiguousWorkflowError). Returns None only when
+    nothing matches (not-found), never a silent guess among >=2.
+    """
+    if wf_id:
+        for s in candidates:
+            if s.get("workflow_id") == wf_id:
+                return s
+        return None
+    if task_id is not None:
+        matches = [s for s in candidates if _task_matches(s.get("task_id"), task_id)]
+        if len(matches) == 1:
+            return matches[0]
+        if not matches:
+            return None
+        raise AmbiguousWorkflowError(matches, context)
+    if len(candidates) == 1:
+        return candidates[0]
+    if not candidates:
+        return None
+    raise AmbiguousWorkflowError(candidates, context)
+
+
+def _format_ambiguous(exc: AmbiguousWorkflowError) -> str:
+    """Copy-paste-ready candidate list for an ambiguous-resolution refusal."""
+    head = (
+        f"ambiguous: {len(exc.candidates)} active workflows"
+        + (f" contain step '{exc.context}'" if exc.context else " match")
+        + " and no --id/--task narrows to one. Re-run with one of:"
+    )
+    lines = [head]
+    for s in sorted(exc.candidates, key=lambda s: s.get("started", "")):
+        wf = s.get("workflow", "?")
+        tid = s.get("task_id")
+        tid_str = f", task {tid}" if tid is not None else ""
+        lines.append(f"  --id {s.get('workflow_id')}   ({wf}{tid_str})")
+    return "\n".join(lines)
+
+
+def _task_matches(state_task: Any, want: int) -> bool:
+    """True if a state's task_id equals `want`, tolerant of int/str storage."""
+    try:
+        return int(state_task) == want
+    except (TypeError, ValueError):
+        return False
+
+
+def _task_id_from_args(args: argparse.Namespace) -> int | None:
+    """Resolve --task to an int, or EXIT on a malformed value.
+
+    Distinguishes "no --task" (None -> no filter) from "--task given but
+    unparseable" (error + exit) so a typo'd narrowing never silently degrades to
+    the fast-path / refuse with the user believing they scoped.
+    """
+    if args.task is None:
+        return None
+    tid = resolve_task_id(args.task)
+    if tid is None:
+        print(f"ERROR: invalid --task value: {args.task!r}", file=sys.stderr)
+        sys.exit(EXIT_VALIDATION_FAIL)
+    return tid
+
+
+# ---------------------------------------------------------------------------
+# Finding the right active workflow for --next / --pause
 # ---------------------------------------------------------------------------
 
 def find_active_workflow_for_next(
     workflow_id: str | None,
+    task_id: int | None = None,
 ) -> dict[str, Any] | None:
-    """Find the right workflow state for --next. Prefers child workflows."""
+    """Find the right workflow state for --next / --pause. Prefers child workflows.
+
+    Refuses (AmbiguousWorkflowError) when neither `workflow_id` nor `task_id` is
+    given and >=2 independent (leaf) workflows are active, instead of the old
+    silent most-recent-leaf guess. A child workflow (its parent spawned it) is
+    the active leaf under nesting — that is resolution, not ambiguity. N==1
+    stays frictionless.
+    """
     states = list_active_states()
     if not states:
         return None
@@ -1989,17 +2212,13 @@ def find_active_workflow_for_next(
                 return s
         return None
 
-    # Find innermost child (no other workflow has this as parent)
+    # Reduce to leaves: workflows that are NOT the parent of any other active
+    # workflow. Nesting is unambiguous (the innermost child is the active one);
+    # ambiguity is >=2 independent leaves.
     parent_ids = {s.get("parent_workflow_id") for s in states if s.get("parent_workflow_id")}
-    # Workflows that are NOT parents of any other workflow
     leaves = [s for s in states if s.get("workflow_id") not in parent_ids]
-    if leaves:
-        # Prefer most recently started
-        leaves.sort(key=lambda s: s.get("started", ""), reverse=True)
-        return leaves[0]
-    # Fallback: most recent
-    states.sort(key=lambda s: s.get("started", ""), reverse=True)
-    return states[0]
+    pool = leaves if leaves else states
+    return _resolve_unique(pool, None, task_id)
 
 
 # ---------------------------------------------------------------------------
@@ -2032,6 +2251,8 @@ def main() -> None:
                         help="Output compact resume block for boot")
     group.add_argument("--find", action="store_true", help="Find workflow ID by task")
     group.add_argument("--guard", metavar="GUARD_NAME", help="Evaluate a named guard")
+    group.add_argument("--reap", action="store_true",
+                        help="Archive stale (long-idle) active workflows")
 
     # Shared options
     parser.add_argument("--task", type=str, default=None, help="Task ID")
@@ -2047,6 +2268,10 @@ def main() -> None:
     parser.add_argument("--format", type=str, default=None, dest="fmt", help="Output format")
     parser.add_argument("--available", action="store_true", help="Include available definitions")
     parser.add_argument("--before-commit", action="store_true", help="Check commit gates")
+    parser.add_argument("--max-age-hours", type=int, default=None, dest="max_age_hours",
+                        help="--reap staleness threshold in hours (default 168 = 7d)")
+    parser.add_argument("--dry-run", action="store_true", dest="dry_run",
+                        help="--reap: list what would be archived, change nothing")
     parser.add_argument(
         "--project-root",
         type=str,
@@ -2069,39 +2294,47 @@ def main() -> None:
         ARCHIVE_DIR = STATE_DIR / "archive"
         REPO_ROOT = PROJECT_ROOT  # keep back-compat alias in sync
 
-    # --start
-    if args.start:
-        cmd_start(args)
-    elif args.next:
-        cmd_next(args)
-    elif args.complete:
-        cmd_complete(args)
-    elif args.skip:
-        cmd_skip(args)
-    elif args.retry:
-        cmd_retry(args)
-    elif args.status:
-        cmd_status(args)
-    elif args.list_cmd:
-        cmd_list(args)
-    elif args.validate:
-        cmd_validate(args)
-    elif args.recover:
-        cmd_recover(args)
-    elif args.abort:
-        cmd_abort(args)
-    elif args.pause:
-        cmd_pause(args)
-    elif args.resume:
-        cmd_resume(args)
-    elif args.handoff_context:
-        cmd_handoff_context(args)
-    elif args.boot_context:
-        cmd_boot_context(args)
-    elif args.find:
-        cmd_find(args)
-    elif args.guard:
-        cmd_guard(args)
+    # Dispatch. Any resolver that cannot narrow to one workflow raises
+    # AmbiguousWorkflowError — caught here and rendered as a LOUD refusal with
+    # a copy-paste --id list + EXIT_AMBIGUOUS, never a silent wrong-instance guess.
+    try:
+        if args.start:
+            cmd_start(args)
+        elif args.next:
+            cmd_next(args)
+        elif args.complete:
+            cmd_complete(args)
+        elif args.skip:
+            cmd_skip(args)
+        elif args.retry:
+            cmd_retry(args)
+        elif args.status:
+            cmd_status(args)
+        elif args.list_cmd:
+            cmd_list(args)
+        elif args.validate:
+            cmd_validate(args)
+        elif args.recover:
+            cmd_recover(args)
+        elif args.abort:
+            cmd_abort(args)
+        elif args.pause:
+            cmd_pause(args)
+        elif args.resume:
+            cmd_resume(args)
+        elif args.handoff_context:
+            cmd_handoff_context(args)
+        elif args.boot_context:
+            cmd_boot_context(args)
+        elif args.find:
+            cmd_find(args)
+        elif args.guard:
+            cmd_guard(args)
+        elif args.reap:
+            cmd_reap(args)
+    except AmbiguousWorkflowError as exc:
+        print(f"ERROR: {_format_ambiguous(exc)}", file=sys.stderr)
+        sys.exit(EXIT_AMBIGUOUS)
 
 
 def cmd_start(args: argparse.Namespace) -> None:
@@ -2140,7 +2373,7 @@ def cmd_start(args: argparse.Namespace) -> None:
 
 
 def cmd_next(args: argparse.Namespace) -> None:
-    state = find_active_workflow_for_next(args.wf_id)
+    state = find_active_workflow_for_next(args.wf_id, _task_id_from_args(args))
     if not state:
         # Exit 0 with empty output = no active workflow (spec)
         sys.exit(EXIT_SUCCESS)
@@ -2176,7 +2409,7 @@ def cmd_complete(args: argparse.Namespace) -> None:
     wf_id = args.wf_id
 
     # Find the workflow that contains this step
-    state = _find_state_for_step(step_id, wf_id)
+    state = _find_state_for_step(step_id, wf_id, _task_id_from_args(args))
     if not state:
         print(f"ERROR: No active workflow contains step '{step_id}'", file=sys.stderr)
         sys.exit(EXIT_NOT_FOUND)
@@ -2230,7 +2463,7 @@ def cmd_retry(args: argparse.Namespace) -> None:
         print("ERROR: --retry requires --reason", file=sys.stderr)
         sys.exit(EXIT_VALIDATION_FAIL)
 
-    state = _find_state_for_step(step_id, args.wf_id)
+    state = _find_state_for_step(step_id, args.wf_id, _task_id_from_args(args))
     if not state:
         print(f"ERROR: No active workflow contains step '{step_id}'", file=sys.stderr)
         sys.exit(EXIT_NOT_FOUND)
@@ -2262,7 +2495,7 @@ def cmd_skip(args: argparse.Namespace) -> None:
         print("ERROR: --skip requires --reason", file=sys.stderr)
         sys.exit(EXIT_VALIDATION_FAIL)
 
-    state = _find_state_for_step(step_id, args.wf_id)
+    state = _find_state_for_step(step_id, args.wf_id, _task_id_from_args(args))
     if not state:
         print(f"ERROR: No active workflow contains step '{step_id}'", file=sys.stderr)
         sys.exit(EXIT_NOT_FOUND)
@@ -2345,10 +2578,17 @@ def cmd_validate(args: argparse.Namespace) -> None:
 
 def cmd_recover(args: argparse.Namespace) -> None:
     if args.wf_id:
-        state = load_state(args.wf_id)
-        states = [state]
+        states = [load_state(args.wf_id)]
+    elif args.task is not None:
+        # Scope to the named task — recover must NOT silently sweep + mutate
+        # every instance when the caller asked for one. Refuse if
+        # the task itself is ambiguous (same task id across >1 live workflow).
+        tid = _task_id_from_args(args)
+        states = [s for s in list_active_states() if _task_matches(s.get("task_id"), tid)]
+        if len(states) > 1:
+            raise AmbiguousWorkflowError(states)
     else:
-        states = list_active_states()
+        states = list_active_states()  # explicit sweep-all (maintenance use)
 
     if not states:
         print("No active workflows to recover.")
@@ -2374,6 +2614,80 @@ def cmd_recover(args: argparse.Namespace) -> None:
             print(f"  {r}")
     else:
         print("No steps recovered.")
+
+
+def cmd_reap(args: argparse.Namespace) -> None:
+    """Archive active workflows idle longer than the staleness threshold.
+
+    Stale = no `started` / step activity within --max-age-hours (default 168 =
+    7d). Paused workflows are never reaped. --dry-run lists candidates without
+    changing anything. Clears the abandonment litter that pollutes
+    list_active_states() + a dispatched agent's perception of "which workflows
+    are live" (the deferred reaper).
+    """
+    max_age_hours = args.max_age_hours if args.max_age_hours is not None else 168
+    if max_age_hours < 1:
+        print(
+            f"ERROR: --max-age-hours must be >= 1 (got {max_age_hours}); refusing "
+            f"to reap recently-active workflows.",
+            file=sys.stderr,
+        )
+        sys.exit(EXIT_VALIDATION_FAIL)
+    now = datetime.now(UTC)
+    cutoff = now - timedelta(hours=max_age_hours)
+
+    # Scan: ids whose last recorded activity is older than the cutoff. Skip
+    # paused + malformed (no workflow_id) states.
+    candidate_ids: list[str] = []
+    for state in list_active_states():
+        if not isinstance(state, dict) or state.get("paused"):
+            continue
+        wid = state.get("workflow_id")
+        last = _last_activity(state)
+        if wid and last is not None and last < cutoff:
+            candidate_ids.append(wid)
+
+    if not candidate_ids:
+        print(f"No stale workflows (idle > {max_age_hours}h).")
+        return
+
+    reaped = 0
+    for wid in candidate_ids:
+        # Re-read fresh + re-verify immediately before acting. The scan snapshot
+        # may be stale (another session advanced the workflow); writing it back
+        # would overwrite live content with dead state. If it
+        # advanced past the cutoff since the scan, leave it.
+        fresh = _load_state_quiet(wid)
+        if fresh is None:
+            continue  # archived / removed concurrently
+        last = _last_activity(fresh)
+        if last is None or last >= cutoff:
+            continue
+        idle_h = (now - last).total_seconds() / 3600
+        if args.dry_run:
+            print(f"WOULD REAP: {wid} (idle {idle_h:.0f}h, last {last.isoformat()})")
+            reaped += 1
+            continue
+        try:
+            # Normalize dangling in_progress steps (parity with --abort closeout).
+            for ss in fresh.get("steps", {}).values():
+                if isinstance(ss, dict) and ss.get("status") == STATUS_IN_PROGRESS:
+                    ss["status"] = STATUS_SKIPPED
+                    ss["skipped_reason"] = "reaped: stale"
+                    ss["completed_at"] = _utcnow()
+            fresh["aborted"] = _utcnow()
+            fresh["abort_reason"] = f"reaped: stale, idle {idle_h:.0f}h (> {max_age_hours}h)"
+            save_state(fresh)
+            archive_state(wid)
+            print(f"REAPED: {wid} (idle {idle_h:.0f}h, last {last.isoformat()})")
+            reaped += 1
+        except Exception as exc:  # noqa: BLE001 — one bad state must not abort the sweep
+            print(f"WARNING: could not reap {wid}: {exc}", file=sys.stderr)
+
+    if args.dry_run:
+        print(f"\n{reaped} stale — re-run without --dry-run to archive.")
+    else:
+        print(f"\nReaped {reaped} stale workflow(s).")
 
 
 def cmd_abort(args: argparse.Namespace) -> None:
@@ -2441,7 +2755,7 @@ def cmd_abort(args: argparse.Namespace) -> None:
 
 def cmd_pause(args: argparse.Namespace) -> None:
     """Pause the active workflow (F4)."""
-    state = find_active_workflow_for_next(args.wf_id)
+    state = find_active_workflow_for_next(args.wf_id, _task_id_from_args(args))
     if not state:
         print("ERROR: No active workflow to pause.", file=sys.stderr)
         sys.exit(EXIT_NOT_FOUND)
@@ -2574,18 +2888,26 @@ def cmd_guard(args: argparse.Namespace) -> None:
         sys.exit(EXIT_VALIDATION_FAIL)
 
 
-def _find_state_for_step(step_id: str, wf_id: str | None = None) -> dict[str, Any] | None:
-    """Find active state containing the given step."""
+def _find_state_for_step(
+    step_id: str, wf_id: str | None = None, task_id: int | None = None,
+) -> dict[str, Any] | None:
+    """Find the active state containing the given step, resolving to exactly one.
+
+    Refuses (AmbiguousWorkflowError) when neither `wf_id` nor `task_id` resolves
+    and >=2 active workflows contain the step — the silent first-match bug
+    (--complete/--skip/--retry <step> hitting the wrong instance). N==1 stays
+    frictionless.
+    """
     if wf_id:
         state = load_state(wf_id)
         if step_id in state.get("steps", {}):
             return state
         return None
 
-    for state in list_active_states():
-        if step_id in state.get("steps", {}):
-            return state
-    return None
+    candidates = [
+        s for s in list_active_states() if step_id in s.get("steps", {})
+    ]
+    return _resolve_unique(candidates, None, task_id, context=step_id)
 
 
 if __name__ == "__main__":

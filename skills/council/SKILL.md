@@ -88,6 +88,15 @@ Members see FINAL briefing only. Council-chief reads BOTH at CHIEF-1.0.
 
 **MUST NOT:** Buddy's proposal · pre-classified conflicts · severity tags · lean hints. Brief-contagion empirically demonstrated.
 
+> **`intent_chain anchoring` is REQUIRED and load-bearing — not droppable.** Its
+> one-line `vision` (from the active `intent.md`, `framework/intent-tree.md`) is the
+> **standing** intent grounding a cold member receives: a standardized alignment
+> derivation, NOT decision-curated content. It is the sanctioned exception to the
+> "cold-analysis gets nothing" anti-anchoring rule — the author-separability line: a standing
+> anchor is not the proposer's per-decision framing, a Buddy-selected fact/premise/hint
+> is (those stay in MUST-NOT). A briefing missing its `intent_chain` block is
+> **incomplete**, not merely terse.
+
 ## 4. Buddy checklist (dispatch)
 
 1. §1.0 gate → mode pick.

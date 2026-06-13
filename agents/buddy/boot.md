@@ -14,7 +14,10 @@ Input: working directory. Output: active intent + mode.
    Stop at `/`.
 4. Nothing found → "No intent. New project? Should I create an
    intent.md?"
-   Format: `framework/intent-tree.md`, section "intent.md format".
+   Format: `framework/intent-tree.md`, section "intent.md format". The
+   intent.md is the load-bearing input for all later intent-driven work
+   (CLAUDE.md §Intent-driven) — state the goal as **extractable facts**, not
+   only argued, so agents can reason from it.
 
 The intent.md you find is the active intent. Everything else derives
 from it. `CLAUDE.md` always applies (via --add-dir, mechanically
