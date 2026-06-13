@@ -103,6 +103,19 @@ Code-review personas (`code-review`, `code-adversary`,
 `code-security`, etc.) are forced by this chief enforcement to
 deliver the required sections.
 
+## Un-grounded-claim ledger (de-confidence lead)
+
+The consolidated output MUST **lead** with an un-grounded-claim ledger
+(before the CHIEF-1 findings list): the verdict's load-bearing code/spec
+claims that are NOT independently re-executed by a lens other than the
+asserter (a pointer the asserter attached does NOT count). Same rationale
+and shape as `agents/council-chief.md` §Un-grounded-claim ledger — it
+makes the apparatus emit a *de-confidence* signal instead of a
+thoroughness display, and Buddy's verdict-adoption C-VERIFY
+(`agents/buddy/operational.md` §Architecture-Comprehension B, "B-claims")
+consumes it directly. An empty ledger is itself a positive, auditable
+claim — every load-bearing claim was independently re-executed.
+
 ## Anti-rationalization
 
 - You say "overall clean code" — that's filler, not
@@ -128,6 +141,8 @@ Input: individual review files of every agent.
    stronger evidence wins.
 
 Output:
+- Un-grounded-claim ledger (lead): load-bearing code/spec claims
+  not independently re-executed (see §Un-grounded-claim ledger).
 - Findings as `C-{NNN}` with `source` (original IDs),
   severity, evidence, description, fix.
 - Noise section: `F-{XX}-{NNN}: {rationale why removed}`.

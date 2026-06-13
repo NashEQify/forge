@@ -92,6 +92,19 @@ rule (≥1 finding references INTENT, PLAN, SIMULATE, or
 IMPACT). Missing → rejected via F-C-TRACE-MISSING finding.
 Analogous to drill enforcement.
 
+## Un-grounded-claim ledger (de-confidence lead)
+
+The consolidation MUST **lead** with an un-grounded-claim ledger: the
+verdict's load-bearing spec/code claims that are NOT independently
+re-executed by a lens other than the asserter (a pointer the asserter
+attached does NOT count). Same rationale and shape as
+`agents/council-chief.md` §Un-grounded-claim ledger — it makes the
+apparatus emit a *de-confidence* signal instead of a thoroughness
+display, and Buddy's verdict-adoption C-VERIFY
+(`agents/buddy/operational.md` §Architecture-Comprehension B, "B-claims")
+consumes it directly. An empty ledger is itself a positive, auditable
+claim — every load-bearing claim was independently re-executed.
+
 ## Anti-rationalization
 
 - You say "the spec is complete" — did you simulate E2E
@@ -308,7 +321,8 @@ didn't have — user constraints, time pressure, downstream
 dependencies — points elsewhere. The deviation is documented
 inline in the workflow state file.
 
-Output structure: deduplicated findings + theme-clusters +
+Output structure: un-grounded-claim ledger (lead) +
+deduplicated findings + theme-clusters +
 severity ranking + convergence prediction + recommended verdict
 label + convergence summary.
 
