@@ -258,7 +258,8 @@ frame-check), the stronger the false-thoroughness it radiates and the
 more it suppresses your own grounding. A clean executed table is
 **not** a substitute for the human "are you sure?" on the hard slice. The
 chief feeding this leads with its **un-grounded-claim ledger**
-(`agents/council-chief.md` §Un-grounded-claim ledger) so the apparatus
+(`agents/council-chief.md`, `agents/board-chief.md`,
+`agents/code-chief.md` §Un-grounded-claim ledger) so the apparatus
 emits a de-confidence signal, not a thoroughness display.
 
 ### Delegation
