@@ -364,6 +364,29 @@ load-bearing check.
 Any `FALSIFIED` row → brief is INCOMPLETE, return to author for AC
 re-scope before MCA dispatch.
 
+### Bind to the resolved seam, not a proxy (verification depth)
+
+A Claim-Verifications row — or any VERIFY / CONFIRM gate that names a seam an
+artifact MUST hit — has to resolve to the *runtime binding the claim rests on*,
+never a name-match or a runtime symptom that a wrong target also satisfies. Two
+recurring proxy-traps; both are the same root (the gate certified a **proxy** of
+the obligation, not the obligation at its **real seam**):
+
+- **Existing-impl / DTO-reuse claims → verify at the construction site.** When a
+  `reuses existing` row asserts a wire / transport / envelope surface reuses an
+  internal or sibling DTO, the grep MUST reach the first-party client / SDK that
+  *constructs* the typed envelope — not merely confirm the field or type exists.
+  Nominal typing (e.g. Pydantic) rejects a structurally-identical sibling
+  instance at construction: field-presence reads GREEN while the constructor is
+  RED. A `reuses existing` row whose grep stops at field-presence is SILENT on
+  the claim, not CONFIRMED.
+- **Test-seam obligations → verify the resolved callee identity.** When a gate
+  mandates a test be (re-)pointed at a named production seam and asserts
+  execution / `0 skipped`, pair that with a callee-identity check: grep the
+  test's *resolved* target and assert it `==` the production caller, not a
+  same-named orphan / twin. `0 skipped` reads GREEN while the test binds dead
+  code that carries the same symbol the skip-guard probes.
+
 ---
 
 ## Reviewer Checkpoints — 4-link Evidence Chain DoD (MANDATORY for L2)

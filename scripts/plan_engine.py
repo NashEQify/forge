@@ -552,6 +552,9 @@ _FEATURE_MILESTONE_KNOWN_FIELDS = {
     # entries so view-buckets like council-mod can opt out of the feature-milestones
     # pseudo-phase and cluster under a normal phase (e.g. post-mvp-backlog).
     "phases",
+    # Plan-topology re-scope (INTENT-010): the 4 capability pillars as a
+    # cross-cutting tag on milestone entries + the launch scope-freeze gate-doc.
+    "pillars", "scope_freeze",
 }
 
 
