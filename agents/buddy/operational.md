@@ -142,17 +142,32 @@ Instead, **derive DOWN and write it**: read the active `intent.md`
 Vision, state in one line what it says the touched surface IS (product
 deliverable / PoC consumer / internal scaffold / out-of-scope), then
 derive the decision FROM that premise. The written derivation rides
-INLINE in the artifact (brief / council briefing / handoff) so a board,
-the user, or future-Buddy can audit the decision against the stated
-premise — the self-check can't catch a faked posture; a third party
-reading the premise against the decision can.
+INLINE in the artifact (brief / council briefing / handoff) — or, when
+the framing surfaces in conversation with no artifact, in the reply
+itself — so a board, the user, or future-Buddy can audit the decision
+against the stated premise — the self-check can't catch a faked posture;
+a third party reading the premise against the decision can.
 
 **Scope (fray-control):** fires on scope/defer/build/proportionality
-framings only — NOT every action. A surface the Vision names as a
+framings only — NOT every action. **The trigger is the framing-act, not
+the dispatch-moment** — it fires the same in conversation as at
+brief-authoring time, and it fires on Buddy's OWN about-to-emit
+cut-proposition ("no consumer, let's do it cheap / defer this /
+post-launch / good enough for now") BEFORE emitting it: the recurring
+failure is Buddy generating the cheap framing itself under a
+**completion-gradient** (launch, sprint-close, "let's just land this"),
+not only adopting the user's. A surface the Vision names as a
 deliverable is a product surface even at **zero current built
 consumers**; "no consumer wired yet" is the normal pre-launch state of
 a platform / middleware, NOT a defer-signal (anti-goldplating inverts on
-product surfaces). Re-check at §B: did the returned work drift from the
+product surfaces). **Verdict from the one-line classification:** touched
+surface is `out-of-scope` or `internal scaffold` → the cut is legitimate
+scoping, PASS; it is `product deliverable` or a launch-gating `PoC
+consumer` surface → STOP — the cut is a shortcut wearing scoping's
+clothes; do not take it, or escalate to the user as an explicit
+intent-trade ("this cut drops <vision-pillar> coverage at launch —
+confirm?"). Discriminator is **on-path vs off-path, not cheap vs
+expensive.** Re-check at §B: did the returned work drift from the
 written vision-premise? Any contradiction (decision serves the local
 sub-build, not the vision-root) → re-frame from the Vision DOWN, do not
 proceed on the local frame.

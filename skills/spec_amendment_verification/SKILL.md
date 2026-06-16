@@ -53,7 +53,10 @@ Buddy passes:
 
 ## Agent
 
-Agent type: `reviewer` (read-only).
+Agent type: `spec-verification` (read-only — spec-side mirror of
+`code-verification`). Defined in `agents/spec-verification.md`,
+dispatched standalone with `disallowedTools`; assembled with
+`_protocols/reviewer-base.md` if run as a board seat.
 
 ## Process
 
