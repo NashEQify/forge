@@ -31,19 +31,35 @@ reviewer outputs directly — chief overhead unjustified.
 
 ## Chief role-constraint (consolidation-only)
 
-Chief operates ON reviewer outputs, NOT on code. CAN warm-start with
-prior-cycle context because reviewer outputs are cold-start (per
-`skills/code_review_board/SKILL.md` §4a) = independent evidence.
+Chief operates ON reviewer outputs, NOT on the diff under review. CAN
+warm-start with prior-cycle context because reviewer outputs are
+cold-start (per `skills/code_review_board/SKILL.md` §4a) = independent
+evidence.
+
+**"NOT on the diff under review" — precise boundary (the sanctioned
+carve-out).** The bar is cold-start re-derivation: the chief MAY NOT
+read the code under review to re-derive, re-confirm, or re-judge a finding
+— that is the reviewers' job, and the chief doing it collapses reviewer
+diversity and delegates substance. It is NOT a blanket bar on opening
+any file. Reading **non-diff consuming-engine code** (workflow_engine.py,
+hook scripts, validators) **solely to confirm a cited mechanism EXISTS**
+is permitted — see §Verify-mechanism-exists discipline. That act grounds
+a load-bearing existence-claim before consolidation (the same
+de-confidence discipline as §Un-grounded-claim ledger); it never reads
+the diff under review, never re-derives a finding, and never re-judges a
+finding's correctness or a reviewer's evidence quality.
 
 **MAY:** cluster findings; aggregate severity per cluster
 (CHIEF-1.5); route per disposition; predict convergence; surface
 contradictions BETWEEN reviewer outputs; surface live-state-vs-claim
-contradictions (CHIEF-1.2).
+contradictions (CHIEF-1.2); read non-diff consuming-engine code for
+mechanism-EXISTENCE verification only (§Verify-mechanism-exists).
 
 **MAY NOT:** verify-or-reject reviewer findings (requires cold-start
-re-derivation); prioritize by upstream-framing relevance; add new
-findings not in any reviewer output; re-evaluate reviewer evidence
-quality on its own.
+re-derivation); read the diff under review to re-derive or re-judge a
+finding; prioritize by upstream-framing relevance; add new findings not
+in any reviewer output; re-evaluate reviewer evidence quality on its
+own.
 
 Chief sees a gap not in any reviewer output → escalate to Buddy
 (dispatch extra cold-start reviewer or re-adversary), NEVER
@@ -65,19 +81,19 @@ violates soul.md §Never delegate substantive understanding.
 
 ## Verify-mechanism-exists discipline (NEW)
 
+This is the sanctioned carve-out to §Chief role-constraint's "NOT on
+the diff under review": existence-checking of a cited mechanism in
+**non-diff** infrastructure code — never finding re-derivation,
+re-judgement, or reading the diff under review.
+
 When a finding (raw or consolidated) cites mechanical behaviour
 in the consuming engine — workflow_engine route inheritance,
 state propagation, hook-layer scoping, validator pass/fail
 semantics — the chief MUST verify the cited mechanism exists by
 reading the consuming-engine code (workflow_engine.py, hook
-scripts, validator scripts), not by trusting SoT prose alone.
-
-**SoT files are necessary but not sufficient — the consuming
-engine is ground truth.** When findings cite mechanical behaviour
-(workflow_engine route handling, state propagation, hook-layer
-scoping, validator semantics), chief MUST verify against the
-consuming-engine code before consolidation, not against SoT prose
-alone.
+scripts, validator scripts), not by trusting SoT prose alone. SoT
+files are necessary but not sufficient — the consuming engine is
+ground truth.
 
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/code-reviewer-protocol.md`,
@@ -152,21 +168,25 @@ Input: individual review files of every agent.
      realistic** (concurrency race, nil on an error path, cold
      cache, falsy-zero, off-by-one on a non-excluded boundary).
    - **REFUTED** — remove, with rationale. Permitted ONLY on an
-     EXISTING reviewer surface, NEVER the chief's own re-reading
-     (the forbidden cold-start re-derivation per §Chief
-     role-constraint — escalate instead). Permitting surfaces:
-     another reviewer's contradicting `file:line` quote that
-     step 4 (conflict resolution) resolves against this finding;
-     a guard a reviewer cited in this diff; a live-state
-     contradiction. A pure-style finding with no observable
-     effect is NOT refuted (it is not false) — keep it; the
-     SKILL §5 disposition routes it to `accept`.
+     EXISTING reviewer surface, NEVER the chief's own re-reading.
+     Permitting surfaces: another reviewer's contradicting
+     `file:line` quote that conflict resolution resolves against
+     this finding; a guard a reviewer cited in this diff; a
+     live-state contradiction. A pure-style finding with no
+     observable effect is NOT refuted (it is not false) — keep it.
 4. **Conflict resolution:** agents contradict each other → the
    finding whose cited evidence the contradicting reviewer's
    surface does not overturn wins. The contradiction is decided
    on the reviewer surfaces, NOT the chief's own evidence-quality
    re-judgement; a conflict the surfaces cannot settle → escalate
    per §Chief role-constraint, do not self-adjudicate.
+
+> **REFUTED cross-refs (step-3):** "the chief's own re-reading" is the
+> forbidden cold-start re-derivation per §Chief role-constraint —
+> escalate instead. The contradicting-reviewer surface is the one
+> step 4 (above) resolves against the finding. A *kept* pure-style
+> finding routes to `accept` per `skills/code_review_board/SKILL.md`
+> §5 disposition.
 
 Output:
 - Un-grounded-claim ledger (lead): load-bearing code/spec claims
@@ -279,7 +299,10 @@ self-originates or self-judges.
 - **CHALLENGE:** a finding a reviewer challenged in discourse is
   confirmed / downgraded / removed per that reviewer's
   counter-evidence (with rationale) — never the chief's own
-  re-judgement.
+  re-judgement. The **removed** outcome IS a REFUTED disposition:
+  cite the challenger's counter-evidence surface and route it to the
+  "Noise filter — removals" section (CHIEF-1 step-3 REFUTED), never a
+  silent drop.
 - **CONNECT:** related findings as a group, identify the root
   cause.
 - **SURFACE:** carry a new finding a reviewer raised via a
@@ -293,8 +316,10 @@ with rationale.
 ## Output enforcement
 
 - A consolidated finding WITHOUT evidence from a source agent
-  fails the code-quote mandate → reject + re-dispatch (distinct
-  from REFUTED, which needs a refuting reviewer surface).
+  fails the code-quote mandate → reject + re-dispatch (max 1
+  re-dispatch, then ESCALATE — mirrors the drill-enforcement bound
+  in §Verify-mechanism-exists; distinct from REFUTED, which needs a
+  refuting reviewer surface).
 - A REMOVED / REFUTED finding WITHOUT rationale = opaque →
   document.
 - A FAIL verdict WITHOUT a concrete blocker list = useless.
