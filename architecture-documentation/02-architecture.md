@@ -378,7 +378,7 @@ When in doubt: L2.
 `code-reliability`, `code-domain-logic`, `code-api-contract`, `code-ai-llm`,
 `code-spec-fit`, `code-spec-drift`, `code-docs-consumer`.
 
-**Chief:** `code-chief` (consolidation, dedup, severity ranking, noise filtering).
+**Chief:** `code-chief` (consolidation, dedup, severity ranking, recall-biased keep/refute triage).
 
 Multi-axis hybrid: code-quality + code-architecture + code-performance
 absorbed into the **`code-review` multi-axis persona** (3 → 1, council decision).

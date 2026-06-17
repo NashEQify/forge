@@ -294,6 +294,33 @@ This is the most important Buddy discipline. If Buddy reads along on the board,
 his interpretation colours the findings, and the multi-perspective guarantee
 is lost.
 
+### Seven review-quality dimensions
+
+forge's review apparatus is shaped by seven quality dimensions that together
+describe what makes a review trustworthy. The first five hold across every
+review surface — code, specs, and architecture decisions (the Council); the
+last two are specific to code-diff review:
+
+1. **Proportionality** — review effort scales to change risk. A trivial change
+   does not pay for a full board; a risky one cannot escape it (the
+   Code-Review-Board L1/L2 split, the §1.0 proportionality gate).
+2. **Anti-anchoring** — reviewers judge independently: they do not see each
+   other's findings, prior verdicts, or the author's rationale before reviewing
+   (`_protocols/context-isolation.md`).
+3. **Evidence** — every finding points at a concrete, re-checkable locator
+   (`file:line` + quote); a claim without evidence is rejected.
+4. **Orchestrator verification** — the decision-maker re-executes the pivotal
+   claims a verdict rests on rather than trusting the consolidation.
+5. **Multi-surface** — the same discipline covers code, specs, architecture,
+   plans, and UX, not just code diffs.
+6. **Finder-angles** — explicit bug-discovery techniques (how to find defects),
+   complementary to the quality axes (what to check).
+7. **Finding-triage** — before disposition each candidate is kept or refuted
+   with a recall-bias, so real-but-uncertain bugs are not dropped. The
+   apparatus is designed so a finding is refuted (removed) only when another
+   reviewer's evidence contradicts it — a second opinion, not the
+   consolidator's own re-judgement.
+
 ## 9. Workflow Phases (Producer Class)
 
 5 phases for build / fix / review / solve:

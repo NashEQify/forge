@@ -176,6 +176,27 @@ drill at least 1 axis finding references a drill element.
 - **Consistency:** does the code fit the codebase's existing
   patterns?
 
+#### Finder-angles (correctness discovery scan)
+
+How to FIND correctness defects, not just what to check —
+complementary to the four checks above. Run all five on the diff:
+- **A — line-by-line:** read every hunk, then the enclosing
+  function — a bug in an UNCHANGED line of a touched function is
+  in scope (the change re-exposes it or fails to fix it). Per
+  line: what input, state, timing, or platform makes it wrong?
+- **B — removed behavior:** what did the change delete or stop
+  doing? Intended, or a silent regression a test no longer
+  guards?
+- **C — cross-file trace:** who calls the changed symbol? Do all
+  call sites still hold under the new signature / semantics /
+  return shape?
+- **D — language pitfalls:** falsy-zero treated as missing,
+  missing `await`, unescaped regex metachars, wrong-variable
+  copy-paste, error swallowed in `except`.
+- **E — wrapper / proxy correctness:** does a wrapper preserve
+  the contract of what it wraps — error propagation, return
+  shape, ordering?
+
 ### Axis 2: architecture
 - **Dependency direction:** check imports. Honour the allowed
   direction.
