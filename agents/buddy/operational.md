@@ -356,6 +356,17 @@ Before `str_replace` on a spec/code: **re-read if the last read is more
 than 5 turns old.** Before asserting consistency across 2+ artifacts:
 **read both, mandatory.** Summaries are heuristic, not ground truth.
 
+**Editing a SHARED artifact** (a `_protocols/` file, an interface
+contract, any SoT consumed by N consumers): the consistency check is the
+**inventory-flip over the consumer-set** — enumerate every consumer and
+verify the edit (a cross-ref, a named mechanism, a vocabulary term)
+resolves for EACH, not just the one live in your working context. Naming
+one consumer's private vocabulary in the shared file is a referential-
+integrity break for the others — the structural-corpus-coherence failure
+soul.md §Methodology warns of (edits are content commitments), here as
+the closed-set lens of CLAUDE.md Inv 5 (inventory-flip) applied to an
+EDIT, not a retirement.
+
 A gate or threshold you set yourself is heuristic too. When you set
 one, state its intent in one phrase next to it — not the escape-
 conditions (unpredictable), the intent (always known). A bare
