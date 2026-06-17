@@ -32,17 +32,34 @@ reviewer outputs directly — chief overhead unjustified.
 
 ## Chief role-constraint (consolidation-only)
 
-Chief operates ON reviewer outputs, NOT on spec or code. CAN
-warm-start with prior-cycle context because reviewer outputs are
-cold-start = independent evidence.
+Chief operates ON reviewer outputs, NOT on the spec or code under
+review. CAN warm-start with prior-cycle context because reviewer
+outputs are cold-start = independent evidence.
+
+**"NOT on the spec or code under review" — precise boundary (the
+sanctioned carve-out).** The bar is cold-start re-derivation: the chief
+MAY NOT read the spec (or code) under review to re-derive, re-confirm,
+or re-judge a finding — that is the reviewers' job, and the chief doing
+it collapses reviewer diversity and delegates substance. It is NOT a
+blanket bar on opening any file. Reading **non-under-review
+consuming-engine code** (workflow_engine.py, hook scripts, validators)
+**solely to confirm a cited mechanism EXISTS** is permitted — see
+§Verify-mechanism-exists discipline. That act grounds a load-bearing
+existence-claim before consolidation (the same de-confidence discipline
+as §Un-grounded-claim ledger); it never reads the spec/code under
+review, never re-derives a finding, and never re-judges a finding's
+correctness or a reviewer's evidence quality.
 
 **MAY:** cluster findings by section / pattern / dimension; aggregate
 severity per cluster (CHIEF-1.5); route per disposition; predict
 convergence; surface contradictions BETWEEN reviewer outputs;
-surface live-state-vs-spec-claim contradictions (CHIEF-1.2).
+surface live-state-vs-spec-claim contradictions (CHIEF-1.2); read
+non-under-review consuming-engine code for mechanism-EXISTENCE
+verification only (§Verify-mechanism-exists).
 
 **MAY NOT:** verify-or-reject reviewer findings (requires cold-start
-re-derivation against spec); prioritize by upstream-framing
+re-derivation against spec); read the spec or code under review to
+re-derive or re-judge a finding; prioritize by upstream-framing
 relevance; add new findings not in any reviewer output; re-evaluate
 reviewer evidence quality on its own.
 
@@ -58,17 +75,18 @@ violates soul.md §Never delegate substantive understanding.
 
 ## Verify-mechanism-exists discipline (NEW)
 
+This is the sanctioned carve-out to §Chief role-constraint's "NOT on
+the spec or code under review": existence-checking of a cited mechanism
+in **non-under-review** infrastructure code — never finding
+re-derivation, re-judgement, or reading the spec/code under review.
+
 When a finding (raw or consolidated) cites mechanical behaviour
 in the consuming engine — workflow_engine route inheritance,
 state propagation, hook-layer scoping, validator pass/fail
 semantics — the chief MUST verify the cited mechanism exists by
-reading the consuming-engine code, not by trusting the SoT prose
-alone.
-
-SoT files are necessary but not sufficient — the consuming
-engine is ground truth. When revisions name mechanical behaviour,
-chief MUST require verification against the consuming-engine code
-(workflow_engine, hook scripts, validators) before consolidation.
+reading the consuming-engine code (workflow_engine, hook scripts,
+validators), not by trusting SoT prose alone. SoT files are
+necessary but not sufficient — the consuming engine is ground truth.
 
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/spec-reviewer-protocol.md`,
@@ -284,20 +302,19 @@ When reviewing artifacts of a type listed in
 
 Process the discourse output of every agent:
 
-- **CHALLENGE:** finding confirmed or downgraded / removed
-  (with rationale).
+- **CHALLENGE:** finding confirmed / downgraded / removed per that
+  reviewer's counter-evidence (with rationale) — never the chief's own
+  re-judgement or the original author's silence. A finding **removed on
+  this basis** (not a -1 candidate left in place) is a REFUTED
+  disposition: cite the challenger's counter-evidence surface and route
+  it to §Noise filtering as a documented REMOVED finding, never a silent
+  drop.
 - **CONNECT:** related findings merged or marked as a group.
 - **SURFACE:** new findings classified and added.
 
-Confidence adjustment:
-
-| Outcome | Change |
-|---------|--------|
-| Multiple AGREE | +1 (very high) |
-| CHALLENGED + defended | +1 |
-| CHALLENGED, not defended | -1 (consider removal) |
-| CONNECTED | +1, root-cause group |
-| SURFACED | standard confidence |
+Confidence adjustment per the shared `_protocols/discourse.md` §5
+table + Rules (removal/downgrade rests on a reviewer surface, never on
+absence) — board-chief consumes that SoT, it does not duplicate it.
 
 ## Recommended-verdict mode (NOT final-arbiter)
 

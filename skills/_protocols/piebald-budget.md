@@ -16,6 +16,17 @@ the board review to every review target whose type has a budget.
 > earlier 120-line cap was a piebald optimization for an older
 > attention-budget that no longer constrains us at this scale.
 
+> **Policy update (chief / consolidator personas).** Chief-persona
+> budget raised ≤150 → **≤400 lines** — the same dated-attention
+> re-calibration as the SKILL.md loosening above. Modern LLMs hold a
+> 400-line persona trivially, and consolidator logic (dedup + severity
+> aggregation + discourse synthesis + de-confidence ledger + the
+> role-constraint carve-out) is irreducibly rich — all four chief
+> personas exceeded ≤150 in practice. Genuine fat (duplicated tables,
+> restated paragraphs) is trimmed, not budgeted around; the gate still
+> catches runaway doubling and no longer forces splitting consolidation
+> logic that "cannot be split".
+
 ## The problem this protocol still solves
 
 Token bloat through accreting prose. Skills + workflows + personas
@@ -37,7 +48,7 @@ Skill *count* inflation is the higher-leverage concern now, not
 | Workflow runbook | ≤200 lines | `workflows/runbooks/*/WORKFLOW.md` |
 | ~~Runbook REFERENCE.md~~ | **deprecated, fold back to WORKFLOW.md** | `workflows/runbooks/*/REFERENCE.md` |
 | Agent persona (standard) | ≤100 lines | `agents/*.md` |
-| Agent persona (chief / moderator / consolidator) | ≤150 lines | `agents/board-chief.md`, `agents/code-chief.md`, `agents/council-chief.md`, `agents/solution-expert.md` |
+| Agent persona (chief / moderator / consolidator) | ≤400 lines | `agents/board-chief.md`, `agents/code-chief.md`, `agents/council-chief.md`, `agents/solution-expert.md` |
 | Skill protocol | ≤150 lines | `skills/_protocols/*.md` |
 | Agent protocol | ≤80 lines | `agents/_protocols/*.md` |
 | Assembled prompt (protocol + persona + dispatch) | ≤500 lines | runtime check on dispatch |
@@ -95,8 +106,9 @@ On board review of an artifact whose type appears in the table:
    - **Fix:** split or trim the artifact below budget.
    - **Exception:** explicitly documented in the artifact
      ("Piebald exception: <reason>") with review-board approval.
-     Only for special cases like `board-chief.md` where the
-     consolidation logic cannot be split.
+     Only for genuine special cases where the logic cannot be split
+     AND the type budget is already realistic (post the chief
+     re-calibration, no current persona needs one).
 
 ## Pre-write self-check (for the author)
 

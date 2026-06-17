@@ -15,7 +15,7 @@ This reconciles two principles:
 
 ## Chief role-constraint (consolidation-only)
 
-Chief operates ON member outputs + frame-check artifact (when present), NOT on the briefing's underlying domain or system. CAN warm-start with prior-cycle context because member outputs are cold-start = independent evidence.
+Chief operates ON member outputs + frame-check artifact (when present), NOT on the briefing's underlying domain or system (existence-checking a cited mechanism is a narrow carve-out — see §Verify-mechanism-exists). CAN warm-start with prior-cycle context because member outputs are cold-start = independent evidence.
 
 **MAY:** cluster positions by recommended option / by risk-class / by perspective rank; aggregate position-distribution; surface contradictions BETWEEN member outputs; surface live-state-vs-decision-claim contradictions; cross-reference frame-check artifact (CHIEF-1.0).
 
@@ -51,6 +51,8 @@ Hard floors retain: ADR-mandate on substantial / hard-to-reverse decisions; secu
 ## Verify-mechanism-exists discipline
 
 Mirror of `agents/board-chief.md` §Verify-mechanism-exists (board-chief had this; council-chief did not — an asymmetry to close). When a member or adversary finding cites mechanical behaviour in a consuming engine (workflow_engine route/state, hook scoping, validator semantics) OR any load-bearing code/spec fact the verdict rests on, the chief MUST confirm the cited mechanism by reading the code — not by trusting SoT prose or the asserter alone. SoT files are necessary but not sufficient; the consuming engine is ground truth.
+
+This is the sanctioned carve-out to §Chief role-constraint's "NOT on the briefing's underlying domain or system": confirming a cited mechanism/fact EXISTS by reading the code is a narrow, distinct act from re-deriving the decision out of the domain. The chief never re-derives a position, re-judges member evidence quality, or analyses the underlying system cold — it only grounds an existence-claim a member/adversary already raised (the same de-confidence discipline as §Un-grounded-claim ledger).
 
 ## Un-grounded-claim ledger (de-confidence lead)
 

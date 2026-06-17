@@ -1,7 +1,8 @@
 # Protocol: Discourse
 
 Shared cross-validation protocol for all board skills.
-Referenced by: spec_board (incl. mode=ux), code_review_board.
+Referenced by: spec_board (incl. mode=ux), code_review_board,
+sectional_deep_review, impl_plan_review, council.
 
 ## When
 
@@ -77,7 +78,7 @@ Constructive. Challenge with reasoning, not dismissal.
 |----------|-----------|
 | Multiple AGREE | +1 (very high) |
 | CHALLENGED + defended | +1 |
-| CHALLENGED, not defended | -1 (consider removal) |
+| CHALLENGED, not rebutted | -1 (removal candidate — see Rules) |
 | CONNECTED | +1, root-cause group |
 | SURFACED | standard |
 
@@ -85,8 +86,20 @@ Constructive. Challenge with reasoning, not dismissal.
 
 - One round (no ping-pong).
 - Max 5 discourse points per agent.
-- CHALLENGE without counter-evidence → ignored.
-- SURFACE without evidence → ignored.
+- **Malformed discourse points are dropped** (format-enforcement, not
+  an evidence-quality judgement): a CHALLENGE carrying no
+  counter-evidence, or a SURFACE carrying no evidence, is not a
+  well-formed discourse point (Step 3 requires counter-evidence /
+  full format) → dropped. This is a structural check on the discourse
+  *entry*, NOT the chief re-judging a well-formed finding's evidence
+  quality (which the consuming board chief's role-constraint bars).
+- **Removal / downgrade rests on a reviewer surface, never on
+  absence.** "CHALLENGED, not rebutted → -1" means the *challenger's*
+  counter-evidence surface stands un-rebutted — that surface is the
+  basis the consuming board's chief cites to refute (per that chief's
+  own consolidation role-constraint). The original author's *silence* is not
+  itself the basis; a challenge with no counter-evidence was already
+  dropped one rule up, so absence alone can never drive a removal.
 - "No discourse points." is explicitly allowed.
 - Input = ALL individual findings with attribution, NOT the
   consolidated set.
