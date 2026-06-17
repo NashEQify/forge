@@ -124,6 +124,9 @@ claim — every load-bearing claim was independently re-executed.
   measures impact, not effort.
 - You remove a finding because "we already have something
   similar" — check whether the root cause is the same.
+- You remove a finding because it's "speculative" — is the
+  reviewer's trigger state realistic? Then KEEP it (recall-bias);
+  REFUTED needs a reviewer surface, not your doubt.
 - You accept "accepted risk" on HIGH — HIGHs are fixed, not
   accepted.
 
@@ -135,19 +138,51 @@ Input: individual review files of every agent.
    list co-finders.
 2. **Severity ranking:** sort by impact (critical → high →
    medium → low).
-3. **Noise filtering:** remove hypothetical, style-based,
-   unsupported findings. Document each removal with rationale.
-4. **Conflict resolution:** agents contradict each other →
-   stronger evidence wins.
+3. **Recall-biased keep/refute (reality triage).** Every finding
+   is KEEP or REFUTED before disposition — do NOT default to
+   removal:
+   - **KEEP** (default) — carry the finding forward, transporting
+     the REVIEWER'S OWN trigger-certainty verbatim (their named
+     inputs/state + `file:line`, or their own "uncertain
+     because …" caveat). The chief does NOT author a confidence
+     rating — it relays what the reviewer asserted, so the
+     keep-side carries no chief evidence-judgement. **Recall-bias:
+     do NOT remove a finding for being "hypothetical" /
+     "speculative" when the reviewer's trigger state is
+     realistic** (concurrency race, nil on an error path, cold
+     cache, falsy-zero, off-by-one on a non-excluded boundary).
+   - **REFUTED** — remove, with rationale. Permitted ONLY on an
+     EXISTING reviewer surface, NEVER the chief's own re-reading
+     (the forbidden cold-start re-derivation per §Chief
+     role-constraint — escalate instead). Permitting surfaces:
+     another reviewer's contradicting `file:line` quote that
+     step 4 (conflict resolution) resolves against this finding;
+     a guard a reviewer cited in this diff; a live-state
+     contradiction. A pure-style finding with no observable
+     effect is NOT refuted (it is not false) — keep it; the
+     SKILL §5 disposition routes it to `accept`.
+4. **Conflict resolution:** agents contradict each other → the
+   finding whose cited evidence the contradicting reviewer's
+   surface does not overturn wins. The contradiction is decided
+   on the reviewer surfaces, NOT the chief's own evidence-quality
+   re-judgement; a conflict the surfaces cannot settle → escalate
+   per §Chief role-constraint, do not self-adjudicate.
 
 Output:
 - Un-grounded-claim ledger (lead): load-bearing code/spec claims
   not independently re-executed (see §Un-grounded-claim ledger).
-- Findings as `C-{NNN}` with `source` (original IDs),
-  severity, evidence, description, fix.
-- Noise section: `F-{XX}-{NNN}: {rationale why removed}`.
+- KEPT findings as `C-{NNN}` with `source` (original IDs),
+  severity, evidence, description, fix — carrying the reviewer's
+  own trigger-certainty verbatim where the reviewer flagged
+  uncertainty (no chief-authored confidence field). KEPT maps to
+  the `KEPT` end-state of the tracking table
+  (`_protocols/consolidation-preservation.md`).
+- REFUTED findings map to the `REMOVED` end-state in the "Noise
+  filter — removals" section (same protocol): `F-{XX}-{NNN}:
+  {rationale}`, each citing the existing reviewer-surface
+  evidence that refutes it.
 - Summary: critical / high / medium / low counts +
-  noise_removed.
+  kept / refuted counts.
 
 ## Chain-of-custody audit (CHIEF-1.0, L2 board only)
 
@@ -233,13 +268,24 @@ re-reading every originating review.
 
 ## Discourse synthesis (CHIEF-2)
 
-Input: discourse files of every agent.
+Input: discourse files of every agent. A discourse file IS a
+reviewer surface (per `_protocols/discourse.md`: reviewers
+AGREE / CHALLENGE / CONNECT / SURFACE on each other's findings),
+so consolidating it is consolidation, NOT chief origination —
+the same reviewer-surface principle as the §Chief role-constraint
+Note. The chief carries the discourse OUTCOME; it never
+self-originates or self-judges.
 
-- **CHALLENGE:** finding confirmed or downgraded / removed
-  (with rationale).
+- **CHALLENGE:** a finding a reviewer challenged in discourse is
+  confirmed / downgraded / removed per that reviewer's
+  counter-evidence (with rationale) — never the chief's own
+  re-judgement.
 - **CONNECT:** related findings as a group, identify the root
   cause.
-- **SURFACE:** classify and add new findings.
+- **SURFACE:** carry a new finding a reviewer raised via a
+  `SURFACE` discourse entry — reviewer-originated, on a surface;
+  the chief does NOT add a finding absent from every discourse
+  file.
 
 Output: discourse counts + final findings by severity + verdict
 with rationale.
@@ -247,8 +293,10 @@ with rationale.
 ## Output enforcement
 
 - A consolidated finding WITHOUT evidence from a source agent
-  = noise → remove.
-- Noise removal WITHOUT rationale = opaque → document.
+  fails the code-quote mandate → reject + re-dispatch (distinct
+  from REFUTED, which needs a refuting reviewer surface).
+- A REMOVED / REFUTED finding WITHOUT rationale = opaque →
+  document.
 - A FAIL verdict WITHOUT a concrete blocker list = useless.
 - `target: new_task` WITHOUT an inline operational-impact sentence
   (CHIEF-1.5 value-floor) = validation fail → re-route to `accept`

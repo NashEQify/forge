@@ -249,6 +249,20 @@ specialists per team composition.
 
 ## 5. Verdict
 
+**Reality first, then disposition.** At L2 the chief first applies the
+recall-biased keep/refute triage (KEEP / REFUTED) per
+`agents/code-chief.md` §CHIEF-1 step 3 — REFUTED removes only on
+existing reviewer-surface evidence, never the chief's own re-reading; a
+KEPT finding carries the reviewer's own trigger-certainty verbatim (the
+chief authors no confidence rating). The severity-verdict and
+disposition-triage RULES below are unchanged; they operate on the KEPT
+findings. Recall-bias deliberately keeps that population larger than a
+precision filter would, so more real-but-uncertain findings reach
+disposition (the intended effect) — each then dispositioned normally (a
+narrow latent HIGH still → `accept`). Keep-or-refute is upstream of
+disposition (fix-now / accept / watch / fix-later): triaged once, then
+dispositioned once.
+
 **Before adopting the verdict** Buddy applies the decision-grounding
 C-VERIFY (`agents/buddy/operational.md` §Architecture-Comprehension B):
 for the pivotal code claims the verdict rests on, re-execute any not

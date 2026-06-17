@@ -11,7 +11,7 @@ contract (proportionality gate + hard floors + level choice).
    return).
 3. PARALLEL agent reviews (context-isolated).
 4. CHIEF-1 consolidation (L2 only) — dedup, severity ranking,
-   noise filtering.
+   recall-biased keep/refute triage.
 5. DISCOURSE (L2 only, optional).
 6. CHIEF-2 synthesis (L2 only) — confidence adjustment.
 7. VERDICT.

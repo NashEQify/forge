@@ -85,7 +85,12 @@ is session-spanning state. The major pieces:
   critical path. A paused multi-day build resumes where it stopped, instead
   of re-deriving context.
 
-→ [how the review apparatus works](architecture-documentation/02-architecture.md)
+Several of these are facets of forge's **seven review-quality
+dimensions** — proportionality, anti-anchoring, evidence, orchestrator
+verification, multi-surface, finder-angles, finding-triage.
+
+→ [how the review apparatus works](architecture-documentation/02-architecture.md) ·
+[the seven dimensions](architecture-documentation/04-core-concepts.md#seven-review-quality-dimensions)
 
 ## Quick Start
 
