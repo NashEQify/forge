@@ -2,8 +2,9 @@
 name: consistency-check
 description: >
   Checks the structural integrity of the repo. Dead references,
-  orphan files, adapter SoT drift, navigation desync.
-  Triggers when structural repo integrity must be validated after structural changes or before commit (dead refs, orphans, adapter drift); NOT for content/logic review.
+  orphan files, adapter SoT drift, navigation desync, doc-currency
+  drift (stale banners + reading-map index-omission).
+  Triggers when structural repo integrity must be validated after structural changes or before commit (dead refs, orphans, adapter drift, stale "Task N pending" banners, reading-map gone stale); NOT for content/logic review.
 status: active
 invocation:
   primary: cross-cutting
@@ -18,8 +19,10 @@ uses: []
 
 Checks the structural integrity of the repo. Finds dead
 references, orphan files, adapter-SoT drift, navigation desync,
-and boot-map drift (workflows / skills in `boot-navigation.md` vs
-disk). Complementary to `knowledge-processor`:
+boot-map drift (workflows / skills in `boot-navigation.md` vs
+disk), and doc-currency drift (a doc or reading-map entry whose
+content has gone stale while its structure still resolves).
+Complementary to `knowledge-processor`:
 `knowledge-processor` processes information (brain logic);
 `consistency-check` checks structure. The two trigger each other
 during the consistency cascade (detail: `REFERENCE.md`).
@@ -52,7 +55,7 @@ Gate enforcement: pre-harness via
 (blocking). Post-harness via the pre-commit hook (when
 implemented).
 
-## The 11 checks (short form)
+## The 12 checks (short form)
 
 1. **Dead references** — scan `*.md` for path refs (backticks,
    "load and follow", SoT tables). Miss → ERROR.
@@ -119,6 +122,22 @@ implemented).
    enforcement-registry` (non-zero exit on failure). Guards against
    the phantom-enforcement class — a registry that claims a mechanism
    whose artifact was renamed or removed.
+12. **Doc-currency** — the content-currency the structural checks
+   are blind to (a doc whose structure resolves but whose content or
+   index entry lied). Judgment-applied (not regex): the agent reads
+   the current-state doc-set (`docs/{specs,architecture}/**/*.md`) +
+   the project's reading-map (the §0 entry its `intent.md` names) and
+   flags (a) a banner naming a Task as pending/open while
+   `docs/tasks/<N>.yaml` status is terminal → **WARNING** (the stale
+   "Task N pending" rot); (b) a doc whose `last_updated` predates a
+   date on one of its own banner lines → **WARNING** (the stamp lags
+   the banner); (c) a reading-map SoT pointer that no longer resolves
+   to the current doc, or a doc-of-record the map should index but
+   omits → **WARNING** (index-omission — the rot a spec born on a
+   bypass route leaves, which no diff-scoped step sees). The "banner /
+   currency claim / right SoT?" calls are read semantically — the
+   LLM-strength judgment a pattern-match gets wrong. No reading-map
+   declared → (c) skips. Contract + vocabulary: `REFERENCE.md` §12.
 
 Running checks 3b, 5, 6, 7, 8, and 10 requires `REFERENCE.md`
 to be co-loaded (sub-checks, scan targets, checklist items,

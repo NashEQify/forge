@@ -180,6 +180,22 @@ the standard `locked` enum.
 `n/a (<why — internal / mechanical / no product surface>)` otherwise.
 Bare `n/a` invalid.
 
+**Architecture reading-map — point, don't re-derive.** When the touched
+surface spans a subsystem AND the project's `intent.md` names an as-built
+architecture reading-map, the brief MUST point the MCA at it (the project's
+coarse→fine orientation entry + the as-built flow / spec docs it indexes),
+so the MCA arrives oriented instead of re-deriving the architecture from
+`src/`. Per-agent re-derivation is the recurring failure: each delegated
+agent re-greps the same chokepoints, and a change spanning stages silently
+drops a leg / seam. Generic by contract — name the map ONLY if the
+project's `intent.md` declares one; never hard-code a path here (the path
+lives in the consumer's `intent.md`; this template is project-agnostic).
+This is the brief-layer of a deliberate selectivity: the same pointer is
+kept OUT of `dispatch-template.md` and the board scaffolds, whose contract
+is to STRIP context for fresh-read anti-bias review — a map ref there would
+corrupt the isolation. A build brief is the opposite contract (the MCA
+SHOULD arrive oriented).
+
 ### 6. other (free-text list)
 
 Task-specific decision classes that don't fit the standard 5.

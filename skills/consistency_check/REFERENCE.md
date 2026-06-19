@@ -26,7 +26,7 @@ it?" Yes → consistency cascade (→ `CLAUDE.md`). Flow: recursive
 IMPACT CHAIN pattern
 (`skills/knowledge_processor/modes/process.md` §step 2).
 
-## The 9 checks — details
+## Check details (by number)
 
 ### 1. Dead references
 
@@ -598,6 +598,51 @@ makes `.claude/skills/` hands-off (skill frontmatter = SoT); the
 validator hook makes idempotency verifiable. Together the
 pattern is self-stabilizing — same rationale as the skill-map
 and navigation-layer patterns; alone neither half is enough.
+
+### 12. Doc-currency
+
+Discipline-applied (like checks 1–9), WARN-level. Closes the
+content-currency gap the structural checks (1, 6, 8) are blind to: a
+doc whose *structure* still resolves while its *content or index entry*
+has gone stale. Judgment, not regex — "is this a banner / a currency
+claim / the right SoT?" is exactly the semantic call an LLM makes well
+and a pattern-match makes badly; that is why this is an agent-read
+discipline, not a script.
+
+**Scan scope:** the current-state doc-set — `docs/specs/**/*.md` +
+`docs/architecture/**/*.md`; skip anything under `/archive/`.
+Historical trees (`docs/reviews`, `docs/build`, `docs/audit`,
+`docs/research`) are point-in-time — a banner there is a record, not a
+live claim. Nothing to check in a repo without those dirs.
+
+**Sub-check (a) — stale "Task N pending".** For each banner that
+states a task's status, resolve the task against `docs/tasks/<N>.yaml`.
+Banner says pending / open / "not yet" / in-progress (or equivalents)
+but the task's `status` is terminal (`done` / `closed` / `completed` /
+`merged` / `cancelled` / `dropped` / `archived` / `superseded` /
+`resolved`) → WARN. Only the contradiction direction fires; a banner
+that agrees the task is done is fine.
+
+**Sub-check (b) — `last_updated` lags a banner date.** If a doc
+declares `last_updated: YYYY-MM-DD` and one of its banner lines
+(SUPERSEDED / AS-BUILT / stale / deprecated / retired / REDIRECT /
+hibernated / Status / "updated") carries a later date → WARN. Implied
+discipline: **bump `last_updated` whenever you add or edit a banner**,
+else the stamp claims the doc is older than its own content.
+
+**Sub-check (c) — reading-map index-currency.** When the project's
+`intent.md` names an architecture reading-map (the §0 entry), check it:
+every SoT pointer still resolves to the current doc (not a moved /
+renamed / superseded one), and every doc-of-record the map should index
+is indexed. A pointer to a moved/missing SoT, or a doc-of-record absent
+from the map → WARN. This is the index-omission rot a spec born on a
+bypass route (DIRECT / SUB-BUILD, no `spec_authoring` checklist) leaves
+— no diff-scoped step sees it. No reading-map declared → skip (c).
+
+**Why banner-scoped, not every date:** a doc legitimately mentions
+many dates in prose; only a date that IS a currency claim (a banner)
+counts. That scoping is itself a judgment — which is why check 12 is an
+agent-read discipline, not a date-lint.
 
 ## Frozen-zone integrity check
 

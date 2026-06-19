@@ -30,6 +30,22 @@ out-of-scope**, not "even more precise line refs".
 
 ---
 
+## Architecture reading-map (orientation, not a scope license)
+
+When the fix touches a subsystem AND the project's `intent.md` names an
+as-built architecture reading-map, point the fixer at it so it understands
+the seam it is repairing instead of re-deriving the architecture from
+`src/`. **Orientation only:** the map informs *what the seam is* — it never
+licenses widening the fix; the scope bound + out-of-scope sections below
+stay the hard boundary. Generic by contract — reference the map only if the
+project's `intent.md` declares one; no path is hard-coded here (it lives in
+the consumer's `intent.md`). Same deliberate selectivity as
+`mca-brief-template.md` §5 — and the same reason it is kept OUT of
+`dispatch-template.md` / the board scaffolds: those strip context for
+anti-bias fresh-read review.
+
+---
+
 ## Trigger (when these sections are mandatory)
 
 Every fix-pass brief in pass N+1 (N ≥ 1), if:
