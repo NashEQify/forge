@@ -189,6 +189,19 @@ On flip to `done` the agent MUST:
 3. If `workflow_engine.py --find --task {task_id}` shows an active
    workflow not yet at `commit-deploy` → drive it (`--complete
    commit-deploy`). No auto-abort.
+4. **Doc-currency backstop (when the project declares an architecture
+   reading-map per its `intent.md`):** run `consistency_check` check-12
+   (doc-currency) over the project's doc-set + reading-map. On a finding
+   (a banner naming a task as pending while its YAML is terminal; a
+   `last_updated` a banner date has overtaken; a reading-map SoT pointer
+   that no longer resolves or a doc-of-record the map omits), reconcile
+   the specific flagged item in this close — targeted, non-blocking. This
+   is the **universal** doc-currency point: every route (incl. DIRECT /
+   SUB-BUILD / fix) reaches a terminal status through this skill, so
+   neither a stale banner nor an un-indexed born-here spec can survive its
+   own close — the rot a diff-scoped Verify step structurally cannot see.
+   Generic: the map + path live in the consumer's `intent.md`; this names
+   the duty, not a path. No reading-map declared → skip.
 
 ### Step 6: output
 
