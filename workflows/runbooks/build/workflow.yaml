@@ -527,12 +527,18 @@ steps:
     name: "Commit + deploy"
     category: deterministic
     instruction: >
-      git commit (pre-commit hooks run: PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE
-      BLOCK; remaining checks WARN). git push. Dashboard deploy conditional.
+      Flip task status=done via the task_status_update skill — NOT a raw
+      `status:` YAML edit. The skill runs the cross-task graph closure,
+      plan.yaml ref sweep, atomic archive move + integrity guard, and the
+      persist-gate; a hand edit silently skips all of them (half-closed
+      archive, dangling blocked_by). Conditional on whether the workflow
+      closes the WHOLE task (skip on sub-build — parent owns task status).
 
-      Engine auto-advances workflow_phase=done when this step completes;
-      task-status=done is conditional on whether the workflow closes the WHOLE
-      task (skip on sub-build — parent owns task status).
+      Then git commit (pre-commit hooks run: PLAN-VALIDATE, CG-CONV,
+      SKILL-FM-VALIDATE BLOCK; remaining checks WARN). git push. Dashboard
+      deploy conditional. Engine auto-advances workflow_phase=done when this
+      step completes (workflow_phase only — the task status flip is the
+      skill call above).
     completion:
       type: manual
     commit_gate: true

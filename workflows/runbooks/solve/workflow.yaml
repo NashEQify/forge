@@ -290,6 +290,6 @@ steps:
       task by definition).
     completion:
       type: exit_code
-      command: "grep -q 'status: done' docs/tasks/{task_id}.yaml"
+      command: "grep -q 'status: done' docs/tasks/{task_id}.yaml docs/tasks/archive/{task_id}.yaml 2>/dev/null"
     commit_gate: true
     on_fail: block
