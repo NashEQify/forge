@@ -46,7 +46,7 @@ are engine-internal.
 | 6 | code-review | `code_review_board/SKILL.md` (light / L1 / L2 per §1) | level: light on ≤2 files mechanical-trigger; L1 default for fixes effort S-M; L2 on schema/cross-spec or larger scope |
 | 7 | spec-drift-check | `spec_amendment_verification/SKILL.md` | when fix changes spec-defined behaviour OR authority log exists with new spec edits |
 | 8 | close-bookkeeping | **distill** `close_retro` (skip-eligible) → **emit** `knowledge_processor/SKILL.md` + `task_creation/SKILL.md` + `risk_followup_routing/SKILL.md` (consume the retro; each skip-eligible) |
-| 9 | commit-deploy | git pre-commit hooks | sub-fix route skips this gate |
+| 9 | commit-deploy | **`task_status_update` (status=done, not a raw YAML edit)** + git pre-commit hooks | sub-fix route skips this gate |
 
 ## Detail per gate
 

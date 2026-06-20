@@ -95,7 +95,7 @@ detail + conditions = the step `instruction:` in `workflow.yaml`.
 | 9 | code-review-board | Verify | `code_review_board/SKILL.md` (light / L1 / L2 per §1) |
 | 10 | spec-drift-check | Verify | `spec_amendment_verification/SKILL.md` (when diff changes spec-defined behaviour) |
 | 11 | close-bookkeeping | Close | **distill** `close_retro` (FULL / new-pattern-STANDARD; skip-eligible) → **emit** `documentation_and_adrs` + `task_creation` + `knowledge_processor` + `risk_followup_routing` (consume the retro; each skip-eligible) |
-| 12 | commit-deploy | Close | engine + git pre-commit hooks |
+| 12 | commit-deploy | Close | **task status=done via `task_status_update`** (not a raw YAML edit) + git pre-commit hooks |
 
 `board` is a mid-flow classification: `--complete board --route
 board-spec|board-council`. The amendment path (mid-build mechanism shift,
