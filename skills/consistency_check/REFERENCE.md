@@ -610,7 +610,8 @@ and a pattern-match makes badly; that is why this is an agent-read
 discipline, not a script.
 
 **Scan scope:** the current-state doc-set — `docs/specs/**/*.md` +
-`docs/architecture/**/*.md`; skip anything under `/archive/`.
+`docs/architecture/**/*.md`; skip anything under `/archive/`. Sub-check (d)
+additionally reads `docs/plan.yaml` (milestone descs).
 Historical trees (`docs/reviews`, `docs/build`, `docs/audit`,
 `docs/research`) are point-in-time — a banner there is a record, not a
 live claim. Nothing to check in a repo without those dirs.
@@ -638,6 +639,18 @@ is indexed. A pointer to a moved/missing SoT, or a doc-of-record absent
 from the map → WARN. This is the index-omission rot a spec born on a
 bypass route (DIRECT / SUB-BUILD, no `spec_authoring` checklist) leaves
 — no diff-scoped step sees it. No reading-map declared → skip (c).
+
+**Sub-check (d) — plan.yaml milestone-status shadow.** When the repo has a
+`docs/plan.yaml`, run `plan_engine.py --status` (the authoritative computed
+milestone status) and read each milestone's `desc`. A `desc` carrying a
+hardcoded status label ("Status: pending / done / blocked / in-progress /
+DONE-ROLLING" or equivalent) that contradicts the computed status for that
+milestone `key` → WARN. `compute_milestone_status` never reads `desc` (status
+is derived from each task's `milestone` + `status`), so a status label in
+`desc` is shadow state that can only drift. Generic — keyed on the computed
+status per milestone key, no project-specific milestone names. The fix is
+deletion (the engine already renders live status), not a re-sync of the label.
+No `docs/plan.yaml` → skip (d).
 
 **Why banner-scoped, not every date:** a doc legitimately mentions
 many dates in prose; only a date that IS a currency claim (a banner)

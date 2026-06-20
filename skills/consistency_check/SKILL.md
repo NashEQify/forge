@@ -134,8 +134,13 @@ implemented).
    the banner); (c) a reading-map SoT pointer that no longer resolves
    to the current doc, or a doc-of-record the map should index but
    omits → **WARNING** (index-omission — the rot a spec born on a
-   bypass route leaves, which no diff-scoped step sees). The "banner /
-   currency claim / right SoT?" calls are read semantically — the
+   bypass route leaves, which no diff-scoped step sees); (d) a
+   `docs/plan.yaml` milestone `desc` carrying a hardcoded status label
+   ("Status: pending/done/blocked/…") that contradicts the status
+   `plan_engine.py --status` computes for that milestone key →
+   **WARNING** (shadow state the engine computes authoritatively — the
+   fix is deletion, not re-sync; no `docs/plan.yaml` → (d) skips). The
+   "banner / currency claim / right SoT?" calls are read semantically — the
    LLM-strength judgment a pattern-match gets wrong. No reading-map
    declared → (c) skips. Contract + vocabulary: `REFERENCE.md` §12.
 
