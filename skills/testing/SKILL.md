@@ -92,6 +92,44 @@ real defects (real follow-up tasks), not preemptive imagined edges.
 >400 lines without adversary mode = drift signal (likely duplicate /
 imagined edges).
 
+### Execution-faithfulness (test-design)
+
+**A test artifact is not coverage until a collected test EXECUTES it
+against the real surface.** A green per-module suite is
+necessary-not-sufficient — it proves module contracts, not assembled
+behaviour. General discipline: for each AC's GREEN test, name the
+production producer of every hand-passed input; if that producer is
+the function-under-test's own caller (or an async/upstream service),
+the unit is necessary-not-sufficient — require a wired companion that
+drives the real producer, do not fabricate its output. Three
+design-time triggers:
+
+- **Multi-module pipeline / instrument / orchestrator** — when the
+  public entry point drives a real downstream **producer whose output
+  the unit tests construct by hand** (the trigger is the *producer
+  seam*, not module count — pure-function composition like
+  `format(parse(x))` does not qualify): design ≥1 **wire-proving
+  end-to-end test** (L4) that drives the public entry point through
+  the real dependency (or its sanctioned testcontainer) and asserts
+  the *commissioned outcome* (the headline number / verdict-bearing
+  field) — RED before implementation, alongside the per-module units.
+  Board backstop: `code_review_board` §2 REQUIREMENTS MAP
+  producer/`*Consumer` tripwire (do not duplicate it here — it is the
+  post-code net; this is the design-time net).
+- **Pooled / singleton resource with a teardown path** — a fix that
+  introduces a pooled/singleton resource carrying a
+  close/teardown/invalidate path requires a test that EXECUTES the
+  lifecycle (build-once + reuse + close-awaits + rebuild-on-invalidate)
+  against a fake whose surface matches the **INSTALLED** SDK — plus an
+  audit of whether an autouse reset-fixture masks the singleton (if so,
+  the lifecycle test opts out of the reset). A memoized pure helper
+  (`@lru_cache`, no teardown, no shared mutable state) does NOT qualify.
+- **Golden / byte-identity / snapshot corpus** — a corpus introduced
+  to satisfy a no-behaviour-change (refactor) AC MUST be imported and
+  asserted by a collected pytest test in the SAME change.
+  Captured-but-orphaned is an incomplete AC, not a deferred nicety. A
+  present-but-inert net reads as coverage while guarding nothing.
+
 ### L1 Logic / semantic + Iteration protocol
 
 L1 = simulation, completeness, consistency, DRY check, constraint

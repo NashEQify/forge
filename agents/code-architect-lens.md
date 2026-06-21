@@ -261,6 +261,18 @@ at `skills/_protocols/mca-brief-template.md` §Claim-Verifications):
   The key is often *derived* (`normalize(name)`, a tuple) — quote the
   value AFTER the derivation the seam keys on, not the raw emit. A
   premise inherited from a council/ADR is a claim, not a settled fact.
+- **Importer/caller-count triggers:** any "N callers / importers /
+  usages" count (depth/leverage analysis, deletion-test, or a brief's
+  "used by N sites"). Grep `import` statements
+  (`grep -rnE "(import|from) .*<Symbol>" <scope>`), NOT bare
+  name-mentions — prose, comments, and string literals inflate the
+  count (observed: a "7 importers" claim resolved to 2 real `import`
+  sites). Quote the real import count, not the name-hit count.
+- **Tenant/security-gate trigger (MANDATORY C-VERIFY):** any diff
+  touching a tenant-isolation or security/auth gate makes the
+  decomposition C-VERIFY MANDATORY (not skip-eligible) — the sharpest
+  structural risk carries grep-grounded rows even when no claim-phrase
+  is explicit.
 
 For each occurrence, the lens (fresh-context-isolated, read-only)
 MUST grep the cited target and emit one row:

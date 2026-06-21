@@ -16,6 +16,24 @@ steps:
       Buddy inline: triage PENDING entries from docs/session-buffer.md
       (act / defer / drop). Skip when the buffer is empty. The dispatcher
       skill is retired — the mechanic now runs inline.
+
+
+      `[framework-feedback]` routing (safety-net actuator): a
+      `[framework-feedback]`-tagged PENDING entry is framework-friction
+      that belongs in forge_dev's forge-feed, NOT the consumer buffer.
+      Write-direct on notice stays PRIMARY
+      (`$FRAMEWORK_DIR/docs/dogfood-learnings/README.md` §39-40) — this
+      step is only the backstop for what slipped into the buffer. Per
+      such entry: (1) run the 6-check pre-write filter (README §Pre-write
+      filter) — 2+ checks fire skip ⇒ mark the buffer entry
+      `status: PROCESSED` with a one-line drop-note, do NOT route;
+      (2) passes ⇒ allocate the next `L-NNN` (= max `L-NNN` across BOTH
+      `forge-feed.md` + `implemented-forge-feeds.md`, +1), append the
+      entry to `$FRAMEWORK_DIR/docs/dogfood-learnings/forge-feed.md` in
+      the README entry format, then mark the buffer entry
+      `status: PROCESSED` (the `buffer-cleanup` step removes it). The
+      destination is ALWAYS `$FRAMEWORK_DIR` (injected every session) —
+      the buffer is consumer-local (CWD), the forge-feed is cross-repo.
     completion:
       type: manual
     required: false

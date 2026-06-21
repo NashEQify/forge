@@ -286,6 +286,14 @@ Per-fix DoD:
    spec-defined behaviour touched.
 4. **L0** — `ruff check <touched-files> && mypy <touched-files>` —
    touched files only.
+5. **Resource-lifecycle audit** (only when the fix introduces a
+   pooled/singleton resource carrying a close/teardown/invalidate
+   path) — the lifecycle test (`skills/testing/SKILL.md`
+   §Execution-faithfulness) must EXECUTE build-once/reuse/close-awaits/
+   rebuild against a fake matching the INSTALLED SDK surface, AND audit
+   whether an autouse reset-fixture masks the singleton (if so, the
+   lifecycle test opts out of the reset). A green suite over a
+   masked singleton proves nothing about teardown.
 
 **Convergence-end full-suite:** ONE run at END of convergence-loop
 fixes, before close.

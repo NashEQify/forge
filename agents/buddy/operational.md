@@ -383,6 +383,17 @@ Read the incident block:
 - ARCH-CONFLICT → solution-expert. *(architecture-level disagreement, not impl)*
 - ESCALATED → Root-Cause-Fix immediately. *(blocking issue, won't yield to retry)*
 
+**No-fixture / testcontainer tests (MANDATORY run-at-return):** when an
+MCA WROTE tests it could not RUN in its sandbox (no-fixture, Neo4j/PG
+testcontainers, real-store), Buddy MUST run them at return before
+trusting the fix-pass — the MCA's unit-green is blind to them. Observed:
+an MCA's real-store tests carried 2 witness-bugs (a query on a
+non-existent field; an out-of-scope assertion) that surfaced ONLY when
+Buddy ran them at return. The return-stage actuator is load-bearing —
+the test may exist and be faithful (test-design, `skills/testing/SKILL.md`
+§Execution-faithfulness), but only an actor holding the fixtures
+executes it.
+
 Discoveries: `knowledge_processor (mode=process)`. Reconcile MCA
 discoveries against active specs AND milestone topology
 (§Architecture-Comprehension B).
