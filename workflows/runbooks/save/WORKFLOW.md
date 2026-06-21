@@ -19,6 +19,20 @@ parallel (one tool-call batch).
    `docs/session-buffer.md` (act / defer / drop). Buffer
    empty → skip. Note: the dispatcher skill is archived —
    the mechanic now runs inline.
+   - **`[framework-feedback]` routing (safety-net):** a
+     `[framework-feedback]` PENDING entry is framework-friction
+     that belongs in forge_dev's forge-feed, not the consumer
+     buffer. Write-direct on notice stays **primary**
+     (`$FRAMEWORK_DIR/docs/dogfood-learnings/README.md` §39-40);
+     this step only catches what slipped into the buffer. Per
+     entry: run the 6-check pre-write filter (README §Pre-write
+     filter) — 2+ skip ⇒ mark `PROCESSED` + one-line drop-note,
+     don't route; pass ⇒ allocate the next `L-NNN` (max across
+     `forge-feed.md` + `implemented-forge-feeds.md`, +1), append
+     to `$FRAMEWORK_DIR/docs/dogfood-learnings/forge-feed.md` in
+     the README entry format, then mark the buffer entry
+     `PROCESSED` (step 7 cleanup removes it). Destination is
+     always `$FRAMEWORK_DIR` — cross-repo from a consumer CWD.
 2. **Reconciliation** — from the context window:
    - **Gap check:** info in the window, not on disk →
      write it now.

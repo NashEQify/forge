@@ -346,3 +346,23 @@ inside the supposed fix.
 This is the council L3 *live-state-vs-claim* axiom turned on the docs:
 validate claims-of-mechanism against a pinned real listing — and stay
 honest about which dimensions actually have one.
+
+### 8.3 Layers where the asserter owes the grounding
+
+The §8.1 positive-claim pointer is owed wherever a mechanical claim is
+AUTHORED, not only in an ADR/handoff. The grep-at-the-asserter
+discipline (Inv 10) extends to every layer that emits
+mechanism-claims or inherits citations — each grounded *at HEAD, by the
+asserter, at that layer*:
+
+| Layer | Claim shape | Where the trigger lives |
+|---|---|---|
+| Lens (importer/caller count) | "N callers/importers" — grep `import` statements, NOT name-mentions (prose/comments inflate the count) | `agents/code-architect-lens.md` |
+| Tester-design | tester output's mechanism-claims (hardcoded literals, path-labels, in-process-vs-network layer-classification) | `skills/adversary_test_plan/SKILL.md` |
+| Dispatch-authoring | a dispatch's "thin wrapper / reuses-existing" claims, and any `file:line`/symbol it cites | `skills/_protocols/dispatch-template.md` |
+| Brief-assembly (inherited) | every INHERITED symbol + `file:line` locator a brief carries from a prior artifact resolves at HEAD (phantom → no match; shifted → range moved) | `agents/brief-architect.md` |
+| Re-review (fix-completeness) | a fix-claim naming a third-party teardown/lifecycle API verified against the INSTALLED SDK surface, not the remembered API | `skills/code_review_board/SKILL.md` §5a |
+
+The principle is one (assert ⇒ ground at HEAD by the asserter); the
+triggers land at five read-sites — a lens author does not read the
+brief-architect's pre-flight, so each layer carries its own.

@@ -105,6 +105,15 @@ Those phrases push synthesis onto the agent instead of doing it
 yourself. Write prompts that prove you understood: include file
 paths, line numbers, what specifically to change.
 
+**Ground the dispatch's own mechanism-claims.** When a dispatch
+asserts a code-shape claim the implementer will rely on — "a thin
+wrapper over X", "reuses the existing Y", a cited `file:line` or
+symbol — grep it at HEAD before it enters the prompt
+(`evidence-pointer-schema.md` §8.3, dispatch-authoring layer).
+Observed: a dispatch's "thin wrapper" claim falsified 3×, plus a cited
+`source_ref` field that never existed. A dispatch claim is an
+asserter-claim; it owes the same one-hop grounding as a brief.
+
 SoT: spec 306 §7.2.
 
 ## §Concurrency (verbatim adoption from upstream AgentTool prompt)

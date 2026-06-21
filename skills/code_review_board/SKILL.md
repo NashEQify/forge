@@ -88,6 +88,23 @@ Detail (incl. post-MCA-return trigger consequence): REFERENCE.md.
    BOARD-stage catch; running the same grep tripwire earlier at the
    build Verify gate (before the board) is a noted follow-up — until
    then the board is the earliest net, not the cheapest one.
+   **Faithfulness-evidence (the green suite must exercise the real
+   surface, not a fabricated one):**
+   - **Producer-faithfulness** — for each AC's GREEN test, name the
+     production producer of every hand-passed input or polled state. If
+     that producer is the function-under-test's own caller, require a
+     wired (L3) companion; if it is an async/upstream service, the test
+     must NAME the producer's floor latency and assert the poll budget
+     brackets it (not a fabricated value, not a premature settled-empty).
+   - **Test-hollowing** — when the diff REWRITES an adversarial test's
+     assertions, require a mutation-or-equivalent proof it still goes
+     RED on the original defect-class (vacuity signature: the rewrite
+     feeds input already at the guarded boundary).
+   - **Orphaned-corpus (Verify gate)** — a golden/byte-identity harness
+     imported by no test (grep `tests/*golden*` → no importer, or 0
+     cases under `--collect-only`) asserts coverage it does not provide.
+   Design-side mandate: `skills/testing/SKILL.md`
+   §Execution-faithfulness.
 5. **TEAM COMPOSITION** — risk → agents + focus points.
 
 ## 3. Team composition
@@ -376,6 +393,20 @@ Output: table — prior finding | addressed? | evidence | correct fix?
 
 Chief: Phase-1 = primary evidence, Phase-2 = closure-verification.
 `remaining_findings` = Phase-1 minus prior-cycle-confirmed-closed.
+
+**Fix-completeness C-VERIFY (extends verdict-adoption C-VERIFY to the
+fix-pass's OWN claims):** a fix-pass introduces NEW load-bearing claims
+("I closed it on shutdown") the original C-VERIFY never covered. When a
+fix-claim names a third-party teardown / lifecycle API (`close` /
+`aclose` / `shutdown` / `__aexit__`), the claim is NOT "addressed"
+until the **installed** SDK surface is shell-verified (e.g. `python3 -c
+"import openai; print(hasattr(openai.AsyncOpenAI,'close'),
+hasattr(openai.AsyncOpenAI,'aclose'))"`) — not the remembered API.
+Observed: a `_close_client_quietly` resolved only `aclose`, absent on
+the installed openai 2.41.1 → `close()` a silent no-op, the pooled
+transport leaked at every drain. A "wired-but-ineffective" fix passes
+the Phase-2 "addressed?" column until the installed surface is checked
+(`evidence-pointer-schema.md` §8.3, re-review layer).
 
 ## 6. Discourse
 

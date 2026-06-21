@@ -105,6 +105,19 @@ pass on a 9-TC proposal often drops 7 as theater.
 Three stop-and-think questions + consolidation rule (EXTENDS
 mandates dropped): `REFERENCE.md` §Augenmaß + §Consolidation.
 
+### 3a. Ground the tester's mechanism-claims (grep-at-the-asserter)
+
+The tester's design output carries mechanism-claims — a hardcoded
+literal (a `","` separator), a path-label, an in-process-vs-network
+layer-classification. These are asserter-claims and owe the same
+one-hop grounding as any brief claim
+(`_protocols/evidence-pointer-schema.md` §8.3 — the tester-design
+layer): grep the cited literal / path / symbol at HEAD before building
+a TC on it. Observed: a design hard-coded a `","` separator the code
+wrote as `", ".join`, and mislabeled a network MCP-client as
+in-process — both grep-falsified. A TC resting on an un-grounded tester
+literal is a false-green in waiting.
+
 ### 4. Output format (required)
 
 Extended test plan v2 = existing TCs (consolidated where applicable)

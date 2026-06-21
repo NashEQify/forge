@@ -144,6 +144,19 @@ outputs differ. Mode-specific notes are inline.
      mentions actually exists in the codebase (grep against `src/`).
      For every defer-claim: grep for consumers of the deferred
      behaviour. A consumer hit invalidates the defer.
+     **Inherited-citation pre-flight (MANDATORY):** a brief inherits
+     `file:line` / symbol locators from prior artifacts (verdicts,
+     build-state, lens output). These age — a symbol renamed/deleted,
+     a line-range shifted — and a stale locator silently sends the
+     implementer to the wrong (or non-existent) site. Before a
+     citation enters the brief, grep that every inherited symbol AND
+     `file:line` resolves at HEAD; flag any phantom (no match) or
+     shifted (range moved) citation for re-grounding. Observed: a
+     brief carried a phantom symbol (`_complete_with_fallback`, never
+     existed) plus a stale C-VERIFY locator. No inherited locator
+     enters the brief un-grepped
+     (`_protocols/evidence-pointer-schema.md` §8.3, brief-assembly
+     layer).
      **Fix-task briefs — failure-cluster provenance (MANDATORY):**
      when the brief's scope is a failing test/assertion cluster,
      run `git log -L <line-range>:<file>` on EACH failing assertion
