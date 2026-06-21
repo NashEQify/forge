@@ -61,6 +61,14 @@ cuts theater. Answer 4:
 has no `light` tier; gate authorizes *staying-in-standard*, not
 skipping the board.
 
+**Skip-decision pointer:** the decision to SKIP the board entirely (a
+pre-invocation call, distinct from this gate's standard-vs-Deep depth
+choice) routes through these same Q3/Q4 contract-surface questions,
+authored inline at the decision point per `agents/buddy/operational.md`
+§Multi-perspective engagement (board-skip discipline) — a new contract
+surface there is a hard stop on the skip, regardless of an ADR-lock or a
+passed amendment-verification.
+
 **Override floor (hard escalation regardless of gate):**
 - YES on **security** check (auth / consent / crypto) → ALWAYS Deep.
 - YES on **full-path** (`dev_path: full`) → ALWAYS Deep.

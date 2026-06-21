@@ -109,6 +109,27 @@ Behavior prohibitions during board/council: CLAUDE.md §Inv 1.
   `_protocols/mca-brief-template.md §7` is the mechanical surface;
   `n/a` requires stated reason.
 
+**Board-skip discipline (pre-invocation).** The decision to SKIP a board
+gate is taken BEFORE the board runs — so the board's own proportionality
+test (`spec_board/SKILL.md` §1.0) cannot vet it; that test only runs once
+the board is invoked. Close the gap at the decision point: a board-skip
+MUST carry an inline written rationale (silent skip is not allowed — same
+posture as the council's skip-template, `skills/council/SKILL.md` §14)
+that answers, in plain language, the contract-surface question §1.0 asks:
+*does the change only document something that already landed in code
+(clarification / rewording), or does it introduce a new rule, new
+state-vocabulary, a new public-API contract, a new SSE event, or a new
+schema field?* If it introduces ANY such contract surface, the board is
+**not skippable** — not even when the underlying decision is ADR-locked,
+a cross-spec amendment-verification already passed, or the change is
+additive / optional / reversible. Those establish that the DECISION is
+settled; they say nothing about the fresh contract SURFACE the
+implementation introduces, which is exactly what the board scrutinizes
+(an ADR-realizing amendment can ship type-safe but permanently inert).
+The workflow-engine's required-step refusal is the backstop where an
+engine runs; this rationale is the portable rule that holds where it does
+not.
+
 **Inline-return fallback (sub-agent ignores file-output override):**
 If a board OR council sub-agent ignores the file-output override from
 `_protocols/dispatch-template.md` §File-Output-OVERRIDE and returns
