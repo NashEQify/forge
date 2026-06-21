@@ -115,7 +115,7 @@ if [ -d "$FW_LEGACY_SRC" ]; then
   echo "  Synced docs/architecture/framework/ -> docs/framework/"
 else
   echo "  SKIP: $FW_LEGACY_SRC absent — framework docs are already native"
-  echo "        in docs/framework/ (post-split; Task-011 Phase 2b migration)"
+  echo "        in docs/framework/ (post-split migration)"
 fi
 
 # --- Step 3: Build both sites ---
@@ -154,7 +154,7 @@ if [ "$MKDOCS_READY" -eq 1 ]; then
 else
   echo -e "${YELLOW}[5/7] Building Product site (mkdocs.yml)...${NC}"
   echo "  SKIP: mkdocs.yml missing in framework repo."
-  echo "        mkdocs config migration pending (Task-011 Phase 4)."
+  echo "        mkdocs config migration pending."
   echo -e "${YELLOW}[6/7] Building Framework site (mkdocs-framework.yml)...${NC}"
   echo "  SKIP: mkdocs-framework.yml missing — same as above."
 fi

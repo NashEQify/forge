@@ -22,12 +22,11 @@ additive change within an established pattern; bug fix;
 test-only change; documentation change. Rationale: post-build
 pattern-purity on shape-preserving work generates forward-looking
 findings ("might smell-transfer into §2.C") that belong in the
-NEXT task's brief-time architect lens (`agents/code-architect-lens.md`,
-task 372), not this task's post-build review. Task 506 generated
-683 lines of pattern-purity review on a shape-preserving extraction
-where half the findings concerned future Phase D/E extractions
-that didn't exist yet — exactly the misfire this trigger narrowing
-prevents.
+NEXT task's brief-time architect lens (`agents/code-architect-lens.md`),
+not this task's post-build review. A shape-preserving extraction can
+produce hundreds of lines of pattern-purity review where half the
+findings concern future extractions that don't exist yet — the misfire
+this trigger narrowing prevents.
 
 **Exception (re-fires within idle scope):** even on shape-preserving
 or additive-within-pattern work, architect-roots fires when the change
@@ -36,10 +35,9 @@ new internal taxonomy, new state machine, new error type, new
 Protocol. The contract shape may be preserved but the new abstraction
 itself can carry smell-transfer or claim a fictitious precedent
 (second-instance check: does the prior art the new abstraction claims
-to mirror actually exist in the codebase?). Task 506's empty
-`_TestChatResumeAttach` with a docstring citing `_TestChatStream` as
-precedent (precedent did not exist anywhere) is the exact failure
-mode this exception catches.
+to mirror actually exist in the codebase?). An empty test peer with
+a docstring citing a non-existent precedent class is the exact
+failure mode this exception catches.
 
 Trigger detail: `skills/code_review_board/SKILL.md` §1.
 
