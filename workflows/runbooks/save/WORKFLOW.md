@@ -89,6 +89,12 @@ parallel (one tool-call batch).
    - **Parallel session:** write failed → re-read, second
      merge, write. The `.bak` then shows the
      second-to-last version.
+   - **Defer-durability re-list:** carry OPEN `revisit-when:`
+     defer-premises (`_protocols/mca-brief-template.md` §5)
+     forward as handoff open-points and re-list them at each
+     save, so an aged "no named consumer" premise resurfaces
+     deterministically. Closes when a consumer appears (promote
+     to a task) or is re-confirmed absent.
 5. **History entry** (on task-closeout) —
    `<CWD>/context/history/YYYY-MM-DD-<slug>.md`. Fires when a
    task closed out this session (Persist Gate, operational.md);

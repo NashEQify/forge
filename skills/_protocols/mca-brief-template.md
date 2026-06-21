@@ -176,6 +176,17 @@ consumer yet" is not a defer-signal (cross-ref `CLAUDE.md` Inv 9 +
 `code_review_board` value-floor Vision-named-surface carve-out). Uses
 the standard `locked` enum.
 
+**Defer-durability — `revisit-when:` premise tag.** The inverse case:
+when the surface is NOT vision-named and the brief DOES defer on an Inv-9
+"no named consumer" / value-floor-0 rationale, that defer rests on a
+premise that can age — a later review with more surface can re-classify
+the same degrade as a real regression. Tag the defer record with a
+one-line `revisit-when:` premise (e.g.
+`revisit-when: any consumer of <column> appears`) so the premise is
+re-audited, not inherited as settled. The `save` close-step re-lists
+OPEN `revisit-when` premises at the save boundary — the deterministic
+re-surface a bare tag (attention-dependent, no performer) would not get.
+
 **Required when the brief touches a product surface** the Vision names;
 `n/a (<why — internal / mechanical / no product surface>)` otherwise.
 Bare `n/a` invalid.

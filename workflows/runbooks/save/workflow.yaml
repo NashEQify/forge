@@ -110,6 +110,13 @@ steps:
 
       Parallel sessions: if the file changed between read and write,
       re-read, do a second merge, then write.
+
+      Defer-durability re-list: carry OPEN `revisit-when:` defer-premises
+      (per `_protocols/mca-brief-template.md` §5) forward as handoff
+      open-points and re-list them at each save, so an aged "no named
+      consumer" premise resurfaces deterministically instead of waiting
+      for a reviewer to re-look. A premise closes when a consumer appears
+      (promote to a real task) or is re-confirmed absent.
     completion:
       type: file_content_check
       path: "context/session-handoff.md"
