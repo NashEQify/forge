@@ -239,7 +239,7 @@ distributed across N modules:
 
 #### Worked example
 
-For the planned code-architect-lens spec (task 372, when authored):
+For the planned code-architect-lens spec (when authored):
 
 ```markdown
 ## §Module-Decomposition

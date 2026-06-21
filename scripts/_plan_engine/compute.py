@@ -963,7 +963,8 @@ def compute_next_actions(
     target: str,
     limit: int = 10,
 ) -> list:
-    """Tasks that are ready to start, sorted by priority.
+    """Tasks that are ready to start, ranked by critical-path -> target-path ->
+    blocking-score -> effort.
 
     Sort order: (1) on critical path, (2) on target path (milestone is target
     or in requires-chain of target), (3) blocking score desc, (4) effort asc.
