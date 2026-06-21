@@ -137,6 +137,7 @@ steps:
       type: file_created_matching
       pattern:
         - "docs/specs/*.md"
+        - "docs/decisions/*.md"
         - "framework/**/*.md"
         - "framework/**/*.yaml"
     commit_gate: false
@@ -167,6 +168,7 @@ steps:
       Classify the artefact (Pattern 7 reader-facing-surface detection):
         - "code"              → code_review_board
         - "spec"              → spec_board (Standard)
+        - "architecture-decision" → council (validation = chief consolidation under docs/reviews/council/)
         - "impl-plan"         → impl_plan_review
         - "ui-spec"           → spec_board (mode=ux)
         - "reader-facing-doc" → spec_board (mode=ux) + board-ux-ia + board-ux-heuristic
@@ -192,7 +194,9 @@ steps:
       (g) update task-YAML board_result + readiness via task_status_update.
     completion:
       type: file_created_matching
-      pattern: "docs/reviews/board/*-pass*.md"
+      pattern:
+        - "docs/reviews/board/*-pass*.md"
+        - "docs/reviews/council/*consolidated*.md"
     commit_gate: true
     on_fail: block
     context_refs:
