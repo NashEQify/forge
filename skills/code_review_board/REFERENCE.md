@@ -100,7 +100,7 @@ Note: post-build architect-roots is now gated to "new exported
 contract or replicable-downstream pattern" per `agents/code-architect-roots.md`.
 Shape-preserving extractions do NOT fire post-build architect-roots
 even when this trigger nominally applies — the pre-implementation
-lens (`agents/code-architect-lens.md`, task 372) handles those.
+lens (`agents/code-architect-lens.md`) handles those.
 
 ## Specialist-name registry-check (NON-NEGOTIABLE)
 

@@ -419,6 +419,78 @@ def _ensure_state_variables_resolved(state: dict[str, Any]) -> bool:
     return changed
 
 
+# Spec-slug shape gate for {spec_name}. A `spec_ref` is supposed to be
+# a spec PATH (`docs/specs/299-fabrication-mitigation.md`) whose stem is a clean
+# slug. But some tasks carry PROSE in `spec_ref` (e.g. "Implements
+# BrainPostgresStore at src/.../postgres_store.py:195.") — `Path(prose).stem`
+# then yields garbage like `postgres_store.py:195.`. That garbage flowed into
+# {spec_name} and the board-spec compound pointer_check globbed a non-existent
+# `docs/reviews/board/postgres_store.py:195.-consolidated-pass1.md`, blocking
+# the step with a confusing "file not found". Validating the stem here and
+# returning None on garbage is the SAFE direction: an unset {spec_name} leaves
+# the placeholder literal, and the compound HARD-policy (see `check_completion`,
+# ctype=="compound") converts that into a clean "unresolved variable" block. It
+# can never cause a false auto-complete.
+_SPEC_SLUG_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+# Prose / code-path tells on a RAW `spec_ref` (whitespace/colon/semicolon/comma/
+# parens/section-sign). Deliberately EXCLUDES `.` `/` `-` `_` — those are legit
+# in spec paths and slugs. Prose detection belongs on the raw string
+# (which still carries these tells), not on the post-`Path.stem` slug.
+_PROSE_TELL_RE = re.compile(r"[\s:;,()§]")
+
+
+def _is_spec_slug(stem: str) -> bool:
+    """True iff `stem` has a clean spec-slug SHAPE.
+
+    Accepts hyphen/underscore/dot slugs such as '299-fabrication-mitigation',
+    '597-memory-search', and the date-prefixed council form
+    '2026-06-02-l061-verdict-pointer-fix-decision'. Rejects an empty stem and
+    any stem with a char outside the slug charset (whitespace, ':', path
+    separators). Prose / code-path rejection lives UPSTREAM on the raw
+    `spec_ref` (`_resolve_spec_name`'s `_PROSE_TELL_RE` pre-gate), so a bare
+    dotted token like 'postgres_store.py' is a valid slug SHAPE here.
+    """
+    if not stem:
+        return False
+    if not _SPEC_SLUG_RE.match(stem):
+        return False
+    return True
+
+
+def _task_yaml_candidates(task_id: int) -> list[Path]:
+    """Candidate task-file paths for `task_id` under the active PROJECT_ROOT.
+
+    Single source of truth for the `docs/tasks/{id}.yaml` AND
+    `docs/tasks/{id:03d}.yaml` lookup shape, shared by `_resolve_spec_name` and
+    the at-start cwd-task guard (`_assert_task_in_cwd`) so they stay in lock-step.
+    """
+    return [
+        PROJECT_ROOT / "docs" / "tasks" / f"{task_id}.yaml",
+        PROJECT_ROOT / "docs" / "tasks" / f"{task_id:03d}.yaml",
+    ]
+
+
+def _assert_task_in_cwd(task_id: int) -> None:
+    """Refuse (exit) if `task_id` has no task file under the active PROJECT_ROOT.
+
+    A `--start build --task <id>` run right after `cd <other-repo>` started
+    a stray `build-<id>` workflow in the wrong repo (no such task there) and
+    polluted boot-context. A warning still lets the stray workflow through, so
+    this REFUSES — `create_state` calls it before any state is written. Only
+    fires when `--task` was given (`task_id is not None`); a task-less `--start`
+    is legitimate for some workflows and is left untouched by the caller.
+    """
+    if any(c.is_file() for c in _task_yaml_candidates(task_id)):
+        return
+    tasks_dir = PROJECT_ROOT / "docs" / "tasks"
+    print(
+        f"ERROR: task {task_id} not found in {tasks_dir}/ — wrong working "
+        f"directory? (refusing to start a stray workflow)",
+        file=sys.stderr,
+    )
+    sys.exit(EXIT_NOT_FOUND)
+
+
 def _resolve_spec_name(task_id: int) -> str | None:
     """resolve {spec_name} variable.
 
@@ -427,13 +499,11 @@ def _resolve_spec_name(task_id: int) -> str | None:
     -> '299-fabrication-mitigation').
 
     Conditional: Task ohne spec_ref ODER spec_ref=null → return None.
-    Engine setzt spec_name nur wenn None nicht ist (kein Override mit None).
+    Ein spec_ref der PROSE ist (kein Spec-Pfad) → stem ist Garbage →
+    return None (statt Garbage in {spec_name} zu leiten). Engine setzt
+    spec_name nur wenn None nicht ist (kein Override mit None).
     """
-    candidates = [
-        PROJECT_ROOT / "docs" / "tasks" / f"{task_id}.yaml",
-        PROJECT_ROOT / "docs" / "tasks" / f"{task_id:03d}.yaml",
-    ]
-    task_yaml = next((c for c in candidates if c.is_file()), None)
+    task_yaml = next((c for c in _task_yaml_candidates(task_id) if c.is_file()), None)
     if task_yaml is None:
         return None
 
@@ -444,7 +514,7 @@ def _resolve_spec_name(task_id: int) -> str | None:
 
     try:
         data = _yaml.safe_load(task_yaml.read_text(encoding="utf-8"))
-    except (OSError, Exception):  # noqa: BLE001
+    except Exception:  # noqa: BLE001
         return None
     if not isinstance(data, dict):
         return None
@@ -452,8 +522,45 @@ def _resolve_spec_name(task_id: int) -> str | None:
     spec_ref = data.get("spec_ref")
     if not spec_ref or not isinstance(spec_ref, str):
         return None
-    # Basename ohne Extension
-    return Path(spec_ref).stem
+    # Reject prose / code-path refs on the RAW string before stemming —
+    # a section-prose ref like 'SKILL.md §1 (...)' stems to a clean-looking
+    # 'SKILL' that the slug gate would wrongly accept.
+    if _PROSE_TELL_RE.search(spec_ref):
+        return None
+    # Basename ohne Extension — nur zurueckgeben wenn es ein sauberer Slug ist
+    # (Code-Pfad-spec_ref → None statt Garbage-Glob).
+    stem = Path(spec_ref).stem
+    if not _is_spec_slug(stem):
+        return None
+    return stem
+
+
+def _existing_spec_ref_path(task_id: int) -> Path | None:
+    """Return the task's `spec_ref` as a Path iff it resolves to an existing
+    file under PROJECT_ROOT, else None (advisory route-hint).
+
+    Distinct from `_resolve_spec_name`: that gates on stem SHAPE; this gates on
+    the referenced file EXISTING. A prose `spec_ref` never names an existing
+    file, so the hint only fires for a real spec/path that is already authored.
+    """
+    task_yaml = next((c for c in _task_yaml_candidates(task_id) if c.is_file()), None)
+    if task_yaml is None:
+        return None
+    try:
+        import yaml as _yaml
+    except ImportError:
+        return None
+    try:
+        data = _yaml.safe_load(task_yaml.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return None
+    if not isinstance(data, dict):
+        return None
+    spec_ref = data.get("spec_ref")
+    if not spec_ref or not isinstance(spec_ref, str):
+        return None
+    ref_path = (PROJECT_ROOT / spec_ref).resolve()
+    return ref_path if ref_path.is_file() else None
 
 
 # Workflow state-file directories searched by `_discover_state_file`. State-files
@@ -983,6 +1090,13 @@ def create_state(
     not given, default to "standard" if declared, else error with valid list.
     """
     _ensure_state_dir()
+
+    # Refuse a stray workflow when `--task` points at a task that does
+    # not exist under the active PROJECT_ROOT (wrong working directory). Runs
+    # before id-generation / duplicate-check / state-write so nothing leaks.
+    if task_id is not None:
+        _assert_task_in_cwd(task_id)
+
     wid = _generate_workflow_id(workflow_name, task_id)
 
     # Check for duplicate active workflow (same type + same task)
@@ -997,6 +1111,7 @@ def create_state(
 
     # Validate top-level routes (if declared) + resolve route
     wf_routes = workflow_def.get("routes")
+    route_defaulted_to_standard = False
     if wf_routes is not None:
         if not isinstance(wf_routes, dict) or not wf_routes:
             print(
@@ -1008,6 +1123,7 @@ def create_state(
         if route is None:
             if "standard" in wf_routes:
                 route = "standard"
+                route_defaulted_to_standard = True
             else:
                 valid = ", ".join(sorted(wf_routes.keys()))
                 print(
@@ -1031,6 +1147,25 @@ def create_state(
             file=sys.stderr,
         )
         sys.exit(EXIT_VALIDATION_FAIL)
+
+    # Advisory-only route-hint. When the route defaulted to `standard`
+    # (the full spec-authoring path) AND the task's spec_ref points at an
+    # already-existing spec, the operator likely wanted an implementation-only
+    # route. Pure non-blocking stderr hint — never changes/blocks/auto-switches.
+    if route_defaulted_to_standard and task_id is not None:
+        existing_spec = _existing_spec_ref_path(task_id)
+        if existing_spec is not None:
+            impl_routes = [
+                r for r in ("standard-implementation-only", "sub-build")
+                if r in (wf_routes or {})
+            ]
+            suffix = f" — did you mean --route {' / '.join(impl_routes)}?" if impl_routes else ""
+            print(
+                f"HINT: task {task_id} has a spec_ref to an existing spec "
+                f"({existing_spec.name}) but route defaulted to 'standard' "
+                f"(full spec-authoring path){suffix}",
+                file=sys.stderr,
+            )
 
     step_ids = _ordered_step_ids(workflow_def)
     now = _utcnow()
@@ -1443,6 +1578,12 @@ def _check_workflow_completion(state: dict[str, Any], _workflow_def: dict[str, A
         return
 
     state["completed"] = _utcnow()
+    # `complete_step` advances `current_step` only via `cmd_next`; on the
+    # FINAL step it stays pointed at the just-completed step. Null it here — in
+    # the SAME blob `archive_state` moves below — so the archived record reads
+    # `current_step: None` instead of a stale leftover (e.g. 'commit-deploy').
+    # Cosmetic-only: no enforcement reads `current_step` after completion.
+    state["current_step"] = None
 
     # If this is a child workflow, propagate completion to parent
     parent_id = state.get("parent_workflow_id")
