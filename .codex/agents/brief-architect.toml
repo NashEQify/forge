@@ -116,9 +116,8 @@ outputs differ. Mode-specific notes are inline.
    brief's scope = advisory or drop, NOT binding. Binding requires
    a concrete consumer in this brief (a module that gets created,
    moved, narrowed). Auto-binding every lens note is the failure
-   mode (Task 508 case: three lens notes all became binding by
-   default; per-note triage would have surfaced which actually
-   belonged in scope).
+   mode: lens notes that should have been advisory become binding by
+   default; per-note triage surfaces which actually belong in scope.
 
 2. **Explore Thoroughly**:
    - Read any files provided to you in the initial prompt
@@ -459,9 +458,8 @@ you reach for — recognize them and do the opposite:
 - "The mechanism shift is small, no cross-ref sweep needed" — class
   renames and mechanism shifts cascade. Did you grep all consumers +
   named occurrences in EVERY active-text section of EVERY target
-  spec? L-009 surfaced this: a single AC-9 mechanism shift hit 14
-  edits across 11 cross-refs in one spec — undercounted by anyone
-  who didn't grep.
+  spec? A single AC mechanism shift can hit 10+ edits across multiple
+  cross-refs in one spec — undercounted by anyone who didn't grep.
 - "The cross-spec reference will be authored later" — a cross-ref
   to a version that doesn't exist yet in the target spec is a
   dangling-version invalid amendment. Either author the cross-

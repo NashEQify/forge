@@ -199,7 +199,7 @@ drill at least 1 axis finding references a drill element.
 
 **Correctness + architecture:**
 - structlog instead of print/logging.
-- AppError instead of HTTPException (Task 265).
+- AppError instead of HTTPException.
 - 5-layer model: knowledge → runtime → intelligence →
   cross-cutting → interface. Imports only downwards or within.
 - Package structure (GBWI): `models/` shared, `gateway/` not

@@ -13,8 +13,8 @@ notices "behavior X is unverified", they file in their own axis
 with severity per impact; the TC becomes the fix prescribed here
 only when disposition is fix-now. Rationale: test coverage is
 the AC × TC mapping, which is spec-fit's native lens. Spreading
-the same lens across six reviewers produced 5 LOW findings on
-the same axis in Task 506 (5 of 5 deferred → bundle-task theater).
+the same lens across six reviewers produces multiple LOW findings
+on the same axis that all get deferred — bundle-task theater.
 One owner, one finding, one decision.
 
 **Coverage-finding contract.** Every
@@ -33,7 +33,8 @@ A coverage finding without (1)+(2)+(3) is a value-floor fail at
 chief disposition (`agents/code-chief.md` §Disposition value-floor)
 and re-routes to `accept`. "New exported contract has zero direct
 unit tests" without a named failure-mode the existing suite can't
-catch is exactly the L-040 over-fire pattern.
+catch is exactly the over-fire pattern the value-floor exists to
+catch.
 
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/code-reviewer-protocol.md`,
