@@ -18,7 +18,11 @@ set -euo pipefail
 # source: startup|resume|clear|compact). Capture for logging — we want
 # persistent evidence of which trigger actually fires in remote sessions.
 HOOK_INPUT="$(cat)"
-HOOK_SOURCE="$(echo "$HOOK_INPUT" | grep -oE '"source"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/')"
+# `|| true`: under set -euo pipefail a no-match grep (empty/malformed stdin)
+# OR a SIGPIPE from head-1 closing the pipe early would abort the whole hook
+# here — before the remote-gate below and before the :-unknown fallback. Keep
+# the parse non-fatal; the fallback on the next line handles the empty case.
+HOOK_SOURCE="$(echo "$HOOK_INPUT" | grep -oE '"source"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' || true)"
 HOOK_SOURCE="${HOOK_SOURCE:-unknown}"
 
 # Skip in non-remote (terminal) sessions — terminal users run cc / setup-cc.sh manually.
