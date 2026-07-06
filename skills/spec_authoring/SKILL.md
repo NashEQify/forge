@@ -134,7 +134,17 @@ skill / agent name, a config key — **ground each against the live SoT
 before board**: open the authoritative file, confirm the surface exists
 *as named*, and cite `file:line` in the spec next to the claim. A spec
 that says "feeds the N-value `target:` enum" or "consumes sub-step (b)"
-asserts that enum / sub-step exists as named — verify it. Do NOT carry it
+asserts that enum / sub-step exists as named — verify it.
+
+**Existence ≠ behavior.** Confirming the surface exists *as named*
+grounds only that it is *declared*. A **behavioral** premise about it —
+that it is *written / read / populated / reserved / live / never-called*
+— is NOT grounded by the declaration; ground it at the **write/read
+path** (the mutation / query site) and cite *that* `file:line`. The verb
+is the trigger: if you write "is reserved / populated / never called /
+live", you owe the write/read site, not the declaration.
+
+Do NOT carry it
 from a source task's framing or from training memory: a source task's
 claim about a *third* surface is the least-trustworthy source (it may
 itself be stale, and the drift then propagates verbatim into the new
