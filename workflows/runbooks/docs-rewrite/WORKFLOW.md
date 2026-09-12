@@ -205,10 +205,12 @@ Steps:
 3. COMMIT-GUARD — the pre-commit hook (PLAN-VALIDATE,
    CG-CONV, SKILL-FM-VALIDATE BLOCK; SECRET-SCAN,
    SOURCE-VERIFICATION WARN).
-4. COMMIT — `git commit + push`.
-5. DEPLOY — `$FRAMEWORK_DIR/scripts/deploy-docs.sh`.
-6. VERIFY — ask the user to check visually (Buddy has
-   no browser).
+4. COMMIT — only with applicable authorization from the request or standing
+   repository policy; push separately per `framework/process-map.md`.
+5. DEPLOY — `$FRAMEWORK_DIR/scripts/deploy-docs.sh` only when deployment was
+   authorized. Otherwise return the verified local result.
+6. VERIFY — use an available browser for an authorized deployment; if visual
+   inspection is unavailable, report that boundary and ask the user to check.
 
 ---
 

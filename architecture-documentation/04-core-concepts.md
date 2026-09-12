@@ -52,10 +52,10 @@ The single most important concept. Three binding strengths:
 
 ## 2. Pre-Delegation Non-Negotiable
 
-`CLAUDE.md §3`, `AGENTS.md §4`:
+`CLAUDE.md §3`, `AGENTS.md §3`:
 
 > No agent call without a delegation artefact.
-> Direct: plan block or scope/goal/agent explicit in the turn.
+> Direct: scope, goal, agent and success criteria explicit in the turn.
 > Standard/Full: gate file. Routing: `framework/process-map.md`.
 
 **Why:** without an explicit delegation artefact the orchestrator forgets
@@ -67,11 +67,17 @@ to materialise their assumptions before invoking a sub-agent.
 
 | Path | Artefact |
 |---|---|
-| DIRECT (≤3 files, no spec, no new behaviour) | plan block in the turn OR scope/goal/agent explicit |
+| DIRECT (risk-based eligibility in `framework/process-map.md`) | scope, goal, agent and success criteria explicit in the turn |
 | STANDARD | gate file (`docs/tasks/<id>-gates.yaml`) + state file (`docs/build/...`) |
 | FULL | gate file + state file + multi-phase spec (E1→Board→E2→...) |
 
 Quality discipline: brief shape is enforced in `_protocols/dispatch-template.md` + `mca-brief-template.md`, with discipline in operational.md §Delegation hygiene.
+
+Authorization persists across phases within the approved scope. A clear
+implementation instruction suffices; ask again only for a material scope/risk
+change or an unresolved consequential decision. Diagnosis alone does not
+authorize a fix, and live, destructive and publication actions retain their
+explicit boundaries (`framework/process-map.md` §Authorization).
 
 ## 3. Single-class skill model
 
@@ -240,11 +246,12 @@ all live refs belong cleaned up in a single commit — `grep -rn old_skill`
 
 ### RECEIVE
 
-Three mental states:
+Input classification:
 
 | State | Trigger | Reaction |
 |---|---|---|
-| **Incident** | expectation ≠ reality | `root_cause_fix/SKILL.md` mandatory, no further check |
+| **Incident** | active outage or ongoing harm | authorized recovery and outcome verification before final RCA; fix runbook §Incident recovery |
+| **Defect** | expectation ≠ reality, without ongoing harm | diagnose and repair; verified known fixes may qualify for DIRECT |
 | **Substantive** | user wants to do/change/build/decide | clarify intent-fit + sequencing before proposing |
 | **Trivial** | acknowledgement, status, greeting | reply |
 
@@ -286,13 +293,15 @@ Three boards, all connected via `_protocols/discourse.md`:
 
 **Buddy's role on boards (CLAUDE.md §1):**
 
-> On Board/Council, do not read review files, do not analyse findings, do not
-> write consolidations, do not verify fixes. Only: spawn → read chief signal
-> → SAVE → escalate.
+Reviewers investigate independently. A Chief consolidates where the selected
+mode requires one. Buddy owns the decision and verifies pivotal claims against
+their sources, consulting relevant findings to resolve contradictions without
+routinely repeating every review. Keep Buddy's framing out of reviewer inputs.
 
-This is the most important Buddy discipline. If Buddy reads along on the board,
-his interpretation colours the findings, and the multi-perspective guarantee
-is lost.
+Read-only reviewers and Chiefs return complete artifacts inline. Buddy persists
+them verbatim with provenance (agent, reviewed scope/revision and run identity)
+before downstream Chief consumption. Role defaults do not establish effective
+runtime permissions; platform instructions and permissions remain binding.
 
 ### Seven review-quality dimensions
 
@@ -752,7 +761,7 @@ The framework is not just a collection of files. It is a coherent
 
 Each discipline has a mental side (Spec-Board / Council / review) and,
 where enforcement is cheap and portable, a mechanical anchor. That
-anchor layer is deliberately thin — git pre-commit + SessionStart hooks
+anchor layer is deliberately thin — shared git pre-commit + host-specific boot
 — with the rest carried by protocol-anchored reasoning. The mechanical
 layer reinforces; it doesn't replace the reasoning.
 

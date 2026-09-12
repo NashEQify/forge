@@ -16,12 +16,15 @@ invariants, the operational rules, the boot routing. He greets you and
 asks what's up. Whatever you say, he routes through three phases:
 **RECEIVE** (incident? substantive? trivial?), **ACT** (delegate, dispatch
 boards, work skills), **BOUNDARY** (persist context, update task state,
-close the loop). A thin hook layer boots Buddy on session start and
-validates every commit against 6 pre-commit checks. When
+close the loop). Host-specific integration boots Buddy (configured Claude
+SessionStart or explicit Codex AGENTS instructions); installed shared Git
+hooks run six commit-time checks. When
 Buddy needs to do something non-trivial, he writes a Plan-Block before
 acting. When he needs multiple perspectives, he dispatches a Board and
-reads only the chief signal — never the individual reviewer outputs.
-When he's unsure, he asks. Default is *discuss*, not *implement*.
+uses Chief consolidation where required, then verifies pivotal claims against
+sources and owns the decision. A clear implementation instruction authorizes
+its scope across phases; unresolved decisions or material scope/risk changes
+require clarification.
 
 That's the loop. Everything else is detail.
 
@@ -38,19 +41,21 @@ Buddy decides whether to do it himself, dispatch a sub-agent, or invoke a
 multi-perspective board. This collapses the "which agent should I call?"
 question into a single conversation.
 
-### 2. Default is "discuss before doing"
+### 2. Authorization follows the approved scope
 
-Vanilla Claude Code defaults to action — you ask, it acts. Buddy defaults
-to *discuss* unless the imperative is unambiguous. Self-triggered changes
-(things Buddy noticed on his own) **always** go through discussion first.
-This is `CLAUDE.md §2`.
-
-The cost: more turns. The benefit: you don't wake up to find Buddy "fixed"
-something you didn't want fixed.
+A clear implementation request authorizes work within its scope. Buddy records
+that approval and carries it across phases; routine signoff steps do not ask
+for the same decision again. Clarify an unresolved consequential decision or
+a material scope/risk change. Diagnosis-only requests do not authorize a fix,
+and bookkeeping cannot introduce substantive decisions. Live, destructive
+and publication actions retain their explicit boundaries. Sources:
+`CLAUDE.md §2` and `framework/process-map.md` §Authorization.
 
 ### 3. Pre-Delegation is not negotiable
 
-Before any sub-agent call, Buddy writes a Plan-Block:
+Before a sub-agent call, Buddy records the delegation. DIRECT needs scope,
+goal, agent and success criteria in the turn. Other paths use a persisted
+brief. A Plan-Block makes the intended work explicit:
 
 ```
 Scope:        what's touched, what's not
@@ -67,18 +72,20 @@ This is `CLAUDE.md §3` + `skills/_protocols/plan-review.md`. Buddy
 authors the brief with the protocol open rather than relying on a hook
 to flag thin prompts.
 
-### 4. Boards run multi-perspective, Buddy doesn't co-read
+### 4. Boards investigate independently; Buddy decides
 
 Spec-Board (4-7 reviewers depending on depth) and Code-Review-Board (L1
 focused / L2 full) operate by **anchoring discipline**: Buddy spawns
 context-isolated reviewers, waits for them all to complete, lets the
-chief persona consolidate, and reads ONLY the chief signal.
+Chief consolidate where required, then verifies pivotal claims against their
+sources and makes the decision. He may inspect relevant findings to resolve
+contradictions without routinely repeating every review.
 
-He does NOT read individual reviewer files. If he did, his interpretation
-would corrupt the multi-perspective. This is `CLAUDE.md §1` and is the
-hardest discipline to get right — multiple architectures of the framework
-have evolved to make it robust (`_protocols/dispatch-template.md`,
-`_protocols/context-isolation.md`, `_protocols/consolidation-preservation.md`).
+Read-only reviewers and Chiefs return complete artifacts inline. Buddy persists
+them verbatim with agent, scope/revision and run provenance before a downstream
+Chief reads them. Parent runtime settings can override role defaults; effective
+permissions must be checked. Sources: shared Invariant 1 and
+`agents/buddy/operational.md` §Read-only review transport.
 
 ### 5. Skills, Workflows, Personas — three separate layers
 
@@ -101,12 +108,13 @@ dispatch Personas. Three layers, clear contract.
 
 | Level | Mechanism | Examples |
 |---|---|---|
-| Boot-time | SessionStart hooks | `buddy-boot-inject`, `session-start-remote` |
+| Boot-time | Host-specific integration | Configured Claude SessionStart: `buddy-boot-inject`, `session-start-remote`; Codex: managed AGENTS boot entry |
 | Commit-time | git pre-commit hook | 6 checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE = BLOCK; SECRET-SCAN, SOURCE-VERIFICATION, ANTI-PHANTOM = WARN) |
 | Index-level | Generator + Validator | `generate_skill_map.py` + `consistency_check` Check 6, `generate_navigation.py` + Check 8 |
 
-Vanilla Claude Code has none of these. They are user-installed during
-`scripts/setup-cc.sh` plus a single git-hook symlink per repo.
+Use the selected adapter installer for boot integration and install shared
+Git hooks in each consumer repo. Codex uses `scripts/setup-codex.sh` plus
+`scripts/install-git-hooks.sh`; verify boot in a fresh session.
 
 ---
 
@@ -124,7 +132,7 @@ reviewers all multiply the same mush.
 | **Spec-Board** (4-7 reviewers + chief) | A written spec. Run spec-authoring first, then board the spec. Boarding a vibe wastes parallel reviewers. |
 | **Code-Review-Board** (L1: 2 / L2: 13 reviewers) | A diff to review. Narrower scope = sharper review. |
 | **`solve` workflow** (open-ended problem) | A problem you can't see the shape of. If you can — `build` is faster. |
-| **`fix` workflow** (root-cause first) | A bug with reproduction path. If reproduction is unclear — `solve` first. |
+| **`fix` workflow** | A defect to investigate. For active outages or ongoing harm, use authorized Incident recovery before final RCA. |
 
 Common short-circuit: *"drill my intent first"* — if Buddy starts producing
 without asking, you can force the clarification step. Don't accept solution-
@@ -155,7 +163,7 @@ trigger words, defined in `agents/buddy/operational.md §Commands`:
 | `consistency check` | Invoke `consistency_check` skill (12 checks) |
 | `solve <problem>` | Trigger solve-Workflow (problem with open solution-form) |
 | `build <task>` | Trigger build-Workflow |
-| `fix <bug>` | Trigger fix-Workflow (root-cause-first) |
+| `fix <bug>` | Trigger fix-Workflow; active incidents use authorized recovery before final RCA |
 | `review <spec>` | Trigger review-Workflow (no code) |
 | `research <topic>` | Trigger research-Workflow (knowledge artefact) |
 | `frame <problem>` | Standalone frame-Skill (8-step problem analysis) |
@@ -276,7 +284,7 @@ python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --find --task 123
 `research`, `docs-rewrite`.
 
 **Optional / skip-eligible**:
-- `build` DIRECT path (≤3 files, no spec, no new behaviour)
+- `build` / verified-known-fix DIRECT path (risk-based eligibility in `framework/process-map.md`)
 - `save` (lifecycle workflow, no multi-session continuity)
 - `context_housekeeping` (ad-hoc maintenance)
 
@@ -359,9 +367,10 @@ reviewers in parallel: `code-review` (correctness/architecture/performance
 multi-axis) + `code-adversary` (concurrency/edge/data-corruption). Then
 `code-chief` consolidates.
 
-Buddy reads ONLY `code-chief`'s signal. If PASS → Phase Close. If
-NEEDS-WORK → fix iteration via `convergence_loop` (max 3 passes, rising
-severity threshold).
+Buddy reads `code-chief`'s signal and verifies pivotal claims against their
+sources, consulting relevant findings as needed. If PASS and verification
+supports it → Phase Close. If NEEDS-WORK → fix iteration via
+`convergence_loop` (max 3 passes, rising severity threshold).
 
 Phase Close:
 - `task_status_update` skill: status=done, workflow_phase=done
@@ -463,7 +472,7 @@ methodology drift is bounded.
 
 ```
 You: "build feature X — spec is at docs/specs/x.md"
-Buddy: → Path determination (DIRECT/STANDARD/FULL based on file count, spec, scope)
+Buddy: → Path determination (process-map safety floors, scope, reversibility, evidence)
        → Phase Specify (frame interview if no spec, spec_board if spec exists)
        → Phase Prepare (test-design + delegation artefact)
        → Phase Execute (main-code-agent)
@@ -474,10 +483,11 @@ Buddy: → Path determination (DIRECT/STANDARD/FULL based on file count, spec, s
 ### Investigate a bug
 
 ```
-You: "the FACTS hook is failing on Linux"
+You: "diagnose why the hook is failing on Linux"
 Buddy: → fix workflow Phase Specify with root_cause_fix Phase A
        → Symptoms → Hypotheses → Drill (1-3 hypotheses, narrowest first)
        → Test plan reproducing the bug
+       → Repair approval (this request authorized diagnosis only)
        → Phase Execute: implement + green test
        → Phase Verify: code-review-board L1
        → Lessons Learned via knowledge_processor

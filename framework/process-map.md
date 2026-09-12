@@ -27,7 +27,8 @@ from the **repository root** (not relative to `framework/`).
 | Implement a feature/task | **Build** | `workflows/runbooks/build/WORKFLOW.md` |
 | Write/design a spec | **Build** (Specify) | `workflows/runbooks/build/WORKFLOW.md` |
 | Review/validate spec(s) | **Review** | `workflows/runbooks/review/WORKFLOW.md` |
-| Fix a bug / handle an incident | **Fix** | `workflows/runbooks/fix/WORKFLOW.md` |
+| Restore service during ongoing harm | **Fix: Incident recovery first** | `workflows/runbooks/fix/WORKFLOW.md` |
+| Diagnose and permanently fix a defect | **Fix** | `workflows/runbooks/fix/WORKFLOW.md` |
 | Research / evaluate / spike | **Research** | `workflows/runbooks/research/WORKFLOW.md` |
 | Rewrite reader-facing docs / README / positioning (reader-journey-first) | **Docs-Rewrite** | `workflows/runbooks/docs-rewrite/WORKFLOW.md` |
 
@@ -45,13 +46,57 @@ permission and gate per artifact type.
 **Solve vs. other workflows — entry-point matrix:**
 - **Solve**: the problem is known, but solution shape (feature? spec? code? process?) is unclear. Typical for meta-problems, structural questions, new processes.
 - **Build**: feature is clear (already decided to build), solution lives in code-space.
-- **Fix**: bug reproducible, cause still to be found. ONLY when investigation is needed — known bug with defined fix -> Build-DIRECT.
+- **Fix**: a defect needs investigation. A known cause and defined fix may use Build-DIRECT only if all DIRECT criteria below hold. An active outage or ongoing harm takes Incident recovery first, even when final RCA is incomplete.
 - **Review**: artifact exists and needs validation.
 - **Research**: knowledge gap, answer needs to be found.
 - **Solve (scoping mode)**: large objective to split into spec hierarchy. Done criterion foreseeable, solution shape = spec hierarchy. Uses `skills/scoping/SKILL.md` as capability.
 
 If unclear: derive routing from intent (what is the desired result?).
 Hybrid tasks: choose a primary workflow and embed other workflows as sub-steps.
+
+## Authorization
+
+Existing authorization survives phase transitions within the approved scope.
+A clear request to implement a bounded change is sufficient; the brief records
+that authorization rather than asking for the same decision again. Ask when
+the intended result is unclear, a consequential design decision is unresolved,
+or the scope, risk, affected host or data impact materially changes.
+Diagnosis-only and proposal-only requests do not authorize implementation.
+Bookkeeping must not silently change the user's goals or permission boundaries.
+
+Live changes follow the consumer's host/session approvals; destructive actions
+require their own explicit confirmation. Recovery does not waive these bounds.
+Commit, push and deploy are separate actions: a research or implementation
+request does not itself authorize publication. A standing explicit repository
+commit policy can authorize local commits; push/deploy require authorization
+covering that action and target. No workflow may widen these permissions.
+
+## DIRECT eligibility
+
+Evaluate safety floors first. DIRECT excludes changes to authorization/auth,
+secrets, schema/data migration, public or cross-component contracts, live
+infrastructure, and changes with hidden/racing/unbounded failure effects.
+Size does not cancel a safety floor.
+
+Otherwise DIRECT requires ALL of:
+- A clear authorized outcome and concrete success criteria.
+- A locally bounded, reversible change following an observed existing pattern.
+- No unresolved consequential design decision or new subsystem.
+- Relevant implementation/spec context read and an executable verification
+  appropriate to the changed behavior; a defect's claimed cause is checked.
+
+New local behavior is allowed. A pre-existing spec is not a reason to repeat
+spec authoring; update any affected contract description within scope. File
+and line counts are useful warning signals, never the eligibility decision.
+If a criterion is unknown, gather targeted evidence; if still unresolved,
+use STANDARD/FULL or ask the missing decision, not a ritual authorization.
+
+DIRECT is a short complete lifecycle: outcome + scope + verification plan,
+implement, run the relevant tests, independent verification of load-bearing
+code, and return evidence. Buddy may author the delegation inline; product
+code still goes to main-code-agent. No separate spec/architect/signoff cycle.
+Typo/format-only changes require a diff check, not behavioral tests or a board.
+An authorization boundary and an independent quality check are different gates.
 
 ---
 

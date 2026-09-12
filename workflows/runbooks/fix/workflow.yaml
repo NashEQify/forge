@@ -1,5 +1,5 @@
 name: fix
-description: "Fix a bug / handle an incident — root-cause-first, no symptom patching."
+description: "Recover active incidents within authorization, then investigate and permanently repair defects."
 need_phrase: "fix a bug or handle an incident"
 trigger: ["fix"]
 derived_from: "WORKFLOW.md@2026-05-09"
@@ -11,8 +11,8 @@ derived_from: "WORKFLOW.md@2026-05-09"
 # brief-signoff + fix-execute per spec 306 §4.5 + §12 sub-task 4.
 #
 # Routes:
-# - standard (default): root-cause → fix → L1 review → close, sets task status=done
-# - full: same step set; reserved for future L2 review on schema-impact
+# - standard (default): root-cause → fix → risk-selected review → close
+# - full: same step set; review level follows the canonical skill, not route name
 # - sub-fix: nested fix-iteration in parent build — close-bookkeeping
 #   excluded since parent owns task-level status
 
@@ -93,7 +93,8 @@ steps:
       covering: root-cause hypothesis (from prior root-cause step),
       fix-implementation plan, scope-focused test/verification,
       RETURN-SUMMARY structure, sign-off field per spec 306 §5.2.
-      DIRECT path (trivial fix): Buddy authors inline as today.
+      DIRECT eligibility is defined by framework/process-map.md; verified
+      known fixes meeting all criteria use an inline delegation.
 
       On external library API references in the fix scope: invoke
       `get_api_docs` BEFORE writing the fix plan (source-grounding,
@@ -107,8 +108,9 @@ steps:
     name: "Brief sign-off (user approval; same step ID as build's, path-agnostic)"
     category: gate
     instruction: >
-      Per spec 306 §4.4. Buddy presents the fix-brief to user for
-      approval before fix-execute (DIRECT path skips). On
+      Apply framework/process-map.md section Authorization. Record existing
+      approval that covers the actual fix scope; ask only for changed
+      scope/risk or a genuinely new decision (DIRECT skips). On
       `escalate:` from architect: surface to user, do not proceed
       to fix-execute. Sub-fix route omits this step (parent
       already approved at parent-scope brief-signoff per
@@ -144,13 +146,12 @@ steps:
     name: "Code review (light / L1 / L2 per spec 306 §4.4a)"
     category: content
     instruction: >
-      Level (per spec 306 §4.4a + skills/code_review_board/SKILL.md §1):
-      - light: ≤2 files mechanical-trigger → single
-        agents/code-verification.md persona (VERDICT: PASS|FAIL|PARTIAL).
-      - L1: small-scope fixes effort S-M (default for fixes) → 2-3
-        reviewers, no chief-consolidation needed.
-      - L2: schema / cross-spec / larger fix scope → 5-7 reviewers +
-        chief-consolidation REQUIRED.
+      Select light / L1 / L2 using skills/code_review_board/SKILL.md §1.
+      Safety floors precede file counts and other size signals. DIRECT
+      eligibility comes from framework/process-map.md; a fix is not
+      automatically L1. Consolidation follows the actual reviewer count
+      under the skill's §1.3. Buddy owns the decision and verifies pivotal
+      claims after reading the reports or Chief consolidation.
 
       On post-board FAIL with `target: spec_text` entries: Buddy
       dispatches MCA fix-execute + spec-text-drift-batch agent in
@@ -246,7 +247,8 @@ steps:
       archive, dangling blocked_by). Conditional on whether the fix closes
       the WHOLE task (sub-fix route skips — parent owns task status).
 
-      Then git commit + push. Deploy conditional on docs/ changes. Engine
+      Commit only with applicable authorization per framework/process-map.md;
+      push and deploy need separate authorization, not merely docs changes. Engine
       auto-advances workflow_phase=done when this step completes
       (workflow_phase only — the task status flip is the skill call above).
     completion:

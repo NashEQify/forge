@@ -8,14 +8,14 @@ Public-OSS architecture, installation, and usage
 documentation for **forge** — disciplined LLM capabilities
 between you and your coding agent: opinionated workflows
 plus a multi-perspective reasoning substrate (Boards +
-Council) plus a thin universal-portable reinforcement
-layer.
+Council) plus shared commit-time checks and host-specific
+boot integration.
 
 This documentation is aimed at **two audiences in
 parallel**:
 - **Humans** (maintainers, OSS contributors, curious
   readers) — reader-journey-first, prose where it helps.
-- **Coding agents** (Claude Code, OpenCode, Cursor) —
+- **Coding agents** (Claude Code, OpenCode, Codex, Cursor) —
   source-path-bound, invariants explicit, do / don't
   explicit.
 

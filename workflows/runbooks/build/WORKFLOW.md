@@ -28,7 +28,7 @@ Nested in a parent build (locked spec, parent has remaining ACs)?            →
 Spec at spec_ref locked from ANY source (parent closed, predecessor, manual,
   external) AND no spec amendment in scope AND implementation-only?           → STANDARD-IMPLEMENTATION-ONLY
 Authority-only task (spec / ADR / plan, no code output)?                      → AUTHORITY-ONLY
-ALL three? (a) ≤3 files (b) no spec (c) no new behaviour                      → DIRECT
+All DIRECT criteria in framework/process-map.md satisfied?                   → DIRECT
 At least ONE? (a) >1 subsystem (b) new subsystem (c) new pattern
   (d) schema change (e) >10 ACs                                              → FULL
 Otherwise                                                                     → STANDARD
@@ -61,16 +61,16 @@ SoT)** — not re-listed here. What each route skips:
 
 ## Path discipline (why each path exists)
 
-Each path is a discipline cluster, not a gate count — picking a path chooses
-which failure-modes the workflow pays tax to prevent. Triggers are
-**mechanical** (file count, spec presence, schema signal — see tree), so path
-choice is not a judgment call. Once a trigger fires the cluster applies as a
-unit; don't cherry-pick gates across paths. Skip a gate within a path via
+Each path addresses a class of failure. Evaluate the safety floors and DIRECT
+criteria in `framework/process-map.md` before using size signals. DIRECT may
+include small new local behavior; it is not a synonym for typo-only work.
+Do not relabel a consequential contract/security change DIRECT. Within a
+selected non-DIRECT path, skip an eligible gate via
 `--skip <step-id> --reason "<why>"`.
 
 | Path | Optimizes for | Failure-mode prevented |
 |------|---------------|------------------------|
-| **DIRECT** | speed on trivial work (review cost > defect risk) | over-process tax on typo/format/comment-only |
+| **DIRECT** | complete verification for clear bounded reversible changes | unnecessary spec/brief/signoff cycles; safety floors still exclude high-risk changes |
 | **STANDARD** | normal quality bar, bounded ceremony (1 architect, 1 signoff, L1) | mid-size feature shipped without spec/test discipline |
 | **FULL** | high-stakes, expensive-to-undo (3 architects, multi-mode brief, L2) | locking a load-bearing decision on a single perspective |
 | **SUB-BUILD** | MCA-pass nested in an in-flight parent that owns the spec | re-authoring spec / re-closing task at sub-level |
@@ -90,7 +90,7 @@ detail + conditions = the step `instruction:` in `workflow.yaml`.
 | 4 | test-design | Prepare | `testing/SKILL.md` (+ `adversary_test_plan` + `test-skeleton-writer` on substantial dispatch) |
 | 5 | architect-lens | Prepare | `agents/code-architect-lens.md` (preventive plan-time module lens; idle below scope-threshold) |
 | 6 | brief-author | Prepare | `agents/brief-architect.md` (single or multi-mode; inline only if DIRECT-eligible) |
-| 7 | brief-signoff | Prepare | user approval before MCA dispatch (DIRECT skips) |
+| 7 | brief-signoff | Prepare | confirm coverage by existing authorization; ask only for a new decision (DIRECT skips) |
 | 8 | mca-implementation | Execute | `main-code-agent` (Plan → impl_plan_review cond. → Implement → L0) |
 | 9 | code-review-board | Verify | `code_review_board/SKILL.md` (light / L1 / L2 per §1) |
 | 10 | spec-drift-check | Verify | `spec_amendment_verification/SKILL.md` (when diff changes spec-defined behaviour) |

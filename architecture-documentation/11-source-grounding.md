@@ -14,19 +14,21 @@ to a file path. The mapping below is the audit table.
 
 | Claim | Evidence |
 |---|---|
-| 8 Buddy invariants under Claude Code | [`../CLAUDE.md`](../CLAUDE.md) §1-8 |
-| 6 Buddy invariants under OpenCode | [`../AGENTS.md`](../AGENTS.md) §1-6 |
+| Shared Buddy invariants under Claude Code | [`../CLAUDE.md`](../CLAUDE.md) §1-6, §9-10 |
+| Shared Buddy invariants under Codex / OpenCode | [`../AGENTS.md`](../AGENTS.md) §1-6, §9-10 |
 | Boot instruction: `Load and follow: agents/buddy/{soul,operational,boot}.md` | [`../CLAUDE.md`](../CLAUDE.md):5, [`../AGENTS.md`](../AGENTS.md):4-5 |
+| Codex explicit AGENTS boot and 40 roles generated from neutral sources | [`../scripts/generate_codex_agents.py`](../scripts/generate_codex_agents.py) `boot_instructions`, `generate_roles`; [`../scripts/setup-codex.sh`](../scripts/setup-codex.sh) |
+| Codex report-role defaults, parent runtime caveat and inline handoff | [`../scripts/generate_codex_agents.py`](../scripts/generate_codex_agents.py) `generate_roles`; [`../agents/buddy/operational.md`](../agents/buddy/operational.md) Read-only review transport |
 | Frozen-zones SoT: `docs/STRUCTURE.md` | [`../CLAUDE.md`](../CLAUDE.md):80 |
 | Stale-cleanup invariant (all refs in the same commit) | [`../CLAUDE.md`](../CLAUDE.md):36-42 |
-| Pre-delegation non-negotiable | [`../CLAUDE.md`](../CLAUDE.md):23-27 |
+| Pre-delegation and authorization across phases | [`../CLAUDE.md`](../CLAUDE.md) §2-3; [`../framework/process-map.md`](../framework/process-map.md) §Authorization |
 
 ### Buddy model
 
 | Claim | Evidence |
 |---|---|
 | RECEIVE → ACT → BOUNDARY structure | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):3-5 |
-| Three mental states (incident / substantive / trivial) | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):11-15 |
+| Intake: incident / defect / substantive / trivial; authorized incident recovery precedes final RCA | [`../agents/buddy/operational.md`](../agents/buddy/operational.md) §Phase 1: RECEIVE; [`../workflows/runbooks/fix/WORKFLOW.md`](../workflows/runbooks/fix/WORKFLOW.md) §Incident recovery |
 | Routing table (code → MCA, architecture → solution-expert, security → security, sysadmin → Buddy) | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):37-42 |
 | Boot sequence ORIENT → RESOLVE → ROUTE → LOAD → STATUS-CHECK → RESUME → GREET | [`../agents/buddy/boot.md`](../agents/buddy/boot.md) §Boot sequence |
 | Persist gate blocking on status change | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):99-104 |
@@ -61,7 +63,7 @@ to a file path. The mapping below is the audit table.
 | 8 active workflows | `ls workflows/runbooks/` (`build`, `context_housekeeping`, `docs-rewrite`, `fix`, `research`, `review`, `save`, `solve`) |
 | Workflow-routing table "what do I want → which workflow" | [`../framework/process-map.md`](../framework/process-map.md):14-31 |
 | 5-phase standard for producer class (specify/prepare/execute/verify/close) | [`../workflows/runbooks/build/WORKFLOW.md`](../workflows/runbooks/build/WORKFLOW.md) phase sections |
-| build path-determination (DIRECT/STANDARD/FULL) | [`../workflows/runbooks/build/WORKFLOW.md`](../workflows/runbooks/build/WORKFLOW.md):21-26 |
+| DIRECT eligibility; STANDARD/FULL path determination | [`../framework/process-map.md`](../framework/process-map.md#direct-eligibility); [`../workflows/runbooks/build/WORKFLOW.md`](../workflows/runbooks/build/WORKFLOW.md) §Path Determination |
 | solve 5 phases | [`../workflows/runbooks/solve/WORKFLOW.md`](../workflows/runbooks/solve/WORKFLOW.md) |
 | save 3 groups (A pre-write, B content-writes parallel, C post-write) | [`../workflows/runbooks/save/WORKFLOW.md`](../workflows/runbooks/save/WORKFLOW.md):5-25 |
 

@@ -20,8 +20,12 @@ Input: working directory. Output: active intent + mode.
    only argued, so agents can reason from it.
 
 The intent.md you find is the active intent. Everything else derives
-from it. `CLAUDE.md` always applies (via --add-dir, mechanically
-guaranteed by the `cc` script). `values.md` + `profile.md` always
+from it. Load the framework's adapter explicitly when the host has not
+already injected it: `AGENTS.md` for Codex/OpenCode, `CLAUDE.md` for Claude
+Code, resolved from the concrete framework root. Additional-directory access
+alone does not prove instruction loading. Keep the consumer's own project
+rules in force; shared framework rules do not replace consumer approvals.
+`values.md` + `profile.md` always
 apply (canonical under `~/projects/personal/context/user/`,
 independent of CWD).
 

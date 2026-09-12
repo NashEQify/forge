@@ -12,11 +12,11 @@
 #   bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh --check     # probe only, no writes
 #   bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh --uninstall # remove symlinks
 #
-# Worktrees: handled via `git rev-parse --git-dir`, so consumer repos
+# Worktrees: handled via `git rev-parse --git-common-dir`, so consumer repos
 # created with `git worktree add` work without special-casing.
 #
-# Idempotent: re-running is a no-op with OK output. Broken symlinks
-# (target missing) and wrong-target symlinks are auto-corrected.
+# Idempotent: re-running is a no-op with OK output. Unrelated or broken
+# symlinks are conflicts and are never replaced automatically.
 # Existing non-symlink files at the hook path produce a WARNUNG and
 # are NOT overwritten — operator must inspect and remove manually.
 #
@@ -64,7 +64,7 @@ if [ ! -d "$TARGET_REPO" ]; then
 fi
 TARGET_REPO="$(cd "$TARGET_REPO" && pwd)"
 
-GIT_DIR="$(cd "$TARGET_REPO" && git rev-parse --git-dir 2>/dev/null || true)"
+GIT_DIR="$(cd "$TARGET_REPO" && git rev-parse --git-common-dir 2>/dev/null || true)"
 if [ -z "$GIT_DIR" ]; then
   echo "FEHLER: $TARGET_REPO ist kein git-checkout (rev-parse --git-dir)." >&2
   exit 1
@@ -74,7 +74,32 @@ case "$GIT_DIR" in
   *)  GIT_DIR="$TARGET_REPO/$GIT_DIR" ;;
 esac
 HOOKS_DIR="$GIT_DIR/hooks"
-mkdir -p "$HOOKS_DIR"
+if CUSTOM_HOOKS="$(git -C "$TARGET_REPO" config --get core.hooksPath)"; then
+  echo "CONFLICT: core.hooksPath is configured (value: '$CUSTOM_HOOKS'); preserve custom hook routing and integrate manually." >&2
+  exit 1
+else
+  CONFIG_STATUS=$?
+  if [ "$CONFIG_STATUS" -ne 1 ]; then
+    echo "CONFLICT: cannot read core.hooksPath (exit $CONFIG_STATUS)." >&2
+    exit 1
+  fi
+fi
+if [ -L "$HOOKS_DIR" ]; then
+  echo "CONFLICT: hooks directory is a symlink: $HOOKS_DIR" >&2
+  exit 1
+fi
+
+# Git may resolve an existing hook symlink to its target; normalize both paths.
+for hook in pre-commit commit-msg; do
+  if ! EFFECTIVE_HOOK="$(git -C "$TARGET_REPO" rev-parse --path-format=absolute --git-path "hooks/$hook")" || [ -z "$EFFECTIVE_HOOK" ]; then
+    echo "CONFLICT: cannot resolve Git's effective $hook destination." >&2
+    exit 1
+  fi
+  if [ "$(readlink -m -- "$EFFECTIVE_HOOK")" != "$(readlink -m -- "$HOOKS_DIR/$hook")" ]; then
+    echo "CONFLICT: Git resolves $hook to $EFFECTIVE_HOOK; inspected path is $HOOKS_DIR/$hook." >&2
+    exit 1
+  fi
+done
 
 if [ ! -f "$HOOK_SCRIPT" ]; then
   echo "FEHLER: hook-script $HOOK_SCRIPT nicht gefunden." >&2
@@ -127,10 +152,8 @@ install_or_check_one() {
       echo "  $hook: WRONG TARGET ($current → expected $expected)"
       return 1
     fi
-    rm "$link"
-    ln -s "$HOOK_SCRIPT" "$link"
-    echo "  $hook: corrected (was → $current)"
-    return 0
+    echo "  $hook: CONFLICT — unrelated/broken symlink preserved: $link" >&2
+    return 1
   elif [ -e "$link" ]; then
     echo "  $hook: WARNUNG — $link existiert und ist KEIN symlink." >&2
     echo "    Manuell pruefen + sichern, dann erneut. (Datei nicht ueberschrieben.)" >&2
@@ -161,6 +184,22 @@ if [ "$MODE" = "uninstall" ]; then
 fi
 
 # install or check
+if [ "$MODE" = "install" ]; then
+  # Preflight both hooks before changing either one.
+  for hook in "${HOOKS[@]}"; do
+    link="$HOOKS_DIR/$hook"
+    if [ -L "$link" ]; then
+      if [ "$(readlink -f "$link" 2>/dev/null || true)" != "$HOOK_SCRIPT" ]; then
+        echo "CONFLICT: unrelated/broken symlink preserved: $link" >&2
+        exit 1
+      fi
+    elif [ -e "$link" ]; then
+      echo "CONFLICT: custom hook preserved: $link" >&2
+      exit 1
+    fi
+  done
+  mkdir -p "$HOOKS_DIR"
+fi
 for hook in "${HOOKS[@]}"; do
   install_or_check_one "$hook" || FAILED=1
 done
@@ -186,7 +225,7 @@ echo "install-git-hooks: self-probe..."
 PROBE_FAILED=0
 PLAN_ENGINE="$FRAMEWORK_DIR/scripts/plan_engine.py"
 if [ -f "$PLAN_ENGINE" ]; then
-  if python3 "$PLAN_ENGINE" --validate -1 >/dev/null 2>&1; then
+  if python3 "$PLAN_ENGINE" --project-root "$TARGET_REPO" --validate -1 >/dev/null 2>&1; then
     echo "  probe-1 (validator rejects --validate -1): FAIL — exit 0 expected != 0" >&2
     PROBE_FAILED=1
   else

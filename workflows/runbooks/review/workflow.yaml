@@ -49,7 +49,9 @@ steps:
     instruction: >
       Dispatch the routed skill (spec_board / sectional_deep_review /
       architecture_coherence_review). Chief consolidates findings into
-      the verdict file. Buddy reads ONLY the chief signal (CLAUDE.md §1).
+      the verdict artifact. Buddy owns the decision and checks decisive source
+      evidence per shared Invariant 1; complete inline reports are persisted
+      verbatim before downstream consumption.
       Output paths:
       - spec_board               → docs/reviews/board/{spec_name}-consolidated-pass1.md
       - sectional_deep_review    → docs/reviews/sectional/{spec_name}-deep.md
@@ -115,7 +117,7 @@ steps:
   - id: commit
     name: "Commit + push"
     category: deterministic
-    instruction: "git commit + push"
+    instruction: "Persist the review. Apply framework/process-map.md section Authorization to commit/push; do not publish without applicable permission."
     completion:
       type: manual
     commit_gate: true

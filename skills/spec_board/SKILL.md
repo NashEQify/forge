@@ -221,7 +221,8 @@ Mechanic: `_protocols/discourse.md`.
 - [ ] All findings fixed (C+H+M+L).
 - [ ] Delta-Verify mini-board if §3a trigger fired — 0 new highs.
 - [ ] Task YAML `board_result` + `readiness` updated.
-- [ ] git commit + push; deploy if task YAMLs changed.
+- [ ] Persist the result; commit/push/deploy only under the respective
+  authorization in `framework/process-map.md`, not because task YAMLs changed.
 
 ## 6a. Risk carry-forward (MANDATORY on user-override / cherry-pick / valve-hit / ESCALATE-accepted)
 

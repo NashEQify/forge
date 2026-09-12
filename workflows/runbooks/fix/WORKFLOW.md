@@ -1,6 +1,7 @@
 # Workflow: fix
 
-Fix a bug or handle an incident. Root-cause-first, no symptom patching.
+Investigate and permanently repair a defect. Active incidents use recovery
+first; recovery is not a claim that the root cause has been fixed.
 
 **Forge-feed trigger (active throughout this workflow):** framework-
 relevant friction → apply the pre-write filter in
@@ -18,6 +19,35 @@ relevant friction → apply the pre-write filter in
 
 Known feature gap → **build**. Spec error → **review**. Unclear
 problem → **solve**. Research → **research** (sub-workflow).
+
+## Incident recovery
+
+For an active outage or ongoing harm, restore safely before final root-cause
+analysis. This section takes precedence over the repair gates below and the
+root-cause-fix skill's permanent-repair sequence.
+
+1. Identify the affected service/host, impact, and current state. Preserve the
+   essential evidence needed for diagnosis without prolonging ongoing harm.
+2. Read the consumer's recovery procedure and authorization bounds. Choose a
+   bounded recovery supported by that procedure and observed state, such as a
+   known-good rollback. If no safe recovery is known, diagnose or escalate;
+   do not improvise repeated restarts or destructive restores.
+3. Execute only with authorization covering the host, session, action and
+   data impact. Existing approval may suffice; destructive actions still
+   require their explicit confirmation. Subagents and background runs gain
+   no new live privileges.
+4. Verify the actual service/user outcome and stability. If recovery fails,
+   stop and reassess its scope; do not silently widen authority.
+5. Record **Restored** separately from **Resolved**. Preserve what changed,
+   evidence, authorization and remaining uncertainty. Then investigate and
+   permanently repair the cause through the normal fix process as needed.
+
+No mandatory hypothesis count, RED test, architect brief or repeated routine
+signoff precedes an authorized recovery. Do not mark those unperformed repair
+gates complete. Recovery can run as a short recorded operation before starting
+the repair workflow; pause an existing repair workflow if needed.
+Authorization SoT: `framework/process-map.md` section Authorization; consumer
+live/destructive restrictions continue to apply.
 
 ## Path determination
 
@@ -43,7 +73,7 @@ are engine-internal.
 | 3 | fix-brief | `agents/brief-architect.md` (architect-authored on substantial; Buddy-inline on DIRECT) | mirrors build's brief-author at fix scope |
 | 4 | brief-signoff | gate (user approval) per spec 306 §4.4 | DIRECT path skips; sub-fix route omits (parent already approved at parent-scope brief-signoff) |
 | 5 | fix-execute | `root_cause_fix/SKILL.md` (Phase B); MCA inline OR Buddy direct per architect-authored fix-brief | retest as inline sub-step (regression suite green) |
-| 6 | code-review | `code_review_board/SKILL.md` (light / L1 / L2 per §1) | level: light on ≤2 files mechanical-trigger; L1 default for fixes effort S-M; L2 on schema/cross-spec or larger scope |
+| 6 | code-review | `code_review_board/SKILL.md` | risk-first selection per §1; consolidation per §1.3 |
 | 7 | spec-drift-check | `spec_amendment_verification/SKILL.md` | when fix changes spec-defined behaviour OR authority log exists with new spec edits |
 | 8 | close-bookkeeping | **distill** `close_retro` (skip-eligible) → **emit** `knowledge_processor/SKILL.md` + `task_creation/SKILL.md` + `risk_followup_routing/SKILL.md` (consume the retro; each skip-eligible) |
 | 9 | commit-deploy | **`task_status_update` (status=done, not a raw YAML edit)** + git pre-commit hooks | sub-fix route skips this gate |
@@ -67,17 +97,20 @@ the fix plan** (source-grounding, mirrors build's spec-write hook).
 
 **4. brief-signoff** — Mirrors build's brief-signoff (same step
 ID, path-agnostic — single signoff shared across DIRECT/STANDARD/
-FULL paths). User approves the fix-brief before fix-execute.
-DIRECT path skips. Sub-fix route omits per parent-owns-approval
-pattern.
+FULL paths). Check the existing authorization against the actual fix-brief
+per `framework/process-map.md` section Authorization. Record a matching
+approval and continue; ask only for a new decision/scope/risk. Diagnosis-only
+requires repair approval. DIRECT skips the separate gate; sub-fix inherits
+the parent's approved scope without expanding it.
 
 **5. fix-execute** — MCA inline OR Buddy direct (orchestrator
 path). Fix-diff makes the RED test green per the architect-authored
 fix-brief. Add regression coverage where it makes sense. Verify
 regression suite is green.
 
-**4. code-review** — `code_review_board/SKILL.md`. L1 default
-(effort S-M); L2 only on larger fix scope or schema/cross-spec.
+**4. code-review** — `code_review_board/SKILL.md` §1 selects the level
+with safety floors first; §1.3 determines consolidation from reviewer count.
+This narrative defines no independent size-based shortcut.
 
 **5. spec-drift-check** — spec-body drift: did the fix change behaviour
 defined in a spec? Yes → spec patch in the SAME block-commit. No
@@ -98,8 +131,10 @@ findings, not lessons);
 (c) §Framework-Feed — forge-feed entries (replaces the old workflow-retro
 safety net; on skip, reverts to capture-now of missed entries).
 
-**7. commit-deploy** — `git commit + push`. Deploy conditional on
-docs/ changes. Engine auto-advances `workflow_phase=done`; task-level
+**7. commit-deploy** — local commit only when authorized by the request or
+standing repository policy. Push/deploy are separately authorized actions;
+docs changes are not deployment permission. Engine auto-advances
+`workflow_phase=done`; task-level
 `status=done` is conditional (sub-fix route skips — parent owns
 task status).
 

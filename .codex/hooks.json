@@ -2,18 +2,7 @@
   "hooks": {
     "SessionStart": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/session-start-remote.sh",
-            "timeout": 60
-          },
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/buddy-boot-inject.sh",
-            "timeout": 3
-          }
-        ]
+        "hooks": []
       }
     ]
   }

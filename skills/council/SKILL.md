@@ -66,11 +66,16 @@ Trigger short-form:
 - **full** — >2 dimensions OR foundational pattern OR ≥2 hard constraints.
 - **interactive** — user explicit ask only (Buddy moderates a dialog — see §10).
 
-**Chief is required for all council modes** per Invariant 1 — Buddy never synthesizes member outputs directly. Light is light by virtue of no-adversary + no-frame-check + no-discourse, NOT by skipping chief.
+**Chief is required for all council modes**. Chief consolidates member
+outputs; Buddy owns the decision and verifies pivotal claims per Invariant 1.
+Light omits adversary/frame-check/discourse, not the Chief.
 
 **Coherence-check** is a Buddy-side rule (`agents/buddy/operational.md` §Architecture-Comprehension B), applied unconditionally on every chief return. Not a duplicated council step.
 
-**Member model config** (yaml `member_config`): minimum 2× Opus + 1× Sonnet per non-light mode for cognitive diversity. Light: 2× Opus + 1× Sonnet or 3× Opus.
+**Member model config**: use the host's available, authorized model settings.
+Inherited model settings are the default; do not invent unavailable models
+or claim model diversity from different role names. Legacy Opus/Sonnet mixes
+in templates are Claude-specific examples, not a portable Codex requirement.
 
 Default = light (proportional release valve). **Mode escalation** (light → standard → full) is criterion-driven, not Buddy-uncertain — picking standard/full just because Buddy feels uncertain is mode inflation. (Separate axis: **user escalation** vs council — see `agents/buddy/operational.md` §Multi-perspective engagement Council-before-user-escalation rule; that rule says when §1.0 fires AND the alternative is asking the user, council wins. Both rules coexist: §1.0 governs whether council fires AND which mode; council-before-user-escalation governs council-vs-user when §1.0 fires.)
 
@@ -84,7 +89,7 @@ Members see FINAL briefing only. Council-chief reads BOTH at CHIEF-1.0.
 
 ## 3. Briefing format (cold-start clean — MANDATORY)
 
-**MUST:** question (1 sentence) · intent_chain anchoring · context-file paths · null option (1-2 sentences) · perspectives + ranks · per-option reversibility cost-band (S/M/L/XL effort × named consumers impacted — lets adversary §Reversibility-trap check verify the claim rather than reconstruct from scratch) · output paths · file-output OVERRIDE block (`_protocols/dispatch-template.md` §File-Output-OVERRIDE).
+**MUST:** question (1 sentence) · intent_chain anchoring · context-file paths · null option (1-2 sentences) · perspectives + ranks · per-option reversibility cost-band (S/M/L/XL effort × named consumers impacted) · artifact destinations · inline return contract (`_protocols/dispatch-template.md` section Output transport).
 
 **MUST NOT:** Buddy's proposal · pre-classified conflicts · severity tags · lean hints. Brief-contagion empirically demonstrated.
 

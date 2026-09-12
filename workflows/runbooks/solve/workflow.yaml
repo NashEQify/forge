@@ -178,7 +178,8 @@ steps:
 
       Then run the sub-flow internally:
       (a) dispatch the routed board; chief consolidates.
-      (b) Buddy reads ONLY the chief signal (CLAUDE.md §1).
+      (b) Buddy decides and verifies pivotal source evidence per shared
+          Invariant 1; complete inline reports are persisted verbatim.
       (c) post-convergence check (chief answers: weakest point in
           PASS — what tips it? which finding got the largest
           downweight — rightly so?).
@@ -282,12 +283,14 @@ steps:
     on_fail: warn
 
   - id: commit-deploy
-    name: "Commit + push + deploy"
+    name: "Close and authorized publication"
     category: deterministic
     instruction: >
       Update state-file frontmatter: phase=done, status=done. Set task
-      status=done via task_status_update. git commit + push. Dashboard
-      deploy.
+      status=done via task_status_update. Apply framework/process-map.md
+      section Authorization to commit, push and dashboard deployment;
+      do not publish without applicable authorization. Local result
+      persistence can complete the solve independently of publication.
 
       Engine auto-advances workflow_phase=done; task-level status=done
       is set unconditionally on standard route (solve closes its own

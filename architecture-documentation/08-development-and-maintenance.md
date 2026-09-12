@@ -170,25 +170,26 @@ WARN-only — drift is heuristic (not every yaml step has to appear in md).
 
 ## Hooks
 
-`orchestrators/claude-code/hooks/` — only 3 scripts remain after the
-universal-portable-only sweep:
+`orchestrators/claude-code/hooks/` contains the shared Git checks and
+two scripts for configured Claude entrypoints:
 
 ```
-buddy-boot-inject.sh           SessionStart — Buddy boot on claude-desktop / claude-web / Codex
-session-start-remote.sh        SessionStart — resume-nudge (recent handoff check)
+buddy-boot-inject.sh           Claude SessionStart — Buddy boot on configured entrypoints
+session-start-remote.sh        Claude SessionStart — resume-nudge (recent handoff check)
 pre-commit.sh                  git pre-commit + commit-msg, 6 checks (3 BLOCK + 3 WARN)
 ```
 
-The hook layer is universal-portable only. Each hook is self-contained
-with a header doc block + exit-code convention.
+Shared Git hooks work across harnesses when installed in the active repository.
+Codex boots through the managed AGENTS entry from `scripts/setup-codex.sh`.
+Each hook is self-contained with a header doc block + exit-code convention.
 
 ### Hook care
 
-Add a hook (must satisfy the universal-portability gate):
-1. Verify universal-portability: replicable in git pre-commit OR
-   exposed via SessionStart on every supported harness (CC-Terminal,
-   claude-desktop, claude-web, Codex). If not universal, reject (the
-   default is "no CC-Terminal-only additions").
+Maintain hooks according to their actual invocation surface:
+1. Verify shared Git checks in the active consumer repository and Claude
+   SessionStart behavior on configured Claude entrypoints. Script presence
+   alone does not establish host invocation; verify Codex AGENTS boot in a
+   fresh session separately. No framework tool-event hooks are active.
 2. Write `orchestrators/claude-code/hooks/<name>.sh` (header doc
    mandatory) and `tests/hooks/test-<name>.sh`.
 3. Add an entry to `orchestrators/claude-code/settings.json.template`

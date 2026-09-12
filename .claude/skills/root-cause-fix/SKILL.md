@@ -1,6 +1,6 @@
 ---
 name: root-cause-fix
-description: 5-step root-cause analysis and fix. Structured fix lifecycle for every defect, no matter how small. Triggers when expectation does not match reality (any defect or incident, however small); NOT for planned feature work (use build).
+description: Evidence-driven diagnosis and permanent defect repair. Triggers when a defect needs investigation; NOT for a verified known fix eligible for DIRECT, planned feature work, or initial incident recovery.
 ---
 
 # Skill: root-cause-fix (Wrapper)

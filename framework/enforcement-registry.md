@@ -47,6 +47,12 @@ would the mechanism still catch the violation?* `[STRUCTURAL]` and
 
 ## Live mechanisms
 
+Codex reader-role sandbox defaults are configuration, not proof of the
+effective runtime policy. Parent permission overrides may replace them.
+Claim filesystem write protection only after a harmless write-denial probe
+through every exposed write channel in the actual launch mode. This does
+not imply network isolation or protection against privileged remote actions.
+
 Single-path `Artifact` pointers (one backticked path per row, optional
 `§section` suffix) so Check 11 can resolve them.
 
@@ -58,13 +64,13 @@ Single-path `Artifact` pointers (one backticked path per row, optional
 | SECRET-SCAN | `[GATE]` | WARN | `orchestrators/claude-code/hooks/pre-commit.sh` | gitleaks over staged content (skipped if gitleaks absent) |
 | SOURCE-VERIFICATION | `[GATE]` | WARN | `orchestrators/claude-code/hooks/pre-commit.sh` | board/council reviews cite line-numbered evidence pointers |
 | ANTI-PHANTOM | `[GATE]` | WARN | `orchestrators/claude-code/hooks/pre-commit.sh` | active-surface docs bind no live-enforcement verb to a purged hook-name (narrow tripwire: 3 named purged hooks × a fixed live-verb list — not universal) |
-| buddy-boot-inject | `[GATE]` | always-run | `orchestrators/claude-code/hooks/buddy-boot-inject.sh` | SessionStart injects the Buddy boot sequence |
+| buddy-boot-inject | `[GATE]` | on configured Claude entrypoints | `orchestrators/claude-code/hooks/buddy-boot-inject.sh` | SessionStart injects boot only when its Claude desktop/web condition matches; Codex uses its managed AGENTS entry |
 | session-start-remote | `[GATE]` | always-run | `orchestrators/claude-code/hooks/session-start-remote.sh` | SessionStart (remote only): runs `setup-cc.sh`, the no-branching branch-override, and a component VALIDATION self-check. Does NOT run `--boot-context` — resume is not a hook (see next row) |
 | cross-session resume | `[DISCIPLINE]` | — | `agents/buddy/boot.md` §RESUME | Buddy runs `workflow_engine.py --boot-context` (active workflows + `current_step`) + `plan_engine.py --boot` (open tasks) at boot; the engine state file `.workflow-state/<id>.json` is the process-position SoT. NOT harness-enforced — the ADR-007 amendment keeps resume `[DISCIPLINE]`, not a hook `[GATE]` |
 | brief-architect read-only | `[STRUCTURAL]` | — | `agents/brief-architect.md` | `disallowedTools` removes Edit/Write/NotebookEdit/ExitPlanMode/Agent (no Write-tool target, cannot sub-delegate — structural); `Bash` is granted for read-only commands, so disk writes via Bash redirection are blocked only by the agent's read-only-Bash `[DISCIPLINE]`, not structurally |
-| reviewer context-isolation | `[STRUCTURAL]` | — | `skills/_protocols/context-isolation.md` | board/council members cannot see each other's output (anti-anchoring) |
-| workflow `on_fail` gates | `[WORKFLOW]` | BLOCK-in-run | `scripts/workflow_engine.py` | step `completion` is met before advance — only while the engine drives the run |
-| DIRECT-eligibility predicate | `[DISCIPLINE]` | — | `workflows/runbooks/build/workflow.yaml` | brief-author inline-vs-architect routing (fail-safe UP); `skip_when` is NOT engine-evaluated |
+| reviewer context-isolation | `[DISCIPLINE]` | — | `skills/_protocols/context-isolation.md` | fresh dispatch excludes other findings; shared filesystem access is not isolated; targeted fix verification is a separate assignment |
+| workflow `on_fail` gates | `[WORKFLOW]` | BLOCK-in-run | `scripts/workflow_engine.py` | configured checks run only when the engine is driven; manual confirmation is not automatic verification |
+| DIRECT eligibility | `[DISCIPLINE]` | — | `framework/process-map.md` | risk-first eligibility for bounded authorized changes; size cannot bypass safety floors; `skip_when` is NOT engine-evaluated |
 | dispatch-package allowlist | `[DISCIPLINE]` | — | `docs/specs/306-brief-architect.md` | a Buddy-authored draft in a brief-architect package is a contract violation |
 | Pre-Delegation artifact | `[DISCIPLINE]` | — | `CLAUDE.md` | no sub-agent call without a delegation artifact (Invariant 3) |
 | STALE-CLEANUP | `[DISCIPLINE]` | — | `CLAUDE.md` | retired artifact → every live reference cleaned in the same commit (Invariant 5) |

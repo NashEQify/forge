@@ -62,7 +62,7 @@ What you see as a user:
 
 Skip list (engine NOT active):
 
-- DIRECT path build/fix (≤3 files, no spec, no new behaviour) —
+- DIRECT path build/fix (risk-based eligibility in `framework/process-map.md`) —
   executed inline
 - save/checkpoint/wakeup/sleep — no multi-step state
 - context_housekeeping — maintenance with no pause points
@@ -112,7 +112,14 @@ Post-Write). `context_housekeeping` is 2-group.
 **Trigger:** user reports an error, or a test failure in the verify
 phase, or a sub-agent ESCALATED, or a monitoring alert.
 
-**Path:**
+For an active outage or ongoing harm, first follow
+[`fix` §Incident recovery](../workflows/runbooks/fix/WORKFLOW.md#incident-recovery):
+preserve essential evidence, restore within existing host/action/data
+authorization, and verify the actual user/service outcome. Record **Restored**
+separately from **Resolved**, then investigate the cause. Final RCA, RED tests
+and repeated routine signoff do not precede authorized recovery.
+
+**Permanent-repair path:**
 
 ```
 Phase Specify
@@ -132,17 +139,27 @@ Phase Close
   → Commit (pre-commit hook runs)
 ```
 
-**Anti-pattern:** patching the symptom without root cause. `fix` forces a
-drill in Phase A — if the hypothesis was wrong, that surfaces when writing the test.
+**Anti-pattern:** claiming permanent repair from a symptom patch. Verify the
+cause with evidence and a reproducer; a known bounded fix may qualify for
+DIRECT. An authorized recovery can restore service while the cause remains open.
 
 ### B. Implement a feature — `build`
 
-**Trigger:** user defines feature/task. Spec approved and ready.
+**Trigger:** user defines an authorized feature/task. Reuse existing approved
+spec context; DIRECT does not require a separate spec-authoring cycle.
 
-**Path determination** (`workflows/runbooks/build/WORKFLOW.md` §Path-Determination):
+**Path determination:** first apply
+[`framework/process-map.md` §DIRECT eligibility](../framework/process-map.md#direct-eligibility).
+Safety floors exclude authorization/auth, secrets, schema/data migration,
+public contracts, live infrastructure and hidden/unbounded failure effects.
+Otherwise DIRECT requires a clear outcome, a bounded reversible change following
+an observed pattern, no unresolved consequential decision or new subsystem,
+and appropriate executable verification. New local behavior is allowed; file
+counts and the presence of a spec are signals, not eligibility rules.
+
+For remaining changes, `workflows/runbooks/build/WORKFLOW.md` selects depth:
 
 ```
-ALL three? (a) ≤3 files (b) no spec (c) no new behaviour → DIRECT
 At least ONE? (a) >1 subsystem (b) new subsystem (c) new pattern
   (d) schema change (e) >10 ACs → FULL
 Otherwise → STANDARD
@@ -161,8 +178,17 @@ Close    → task_status_update → done + commit guard + deploy
 **FULL path:** spec is built up in 3 levels (E1 → Board → E2 → Board → E3 → Board Deep + DR).
 Test design additive (L4/L5 after E1, L3 after E2, L2 after E3).
 
-**DIRECT path:** inline delegation → MCA → L0 → return. No board, no
-state file. The pre-commit hook stays (NON-NEGOTIABLE).
+**DIRECT path:** scope + success criteria + verification plan → inline
+delegation to MCA for product code → implementation → relevant tests and
+independent verification of load-bearing code → evidence return. No separate
+spec/architect/signoff cycle or engine state. Typo/format-only edits need a
+diff check. Commit hooks still apply when committing.
+
+Authorization carries across phases within approved scope. A brief records
+matching approval; it does not require another routine question. Ask when the
+scope/risk changes or a consequential decision remains unresolved. Diagnosis
+alone does not authorize repair; live, destructive and publication actions
+retain their explicit boundaries (`framework/process-map.md` §Authorization).
 
 ### C. Open-shaped problem — `solve`
 
@@ -283,7 +309,10 @@ Source: `agents/buddy/operational.md §Source-Grounding`.
 
 - Buddy writes NO own analysis into the board dispatch prompt.
 - Board reviewers receive spec + brief; their own analysis is their job.
-- After the board: Buddy reads ONLY `chief-signal.md`, no individual reviews.
+- A Chief consolidates where required. Buddy verifies pivotal claims against
+  sources and may inspect relevant findings to resolve contradictions.
+- Read-only reviewers return complete artifacts inline; Buddy persists them
+  verbatim with provenance before downstream Chief consumption.
 
 Violation: board reviewers get colored by Buddy's hypothesis, the
 multi-perspective guarantee is gone.
@@ -327,18 +356,16 @@ On task status change (e.g. `pending` → `in_progress` or `→ done`):
 
 ## Anti-patterns
 
-### A1 — Buddy reads board reviews
+### A1 — Buddy biases reviewers or accepts a verdict without evidence
 
-CLAUDE.md §1: *On board/council, do not read review files, do not analyse
-findings, do not write consolidations, do not verify fixes. Only:
-spawn → read chief signal → SAVE → escalate.*
-
-When Buddy does read along: his interpretation colours the findings,
-the multi-perspective guarantee is lost, and the board was for nothing.
+Shared Invariant 1 separates reviewer investigation, Chief consolidation and
+Buddy's decision. Keep the orchestrator's conclusions out of reviewer inputs.
+After consolidation, Buddy verifies the claims the decision rests on and
+consults individual findings when needed, without routinely repeating the review.
 
 ### A2 — Sub-agent call without delegation artefact
 
-CLAUDE.md §3 / AGENTS.md §4: *No agent call without a delegation artefact.*
+CLAUDE.md §3 / AGENTS.md §3: *No agent call without a delegation artefact.*
 
 When Buddy calls the `Agent` tool ad-hoc without plan block or gate file:
 constraints get forgotten, the sub-agent does "something other than meant",
@@ -366,8 +393,9 @@ outside the AUTO markers.** For the AUTO block: source is disk
 
 ### A6 — Patching the symptom without root cause
 
-`fix` workflow Phase A is not optional. Even for a "small bug" — if the
-root-cause hypothesis was wrong, the bug comes back.
+Permanent repair requires a verified cause, even for a small bug. During an
+active incident, authorized recovery precedes final RCA; restoration alone
+does not establish that the cause is resolved.
 
 ### A7 — Skipping the persist gate after status change
 

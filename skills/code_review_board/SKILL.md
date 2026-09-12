@@ -25,27 +25,24 @@ Buddy checklist. Detail: REFERENCE.md. Protocols:
 
 ### 1.0 Proportionality gate (MANDATORY — runs before table)
 
-Default = escalate. Gate cuts theater. Answer 4:
+Safety floors are evaluated first: security/auth/secrets, schema/data
+migration, public or cross-component contract changes and live infrastructure
+require L2 with the relevant specialists. No count or majority can cancel a
+safety floor. Include the actual authorization and impact, not merely LOC.
 
-1. Change ≤~50 net lines in one function (cohesive site)?
-2. Mirrors visible sibling pattern in same module?
-3. Red test going green OR new test pins fix?
-4. Spec touches bookkeeping only — NOT contract (new state-vocab, new SSE type, new public API, schema break)?
-
-**3-of-4 yes → `light` path** (single `code-verification`). Table ignored.
-
-**Override floor:** non-negotiable escalation below fires only on
-**L/XL effort AND new subsystem AND named-public-API change**.
-Spec-in-diff alone insufficient.
+Below those floors, ALL DIRECT criteria in `framework/process-map.md` plus
+an executed regression/behavior check allow `light` (single independent
+`code-verification`). New local behavior is allowed when bounded and verified.
+Otherwise use the level table; resolve missing facts rather than inventing
+certainty. Pure typo/format-only changes need a diff check, not this board.
 
 ### 1.1 Level-choice table
 
 ```
-light:   ≤2 files (test 0.5×) AND ≤30 net LOC AND no contract spec change
-         AND no Pydantic/type/NATS/public-API signature change
-         AND no new top-level symbol → single code-verification.
+light:   all DIRECT criteria + executed relevant tests, no safety-floor
+         surface → single code-verification.
 L1:      above light AND ≤5 files AND no new module AND no schema
-         change AND effort S-M → 2-3 reviewers + chief.
+         change AND effort S-M → 2-3 reviewers; consolidation per §1.3.
 L2:      >5 files OR new exported behavior (new public API, state vocab,
          error taxonomy) OR contract-cross-spec OR schema OR L-XL
          → 5-7 reviewers + chief.
@@ -68,6 +65,14 @@ Unclear: L2 UNLESS §1.0 fired light.
 - **Optional L1+:** L1 + 1 risk-specialist when one risk-class dominates.
 
 Detail (incl. post-MCA-return trigger consequence): REFERENCE.md.
+
+### 1.3 Consolidation
+
+With at most two reviewers, Buddy reads the complete reports directly.
+With three or more reviewers, a Chief consolidates their persisted returns,
+including when an L1 review has three reviewers. Buddy owns the verdict and
+verifies pivotal claims in either case. Reviewer count controls consolidation
+overhead, never safety-floor selection or evidence requirements.
 
 ## 2. Review brief (MUST before dispatch)
 
@@ -157,13 +162,16 @@ non-matching name, substitute by risk-area from the §3 table above
      (severity-preserving) into the board brief as scope/context
      content, then dispatches the board (code-review + risk
      specialists) parallel cold-start.
-6. **L1:** Buddy reads both → verify drill+trace → verdict.
-7. **L2:** chief consolidates (F-C-DRILL-MISSING / F-C-TRACE-MISSING
+6. **L1:** Apply §1.3 to the actual reviewer count. Buddy owns the verdict
+   and verifies pivotal source claims; inspect individual findings when
+   needed, without routinely redoing the reviews.
+7. **L2:** Chief consolidates (F-C-DRILL-MISSING / F-C-TRACE-MISSING
    enforced; chain-of-custody audit per `agents/code-chief.md`
    §CHIEF-1.0 — chief reads frame-check artifact and audits board
    coverage of its substantive concerns; pre-consolidation gates
    §CHIEF-1.1, 1.2; reject every claim without ≥1 verbatim
-   `file:line` code-quote) → discourse → synthesis → verdict.
+   `file:line` code-quote) → discourse → Buddy's decision and pivotal-claim
+   verification. Chiefs recommend; they do not take over the decision.
 8. SAVE.
 
 **Fix-pass dispatch (post-FAIL):** scope-focused tests + L0 on touched

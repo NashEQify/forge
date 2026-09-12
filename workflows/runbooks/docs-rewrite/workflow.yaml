@@ -120,7 +120,7 @@ steps:
   - id: commit
     name: "Commit + push"
     category: deterministic
-    instruction: "git commit + push"
+    instruction: "Persist the local result. Commit/push only as authorized by framework/process-map.md section Authorization."
     completion:
       type: manual
     commit_gate: true

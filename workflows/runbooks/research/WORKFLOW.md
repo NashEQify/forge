@@ -38,7 +38,7 @@ are engine-internal.
 | 2 | research | `get_api_docs/SKILL.md` + WebSearch / WebFetch | — |
 | 3 | synthesis | — (Buddy or general-purpose agent) | High mode adds adversary check |
 | 4 | knowledge-capture | `knowledge_capture/SKILL.md` | each of (persist, context-gap-check, impact) skip-eligible with one-line rationale |
-| 5 | commit | git pre-commit hooks | — |
+| 5 | commit | git pre-commit hooks | only with applicable authorization; otherwise skip |
 
 ## State tracking
 
@@ -73,9 +73,12 @@ to session-buffer PENDING;
 preamble). Methodology-level only; cluster-specific feeds stay in
 cluster files. Skip if none.
 
-**5. commit** — `git commit + push`. Sub-workflow: COMMIT must come
-before HANDOFF — on a crash between these steps the parent would
-otherwise consume non-persisted results.
+**5. commit** — apply `framework/process-map.md` section Authorization.
+Persist the requested result locally before handoff. Commit only with
+applicable request/standing repository authorization; push is separate and
+never implied by research. If neither is authorized, skip this optional
+publication step with a reason. Local persistence is enough to complete
+research; do not claim that a skipped commit or push was performed.
 
 ## Iteration bounds
 

@@ -35,7 +35,7 @@ has a `navigation.md` with reader-journey sections (`## What lives here?`,
 |---|---|---|
 | **solve** | `workflows/runbooks/solve/WORKFLOW.md` | Problem with open solution shape. Frame -> refine -> artifact -> validate -> execute. |
 | **build** | `workflows/runbooks/build/WORKFLOW.md` | Implement feature/task. Direct / Standard / Full paths. |
-| **fix** | `workflows/runbooks/fix/WORKFLOW.md` | Bug/incident. Root-cause first, no symptom patching. |
+| **fix** | `workflows/runbooks/fix/WORKFLOW.md` | Authorized incident recovery first; then investigate and permanently repair defects. |
 | **review** | `workflows/runbooks/review/WORKFLOW.md` | Review/validate spec(s). No code. |
 | **research** | `workflows/runbooks/research/WORKFLOW.md` | Research, SOTA, spike. Output = knowledge, not code. |
 | **docs-rewrite** | `workflows/runbooks/docs-rewrite/WORKFLOW.md` | Rewrite docs, reader-journey-first. |

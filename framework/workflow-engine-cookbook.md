@@ -103,14 +103,66 @@ classification primitive is a deferred option, not done.
   warn) — post-implementation check: did the commit change
   spec-defined behavior? If yes → spec patch in the SAME block-commit.
 
-## `on_fail` policy reaction
+## Completion checks and `on_fail`
+
+Unresolved `{variable}` inputs fail completion, including inside compound
+checks. Supply the missing value with `--set <key> <value>` or create the
+expected artifact before retrying. Empty variable values remain unresolved;
+numeric regex quantifiers such as `{3}` are not variables. A missing pointer
+validator also fails evaluation. These errors return CLI exit `1`, leave the
+step incomplete, and do not invoke `on_fail` or become automatic completion.
+Command checks use exit `0` for pass and `1` for a valid negative; other exits,
+timeouts and I/O failures are evaluation errors. Unreadable glob directories
+also fail evaluation instead of being treated as empty results.
+Pointer validator exit `2` and raised parse/internal errors likewise fail
+evaluation; only exit `1` is a valid negative eligible for `on_fail`.
+
+Compound preflight checks all external inputs before execution, including those
+after a check that may return negative. A preceding `file_created_matching`
+check can supply `{artifact_path}` to later checks. Each child resolves its
+inputs after earlier children execute, so consumers use the producer's current
+output. A reference before its producer remains an unresolved-input error.
+
+`on_fail` applies to a check that successfully evaluates to a negative result:
 
 | `on_fail` | Buddy reaction |
 |---|---|
 | `block` | Step stays `in_progress`; Buddy MUST fix and retry `--complete` |
-| `warn` | Step stays `in_progress`; Buddy may `--complete --force` with a reason |
-| `skip` | Step automatically `warn_skipped`, engine advances |
-| `escalate` | Step → `escalated`, workflow pauses, user decision required |
+| `warn` | Step becomes `warn_skipped`; output includes the failed check |
+| `skip` | Step becomes `skipped` |
+| `escalate` | Step becomes `escalated`; output requests user action |
+
+## Completion provenance
+
+Manual completion remains an explicit agent confirmation. `--complete` accepts
+it, retains `status: complete`, and records `completion_method: agent-confirmed`.
+The completion response and `--status` say `agent-confirmed (not verified)`.
+The same applies to an omitted completion check or a compound containing a
+manual check. Evidence text is retained, but does not itself prove verification.
+
+Successful mechanical checks record `completion_method: verified`, including
+deterministic steps automatically completed by `--next`. This means the defined
+check passed, not that every property of the work was verified. Legacy pointer
+checks accepted without a current evidence schema record `legacy-unverified`.
+
+The existing bounded `--force` override remains available for completion checks;
+it records `forced (not verified)` alongside the existing force counter and
+`force_completed` flag. It cannot override guard errors. Retry clears the prior
+completion method. State schema version `2` and existing statuses are unchanged;
+older states without this additive field still load and are not retroactively
+labeled verified.
+
+## Recovery
+
+`--recover` evaluates guards before recovering active steps. A guard error exits
+`6`; a valid nonapplicable guard leaves the step alone for `--next` to handle.
+Manual checks, including compounds containing a manual check, remain active
+until explicit `--complete` confirmation.
+
+Successful mechanical recovery records the completion method and the actual
+check result in evidence and displays the method in the recovery response.
+Completion evaluation errors exit `1` without completing the step. Legacy
+pointer checks retain their `legacy-unverified` provenance.
 
 ## `--complete` idempotence
 
@@ -134,18 +186,32 @@ ad-hoc special-casing:
 
 **`--guard <name> [<task_id>]`** — a named guard predicate referenced from a
 step's `guard:` block (`type: script`, `command: "… --guard <name> {task_id}"`).
-Exit `0` → the step proceeds; exit `≠0` → the step is skipped (see
-`evaluate_guard`). Named guards today:
+Exit `0` means applicable; exit `1` is a successfully evaluated, legitimate
+negative and skips the step. Every other exit code, a missing program, timeout,
+I/O failure, unresolved input, or unknown guard type/name is an evaluation error.
+It leaves the required step incomplete and does not advance to later steps.
+Named guard errors return exit `6`; `--start` and `--next` report guard errors
+with exit `6`, while rejected `--complete` and `--skip` return exit `1`.
+Correct the error and retry; required steps cannot use `--skip` to bypass it.
+
+For Python callers, `evaluate_guard` retains its two-item result:
+`(True, reason)` means applicable, `(False, reason)` means nonapplicable, and
+`(None, reason)` means error. Consumers must distinguish `is False` from
+`is None`. `find_next_step` raises `GuardEvaluationError` on evaluation errors.
+File guards support repo-relative globs (including `**`) and report unreadable
+directories as errors. Missing files remain valid negative results.
+
+Named guards today (both require a positive task ID):
 
 | Guard | Returns 0 (proceed) when |
 |---|---|
-| `council-needed` | the **solve** state file (`docs/solve/*.md`) carries the opt-in marker `council-required: true` (Buddy writes it when frame's >1-path + hard-to-reverse criteria fire). NOTE: greps `docs/solve/` only — solve-scoped today |
+| `council-needed` | the task's discovered workflow state file carries `council-required: true` or `council_required: true`; discovery uses the engine's workflow directories and task-reference/legacy filename rules |
 | `task-yaml-ok` | `docs/tasks/<id>.yaml` exists |
 
 **Retired:** `delta-needed` — removed (its trigger was a judgment the engine
 cannot compute; see the design rule below). It has no `cmd_guard` branch now,
-so referencing `--guard delta-needed` falls to "Unknown guard" → exit ≠0 (the
-step is skipped, fail-safe). No `workflow.yaml` references it.
+so referencing `--guard delta-needed` reports "Unknown guard" with exit `6`
+and blocks advancement. No `workflow.yaml` references it.
 
 Adding a guard: add a branch in `cmd_guard` + reference it from the step's
 `guard:` block. **Design rule (the `delta-needed` retirement lesson):** a
@@ -165,7 +231,10 @@ predicate the engine does not evaluate (`framework/enforcement-registry.md`).
 
 ## Skip allowed for
 
-- `build` DIRECT path (≤3 files, no spec, no new behavior)
+- `build` DIRECT path, per [central DIRECT eligibility](process-map.md#direct-eligibility).
+  Apply its risk exclusions first. Bounded, reversible new local behavior is
+  allowed when all central criteria hold; file and line counts are warning
+  signals, not eligibility rules.
 - `save` / `checkpoint` / `wakeup` / `sleep`
   (lifecycle commands without long continuity)
 - `context_housekeeping` (ad hoc, no multi-session state)
@@ -174,6 +243,30 @@ predicate the engine does not evaluate (`framework/enforcement-registry.md`).
 - `think!` (stance change, not a workflow)
 
 ## Concurrency
+
+New `workflow_id` values retain their descriptive timestamp prefix and add a
+full UUID suffix. Restarting the same workflow/task uses a distinct identity
+even when the clock is unchanged, so matching revision numbers cannot let an
+old transition modify or archive the replacement run. Existing IDs and state
+files remain unchanged; resolution by `--id` or `--task` still works for them.
+
+Publishing a new run rechecks the active `(workflow, task_id)` pair while holding
+the same lock used to write its state. Concurrent starts for the same pair
+produce one active run; the losing start exits `1` and names the existing run.
+This includes workflows without a task ID. Different workflow/task pairs remain
+allowed, and archived runs do not block a restart.
+
+State writes compare the snapshot's `revision` with the persisted revision
+under the same lock used for replacement, then increment it. Legacy states
+without this optional field start at revision `0`; schema version `2` remains
+unchanged. Completion, abort and reap also check the revision when archiving,
+so a concurrent retry cannot be archived by an older transition.
+
+A stale write or archive raises `StaleStateError` and interactive commands exit
+`7` with a reload-and-retry diagnostic. Reload before rerunning the operation;
+the engine does not automatically replay checks or overwrite newer evidence.
+The maintenance reap sweep reports a conflicting instance and continues with
+other candidates.
 
 - **Read-only sub-skills** (research, board reviewers, multi-architect
   brief authoring, source-grounding lookups, code reviewers): dispatch

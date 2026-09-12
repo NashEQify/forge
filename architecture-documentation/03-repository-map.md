@@ -69,10 +69,10 @@ forge/
 │   └── cursor/
 │       └── rules/                 # Cursor rules (no PreToolUse API)
 │
-├── .codex/                        # Codex Desktop / CLI adapter (project-local)
-│   ├── agents/                    # Per-persona TOML wrappers (template + curated)
-│   └── hooks.json                 # Project-local hook wiring per Codex lifecycle
-│   #   (global: ~/.codex/agents/ + ~/.agents/skills/, written by setup-codex.sh)
+├── .codex/                        # Codex adapter artifacts
+│   ├── agents/                    # TOML templates; neutral agents/*.md are SoT
+│   └── hooks.json                 # Legacy artifact, not the Codex boot contract
+│   #   setup-codex.sh generates roles/skills and explicit managed AGENTS boot entries
 │
 ├── scripts/                       # Engines + generators
 │   ├── plan_engine.py             # Computed planning layer
@@ -134,7 +134,7 @@ forge/
 | `workflows/runbooks/` | 9 workflows | "What does workflow X do?" → `<name>/WORKFLOW.md` |
 | `references/` | Reference docs | a11y → `accessibility-checklist.md`. Orch pattern → `orchestration-patterns.md` |
 | `agents/_protocols/` | Persona-level mechanisms | "Reviewer base rules?" → `reviewer-base.md` |
-| `orchestrators/` | Adapter layer | Claude Code → `claude-code/`. OpenCode → `opencode/`. Cursor → `cursor/`. Codex via `.codex/` (project-local) + `setup-codex.sh` (global) |
+| `orchestrators/` | Adapter layer | Claude Code → `claude-code/`. OpenCode → `opencode/`. Cursor → `cursor/`. Codex → `generate_codex_agents.py` + `setup-codex.sh` (roles, skills, AGENTS boot) |
 | `scripts/` | Engines + generators | "plan_engine.py" + "workflow_engine.py" are the two central ones |
 | `.claude/` | Workspace config for Claude Code | wrappers, hook registration, path whitelist |
 | `docs/` | Project bookkeeping | plan → `plan.yaml`. Tasks → `tasks/`. Reviews → `reviews/` |

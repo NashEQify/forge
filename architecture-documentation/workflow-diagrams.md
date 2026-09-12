@@ -15,7 +15,10 @@ Inside the home are **phases** (the boxes); inside phases are **steps**
 (listed to the right). A step is where a **skill** runs — and some skills
 spawn a **cold sub-routine**: a board, a council, or the code-agent, each
 running context-isolated (reviewers never see the orchestrator's framing)
-and returning only one consolidated **chief signal** back into the step.
+and returning their artifacts to the step. A Chief consolidates where required;
+Buddy owns the decision and verifies pivotal claims against sources. Read-only
+reviewers return complete artifacts inline for Buddy to persist verbatim with
+provenance before downstream Chief consumption.
 When a check fails the flow **loops** — fix and re-review, bounded to a
 fixed number of passes, then it escalates. The **result** leaves the
 container at the bottom — it is the output of the whole workflow, not of
@@ -28,14 +31,20 @@ legend
   └────┬────┘
        ▼            phases run top → bottom
   ◄ ≤N              a bounded loop: N passes, then escalate to the user
-  cold → 1 signal   context-isolated spawn (board / council / agent); only
-                    the chief's consolidated signal returns
+  cold → 1 signal   independent review; Chief consolidates where required,
+                    Buddy verifies pivotal claims and decides
   RESULT            leaves the container at the bottom — the workflow's output
 ```
 
 The path (or route) is chosen *before* the phases run and sets the depth:
-the lightest path skips the apparatus entirely, the heaviest runs every
-gate. Effort scales to the stakes.
+DIRECT uses a bounded lifecycle with relevant verification; the heaviest path
+runs every applicable gate. Eligibility comes from `framework/process-map.md`.
+Effort scales to the stakes.
+
+Signoff steps record existing authorization when it covers the scope. Ask for
+a new decision only when scope/risk changes or a consequential decision remains
+open. Commit, push and deploy each require authorization covering that action;
+the diagrams do not grant publication or live-change permissions.
 
 ---
 
@@ -69,6 +78,12 @@ gate. Effort scales to the stakes.
 ```
 
 ### fix — root-cause a bug, no symptom-patching
+
+For an active outage or ongoing harm, run authorized recovery before the
+permanent-repair phases below: preserve essential evidence, restore safely,
+verify the actual service/user outcome, and record **Restored** separately
+from **Resolved**. Final RCA and repair gates do not block authorized recovery.
+See [`fix` §Incident recovery](../workflows/runbooks/fix/WORKFLOW.md#incident-recovery).
 
 ```
 ┌─ fix · root-cause a bug, no symptom-patching ─────────────────────────────────────┐

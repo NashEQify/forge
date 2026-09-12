@@ -72,8 +72,9 @@ check the top-level YAML block `remaining_findings:`. Non-empty →
 file ONE follow-up task via `task_creation`. No remaining findings:
 skip with one-line rationale.
 
-**5. commit** — `git commit + push`. Updates `board_result` and
-`readiness` in the task YAML.
+**5. commit** — persist the verdict and update `board_result` / `readiness`
+as applicable. Apply `framework/process-map.md` section Authorization to any
+commit or push; a review request is not publication permission.
 
 ## References
 

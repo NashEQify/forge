@@ -58,15 +58,17 @@ referenced specs.
 **Standard / full path** → follow the MCA steps in the build runbook
 (`workflows/runbooks/build/WORKFLOW.md` Execute phase / mca-implementation).
 
-**Direct path (trivial fixes).** ALL three: (a) ≤3 files, (b) no
-spec, (c) no new behaviour. OR: typo / formatting / comment without
-semantic change. Yes → implement → L0 → commit → minimal return.
-No test-first, no review.
+**Direct path.** Use `framework/process-map.md` section DIRECT eligibility.
+Small local new behavior is allowed; safety floors are evaluated first.
+Read the actual code, state success criteria, implement, run appropriate
+regression/behavior checks and L0. Load-bearing code receives independent
+verification through Buddy; typo/format-only work needs a diff check.
+Commit only when the request or standing repository policy authorizes it.
 
 Direct-path return:
 ```
 RETURN-SUMMARY: Task: {description}. Status: DONE. Changes: {one line}. INCIDENT: No.
-Tester: NOT SIGNED OFF — direct path, L0 only.
+Verification: {actual checks and results}. Independent review: {status or pending Buddy}.
 ```
 
 **Backlog path (autonomous task sequence).** A backlog file with

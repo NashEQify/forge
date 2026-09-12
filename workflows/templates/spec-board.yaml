@@ -561,14 +561,12 @@ convergence_loop:
       → GOTO LOOP
 
     buddy_role_in_loop: >
-      Buddy ist mechanischer Dispatcher im Loop. Buddy's Context-Window ist
-      knappe Orchestrierungs-Ressource. Daher:
-      - Buddy spawnt Agents (Template-Prompts, billig)
-      - Buddy liest Chief-Signals (1 Zeile, billig)
-      - Buddy macht SAVE (mechanisch)
-      - Buddy eskaliert User-Entscheidungen (aus Chief-Signal, nicht aus Files)
-      - Buddy liest KEINE Review-Files, analysiert KEINE Findings,
-        schreibt KEINE Konsolidierungen, verifiziert KEINE Fixes.
+      Buddy dispatches independent reviewers, persists their complete inline
+      returns verbatim with provenance, and reads the Chief consolidation.
+      Buddy owns the decision and checks pivotal source claims. Relevant
+      findings may be inspected to resolve contradictions; do not routinely
+      repeat every review. Escalate new user decisions or changed scope,
+      not each routine phase transition. Shared Invariants 1/2 apply.
       Chief ist der analytische Controller. Chief konsolidiert, prueft
       Convergence, schreibt Findings-Briefings, aggregiert synthesize-Ergebnisse,
       and trifft die Final-Arbiter-Entscheidung.
@@ -869,7 +867,8 @@ tier_behavior:
       Context-Isolation durch CC Sub-Agent-Mechanismus.
       Buddy setzt model-Parameter beim Spawn je nach Modus/Phase.
       Chief aggregiert (review-Konsolidierung + synthesize-Aggregation).
-      Buddy ist mechanischer Dispatcher (spawnt, liest Signals, macht SAVE).
+      Buddy persists inline artifacts, reads Chief consolidation, verifies
+      pivotal claims and owns the decision per shared Invariant 1.
     execution: >
       Standard (3-4 Agents, alle Opus):
         board-adversary "Spec: {path}. Output: {output_path}."

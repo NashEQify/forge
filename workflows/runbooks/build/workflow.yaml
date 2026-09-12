@@ -292,15 +292,13 @@ steps:
     category: content
     instruction: >
       Per spec 306 §4.3 + §4.1. The inline-vs-architect branch is
-      governed by a DIRECT-eligibility predicate, not by Buddy's
-      discretion:
+      governed by the single DIRECT-eligibility policy in
+      framework/process-map.md (safety floors first, then clear authorized,
+      bounded, reversible work with observed pattern and verification).
 
-        direct_eligible := scope_files <= 3
-                           AND no docs/specs/*.md touched
-                           AND no new behaviour introduced
-
-      - direct_eligible TRUE → Buddy authors the brief inline (legacy
-        delegation-artefact path; trivial work only).
+      - direct_eligible TRUE → Buddy authors a short inline delegation
+        with scope, success criteria and verification; local new behavior
+        is allowed within those bounds.
       - direct_eligible FALSE or unclassifiable → dispatch
         `agents/brief-architect.md`. Fail-safe direction is UP: any
         ambiguity routes to the architect, never inline. A FULL-shape
@@ -323,12 +321,11 @@ steps:
       input validation per main-code-agent.md is "delegation input
       exists" only.
 
-      Enforcement class [DISCIPLINE]: this predicate is applied by
+      Enforcement class [DISCIPLINE]: eligibility is applied by
       Buddy — the engine does not evaluate skip_when (the
       architect-lens skip_when is the same class). The structural
-      teeth are in the agent topology: a context-isolated
-      brief-architect must read src/ to author anything
-      ([STRUCTURAL]).
+      read-only brief-architect is a fresh investigator. Reading actual code
+      is a discipline requirement, not a structurally guaranteed action.
     skill_ref: agents/brief-architect.md
     completion:
       type: manual
@@ -349,12 +346,11 @@ steps:
       not delegated). Single mode: brief is the architect's direct
       output, no synthesis.
 
-      Then in BOTH modes (STANDARD and FULL paths), present the
-      synthesized brief to the user for approval before MCA
-      dispatch. In multi-mode, also surface the §Divergence
-      Rationale block alongside the synthesized brief — user
-      approval is for the synthesized brief in light of the
-      divergence-rationale.
+      Apply framework/process-map.md section Authorization in both modes.
+      Compare the synthesized brief with the already approved scope. Record
+      the matching authorization and continue without another routine gate.
+      If synthesis introduces a consequential decision, changed scope/risk,
+      or unresolved divergence, present it for user approval before dispatch.
 
       User approves: dispatch MCA. User rejects with comments:
       Buddy decides — re-dispatch brief-architect with comments
@@ -412,19 +408,12 @@ steps:
     name: "Code review board (light / L1 / L2 per spec 306 §4.4a)"
     category: content
     instruction: >
-      Level (per spec 306 §4.4a + skills/code_review_board/SKILL.md §1):
-      - light: ≤2 files mechanical-trigger AND ≤30 net LOC AND no schema
-        AND no cross-spec AND no new top-level symbol → single
-        agents/code-verification.md persona; VERDICT: PASS|FAIL|PARTIAL
-        per upstream contract; chief-consolidation NOT required.
-      - L1: ≤5 files AND no new module AND no schema → 2-3 reviewers;
-        chief-consolidation NOT required (N ≤ 2 typical; Buddy reads
-        directly per "Never delegate substantive understanding" with
-        L1's small reviewer count).
-      - L2: >5 files OR new module OR cross-spec OR schema OR effort=L|XL
-        → 5-7 reviewers + chief-consolidation REQUIRED (N ≥ 3 triggers
-        chief tool-use per spec 306 §4.6.a).
-      When in doubt: L2.
+      Select light / L1 / L2 using skills/code_review_board/SKILL.md §1.
+      Safety floors precede file counts and other size signals. DIRECT
+      eligibility comes from framework/process-map.md; this step defines
+      no separate shortcut. Consolidation follows the actual reviewer
+      count under the skill's §1.3. Buddy owns the decision and verifies
+      pivotal claims after reading the reports or Chief consolidation.
 
       On post-board FAIL with `target: spec_text` entries in
       remaining_findings (per spec 306 §4.7 + §4.8): Buddy dispatches

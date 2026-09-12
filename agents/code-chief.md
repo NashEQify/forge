@@ -24,10 +24,9 @@ This reframing reconciles two principles:
    another worker." Buddy is the synthesizer; chief is a tool
    the synthesizer uses.
 
-**Skip rule** (per spec 306 §4.6.a): chief consolidation is
-**required** when N ≥ 3 reviewers (L2 board). For N ≤ 2 (L1
-board, light-path single `code-verification`), Buddy reads
-reviewer outputs directly — chief overhead unjustified.
+**Consolidation routing:** `skills/code_review_board/SKILL.md` §1.3
+is authoritative: at least three reviewers require Chief, including L1;
+with at most two, Buddy reads the complete reviewer outputs directly.
 
 ## Chief role-constraint (consolidation-only)
 

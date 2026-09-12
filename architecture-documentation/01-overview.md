@@ -29,9 +29,9 @@ replaces "remember to" rules with mechanical enforcement.
   review / research / save) with explicit phase models.
 - 3 hook scripts: `buddy-boot-inject` + `session-start-remote`
   (SessionStart) + `pre-commit.sh` (git pre-commit, 6 checks: 3 BLOCK
-  + 3 WARN). All three are universally portable — git pre-commit runs
-  on every harness, SessionStart works on CC-Terminal / claude-desktop
-  / claude-web / Codex. There are no tool-event hooks (PreToolUse /
+  + 3 WARN). Shared Git hooks run when installed in the active repository.
+  SessionStart scripts run on configured Claude entrypoints; Codex boots
+  through explicit managed AGENTS instructions. There are no tool-event hooks (PreToolUse /
   PostToolUse / UserPromptSubmit); write-time discipline is
   protocol-anchored.
 
@@ -91,8 +91,8 @@ supposed to prevent.
 **The framework's answer:** discipline-as-
 methodology anchored in protocols (`_protocols/dispatch-template.md`,
 `context-isolation.md`, `mca-brief-template.md`, `plan-review.md`,
-`evidence-pointer-schema.md`), backed by a thin universal-portable
-reinforcement layer (git pre-commit 6 checks + SessionStart hooks).
+`evidence-pointer-schema.md`), backed by shared git pre-commit checks
+and host-specific boot integration.
 Buddy's reasoning is the load-bearing substrate; protocols carry the
 rules; hooks catch what's mechanically cheap-and-cross-portable.
 
@@ -106,10 +106,11 @@ You spawn three reviewer personas to look at a spec. You read the first
 one's findings. By the time you read the third, you're anchored. The
 "multi-perspective" was wishful.
 
-**The framework's answer:** `CLAUDE.md §1` Buddy = Dispatcher. The
-orchestrator doesn't read review files. Reviewers run context-isolated
-(via `_protocols/context-isolation.md`). A `chief` persona consolidates;
-the orchestrator reads only the chief signal and acts.
+**The framework's answer:** shared Invariant 1 separates independent review,
+Chief consolidation, and Buddy's decision. Reviewers run context-isolated
+(via `_protocols/context-isolation.md`). A Chief consolidates where required;
+Buddy verifies pivotal claims against sources and may inspect relevant findings
+to resolve contradictions, without routinely repeating every review.
 
 ### Problem 4 — Sub-agent delegations skip constraints
 
@@ -160,7 +161,7 @@ short tasks. It does not survive the failure modes that show up at scale.
 
 **What forge adds (high-level):** orchestrator-persona above skills,
 multi-perspective boards with chief-consolidation + anti-anchoring, mandatory
-Plan-Block / Gate-File before sub-agent calls, a thin reinforcement-hook layer (git pre-commit + SessionStart),
+Plan-Block / Gate-File before sub-agent calls, shared git pre-commit checks and host-specific boot,
 single-source-of-truth + N adapters, generator+validator for drift-prone
 indices, cross-session continuity via workflow-engine.
 
@@ -175,16 +176,18 @@ state). The honest trade-offs:
 - **Multi-perspective review** costs 5-15k tokens per board and 10-30k
   per council. It earns its keep when it catches a spec-violation that
   would otherwise cost a day of re-work; on a typo-fix it is overhead.
-- **Pre-delegation discipline** (mandatory plan-block / gate-file) adds
-  one turn per substantive action. The win is "no agent call without a
-  briefing"; the cost is more conversational round-trips.
+- **Pre-delegation discipline** adds the work of recording scope and success
+  criteria before an agent call. DIRECT can carry these inline; other paths
+  use a persisted brief. Existing authorization does not require another
+  routine approval turn.
 - **Cross-session state** (workflow engine + state file + session-handoff)
   adds operational complexity; the win is that a multi-day build resumes
   where it stood. For one-shot tasks the overhead is unjustified.
-- **Universal-portable hooks** (git pre-commit 6 checks + SessionStart
-  for boot) impose a small setup cost (`scripts/setup-cc.sh` plus a
-  git-hook symlink per consumer repo) and require investigating BLOCKs
-  rather than bypassing. There are no tool-event hooks.
+- **Shared Git hooks and host-specific boot** impose a small setup cost
+  (the selected adapter installer plus Git hooks in each consumer repo)
+  and require investigating BLOCKs rather than bypassing. Claude uses
+  configured SessionStart hooks; Codex uses managed AGENTS instructions.
+  There are no tool-event hooks.
 - **Single-class skill model + anatomy validation** prevents skill
   inflation; the cost is a learning curve for skill authors.
 

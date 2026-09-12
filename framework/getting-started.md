@@ -129,7 +129,7 @@ Routing rules: `framework/process-map.md`. Runbooks:
 
 | Path | When | Steps |
 |------|------|----------|
-| **Direct** | <=3 files, no spec, no new behavior | Buddy -> MCA directly |
+| **Direct** | All risk-first criteria in `framework/process-map.md`; small local new behavior allowed | Buddy -> MCA with short success criteria + verification |
 | **Standard** | 1 subsystem | interview -> spec -> board -> test -> implement |
 | **Full** | >1 subsystem, schema change | spec in 3 levels, board after each |
 

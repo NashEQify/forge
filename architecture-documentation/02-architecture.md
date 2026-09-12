@@ -11,15 +11,15 @@
 ┌─────────────────────────────────────────────────────────────────────┐
 │  HARNESS-ADAPTER (orchestrators/<name>/)                            │
 │  - cc / oc: scope-routing, --add-dir composition                    │
-│  - hooks/: SessionStart (boot) + git pre-commit (6 checks)          │
-│  - ~/.claude/settings.json (user-global) registers SessionStart     │
+│  - boot: configured Claude SessionStart / Codex AGENTS              │
+│  - shared git pre-commit checks, installed per consumer repo        │
 └──────────────────────────────┬──────────────────────────────────────┘
                                │ loads
                                ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │  TIER 0 — INVARIANTS                                                │
-│  CLAUDE.md (CC) | AGENTS.md (OC)                                    │
-│  6-8 invariants, never overridden                                   │
+│  CLAUDE.md (CC) | AGENTS.md (OC / Codex)                            │
+│  Shared invariants within effective platform permissions            │
 └──────────────────────────────┬──────────────────────────────────────┘
                                │ "Load and follow"
                                ▼
@@ -96,8 +96,12 @@ via Buddy (Board, Council, Standalone). Buddy never leaves the phase model:
 
 `agents/buddy/operational.md`:
 
-- **RECEIVE**: three mental states.
-  - **Incident** (expectation ≠ reality) → `root_cause_fix/SKILL.md` mandatory.
+- **RECEIVE**: classify the input.
+  - **Incident** (active outage or ongoing harm) → authorized recovery and
+    outcome verification before final RCA (`workflows/runbooks/fix/WORKFLOW.md`
+    §Incident recovery).
+  - **Defect** → investigate and repair with `root_cause_fix/SKILL.md`, or use
+    DIRECT when the cause and bounded fix satisfy the process-map criteria.
   - **Substantive** (user wants something) → clarify intent-fit + sequencing.
   - **Trivial** (acknowledgement, status, greeting) → reply.
 - **ACT**: Board/Council, delegation, source-grounding, sub-agent return.
@@ -225,17 +229,29 @@ For detail see `workflows/runbooks/<name>/WORKFLOW.md`.
 
 ### Path Determination (build)
 
-`workflows/runbooks/build/WORKFLOW.md` §Path Determination:
+[`framework/process-map.md`](../framework/process-map.md) §DIRECT eligibility
+is the single source for the short path. Evaluate safety floors first:
+authorization/auth, secrets, schema/data migration, public contracts, live
+infrastructure and hidden or unbounded failure effects exclude DIRECT.
+Otherwise, a clear authorized outcome, a bounded reversible change following
+an observed pattern, no unresolved consequential decision or new subsystem,
+and appropriate executable verification qualify. New local behavior is
+allowed; file counts and an existing spec do not decide eligibility.
+
+For changes outside DIRECT, `workflows/runbooks/build/WORKFLOW.md` determines
+STANDARD or FULL:
 
 ```
-ALL three? (a) ≤3 files (b) no spec (c) no new behaviour → DIRECT
 At least ONE? (a) >1 subsystem (b) new subsystem (c) new pattern
   (d) schema change (e) >10 ACs → FULL
 Otherwise → STANDARD
 ```
 
-DIRECT: inline delegation → MCA → L0 → return. No board, no gate file,
-no state file. Exception: pre-commit hooks remain (NON-NEGOTIABLE).
+DIRECT: scope + success criteria + verification plan → inline delegation
+to MCA for product code → implementation → relevant tests + independent
+verification of load-bearing code → evidence return. It needs no separate
+spec/architect/signoff cycle or engine state. Typo/format-only changes need
+a diff check. Commit-time hooks still apply when committing.
 
 ## Workflow Engine (Cross-Session State Machine)
 
@@ -300,7 +316,7 @@ checkout). Schema:
 Per `agents/buddy/operational.md` §Workflow Engine: build/fix/refactor/solve/
 review/research/docs-rewrite **MUST go through the engine**. Skip list:
 
-- DIRECT-path build/fix (≤3 files, no spec, no new behaviour)
+- DIRECT-path build/fix (risk-based eligibility in `framework/process-map.md`)
 - save/checkpoint/wakeup/sleep (no multi-step state)
 - context_housekeeping (maintenance workflow without pause points)
 - frame/bedrock_drill standalone (sub-skills)
@@ -395,7 +411,9 @@ Structured architectural / strategic decision. Four modes:
 | **interactive** | Buddy moderates a user dialog with perspectives (phase 1-2-3) | user wants to think through together, not parallel-isolation |
 
 **Consolidator-tool mandatory for ≥3 members** per CLAUDE.md Invariant 1
-— Buddy reads only the chief signal, never the individual member files.
+— the Chief consolidates; Buddy owns the decision and verifies pivotal
+claims against sources. Relevant member findings may be inspected to resolve
+contradictions without routinely repeating every review.
 
 **Post-council coherence-check** (`agents/buddy/operational.md`
 §Architecture-Comprehension B) re-applies unconditionally on chief return.
@@ -412,14 +430,16 @@ about which path is right.
 ## Hooks (Mechanism)
 
 `orchestrators/claude-code/hooks/` — **3 hook scripts on disk**. The
-hooks are universally portable (SessionStart + git pre-commit); there are
-no tool-event hooks (PreToolUse / PostToolUse / UserPromptSubmit).
+Git checks are shared across harnesses when installed in the active repo;
+SessionStart scripts are specific to configured Claude entrypoints. Codex
+uses managed AGENTS boot instructions. There are no tool-event hooks
+(PreToolUse / PostToolUse / UserPromptSubmit).
 Write-time discipline is protocol-anchored (`agents/buddy/operational.md`).
 
 | Hook | Trigger | Behaviour |
 |---|---|---|
 | `buddy-boot-inject.sh` | SessionStart | Triggers Buddy boot in claude-desktop / claude-web (where `--agent buddy` isn't an entrypoint flag). Load-bearing for boot on non-Terminal entrypoints. |
-| `session-start-remote.sh` | SessionStart | Resume-nudge — checks for recent session-handoff at session start. |
+| `session-start-remote.sh` | Configured Claude SessionStart | Resume-nudge — checks for recent session-handoff at session start. |
 | `pre-commit.sh` | git pre-commit + commit-msg | 6 checks (see below) — universally available across harnesses (git is portable). |
 
 ### Pre-Commit 6 Checks
@@ -510,7 +530,7 @@ User: "implement feature X"
       INTERVIEW via frame (8 sub-steps)
       Write SPEC
       BOARD via spec_board (standard, 4 reviewers)
-        → Chief consolidation → Buddy reads ONLY the chief signal
+        → Chief consolidation → Buddy verifies pivotal claims and decides
   → Phase Prepare
       TEST-DESIGN via testing
       DELEGATION artefact with MUST constraints
@@ -536,10 +556,11 @@ Buddy has a plan block or gate file
       .claude/agents/<name>.md found
       Wrapper loads agents/<name>.md (SoT)
       Persona protocol(s) inlined
-  → Sub-agent runs, writes review file / code diff
+  → Sub-agent runs: writer produces code diff; read-only reviewer returns report inline
+  → Buddy persists the complete report verbatim with provenance before Chief consumption
   → Returns
   → Buddy reads the return summary (return_summary/SKILL.md format)
-  → For a board: chief consolidates, Buddy reads ONLY the chief signal (CLAUDE.md §1)
+  → For a board: Chief consolidates where required; Buddy verifies pivotal claims and decides
   → Persist gate
 ```
 

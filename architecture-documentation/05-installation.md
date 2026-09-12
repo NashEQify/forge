@@ -11,6 +11,7 @@
 | **PyYAML** | plan/task/workflow YAML parsing |
 | **Claude Code CLI** | when using the CC adapter |
 | **OpenCode CLI** | when using the OC adapter |
+| **Codex Desktop / CLI** | when using the Codex adapter |
 | `chub` CLI | optional, for the `get_api_docs` skill |
 | `gitleaks` | optional, for the SECRET-SCAN pre-commit check (`brew install gitleaks` or via [GitHub releases](https://github.com/gitleaks/gitleaks/releases)) |
 
@@ -172,6 +173,57 @@ $FRAMEWORK_DIR/orchestrators/opencode/bin/oc
   are loaded.
 - Commands: trigger words without prefix (`wakeup`, `save`, `checkpoint`, `think!`).
 - **No write-time path guard** (on any harness) — Buddy stays within intent scope by discipline
+
+### Codex
+
+Use an existing consumer checkout. These examples assume the framework was
+cloned as in Quickstart; the installer resolves its root from its own location.
+Activate the Python environment so its `python3` can import PyYAML:
+
+```bash
+export FRAMEWORK_DIR="$HOME/projects/forge"
+source "$FRAMEWORK_DIR/.venv/bin/activate"
+forge_consumer="$HOME/projects/my-app"
+python3 -c 'import yaml'
+bash "$FRAMEWORK_DIR/scripts/setup-codex.sh" --check "$forge_consumer"
+```
+
+`--check` never writes. Exit 0 means current; exit 1 means pending changes
+or a conflict, distinguished in the output. Unknown/edited files and symlinks
+are conflicts. Review and preserve custom content before resolving them.
+For a legacy installation, `--migrate-legacy` can adopt only byte-identical
+known legacy roles and skill wrappers; use it in both check and install commands
+when needed. It does not force-overwrite customizations.
+
+Once the check shows only the intended changes, install and verify:
+
+```bash
+bash "$FRAMEWORK_DIR/scripts/setup-codex.sh" "$forge_consumer"
+bash "$FRAMEWORK_DIR/scripts/install-git-hooks.sh" "$forge_consumer"
+bash "$FRAMEWORK_DIR/scripts/setup-codex.sh" --check "$forge_consumer"
+bash "$FRAMEWORK_DIR/scripts/install-git-hooks.sh" --check "$forge_consumer"
+```
+
+Codex setup generates 40 roles from `agents/*.md`, installs skill wrappers,
+and merges explicit boot blocks into `~/.codex/AGENTS.md` and the consumer's
+`AGENTS.md`, preserving surrounding instructions. Installed paths are absolute;
+source templates remain portable. `CODEX_HOME` / `AGENTS_HOME` or the flags
+`--codex-home` / `--agents-home` select alternate installation roots.
+
+It removes only recognized obsolete Forge Claude-hook commands from existing
+Codex `hooks.json` files; Codex boot uses AGENTS instructions. Git hooks are
+installed separately. Existing custom Git hooks or `core.hooksPath` settings
+require explicit integration. Codex `config.toml` and credentials are untouched.
+
+Open a fresh Codex session in the consumer checkout. Verify that it loads
+Buddy's `soul.md`, `operational.md` and `boot.md` from the framework root while
+keeping the consumer's `intent.md`, CWD and project rules active. Check role
+and skill availability. Report roles return complete artifacts inline for the
+parent to persist verbatim; their read-only/no-approval defaults can be
+overridden by the parent runtime. Verify effective permissions in that session.
+A file check alone does not verify boot or sandbox enforcement.
+
+Source and behavior details: [Codex integration](07-tool-integrations.md#codex).
 
 ### Cursor
 

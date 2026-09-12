@@ -101,7 +101,7 @@ the input (discuss / incident / substantial) and routes to a workflow:
 |---|---|
 | `solve <problem>` | open-ended: frame → refine → artifact → execute |
 | `build task X` | spec → spec-board → code → code-review-board → close |
-| `fix bug X` | root-cause first, no symptom-patching |
+| `fix bug X` | recover active incidents within authorization, then diagnose and repair the cause |
 | `review spec X` | multi-perspective spec-board (4-7 personas + chief) |
 | `research X` | knowledge artifact, not code |
 | `save` | writes the session-handoff so the next session picks up the thread — run it mid-session or at session end (one command, the footprint adapts) |
@@ -128,8 +128,9 @@ interview → a spec-board (4–7 reviewer personas in parallel + a chief
 consolidator) → main-code-agent implements → a code-review-board on the
 diff → close. The eight workflows carry the methodology; the 41 active
 skills carry the moves inside each phase. The boards and the council run
-context-isolated — Buddy doesn't colour the reviewers' findings and
-reads only the chief's consolidated signal — and the council runs in
+context-isolated. A Chief consolidates where the review mode requires one;
+Buddy decides and verifies pivotal claims against their sources, consulting
+individual findings when needed. The council runs in
 four modes (light / standard / full / interactive), scaled to the
 decision.
 
@@ -159,9 +160,9 @@ decision.
  same backbone, 8 workflows:
    build · fix · review · solve · research  →  Specify·Prepare·Execute·Verify·Close
    docs-rewrite → 7 phases ·  save → 3 groups ·  context_housekeeping → 2 groups
-   path sets depth:  DIRECT skips the apparatus  …  FULL runs every gate
+   path sets depth:  DIRECT verifies locally  …  FULL runs every applicable gate
 
- HOOKS (portable):  SessionStart boot · git pre-commit (3 BLOCK + 3 WARN)
+ BOOT: host-specific (Codex: AGENTS) · git pre-commit: 3 BLOCK + 3 WARN
 ```
 
 *Intent in at the top, result out at the bottom — the workflow is the home
@@ -210,8 +211,23 @@ cc <project>        # Claude Code (or bare `cc` for the current dir)
 ```
 
 Other harnesses: `setup-oc.sh` (OpenCode), `setup-codex.sh` (Codex);
-Cursor ships rules under `orchestrators/cursor/`. Each script is
-idempotent — re-run any time to repair.
+Cursor ships rules under `orchestrators/cursor/`. For Codex, use Python
+with PyYAML available and an existing consumer checkout:
+
+```bash
+bash ~/forge/scripts/setup-codex.sh --check ~/projects/my-app
+bash ~/forge/scripts/setup-codex.sh ~/projects/my-app
+bash ~/forge/scripts/install-git-hooks.sh ~/projects/my-app
+bash ~/forge/scripts/setup-codex.sh --check ~/projects/my-app
+bash ~/forge/scripts/install-git-hooks.sh --check ~/projects/my-app
+```
+
+The first check reports pending changes or conflicts without writing. Resolve
+conflicts before installation. Codex setup generates roles and skill wrappers
+and merges explicit AGENTS boot instructions; Git hooks are installed separately.
+Verify instruction loading in a fresh session opened in the consumer checkout.
+See the [Codex setup guide](architecture-documentation/05-installation.md#codex)
+for migration and verification details.
 
 **Full details** — prerequisites, per-harness setup, consumer-repo
 wiring, verification:
@@ -241,11 +257,13 @@ together in a single session.
 **Adapters.** forge's discipline lives in several layers: skills
 (markdown + YAML), workflow runbooks, the workflow engine (Python +
 YAML state), persona definitions, task / plan YAMLs, and a thin hook
-layer (SessionStart boot + git pre-commit). Most of it is
+layer (configured Claude SessionStart boot + shared git pre-commit). Most of it is
 harness-neutral — any harness that loads MD + YAML and can spawn
 sub-agents can run forge. An adapter buys mechanical persona / skill
-discovery, tier-0 anchor loading, and the boot + commit-time hooks
-wired into the harness startup and the repo's git hooks.
+discovery, tier-0 anchor loading, host-specific boot integration, and
+shared commit-time checks installed in the repo's git hooks. Codex boots
+through explicit AGENTS instructions; Claude SessionStart hooks do not
+establish Codex boot.
 
 Cursor is the fourth shipped adapter; it has no tool-event API and no
 SessionStart hook, so its mechanical layer is git pre-commit plus the

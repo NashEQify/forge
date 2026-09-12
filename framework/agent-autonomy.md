@@ -1,6 +1,6 @@
 # Agent Autonomy
 
-Tier-1 refinement of Tier-0 invariant §5 (CLAUDE.md / AGENTS.md).
+Tier-1 refinement of shared invariants 2-4 (CLAUDE.md / AGENTS.md).
 
 SoT for the question: "who writes which artifact, with which gate,
 through which routing".
@@ -13,7 +13,8 @@ Autonomy decisions split into three independent sub-questions.
 Every write act must answer all three:
 
 1. **Permission** — may this agent write this path at all?
-   Coarse path whitelist in `CLAUDE.md §5`, mirrored in `AGENTS.md §5`.
+   Approved scope in shared Invariant 2 and role ownership in Invariant 4;
+   effective platform permissions are a separate technical boundary.
 2. **Gate** — does this act require pre-write review or peer consultation?
    Artifact-type specific, encoded in the table below.
 3. **Routing** — who executes the act concretely?
@@ -29,21 +30,24 @@ The sub-questions are logically orthogonal, but two seam cases exist
 
 Three documents form one cascade:
 
-**CLAUDE.md §5** (coarse, Tier-0 anchor)
+**Shared AGENTS.md / CLAUDE.md Invariants 2-4** (Tier-0 anchor)
 -> **framework/agent-autonomy.md** (specific, this file)
 -> **local workflow runbook** (further refinement when workflow mechanics require it)
 
-**Rule 1 — earlier layer beats later layer:** if CLAUDE.md §5 is explicit
+**Rule 1 — earlier layer beats later layer:** if shared Invariant 4 is explicit
 (e.g. "docs/ = Buddy zone"), later layers refine it — not override it.
 
 **Rule 2 — later layer may refine, not invent:** specific layers may
 concretize generic layers (e.g. "docs/specs/*.md requires spec_board"),
-but not contradict them. Contradictions are bugs and are detected by
-`plan_engine --validate`.
+but not contradict them. The invariant-parity test detects adapter drift;
+semantic contradictions need review and behavioral checks. `plan_engine
+--validate` validates its structured inputs, not arbitrary prose semantics.
 
-**Rule 3 — defensive default:** if a case is unclear (gate heuristic
-ambiguous, artifact type missing), **trigger gate, do not write**.
-A redundant review is cheaper than a silent regression.
+**Rule 3 — resolve uncertainty:** inspect the relevant facts before routing.
+If DIRECT eligibility remains unknown, use the appropriate standard path
+or ask the missing consequential decision. A redundant review is not always
+cheaper; safety floors are never bypassed. Authorization is governed by
+`framework/process-map.md`, not repeated at each routine phase transition.
 
 ---
 

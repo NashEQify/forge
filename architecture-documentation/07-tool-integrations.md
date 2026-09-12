@@ -35,16 +35,13 @@ and the harness-neutral methodology.
   CLI             CLI              / CLI
 ```
 
-An adapter delivers three things: persona / skill discovery,
-tier-0-anchor loading, and — for the SessionStart + git pre-commit
-hooks — universal wiring. **Only universal-portable hooks are wired:**
-SessionStart (boot inject + resume nudge) and git pre-commit (6
-checks). There are no tool-event hooks (PreToolUse / PostToolUse /
-UserPromptSubmit); write-time discipline is protocol-anchored. All
-supported harnesses (CC-Terminal, claude-desktop, claude-web, OpenCode,
-Codex, Cursor) run discipline + protocols + the same 3 hooks (Cursor
-lacks SessionStart, so it boots via project rules; pre-commit fires
-identically).
+An adapter provides persona / skill discovery, tier-0 instruction loading,
+and host-specific boot integration. Shared Git hooks provide six commit-time
+checks when installed in the active repository. The two SessionStart scripts
+run on configured Claude entrypoints. Codex uses explicit managed AGENTS boot
+instructions, OpenCode uses its launcher, and Cursor uses project rules.
+There are no framework tool-event hooks (PreToolUse / PostToolUse /
+UserPromptSubmit); write-time discipline is protocol-anchored.
 
 ## Claude Code
 
@@ -221,104 +218,105 @@ on one.
 
 ## Codex
 
-Codex Desktop / CLI reads agent definitions from `~/.codex/agents/`
-(global, user-level) and project-local hooks from `<project>/.codex/
-hooks.json`. Skills are discovered globally from `~/.agents/skills/`.
-There is no `--add-dir`-style runtime path resolution; Codex expects
-agent files to carry concrete absolute paths.
+Forge's Codex installer generates roles from the neutral `agents/*.md`
+sources and installs explicit AGENTS instructions for primary-session boot.
+It does not use Claude SessionStart scripts as Codex boot hooks. Giving a
+session directory access or selecting a Buddy role alone does not prove
+that the framework instructions were loaded.
 
 ### Prerequisites
 
 - Codex Desktop or Codex CLI installed (`codex --version`).
-- The active repository carries an `AGENTS.md` (project Tier-0
-  surface; identical convention to OpenCode).
+- Python 3.10+ with PyYAML available to `python3`.
+- A framework checkout and an existing consumer project directory.
+  The installer can create `AGENTS.md` or merge its managed boot block
+  into existing project instructions.
 
 ### Adapter files
 
-```
-.codex/
-├── agents/              # 38 agent wrappers (TOML, generated/curated)
-│   ├── buddy.toml       # template stub — overwritten at install time
-│   ├── main-code-agent.toml
-│   ├── board-chief.toml
-│   ├── code-chief.toml
-│   └── … (one per persona)
-└── hooks.json           # project-local hook wiring (uses
-                         # ${CLAUDE_PROJECT_DIR} as the in-repo form;
-                         # overwritten with concrete paths on install)
-```
+| Surface | Purpose |
+|---|---|
+| `agents/*.md` | Canonical neutral role definitions |
+| `scripts/generate_codex_agents.py` | Generates all 40 active roles as TOML |
+| `scripts/setup-codex.sh` | Managed installation of roles, skills and boot entries |
+| `~/.codex/agents/*.toml` | Installed roles with concrete framework paths |
+| `~/.agents/skills/*/SKILL.md` | Generated discovery wrappers with concrete skill paths |
+| `~/.codex/AGENTS.md`, `<consumer>/AGENTS.md` | Managed boot block plus preserved user/project instructions |
 
-The committed `.codex/agents/buddy.toml` is a TEMPLATE with a
-`${FRAMEWORK_DIR}` placeholder. `scripts/setup-codex.sh` writes the
-installed copy at `~/.codex/agents/buddy.toml` with the placeholder
-substituted to the user's absolute path. This indirection exists
-because Codex Desktop has no runtime environment-variable resolution
-for agent file paths; concrete paths must be baked in at install
-time. The 37 other wrappers carry no absolute paths and are copied
-unchanged.
+Portable role templates use `<FRAMEWORK_ROOT>` with instructions to resolve
+it from the framework checkout or the managed AGENTS entry in a consumer
+session. Installed roles use the concrete framework path. Both forms come
+from neutral sources; edit those sources and regenerate. Project paths
+remain relative to the active consumer CWD.
 
 ### setup-codex.sh
 
 ```bash
-bash $FRAMEWORK_DIR/scripts/setup-codex.sh [project-dir ...]
+bash "$FRAMEWORK_DIR/scripts/setup-codex.sh" --check "$HOME/projects/my-app"
+bash "$FRAMEWORK_DIR/scripts/setup-codex.sh" "$HOME/projects/my-app"
 ```
 
 Operations:
 
-1. **Detect `FRAMEWORK_DIR`** from the script's own location (same
-   pattern as `setup-cc.sh`, portable across clones).
-2. **Install agent wrappers** at `~/.codex/agents/` from
-   `.codex/agents/*.toml`.
-3. **Overwrite `~/.codex/agents/buddy.toml`** with a Codex-specific
-   wrapper carrying the concrete `FRAMEWORK_DIR`.
-4. **Write `~/.codex/AGENTS.md`** — a global fallback that points at
-   the active repo's `AGENTS.md` as the project Tier-0.
-5. **Generate skill wrappers** at `~/.agents/skills/` via
-   `scripts/generate_skill_wrappers.py --output-root ~/.agents/skills
-   --tool-label Codex`. Same generator as the Claude Code wrappers,
-   different output root.
-6. **For each `project-dir` argument:** write `<project-dir>/.codex/
-   hooks.json` with SessionStart entries pointing at the same scripts
-   CC uses (`buddy-boot-inject.sh` + `session-start-remote.sh`). The
-   per-project hooks.json carries SessionStart-only; the
-   git pre-commit symlink is wired separately via
-   `scripts/install-git-hooks.sh`.
+1. Resolve the framework root from the script's location and generate roles
+   and skill wrappers with concrete targets.
+2. Preflight all managed targets. Hash manifests identify owned files;
+   unknown or edited files and symlinks are conflicts. `--check` never writes:
+   exit 0 means current, exit 1 means pending changes or a conflict (read
+   the output).
+3. Install owned role/skill files and merge the boot block into the Codex
+   home AGENTS file and each supplied consumer's AGENTS file, preserving
+   surrounding instructions.
+4. Remove only recognized obsolete Forge Claude-hook command entries from
+   existing Codex `hooks.json` files. Preserve unrelated commands and group
+   metadata. `config.toml`, credentials and Git hooks are untouched.
 
-### Hook registration
+`CODEX_HOME` and `AGENTS_HOME` (or `--codex-home` and `--agents-home`) select
+alternative destinations. `--migrate-legacy` adopts only byte-identical known
+legacy roles and wrappers. Review and preserve custom changes before resolving
+a conflict; there is no force-overwrite option. Each file replacement is atomic,
+but installation across directories is not a single filesystem transaction.
 
-`.codex/hooks.json` registers SessionStart only:
+### Boot and Git hooks
 
-| Event | Hooks |
-|---|---|
-| `SessionStart` | `buddy-boot-inject.sh` + `session-start-remote.sh` |
+The managed AGENTS entry tells the primary session to read Buddy's `soul.md`,
+`operational.md` and `boot.md`, even without explicit Buddy role selection.
+The consumer CWD and its project rules remain active; delegated roles follow
+their canonical role without repeating primary-session boot/bookkeeping.
 
-There are no PreToolUse / PostToolUse / UserPromptSubmit hooks.
-Discipline + protocols + git pre-commit (6 checks, universally
-available) carry the write-time layer.
+Install shared Git hooks separately with `scripts/install-git-hooks.sh`, then
+run its `--check` mode. Verify the actual AGENTS loading in a fresh consumer
+session. No framework tool-event hooks enforce write-time discipline.
 
 ### Discovery + tool use
 
-Codex discovers:
-- **Agents:** globally from `~/.codex/agents/`. No project-local
-  `.codex/agents/` lookup (unlike Claude Code's walk-up).
-- **Skills:** globally from `~/.agents/skills/`. Wrappers are
-  generated derived artefacts.
-- **Tier-0:** from the active project's `AGENTS.md` (same convention
-  as OpenCode). If the project has no `AGENTS.md`, the global
-  `~/.codex/AGENTS.md` fallback points at it as the missing Tier-0.
+The default installation places roles in `~/.codex/agents/` and skill wrappers
+in `~/.agents/skills/`. The explicit boot entry identifies the framework root;
+consumer `AGENTS.md` supplies project rules. Verify the installed roles and
+skills are available in the host session instead of inferring discovery from
+file presence alone.
+
+Of the 40 generated roles, 34 report roles default to `sandbox_mode = "read-only"`
+and `approval_policy = "never"`. They return complete reports inline, including
+intended artifact paths, evidence and provenance. The parent persists them
+verbatim before downstream Chief consumption. Shell and temporary-file writes
+are outside the report-only contract.
+
+The six writer roles (`buddy`, `main-code-agent`, `tester`, `test-skeleton-writer`,
+`spec-text-drift-batch`, `security`) inherit their runtime settings. Parent
+runtime overrides can supersede role defaults; verify effective permissions
+before claiming sandbox enforcement. A report role retains report-only behavior
+and reports any mismatch.
 
 ### Limitations
 
-- **No project-local agent override.** Codex has no walk-up agent
-  discovery; consumer repos cannot ship per-project agent variants.
-  Workaround: edit the global `~/.codex/agents/` directly, or use a
-  per-repo `AGENTS.md` that re-routes via prompt.
-- **Skill wrappers are install-time, not repo-tracked.** Unlike
-  `.claude/skills/` (committed, exposed via symlink), the Codex skill
-  wrappers under `~/.agents/skills/` regenerate on every
-  `setup-codex.sh` run. When a skill's frontmatter changes, re-run
-  `setup-codex.sh` (or the generator directly) to refresh the
-  wrappers.
+- Generated role/skill edits become ownership conflicts on a later install.
+  Change canonical sources and rerun setup; preserve custom files separately.
+- A passing installation check verifies managed files, not live instruction
+  loading, role discovery or effective sandbox rights. Check those in the
+  actual parent session.
+
+For the complete setup sequence, see [Installation: Codex](05-installation.md#codex).
 
 ## Cursor
 
@@ -350,14 +348,15 @@ are invoked via `@<name>` mentions; the Cursor agent reads
 |---|---|---|---|---|
 | Sub-agent discovery | `~/.claude/agents/` | `.opencode/agent/` | `~/.codex/agents/` | project rules + `@`-mention |
 | Skill discovery | `~/.claude/skills/` (symlink) | `.opencode/skill/` | `~/.agents/skills/` (generated) | project rules |
-| SessionStart hook | native | n/a (boot via launcher) | native (`.codex/hooks.json`) | n/a (boot via project rules) |
+| Boot integration | Configured Claude SessionStart / launcher | launcher | explicit managed AGENTS entry | project rules |
 | Pre-commit hook | git symlink | git symlink | git symlink | git symlink |
 | Workflow-engine | available, on-demand | available, on-demand | available, on-demand | available, on-demand |
 
-**Consequence:** the framework runs identically on every
-adapter. Boot mechanism varies (SessionStart on CC/Codex, launcher on
-OC, project rules on Cursor); pre-commit is identical (git symlink);
-discipline + protocols + skills + workflows + personas are 1:1.
+**Consequence:** the discipline is shared across adapters. Boot differs:
+configured Claude SessionStart / launcher, OpenCode launcher, Codex managed
+AGENTS, Cursor project rules. Shared Git checks run when installed in the
+active repo; effective runtime permissions and discovery must be verified
+on the host.
 
 ### Status
 
@@ -399,15 +398,14 @@ persona-wrapper chain:
 agents/<name>.md                              <- SoT
 .claude/agents/<name>.md                      <- CC wrapper, "load SoT"
 orchestrators/opencode/.opencode/agent/<name>.md  <- OC wrapper, "load SoT"
-.codex/agents/<name>.toml                     <- Codex wrapper, "load SoT"
+scripts/generate_codex_agents.py             <- Codex TOML generated from neutral SoT
 ```
 
-Codex wrappers (`.codex/agents/<name>.toml`) live in the repo as a
-checked-in adapter surface; `setup-codex.sh` copies them to
-`~/.codex/agents/`. The Buddy wrapper is a template stub with a
-`${FRAMEWORK_DIR}` placeholder — substituted at install time. The
-other 37 wrappers are generated-then-curated (no install-time
-substitution needed).
+Codex roles are generated from all 40 active neutral `agents/*.md` sources.
+Portable templates resolve `<FRAMEWORK_ROOT>` explicitly; `setup-codex.sh`
+generates installed roles and skill wrappers with concrete framework paths.
+Use its `--check` mode to detect managed-install drift. The normal generation
+source is the neutral role, not a curated TOML copy.
 
 Cursor has no per-persona wrapper file (personas resolve via
 `@`-mention into `agents/<name>.md` directly), so Check 3 does not

@@ -23,97 +23,68 @@ standardized anchor is not the proposer's per-decision framing; a curated slice 
 
 ## Invariants
 
-### 1. Board/Council: Buddy = Dispatcher
-On Board/Council, Buddy doesn't read review files, analyze findings,
-write consolidations, or verify fixes. Spawn → read the Chief signal
-→ SAVE → escalate. That's the whole job.
+### 1. Board/Council: responsibility and evidence
+Reviewers investigate independently; a Chief consolidates where the
+selected review mode calls for one. Buddy owns the decision and verifies
+load-bearing claims against their sources. Buddy may inspect relevant
+findings to resolve contradictions, but does not routinely repeat every
+review. Read-only reviewers return complete artifacts inline; Buddy
+persists them verbatim with provenance before Chief consumption.
+Platform instructions and effective permissions are never overridden.
 
-### 2. Default: discuss, don't implement
-Implement only on a clear imperative. Unclear → ask. Self-triggered →
-always discuss first. Context writes and bookkeeping skip the gate.
+### 2. Authorization
+Discuss when the requested outcome or a consequential decision is unclear.
+A clear implementation instruction authorizes work within its stated scope.
+Existing authorization survives phase transitions; ask again only for a
+material scope/risk change or a genuinely unresolved user decision.
+Diagnosis-only does not authorize a fix. Live, destructive and publication
+actions retain their explicit boundaries. Bookkeeping does not authorize
+new substantive decisions. SoT: `framework/process-map.md` section
+Authorization.
 
 ### 3. Pre-Delegation
-No agent call without a delegation artifact. Direct path: plan block,
-or scope/goal/agent stated in the turn. Standard/Full path: gate file.
-Routing rules in `framework/process-map.md`; path detail in
-`workflows/runbooks/build/WORKFLOW.md`.
+No agent call without a delegation artifact. DIRECT: scope, goal, agent
+and success criteria in the turn suffice. Other paths use a persisted
+brief. Do not request another routine signoff for an already approved
+scope. Routing: `framework/process-map.md` and the selected runbook.
 
 ### 4. Code delegation
-Product code goes to main-code-agent. Buddy writes within intent-scope
-by discipline. Orchestrator work (agents/, framework/,
-skills/, context/, docs/) Buddy writes directly. Detail:
-`framework/agent-autonomy.md`.
+Product code goes to main-code-agent. Buddy writes orchestrator artifacts
+(`agents/`, `framework/`, `skills/`, `workflows/`, `context/`, `docs/`)
+within the approved intent-scope. Detail: `framework/agent-autonomy.md`.
 
 ### 5. Stale cleanup
-When an artifact is retired/replaced/sunset, clean up every live
-reference in non-frozen files in the same commit. `grep -rn <artifact>`
-finds the obvious refs — but it does NOT prove completeness: a retired
-name lives in an OPEN form-space (canonical, label, spaced, prose
-paraphrase), so matching the name misses the variants. Prove
-completeness by INVENTORY-FLIP — enumerate a PINNED listing of what
-exists in the dimension the artifact lived in (`ls agents/`, the skill
-dirs, the named pre-commit-check headers) and walk the doc's mechanism
-nouns against it: flag any CLAIM resolving to no entry (referential
-integrity — no knowledge of the dead name-forms needed). Pin the
-membership definition you used: where the listing is unambiguous the
-flip closes the form-space; where membership is itself a judgment
-("what counts as a check") it only NARROWS it — so ship the
-inventory-check (command + output) WITH its pinned definition, not a
-bare "all clean", and keep the verifier lens different from the
-name-grep that did the removal. Discipline-only. Detail + honest bound:
-`skills/_protocols/evidence-pointer-schema.md` §8.2 +
-`skills/deprecation_and_migration/SKILL.md` (Phase 3 Step 4).
+Retiring or replacing an artifact includes its live references in the same
+change. Search names and enumerate the relevant live inventory; neither a
+name search nor a confident summary alone proves completeness. Preserve
+frozen history. Detail: `skills/_protocols/evidence-pointer-schema.md`
+section 8.2 and `skills/deprecation_and_migration/SKILL.md`.
 
 ### 6. Deployment verification
-After a deploy, look at it. HTTP 200 isn't proof. If you can't see it,
-say so and ask the user to check.
+Verify the actual user/service outcome after deployment; HTTP 200 or
+process liveness alone is insufficient. If verification is unavailable,
+report the unverified boundary instead of claiming verified deployment.
+Incident recovery follows `workflows/runbooks/fix/WORKFLOW.md` section
+Incident recovery before final RCA; authorization is not relaxed.
 
-> Invariants 7 and 8 (forensic hygiene on public surface; private-dev-SoT /
-> OSS-mirror topology) were relocated to `intent.md` (§Forensic hygiene on
-> public surface; §Public mirror = read-only OSS mirror). The numbers 9 and 10
-> are kept stable here — corpus-wide references cite "Inv 9"/"Inv 10", so the
-> gap is intentional, not a renumber. `AGENTS.md` (public-mirror surface)
-> carries only Invariants 1–6; Inv 9 (Proportionality) and Inv 10 (Verify
-> mechanical claims) are CLAUDE.md-only and have no AGENTS.md counterpart.
+<!-- Numbers 7/8 remain in intent.md; retain stable 9/10 references. -->
 
 ### 9. Proportionality of effort
-Effort matches stakes. Every decision boundary that creates followup
-work (task, gate, test, route, lens-binding) needs a value-floor
-judgment: *what named operational cost would NOT doing this incur,
-for which named consumer?* Concrete cost + concrete consumer = justified
-(a non-blocking fix for performance, stability, security, observability,
-maintainability still passes when the cost is named). A consumer the
-active `intent.md` Vision names as a product deliverable counts as a
-named consumer even at **zero built instances** — a vision-named product
-surface is not goldplating pre-launch (the consumable surface IS the
-deliverable). Hand-wavy
-"future-edit safety" / "should be cleaner" / "follows convention" =
-re-route. CRITICAL / security / schema / public-API / full-path hard
-floors stay in scope regardless.
+Effort matches consequences, reversibility and uncertainty. Name the
+consumer and concrete cost a gate, task or test addresses. Vision-named
+product deliverables count even before deployment. Safety floors for
+security/auth/secrets, schema/data migration, public contracts and live
+infrastructure are evaluated before any small-change shortcut.
+DIRECT eligibility has one source: `framework/process-map.md`.
+File counts are signals, not substitutes for risk assessment.
 
-### 10. Verify mechanical claims with the shell
-Before stating a mechanical fact (file exists, grep count, line
-numbers, version, byte-identity, command output), run the check (`ls`,
-`grep`, `wc`, `read`, `stat`). Don't infer from the model — confident
-plausible specifics that turn out wrong are a recurrent silent failure
-class. Reviewers carry an evidence-pointer mandate
-(`_protocols/evidence-pointer-schema.md`); this is the Buddy-side
-equivalent — every load-bearing fact costs one verifying command, not
-"sounds right".
-
-**Evidence-pointer at write time (author side).** When a load-bearing
-mechanical claim about how code behaves goes into a Buddy-authored
-artifact the reader will act on — an ADR, a decision record, a handoff,
-a consequential inline assertion — carry the verifying command or
-`file:line` INLINE next to the claim, so the next reader can audit the
-cited line. This extends the review-only evidence-pointer mandate
-(`_protocols/evidence-pointer-schema.md` §8) to the author.
-Limit, stated honestly: the pointer raises the floor and makes a claim
-auditable, but it does NOT catch a MISREAD — the author can look at the
-right line and still draw the wrong conclusion. Only an independent
-reader catches the misread (the default verify-pass,
-`skills/documentation_and_adrs/SKILL.md` §Independent verify-pass). The
-two are complementary, not redundant.
+### 10. Verify mechanical claims
+Verify file existence, counts, versions, code behavior and command results
+against actual files or executed checks before asserting them. Consequential
+artifacts carry evidence pointers or commands beside the claim. Distinguish
+agent-confirmed, automatically checked and unverified results. A correct
+pointer can still be misread; independent review checks interpretation.
+Detail: `skills/_protocols/evidence-pointer-schema.md`.
 
 ## Observability
 For state-changing actions, leave a one-liner:
@@ -139,20 +110,27 @@ per-commit authorisation is needed — this overrides the harness "ask
 before committing" default. The Claude-Code session-guidance rule "If on
 the default branch, branch first" does NOT apply here. Bounds:
 Conventional-Commit format (CG-CONV), the pre-commit hook must pass,
-never bypass hooks; `git push` and genuinely destructive / irreversible
-git ops (force-push, `reset --hard`, history rewrite) still warrant a
-heads-up. Override locked.
+never bypass hooks. An explicit task boundary such as "no commit" overrides
+this standing local-commit permission. `git push` requires authorization for
+publication to the intended remote; destructive operations (force-push,
+`reset --hard`, history rewrite) require explicit authorization for that action.
+A heads-up alone is not permission. See process-map.md, Authorization.
 
 ## Active Hooks
 
-Two hook layers, both universally portable.
+Shared git hooks and host-specific boot integration. Presence of a script
+does not prove that a host invokes it.
 
-SessionStart (CC-Terminal, claude-desktop, claude-web, Codex via hooks.json):
+SessionStart on configured Claude entrypoints (not Codex):
 - `buddy-boot-inject` — triggers the Buddy boot sequence where `--agent
   buddy` isn't an explicit flag (claude-desktop / claude-web). Load-bearing
   for boot.
 - `session-start-remote` — resume nudge (active workflow / recent
   session-handoff check).
+
+Codex boots through the explicit managed AGENTS entry from
+`scripts/setup-codex.sh`. Additional-directory access or a Buddy role file
+alone does not establish that framework instructions were loaded.
 
 git pre-commit (6 checks, 3 BLOCK + 3 WARN):
 - BLOCK: PLAN-VALIDATE (plan_engine schema integrity), CG-CONV
@@ -174,8 +152,9 @@ Everything else is carried by discipline, not hooks:
   Tier-1 edits per `_protocols/plan-review.md`.
 - MCA return: Buddy reads the return summary himself per `operational.md`
   §Sub-Agent Return.
-- Board / council output: chief consolidates and reads the files;
-  inline-return fallback in `operational.md` §Multi-perspective engagement.
+- Board / council output: read-only reviewers and Chiefs return artifacts;
+  Buddy persists verbatim with provenance, then adopts the decision based on
+  evidence. See `operational.md` §Multi-perspective engagement.
 - Workflow continuity: handoff + boot-resume carry it across turns;
   `workflow_engine.py --boot-context` on demand.
 

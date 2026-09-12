@@ -3,7 +3,7 @@
 > **Audience: AI coding agents.** Human reader → see
 > [`10-human-guide.md`](10-human-guide.md).
 
-For coding agents (Claude Code, OpenCode, Cursor, etc.). Compact required
+For coding agents (Claude Code, OpenCode, Codex, Cursor, etc.). Compact required
 reading before any actions are taken against the repo.
 
 ## Start here
@@ -11,7 +11,8 @@ reading before any actions are taken against the repo.
 When you see this repo for the first time:
 
 1. **Read Tier 0:** [`../CLAUDE.md`](../CLAUDE.md) (Claude Code) or
-   [`../AGENTS.md`](../AGENTS.md) (OpenCode). 6-8 invariants — never override.
+   [`../AGENTS.md`](../AGENTS.md) (Codex / OpenCode). Shared invariants apply
+   alongside effective platform instructions and permissions.
 2. **Read Buddy Tier 1:** [`../agents/buddy/soul.md`](../agents/buddy/soul.md)
    + [`../agents/buddy/operational.md`](../agents/buddy/operational.md)
    + [`../agents/buddy/boot.md`](../agents/buddy/boot.md).
@@ -26,16 +27,21 @@ needed, Tier 2 is on-demand.
 
 `CLAUDE.md`:
 
-1. **Board/Council: Buddy = dispatcher.** On board/council do not read
-   review files, do not analyse findings, do not write consolidations,
-   do not verify fixes. Only: spawn → read chief signal → SAVE → escalate.
+1. **Board/Council: responsibility and evidence.** Reviewers investigate
+   independently; a Chief consolidates where required. Buddy decides and
+   verifies pivotal claims against sources, consulting relevant findings
+   without routinely repeating every review. Read-only reviewers return
+   complete artifacts inline; Buddy persists them verbatim with provenance
+   before Chief consumption. Effective platform permissions remain binding.
 
-2. **Default: discuss, don't implement.** Implement only on a clear
-   imperative. Unclear → ask. Self-triggered → always discuss. Context
-   writes and bookkeeping: no gate.
+2. **Authorization.** A clear implementation instruction authorizes its
+   bounded scope across phases. Ask again only for a material scope/risk
+   change or an unresolved consequential decision. Diagnosis does not
+   authorize repair; live, destructive and publication actions retain their
+   explicit boundaries. Bookkeeping cannot authorize substantive changes.
 
 3. **Pre-Delegation.** No agent call without a delegation artefact. Direct:
-   plan block or scope/goal/agent stated explicitly in the turn.
+   scope, goal, agent and success criteria stated explicitly in the turn.
    Standard/Full: gate file. Routing: `framework/process-map.md`.
 
 4. **Code delegation.** Product code → main-code-agent. Buddy writes
@@ -47,13 +53,19 @@ needed, Tier 2 is on-demand.
    all active references in non-frozen files in the same commit.
    `grep -rn <artefact>` + filter frozen zones + fix the rest.
 
-6. **Deployment verification.** After deploy: visually verify, not just
-   HTTP 200. If a visual check is not possible: report explicitly and ask
-   the user to verify.
+6. **Deployment verification.** Verify the actual user/service outcome.
+   HTTP 200 or process liveness alone is insufficient; report any unverified
+   boundary. During ongoing harm, follow the fix runbook's Incident recovery
+   before final RCA, within existing authorization.
 
-OpenCode (`AGENTS.md`) may have additional adapter invariants — under OC
-the relevant `AGENTS.md` is the source, the CC `CLAUDE.md` is
-adapter-specific.
+DIRECT eligibility is centralized in `framework/process-map.md`: risk,
+reversibility, observed patterns and executable verification determine the
+path. Safety floors apply first; file counts and new local behavior do not
+decide eligibility.
+
+Codex and OpenCode use `AGENTS.md`; Claude Code uses `CLAUDE.md`. Shared
+invariants apply alongside each consumer's project rules and effective
+platform permissions.
 
 ## Buddy phases
 
@@ -65,17 +77,19 @@ RECEIVE → ACT → BOUNDARY
 
 ### RECEIVE
 
-Three mental states before you reply:
+Classify the input before you reply:
 
 | State | Trigger | Reaction |
 |---|---|---|
-| **Incident** | Expectation ≠ reality | `root_cause_fix/SKILL.md` mandatory |
+| **Incident** | Active outage or ongoing harm | Authorized recovery + outcome verification before final RCA |
+| **Defect** | Expectation ≠ reality without ongoing harm | Diagnose and repair; verified known fixes may qualify for DIRECT |
 | **Substantive** | User wants to do/change/build | Clarify intent fit + sequencing |
 | **Trivial** | Confirmation, status, greeting | answer |
 
 ### ACT
 
-- Board/Council: spawn, do **NOT** read along.
+- Board/Council: independent reviewers, Chief consolidation where required,
+  then Buddy's decision and verification of pivotal claims.
 - Delegation: routing table (code → MCA, architecture → solution-expert,
   security → security, sysadmin → Buddy direct).
 - Source grounding: read if last read >5 turns old. Before consistency
@@ -150,15 +164,17 @@ Not for analysis/discussion/framing.
 
 ## Don't — prohibitions
 
-### DON'T 1: Read along on board reviews
+### DON'T 1: Bias reviewers or skip verification
 
-CLAUDE.md §1. If you read along in the board, your interpretation
-colours the findings, multi-perspective guarantee is lost.
+CLAUDE.md §1. Keep reviewers independent. A Chief's signal informs Buddy's
+decision; verify pivotal claims against sources and inspect relevant findings
+when needed to resolve contradictions.
 
-### DON'T 2: Implement without a clear imperative
+### DON'T 2: Exceed authorization or repeatedly ask for the same approval
 
-CLAUDE.md §2. Default is discuss. Self-triggered always discuss.
-Context writes + bookkeeping are the exception.
+CLAUDE.md §2. Carry approved scope across phases. Clarify unresolved decisions
+or material changes to scope/risk; diagnosis-only and bookkeeping do not
+authorize implementation.
 
 ### DON'T 3: Sub-agent call without a delegation artefact
 
@@ -202,7 +218,9 @@ drift source.
 
 ### DON'T 10: Patch symptoms without root cause
 
-For a bug → `fix` workflow Phase A is not optional. Even for a "small" bug.
+Verify the cause before claiming permanent repair. During ongoing harm, follow
+the fix runbook's authorized Incident recovery first; restoration is distinct
+from resolution of the cause.
 
 ## Where do I find what?
 
@@ -255,7 +273,7 @@ When something doesn't fit:
 |---|---|
 | Hook blocks | Read the block output, correct disposition, retry |
 | Sub-agent ESCALATED | `root_cause_fix` mandatory, no "ignore" |
-| Gate file missing | Create it, then sub-agent call — not without |
+| Delegation artifact missing | Record scope, goal, agent and success criteria inline for DIRECT; use a persisted brief for other paths |
 | Adjust write-scope | No path-whitelist enforcement; if your write was out of intent scope, surface the scope-conflict to the user explicitly |
 | Frozen-zone modify wanted | Not without explicit user OK; convention-enforced (WORM) — use a `.correction.md` sidecar |
 | Inconsistency detected | Invoke `consistency_check` skill, fix findings systematically |

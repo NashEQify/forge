@@ -42,7 +42,8 @@ CLI mirrors generate_skill_map.py:
 Standalone script: reads skills/*/SKILL.md, writes only under the
 selected output root. No framework-runtime import, no release-sync call.
 Default output is `.claude/skills/` for Claude Code. Codex setup passes
-`--output-root ~/.agents/skills --tool-label Codex`.
+`--output-root ~/.agents/skills --tool-label Codex`. Codex output uses
+concrete SoT paths and hash-owned installation; --portable generates templates.
 """
 from __future__ import annotations
 
@@ -50,6 +51,15 @@ import argparse
 import shutil
 import sys
 from pathlib import Path
+
+sys.dont_write_bytecode = True
+
+try:
+    from .codex_legacy import legacy_hashes
+    from .managed_install import InstallPlan, managed_files
+except ImportError:
+    from codex_legacy import legacy_hashes
+    from managed_install import InstallPlan, managed_files
 
 try:
     import yaml
@@ -79,14 +89,12 @@ This is the {discovery_label}-discoverable wrapper. The full
 orchestrator-neutral protocol — methodology, contract, modes,
 red flags — lives in the SoT:
 
-**SoT:** `skills/{src_dir}/SKILL.md`
+**SoT:** `{source_path}`
 
 Read the SoT and follow it. This wrapper is a generated derived
 artifact (`scripts/generate_skill_wrappers.py`); it exists only so
 {tool_label} can inject the skill into the available-skills
-system-reminder for proactive discovery. Do not hand-edit — edits
-are reverted on the next generator run and flagged by
-`consistency_check`.
+system-reminder for proactive discovery. {edit_policy}
 """
 
 
@@ -288,6 +296,7 @@ def render_wrapper(
     *,
     tool_label: str = "Claude Code",
     discovery_label: str = "Claude-Code",
+    framework_root: Path | None = None,
 ) -> str:
     """
     Render the full wrapper SKILL.md (frontmatter + fixed body).
@@ -310,9 +319,19 @@ def render_wrapper(
     body = WRAPPER_BODY_TEMPLATE.format(
         name=name_kebab,
         src_dir=src_dir,
+        source_path=(str(framework_root.resolve() / "skills" / src_dir / "SKILL.md")
+                     if framework_root else f"skills/{src_dir}/SKILL.md"),
         marker=GENERATED_MARKER,
         tool_label=tool_label,
         discovery_label=discovery_label,
+        edit_policy=(
+            "Do not hand-edit. The installer preserves custom edits and\n"
+            "reports conflicts instead of overwriting them."
+            if framework_root else
+            "Do not hand-edit — edits\n"
+            "are reverted on the next generator run and flagged by\n"
+            "`consistency_check`."
+        ),
     )
     return front + body
 
@@ -341,6 +360,7 @@ def build_desired(
     *,
     tool_label: str = "Claude Code",
     discovery_label: str = "Claude-Code",
+    framework_root: Path | None = None,
 ) -> dict[str, str]:
     """
     Map kebab wrapper name -> wrapper file content for every eligible
@@ -351,6 +371,8 @@ def build_desired(
     skills. Both abort BEFORE any write (no partial state).
     """
     desired: dict[str, str] = {}
+    if not skills_root.is_dir():
+        raise ValueError(f"missing skills source directory: {skills_root}")
     # Casefolded kebab -> (first kebab, first src_dir), for case-only
     # collision detection on case-insensitive filesystems (C-007).
     seen_fold: dict[str, tuple[str, str]] = {}
@@ -416,6 +438,7 @@ def build_desired(
             src_dir,
             tool_label=tool_label,
             discovery_label=discovery_label,
+            framework_root=framework_root,
         )
         seen_fold[fold] = (kebab, src_dir)
 
@@ -495,6 +518,12 @@ def write_wrappers(output_root: Path, desired: dict[str, str]) -> None:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", type=Path, default=None)
+    ap.add_argument("--framework-root", type=Path, default=None,
+                    help="concrete installed SoT root; omit for portable source templates")
+    ap.add_argument("--portable", action="store_true",
+                    help="keep relative SoT references for source templates")
+    ap.add_argument("--migrate-legacy", action="store_true",
+                    help="adopt only byte-identical legacy wrappers")
     ap.add_argument(
         "--output-root",
         type=Path,
@@ -525,13 +554,17 @@ def main(argv: list[str] | None = None) -> int:
     skills_root = root / "skills"
     output_root = args.output_root or root / ".claude" / "skills"
     output_root = output_root.expanduser()
+    managed = args.tool_label == "Codex" or args.framework_root is not None
+    if args.portable and args.framework_root is not None:
+        ap.error("--portable and --framework-root are mutually exclusive")
+    concrete_root = None if args.portable else (args.framework_root or (root if managed else None))
     discovery_label = args.discovery_label
     if discovery_label is None:
         discovery_label = "Claude-Code" if args.tool_label == "Claude Code" else args.tool_label
 
     if yaml is None:
         print("generate_skill_wrappers: SKIP — PyYAML missing", file=sys.stderr)
-        return 0
+        return 1 if managed else 0
 
     if not skills_root.is_dir():
         print(
@@ -544,6 +577,7 @@ def main(argv: list[str] | None = None) -> int:
             skills_root,
             tool_label=args.tool_label,
             discovery_label=discovery_label,
+            framework_root=concrete_root,
         )
     except FrontmatterValueError as exc:
         print(f"generate_skill_wrappers: ERROR {exc}", file=sys.stderr)
@@ -551,6 +585,29 @@ def main(argv: list[str] | None = None) -> int:
     except CollisionError as exc:
         print(f"generate_skill_wrappers: ERROR {exc}", file=sys.stderr)
         return 1
+
+    if managed:
+        try:
+            legacy = None
+            if args.migrate_legacy:
+                legacy = {f"{name}/SKILL.md": content for name, content in
+                          build_desired(skills_root, tool_label=args.tool_label,
+                                        discovery_label=discovery_label).items()}
+            plan = InstallPlan()
+            managed_files(plan, output_root,
+                          {f"{name}/SKILL.md": content for name, content in desired.items()},
+                          legacy=legacy,
+                          legacy_hashes=(legacy_hashes("skills")
+                                         if args.migrate_legacy and args.tool_label == "Codex"
+                                         else None))
+            changes = plan.changes()
+            if not args.check:
+                plan.apply()
+            print(f"generate_skill_wrappers: {len(changes)} {'pending' if args.check else 'applied'} file changes")
+            return int(args.check and bool(changes))
+        except (OSError, ValueError) as exc:
+            print(f"generate_skill_wrappers: conflict: {exc}", file=sys.stderr)
+            return 1
 
     current = current_wrappers(output_root)
     report = diff_report(desired, current)

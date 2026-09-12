@@ -84,10 +84,15 @@ steps:
     on_fail: skip
 
   - id: commit
-    name: "Commit + push"
-    category: deterministic
-    instruction: "git commit + push"
+    name: "Authorized publication (optional)"
+    category: content
+    instruction: >
+      Persist the result locally before handoff. Apply framework/process-map.md
+      section Authorization: local commit only with applicable authorization;
+      push requires separate authorization. Without it, skip this step with
+      the reason. Research may finish with a local artifact.
+    required: false
     completion:
       type: manual
     commit_gate: true
-    on_fail: block
+    on_fail: warn

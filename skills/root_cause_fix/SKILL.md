@@ -1,9 +1,9 @@
 ---
 name: root-cause-fix
 description: >
-  5-step root-cause analysis and fix. Structured fix lifecycle
-  for every defect, no matter how small.
-  Triggers when expectation does not match reality (any defect or incident, however small); NOT for planned feature work (use build).
+  Evidence-driven diagnosis and permanent defect repair.
+  Triggers when a defect needs investigation; NOT for a verified known fix
+  eligible for DIRECT, planned feature work, or initial incident recovery.
 status: active
 relevant_for: ["main-code-agent"]
 invocation:
@@ -15,10 +15,11 @@ uses: [testing]
 
 # Skill: root-cause-fix
 
-5-step root-cause analysis and fix. Every defect — no matter how
-small — runs through a structured fix lifecycle. No "patch it
-quickly and move on". Even a 3-line fix gets a light plan + done
-criterion + retest. That is the invariant of this primitive.
+5-step root-cause analysis and permanent repair. A verified known fix may
+use DIRECT under `framework/process-map.md`; it still needs success criteria
+and a regression check. During an active outage or ongoing harm, first use
+`workflows/runbooks/fix/WORKFLOW.md` section Incident recovery. Do not delay
+an authorized bounded recovery for this skill's diagnosis/brief/test gates.
 
 **Artifact gate:** "From now on I'll do X" without a file change
 is not a valid fix. Root-cause-fix ALWAYS ends with a concrete
@@ -34,8 +35,9 @@ What is broken? (Code / spec / framework / primitive / context)
 → Proof sentence: "Broken is X, recognizable by Y."
 ```
 
-Don't guess, don't "probably". When the root cause is unclear:
-investigate until it is clear.
+Do not state an unproven hypothesis as the cause. Investigate with bounded
+experiments; if evidence is unavailable, report uncertainty and the next
+useful observation rather than inventing a fix or endlessly investigating.
 
 ### Feedback-Loop-as-Product (pattern lift Phase G tier-2 from Pocock diagnose)
 
@@ -97,14 +99,11 @@ A 30-second flaky loop is barely better than no loop. A
   register the NOCOMMIT pattern as an add-on when the trigger
   empirically returns.
 
-**3-5 ranked falsifiable hypotheses BEFORE testing:**
-single-hypothesis anchors on the first plausible idea. Min 3,
-each phrased falsifiably ("if X is the cause, changing Y will
-make the bug disappear / changing Z will make it worse"). Show
-the ranked list to the user before testing — the user often has
-domain knowledge that instantly re-ranks ("just deployed change
-to #3"), or already knows excluded hypotheses. Cheap checkpoint,
-big time saver.
+**Falsifiable hypotheses, proportional to uncertainty:** for an ambiguous
+failure, compare plausible alternatives and choose a discriminating test.
+For a clear suspected cause, test it directly and broaden if falsified.
+Do not invent a minimum number of alternatives. Ask the user for unavailable
+domain facts, not routine permission to perform authorized read-only tests.
 
 ### Triage checklist (pattern lift from addyosmani/debugging-and-error-recovery, MIT, Copyright Addy Osmani 2025)
 
@@ -277,29 +276,14 @@ SIGNAL CHECK is not an optional step. Even if the answer is "no
 gate responsible, new error type" — that is a valid result that
 must be documented.
 
-## USER GATE (MUST — between analysis and fix)
+## Authorization check (between analysis and fix)
 
-Phase A (steps 1-2) is analysis — output to the user, not an
-implementation order.
-Phase B (steps 3-5) is fix — only after explicit user
-confirmation.
-
-After step 2: present the analysis to the user:
-- Root cause (step 1 result).
-- Signal check (step 2 result).
-- Fix proposal: which scope (task fix / spec update / framework
-  change).
-
-Then ask: "Should I fix this as proposed, or do you see it
-differently?"
-
-Only after explicit confirmation → continue to step 3.
-Without confirmation → wait. Don't silently keep going.
-
-Exception: when the root-cause-fix comes from a sub-agent
-ESCALATED AND the fix is trivial (triviality check below
-satisfied): Buddy may shorten the fix proposal to "I'd fix this
-directly, OK?". But: even here Buddy waits for the answer.
+Apply `framework/process-map.md` section Authorization. Present the evidence
+and planned fix scope. If that fix is already within an explicit authorized
+repair scope, continue without another routine confirmation. Diagnosis-only
+does not authorize repair. Ask for genuinely new scope, changed risk, an
+unresolved design decision, or required live/destructive permission.
+An ESCALATED agent return supplies evidence, never additional authorization.
 
 **Triviality check (all three MUST):**
 

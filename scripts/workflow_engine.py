@@ -27,13 +27,15 @@ Usage:
     python3 scripts/workflow_engine.py --guard <guard-name> [<task-id>]
 
 Exit Codes: 0=success, 1=validation-fail, 2=not-found, 3=schema-error,
-            4=corrupt-state, 5=ambiguous (>=2 active workflows, no --id/--task)
+            4=corrupt-state, 5=ambiguous (>=2 active workflows, no --id/--task),
+            6=guard-evaluation-error, 7=stale-state (reload and retry)
 """
 
 from __future__ import annotations
 
 import argparse
 import contextlib
+import fnmatch
 import json
 import os
 import re
@@ -42,6 +44,7 @@ import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 try:
     import fcntl  # type: ignore
@@ -58,6 +61,7 @@ if str(_FRAMEWORK_ROOT) not in sys.path:
 
 from scripts.lib.yaml_loader import (  # noqa: E402
     SchemaError,
+    VALID_COMPLETION_TYPES,
     discover_workflow_yaml,
     list_available_workflows,
     load_workflow_yaml,
@@ -104,6 +108,20 @@ EXIT_NOT_FOUND = 2
 EXIT_SCHEMA_ERROR = 3
 EXIT_CORRUPT_STATE = 4
 EXIT_AMBIGUOUS = 5  # >=2 active workflows match and no --id/--task narrows to one
+EXIT_GUARD_ERROR = 6
+EXIT_STALE_STATE = 7
+
+
+class GuardEvaluationError(Exception):
+    """A guard could not be evaluated; the step must not advance."""
+
+
+class CompletionEvaluationError(Exception):
+    """A completion check could not run; on_fail does not apply."""
+
+
+class StaleStateError(RuntimeError):
+    """A transition used an outdated snapshot; reload before retrying."""
 
 STATE_DIR = PROJECT_ROOT / ".workflow-state"
 ARCHIVE_DIR = STATE_DIR / "archive"
@@ -184,11 +202,13 @@ def _last_activity(state: dict[str, Any]) -> datetime | None:
 
 
 def _generate_workflow_id(workflow_name: str, task_id: int | None) -> str:
+    """Keep a readable prefix while giving every run an independent identity."""
     ts = datetime.now(UTC).strftime("%Y%m%dT%H%M")
     parts = [workflow_name]
     if task_id is not None:
         parts.append(str(task_id))
     parts.append(ts)
+    parts.append(uuid4().hex)
     return "-".join(parts)
 
 
@@ -252,34 +272,65 @@ def _state_lock():
 
 
 def save_state(state: dict[str, Any], is_new: bool = False) -> None:
-    """Write state to disk atomically (tmp + os.replace) under flock.
+    """Compare revisions and atomically replace state under the same lock.
 
-    Atomicity prevents kill-9-mid-write corruption. Concurrent --next /
-    --complete / --boot-context calls serialise via _state_lock.
-
-    Resurrection guard (TOCTOU): on an UPDATE (`is_new=False`), if this
-    workflow's active file has vanished but an archive entry exists, another
-    process archived it (abort / completion) between our load and this write.
-    Writing would resurrect a terminated workflow as a zombie active file — skip
-    + warn instead. `create_state` passes `is_new=True` (a fresh id has no
-    active file yet, so the guard must not fire). The check + write share the
-    same flock, so no further race window remains.
+    Legacy states without a revision start at zero. A successful write updates
+    the caller's revision; a stale or archived snapshot raises StaleStateError
+    so its caller cannot continue a transition that was never persisted.
+    New runs recheck active workflow/task uniqueness under this same lock.
     """
     with _state_lock():
         path = _state_path(state["workflow_id"])
-        if not is_new and not path.exists() and (ARCHIVE_DIR / path.name).exists():
-            print(
-                f"WARNING: refusing to resurrect workflow {state['workflow_id']} "
-                f"— archived by another process mid-flight. State not written.",
-                file=sys.stderr,
+        expected = state.get("revision", 0)
+        if type(expected) is not int or expected < 0:
+            raise StaleStateError("Invalid state revision; reload and retry")
+        if path.exists():
+            current = _persisted_revision(path)
+            if is_new or current != expected:
+                raise StaleStateError(
+                    f"Stale workflow '{state['workflow_id']}' (expected revision {expected}, "
+                    f"found {current}); reload and retry"
+                )
+        elif not is_new and (expected != 0 or (ARCHIVE_DIR / path.name).exists()):
+            raise StaleStateError(
+                f"Stale workflow '{state['workflow_id']}' was removed or archived; reload and retry"
             )
-            return
+        if is_new and state.get("workflow") is not None:
+            # Scan directly: list_active_states would acquire a nested flock.
+            for active_path in sorted(STATE_DIR.glob("*.json")):
+                try:
+                    active = json.loads(active_path.read_text(encoding="utf-8"))
+                except (json.JSONDecodeError, OSError) as exc:
+                    raise StaleStateError(f"Cannot check active workflow uniqueness: {exc}; reload and retry") from exc
+                if not isinstance(active, dict):
+                    raise StaleStateError("Invalid active workflow state; repair, reload and retry")
+                if (active.get("workflow"), active.get("task_id")) == (state["workflow"], state.get("task_id")):
+                    print(
+                        f"ERROR: Workflow '{state['workflow']}' with task {state.get('task_id')} "
+                        f"already active (id: {active.get('workflow_id')})",
+                        file=sys.stderr,
+                    )
+                    sys.exit(EXIT_VALIDATION_FAIL)
+        updated = {**state, "revision": expected + 1}
         tmp_path = path.with_suffix(path.suffix + ".tmp")
         tmp_path.write_text(
-            json.dumps(state, indent=2, ensure_ascii=False) + "\n",
+            json.dumps(updated, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
         )
         os.replace(str(tmp_path), str(path))
+        state["revision"] = updated["revision"]
+
+
+def _persisted_revision(path: Path) -> int:
+    """Read a revision while the caller holds the state lock."""
+    try:
+        stored = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise StaleStateError("Cannot update corrupt state; repair, reload and retry") from exc
+    revision = stored.get("revision", 0) if isinstance(stored, dict) else None
+    if type(revision) is not int or revision < 0:
+        raise StaleStateError("Invalid persisted state revision; repair, reload and retry")
+    return revision
 
 
 def list_active_states() -> list[dict[str, Any]]:
@@ -311,17 +362,20 @@ def list_active_states() -> list[dict[str, Any]]:
     return states
 
 
-def archive_state(workflow_id: str) -> None:
+def archive_state(workflow_id: str, *, expected_revision: int | None = None) -> None:
     """Move state file to archive atomically (os.replace, single-step).
 
-    Never clobbers an existing archive record of the same id (minute-granularity
-    id collision: an archived run + a later run sharing the id) — a second entry
-    is timestamp-suffixed so the prior archived record survives.
+    Legacy IDs may already have an archive entry. A second entry receives a
+    timestamp suffix so the prior archived record survives.
     """
     with _state_lock():
         src = _state_path(workflow_id)
         if not src.exists():
+            if expected_revision is not None:
+                raise StaleStateError(f"Stale workflow '{workflow_id}' is no longer active; reload and retry")
             return
+        if expected_revision is not None and _persisted_revision(src) != expected_revision:
+            raise StaleStateError(f"Stale workflow '{workflow_id}' changed before archiving; reload and retry")
         dst = ARCHIVE_DIR / src.name
         if dst.exists():
             stamp = _utcnow().replace(":", "").replace("-", "")
@@ -355,7 +409,7 @@ def _resolve_vars(text: str, variables: dict[str, Any]) -> str:
         if s == "":
             return m.group(0)
         return s
-    return re.sub(r"\{(\w+)\}", replacer, text)
+    return re.sub(r"\{([A-Za-z_]\w*)\}", replacer, text)
 
 
 def _has_unresolved_vars(text: str) -> list[str]:
@@ -371,7 +425,7 @@ def _has_unresolved_vars(text: str) -> list[str]:
     Whitelist-Erweiterung ist semantisch via variables-Dict in
     _resolve_completion_vars (Spec §2.1).
     """
-    return re.findall(r"\{(\w+)\}", text)
+    return re.findall(r"\{([A-Za-z_]\w*)\}", text)
 
 
 def _ensure_state_variables_resolved(state: dict[str, Any]) -> bool:
@@ -581,7 +635,7 @@ STATE_FILE_DIRS = (
 )
 
 
-def _discover_state_file(task_id: int) -> str | None:
+def _discover_state_file(task_id: int, *, strict: bool = False) -> str | None:
     """Discover workflow state file for a given task ID.
 
     Searches all known workflow-state directories (`docs/<workflow>/`) for:
@@ -592,7 +646,8 @@ def _discover_state_file(task_id: int) -> str | None:
     2. Most recent file with literal `task-<N>` or `task_<N>` prefix in the
        filename (across all workflow dirs).
 
-    Returns relative path (from project root) or None.
+    Returns relative path (from project root) or None. With strict=True,
+    propagate I/O failures so named guards cannot mistake them for absence.
 
     Convention note: `parent_task:` is the task-yaml field for sub-task
     hierarchy (`framework/task-format.md` line 45). It is NOT a state-file
@@ -602,6 +657,9 @@ def _discover_state_file(task_id: int) -> str | None:
     candidate_files: list[Path] = []
     for sub in STATE_FILE_DIRS:
         wf_dir = PROJECT_ROOT / "docs" / sub
+        if strict:
+            candidate_files.extend(_glob_paths_strict(f"docs/{sub}/*.md"))
+            continue
         if not wf_dir.is_dir():
             continue
         candidate_files.extend(wf_dir.glob("*.md"))
@@ -618,6 +676,8 @@ def _discover_state_file(task_id: int) -> str | None:
         try:
             content = md_file.read_text(errors="replace")
         except OSError:
+            if strict:
+                raise
             continue
         fm_match = re.match(r"^---\s*\n(.*?)\n---", content, re.DOTALL)
         if not fm_match:
@@ -643,13 +703,12 @@ def _discover_state_file(task_id: int) -> str | None:
         if re.search(rf"task[-_]0*{re.escape(task_str)}(?:[-_]|$)", name):
             return str(md_file.relative_to(PROJECT_ROOT))
 
-    # No match: warn so user knows state-file lookup failed (vs silent
-    # degradation to "manual" completion-checks)
+    # Keep missing-input diagnostics visible to callers that retry discovery.
     print(
         f"WARNING: no state-file found for task {task_id}. "
         f"Strategy 1 (frontmatter task_ref or legacy parent_task across "
         f"docs/{{{','.join(STATE_FILE_DIRS)}}}/) + Strategy 2 (task-N filename) "
-        f"both missed. Workflow steps using {{state_file}} will degrade to manual.",
+        f"both missed. Completion checks using {{state_file}} remain blocked until resolved.",
         file=sys.stderr,
     )
 
@@ -750,14 +809,14 @@ def _check_pointer(
 ) -> tuple[bool, str]:
     """pointer_check Completion-Type — Spec §2.1 Schicht-2.
 
-    1. source_file resolved (mit unresolved-vars-graceful — siehe loop oben).
+    1. source_file must be resolved before evaluation.
     2. Layout via Skill-Frontmatter (default per_finding).
     3. validate_evidence_pointers Library-Import:
        - schema_version: 0 OR missing → return (True, "legacy, skipped")
        - schema_version: 1 + leeres/missing evidence → return (False, "non-empty...")
        - pro Pointer Mechanik (existence + grep -F + range etc.)
-    4. exit-code Mapping: 0 → (True, msg), 1 → (False, msg), 2 → (False, parse-error).
-    5. NIE crash — bei ImportError silent-degrade auf manual.
+    4. Exit 0 passes, exit 1 is a valid negative, other exits raise evaluation errors.
+    5. An unavailable validator is an evaluation error, never manual success.
     """
     source_file = comp.get("source_file")
     if not source_file:
@@ -789,8 +848,9 @@ def _check_pointer(
             validate_file,
         )
     except ImportError as exc:
-        # Silent-degrade: validator-lib unavailable → manual
-        return True, f"manual: validate_evidence_pointers unavailable ({exc})"
+        raise CompletionEvaluationError(
+            f"validate_evidence_pointers unavailable ({exc})"
+        ) from exc
 
     # Legacy-Detection vor validate_file (validator returnt empty messages
     # bei legacy was wir nicht von "valid mit 0 pointers" unterscheiden
@@ -798,18 +858,17 @@ def _check_pointer(
     try:
         from scripts.validate_evidence_pointers import get_schema_version
         sv = get_schema_version(str(abs_source))
-    except Exception:  # noqa: BLE001
-        sv = None
+    except Exception as exc:  # noqa: BLE001
+        raise CompletionEvaluationError(f"pointer_check schema evaluation error: {exc}") from exc
 
     try:
         exit_code, messages = validate_file(
             str(abs_source), layout=layout, repo_root=str(PROJECT_ROOT),
         )
     except (_EvParseErr, _EvValErr) as exc:
-        return False, f"pointer_check parse-error: {exc}"
+        raise CompletionEvaluationError(f"pointer_check evaluation error: {exc}") from exc
     except Exception as exc:  # noqa: BLE001
-        # Engine NIE crash — return (False, msg) per Spec §5.2 error_handling
-        return False, f"pointer_check internal error: {exc}"
+        raise CompletionEvaluationError(f"pointer_check internal error: {exc}") from exc
 
     # separate WARN-Channel von errors. Validator-Library appended
     # WARN-Strings ans messages-Array; engine-Pfad sollte sie NICHT als Teil
@@ -829,46 +888,60 @@ def _check_pointer(
         return True, f"pointer_check ok: {detail}" if detail else "pointer_check ok"
     if exit_code == 1:
         return False, f"pointer_check fail: {detail}"
-    # exit_code == 2
-    return False, f"pointer_check parse-error: {detail}"
+    raise CompletionEvaluationError(f"pointer_check evaluation failed (exit {exit_code}): {detail}")
 
 
 def check_completion(comp: dict[str, Any], state: dict[str, Any], step_state: dict[str, Any]) -> tuple[bool, str]:
     """Evaluate a completion condition. Returns (passed, message)."""
-    variables = state.get("variables", {})
-    comp = _resolve_completion_vars(comp, variables)
-    ctype = comp.get("type", "manual")
+    try:
+        return _check_completion(comp, state, step_state)
+    except (CompletionEvaluationError, OSError, ValueError, TypeError, re.error) as exc:
+        return False, f"completion evaluation error: {exc}"
 
-    # Check for unresolved variables in path/command/pattern/source_file fields
-    # — graceful degradation. Die Whitelist umfasst
-    # source_file (pointer_check Pflichtfeld).
+
+def _validate_completion_inputs(
+    comp: dict[str, Any], available_outputs: set[str] | None = None,
+) -> set[str]:
+    """Validate external inputs up front; defer only prior producer outputs."""
+    available = set(available_outputs or ())
     for field in ("path", "command", "pattern", "source_file"):
         val = comp.get(field)
-        if isinstance(val, str):
-            unresolved = _has_unresolved_vars(val)
+        for item in val if isinstance(val, list) else [val]:
+            unresolved = (
+                [name for name in _has_unresolved_vars(item) if name not in available]
+                if isinstance(item, str) else []
+            )
             if unresolved:
-                var_names = ", ".join(unresolved)
-                print(
-                    f"WARNING: Unresolved variable(s) {{{var_names}}} in completion check "
-                    f"field '{field}' (value: {val}). Treating as manual.",
-                    file=sys.stderr,
+                raise CompletionEvaluationError(
+                    f"unresolved variable(s) {{{', '.join(unresolved)}}} "
+                    f"in completion field '{field}' (value: {item})"
                 )
-                return True, f"manual: unresolved variable(s) {{{var_names}}} — skipped check"
-        elif isinstance(val, list):
-            for item in val:
-                if isinstance(item, str):
-                    unresolved = _has_unresolved_vars(item)
-                    if unresolved:
-                        var_names = ", ".join(unresolved)
-                        print(
-                            f"WARNING: Unresolved variable(s) {{{var_names}}} in completion check "
-                            f"field '{field}' (value: {item}). Treating as manual.",
-                            file=sys.stderr,
-                        )
-                        return True, f"manual: unresolved variable(s) {{{var_names}}} — skipped check"
+    ctype = comp.get("type", "manual")
+    if ctype not in VALID_COMPLETION_TYPES:
+        raise CompletionEvaluationError(f"unknown completion type: {ctype}")
+    if ctype == "compound":
+        checks = comp.get("checks")
+        if not isinstance(checks, list) or not checks:
+            raise CompletionEvaluationError("compound requires non-empty checks")
+        for i, sub in enumerate(checks):
+            if not isinstance(sub, dict):
+                raise CompletionEvaluationError(f"compound check [{i}] must be a mapping")
+            available = _validate_completion_inputs(sub, available)
+    elif ctype == "file_created_matching":
+        available.add("artifact_path")
+    return available
+
+
+def _check_completion(comp: dict[str, Any], state: dict[str, Any], step_state: dict[str, Any]) -> tuple[bool, str]:
+    """Distinguish failed evaluation from a valid negative completion check."""
+    variables = state.get("variables", {})
+    raw_comp = comp
+    comp = _resolve_completion_vars(comp, variables)
+    _validate_completion_inputs(comp)
+    ctype = comp.get("type", "manual")
 
     if ctype == "manual":
-        return True, "manual: always passes"
+        return True, "manual: agent-confirmed (not verified)"
 
     if ctype == "file_modified_after":
         target_path = comp.get("path", "")
@@ -891,10 +964,7 @@ def check_completion(comp: dict[str, Any], state: dict[str, Any], step_state: di
         workflow_start = state.get("started", "")
         start_ts = 0.0 if not workflow_start else _parse_utc(workflow_start).timestamp()
         for pat in patterns:
-            # Recursive glob from the repo root so `**` patterns resolve.
-            # `Path(ROOT / pat).parent.glob(name)` silently never matched a
-            # `**` pattern (parent became a literal `**` dir).
-            for match_path in PROJECT_ROOT.glob(pat):
+            for match_path in _glob_paths_strict(pat):
                 if match_path.exists() and match_path.stat().st_mtime >= start_ts:
                     rel = str(match_path.relative_to(PROJECT_ROOT))
                     state.setdefault("variables", {})["artifact_path"] = rel
@@ -921,6 +991,8 @@ def check_completion(comp: dict[str, Any], state: dict[str, Any], step_state: di
 
     if ctype == "exit_code":
         command = comp.get("command", "")
+        if not isinstance(command, str) or not command.strip():
+            raise CompletionEvaluationError("exit_code requires a non-empty command")
         try:
             result = subprocess.run(  # noqa: S602
                 command, shell=True, capture_output=True, timeout=30,
@@ -928,70 +1000,99 @@ def check_completion(comp: dict[str, Any], state: dict[str, Any], step_state: di
             )
             if result.returncode == 0:
                 return True, "command succeeded (exit 0)"
-            return False, f"command failed (exit {result.returncode})"
-        except subprocess.TimeoutExpired:
-            return False, "command timed out"
+            if result.returncode == 1:
+                return False, "command failed (exit 1)"
+            raise CompletionEvaluationError(f"command evaluation failed (exit {result.returncode})")
+        except subprocess.TimeoutExpired as exc:
+            raise CompletionEvaluationError("command timed out") from exc
         except Exception as e:  # noqa: BLE001
-            return False, f"command error: {e}"
+            raise CompletionEvaluationError(f"command error: {e}") from e
 
     if ctype == "pointer_check":
-        # Schicht-2 Engine-Check fuer Evidence-Pointer.
-        # Library-Import von scripts.validate_evidence_pointers (Spec §6.5
-        # Library-bevorzugt). Bei ImportError: silent-degrade auf manual
-        # damit Engine NIE crasht.
         return _check_pointer(comp, state, step_state)
 
     if ctype == "compound":
-        # graceful-degradation-Konflikt mit
-        # spec-§2.2-Race-Mitigation. Pre-fix: pointer_check mit unresolved
-        # `{spec_name}` returnt (True, "manual: unresolved...") → manual
-        # passt → compound passes silent. Konsequenz: jeder Task ohne
-        # spec_ref durchlief Tier-1-Steps OHNE pointer_check Enforcement.
-        # Generic-Defense-vs-Specific-Enforcement-Drift.
-        checks = comp.get("checks", [])
+        # Resolve each child against state after preceding producers execute.
+        checks = raw_comp.get("checks", [])
+        unverified = []
         for i, sub in enumerate(checks):
-            if not isinstance(sub, dict):
-                continue
-            ok, msg = check_completion(sub, state, step_state)
-            # HARD policy fuer pointer_check innerhalb compound: unresolved
-            # variables blockieren — pointer_check-Defense darf NICHT
-            # via graceful-degradation umgangen werden.
-            if (
-                sub.get("type") == "pointer_check"
-                and ok
-                and "unresolved variable" in msg
-            ):
-                return False, (
-                    f"compound check [{i}] pointer_check requires "
-                    f"resolved source_file (Spec 299 §2.2): {msg}"
-                )
+            ok, msg = _check_completion(sub, state, step_state)
             if not ok:
                 return False, f"compound check [{i}] failed: {msg}"
-        return True, "all compound checks passed"
+            if "not verified" in msg or "legacy, skipped" in msg:
+                unverified.append(msg)
+        detail = f" ({'; '.join(unverified)})" if unverified else ""
+        return True, f"all compound checks passed{detail}"
 
-    return False, f"unknown completion type: {ctype}"
+    raise CompletionEvaluationError(f"unknown completion type: {ctype}")
 
 
 # ---------------------------------------------------------------------------
 # Guard Evaluation
 # ---------------------------------------------------------------------------
 
-def evaluate_guard(guard: dict[str, Any], state: dict[str, Any], variables: dict[str, Any]) -> tuple[bool, str]:
-    """Evaluate a guard. Returns (proceed, reason). proceed=False means skip."""
+def _glob_paths_strict(pattern: str) -> list[Path]:
+    """Glob with scandir so unreadable directories cannot become no matches.
+
+    Like Path.glob, include hidden names and do not recurse through symlinked
+    directories for **. Missing paths are legitimate negatives.
+    """
+    path = Path(pattern)
+    if not pattern or path.is_absolute() or ".." in path.parts:
+        raise ValueError(f"glob path must be non-empty and repo-relative: {pattern}")
+    if any("**" in part and part != "**" for part in path.parts):
+        raise ValueError("** must be an entire path component")
+
+    def walk(base: Path, parts: tuple[str, ...]) -> list[Path]:
+        if not parts:
+            base.stat()
+            return [base]
+        part, rest = parts[0], parts[1:]
+        try:
+            with os.scandir(base) as scan:
+                entries = list(scan)
+        except FileNotFoundError:
+            return []
+        matches = walk(base, rest) if part == "**" else []
+        for entry in entries:
+            child = Path(entry.path)
+            if part == "**":
+                if entry.is_dir(follow_symlinks=False):
+                    matches.extend(walk(child, parts))
+            elif fnmatch.fnmatchcase(entry.name, part):
+                if not rest:
+                    if not pattern.endswith("/") or entry.is_dir():
+                        matches.append(child)
+                elif entry.is_dir():
+                    matches.extend(walk(child, rest))
+        return matches
+
+    return walk(PROJECT_ROOT, path.parts)
+
+
+def evaluate_guard(guard: dict[str, Any], state: dict[str, Any], variables: dict[str, Any]) -> tuple[bool | None, str]:
+    """Return (applicable, reason): True=proceed, False=skip, None=error."""
+    try:
+        return _evaluate_guard(guard, state, variables)
+    except (OSError, ValueError, TypeError) as exc:
+        return None, f"guard evaluation error: {exc}"
+
+
+def _evaluate_guard(guard: dict[str, Any], state: dict[str, Any], variables: dict[str, Any]) -> tuple[bool | None, str]:
+    if not isinstance(guard, dict):
+        return None, "guard must be a mapping"
+    guard = _resolve_completion_vars(guard, variables)
+    for field, value in guard.items():
+        if isinstance(value, str) and (unresolved := _has_unresolved_vars(value)):
+            return None, f"guard field '{field}' has unresolved variable(s): {', '.join(unresolved)}"
     gtype = guard.get("type", "")
 
     if gtype == "always_skip":
         return False, "always_skip guard"
 
     if gtype == "file_exists":
-        path_pattern = guard.get("path", "")
-        resolved = _resolve_vars(path_pattern, variables)
-        # Recursive glob so `**` guard patterns resolve.
-        # An absolute resolved path can't be a repo-relative glob (pathlib
-        # raises on it) — honour the (False, ...) contract instead of crashing.
-        if Path(resolved).is_absolute():
-            return False, f"file not found (path must be repo-relative): {resolved}"
-        matches = list(PROJECT_ROOT.glob(resolved))
+        resolved = guard.get("path", "")
+        matches = _glob_paths_strict(resolved)
         if matches:
             return True, f"file exists: {resolved}"
         return False, f"file not found: {resolved}"
@@ -1000,6 +1101,10 @@ def evaluate_guard(guard: dict[str, Any], state: dict[str, Any], variables: dict
         step_id = guard.get("step_id", "")
         expected = guard.get("expected", "complete")
         steps = state.get("steps", {})
+        if step_id not in steps:
+            return None, f"guard references unknown step: {step_id}"
+        if expected not in TERMINAL_STEP_STATUSES | {STATUS_PENDING, STATUS_IN_PROGRESS}:
+            return None, f"guard references unknown status: {expected}"
         step_state = steps.get(step_id, {})
         actual = step_state.get("status", STATUS_PENDING)
         if actual == expected:
@@ -1010,6 +1115,8 @@ def evaluate_guard(guard: dict[str, Any], state: dict[str, Any], variables: dict
         step_id = guard.get("step_id", "")
         route = guard.get("route", "")
         steps = state.get("steps", {})
+        if step_id not in steps or not route:
+            return None, f"guard requires a known step and non-empty route: {step_id}"
         step_state = steps.get(step_id, {})
         selected = step_state.get("selected_route")
         if selected == route:
@@ -1018,21 +1125,44 @@ def evaluate_guard(guard: dict[str, Any], state: dict[str, Any], variables: dict
 
     if gtype == "script":
         command = guard.get("command", "")
-        resolved = _resolve_vars(command, variables)
+        if not isinstance(command, str) or not command.strip():
+            return None, "script guard requires a non-empty command"
         try:
             result = subprocess.run(  # noqa: S602
-                resolved, shell=True, capture_output=True, timeout=30,
+                command, shell=True, capture_output=True, timeout=30,
                 cwd=str(PROJECT_ROOT),
             )
             if result.returncode == 0:
                 return True, "script guard: proceed"
-            return False, f"script guard: skip (exit {result.returncode})"
+            if result.returncode == 1:
+                return False, "script guard: not applicable (exit 1)"
+            detail = result.stderr.decode(errors="replace").strip()[:500]
+            return None, f"script guard error (exit {result.returncode}): {detail}"
         except subprocess.TimeoutExpired:
-            return False, "script guard: timeout"
+            return None, "script guard: timeout"
         except Exception as e:  # noqa: BLE001
-            return False, f"script guard error: {e}"
+            return None, f"script guard error: {e}"
 
-    return False, f"unknown guard type: {gtype}"
+    return None, f"unknown guard type: {gtype}"
+
+
+def _completion_method(comp: dict[str, Any] | None, message: str = "") -> str:
+    """Add provenance without changing the legacy step status vocabulary."""
+    if not comp or comp.get("type", "manual") == "manual":
+        return "agent-confirmed"
+    if comp.get("type") == "compound" and any(
+        _completion_method(check) == "agent-confirmed" for check in comp.get("checks", [])
+    ):
+        return "agent-confirmed"
+    if "legacy, skipped" in message:
+        return "legacy-unverified"
+    return "verified"
+
+
+def _format_completion_method(method: str) -> str:
+    if method in {"agent-confirmed", "forced", "legacy-unverified"}:
+        return f"{method} (not verified)"
+    return method
 
 
 # ---------------------------------------------------------------------------
@@ -1286,10 +1416,6 @@ def find_next_step(state: dict[str, Any], workflow_def: dict[str, Any]) -> str |
         ss = steps.get(sid, {})
         status = ss.get("status", STATUS_PENDING)
 
-        # Already in progress — this IS the next step
-        if status == STATUS_IN_PROGRESS:
-            return sid
-
         # Skip terminal statuses
         if status in TERMINAL_STEP_STATUSES:
             continue
@@ -1300,7 +1426,7 @@ def find_next_step(state: dict[str, Any], workflow_def: dict[str, Any]) -> str |
             continue
 
         deps = step_def.get("depends_on", [])
-        if isinstance(deps, list):
+        if status != STATUS_IN_PROGRESS and isinstance(deps, list):
             deps_met = all(
                 steps.get(d, {}).get("status") in TERMINAL_STEP_STATUSES
                 for d in deps
@@ -1310,9 +1436,11 @@ def find_next_step(state: dict[str, Any], workflow_def: dict[str, Any]) -> str |
 
         # Check guard
         guard = step_def.get("guard")
-        if guard and isinstance(guard, dict):
+        if "guard" in step_def:
             proceed, reason = evaluate_guard(guard, state, variables)
-            if not proceed:
+            if proceed is None:
+                raise GuardEvaluationError(f"Step '{sid}': {reason}")
+            if proceed is False:
                 steps[sid] = {
                     "status": STATUS_SKIPPED,
                     "skipped_reason": f"guard: {reason}",
@@ -1327,6 +1455,10 @@ def find_next_step(state: dict[str, Any], workflow_def: dict[str, Any]) -> str |
                         file=sys.stderr,
                     )
                 continue
+
+        # Active steps (including the first step) still need a valid guard.
+        if status == STATUS_IN_PROGRESS:
+            return sid
 
         # FW-007 (pre-fulfilled idempotency): if a deterministic step's
         # completion-check already passes BEFORE activation (typical when
@@ -1353,6 +1485,7 @@ def find_next_step(state: dict[str, Any], workflow_def: dict[str, Any]) -> str |
                 success, msg = False, f"auto-complete eval error: {exc}"
             if success:
                 steps[sid]["status"] = STATUS_COMPLETE
+                steps[sid]["completion_method"] = _completion_method(comp, msg)
                 steps[sid]["completed_at"] = _utcnow()
                 steps[sid]["evidence"] = (
                     f"auto-complete: pre-fulfilled completion-check ({msg})"
@@ -1428,6 +1561,12 @@ def complete_step(
     if current_status != STATUS_IN_PROGRESS:
         return False, f"Step '{step_id}' is {current_status}, must be in_progress first. Run --next to advance."
 
+    if "guard" in step_def:
+        guard_vars = {**state.get("variables", {}), **(set_vars or {})}
+        applicable, reason = evaluate_guard(step_def["guard"], state, guard_vars)
+        if applicable is not True:
+            return False, f"Cannot complete step '{step_id}': guard: {reason}. Run --next after resolving it."
+
     # Force guardrails: soft warning threshold + hard stop.
     if force:
         force_count = state.get("force_count", 0)
@@ -1452,8 +1591,13 @@ def complete_step(
             return False, f"Unknown route '{route}' for step '{step_id}'. Valid: {valid}"
 
     comp = step_def.get("completion")
+    check_message = ""
     if comp and isinstance(comp, dict) and not force:
-        passed, msg = check_completion(comp, state, step_state)
+        try:
+            passed, msg = _check_completion(comp, state, step_state)
+        except (CompletionEvaluationError, OSError, ValueError, TypeError, re.error) as exc:
+            return False, f"Completion evaluation error: {exc}"
+        check_message = msg
         if not passed:
             on_fail = step_def.get("on_fail", "block")
             if on_fail == "block":
@@ -1497,6 +1641,8 @@ def complete_step(
 
     # Mark complete
     step_state["status"] = STATUS_COMPLETE
+    method = "forced" if force and comp else _completion_method(comp, check_message)
+    step_state["completion_method"] = method
     step_state["completed_at"] = _utcnow()
     if evidence:
         step_state["evidence"] = evidence
@@ -1512,7 +1658,7 @@ def complete_step(
     # Check if workflow is done
     _check_workflow_completion(state, workflow_def)
 
-    msg = f"Step '{step_id}' completed"
+    msg = f"Step '{step_id}' completed: {_format_completion_method(method)}"
     if force_count_after is not None:
         msg += f" (forced {force_count_after}/{MAX_FORCE_PER_WORKFLOW})"
     if force_warning:
@@ -1585,13 +1731,13 @@ def _check_workflow_completion(state: dict[str, Any], _workflow_def: dict[str, A
     # Cosmetic-only: no enforcement reads `current_step` after completion.
     state["current_step"] = None
 
-    # If this is a child workflow, propagate completion to parent
+    save_state(state)
+    archive_state(state["workflow_id"], expected_revision=state["revision"])
+
+    # Propagate only after the completed revision has been archived successfully.
     parent_id = state.get("parent_workflow_id")
     if parent_id:
         _propagate_child_completion(state, parent_id)
-
-    save_state(state)
-    archive_state(state["workflow_id"])
 
 
 def _propagate_child_completion(child_state: dict[str, Any], parent_id: str) -> None:
@@ -1647,11 +1793,11 @@ def skip_step(
     if required:
         # Check if guard would skip
         guard = step_def.get("guard")
-        if guard and isinstance(guard, dict):
-            proceed, _ = evaluate_guard(guard, state, state.get("variables", {}))
-            if not proceed:
-                pass  # Guard fail allows skip even if required
-            else:
+        if "guard" in step_def:
+            proceed, guard_reason = evaluate_guard(guard, state, state.get("variables", {}))
+            if proceed is None:
+                return False, f"Cannot skip required step '{step_id}': {guard_reason}"
+            if proceed is True:
                 return False, f"Cannot skip required step '{step_id}' (guard passed)"
         else:
             return False, f"Cannot skip required step '{step_id}'"
@@ -1742,7 +1888,7 @@ def retry_step(
     prior_route = step_state.get("selected_route")
     # Clear terminal-state fields so retry is clean
     for field in ("completed_at", "evidence", "warn_reason", "skipped_reason",
-                  "force_completed", "selected_route"):
+                  "force_completed", "selected_route", "completion_method"):
         step_state.pop(field, None)
 
     # Classification retry: re-pristine the route-children whose state is a
@@ -1785,7 +1931,7 @@ def retry_step(
                     continue
                 child["status"] = STATUS_PENDING
                 for f in ("completed_at", "started_at", "evidence", "warn_reason",
-                          "skipped_reason", "force_completed", "selected_route"):
+                          "skipped_reason", "force_completed", "selected_route", "completion_method"):
                     child.pop(f, None)
 
     # Update current_step pointer
@@ -1803,7 +1949,7 @@ def retry_step(
 # ---------------------------------------------------------------------------
 
 def recover_workflow(state: dict[str, Any], workflow_def: dict[str, Any]) -> list[str]:
-    """Re-evaluate completion conditions for in_progress steps. Returns list of recovered step IDs."""
+    """Recover applicable mechanical checks, never supply manual confirmation."""
     recovered: list[str] = []
     steps = state.get("steps", {})
 
@@ -1813,14 +1959,27 @@ def recover_workflow(state: dict[str, Any], workflow_def: dict[str, Any]) -> lis
         step_def = _get_step_def(workflow_def, sid)
         if not step_def:
             continue
+        if "guard" in step_def:
+            applicable, reason = evaluate_guard(step_def["guard"], state, state.get("variables", {}))
+            if applicable is None:
+                raise GuardEvaluationError(f"Step '{sid}': {reason}")
+            if applicable is False:
+                continue
         comp = step_def.get("completion")
         if not comp or not isinstance(comp, dict):
             continue
-        passed, _msg = check_completion(comp, state, ss)
+        if _completion_method(comp) == "agent-confirmed":
+            continue
+        try:
+            passed, message = _check_completion(comp, state, ss)
+        except (OSError, ValueError, TypeError, re.error) as exc:
+            raise CompletionEvaluationError(f"Step '{sid}': {exc}") from exc
         if passed:
+            method = _completion_method(comp, message)
             ss["status"] = STATUS_COMPLETE
             ss["completed_at"] = _utcnow()
-            ss["evidence"] = "recovered: completion check passed retroactively"
+            ss["completion_method"] = method
+            ss["evidence"] = f"recovered: {_format_completion_method(method)}; {message}"
             recovered.append(sid)
 
     if recovered:
@@ -2017,7 +2176,7 @@ def _format_completion(comp: dict[str, Any], variables: dict[str, Any]) -> str:
     """Human-readable completion description."""
     ctype = comp.get("type", "manual")
     if ctype == "manual":
-        return "manual"
+        return "manual: agent-confirmed (not verified)"
     if ctype == "file_modified_after":
         return f"file_modified_after({_resolve_vars(comp.get('path', ''), variables)})"
     if ctype == "file_created_matching":
@@ -2067,8 +2226,10 @@ def fmt_status(state: dict[str, Any]) -> str:
     for sid, ss in steps.items():
         status = ss.get("status", STATUS_PENDING)
         extra = ""
+        if ss.get("completion_method"):
+            extra = f" [{_format_completion_method(ss['completion_method'])}]"
         if ss.get("evidence"):
-            extra = f" [{ss['evidence'][:50]}]"
+            extra += f" [{ss['evidence'][:50]}]"
         if ss.get("selected_route"):
             extra += f" [route: {ss['selected_route']}]"
         lines.append(f"  {status:15s} {sid}{extra}")
@@ -2476,6 +2637,15 @@ def main() -> None:
     except AmbiguousWorkflowError as exc:
         print(f"ERROR: {_format_ambiguous(exc)}", file=sys.stderr)
         sys.exit(EXIT_AMBIGUOUS)
+    except GuardEvaluationError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        sys.exit(EXIT_GUARD_ERROR)
+    except CompletionEvaluationError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        sys.exit(EXIT_VALIDATION_FAIL)
+    except StaleStateError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        sys.exit(EXIT_STALE_STATE)
 
 
 def cmd_start(args: argparse.Namespace) -> None:
@@ -2505,8 +2675,9 @@ def cmd_start(args: argparse.Namespace) -> None:
         route=args.route,
     )
 
-    # Show first step
-    output = fmt_next(state, workflow_def)
+    # Validate even the first step's guard before presenting work to execute.
+    next_id = find_next_step(state, workflow_def)
+    output = fmt_next(state, workflow_def) if next_id else ""
     if output:
         print(output)
     else:
@@ -2531,14 +2702,12 @@ def cmd_next(args: argparse.Namespace) -> None:
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(EXIT_SCHEMA_ERROR)
 
-    # Advance to next if current is done
-    current = state.get("current_step")
-    steps = state.get("steps", {})
-    if current and steps.get(current, {}).get("status") in TERMINAL_STEP_STATUSES:
-        next_id = find_next_step(state, workflow_def)
-        if next_id:
-            state["current_step"] = next_id
-            save_state(state)
+    next_id = find_next_step(state, workflow_def)
+    if not next_id:
+        return
+    if state.get("current_step") != next_id:
+        state["current_step"] = next_id
+        save_state(state)
 
     output = fmt_next(state, workflow_def, brief=args.brief)
     if output:
@@ -2747,7 +2916,8 @@ def cmd_recover(args: argparse.Namespace) -> None:
             continue
         recovered = recover_workflow(state, workflow_def)
         for sid in recovered:
-            total_recovered.append(f"{state.get('workflow_id')}: {sid}")
+            method = state["steps"][sid]["completion_method"]
+            total_recovered.append(f"{state.get('workflow_id')}: {sid} ({_format_completion_method(method)})")
 
     if total_recovered:
         print(f"Recovered {len(total_recovered)} step(s):")
@@ -2819,7 +2989,7 @@ def cmd_reap(args: argparse.Namespace) -> None:
             fresh["aborted"] = _utcnow()
             fresh["abort_reason"] = f"reaped: stale, idle {idle_h:.0f}h (> {max_age_hours}h)"
             save_state(fresh)
-            archive_state(wid)
+            archive_state(wid, expected_revision=fresh["revision"])
             print(f"REAPED: {wid} (idle {idle_h:.0f}h, last {last.isoformat()})")
             reaped += 1
         except Exception as exc:  # noqa: BLE001 — one bad state must not abort the sweep
@@ -2889,7 +3059,7 @@ def cmd_abort(args: argparse.Namespace) -> None:
     state["aborted"] = _utcnow()
     state["abort_reason"] = reason
     save_state(state)
-    archive_state(wf_id)
+    archive_state(wf_id, expected_revision=state["revision"])
     touched_info = f" (closeout: {len(touched_steps)} step(s))" if touched_steps else ""
     print(f"Workflow '{wf_id}' aborted: {reason}{touched_info}")
 
@@ -2987,8 +3157,24 @@ def cmd_guard(args: argparse.Namespace) -> None:
     # guard_args may contain task_id
     task_id = args.guard_args[0] if args.guard_args else args.task
 
-    # Named guards — extend as needed
-    # For now, exit 1 (skip) for unknown guards
+    if guard_name not in {"council-needed", "task-yaml-ok"}:
+        print(f"Unknown guard: {guard_name}", file=sys.stderr)
+        sys.exit(EXIT_GUARD_ERROR)
+    tid = resolve_task_id(task_id)
+    if tid is None or tid <= 0:
+        print(f"ERROR: Guard '{guard_name}' requires a valid positive task ID", file=sys.stderr)
+        sys.exit(EXIT_GUARD_ERROR)
+
+    try:
+        applicable = _named_guard_applies(guard_name, tid)
+    except (OSError, ValueError) as exc:
+        print(f"ERROR: Guard '{guard_name}' evaluation failed: {exc}", file=sys.stderr)
+        sys.exit(EXIT_GUARD_ERROR)
+    sys.exit(EXIT_SUCCESS if applicable else EXIT_VALIDATION_FAIL)
+
+
+def _named_guard_applies(guard_name: str, task_id: int) -> bool:
+    """Only a successfully evaluated negative may produce guard exit 1."""
     if guard_name == "council-needed":
         # Council is Buddy-judgmental (skills/council/SKILL.md §1.0
         # proportionality gate is the SoT, not an engine heuristic).
@@ -2996,37 +3182,18 @@ def cmd_guard(args: argparse.Namespace) -> None:
         # state file (frontmatter or body marker) when frame report's
         # >1-path + hard-to-reverse criteria fire. Guard greps for it.
         # Default = skip; council fires when Buddy explicitly marks it.
-        if task_id:
-            tid = resolve_task_id(task_id)
-            if tid:
-                # Resolve the state file via the canonical task_ref resolver,
-                # NOT a filename glob. Solve state files follow the
-                # YYYY-MM-DD-<slug> convention and carry the task linkage in
-                # `task_ref:` frontmatter, not the filename — a glob on the
-                # task id never matches that convention and silently skips
-                # council (the dead-gate anti-pattern). _discover_state_file
-                # is the same resolver the rest of the engine uses.
-                rel = _discover_state_file(tid)
-                if rel:
-                    try:
-                        content = (PROJECT_ROOT / rel).read_text(errors="replace")
-                        if "council-required: true" in content or "council_required: true" in content:
-                            sys.exit(EXIT_SUCCESS)
-                    except OSError:
-                        pass
-        sys.exit(1)
-    elif guard_name == "task-yaml-ok":
-        # Check if task YAML exists
-        if task_id:
-            tid = resolve_task_id(task_id)
-            if tid:
-                task_path = PROJECT_ROOT / "docs" / "tasks" / f"{tid:03d}.yaml"
-                if task_path.exists():
-                    sys.exit(EXIT_SUCCESS)
-        sys.exit(EXIT_VALIDATION_FAIL)
-    else:
-        print(f"Unknown guard: {guard_name}", file=sys.stderr)
-        sys.exit(EXIT_VALIDATION_FAIL)
+        rel = _discover_state_file(task_id, strict=True)
+        if not rel:
+            return False
+        content = (PROJECT_ROOT / rel).read_text(errors="replace")
+        return "council-required: true" in content or "council_required: true" in content
+
+    task_path = PROJECT_ROOT / "docs" / "tasks" / f"{task_id:03d}.yaml"
+    try:
+        task_path.stat()
+    except FileNotFoundError:
+        return False
+    return True
 
 
 def _find_state_for_step(

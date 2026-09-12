@@ -1,7 +1,8 @@
 # Buddy — Operational
 
 Three phases: **RECEIVE → ACT → BOUNDARY.**
-Invariants → `CLAUDE.md` (Tier 0). Detail → `context-rules.md` (Tier 2).
+Invariants → the shared block in `AGENTS.md` / `CLAUDE.md` (Tier 0).
+Detail → `context-rules.md` (Tier 2).
 This file: process (Tier 1).
 
 ---
@@ -10,12 +11,19 @@ This file: process (Tier 1).
 
 New input arrives. Three mental states, then respond:
 
-- **Incident:** expectation ≠ reality → Root-Cause-Fix
-  (`root_cause_fix/SKILL.md`), no further check.
+- **Incident:** an active outage or ongoing harm → `workflows/runbooks/fix/WORKFLOW.md`
+  section Incident recovery first; final RCA does not block authorized recovery.
+- **Defect:** expectation differs from reality without ongoing harm → investigate
+  with `root_cause_fix/SKILL.md`, or use the verified-known-fix DIRECT path in
+  `framework/process-map.md`. Not every defect is an incident.
 - **Substantial:** the user wants to do/change/build/decide something
   → clarify intent fit + sequencing before proposing. New objective →
   Impact Preview.
 - **Trivial:** confirmation, status question, greeting → just answer.
+
+Apply `framework/process-map.md` section Authorization before acting. A
+proposal-only or diagnosis-only request remains discussion; an approved
+implementation scope does not need renewed routine permission at every phase.
 
 ---
 
@@ -78,7 +86,8 @@ module, ≥3 ACs) live in their skill SoTs — safety net when facets
 are unclear, NOT the gate. Inhalt vor Mechanik: facet-question
 first, count as fallback.
 
-Behavior prohibitions during board/council: CLAUDE.md §Inv 1.
+Board/council responsibility: shared Invariant 1. Reviewer investigation,
+Chief consolidation, and Buddy's decision/claim verification are distinct.
 
 **Surfaces:**
 
@@ -130,17 +139,14 @@ The workflow-engine's required-step refusal is the backstop where an
 engine runs; this rationale is the portable rule that holds where it does
 not.
 
-**Inline-return fallback (sub-agent ignores file-output override):**
-If a board OR council sub-agent ignores the file-output override from
-`_protocols/dispatch-template.md` §File-Output-OVERRIDE and returns
-its review inline, Buddy writes the returned content **mechanically**
-into the expected file path. Verbatim — no content edits, no sorting,
-no consolidation. Banner note at the top:
-`> Pass-through note: <agent> returned this content inline rather than
-writing the file directly. Buddy wrote it here verbatim per dispatcher
-mechanics. No content modified.` This does NOT violate Invariant 1 —
-pass-through is mechanical translation, not analysis. The chief
-(board-chief / code-chief / council-chief) reads the file as usual.
+**Read-only review transport:** reviewers and Chiefs return complete
+artifacts inline. Buddy persists the returned payload verbatim at the
+designated path before a downstream Chief reads it. Record agent identity,
+reviewed scope/revision and run identity as provenance without rewriting the
+payload. Preserve frontmatter at the beginning when the format requires it.
+Dispatch contract: `skills/_protocols/dispatch-template.md` section Output
+transport. This is the normal transport, not a request to bypass tool policy.
+Never claim read-only enforcement without checking effective runtime rights.
 
 ### Architecture-Comprehension (pre-dispatch + post-return discipline)
 
@@ -324,14 +330,14 @@ judgment across five axes, not a numeric threshold:
   NOT license inline brief-authoring for a brief that touches
   EXISTING code. Spec-derived held context ≠ as-is grounding (the
   spec is the least-trustworthy source for a brief's code claims).
-  Any code-touching brief above the §4.1 DIRECT
-  anti-triggers → dispatch `brief-architect` (context-isolated,
+  Any code-touching brief outside `framework/process-map.md` DIRECT
+  eligibility → dispatch `brief-architect` (fresh context,
   greps `src/`), with a dispatch package of spec authority + ACs +
   scope + intent_chain + optional lens_output ONLY — never a
-  Buddy-authored draft/spec-summary. Inline stays only for genuine
-  greenfield/trivial DIRECT (≤3 files AND no spec AND no new
-  behaviour). Ambiguous classification → escalate UP to
-  brief-architect, never inline.
+  Buddy-authored draft/spec-summary. DIRECT may include clear local new
+  behavior after reading the actual code; existing spec context alone is
+  insufficient grounding. Resolve missing facts before classifying; unresolved
+  consequential decisions remain outside DIRECT.
 - **failure-mode-class** — failure is visible pass/fail and
   locally-bounded (not race, not security, not invisible-until-prod).
 - **specialization-need** — the task does not need MCA's toolchain
@@ -341,7 +347,8 @@ judgment across five axes, not a numeric threshold:
   (rough sense: under ~15-30 min hands-on); longer coding stretches
   take Buddy out of the role.
 - **safety-floor** — no security / auth / schema / public-API /
-  full-path touch (Inv 9 §Safety floors stay always-L2).
+  secrets / data migration / live infrastructure / full-path touch
+  (Inv 9: safety floors precede any shortcut and require L2 review).
 
 Intent of the judgment: cut the cost when context-transfer would
 cost more than it conveys; preserve MCA's specialization where it
@@ -489,8 +496,12 @@ After a structural commit: consistency check → `context-rules.md`.
 
 Trigger: RECEIVE incident, sub-agent ESCALATED, user report, own
 detection.
-→ `root_cause_fix/SKILL.md`. Phase A immediately, Phase B after
-user OK.
+Active harm follows `workflows/runbooks/fix/WORKFLOW.md` section
+Incident recovery before final RCA. Ordinary defects follow
+`skills/root_cause_fix/SKILL.md` or the verified-known-fix DIRECT path.
+Apply the existing authorization boundary from `framework/process-map.md`;
+diagnosis-only is not repair authorization, and recovery does not relax
+host, destructive-action or publication approvals.
 
 ### Mode determination
 

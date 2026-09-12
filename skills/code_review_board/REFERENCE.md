@@ -10,8 +10,9 @@ contract (proportionality gate + hard floors + level choice).
 2. L0 static analysis (MCA already ran it; Buddy checks the
    return).
 3. PARALLEL agent reviews (context-isolated).
-4. CHIEF-1 consolidation (L2 only) — dedup, severity ranking,
-   recall-biased keep/refute triage.
+4. CHIEF-1 consolidation — dedup, severity ranking,
+   recall-biased keep/refute triage. Consolidation also applies to L1
+   with three reviewers; canonical routing: `SKILL.md` §1.3.
 5. DISCOURSE (L2 only, optional).
 6. CHIEF-2 synthesis (L2 only) — confidence adjustment.
 7. VERDICT.
@@ -44,7 +45,7 @@ just because the happy path doesn't exercise it.
 | code-api-contract | REST, schema pipeline, SSE | — | ✓ |
 | code-ai-llm | Prompt, model, token budget | — | ✓ |
 | code-docs-consumer | Code docs + spec readability | — | ✓ |
-| code-chief | Consolidation, discourse synthesis | — | ✓ |
+| code-chief | Consolidation, discourse synthesis | 3+ reviewers per §1.3 | ✓ |
 | code-spec-fit | Spec conformance + sole test-coverage owner | — | ✓ + spec_ref |
 | code-spec-drift | Retroactive spec drift | — | ✓ + retroactive |
 | code-architect-roots | Pattern-purity (post-build) — gated trigger | — | ✓ + new-contract |
@@ -73,8 +74,9 @@ not on file-creation. Shape-preserving extractions stay at L1.
 
 L1 + 1 risk-specialist (drawn from L2 specialist set per the
 brief's risk-assessment top-1 entry) is a precision-escalation
-option when effort=S/M but a single risk-class dominates (e.g.
-error path with security implications → core + 1× security).
+option below the safety floors when effort=S/M but a single risk-class
+dominates (e.g. bounded error handling → core + reliability).
+It never overrides `SKILL.md` §1.0; security-sensitive work still requires L2.
 
 ## Post-MCA-return trigger consequence
 

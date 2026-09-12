@@ -29,6 +29,9 @@ set -euo pipefail
 
 FRAMEWORK_ROOT="$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)"
 PLAN_ENGINE="${FRAMEWORK_ROOT}/scripts/plan_engine.py"
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+cd "$PROJECT_ROOT"
+COMMIT_MSG_HOOK="$(git rev-parse --git-path hooks/commit-msg)"
 
 BLOCK=0
 WARNINGS=()
@@ -56,7 +59,7 @@ esac
 # ---------- Check 1: PLAN-VALIDATE (BLOCK) ----------
 
 if [ -f "$PLAN_ENGINE" ]; then
-  VALIDATE_OUTPUT=$(python3 "$PLAN_ENGINE" --validate 2>&1) || true
+  VALIDATE_OUTPUT=$(python3 "$PLAN_ENGINE" --project-root "$PROJECT_ROOT" --validate 2>&1) || true
 
   # Accept either "Summary: 0 errors" (with-tasks) or "CLEAN" (empty-state).
   # Pinned form — earlier `^Summary:.*0 errors|^CLEAN:` was fail-OPEN
@@ -88,7 +91,7 @@ fi
 # commit-msg mode receives fresh message path as $1 from git.
 # pre-commit mode may see stale .git/COMMIT_EDITMSG and must never BLOCK on it.
 
-COMMIT_MSG_FILE="${1:-${FRAMEWORK_ROOT}/.git/COMMIT_EDITMSG}"
+COMMIT_MSG_FILE="${1:-$(git rev-parse --git-path COMMIT_EDITMSG)}"
 CONVENTION_REGEX='^(feat|fix|refactor|review|save|docs|chore|solve|build|audit|research)(\([^)]+\))?: [^ ].+( \[Task-[0-9]+\])?$'
 
 if [ "$HOOK_MODE" = "commit-msg" ]; then
@@ -119,8 +122,8 @@ if [ "$HOOK_MODE" = "commit-msg" ]; then
   fi
 else
   echo "pre-commit: COMMIT-CONVENTION SKIP (authoritative validation runs in commit-msg hook)"
-  if [ ! -e "${FRAMEWORK_ROOT}/.git/hooks/commit-msg" ]; then
-    WARNINGS+=("COMMIT-CONVENTION: commit-msg hook missing. Install via: ln -sf ${FRAMEWORK_ROOT}/orchestrators/claude-code/hooks/pre-commit.sh ${FRAMEWORK_ROOT}/.git/hooks/commit-msg")
+  if [ ! -e "$COMMIT_MSG_HOOK" ]; then
+    WARNINGS+=("COMMIT-CONVENTION: commit-msg hook missing. Install via: bash ${FRAMEWORK_ROOT}/scripts/install-git-hooks.sh ${PROJECT_ROOT}")
   fi
 fi
 
@@ -130,9 +133,9 @@ fi
 # SKIP: consumer repos without skills/, or PyYAML/skip inside script.
 
 SKILL_FM="${FRAMEWORK_ROOT}/scripts/skill_fm_validate.py"
-if [ -f "$SKILL_FM" ] && [ -d "${FRAMEWORK_ROOT}/skills" ]; then
+if [ -f "$SKILL_FM" ] && [ -d "${PROJECT_ROOT}/skills" ]; then
   set +e
-  FM_OUT=$(python3 "$SKILL_FM" --repo "$FRAMEWORK_ROOT" 2>&1)
+  FM_OUT=$(python3 "$SKILL_FM" --repo "$PROJECT_ROOT" 2>&1)
   FM_RET=$?
   set -e
   echo "$FM_OUT"
@@ -166,7 +169,7 @@ if command -v gitleaks &>/dev/null; then
   fi
 else
   # Only warn about missing gitleaks once per session via marker (avoid noise)
-  GITLEAKS_MARK="${FRAMEWORK_ROOT}/.session/gitleaks-missing.marker"
+  GITLEAKS_MARK="$(git rev-parse --git-path forge/gitleaks-missing.marker)"
   mkdir -p "$(dirname "$GITLEAKS_MARK")" 2>/dev/null || true
   if [ ! -f "$GITLEAKS_MARK" ] || [ "$(find "$GITLEAKS_MARK" -mtime +0 2>/dev/null)" ]; then
     WARNINGS+=("SECRET-SCAN: gitleaks not installed — secret-pattern check skipped. Install via 'brew install gitleaks' or github.com/gitleaks/gitleaks/releases. Suppressing this warning for 24h.")
@@ -213,7 +216,7 @@ if [ -f "$VALIDATOR" ]; then
 
     if [ ${#FILTERED_FILES[@]} -gt 0 ]; then
       set +e
-      VAL_OUT=$(python3 "$VALIDATOR" "${FILTERED_FILES[@]}" --repo-root "$FRAMEWORK_ROOT" 2>&1)
+      VAL_OUT=$(python3 "$VALIDATOR" "${FILTERED_FILES[@]}" --repo-root "$PROJECT_ROOT" 2>&1)
       VAL_RC=$?
       set -e
       if [ "$VAL_RC" -ne 0 ]; then

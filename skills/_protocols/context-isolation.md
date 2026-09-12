@@ -6,10 +6,16 @@ sectional_deep_review.
 
 ## Rule
 
-Reviewer agents in pass N receive NO information from pass N-1.
-Every pass is a fresh look at the current artifact.
+Fresh-investigation reviewers receive no prior findings. Each such pass
+is a new look at the current artifact. This controls the supplied context;
+a shared filesystem does not enforce access isolation. Do not consult other
+review outputs during fresh investigation.
 
-## Buddy dispatch: MUST NOT contain
+Targeted fix verification is a separate, explicitly named assignment. It may
+receive the prior finding and regression evidence needed to test that fix;
+do not present it as a fresh independent search for new defects.
+
+## Fresh-investigation dispatch: MUST NOT contain
 
 - Previous findings (from earlier passes or runs).
 - Finding counts or severity distributions.
@@ -20,7 +26,7 @@ Every pass is a fresh look at the current artifact.
 ## Buddy dispatch: MUST contain only
 
 1. Artifact path (spec, code, etc.).
-2. Output path.
+2. Output destination (Buddy persists the returned inline artifact).
 3. Agent definition (implicit via agent type).
 
 Identical for EVERY pass — pass 1 and pass N receive the same

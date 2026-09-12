@@ -62,12 +62,13 @@ The framework anchors important rules in three layers:
 - **Pre-commit (6 checks, universal):** PLAN-VALIDATE, CG-CONV,
   SKILL-FM-VALIDATE (BLOCK); SECRET-SCAN, SOURCE-VERIFICATION,
   ANTI-PHANTOM (WARN).
-- **SessionStart hooks** for boot on claude-desktop / claude-web /
-  Codex.
+- **Host-specific boot:** SessionStart hooks on configured Claude
+  entrypoints; explicit managed AGENTS instructions for Codex.
 
 There are no tool-event hooks (PreToolUse / PostToolUse /
-UserPromptSubmit). The universal-portable set above is what every harness
-gets; the rest is carried by protocol-anchored discipline.
+UserPromptSubmit). Shared Git hooks run when installed in the active repo;
+boot integration depends on the host. The rest is carried by protocol-anchored
+discipline.
 
 What cannot be checked mechanically (content quality, spec
 completeness, whether a new skill is genuinely standalone) remains a
@@ -83,9 +84,9 @@ appeared in vanilla Claude Code sessions:
 
 - **Anchoring during multi-perspective review:** Buddy spawns three
   reviewers, reads the first one, and gets coloured by it. Several
-  architectural iterations were needed to mechanically anchor the
-  anti-anchoring discipline (Buddy = dispatcher, chief-only-read) as a
-  Tier-0 invariant.
+  architectural iterations led to the Tier-0 separation of independent
+  reviewer investigation, Chief consolidation and Buddy's decision.
+  Buddy verifies pivotal claims against sources after the review.
 - **Skip-pattern at pre-delegation:** "implement feature X" was
   delegated to sub-agents without complete constraints. The
   pre-delegation non-negotiable model arose as a fix.
@@ -143,13 +144,13 @@ Buddy:
 In Phase Execute, Buddy delegates to `main-code-agent`. The sub-agent
 implements the fix, makes the test pass, and returns a summary.
 
-Buddy reads **no code** — only the return summary plus the code diff,
-and only if needed for the next decision.
+Buddy reads the return summary and verifies the code/evidence needed for the
+next decision, without routinely repeating the implementer's entire review.
 
 In Phase Verify, Buddy triggers `code_review_board L1`. Two reviewer
 personas (`code-review` multi-axis + `code-adversary`) review in
-parallel. `code-chief` consolidates. Buddy reads **only the chief
-signal**.
+parallel. `code-chief` consolidates. Buddy verifies pivotal claims against
+sources and may consult individual findings to resolve contradictions.
 
 On PASS: Phase Close with `task_status_update → done`, commit. The
 pre-commit hook runs (6 checks). On BLOCK: Buddy fixes, then makes a
@@ -196,12 +197,12 @@ solve:
   producer-class workflows.
 - **Mechanical hook layer.** Skill-bag has optional session hooks.
   forge has 3 hook scripts:
-  buddy-boot-inject + session-start-remote (SessionStart, portable on
-  CC-Terminal / claude-desktop / claude-web / Codex) and pre-commit.sh
+  buddy-boot-inject + session-start-remote (configured Claude
+  SessionStart) and pre-commit.sh
   (git pre-commit, 6 checks: PLAN-VALIDATE / CG-CONV / SKILL-FM-VALIDATE
-  BLOCK; SECRET-SCAN / SOURCE-VERIFICATION / ANTI-PHANTOM WARN). All
-  universally
-  portable. Discipline replaces the earlier CC-Terminal-only WARN /
+  BLOCK; SECRET-SCAN / SOURCE-VERIFICATION / ANTI-PHANTOM WARN). Git
+  hooks are shared across harnesses; Codex uses managed AGENTS boot.
+  Discipline replaces the earlier CC-Terminal-only WARN /
   BLOCK PreToolUse layer.
 - **Anti-inflation.** Skill-bag allows "more skills = better". forge
   requires a `Standalone-justification` block for every new skill +

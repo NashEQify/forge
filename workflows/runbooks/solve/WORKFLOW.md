@@ -84,7 +84,8 @@ lands in process-map / STRUCTURE.md / handoff fields.
 detection — code / spec / impl-plan / ui-spec / reader-facing-doc);
 (b) dispatch the routed board (`spec_board` / `code_review_board` /
 `impl_plan_review` / `spec_board(mode=ux)`);
-(c) Buddy reads ONLY the chief signal (CLAUDE.md §1);
+(c) Chief consolidates; Buddy decides and verifies pivotal source evidence
+    per shared Invariant 1, persisting complete inline reports verbatim;
 (d) post-convergence + post-pass checklists per `spec_board` §3, §6;
 (e) on NEEDS-WORK: convergence_loop max 3 passes;
 (f) delta-verify on PASS when triggered (≥10 normative lines OR ≥3
@@ -93,7 +94,7 @@ files OR ≥1 MAJOR fixed OR meta-critical change);
 `task_status_update`.
 
 **5. apply-artifact** — variants per `framework/agent-autonomy.md`:
-direct (process-map register + stale cleanup + deploy), handoff to
+direct (process-map register + stale cleanup + authorized deployment), handoff to
 build (spec/plan → build workflow), handoff to docs-rewrite,
 self-apply.
 
@@ -111,7 +112,9 @@ completion artifact; the retro does not satisfy it);
 (c) §Framework-Feed — forge-feed entries (replaces the old workflow-retro
 safety net; on skip, reverts to capture-now of missed entries).
 
-**7. commit-deploy** — `git commit + push` + dashboard deploy. Engine
+**7. commit-deploy** — apply `framework/process-map.md` section Authorization:
+commit, push and dashboard deploy only when the respective action is authorized.
+Do not infer publication permission from a solve request. Engine
 auto-advances `workflow_phase=done`; task-level `status=done` is set
 unconditionally on standard route (solve closes its own task by
 definition).

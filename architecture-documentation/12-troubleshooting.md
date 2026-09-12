@@ -198,8 +198,9 @@ revert.
 
 ### `build` Phase Verify fails with code-review findings
 
-The code-review-board produced findings. Buddy reads **only
-chief-signal.md**. Fix:
+The code-review-board produced findings. Buddy reads the Chief's signal,
+verifies pivotal claims against sources and consults relevant findings to
+resolve contradictions. Fix:
 - Work through HIGH/MAJOR findings systematically.
 - On architectural conflict: consult solution-expert.
 - On spec conflict: back to the spec (spec-engineering mantra).
@@ -289,12 +290,12 @@ For external contributions the setup would have to be extended:
 
 ### Cursor: harness parity
 
-The framework runs identically on every supported harness. The only
-hooks are universally-portable ones (git pre-commit + SessionStart);
-there are no tool-event hooks (PreToolUse / PostToolUse /
-UserPromptSubmit). Cursor needs no special "limitation" note —
-write-time discipline lives in Buddy reasoning + protocols, identical
-to CC-Terminal. Full adapter
+The discipline layer is shared across supported harnesses. Git hooks run
+when installed in the active repo; boot integration differs: configured
+Claude SessionStart, Codex managed AGENTS, OpenCode launcher, Cursor rules.
+There are no framework tool-event hooks (PreToolUse / PostToolUse /
+UserPromptSubmit). Write-time discipline lives in Buddy reasoning + protocols.
+Full adapter
 shape: [`07-tool-integrations.md`](07-tool-integrations.md) §Cursor.
 
 ## When nothing helps
