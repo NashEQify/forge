@@ -97,17 +97,18 @@ review output).
 
 **Skill-level protocols on consolidation:**
 `skills/_protocols/consolidation-preservation.md` (silent-loss
-protection), `skills/_protocols/piebald-budget.md` (budget
-gate).
+protection), `skills/_protocols/piebald-budget.md` (instruction
+loading/coherence review).
 **Drill enforcement:** chief verifies that every raw review
 contains a `## Reviewer-First-Principles-Drill` section + the
-bind rule (≥1 finding references a drill element). Missing →
+bind rule from `first-principles-check.md`, including its
+evidenced zero-findings conclusion path. Missing →
 rejected and demanded back via F-C-DRILL-MISSING finding.
 
 **Trace enforcement:** chief verifies that every raw review
 contains a `## Reviewer-Reasoning-Trace` section + the bind
-rule (≥1 finding references INTENT, PLAN, SIMULATE, or
-IMPACT). Missing → rejected via F-C-TRACE-MISSING finding.
+rule from `reviewer-reasoning-trace.md`, including its
+evidenced zero-findings conclusion path. Missing → rejected via F-C-TRACE-MISSING finding.
 Analogous to drill enforcement.
 
 ## Un-grounded-claim ledger (de-confidence lead)
@@ -290,13 +291,11 @@ foundation-spec L3 always escalate.
 ## Piebald-budget check (on skill / runbook / persona reviews)
 
 When reviewing artifacts of a type listed in
-`_protocols/piebald-budget.md` §budget table:
-
-1. Run `wc -l <review-target>`.
-2. Check against the budget.
-3. Overshoot → automatic HIGH finding F-C-BUDGET (see
-   protocol).
-4. The board cannot PASS while it's open.
+`skills/_protocols/piebald-budget.md`, apply its loading and size-review
+criteria. Reuse reviewer measurements for the same revision. Require a
+named functional consequence for a finding; length alone neither raises
+severity nor blocks PASS. Preserve substantiated missing-load findings
+even when the entrypoint is short.
 
 ## Discourse synthesis (CHIEF-2, after the discourse phase)
 

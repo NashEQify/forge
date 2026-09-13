@@ -75,7 +75,8 @@ under `docs/reviews/council/`. Skip with one-line rationale otherwise;
 as a "Phase 2" section in the state file.
 
 **3. write-artifact** — create the artefact (spec / workflow /
-protocol / code plan). Self-contained, within piebald budget. Inline
+protocol / code plan). Keep essential guidance self-contained and conditional
+detail reachable per `skills/_protocols/piebald-budget.md`. Inline
 sub-step: write a "Registration" section explaining how the artefact
 lands in process-map / STRUCTURE.md / handoff fields.
 

@@ -241,7 +241,7 @@ Every new SKILL.md follows `framework/skill-anatomy.md`:
 - Frontmatter with required fields
 - 7 mandatory sections + 2 optional
 - `Standalone` block on new skills (mandatory)
-- Token budget ≤120 lines (Single-Class v2)
+- Focused entrypoint with explicit read triggers for conditional references
 - Naming: `verb_object` default
 
 Pre-commit Check 3 (SKILL-FM-VALIDATE, BLOCK) catches structural frontmatter drift; spec-board
@@ -249,13 +249,13 @@ L1 catches content drift (process quality, standalone, naming).
 
 ### Persona format
 
-`agents/<name>.md` (SoT) + wrapper under `.claude/agents/<name>.md`. Persona
-token budget ≤70 lines. Detail in `skills/_protocols/piebald-budget.md`.
+`agents/<name>.md` (SoT) + wrapper under `.claude/agents/<name>.md`.
+Loading/coherence and size-review guidance: `skills/_protocols/piebald-budget.md`.
 
 ### Workflow format
 
 `workflows/runbooks/<name>/WORKFLOW.md`. Producer class has 5 phases.
-Token budget ≤150 lines. Per phase: skills, input, output, gate, failure,
+Keep narrative distinct from runtime step detail. Per phase: skills, input, output, gate, failure,
 autonomy, protocols.
 
 ### Protocol format

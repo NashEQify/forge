@@ -51,10 +51,12 @@ do not translate the bullet labels.)
 
 ## Bind rule (drill ↔ findings)
 
-**At least one finding MUST reference the drill section** (the
-assumption OR the counter-question OR the 1st-principle level as
-motivation). Without the bind: filler. Chief checks via substring
-match.
+Connect the drill to the review's result. When findings exist, at least
+one references the assumption, counter-question, or principle it tested.
+When none exist, the conclusion names the checked assumption, supporting
+evidence and limits. Apply this separately to each reviewed axis.
+Zero findings is a valid result; never invent a finding to satisfy a bind.
+Chief checks the substantive connection, not a minimum finding count.
 
 ## Chief rejection mechanic
 

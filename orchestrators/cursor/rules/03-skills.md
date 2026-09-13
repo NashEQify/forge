@@ -41,5 +41,5 @@ list references them. Examples:
 - `discourse.md` — board cross-validation
 - `context-isolation.md` — anti-anchoring
 - `dispatch-template.md` — board-dispatch without buddy-bias
-- `piebald-budget.md` — token-budget hard gate
+- `piebald-budget.md` — instruction loading/coherence review; size is a signal
 - `plan-review.md` — plan-self-review mechanic

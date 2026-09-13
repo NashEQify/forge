@@ -61,7 +61,7 @@ schema_version: 1
 # Council Analysis: {task_id} — Adversary
 
 ## Reviewer-First-Principles-Drill
-{Per _protocols/first-principles-check.md; bind rule: ≥1 finding references a drill element.}
+{Per _protocols/first-principles-check.md; apply its bind rule, including the evidenced zero-findings conclusion path.}
 
 ## 4 mandatory checks
 1. **Framing-trap:** reformulation + finding or "no finding because <scenario>"

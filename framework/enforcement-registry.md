@@ -74,7 +74,7 @@ Single-path `Artifact` pointers (one backticked path per row, optional
 | dispatch-package allowlist | `[DISCIPLINE]` | — | `docs/specs/306-brief-architect.md` | a Buddy-authored draft in a brief-architect package is a contract violation |
 | Pre-Delegation artifact | `[DISCIPLINE]` | — | `CLAUDE.md` | no sub-agent call without a delegation artifact (Invariant 3) |
 | STALE-CLEANUP | `[DISCIPLINE]` | — | `CLAUDE.md` | retired artifact → every live reference cleaned in the same commit (Invariant 5) |
-| piebald-budget | `[DISCIPLINE]` | — | `skills/_protocols/piebald-budget.md` | per-file-type length budget, applied by reviewers at review time |
+| piebald-budget | `[DISCIPLINE]` | — | `skills/_protocols/piebald-budget.md` | instruction-loading/coherence review; size signals, no length-only gate |
 
 ## Purged mechanisms (no runnable artifact)
 

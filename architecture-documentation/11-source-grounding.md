@@ -45,7 +45,7 @@ to a file path. The mapping below is the audit table.
 | Anti-inflation: new skills only with a standalone-justification | [`../framework/skill-anatomy.md`](../framework/skill-anatomy.md) §Inflation guard |
 | Naming convention `verb_object` default | [`../framework/skill-anatomy.md`](../framework/skill-anatomy.md) §Naming convention |
 | Mode convention: max 3 modes per skill | [`../framework/skill-anatomy.md`](../framework/skill-anatomy.md) §Modes |
-| Token budget ≤120 lines for v2 skills | [`../skills/_protocols/piebald-budget.md`](../skills/_protocols/piebald-budget.md):17 |
+| Instruction loading/coherence and size signals | [`../skills/_protocols/piebald-budget.md`](../skills/_protocols/piebald-budget.md) |
 
 ### Skill inventory
 
@@ -76,7 +76,7 @@ to a file path. The mapping below is the audit table.
 | UX-Board: ux-heuristic, ux-ia, ux-interaction (3) | `ls agents/board-ux-*.md` |
 | Code-Review-Board: 14 personas (multi-axis hybrid) | `ls agents/code-*.md` |
 | Standalone: main-code-agent, council-member, solution-expert, security, tester, test-skeleton-writer, plan-adversary, brief-architect, buddy-thinking, spec-text-drift-batch | `ls agents/<name>.md` |
-| Persona token budget ≤70 lines | [`../skills/_protocols/piebald-budget.md`](../skills/_protocols/piebald-budget.md) |
+| Persona loading/coherence review; no length-only gate | [`../skills/_protocols/piebald-budget.md`](../skills/_protocols/piebald-budget.md) |
 
 ### Hooks
 

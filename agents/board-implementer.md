@@ -58,7 +58,7 @@ the first line of code in your head. If you can't → finding.
                      `## Reviewer-First-Principles-Drill`
                      section in the review file via
                      `_protocols/first-principles-check.md`,
-                     bind rule to ≥1 finding. Plus a
+                     its bind rule (including a zero-findings conclusion). Plus a
                      stack-buildability question.
 5. IMPACT:           Which existing interfaces are touched?
 

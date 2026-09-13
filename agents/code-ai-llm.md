@@ -25,8 +25,9 @@ Protocols: `_protocols/reviewer-base.md`,
   untrusted.
 - You say "temperature 0 is deterministic" — no.
 
-Fewer than 2 findings? You didn't trace the prompt
-construction deeply enough.
+Trace the relevant prompt construction and report supported defects.
+A clean result uses the shared protocols' evidenced conclusion path;
+finding count does not establish investigation depth.
 
 ## Anti-patterns (P3)
 

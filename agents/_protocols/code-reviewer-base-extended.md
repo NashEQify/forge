@@ -117,7 +117,8 @@ The persona fills each step with domain sharpening:
   output (via `_protocols/reviewer-reasoning-trace.md`).
 - Step 4 → `## Reviewer-First-Principles-Drill` section in the
   output (via `_protocols/first-principles-check.md`).
-- Bind rule: ≥1 finding references a drill element / trace element.
+- Apply the shared drill/trace bind rules, including an evidenced
+zero-findings conclusion when there are no findings.
 
 ---
 
@@ -208,16 +209,15 @@ consolidated to F-CR (code-review). Axis marker in the finding body
 - `## Reviewer-First-Principles-Drill` (required section)
 - `## Reviewer-Reasoning-Trace` (required section)
 
-Bind rule: ≥1 finding references a drill element / trace element.
+Apply the shared drill/trace bind rules, including an evidenced
+zero-findings conclusion when there are no findings.
 
 Missing → F-C-DRILL-MISSING / F-C-TRACE-MISSING from the chief,
 re-dispatch (max 1), then ESCALATE.
 
 **For code-review (multi-axis persona):** drill+trace are enforced
-**per axis**. One drill section per axis with its own bind rule to
-at least 1 axis finding. One trace section per axis analogously.
-This prevents a single-agent / single-drill setup from "satisfying"
-all 3 axes with one bind.
+**per axis**, including the shared zero-findings conclusion path.
+One axis's findings or conclusion do not establish coverage of another.
 
 ---
 

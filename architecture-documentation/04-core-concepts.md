@@ -168,7 +168,7 @@ inline-assembled at invocation:
 | `dispatch-template.md` | Prevents Buddy's own analysis from colouring the board |
 | `consolidation-preservation.md` | Prevents silent loss during consolidation |
 | `content-preservation.md` | Prevents unintended deletion of valuable content |
-| `piebald-budget.md` | Hard-gate token budget per artefact |
+| `piebald-budget.md` | Instruction loading/coherence review; size signals |
 | `plan-review.md` | Plan-self-review mechanism before non-trivial action |
 | `analysis-mode-gate.md` | Forces a substantive mode before classification |
 | `cross-phase-source-grounding.md` | Source grounding for iterative solve runs |
@@ -345,23 +345,17 @@ Each phase has skills, input, output, gate, failure-behaviour, autonomy, protoco
 - Operations (`save`): 3 groups (A pre-write, B content-writes parallel, C post-write).
 - Maintenance (`context_housekeeping`): 2 groups.
 
-## 10. Token Budget (Piebald)
+## 10. Instruction Budget (Piebald)
 
-`skills/_protocols/piebald-budget.md` defines hard token /
-line budgets per artefact type. Prevents skills/runbooks/personas
-from growing unboundedly.
+`skills/_protocols/piebald-budget.md` keeps loaded instructions focused and
+required guidance reachable. It supplies size signals for inspection, not
+token measurements or length-only gates. Review concrete duplication,
+contradictions, unnecessary loaded content and missing read triggers.
 
-| Type | Budget |
-|---|---|
-| Skill SKILL.md (Single-Class v2) | ≤120 lines |
-| Skill SKILL.md (legacy "workflow" type before migration) | ≤180 lines |
-| Runbook | ≤150 lines |
-| Persona | ≤70 lines |
-| Buddy-facing tier 1 | ≤100 lines |
-| Agent-facing assembled prompt | ≤200 lines |
-
-Detail in the protocol's table. Exceeding it → Spec-Board L1 BLOCK
-with a proposal (split / extract REFERENCE.md / consolidate modes).
+Keep essential constraints in the entrypoint and load substantial conditional
+detail when its mode or action requires it. A longer cohesive file may be
+appropriate; a short entrypoint can still omit required guidance. Severity
+and disposition follow functional consequences, not line count.
 
 ## 11. ADR-Discipline-Triple
 

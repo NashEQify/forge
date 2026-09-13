@@ -72,8 +72,8 @@ Protocols: `_protocols/reviewer-base.md`,
 `_protocols/code-reviewer-protocol.md`,
 `_protocols/code-reviewer-base-extended.md`,
 `_protocols/reviewer-reasoning-trace.md`,
-`_protocols/first-principles-check.md` (drill required, bind
-to ≥1 finding required).
+`_protocols/first-principles-check.md` (drill required; apply its bind rule,
+including the evidenced zero-findings conclusion path).
 
 Sister persona: `agents/board-architect-roots.md` (spec-side,
 LD-lock-time). Same three pattern classes, different phase.

@@ -24,16 +24,13 @@ What this spec does not do:
 
 ## Files in a skill directory
 
-A skill is a single `skills/<name>/SKILL.md` file. The earlier optional
-`REFERENCE.md` tier-2 split-file pattern is **deprecated** — Buddy's
-Skill-tool loading mechanism never auto-loads REFERENCE.md content,
-so the split delivered no operational benefit. SKILL.md budget loosened
-to ≤400 lines (see `skills/_protocols/piebald-budget.md`) so existing
-REFERENCE.md content can fold back without splitting.
-
-Per-skill fold-back happens incrementally as each skill is next
-touched. The 12 active REFERENCE.md files at the policy switch are
-tracked in the piebald-budget protocol.
+A skill has a `skills/<name>/SKILL.md` entrypoint and may have supporting
+references. Keep purpose, essential constraints and routing in SKILL.md;
+link substantial conditional detail with a concrete read trigger where
+it is needed. A reference is not assumed to load automatically. Short
+self-contained skills need no split. Loading and size-review guidance:
+`skills/_protocols/piebald-budget.md`. Neither reference folding nor file
+splitting is required solely to meet a line count.
 
 ---
 
@@ -511,8 +508,8 @@ name: task_creation
 - `framework/boot-navigation.md` (boot index)
 - `agents/buddy/operational.md` (operational anti-inflation behavior)
 - `framework/spec-engineering.md` (5 primitives spirit)
-- `skills/_protocols/piebald-budget.md` (length-budget SoT — the per-type
-  / single-class-v2 threshold is discipline-enforced)
+- `skills/_protocols/piebald-budget.md` (instruction loading and size-review
+  SoT — assess functional impact; length alone is not a gate)
 
 ---
 
@@ -522,4 +519,3 @@ Documented future extensions:
 - additional invocation path families
 - potential mode-axis standardization
 - reminder that anatomy is an operational lever, not taxonomic vanity
-

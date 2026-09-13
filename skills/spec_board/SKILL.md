@@ -215,7 +215,7 @@ Mechanic: `_protocols/discourse.md`.
 
 - [ ] Chief consolidated has tracking table.
 - [ ] Verification equation holds (Raw = Kept + Merged + Related + Removed).
-- [ ] Merge spot-check (2-3 MERGED findings — root cause really identical?).
+- [ ] Merge spot-check (up to 3 available MERGED findings — same root cause? No merges → not applicable).
 - [ ] Minority re-check (scan REMOVED + low-severity single-agent).
 - [ ] Piebald-budget check on skill / runbook / persona reviews.
 - [ ] All findings fixed (C+H+M+L).

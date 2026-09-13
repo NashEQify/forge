@@ -108,7 +108,8 @@ preparation (solution-candidate input).
    (`_protocols/cross-phase-source-grounding.md`) — mapping table
    required.
 5. **Identify constraints** (always). Hard (CLAUDE.md invariants,
-   sovereignty, Piebald budgets, skill taxonomy) vs negotiable.
+   sovereignty, skill taxonomy) vs negotiable. Instruction size is
+   a loading/coherence review signal, not a hard constraint.
 6. **SOTA research** (conditional). Triggers: uncertainty + thin
    solution list + fast-evolving domain + user-explicit + hard to
    reverse. Detail: REFERENCE.md §SOTA-Trigger. **Skip** allowed

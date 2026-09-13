@@ -182,8 +182,8 @@ COMP, CONS, IMPL, INTF, DEPS.
 3. **Consolidated findings table** (sorted: severity desc, then dim):
    | Finding-ID | Dim | Severity | Location | Problem | Remediation | Status |
 
-4. **Merge spot-check**: show at least 2-3 MERGED findings explicitly —
-   were they merged correctly? Same root cause?
+4. **Merge spot-check**: inspect up to 3 available MERGED findings —
+   same root cause? If there are no merges, record not applicable.
 
 5. **Minority re-check**: scan REMOVED low-severity findings briefly —
    anything surprising in there?

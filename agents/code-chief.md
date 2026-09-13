@@ -104,13 +104,14 @@ review output).
 
 **Drill enforcement:** chief verifies that every raw review
 contains a `## Reviewer-First-Principles-Drill` section + the
-bind rule (≥1 finding references Annahme / Gegenfrage /
-1st-Principle-Ebene). Missing → F-C-DRILL-MISSING finding +
+bind rule from `first-principles-check.md`, including its
+evidenced zero-findings conclusion path. Missing → F-C-DRILL-MISSING finding +
 re-dispatch of the same code reviewer (max 1), then ESCALATE.
 
 **Trace enforcement:** chief verifies that every raw review
 contains a `## Reviewer-Reasoning-Trace` section + the bind
-rule (≥1 finding references INTENT / PLAN / SIMULATE / IMPACT).
+rule from `reviewer-reasoning-trace.md`, including its
+evidenced zero-findings conclusion path.
 Missing → F-C-TRACE-MISSING finding, analogous to drill
 enforcement.
 

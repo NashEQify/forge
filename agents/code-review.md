@@ -36,9 +36,9 @@ Protocols: `_protocols/reviewer-base.md`,
 axis), `_protocols/first-principles-check.md` (required drill
 per axis).
 
-**Drill+Trace per axis required:** three drill sections + three
-trace sections in the output, each with its own bind rule to at
-least 1 axis finding.
+**Drill+Trace per axis required:** cover each axis with a concrete
+check and its result. Apply the shared protocols' bind rules, including
+their zero-findings conclusion path, separately to each axis.
 
 ---
 
@@ -82,9 +82,10 @@ least 1 axis finding.
   not faster CPU.
 - You ignore memory — on Odroid / VPS, RAM is tight.
 
-**Closing per axis:** when you write an explanation instead of
-a counter-argument: stop. When you have fewer than 3
-substantive findings per axis: you didn't search enough.
+**Closing per axis:** report supported defects and the scope actually
+checked. Zero findings is valid after a substantive check. Finding
+counts do not measure review quality; do not manufacture issues or
+extend the review merely to meet a quota.
 
 ## Anti-patterns (P3)
 
@@ -159,8 +160,8 @@ substantive findings per axis: you didn't search enough.
 `## Reviewer-Reasoning-Trace — Axis [Correctness|Architecture
 |Performance]` section and one
 `## Reviewer-First-Principles-Drill — Axis [Correctness|
-Architecture|Performance]` section each. Bind rule: per axis
-drill at least 1 axis finding references a drill element.
+Architecture|Performance]` section each. Apply the shared bind rules
+per axis: findings when present, otherwise an evidenced conclusion.
 
 ## Check focus
 

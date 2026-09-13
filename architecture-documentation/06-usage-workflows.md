@@ -438,11 +438,12 @@ is discipline-only — there's no pre-commit check for it.
 Skills with `modes:` have **one axis** (depth / topic / phase / level / scope).
 Mixing is forbidden. Hard convention: max 3 modes (exception: phase axis).
 
-### BP7 — Check token budget up front
+### BP7 — Check instruction loading up front
 
-Before SKILL.md / WORKFLOW.md / persona edit: check the budget from
-`skills/_protocols/piebald-budget.md`. On imminent overrun: extract to
-REFERENCE.md or consolidate a mode.
+For SKILL.md / WORKFLOW.md / persona edits, apply
+`skills/_protocols/piebald-budget.md`: remove duplication, keep required
+guidance reachable, and load mode-specific detail at its read trigger.
+Size prompts inspection; it does not automatically require a split.
 
 ## Who reads what?
 

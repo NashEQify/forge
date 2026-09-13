@@ -92,8 +92,8 @@ status values" / Model "Finding-based source grounding (vs file-based)".
 - **NOT:** mistaking "model" for "approach". **INSTEAD:** model =
   building blocks + interaction + load-bearing assumption.
 - **NOT:** finding list without proof-back-reference. **INSTEAD:**
-  at least one finding references a proof element by name (bind
-  rule).
+  connect a finding to a proof element, or, when there are no
+  findings, connect the evidenced conclusion and its limits to it.
 
 ## Gate rule
 

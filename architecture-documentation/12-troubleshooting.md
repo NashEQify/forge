@@ -152,14 +152,14 @@ value. Check:
 
 Detail: `framework/skill-anatomy.md §Frontmatter-Schema`.
 
-### Skill over the 120-line token budget
+### Skill is large or required guidance is missed
 
-Piebald budget exceeded. Typical fixes:
-- Move detail to `REFERENCE.md` (the skill keeps a Buddy-facing
-  checklist, REFERENCE holds the detail mechanics).
-- Check for mode consolidation.
-- Mega-skill test: if more than 50% of the content is disjoint per
-  mode, split the skill.
+Apply `skills/_protocols/piebald-budget.md`. Check for duplicated or
+irrelevant loaded content, conflicting instructions and missing read triggers.
+Remove duplication or move substantial conditional detail to a reference
+with an explicit trigger. Keep essential action constraints visible before
+the dependent action. Retain a cohesive structure when it serves the task;
+line count alone requires neither a split nor an exception approval.
 
 ### Workflow engine says "step not found"
 

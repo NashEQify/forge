@@ -1,136 +1,69 @@
-# Protocol: Piebald-Budget Hard Gate
+# Protocol: Instruction Budget
 
-Prevents budget drift in skills, runbooks, personas, and assembled
-prompts. Loaded by: spec_board, code_review_board,
-sectional_deep_review, architecture_coherence_review. Applied by
-the board review to every review target whose type has a budget.
+Keep the instructions loaded for a task useful and coherent. Applied when
+authoring or reviewing skills, runbooks, personas and assembled prompts.
+The consumer is the executing agent; the cost is irrelevant context,
+duplicated authority, or missing guidance at the point it is needed.
 
-> **Policy update.** SKILL.md budget loosened from ≤120
-> to **≤400 lines** following empirical evidence that the earlier
-> tight cap drove content into REFERENCE.md split-files that the
-> framework's skill-loading mechanism never auto-loads (Buddy reads
-> SKILL.md via the Skill tool; REFERENCE.md is a manual on-demand
-> read that effectively never happens). REFERENCE.md pattern is
-> **deprecated** — fold the content back into SKILL.md as touched.
-> Modern LLM context windows handle 400-line skills trivially; the
-> earlier 120-line cap was a piebald optimization for an older
-> attention-budget that no longer constrains us at this scale.
+## Loading policy
 
-> **Policy update (chief / consolidator personas).** Chief-persona
-> budget raised ≤150 → **≤400 lines** — the same dated-attention
-> re-calibration as the SKILL.md loosening above. Modern LLMs hold a
-> 400-line persona trivially, and consolidator logic (dedup + severity
-> aggregation + discourse synthesis + de-confidence ledger + the
-> role-constraint carve-out) is irreducibly rich — all four chief
-> personas exceeded ≤150 in practice. Genuine fat (duplicated tables,
-> restated paragraphs) is trimmed, not budgeted around; the gate still
-> catches runaway doubling and no longer forces splitting consolidation
-> logic that "cannot be split".
+Keep purpose, essential constraints and routing in the entrypoint. Put
+substantial mode-specific procedures, schemas and examples in references
+when they are useful only for that mode. A short self-contained skill
+does not need a split. Do not fold references back merely because they
+are not automatically loaded.
 
-## The problem this protocol still solves
+Every required reference needs a discoverable path and a concrete read
+trigger at its point of use. Verify that the selected workflow actually
+loads the guidance before the dependent action. A link without a trigger
+is insufficient for required behavior. Keep safety/authorization constraints
+needed to choose the action visible before entering conditional detail.
 
-Token bloat through accreting prose. Skills + workflows + personas
-need to stay focused. Past hard-cap was 120 lines per SKILL.md;
-loosened to 400 in light of (a) modern context windows + (b) the
-REFERENCE.md split-file pattern empirically not delivering its
-intended benefit.
+Remove duplication or obsolete instructions before adding routing layers.
+Do not compress unique requirements into opaque shorthand or distribute
+one rule across files that must always be read together just to reduce
+the entrypoint's line count.
 
-Skill *count* inflation is the higher-leverage concern now, not
-*size* — inflation guard sits in `skill-anatomy.md` §Inflation guard.
+## Review signals
 
-## Budget table (hard gate)
+Measure changed instruction files and, where available, the content actually
+loaded for a representative task. Record line/byte counts as size measures;
+they are not measured tokens, attention limits, or proof of behavioral gain.
 
-| Artifact type | Budget | Path pattern |
-|---------------|--------|--------------|
-| **Skill SKILL.md** (single-class v3, REFERENCE.md folded back) | ≤400 lines | `skills/*/SKILL.md` |
-| **Skill SKILL.md** (legacy with REFERENCE.md split, transitional) | ≤180 lines while REFERENCE.md exists | `skills/*/SKILL.md` + paired `REFERENCE.md` |
-| ~~Skill REFERENCE.md~~ | **deprecated, fold back to SKILL.md** | `skills/*/REFERENCE.md` |
-| Workflow runbook | ≤200 lines | `workflows/runbooks/*/WORKFLOW.md` |
-| ~~Runbook REFERENCE.md~~ | **deprecated, fold back to WORKFLOW.md** | `workflows/runbooks/*/REFERENCE.md` |
-| Agent persona (standard) | ≤100 lines | `agents/*.md` |
-| Agent persona (chief / moderator / consolidator) | ≤400 lines | `agents/board-chief.md`, `agents/code-chief.md`, `agents/council-chief.md`, `agents/solution-expert.md` |
-| Skill protocol | ≤150 lines | `skills/_protocols/*.md` |
-| Agent protocol | ≤80 lines | `agents/_protocols/*.md` |
-| Assembled prompt (protocol + persona + dispatch) | ≤500 lines | runtime check on dispatch |
+The following are inspection prompts, not targets or pass/fail thresholds:
 
-**Per-skill REFERENCE.md fold-back triage** (12 active files, 2444
-LoC total; 2 done):
+| Artifact | Inspect more closely when |
+|---|---|
+| Skill entrypoint | over 400 lines, or common tasks load unused mode detail |
+| Workflow narrative | over 200 lines, or duplicates runtime step instructions |
+| Standard persona | over 100 lines, or repeats shared protocols |
+| Chief / consolidator persona | over 400 lines, or mixes discovery and consolidation |
+| Skill / agent protocol | over 150 / 80 lines, or has multiple authorities for one rule |
+| Assembled prompt | over 500 lines, or combines irrelevant roles/modes |
 
-| Skill | REF lines | Status |
-|---|---|---|
-| council | 102 | **DONE** — folded into SKILL (206 LoC merged) |
-| sectional_deep_review | 87 | **DONE** — folded into SKILL (259 LoC merged) |
-| consistency_check | 636 | TODO — heaviest: triage forensic history; likely 80% drop, 20% inline |
-| code_review_board | 313 | TODO — review-mode detail merges into SKILL §Process |
-| testing | 282 | TODO — L0-L5 pyramid detail belongs in SKILL |
-| spec_board | 220 | TODO — mode profiles + chief routing merge into SKILL |
-| spec_authoring | 160 | TODO — phase detail merges |
-| adversary_test_plan | 146 | TODO |
-| task_creation | 139 | TODO |
-| frame | 120 | TODO — 8-step process detail |
-| bedrock_drill | 120 | TODO |
-| convergence_loop | 119 | TODO |
+These inherited size signals are heuristics, not validated optimal budgets.
+A shorter artifact can still be confusing or omit a required load trigger;
+a longer cohesive artifact can be justified. Review only the relevant
+scope, not an unrelated corpus sweep triggered by one large file.
 
-Per-skill fold-back is **per-skill content judgment** (not mechanical
-replace) and runs as a follow-up sweep or as each skill is next
-touched. The transitional 180-line cap applies while paired
-REFERENCE.md still exists.
+## Finding and disposition
 
-## Gate rule
+Ground a finding in a concrete problem: conflicting instructions, repeated
+content loaded without benefit, a missing required read, or an unclear
+decision path. Name the affected task/consumer and consequence. Severity
+and disposition follow that consequence and the ordinary review criteria.
+Line count alone never creates a HIGH finding, blocks PASS, or requires
+an exception approval.
 
-**Budget is a HARD GATE, not a soft target.**
+Choose the smallest useful correction: remove duplication, clarify the
+read trigger, move conditional detail, or retain the current structure
+with a short rationale. Check that required guidance remains reachable
+after a split. Do not claim better model behavior from fewer lines alone.
 
-On board review of an artifact whose type appears in the table:
+## Author and reviewer check
 
-1. The chief (or a named agent) measures the line count of the
-   review target.
-2. If line count > budget: automatic HIGH finding.
-3. Finding format:
-   ```
-   ### F-C-BUDGET: Piebald budget exceeded
-   - severity: high
-   - scope: local
-   - primitive: P2 (consistency)
-   - evidence: `<path>` has <N> lines, budget is ≤<M>.
-   - description: budget is a hard gate. The "substance justifies
-     it" rationalization is not allowed — attention degradation is
-     empirically confirmed.
-   - suggested_fix: (a) split into SKILL.md + REFERENCE.md (move
-     detail mechanics out), OR (b) trim content (shorten examples,
-     remove redundancy), OR (c) document an exception with user
-     approval in the persona / SKILL (only for special cases with
-     unique content that cannot be split).
-   ```
-4. The board CANNOT signal PASS while this finding is open.
-5. Acceptable resolutions:
-   - **Fix:** split or trim the artifact below budget.
-   - **Exception:** explicitly documented in the artifact
-     ("Piebald exception: <reason>") with review-board approval.
-     Only for genuine special cases where the logic cannot be split
-     AND the type budget is already realistic (post the chief
-     re-calibration, no current persona needs one).
-
-## Pre-write self-check (for the author)
-
-Before committing an artifact whose type is in the table:
-1. Run `wc -l <path>`.
-2. Compare against the budget.
-3. If over budget: take the split decision BEFORE the commit, not
-   "later".
-
-That is the author-side check. The board review is the
-enforcement-side check. Both are needed: the author check catches
-most violations, the board check catches the rest.
-
-## Relation to convergence_loop
-
-`convergence_loop` MUST signal PASS only when the Piebald-budget
-finding is closed (either fixed or explicit exception approved).
-Automatic NEEDS-WORK on an open budget finding, until resolved.
-
-## Why a hard gate?
-
-Soft target + "split later" rationalization empirically leads to
-permanent drift. Multiple fix passes (docs-rewrite, solve-framing,
-others) overshot the original budget calibration. Without a hard
-gate the drift repeats.
+The author checks changed files and their direct loading references.
+The reviewer verifies the consequential loading and coherence claims;
+reuse measurements for the same revision. Missing evidence is reported
+as an unverified boundary, not converted into a claim that loading works.
+Convergence follows substantive findings; there is no separate length gate.

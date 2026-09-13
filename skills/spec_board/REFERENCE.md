@@ -117,16 +117,15 @@ the 2 Delta-Verify reviewers:
 1. **Drill existence:** `grep -l
    "## Reviewer-First-Principles-Drill"` to confirm both review
    files contain the section.
-2. **Drill bind rule:** `grep -c` to confirm at least one of
-   the keywords (`Annahme | Gegenfrage | 1st-Principle`) appears
-   outside the drill section — proxy for finding bind. Zero
-   count = bind missing.
+2. **Drill bind rule:** apply `agents/_protocols/first-principles-check.md`.
+   Check the substantive connection to findings or, when none exist,
+   the evidenced conclusion and its limits. A keyword count is not proof.
 3. **Trace existence:** `grep -l
    "## Reviewer-Reasoning-Trace"` to confirm both review files
    contain the section.
-4. **Trace bind rule:** `grep -c` to confirm at least one of
-   the keywords (`INTENT | PLAN | SIMULATE | IMPACT`) appears
-   in findings. Zero count = bind missing.
+4. **Trace bind rule:** apply `agents/_protocols/reviewer-reasoning-trace.md`.
+   Check the scenario/evidence connection in findings or the clean conclusion.
+   Zero findings is valid; missing substantive coverage still fails.
 
 Drill / trace OR bind missing on ≥1 reviewer: re-dispatch the
 same reviewer context-isolated with a hint at the missing

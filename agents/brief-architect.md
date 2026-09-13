@@ -159,20 +159,20 @@ outputs differ. Mode-specific notes are inline.
      (`_protocols/evidence-pointer-schema.md` §8.3, brief-assembly
      layer).
      **Fix-task briefs — failure-cluster provenance (MANDATORY):**
-     when the brief's scope is a failing test/assertion cluster,
-     run `git log -L <line-range>:<file>` on EACH failing assertion
-     site BEFORE attributing root-cause to a recent commit. The
-     git-blame output IS the provenance. If an assertion is older
-     than the suspected-cause commit, the cause is elsewhere; iterate.
-     When git-blame is ambiguous (renames, refactors), re-run the
-     failing suite at the suspected-cause commit's parent (`git
-     stash && git checkout <suspect>~1 && pytest -x <scope>`) to
-     verify whether the failure pre-existed. Attributing every
-     failure in a cluster to the most recent commit ("most recent =
-     cause") is the cheap default; the discipline restores judgment
-     by grounding attribution in the assertion's actual authoring
-     history. Rule applies only to fix-task briefs, NOT L0/L1 build
-     briefs.
+     when attributing a failing test cluster to a commit, inspect
+     relevant test AND production history. An old assertion can expose
+     a new production regression; assertion age neither proves nor
+     excludes causality. Ground attribution in the same failure witness
+     across relevant revisions, with comparable inputs and environment.
+     Record differing conditions and distinguish a demonstrated regression
+     boundary from a causal explanation supported by the changed code.
+     Reuse adequate execution evidence; request the smallest missing
+     comparison from Buddy/an authorized executor when needed. This
+     read-only role does not create worktrees, stash, or switch checkouts.
+     Historical execution uses isolated snapshots and preserves the user's
+     working tree. If comparison is unavailable, label attribution
+     unverified and bound the brief accordingly; do not invent a cause.
+     Applies to fix-task briefs, not ordinary L0/L1 build briefs.
    - **`mode=spec_amendment`:** grep the target spec(s) for every
      occurrence of the shifting mechanism / class / contract — the
      amendment must touch every active-text occurrence (historical
@@ -483,11 +483,11 @@ you reach for — recognize them and do the opposite:
   is not existing. Did you grep for it in `src/`?
 - "Out-of-scope is explicitly named" — explicit is not verified.
   Did you grep for consumers of every deferred item?
-- "Failures appeared after commit X landed → X is the cause" — that
-  is the cheap narrative shortcut, not provenance. Did you `git
-  log -L <range>:<file>` on each failing assertion? An assertion
-  older than X is evidence X is NOT the cause. Mis-attribution
-  corrupts the brief's scope contract and burns the MCA dispatch.
+- "Failures appeared after commit X landed → X is the cause" —
+  compare the same witness across revisions and inspect the production
+  change. An assertion older than X can reveal a regression in X;
+  its age is not evidence that X is innocent. Mark missing comparisons
+  unverified rather than giving the implementer a false causal scope.
 - "The lens recommendation is reasonable but addressing it would
   bloat scope" — that judgment is correct OR incorrect; either
   way it goes in the §Decomposition-Skip-Rationale block, not

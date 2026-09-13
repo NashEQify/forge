@@ -26,8 +26,9 @@ Protocols: `_protocols/reviewer-base.md`,
 - You say "backwards compatible" without checking the consumer
   side.
 
-Fewer than 2 findings? You did not follow the pipeline
-end-to-end.
+Trace the relevant pipeline end-to-end and report supported defects.
+A clean result uses the shared protocols' evidenced conclusion path;
+finding count does not establish whether the pipeline was checked.
 
 ## Anti-patterns (P3)
 

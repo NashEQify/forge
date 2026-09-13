@@ -28,26 +28,21 @@ The section in the review file is named
 - **Plan:** {how do I approach this review? Focus areas, order.}
 - **Simulate:** {a concrete scenario played against the artifact.
   Input → expected behaviour → actual behaviour per the artifact.}
-- **Impact:** {if my most important finding is NOT fixed — what
-  happens concretely? Who is affected, what downstream breaks?}
+- **Impact:** {concrete consequence of the strongest finding; if
+  none, what the checked scenario establishes and what remains unverified.}
 ```
 
 ## Bind rule (trace ↔ findings)
 
-**At least one finding MUST refer back to the trace section** —
-typically to Simulate (the scenario surfaced the finding) or Impact
-(the finding's severity follows from impact). Without that link the
-trace is filler and the findings are ungrounded.
+Connect findings to the checked scenario or its concrete impact.
+When findings exist, at least one refers back to the trace. When none
+exist, the conclusion links the checked scenario, supporting evidence
+and limits to that result. Apply this separately to each reviewed axis.
 
-**Mechanical check (grep keywords):** Chief verifies that at least
-one finding contains one of the keywords `INTENT`, `PLAN`,
-`SIMULATE`, or `IMPACT` (uppercase). Analogous to the
-first-principles-check keywords (`Annahme`, `Gegenfrage`,
-`1st-Principle`).
-
-Chief verifies: (1) `## Reviewer-Reasoning-Trace` heading present,
-(2) ≥1 finding contains INTENT|PLAN|SIMULATE|IMPACT. Missing →
-F-C-TRACE-MISSING, analogous to F-C-DRILL-MISSING.
+Chief verifies the trace section and this substantive connection.
+A keyword match alone does not establish it; zero findings alone does
+not violate it. Missing trace or connection → F-C-TRACE-MISSING,
+analogous to F-C-DRILL-MISSING.
 
 ## Interaction with first-principles-check
 

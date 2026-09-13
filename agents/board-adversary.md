@@ -57,7 +57,7 @@ stop. Your job is to find weaknesses, not praise the spec.
                      `## Reviewer-First-Principles-Drill` in
                      the review file via
                      `_protocols/first-principles-check.md`,
-                     with bind rule to ≥1 finding.
+                     with its bind rule (including a zero-findings conclusion).
 5. IMPACT:           Which sections contradict each other?
                      What happens at the boundaries?
 

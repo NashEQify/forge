@@ -325,7 +325,7 @@ mechanically.
 
 | Disposition | Criterion |
 |---|---|
-| **fix-now** | blocks requirement OR reproduces reported defect. ALWAYS every CRITICAL + every convergence cluster (≥3 reviewers same evidence). MEDIUM/LOW reproducing defect = fix-now. HIGH narrow latent = `accept` |
+| **fix-now** | blocks requirement OR reproduces reported defect; every CRITICAL and the safety floors below. MEDIUM/LOW reproducing defect = fix-now. HIGH narrow latent = `accept` unless a safety floor applies |
 | **accept** | non-blocking AND (narrow+backstopped OR latent OR self-introduced narrower than original). DEFAULT non-blocking |
 | **watch** | `accept` + named future trigger |
 | **fix-later** | MEDIUM+ only. Named concrete defect + measurable downstream cost. LOW FORBIDDEN |
@@ -357,8 +357,10 @@ Hard floors override: CRITICAL, security/auth/consent/crypto, schema
 / public-API contract, full-path tasks stay `fix-now` / `new_task`.
 
 **Bundling content-split:** bundled items tagged
-`value_class: real-impact | nice-to-have`. ≥3 reviewers same evidence
-= convergence → fix-now. Solo LOWs never escape `accept`.
+`value_class: real-impact | nice-to-have`. Preserve each reviewer's
+provenance when merging duplicate evidence. Agreement can strengthen
+confidence; reviewer count alone changes neither severity nor disposition.
+Apply the same impact criteria to solo and convergent findings.
 
 **Test-coverage findings = `code-spec-fit` sole owner.** Coverage
 findings name (a) concrete failure-mode missing tests catch, (b) why

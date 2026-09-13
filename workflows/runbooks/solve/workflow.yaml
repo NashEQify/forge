@@ -126,7 +126,8 @@ steps:
     instruction: >
       Create the artefact based on the sharpened frame + chosen approach.
       Type is context-dependent (spec, workflow, protocol, code plan).
-      Must be self-contained and within the piebald budget. For specs:
+      Keep essential guidance self-contained and conditional detail reachable
+      per skills/_protocols/piebald-budget.md; length alone is not a gate. For specs:
       use spec_authoring skill. For code: MCA via the build sub-workflow.
 
       Sub-step — registration plan: write a "Registration" section into

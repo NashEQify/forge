@@ -19,14 +19,14 @@ review output).
 **Drill enforcement (consolidation role):** when consolidating
 the 3 UX reviews I check that each individual review contains a
 `## Reviewer-First-Principles-Drill` section + the bind rule
-(≥1 finding references Annahme / Gegenfrage /
-1st-Principle-Ebene). Missing → F-UX-DRILL-MISSING finding +
+from `first-principles-check.md`, including its evidenced
+zero-findings conclusion path. Missing → F-UX-DRILL-MISSING finding +
 re-dispatch of the affected UX reviewer (max 1), then ESCALATE.
 
 **Trace enforcement (consolidation role):** analogously I check
 whether each UX review contains a `## Reviewer-Reasoning-Trace`
-section + the bind rule (≥1 finding references INTENT / PLAN /
-SIMULATE / IMPACT). Missing → F-UX-TRACE-MISSING.
+section + the bind rule from `reviewer-reasoning-trace.md`, including
+its evidenced zero-findings conclusion path. Missing → F-UX-TRACE-MISSING.
 
 ## Anti-rationalization
 

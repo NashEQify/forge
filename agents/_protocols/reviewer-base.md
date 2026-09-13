@@ -117,7 +117,7 @@ working well"). For each file touched by the diff:
 |---|---|---|---|
 | src/foo/bar.py    | 487 | +52 | — |
 | src/foo/baz.py    | 612 | +120 | size-trend |
-| skills/x/SKILL.md | 220 | +8  | size-trend (piebald budget ≤180) |
+| skills/x/SKILL.md | 420 | +8  | size-trend (inspect loading/coherence) |
 ```
 
 **Signal column — judgment-driven, soft thresholds as triggers only:**
@@ -126,7 +126,7 @@ working well"). For each file touched by the diff:
 |---|---|
 | `src/**/*.py` | ≥600 LOC OR Δ ≥150 LOC in one diff |
 | `src/**/*.ts`, `*.tsx` | ≥500 LOC OR Δ ≥120 LOC in one diff |
-| `skills/*/SKILL.md` | ≥180 LOC (per `_protocols/piebald-budget.md`) |
+| `skills/*/SKILL.md` | instruction-size signals per `skills/_protocols/piebald-budget.md` |
 | `agents/*.md` | ≥400 LOC OR Δ ≥100 LOC |
 | `docs/specs/*.md` | ≥800 LOC (specs naturally large) |
 
@@ -155,9 +155,7 @@ misses or that grew between brief and review.
 
 **Boundary:** this is REVIEWER-LAYER discipline. It does NOT replace
 the brief-time architecture lens (preventive, plan-phase) NOR the
-piebald-budget protocol (`skills/_protocols/piebald-budget.md`) — the
-per-file length budget applied at review/commit time (`[DISCIPLINE]`,
-not a hook; the former pre-commit budget check was dropped in the hook
-paradigm shift). Three layers, one discipline: prevention (brief),
-reporting (reviewer), budget (protocol). Reviewer-layer is the
-curative backstop.
+piebald-budget protocol (`skills/_protocols/piebald-budget.md`) — it
+provides instruction-loading criteria and size signals, not a separate
+length gate. Reuse measurements for the same revision; judge the concrete
+problem rather than producing duplicate findings for multiple size signals.

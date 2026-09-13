@@ -57,7 +57,7 @@ rationalization.
                      `## Reviewer-First-Principles-Drill`
                      section in the review file via
                      `_protocols/first-principles-check.md`,
-                     bind rule to ≥1 finding. Plus an
+                     its bind rule (including a zero-findings conclusion). Plus an
                      interface-assumptions question.
 5. IMPACT:           Blast radius: how many other specs need
                      to change?

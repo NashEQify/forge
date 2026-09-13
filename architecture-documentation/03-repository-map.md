@@ -177,12 +177,12 @@ block.
 
 ### Skill format
 
-Every active skill is a directory under `skills/` containing a single
-`SKILL.md` (frontmatter + 7 sections). An optional `REFERENCE.md` for
-tier-2 detail used to live alongside; an anatomy review found
-REFERENCE files were effectively never auto-loaded, so the pattern is
-being folded back into SKILL.md (with a raised Piebald budget). See
-`framework/skill-anatomy.md` for the current format specification.
+Every active skill has a `SKILL.md` entrypoint under `skills/` and may
+have supporting references. Keep purpose, essential constraints and routing
+in the entrypoint; link conditional detail with a concrete read trigger.
+References are not assumed to load automatically. See
+`framework/skill-anatomy.md` for the format specification and
+`skills/_protocols/piebald-budget.md` for loading and size-review guidance.
 
 ## Next step
 
