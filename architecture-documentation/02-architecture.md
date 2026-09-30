@@ -326,8 +326,8 @@ Enforcement: the engine itself is in usage standby; discipline-only.
 
 ### Cross-Session Resume
 
-- Boot step 5 STATUS-CHECK + step 6 RESUME → `--boot-context` injects a
-  resume line that `Step 7 RESUME` hands to the user
+- Boot step 2 STATUS-CHECK + step 6 RESUME → `--boot-context` injects a
+  resume line that `Step 7 GREET` hands to the user
 - Buddy reads workflow state on demand via `--boot-context` / `--next`.
 
 ### Multi-Machine Constraint
@@ -508,15 +508,10 @@ $ cc framework
   → exec claude --add-dir $FRAMEWORK_DIR --add-dir $CWD --agent buddy
   → CC finds .claude/agents/buddy.md (wrapper)
   → Wrapper loads agents/buddy/{soul,operational,boot}.md
-  → Boot sequence: ORIENT → RESOLVE → ROUTE → LOAD → STATUS-CHECK → RESUME → GREET
-                                                  ▲              ▲
-                                                  │              │ workflow_engine.py
-                                                  │              │ --boot-context (active
-                                                  │              │ workflows + state files)
-                                                  │
-                                                  │ git-status-check.sh
-                                                  │ (parallel fetch + status for
-                                                  │  FRAMEWORK_DIR + CWD, realpath-deduped)
+  → Boot sequence: ORIENT → STATUS-CHECK (pull decision) → RESOLVE → ROUTE → LOAD → RESUME → GREET
+  → STATUS-CHECK: git-status-check.sh checks active project + framework;
+    resolve the pull decision before loading context, reload instructions after pull.
+  → RESUME: workflow_engine.py --boot-context reads current workflow state.
 ```
 
 ### Build (Standard Path)

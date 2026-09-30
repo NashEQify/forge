@@ -154,7 +154,7 @@ trigger words, defined in `agents/buddy/operational.md §Commands`:
 
 | User says | Buddy does |
 |---|---|
-| (initial greeting) | Boot sequence ORIENT → RESOLVE → ROUTE → LOAD → STATUS-CHECK → RESUME → GREET |
+| (initial greeting) | Boot sequence ORIENT → STATUS-CHECK (pull decision) → RESOLVE → ROUTE → LOAD → RESUME → GREET |
 | `wakeup` | Re-boot session continuity from `session-handoff.md` + `plan_engine --boot` |
 | `save` | Session persist (mid + end of session, one adaptive command) via `workflows/runbooks/save/WORKFLOW.md` |
 | `checkpoint` | Save + drift-check + sculpting (deep version) |

@@ -26,7 +26,7 @@ consumer-repo sessions.
 |--------|-------|----------|------------------|
 | `plan_engine.py` | plan state + critical path + validate + boot output | Buddy boot, task_creation step 5, wakeup | `$FRAMEWORK_DIR/scripts/plan_engine.py` |
 | `workflow_engine.py` | YAML-driven workflow state machine. Cross-session continuity. `--start` / `--next` / `--complete` / `--status` / `--recover` / `--boot-context` / `--handoff-context`. State persists in `.workflow-state/` (gitignored). Required for non-trivial workflows (operational.md §Workflow Engine). | Buddy boot (`--boot-context`), save workflow A.3 (`--handoff-context`), MUST be called at workflow start | `$FRAMEWORK_DIR/scripts/workflow_engine.py` |
-| `git-status-check.sh` | parallel git fetch + status-sb for FRAMEWORK_DIR + active CWD. 5s network timeout. Output shows non-clean repos (ahead/behind). Prevents working on stale state in multi-machine workflows. | Buddy boot step 5 STATUS-CHECK | `$FRAMEWORK_DIR/scripts/git-status-check.sh` |
+| `git-status-check.sh` | parallel git fetch + status-sb for FRAMEWORK_DIR + active CWD. 5s network timeout. Output shows non-clean repos (ahead/behind). Prevents working on stale state in multi-machine workflows. | Buddy boot step 2 STATUS-CHECK | `$FRAMEWORK_DIR/scripts/git-status-check.sh` |
 | `deploy-docs.sh` | mkdocs build + server sync for `docs/` | solve/spec_board/docs-rewrite/fix workflows | `$FRAMEWORK_DIR/scripts/deploy-docs.sh` |
 | `generate-architecture.py` | architecture doc generator | docs-rewrite workflow | `$FRAMEWORK_DIR/scripts/generate-architecture.py` |
 | `generate-control.py` | control-plane doc generator | docs-rewrite workflow | `$FRAMEWORK_DIR/scripts/generate-control.py` |

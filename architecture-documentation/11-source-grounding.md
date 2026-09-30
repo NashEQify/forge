@@ -30,7 +30,7 @@ to a file path. The mapping below is the audit table.
 | RECEIVE → ACT → BOUNDARY structure | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):3-5 |
 | Intake: incident / defect / substantive / trivial; authorized incident recovery precedes final RCA | [`../agents/buddy/operational.md`](../agents/buddy/operational.md) §Phase 1: RECEIVE; [`../workflows/runbooks/fix/WORKFLOW.md`](../workflows/runbooks/fix/WORKFLOW.md) §Incident recovery |
 | Routing table (code → MCA, architecture → solution-expert, security → security, sysadmin → Buddy) | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):37-42 |
-| Boot sequence ORIENT → RESOLVE → ROUTE → LOAD → STATUS-CHECK → RESUME → GREET | [`../agents/buddy/boot.md`](../agents/buddy/boot.md) §Boot sequence |
+| Boot sequence ORIENT → STATUS-CHECK (pull decision) → RESOLVE → ROUTE → LOAD → RESUME → GREET | [`../agents/buddy/boot.md`](../agents/buddy/boot.md) §Boot sequence |
 | Persist gate blocking on status change | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):99-104 |
 | Source-grounding discipline (>5 turns old → read) | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):54-57 |
 
