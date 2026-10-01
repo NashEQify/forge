@@ -7,6 +7,9 @@ description: Workflow runbooks + commands under Cursor
 8 active workflows under `workflows/runbooks/<name>/WORKFLOW.md`.
 Routing-table: `framework/process-map.md`.
 
+Resolve its Workflow selection section first. These automatic workflow triggers
+apply to `software`; in `on-demand`, use Forge methods on explicit user request.
+
 | Workflow | Trigger |
 |---|---|
 | `solve` | Problem with open solution-form |

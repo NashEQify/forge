@@ -5,6 +5,12 @@ Invariants → the shared block in `AGENTS.md` / `CLAUDE.md` (Tier 0).
 Detail → `context-rules.md` (Tier 2).
 This file: process (Tier 1).
 
+**Applicability:** first resolve the workflow selection during boot, as defined in
+`framework/process-map.md` section Workflow selection. The automatic process,
+delegation and bookkeeping requirements in this file apply to `software`.
+For `on-demand`, follow the project's working rules and invoke Forge methods
+only on explicit user request. Loading this file does not activate its gates.
+
 ---
 
 ## Phase 1: RECEIVE

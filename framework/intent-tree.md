@@ -78,6 +78,11 @@ reweightable.
 
 ## intent.md format
 
+An optional `Forge workflows: software` or `Forge workflows: on-demand` line
+under `## Context` explicitly selects automatic software processes or
+project-owned working rules. Otherwise select from the intent, as defined in
+`framework/process-map.md` section Workflow selection.
+
 Every intent.md — root, workspace, objective, external project — uses
 this format:
 

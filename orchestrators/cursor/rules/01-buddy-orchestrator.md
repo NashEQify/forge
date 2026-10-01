@@ -12,7 +12,9 @@ your behavior:
 - `agents/buddy/operational.md` — RECEIVE/ACT/BOUNDARY phases, gates, delegation
 - `agents/buddy/boot.md` — session-start routing (intent detection)
 
-Read those at session start. Then operate by the three-phase model:
+Read those at session start and resolve the workflow selection per
+`framework/process-map.md` section Workflow selection. For `on-demand`, follow the
+project's working rules. The automatic process below applies to `software`:
 
 ## RECEIVE
 

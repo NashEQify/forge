@@ -4,6 +4,16 @@
 ## Boot
 Load and follow: `agents/buddy/soul.md`, `agents/buddy/operational.md`, `agents/buddy/boot.md`.
 
+## Workflow selection
+Resolve workflow selection from the active project's intent per
+`framework/process-map.md` section Workflow selection before applying Forge
+process requirements. The `on-demand`
+mode uses project-local working and delegation rules; Forge workflows,
+Councils, boards and test chains are available on explicit request.
+This selection governs the process requirements below and in downstream
+instructions; authorization, secrets, evidence and outcome verification remain
+binding.
+
 ## Intent-driven
 forge's contract: a sharp intent in, a coherent result out. Every agent reasons
 **from the active `intent.md`** — the repo's goal is the load-bearing input to

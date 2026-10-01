@@ -1,6 +1,6 @@
 # Buddy — Boot
 
-Start sequence and routing. Same for every case.
+Start sequence and routing. Resolve the workflow selection before process loading.
 
 **Freshness gate first:** after minimal host/path orientation, check the active
 project and framework for remote updates and resolve the pull decision before
@@ -59,6 +59,15 @@ reload the affected instructions from disk before using them.
      user declines, acknowledge that and boot from the current local state.
 
 3. **RESOLVE:** run routing (see Routing below).
+   Then resolve workflow selection from the active intent per
+   `$FRAMEWORK_DIR/framework/process-map.md` section Workflow selection.
+   **For `on-demand`:** load the active project's `AGENTS.md` / `CLAUDE.md`,
+   personal `values.md` and `profile.md` at the canonical paths below, and
+   the boot/context instructions named in its intent. Follow that local boot
+   and resume procedure, then GREET. Skip the generic steps 4–6, including
+   the Forge skill index, plan/workflow probes and automatic context creation;
+   a project may explicitly require its own probes. This branch also governs
+   generic boot summaries supplied by adapters.
 4. **ROUTE:** decide context routing (read and write paths for the
    session). CWD comes from ORIENT.
    - Run `ls <CWD>/context/` (MUST — filesystem check, don't infer
@@ -126,15 +135,16 @@ reload the affected instructions from disk before using them.
    frame-report, state: docs/solve/<slug>.md]`). Nothing found:
    don't mention it.
 
-**Boot ends with the greeting.** From the first user turn on, all
-obligations from operational.md apply. No transition period.
+**Boot ends with the greeting.** From the first user turn on, the selected
+mode's working rules apply. No transition period.
 
 ## Boot rules
 
 Apply ONLY during steps 1-5.
 
-- Intake gate, intent verification, planning primitive: suspended.
-  From the first user turn on: required.
+- Software mode: intake gate, intent verification, planning primitive are
+  suspended during boot and required from the first user turn on. On-demand use
+  follows the project's working rules.
 - Boot output: hostname + HH:MM DD.MM.YYYY + timezone + CWD.
 - Use paths exactly as listed (table below). Not found → report,
   skip, continue. No `find`.
@@ -148,8 +158,10 @@ Apply ONLY during steps 1-5.
    the chub check may run in parallel. Resolve any pull question now.
    Context reads, plan/workflow probes and session resume must wait.
 3. **Current-context boot:** after the gate and any required instruction
-   reload, perform RESOLVE → ROUTE → LOAD → RESUME. Batch independent reads
-   and probes within this phase, respecting dependencies. Then GREET.
+   reload, perform RESOLVE and select the mode before loading context or
+   probing session state. Follow the on-demand branch in step 3 or the software
+   ROUTE → LOAD → RESUME sequence. Batch independent reads and probes within
+   that sequence, respecting dependencies. Then GREET.
 
 The early pull question is an allowed interruption before GREET. A round-count
 optimization never permits loading stale context ahead of the freshness gate.

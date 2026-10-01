@@ -5,6 +5,11 @@ Tier-1 refinement of shared invariants 2-4 (CLAUDE.md / AGENTS.md).
 SoT for the question: "who writes which artifact, with which gate,
 through which routing".
 
+These Forge delegation and review gates apply to software development.
+For `on-demand`, project-local working rules govern delegation and review;
+see `framework/process-map.md` section Workflow selection. Explicitly requested
+Forge methods retain their scoped requirements and all authorization bounds.
+
 ---
 
 ## The three autonomy sub-questions (orthogonal)
