@@ -33,6 +33,8 @@ try:
         read_file,
         safe_path,
     )
+    from .user_scope import UserScope, boot_text, daily_rules, unusable_setting
+    from .user_scope import resolve as resolve_user_scope
 except ImportError:
     from codex_legacy import legacy_hashes
     from generate_skill_wrappers import build_desired
@@ -45,6 +47,8 @@ except ImportError:
         read_file,
         safe_path,
     )
+    from user_scope import UserScope, boot_text, daily_rules, unusable_setting
+    from user_scope import resolve as resolve_user_scope
 
 
 # These roles execute or author files; the others produce reports.
@@ -59,22 +63,46 @@ WRITER_ROLES = {
 }
 START = "<!-- FORGE-CODEX-BOOT:START -->"
 END = "<!-- FORGE-CODEX-BOOT:END -->"
+# Person-specific legacy text outside a managed block (an old per-person soul
+# block or the retired session-resume entry) is never edited by forge.
+LEGACY_TEXT = re.compile(r"<!--\s*[\w.-]*-SOUL:START|session-resume")
 
 
-def boot_instructions(framework: str) -> str:
+_TAIL = (
+    "Keep the consumer CWD as the active project. Resolve framework paths\n"
+    "against the framework root above; resolve project intent.md, AGENTS.md,\n"
+    "docs/ and context/ against the active project. Follow the consumer's\n"
+    "AGENTS.md instructions as project rules. Delegated roles follow their\n"
+    "own canonical role and do not repeat primary-session boot/bookkeeping.\n"
+)
+
+
+def boot_instructions(
+    framework: str, scope: UserScope | None = None, *, profile: str = "full"
+) -> str:
+    """Codex boot entry. scope=None stays person-neutral (roles, project blocks);
+    only home-level blocks receive a scope (framework/user-scope.md)."""
+    if scope is None and profile == "full":
+        return (
+            "Forge framework root: " + framework + "\n\n"
+            "For the primary Buddy session, read these files before responding, even\n"
+            "when no Buddy role was explicitly selected:\n\n"
+            + "\n".join(
+                f"- {framework}/agents/buddy/{part}.md"
+                for part in ("soul", "operational", "boot")
+            )
+            + "\n\n" + _TAIL
+        )
+    if scope is None:  # person-neutral text for a non-default profile
+        entry = boot_text(UserScope(), Path(framework), profile, neutral=True)
+    else:
+        entry = boot_text(scope, Path(framework), profile, install_time=True)
     return (
         "Forge framework root: " + framework + "\n\n"
-        "For the primary Buddy session, read these files before responding, even\n"
-        "when no Buddy role was explicitly selected:\n\n"
-        + "\n".join(
-            f"- {framework}/agents/buddy/{part}.md"
-            for part in ("soul", "operational", "boot")
-        )
-        + "\n\nKeep the consumer CWD as the active project. Resolve framework paths\n"
-        "against the framework root above; resolve project intent.md, AGENTS.md,\n"
-        "docs/ and context/ against the active project. Follow the consumer's\n"
-        "AGENTS.md instructions as project rules. Delegated roles follow their\n"
-        "own canonical role and do not repeat primary-session boot/bookkeeping.\n"
+        "For the primary Buddy session, follow this boot entry before responding,\n"
+        "even when no Buddy role was explicitly selected:\n\n"
+        + entry + "\n" + _TAIL
+        + ("\n" + daily_rules("codex") if profile == "daily" else "")
     )
 
 
@@ -148,9 +176,22 @@ def generate_roles(repo: Path, framework_root: Path | None = None) -> dict[str, 
     return desired
 
 
-def plan_boot(plan: InstallPlan, root: Path, framework: Path) -> None:
-    path = safe_path(root) / "AGENTS.md"
-    state_path = path.with_name(".forge-codex-boot.json")
+def plan_block(
+    plan: InstallPlan,
+    path: Path,
+    state_path: Path,
+    start: str,
+    end: str,
+    body: str,
+    *,
+    replace_whole: bool = False,
+) -> None:
+    """Own exactly one marker-delimited block in `path`; text outside it is kept.
+
+    replace_whole: the caller proved the entire current file is owned (legacy
+    whole-file ownership); the new content is the block only.
+    """
+    path = safe_path(path)
     original = read_file(path)
     text = original.decode() if original is not None else ""
     raw_state = read_file(state_path)
@@ -167,19 +208,21 @@ def plan_boot(plan: InstallPlan, root: Path, framework: Path) -> None:
                 raise ValueError("invalid boot hash")
         except (ValueError, TypeError) as exc:
             raise InstallConflict(f"invalid boot ownership: {state_path}") from exc
-    block = START + "\n" + boot_instructions(str(framework)) + END
-    if START in text or END in text:
+    block = start + "\n" + body + end
+    if replace_whole:
+        updated = block + "\n"
+    elif start in text or end in text:
         if (
-            text.count(START) != 1
-            or text.count(END) != 1
-            or text.index(START) > text.index(END)
+            text.count(start) != 1
+            or text.count(end) != 1
+            or text.index(start) > text.index(end)
         ):
             raise InstallConflict(f"malformed managed boot block: {path}")
-        start, end = text.index(START), text.index(END) + len(END)
-        current = text[start:end]
+        first, last = text.index(start), text.index(end) + len(end)
+        current = text[first:last]
         if current != block and digest(current.encode()) != old_hash:
             raise InstallConflict(f"modified or unowned boot block: {path}")
-        updated = text[:start] + block + text[end:]
+        updated = text[:first] + block + text[last:]
     else:
         if old_hash is not None and original is not None:
             raise InstallConflict(f"managed boot block removed: {path}")
@@ -190,6 +233,116 @@ def plan_boot(plan: InstallPlan, root: Path, framework: Path) -> None:
         json_bytes({"version": 1, "sha256": digest(block.encode())}),
         expected=raw_state,
     )
+
+
+def plan_block_removal(
+    plan: InstallPlan, path: Path, state_path: Path, start: str, end: str
+) -> None:
+    """Remove a hash-owned block (and its state); delete the file if nothing else remains."""
+    path = safe_path(path)
+    raw_state = read_file(state_path)
+    if raw_state is None:
+        return
+    try:
+        old_hash = json.loads(raw_state)["sha256"]
+    except (ValueError, TypeError, KeyError) as exc:
+        raise InstallConflict(f"invalid boot ownership: {state_path}") from exc
+    original = read_file(path)
+    text = original.decode() if original is not None else ""
+    if start in text or end in text:
+        if (
+            text.count(start) != 1
+            or text.count(end) != 1
+            or text.index(start) > text.index(end)
+        ):
+            raise InstallConflict(f"malformed managed boot block: {path}")
+        first, last = text.index(start), text.index(end) + len(end)
+        if digest(text[first:last].encode()) != old_hash:
+            raise InstallConflict(f"modified or unowned boot block: {path}")
+        before, after = text[:first], text[last:]
+        if after.startswith("\n"):
+            after = after[1:]
+        if before.endswith("\n\n"):  # separator plan_block added after outer text
+            before = before[:-2]
+        remaining = before + after
+        plan.add(
+            path, remaining.encode() if remaining.strip() else None, expected=original
+        )
+    plan.add(state_path, None, expected=raw_state)
+
+
+def check_legacy_text(path: Path, start: str, end: str) -> None:
+    """Refuse when person-specific legacy text sits outside the managed block;
+    the rollout removes it by hand first."""
+    raw = read_file(path)
+    if raw is None:
+        return
+    text = raw.decode("utf-8", errors="replace")
+    outside = text
+    if start in text and end in text and text.index(start) < text.index(end):
+        outside = text[: text.index(start)] + text[text.index(end) + len(end):]
+    if LEGACY_TEXT.search(outside):
+        raise InstallConflict(f"legacy text outside managed block: {path}")
+
+
+def plan_boot(
+    plan: InstallPlan,
+    root: Path,
+    framework: Path,
+    *,
+    scope: UserScope | None = None,
+    profile: str = "full",
+) -> None:
+    """Codex wrapper: `<root>/AGENTS.md` block. Pass a scope only for ~/.codex."""
+    path = safe_path(root) / "AGENTS.md"
+    plan_block(
+        plan,
+        path,
+        path.with_name(".forge-codex-boot.json"),
+        START,
+        END,
+        boot_instructions(str(framework), scope, profile=profile),
+    )
+
+
+def plan_codex(
+    plan: InstallPlan,
+    codex_home: Path,
+    agents_home: Path,
+    framework: Path,
+    *,
+    skills: dict[str, str],
+    scope: UserScope | None,
+    profile: str = "full",
+    roles: bool = True,
+    legacy_roles: dict[str, set[str]] | None = None,
+    legacy_skills: dict[str, str] | None = None,
+    legacy_skill_hashes: dict[str, set[str]] | None = None,
+) -> None:
+    """The one planner for the Codex home surfaces (setup-codex.sh, forge_install.py).
+
+    roles=False removes previously owned roles instead of installing them.
+    `skills` maps kebab name -> wrapper content.
+    """
+    agents = codex_home / "agents"
+    if roles:
+        managed_files(
+            plan, agents, generate_roles(framework, framework), legacy_hashes=legacy_roles
+        )
+    elif read_file(agents / ".forge-managed.json") is not None:
+        managed_files(plan, agents, {})
+    managed_files(
+        plan,
+        agents_home / "skills",
+        {f"{name}/SKILL.md": content for name, content in skills.items()},
+        legacy=legacy_skills,
+        legacy_hashes=legacy_skill_hashes,
+    )
+    check_legacy_text(codex_home / "AGENTS.md", START, END)
+    # Only the home-level block is person-specific; project blocks stay neutral.
+    plan_boot(plan, codex_home, framework, scope=scope, profile=profile)
+    if roles:
+        plan_hook_cleanup(plan, codex_home, framework)
 
 
 def obsolete_hook(hook: object, framework: Path) -> bool:
@@ -290,21 +443,32 @@ def main(argv: list[str] | None = None) -> int:
                         repo / "skills", tool_label="Codex", discovery_label="Codex"
                     ).items()
                 }
-            managed_files(
+            unusable = unusable_setting()
+            if unusable:
+                raise InstallConflict(
+                    f"machine setting unusable ({unusable}); fix it or run "
+                    "scripts/forge_install.py --profile ... --user-repo ... "
+                    "--force-user-config"
+                )
+            scope = resolve_user_scope(repo)
+            if scope.profile == "daily":
+                raise InstallConflict(
+                    f"machine setting {scope.config_path} selects the daily profile; "
+                    "setup-codex.sh installs the full profile. Use "
+                    "scripts/forge_install.py --profile daily (or switch with "
+                    "forge_install.py --profile full --user-repo ... --force-user-config)"
+                )
+            plan_codex(
                 plan,
-                codex_home / "agents",
-                generate_roles(repo, repo),
-                legacy_hashes=legacy_roles,
+                codex_home,
+                agents_home,
+                repo,
+                skills=skills,
+                scope=scope,
+                legacy_roles=legacy_roles,
+                legacy_skills=legacy_skills,
+                legacy_skill_hashes=legacy_skill_hashes,
             )
-            managed_files(
-                plan,
-                agents_home / "skills",
-                {f"{name}/SKILL.md": content for name, content in skills.items()},
-                legacy=legacy_skills,
-                legacy_hashes=legacy_skill_hashes,
-            )
-            plan_boot(plan, codex_home, repo)
-            plan_hook_cleanup(plan, codex_home, repo)
             for project in args.projects:
                 project = safe_path(project)
                 if not project.is_dir():

@@ -2,7 +2,8 @@
 <!-- Tier 0: invariants here. Process detail in operational.md (Tier 1). -->
 
 ## Boot
-Load and follow: `agents/buddy/soul.md`, `agents/buddy/operational.md`, `agents/buddy/boot.md`.
+Load and follow: the resolved soul (`framework/user-scope.md`; default
+`agents/buddy/soul.md`), `agents/buddy/operational.md`, `agents/buddy/boot.md`.
 
 ## Workflow selection
 Resolve workflow selection from the active project's intent per
@@ -113,7 +114,9 @@ shortcuts.
 Before any commit, Buddy must **PERSIST** → operational.md §Post-Action
 Obligations (Context · History · Backlog).
 
-**No branching ceremony.** Single-dev workflow — Buddy commits directly
+**No branching ceremony** (applies when the active project is the forge
+repository itself; consumer repos follow their own commit rules).
+Single-dev workflow — Buddy commits directly
 to `main` autonomously at workflow phase boundaries (the runbooks
 prescribe per-phase commits) and at logical work boundaries; no
 per-commit authorisation is needed — this overrides the harness "ask

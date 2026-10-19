@@ -15,7 +15,8 @@ Before any substantive action: run the agent check (intent.md).
 Derivation chain: action → task intent → operational intent →
 vision intent.
 Constraint defaults:
-`~/projects/personal/context/user/values.md`.
+the user's constraint defaults (values and priorities in `<user_repo>/context/user/profile.md`,
+`framework/user-scope.md`; no user scope → no personal defaults).
 
 <!-- AGENT-SKILLS-AUTO-START -->
 ## Relevant Skills (auto-generated)

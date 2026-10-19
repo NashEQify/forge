@@ -40,6 +40,52 @@ If everything is running, `cc framework` opens a Claude Code session with Buddy
 as the initial agent, the framework repo as the working directory, and `--add-dir
 $FRAMEWORK_DIR` (which is identical here).
 
+## User and install profile
+
+Every machine is installed the same way; only the user and the profile differ.
+
+```bash
+# Who the user is: their own repo (convention: context/user/ with optional
+# soul.md, profile.md, navigation.md — framework/user-scope.md)
+python3 $FRAMEWORK_DIR/scripts/forge_install.py --profile full --user-repo ~/notes --check
+python3 $FRAMEWORK_DIR/scripts/forge_install.py --profile full --user-repo ~/notes
+```
+
+- `--profile full` — all Codex roles and skills, Codex boot block, and the
+  Claude Code launcher, hooks and symlinks (applied through the unchanged
+  `scripts/setup-cc.sh`; skipped with a warning when HOME is a staged test
+  home).
+- `--profile daily` — knowledge processor, bedrock drill and a `save` entry
+  for Codex (`~/.agents/skills`) and Claude Code (`~/.claude/skills`), plus
+  managed boot blocks in `~/.codex/AGENTS.md` and `~/.claude/CLAUDE.md`. No
+  roles, hooks or launcher; always on-demand. A sparse checkout needs the
+  profile's `required_paths` (`framework/install-profiles.yaml`), e.g.
+  `git sparse-checkout add workflows/runbooks/save`.
+- `--skill-link PATH` (repeatable) links an external skill directory into
+  the skill roots; recorded in `~/.config/forge/user.yaml`.
+- `--force-user-config` replaces a different existing `user.yaml`.
+- Switching profiles: full → daily removes forge-owned Codex roles and
+  stops with exact manual steps while full-only Claude Code surfaces remain
+  (forge hook in `~/.claude/settings.json`, `~/.claude/{agents,skills}`
+  symlinks, `~/.local/bin/cc`); daily → full removes the forge-owned daily
+  Claude block and skills before `setup-cc.sh` runs.
+- `scripts/setup-codex.sh` is the full-profile Codex entry; it refuses on a
+  machine whose `user.yaml` says `daily`. `scripts/setup-cc.sh` has no such
+  guard — on a daily machine never run it directly; `forge_install.py
+  --check` reports the resulting surfaces as a conflict.
+- Exit codes: 0 done / nothing pending, 1 changes pending under `--check`,
+  2 conflict (nothing written), 3 a step after the write failed (the
+  message names what was applied). Text outside the managed blocks is never
+  edited; leftover text from an older installer is a conflict to clean up
+  by hand.
+- OpenCode bakes the soul and boot files into `opencode.jsonc`: re-run
+  `scripts/setup-oc.sh` after adding or removing `context/user/soul.md`.
+  The Codex and Claude Code blocks name the soul conditionally and need no
+  re-run.
+
+Without `~/.config/forge/user.yaml` sessions run with forge's soul and no
+personal context, and say so in the greeting.
+
 ## Tool-Specific Setup Guides
 
 ### Claude Code
@@ -140,7 +186,7 @@ Buddy boots:
 1. ORIENT — `date / hostname / pwd`
 2. RESOLVE — `ls $CWD/intent.md` (upward search)
 3. ROUTE — context path
-4. LOAD — `values.md` + `profile.md` + `boot-navigation.md` + intent-load
+4. LOAD — user `profile.md` + `boot-navigation.md` + intent-load
 5. RESUME — `session-buffer.md` + `session-handoff.md` + optionally `plan_engine --boot`
 6. GREET
 
@@ -216,7 +262,7 @@ installed separately. Existing custom Git hooks or `core.hooksPath` settings
 require explicit integration. Codex `config.toml` and credentials are untouched.
 
 Open a fresh Codex session in the consumer checkout. Verify that it loads
-Buddy's `soul.md`, `operational.md` and `boot.md` from the framework root while
+the resolved soul, `operational.md` and `boot.md` from the framework root while
 keeping the consumer's `intent.md`, CWD and project rules active. Check role
 and skill availability. Report roles return complete artifacts inline for the
 parent to persist verbatim; their read-only/no-approval defaults can be

@@ -21,16 +21,11 @@ reload the affected instructions from disk before using them.
    when they are the same repo). It fetches and reports ahead/behind status.
    5-second network timeout. Output: one line per non-clean repo,
    `<path> [ahead N | behind N | ahead M, behind N]`. Empty = sync.
+   When a user repo is configured (§User scope) and differs from the
+   active project, run the same script from the user repo's root too:
+   user-scope facts are written there, so it must not be stale.
 
-   In the same round: `bash $FRAMEWORK_DIR/scripts/chub-status-check.sh`
-   — presence check for the `chub` CLI (get_api_docs prerequisite).
-   Empty output = chub installed. Non-empty = single advisory line
-   (install hint). Converts the runtime-surprise — get_api_docs
-   silently falls back to WebFetch when chub is missing — into a
-   boot-time nudge.
-
-   Buddy parses both outputs. Ahead-only status and missing chub remain
-   advisory. A remote update requires the **pull decision** below before
+   Buddy parses the output. Ahead-only status remains advisory. A remote update requires the **pull decision** below before
    RESOLVE, ROUTE, LOAD or RESUME begins. Do not load context in parallel
    with this gate or while waiting for the answer.
 
@@ -44,15 +39,16 @@ reload the affected instructions from disk before using them.
      "Remote has N newer commits in <repo>. Shall I run git pull before
      continuing?" Batch multiple affected repos into one question. Wait for
      the user's answer before continuing the boot sequence. Silence
-     is not approval. An explicit pull instruction in the current request
-     already answers this question for the named repos.
+     is not approval. An explicit pull instruction in the current request,
+     or a standing session-start pull permission in the project's rules,
+     already answers this question for the repos it covers.
    - On approval, inspect the working tree and run `git pull --ff-only` in
      each approved repo. Preserve local work: no automatic stash, reset,
      rebase, merge commit or branch switch. If the pull cannot fast-forward
      or local changes block it, report the concrete blocker and ask how to
      proceed; do not silently resume against the old state.
    - After a successful pull, reload the affected adapters (`AGENTS.md` /
-     `CLAUDE.md`) and framework `soul.md`, `operational.md`, `boot.md` from
+     `CLAUDE.md`), the resolved soul and the framework boot files from
      disk. Follow their updated sequence; only then begin RESOLVE and load
      context/session state. Do not rely on pre-pull copies or repeat an
      already resolved pull question for the same remote revision. If the
@@ -61,13 +57,13 @@ reload the affected instructions from disk before using them.
 3. **RESOLVE:** run routing (see Routing below).
    Then resolve workflow selection from the active intent per
    `$FRAMEWORK_DIR/framework/process-map.md` section Workflow selection.
-   **For `on-demand`:** load the active project's `AGENTS.md` / `CLAUDE.md`,
-   personal `values.md` and `profile.md` at the canonical paths below, and
-   the boot/context instructions named in its intent. Follow that local boot
-   and resume procedure, then GREET. Skip the generic steps 4–6, including
-   the Forge skill index, plan/workflow probes and automatic context creation;
-   a project may explicitly require its own probes. This branch also governs
-   generic boot summaries supplied by adapters.
+   The **daily** install profile (named in the entry) always selects
+   `on-demand`: it installs no software tooling and starts directly with
+   `boot-on-demand.md`.
+   **For `on-demand`:** continue with `$FRAMEWORK_DIR/agents/buddy/boot-on-demand.md`
+   from its step 3 (steps 1–2 are done) and GREET as it says. Skip the
+   generic steps 4–6 here; a project may explicitly require its own probes.
+   This branch also governs generic boot summaries supplied by adapters.
 4. **ROUTE:** decide context routing (read and write paths for the
    session). CWD comes from ORIENT.
    - Run `ls <CWD>/context/` (MUST — filesystem check, don't infer
@@ -86,11 +82,12 @@ reload the affected instructions from disk before using them.
    infrastructure, scope-independent) + intent-load (from the
    Context field of the active intent.md).
    - **always-load** (Buddy tier, every session):
-     - `values.md` — canonical
-       `~/projects/personal/context/user/values.md`, CWD-independent.
-     - `profile.md` — canonical
-       `~/projects/personal/context/user/profile.md`, CWD-independent
-       (who the user is — minimal context).
+     - **User profile** — `<user_repo>/context/user/profile.md`
+       (§User scope: who the user is, including values and priorities), CWD-independent (who the user is —
+       minimal context). No user scope → nothing to load.
+     - `bash $FRAMEWORK_DIR/scripts/chub-status-check.sh` — presence
+       check for the `chub` CLI (get_api_docs prerequisite). Empty
+       output = installed; non-empty = one advisory line for GREET.
      - `$FRAMEWORK_DIR/framework/boot-navigation.md` — skill index
        (25 skills + 10 workflows). Without it, Buddy boots without
        the skill landscape in mind. Explicit-absolute (consumer-CWD
@@ -130,6 +127,9 @@ reload the affected instructions from disk before using them.
    pull decision was resolved before context loading; do not ask again here.
    Nothing found: don't mention it.
 
+   **On user-scope warnings (§User scope):** one line — no user scope
+   configured, user folder or a boot file missing.
+
    **On Workflow-Resume findings (step 6):** active workflows as a
    one-liner list in GREET (`Active: solve workflow [step:
    frame-report, state: docs/solve/<slug>.md]`). Nothing found:
@@ -137,6 +137,26 @@ reload the affected instructions from disk before using them.
 
 **Boot ends with the greeting.** From the first user turn on, the selected
 mode's working rules apply. No transition period.
+
+## User scope
+
+SoT: `$FRAMEWORK_DIR/framework/user-scope.md`. The machine setting
+`~/.config/forge/user.yaml` names the person's user repo; inside it one
+fixed convention: `context/user/` with optional `soul.md`, `profile.md`
+(read by the start procedure after the freshness gate), and
+`navigation.md` to the detail files (on demand). The **entry** (session
+hook, launcher, or the installed block in `~/.claude/CLAUDE.md` /
+`~/.codex/AGENTS.md`) names only who and where: the resolved soul, the
+start procedure, the user repo and the install profile. Without an entry,
+resolve by reading the machine setting. The soul read in bootstrap is the **resolved**
+soul (default `agents/buddy/soul.md`). Never fall back to another person's
+files.
+
+**Continuous maintenance:** when a user scope is configured, or the
+project's rules require ongoing knowledge maintenance, read
+`$FRAMEWORK_DIR/skills/knowledge_processor/SKILL.md` §Continuous
+maintenance in LOAD (software) or step 3 of `boot-on-demand.md`; its rules
+apply from the first turn.
 
 ## Boot rules
 
@@ -151,11 +171,11 @@ Apply ONLY during steps 1-5.
 
 ### Parallelization (respect the freshness gate)
 
-1. **Bootstrap:** read `soul.md`, `operational.md` and `boot.md`, plus the
-   minimum adapter instructions needed to locate the framework and active
-   project. ORIENT may run in parallel. Do not preload intent or context.
-2. **Freshness gate:** run STATUS-CHECK (step 2); independent Git checks and
-   the chub check may run in parallel. Resolve any pull question now.
+1. **Bootstrap:** read the resolved soul (§User scope), `operational.md`
+   (when the injected boot list names it) and `boot.md`, plus the minimum
+   adapter instructions needed to locate the framework and active project. ORIENT may run in parallel. Do not preload intent or context.
+2. **Freshness gate:** run STATUS-CHECK (step 2); independent Git checks
+   may run in parallel. Resolve any pull question now.
    Context reads, plan/workflow probes and session resume must wait.
 3. **Current-context boot:** after the gate and any required instruction
    reload, perform RESOLVE and select the mode before loading context or
@@ -174,19 +194,17 @@ ENOENT masks the probe).
 ### Boot paths
 
 Relative paths = framework-relative (via `--add-dir $FRAMEWORK_DIR`)
-or CWD-relative (session-specific). Absolute paths
-(`~/projects/personal/...`) = canonical user-scope locations,
-CWD-independent.
+or CWD-relative (session-specific). User-scope paths resolve through
+§User scope, CWD-independent.
 
 | File | Path | Scope |
 |-------|------|-------|
 | context-rules.md | `agents/buddy/context-rules.md` | Only when listed in the Context field |
-| values.md | `~/projects/personal/context/user/values.md` | always-load (canonical, CWD-independent) |
-| profile.md | `~/projects/personal/context/user/profile.md` | always-load (canonical, CWD-independent) |
+| user profile | `<user_repo>/context/user/profile.md` | always-load (§User scope, CWD-independent) |
 | boot-navigation.md | `$FRAMEWORK_DIR/framework/boot-navigation.md` | always-load (skill + workflow index, scope-independent). Explicit-absolute because consumer sessions (CWD≠FRAMEWORK_DIR) resolve relative `framework/` paths through `--add-dir` — the explicit form is more fail-safe. |
 | session-buffer.md | `<CWD>/docs/session-buffer.md` | Only when present (repo-local) |
 | plan_engine --boot | `$FRAMEWORK_DIR/scripts/plan_engine.py --boot` | Root sessions only (bash call) |
-| chub-status-check | `$FRAMEWORK_DIR/scripts/chub-status-check.sh` | Always (bash call; parallel with git-status-check). Empty stdout = chub installed; non-empty = single advisory line surfaced in GREET. |
+| chub-status-check | `$FRAMEWORK_DIR/scripts/chub-status-check.sh` | Software mode, LOAD step (bash call). Empty stdout = chub installed; non-empty = single advisory line surfaced in GREET. |
 | session-handoff | `<CWD>/context/session-handoff.md` | Only when present (repo-local) |
 | project backlog | `<CWD>/docs/backlog.md` | Only when ROUTE found a local backlog |
 
@@ -212,12 +230,11 @@ Input: working directory. Output: active intent + mode.
 The intent.md you find is the active intent. Everything else derives
 from it. Load the framework's adapter explicitly when the host has not
 already injected it: `AGENTS.md` for Codex/OpenCode, `CLAUDE.md` for Claude
-Code, resolved from the concrete framework root. Additional-directory access
+Code, resolved from the concrete framework root. The daily profile loads no
+framework root adapter: its injected boot entry carries the rules it needs. Additional-directory access
 alone does not prove instruction loading. Keep the consumer's own project
 rules in force; shared framework rules do not replace consumer approvals.
-`values.md` + `profile.md` always
-apply (canonical under `~/projects/personal/context/user/`,
-independent of CWD).
+The resolved user scope (§User scope) always applies, independent of CWD.
 
 ## Context routing
 
@@ -229,8 +246,9 @@ Decided once at boot (ROUTE step), holds for the entire session.
 - **CWD without `context/`:** create `context/` with `history/` and
   `overview.md`, then write project-local. The intent exists, so the
   intention is clear — no clarifying round trip.
-- **Always global:** `~/projects/personal/context/user/` (canonical
-  user-scope path), regardless of the active path.
+- **Always global:** user-scope facts go to the resolved user repo
+  (`<user_repo>/context/user/`, §User scope), regardless of the active
+  path. No user scope → report the fact as unroutable; never guess a path.
 - **Session handoff:** `<CWD>/context/session-handoff.md` (repo-
   local). Parallel sessions on different hosts don't collide
   (different repos).

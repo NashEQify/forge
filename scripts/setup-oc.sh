@@ -4,7 +4,9 @@
 # Was es tut:
 #   1. Erkennt FRAMEWORK_DIR aus eigenem Standort.
 #   2. Generiert orchestrators/opencode/opencode.jsonc aus .example
-#      (substituiert ${FRAMEWORK_DIR} und ${HOME}).
+#      (substituiert ${FRAMEWORK_DIR}, ${HOME} und den aufgeloesten User
+#      Scope: soul + Boot-Set in instructions, User-Repo in
+#      external_directory; framework/user-scope.md).
 #   3. Kopiert orchestrators/opencode/bin/oc nach ~/.local/bin/oc mit
 #      install-time FRAMEWORK_DIR-Substitution (analog zu setup-cc.sh).
 #   4. Pruefe opencode CLI Verfuegbarkeit.
@@ -45,11 +47,44 @@ if [ ! -f "$LAUNCHER_SOURCE" ]; then
 fi
 
 # --- Generate opencode.jsonc ---
-# Substitute ${FRAMEWORK_DIR} and ${HOME} via simple sed (paths shouldn't
-# contain | so it's safe as the sed delimiter).
-sed -e "s|\${FRAMEWORK_DIR}|$FRAMEWORK_DIR|g" \
-    -e "s|\${HOME}|$HOME|g" \
-    "$TEMPLATE" > "$TARGET"
+# Substitute ${FRAMEWORK_DIR} and ${HOME}, and render the user scope
+# (framework/user-scope.md) into the two placeholder lines: instructions =
+# [AGENTS.md, <soul>, <user boot files...>], external_directory gains
+# "<user_repo>/**": "allow". No user scope -> forge soul only + notice.
+python3 - "$FRAMEWORK_DIR" "$HOME" "$TEMPLATE" "$TARGET" <<'PY'
+import json, re, sys
+from pathlib import Path
+
+framework, home, template, target = sys.argv[1:5]
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(framework) / "scripts"))
+from user_scope import resolve  # noqa: E402
+
+scope = resolve(Path(framework))
+text = Path(template).read_text(encoding="utf-8")
+text = text.replace("${FRAMEWORK_DIR}", framework).replace("${HOME}", home)
+
+
+def fill(placeholder, lines):
+    global text
+    pattern = re.compile(r"^([ \t]*)// \$\{" + placeholder + r"\}[ \t]*$", re.M)
+    text = pattern.sub(lambda m: "\n".join(m.group(1) + line for line in lines), text)
+
+
+fill("FORGE_USER_INSTRUCTIONS", [json.dumps(p) + "," for p in [scope.soul, *scope.boot]])
+fill(
+    "FORGE_USER_DIR_ALLOW",
+    [json.dumps(scope.user_repo.rstrip("/") + "/**") + ': "allow",'] if scope.configured else [],
+)
+Path(target).write_text(text, encoding="utf-8")
+print(f"  soul          = {scope.soul}")
+if scope.configured:
+    print(f"  user repo     = {scope.user_repo}")
+else:
+    print("  no user scope configured (forge soul in use)")
+for warning in scope.warnings:
+    print(f"  user scope warning: {warning}")
+PY
 echo "opencode.jsonc: $TARGET"
 echo "  FRAMEWORK_DIR = $FRAMEWORK_DIR"
 echo "  HOME          = $HOME"

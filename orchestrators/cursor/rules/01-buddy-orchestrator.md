@@ -8,7 +8,8 @@ alwaysApply: true
 You are Buddy — the primary orchestrator for this repo. Source-of-truth for
 your behavior:
 
-- `agents/buddy/soul.md` — personality, role, principles
+- the resolved soul (`framework/user-scope.md`; default `agents/buddy/soul.md`)
+  — personality, role, principles
 - `agents/buddy/operational.md` — RECEIVE/ACT/BOUNDARY phases, gates, delegation
 - `agents/buddy/boot.md` — session-start routing (intent detection)
 

@@ -10,10 +10,11 @@ Guardrails (delta check, write-quality gate, unloading) apply — see SKILL.md.
 | On task status change (open→in-progress, done, etc.) | All agents | all repos |
 | Project/system discoveries from agent return | Buddy (consumes return summaries) | active project context |
 
-**User facts are NOT listed here** — they are NOT extracted automatically.
-If the user wants facts persisted, they say so explicitly; Buddy then invokes
-this skill (mode=user-signal) against the user-context path. No background
-mechanism, no prompt gate.
+| A fact, decision, correction or changed state surfaces in conversation while continuous maintenance is active | Buddy | same response cycle — SKILL.md §Continuous maintenance |
+
+**User facts** go to `<user_repo>/context/user/` (`framework/user-scope.md`,
+mode=user-signal) as part of the same-cycle maintenance above. No
+background mechanism or hook — the rule is instruction-level.
 
 "New factual information": the agent has OBSERVED something (SSH output, server state), CHANGED something (fix, config change), LEARNED something (user mentions a fact, document read), or RECEIVED something (agent result, delegation return).
 
@@ -105,7 +106,7 @@ For every relevant fact: start an impact tree. Depth-first: follow each branch t
 **a. LOCATE** — Two questions, both mandatory.
 
 **Question 1 — Impact:** Where does this information matter? (Entity-based)
-- DIRECT: Navigation-guided — read the obviously affected area(s) (navigation.md + overview.md + relevant detail files)
+- DIRECT: Navigation-guided — read the obviously affected area(s) (navigation.md + overview.md + relevant detail files); along the navigation path read the topic's `intent.md` and local notes first
 - BROAD: Keyword grep across `context/`, `docs/tasks/`, `docs/tasks/*.yaml`, `decisions.md`. As needed also `agents/`, `framework/`, `intent.md`. Search terms: entities from the information.
 - **On EVERY hit: read the full file.** A grep hit is a pointer, not a result.
 
@@ -126,6 +127,8 @@ Result:
 
 No silent continuation. Both outcomes are visible.
 
+**Navigation hygiene:** a new area with its own goal gets an `intent.md` and a `navigation.md`, linked from the parent navigation. Move topic content out of an overloaded navigation into responsible files; intents are not a dumping ground.
+
 **Boundary:** DELETE reference check ("is this file referenced anywhere?") is an impact question (Question 1), not a convention question.
 
 **b. ASSESS** — For EVERY hit: what is the impact?
@@ -145,7 +148,7 @@ No silent continuation. Both outcomes are visible.
 - Decisions: flag if a premise has changed
 - Backlog: update status if affected
 - Constraints: report violations
-- **ACTIONABLE → task gate (mandatory):** the fact MUST land as a task in the backlog — assigned to an existing task or as a new one. "We'll do this later" without a task is an integrity violation.
+- **ACTIONABLE → task gate (mandatory):** the fact MUST land as a task in the backlog — assigned to an existing task or as a new one. A project without a task system records it in its existing plan or the session handoff. "We'll do this later" with no durable record is an integrity violation.
 
 **d. RECURSE** — Every change from ACT is new information
 - For EVERY change: invoke **IMPACT_CHAIN(change)** — full recursion

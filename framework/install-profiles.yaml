@@ -1,0 +1,47 @@
+# Install profiles — consumed by scripts/forge_install.py.
+# SoT for what each profile installs. Who the user is comes from the machine
+# setting (framework/user-scope.md), never from a profile.
+version: 1
+
+profiles:
+  full:
+    description: >-
+      Everything: all roles, skills, hooks and launchers for software
+      development and on-demand work.
+    codex_roles: true
+    skills: all                   # every build_desired-eligible skill
+    entries: {}                   # full discovers save via workflow-router
+    codex_boot: true              # ~/.codex/AGENTS.md managed block
+    claude_boot_block: false      # Claude Code full boots via hook + cc
+    claude_setup: scripts/setup-cc.sh
+    boot_files: [soul, operational, boot]
+    required_paths: [agents, framework, scripts, skills, workflows, orchestrators, .claude]
+
+  daily:
+    description: >-
+      Everyday knowledge work with on-demand Forge methods: knowledge
+      maintenance, save, bedrock drill and the boot entry. No software
+      tooling, roles, hooks or launchers.
+    codex_roles: false
+    skills: [knowledge-processor, bedrock-drill]
+    entries:
+      save:
+        source: workflows/runbooks/save/WORKFLOW.md
+        description: >-
+          Persist the working state: knowledge, navigation, session
+          handoff and history, then commit and push as the project permits.
+          Use when the user says "save" or "speichern" or asks for an
+          end-of-work backup; NOT for filing a single fact (that is
+          knowledge-processor).
+    codex_boot: true
+    claude_boot_block: true       # ~/.claude/CLAUDE.md managed block
+    claude_setup: null
+    boot_files: [soul, boot-on-demand]
+    required_paths:
+      - agents/buddy
+      - framework
+      - scripts
+      - skills/knowledge_processor
+      - skills/bedrock_drill
+      - skills/_protocols
+      - workflows/runbooks/save

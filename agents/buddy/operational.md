@@ -517,8 +517,9 @@ Mode = working directory. CWD lookup, no heuristic.
 
 `knowledge_processor` on the active context path.
 Trigger: task status change, save (wrap-up).
-User context (`personal/context/user/`): write only on explicit user
-request.
+User context: `<user_repo>/context/user/` (`framework/user-scope.md`),
+maintained during the work per `knowledge_processor` §Continuous
+maintenance; no user scope configured → nothing is written there.
 
 ---
 

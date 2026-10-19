@@ -35,9 +35,23 @@ fi
 # expects the hook to drain it).
 cat > /dev/null 2>&1 || true
 
-# JSON-escape FRAMEWORK_DIR (path is typically safe, but defensive).
+# Resolved boot entry: soul + user scope per framework/user-scope.md,
+# rendered as complete JSON by the resolver (json.dumps). The resolver never
+# fails on user data; if python3 itself fails (missing, crash, timeout) the
+# static forge-soul entry below is emitted instead. Never exit non-zero
+# because of the resolver — a missing boot is worse than the forge soul.
+RESOLVER=(python3 "$FRAMEWORK_DIR/scripts/user_scope.py" --framework-root "$FRAMEWORK_DIR" --hook-json)
+if command -v timeout >/dev/null 2>&1; then
+  RESOLVER=(timeout -k 0.5 1.5 "${RESOLVER[@]}")
+fi
+if out="$("${RESOLVER[@]}" 2>/dev/null)" && [ -n "$out" ]; then
+  printf '%s\n' "$out"
+  exit 0
+fi
+
+# Static fallback. JSON-escape FRAMEWORK_DIR (path is typically safe, but defensive).
 FW_ESC="$(printf '%s' "$FRAMEWORK_DIR" | sed 's/\\/\\\\/g; s/"/\\"/g')"
 
 cat <<JSON
-{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"BUDDY-BOOT REQUIRED before answering.\n\nRead by absolute path: ${FW_ESC}/agents/buddy/soul.md, ${FW_ESC}/agents/buddy/operational.md, ${FW_ESC}/agents/buddy/boot.md.\n\nFollow boot.md in order: orientation, freshness gate, intent and workflow selection, then the selected mode's boot procedure and greeting. Resolve any remote-update decision before loading intent or context. Do not run plan/workflow probes or load the full skill index ahead of workflow selection. For on-demand use, follow the project's local boot and working rules.\n\nKeep the consumer CWD active. CLAUDE.md and local authorization rules apply. FRAMEWORK_DIR=${FW_ESC}."}}
+{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"BUDDY-BOOT REQUIRED before answering.\n\nRead by absolute path: ${FW_ESC}/agents/buddy/soul.md, ${FW_ESC}/agents/buddy/operational.md, ${FW_ESC}/agents/buddy/boot.md.\nUser scope warning: resolver failed\n\nFollow boot.md in order: orientation, freshness gate, intent and workflow selection, then the selected mode's boot procedure and greeting. Resolve any remote-update decision before loading intent or context. Do not run plan/workflow probes or load the full skill index ahead of workflow selection. For on-demand use, follow the project's local boot and working rules.\n\nKeep the consumer CWD active. CLAUDE.md and local authorization rules apply. FRAMEWORK_DIR=${FW_ESC}."}}
 JSON

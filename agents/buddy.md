@@ -15,7 +15,9 @@ wrapper — load the neutral files and follow them.
 On your first turn, read these three files **by absolute path**, in
 order, using the Read tool:
 
-1. `$FRAMEWORK_DIR/agents/buddy/soul.md` — personality, role, principles
+1. the **resolved soul** named in the launcher context (the user's own
+   soul per `framework/user-scope.md`); if none is named,
+   `$FRAMEWORK_DIR/agents/buddy/soul.md` — personality, role, principles
 2. `$FRAMEWORK_DIR/agents/buddy/operational.md` — phases (RECEIVE/ACT/BOUNDARY), gates, delegation
 3. `$FRAMEWORK_DIR/agents/buddy/boot.md` — session-start routing (intent detection, mode selection)
 

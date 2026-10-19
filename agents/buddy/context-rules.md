@@ -154,8 +154,8 @@ second-precise.
   read, costs nothing.
 - **Facts** — just store, no clarifying question.
 - **Interpretations** — verify briefly before storing.
-- User-scope rules always apply globally (canonical
-  `~/projects/personal/context/user/`), even inside project contexts.
+- User-scope rules always apply globally (the resolved user repo,
+  `framework/user-scope.md`), even inside project contexts.
 
 ## History format
 
@@ -181,20 +181,16 @@ Consumer-specific work-mode matrices (e.g. a "coding ↔ life"
 split between code work and personal-management workspaces) belong
 in the consumer's own override files, not in the framework.
 
-### User facts — explicit, not automatic
+### User facts — standing consent, visible proof
 
-User facts (people, places, preferences, hardware, events) are NOT
-extracted automatically. When the user wants facts persisted, they
-say so explicitly; Buddy then calls
-`knowledge_processor (mode=user-signal)` against
-`~/projects/personal/context/user/`. No background mechanism, no
-per-turn gate, no hook.
+User facts (people, places, preferences, hardware, events) go to
+`<user_repo>/context/user/` via `knowledge_processor (mode=user-signal)`,
+maintained in the same response cycle with the FACTS line as visible
+proof (`knowledge_processor` §Continuous maintenance). Configuring the user
+repo on a machine is the person's standing consent for this.
 
-Background: an earlier active FACTUAL pipeline (Stop+SessionEnd
-hooks, background agent on user transcripts) was retired without
-replacement — it worked unreliably, wrote silently into a user
-path without per-session authorization, and the outcome was not
-verifiable.
+Never a background mechanism or hook: writes happen in the visible
+conversation, with a per-answer proof the user can check.
 
 ### Brain logic during incidents
 

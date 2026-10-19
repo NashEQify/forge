@@ -2,7 +2,8 @@
 <!-- Tier 0: invariants here. Process detail in operational.md (Tier 1). -->
 
 ## Boot
-Load and follow: `agents/buddy/soul.md`, `agents/buddy/operational.md`, `agents/buddy/boot.md`.
+Load and follow: the resolved soul (`framework/user-scope.md`; default
+`agents/buddy/soul.md`), `agents/buddy/operational.md`, `agents/buddy/boot.md`.
 
 ## Workflow selection
 Resolve workflow selection from the active project's intent per

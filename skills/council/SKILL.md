@@ -138,13 +138,14 @@ Base: `docs/reviews/council/<date>-<topic>-{briefing,frame-check,{perspective},c
 
 ## 8. Boundary
 
-Spec review → `spec_board`. Code diff → `code_review_board`. Pre-code plan → `impl_plan_review`. Technical architecture moderator → `solution-expert` (instantiates this skill, 6 fixed perspectives per `values.md`). Non-technical → this skill with situational perspectives (see §9 below).
+Spec review → `spec_board`. Code diff → `code_review_board`. Pre-code plan → `impl_plan_review`. Technical architecture moderator → `solution-expert` (instantiates this skill, 6 fixed perspectives per the user's values). Non-technical → this skill with situational perspectives (see §9 below).
 
 ## 9. Perspective profiles
 
 ### architecture (default for ARCH-XXX decisions)
 
-Ranks from `~/projects/personal/context/user/values.md` constraint hierarchy:
+Ranks from the user's constraint hierarchy (values and priorities in `<user_repo>/context/user/profile.md`,
+`framework/user-scope.md`); without one, this default order applies:
 
 | Rank | Perspective | Focus |
 |------|-------------|-------|
@@ -194,7 +195,7 @@ Mirrors `code_review_board/SKILL.md` §Risk carry-forward. Decision artifact YAM
 ADR REQUIRED on:
 - Hard-to-reverse decision (data/schema/contract/identity)
 - Decision spans ≥2 components or layers
-- ≥1 HARD constraint (security, sovereignty per values.md) explicitly traded off
+- ≥1 HARD constraint (security, sovereignty per the user's values) explicitly traded off
 - Council mode = standard or full (light optional)
 
 Via `documentation_and_adrs/SKILL.md`. Decision-file references ADR id.

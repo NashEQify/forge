@@ -28,10 +28,9 @@ it's **deploying safely** with active monitoring, a tested
 rollback plan, and a clear definition of success. Every launch
 should be reversible, observable, and incremental.
 
-Absorbs the `[INVARIANT]` from
-`~/projects/personal/context/user/profile.md` §Deploy-Discipline
-(pg_dump pre-DB-deploy + mount-verify pre-recreate) as formal
-skill obligations, not just a user convention.
+Deploy-discipline invariants (pg_dump before a DB deploy, mount
+verification before a recreate) are formal skill obligations here, not
+just a user convention.
 
 ## Source
 
@@ -477,5 +476,5 @@ async def error_middleware(request: Request, call_next):
   deprecation workflow (complementary).
 - `skills/_protocols/skill-guardrails.md` — skill
   anti-patterns.
-- `~/projects/personal/context/user/profile.md`
-  §Deploy-Discipline — INVARIANTS source.
+- The user's profile (`<user_repo>/context/user/profile.md`) may add
+  further deploy invariants.

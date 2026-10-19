@@ -307,6 +307,57 @@ def render_wrapper(
     is deterministic for a fixed input (sorted keys disabled, fixed
     field order), so output stays byte-identical run-vs-run.
     """
+    return _render(
+        name_kebab,
+        description,
+        (str(framework_root.resolve() / "skills" / src_dir / "SKILL.md")
+         if framework_root else f"skills/{src_dir}/SKILL.md"),
+        tool_label=tool_label,
+        discovery_label=discovery_label,
+        installed=framework_root is not None,
+    )
+
+
+TRIGGER_MARKERS = ("Use when", "Triggers when", "Trigger:")
+
+
+def render_entry(
+    name: str,
+    description: str,
+    source_path: str | Path,
+    *,
+    tool_label: str = "Claude Code",
+    discovery_label: str = "Claude-Code",
+) -> str:
+    """
+    Render a synthetic installed entry (e.g. `save`, whose SoT is a workflow
+    runbook, not `skills/*/SKILL.md`) with the wrapper template and marker.
+    `source_path` must be absolute; the description must carry a trigger
+    marker so the harness can discover the entry.
+    """
+    if not Path(source_path).is_absolute():
+        raise ValueError(f"entry source must be absolute: {source_path}")
+    if not any(marker in normalize_description(description) for marker in TRIGGER_MARKERS):
+        raise ValueError(f"entry description lacks a trigger marker: {name}")
+    return _render(
+        name,
+        description,
+        str(source_path),
+        tool_label=tool_label,
+        discovery_label=discovery_label,
+        installed=True,
+    )
+
+
+def _render(
+    name_kebab: str,
+    description: str,
+    source_path: str,
+    *,
+    tool_label: str,
+    discovery_label: str,
+    installed: bool,
+) -> str:
     desc = normalize_description(description)
     front_block = yaml.safe_dump(
         {"name": name_kebab, "description": desc},
@@ -318,16 +369,14 @@ def render_wrapper(
     front = f"---\n{front_block}---\n\n"
     body = WRAPPER_BODY_TEMPLATE.format(
         name=name_kebab,
-        src_dir=src_dir,
-        source_path=(str(framework_root.resolve() / "skills" / src_dir / "SKILL.md")
-                     if framework_root else f"skills/{src_dir}/SKILL.md"),
+        source_path=source_path,
         marker=GENERATED_MARKER,
         tool_label=tool_label,
         discovery_label=discovery_label,
         edit_policy=(
             "Do not hand-edit. The installer preserves custom edits and\n"
             "reports conflicts instead of overwriting them."
-            if framework_root else
+            if installed else
             "Do not hand-edit — edits\n"
             "are reverted on the next generator run and flagged by\n"
             "`consistency_check`."

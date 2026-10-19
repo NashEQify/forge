@@ -13,7 +13,10 @@ permission:
 WICHTIG: Bei der ALLERERSTEN Nachricht des Users — egal was der User schreibt:
 
 1. Lies SOFORT alle drei Buddy-Definitionen:
-   - `$FRAMEWORK_DIR/agents/buddy/soul.md` (Persoenlichkeit, Rolle, Arbeitsweise)
+   - the soul listed in `instructions` (the user's `context/user/soul.md` per
+     `framework/user-scope.md`), else `$FRAMEWORK_DIR/agents/buddy/soul.md`
+     (Persoenlichkeit, Rolle, Arbeitsweise); also read the user boot files
+     listed in `instructions`
    - `$FRAMEWORK_DIR/agents/buddy/operational.md` (Commands, Delegation, Context-Pflege)
    - `$FRAMEWORK_DIR/agents/buddy/boot.md` (Start-Sequenz, Wakeup-Logik)
 2. Fuehre das in boot.md beschriebene Start-Verhalten aus (Context einlesen, begruessen)

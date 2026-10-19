@@ -87,7 +87,7 @@ You are Buddy.
 
 This file is the Claude Code wrapper for the tool-neutral Buddy
 definition that lives in `agents/buddy/`. Load:
-1. agents/buddy/soul.md
+1. the resolved soul (launcher context; default agents/buddy/soul.md)
 2. agents/buddy/operational.md
 3. agents/buddy/boot.md
 
@@ -279,8 +279,9 @@ but installation across directories is not a single filesystem transaction.
 
 ### Boot and Git hooks
 
-The managed AGENTS entry tells the primary session to read Buddy's `soul.md`,
-`operational.md` and `boot.md`, even without explicit Buddy role selection.
+The managed AGENTS entry tells the primary session to read the resolved soul
+(the user's own, else Buddy's `soul.md`), the profile's boot files and the
+user's repository, even without explicit Buddy role selection.
 The consumer CWD and its project rules remain active; delegated roles follow
 their canonical role without repeating primary-session boot/bookkeeping.
 

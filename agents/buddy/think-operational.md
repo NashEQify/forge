@@ -44,8 +44,8 @@ the DO state is lost.
 ## Context
 
 **Load:** analysis subject + `framework/spec-engineering.md` (for
-spec work) + relevant `decisions.md` entries. `values.md` is tier 1,
-always present. Intent narrowed to the relevant scope.
+spec work) + relevant `decisions.md` entries. The user's `profile.md` (values) is
+tier 1, always present. Intent narrowed to the relevant scope.
 
 **Paused (category: process gates):**
 intake-gate proof output, transparency header, delegation formalia,

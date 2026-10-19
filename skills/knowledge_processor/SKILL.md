@@ -2,9 +2,11 @@
 name: knowledge-processor
 description: >
   The context-write mechanism — reconcile new information against existing
-  knowledge so `context/` stays accurate. Triggers when new information must be
-  folded into context/ (task status change, save, agent return); NOT a
-  user-callable workflow — it is cross-cutting infrastructure.
+  knowledge so `context/` and the user's own repo stay accurate. Triggers when
+  new information must be folded in: a fact, decision, correction or changed
+  state in the conversation (same response cycle under continuous
+  maintenance), a task status change, save, or an agent return; NOT a
+  standalone workflow — it is cross-cutting infrastructure.
 status: active
 relevant_for: ["solution-expert"]
 invocation:
@@ -28,10 +30,12 @@ files, post-brain as structured queries — the logic stays.
 
 Operates on the **active context path** (set by boot.md context
 routing). Project with its own `context/` → project path.
-Without `context/` → user context only. All paths relative to
+Without `context/` → user scope only. All paths relative to
 the active context path. **Exception — always global:**
-user-scope context (canonical `~/projects/personal/context/user/`)
-is always written there regardless of the active project path.
+user-scope facts go to the resolved user repo
+(`<user_repo>/context/user/`, `framework/user-scope.md`) regardless of
+the active project path. No user scope configured → do not write; report
+the fact as unroutable.
 
 ## Inputs
 
@@ -105,6 +109,59 @@ invocations (standalone, save, agent-return) are unchanged. (spec 374 §6.)
   done.
 - **Abort:** not foreseen — the skill is idempotent (the delta
   check prevents double writes).
+
+## Continuous maintenance
+
+Applies to the user scope whenever one is configured
+(`framework/user-scope.md` — configuring it is the person's consent), and to
+a project's context when the project's rules require ongoing maintenance. Runtime-neutral and
+instruction-level: no hook, no background agent. Project rules may add
+specifics (provenance, sensitive data, storage places); they do not need to
+restate these rules.
+
+- **Same response cycle.** Fold a new relevant fact, decision, correction,
+  confirmed goal/preference or changed state into its responsible file
+  before sending the final answer — do not wait for `save` or session end.
+  Delta check first; write NEW/CHANGED only; uncertain → ask, or keep it as
+  a marked open question, never as fact. Honor "do not save". Tentative
+  thinking, AI interpretations and third-party claims are not user facts.
+- **Keep the scope.** An instruction for one task or topic is filed with
+  that task/topic, not promoted to repository-wide rules. Judge profile
+  content and execution rules of one source separately.
+- **New leading file.** When a new leading version of a result appears
+  (draft, deck, document), switch the responsible navigation and the
+  handoff to it in the same cycle — a new session must land on the newest
+  version.
+- **Task-scoped working rules** (e.g. where drafts of an assignment go) are
+  recorded in the handoff or the topic's local notes, not only in a tool's
+  memory; other sessions and runtimes cannot see tool memory.
+- **Checkpoint.** In long sessions, after a substantive interim result and
+  before a topic switch: knowledge to its leading place; assignment,
+  decisions and open work to the handoff. Do not accumulate over many turns
+  in chat only.
+- **Before each write** re-read the target file: parallel sessions write
+  to the same user files.
+- **After compaction or resume:** re-read the project rules, the user boot
+  set and the complete handoff, then the affected topic files; catch up
+  pending maintenance before dependent work. Never claim from memory that
+  maintenance was done — check the files.
+- **Write blocked:** for project context, note a concrete pending item
+  (target file, missing information) in that project's handoff; if that is
+  blocked too, report the missing persistence explicitly. For **user-scope**
+  facts, never park them in another repository's files — report them as
+  `deferred:` in the FACTS line and catch up when the user repo is
+  writable (`framework/user-scope.md` §4).
+- **Supersede, don't append.** Replace outdated statements in current
+  knowledge and align affected summaries and links; historical evidence
+  stays unchanged.
+
+**FACTS line** — proof of the check, as the last line of an answer:
+
+`FACTS: keine | {Fakt} → {Ziel} [geschrieben|deferred:{Grund}]`
+
+Every answer carries the line while continuous maintenance is active;
+`FACTS: keine` when nothing qualified. "pending" is not a value — write now, or defer with a reason. A `deferred:` item is
+resolved or carried into the handoff before the next commit or save.
 
 ## Entropy audit
 

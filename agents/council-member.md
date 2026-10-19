@@ -52,8 +52,8 @@ In the call prompt you receive:
 
 Read the briefing file. Read referenced context files when
 needed. Read
-`~/projects/personal/context/user/values.md` for constraint
-defaults.
+the user's constraint defaults (values and priorities in `<user_repo>/context/user/profile.md`,
+`framework/user-scope.md`; no user scope → no personal defaults).
 
 ## Output
 

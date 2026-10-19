@@ -31,7 +31,7 @@ Architectural decisions invite specific rationalizations. When you write or acce
 - *"Consistent with our other choices"* — consistency with an un-stress-tested past decision compounds risk. Did the past decision itself survive a council? If not, citing it is precedent-by-momentum.
 - *"Trade-offs are explicitly named in the briefing"* — naming a cost ≠ paying it ≠ being right that it's worth paying. Re-ask: who pays, when, what do they lose specifically?
 - *"Reversibility: medium / can change later"* — enumerate the undo chain: files touched, deploys reverted, data migrated back, downstream consumers re-pointed. If you cannot list them, reversibility is HIGH, not medium.
-- *"Industry standard / well-established pattern"* — standard for whose constraint hierarchy? Industry defaults optimize for vendor-velocity and team-rotation; neither is in the framework's HARD-constraint set (sovereignty, security per `values.md`).
+- *"Industry standard / well-established pattern"* — standard for whose constraint hierarchy? Industry defaults optimize for vendor-velocity and team-rotation; neither is in the framework's HARD-constraint set (sovereignty, security per the user's values).
 - *"Out of scope for this decision"* — scope is itself a decision. Surface the scope-line: who drew it, what's on the other side, why is it the right line?
 - *"Adversarial scenario is theoretical"* — construct it concretely (named stakeholder + named cost + named constraint violated) or drop the objection. Theoretical-as-shield is your seat's failure mode equivalent.
 - *"All options have trade-offs"* — truism, not analysis. Rank WHICH trade-offs matter most for THIS decision against the constraint hierarchy.

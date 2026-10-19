@@ -331,7 +331,7 @@ sequence:
 ORIENT  → date / hostname / pwd
 RESOLVE → ls $CWD/intent.md → found, read it
 ROUTE   → CWD inside framework, no consumer-context wiring
-LOAD    → values.md + profile.md + boot-navigation.md + intent-load
+LOAD    → user profile.md + boot-navigation.md + intent-load
 RESUME  → session-buffer + session-handoff + plan_engine --boot
 GREET   → "Boot done. What's up?"
 ```
@@ -420,9 +420,28 @@ determines context-paths:
 - consumer has `context/`? → write context-updates there
 - consumer has `docs/backlog.md`? → use that backlog (not framework's)
 
-LOAD pulls in the always-load files (values.md from `~/projects/personal/context/user/`
-canonical, profile.md, boot-navigation.md from framework) + intent-load
+LOAD pulls in the always-load files (the user's `profile.md`
+from their own repo, boot-navigation.md from framework) + intent-load
 files specified in the consumer's intent.md "Context" field.
+
+### Who the user is
+
+One machine setting, `~/.config/forge/user.yaml`, points to the person's
+own user repository. Inside it, one fixed convention for everyone:
+`context/user/` holds an optional `soul.md` (default: forge's), short
+`profile.md` (who they are, including values; always loaded), and
+`navigation.md` to the
+detail files (`framework/user-scope.md`). The soul and user facts follow the person
+into every repo. Install with one installer and a profile:
+
+```bash
+python3 $FRAMEWORK_DIR/scripts/forge_install.py --profile full --user-repo ~/notes
+python3 $FRAMEWORK_DIR/scripts/forge_install.py --profile daily --check
+```
+
+`full` installs all roles, skills, hooks and launchers; `daily` installs
+knowledge maintenance, save, the bedrock drill and the boot entry for
+everyday on-demand work without software tooling.
 
 The framework methodology is now live: pre-delegation discipline,
 boards, hooks, all of it. Consumer-specific content (its tasks, specs,

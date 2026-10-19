@@ -15,10 +15,11 @@ holds the deeper model.
 **Context maintenance:** the knowledge-processor skill implements
 brain-logic as agent behavior for project/system context. Triggers:
 task status changes (all repos), save, entropy audit at boot.
-User context (`~/projects/personal/context/user/`) is written only on
-explicit user request — no automatic extraction. Store facts without
-clarification when instructed by the user; verify interpretations
-before storing.
+User context (`<user_repo>/context/user/`, `framework/user-scope.md`) is
+maintained during the work; configuring the user repo is the person's
+consent for that (`knowledge_processor` §Continuous maintenance).
+Store facts without clarification; verify interpretations before
+storing; uncertain information is asked, not stored.
 
 **Intake gate (pre-harness enforcement, Buddy):** 4-point MUST checklist
 immediately on new information — BEFORE acting (FACTS, ACTIONABLE,
@@ -48,9 +49,9 @@ releases on-demand context. Details: `docs/specs/context-management.md`.
 Injected by CC/OC runtime.
 
 **Tier 1 — boot-loaded (compaction-safe):**
-`agents/buddy/soul.md`, `operational.md`, `boot.md`,
-`~/projects/personal/context/user/values.md` — process rules,
-character, commands.
+the resolved soul (`framework/user-scope.md`, default
+`agents/buddy/soul.md`), `operational.md`, `boot.md`, the user's `profile.md` —
+process rules, character, commands.
 
 **Tier 2 — boot-read (compaction-prone):**
 `context/plan_engine --boot` (curated distillate),

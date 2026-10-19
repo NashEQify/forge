@@ -121,7 +121,7 @@ the real Buddy files (`agents/buddy/soul.md`, `operational.md`,
 - ORIENT: determine date / hostname / pwd
 - RESOLVE: look for `intent.md` in CWD (or upwards)
 - ROUTE: determine the context path
-- LOAD: `values.md`, `profile.md` (user scope), `boot-navigation.md`
+- LOAD: `profile.md` (user scope), `boot-navigation.md`
 - RESUME: read `session-handoff.md`, run `plan_engine --boot` if needed
 - GREET: short greeting in Buddy's style
 

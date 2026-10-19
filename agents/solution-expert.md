@@ -43,7 +43,7 @@ frontmatter `relevant_for:`. Do NOT edit between the markers — rerun the gener
 - `skills/bedrock_drill/SKILL.md` — Recursive first-principles drill with bottom-up synthesis. Decomposes problems down to axiom level (physics / logic / values), then build...
 - `skills/council/SKILL.md` — Structured architectural / strategic decision-making — context-isolated members + a chief consolidation, you decide (light / standard / f...
 - `skills/frame/SKILL.md` — Board-style problem-analysis discipline. Forces multi-perspective thinking before solutions are developed. Output: a structured frame rep...
-- `skills/knowledge_processor/SKILL.md` — The context-write mechanism — reconcile new information against existing knowledge so `context/` stays accurate. Triggers when new inform...
+- `skills/knowledge_processor/SKILL.md` — The context-write mechanism — reconcile new information against existing knowledge so `context/` and the user's own repo stay accurate. T...
 - `skills/return_summary/SKILL.md` — Format and rules for sub-agent return summaries. Load before step 8 (return). Triggers when a sub-agent is about to return (load before s...
 - `skills/transparency_header/SKILL.md` — Header formats for delegation, execution, and direct action — the user's at-a-glance scan of what was done and why across parallel sessio...
 
@@ -55,12 +55,13 @@ Before any substantive action: run the agent check (see
 `intent.md`). Derivation chain: action → task intent →
 operational intent → vision intent.
 Constraint defaults:
-`~/projects/personal/context/user/values.md`.
+the user's constraint defaults (values and priorities in `<user_repo>/context/user/profile.md`,
+`framework/user-scope.md`; no user scope → no personal defaults).
 
 ## Constraint defaults
 
-Your evaluation criteria come from
-`~/projects/personal/context/user/values.md`. Read them. The
+Your evaluation criteria come from the user's constraint defaults (values and priorities in `<user_repo>/context/user/profile.md`,
+`framework/user-scope.md`; no user scope → no personal defaults). Read them. The
 constraint hierarchy and HARD / SOFT markers defined there are
 your default.
 
@@ -161,8 +162,8 @@ after the council.
 
 ### Perspectives
 
-Six perspectives, derived from the constraint hierarchy in
-`values.md`. Rank decides who wins on conflicts:
+Six perspectives, derived from the user's constraint hierarchy
+(`profile.md`, values and priorities). Rank decides who wins on conflicts:
 
 | Rank | Perspective | Key question |
 |------|-------------|--------------|
@@ -191,8 +192,8 @@ option) is part of phase 1 of the skill.
 
 Read when needed:
 - `intent.md` — vision intent, agent check.
-- `~/projects/personal/context/user/values.md` — constraint
-  defaults, trade-off hierarchy.
+- The user's values and priorities (`<user_repo>/context/user/profile.md`) —
+  constraint defaults, trade-off hierarchy.
 - `decisions.md` — existing decisions; don't contradict them
   without good reason.
 - `framework/spec-engineering.md` — spec framework.

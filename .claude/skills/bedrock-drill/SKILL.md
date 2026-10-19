@@ -1,6 +1,6 @@
 ---
 name: bedrock-drill
-description: Recursive first-principles drill with bottom-up synthesis. Decomposes problems down to axiom level (physics / logic / values), then builds answers from the bottom up. Domain-independent. Triggers when a problem must be decomposed to axiom level before synthesis (frame step 2, solve override); NOT for routine analysis with a known frame.
+description: 'Recursive first-principles drill with bottom-up synthesis. Decomposes problems down to axiom level (physics / logic / values), then builds answers from the bottom up. Domain-independent — technical design as well as strategy, career, consulting, learning or everyday decisions. Triggers when a problem must be decomposed to axiom level before synthesis: a question is stuck, goals or values conflict, a recurring pattern is unclear, repeated why-questions lead to unexamined assumptions, or first principles are asked for explicitly (also frame step 2, solve override); NOT for simple factual questions, rewording, summaries, clearly specified execution or routine analysis with a known frame.'
 ---
 
 # Skill: bedrock-drill (Wrapper)

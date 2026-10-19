@@ -13,7 +13,7 @@ steps:
   - id: evaluate
     title: Evaluieren gegen Constraints
     description: >
-      Optionen gegen values.md, Domain-Constraints, Impact auf andere Objectives pruefen.
+      Optionen gegen die Werte im profile.md, Domain-Constraints, Impact auf andere Objectives pruefen.
       Cross-Domain Impact Check wenn betroffen (LIFE-004).
     exit_criteria: Jede Option gegen alle relevanten Constraints geprueft
   - id: decide

@@ -201,6 +201,32 @@ if [ "$CWD" != "$FRAMEWORK_DIR" ]; then
   ADD_DIR_ARGS+=(--add-dir "$CWD")
 fi
 
+# --- User scope (framework/user-scope.md) ---
+# Resolved AFTER the role-aware re-bind so a framework-dev session uses the
+# tree it edits. The resolver never fails on user data; if python3 fails,
+# the static forge-soul entry is used — cc never aborts because of it.
+USER_SCOPE_PY="$FRAMEWORK_DIR/scripts/user_scope.py"
+# One resolver call: --shell prints shell-quoted USER_REPO=… and BOOT_TEXT=….
+USER_REPO=""
+BOOT_TEXT=""
+if SCOPE_SHELL="$(python3 "$USER_SCOPE_PY" --framework-root "$FRAMEWORK_DIR" --shell 2>/dev/null)"; then
+  eval "$SCOPE_SHELL" || { USER_REPO=""; BOOT_TEXT=""; }
+fi
+SCOPE_TEXT="$BOOT_TEXT"
+if [ -z "$SCOPE_TEXT" ]; then
+  USER_REPO=""
+  SCOPE_TEXT="Read before the first answer:
+- soul: ${FRAMEWORK_DIR}/agents/buddy/soul.md
+- ${FRAMEWORK_DIR}/agents/buddy/operational.md
+- ${FRAMEWORK_DIR}/agents/buddy/boot.md
+User scope warning: resolver failed"
+fi
+# Read/write access to the user repo (boot set, user-scope maintenance).
+if [ -n "$USER_REPO" ] && [ -d "$USER_REPO" ] && [ "$USER_REPO" != "$CWD" ] \
+   && [ "$USER_REPO" != "$FRAMEWORK_DIR" ]; then
+  ADD_DIR_ARGS+=(--add-dir "$USER_REPO")
+fi
+
 # Workflow-Engine project-scope: workflow_engine.py reads BUDDY_PROJECT_ROOT
 # to find .workflow-state/, docs/tasks/, etc. Setting it explicitly here
 # avoids ambiguity when the engine is called from a sub-process / hook
@@ -217,13 +243,14 @@ export BUDDY_PROJECT_ROOT="$CWD"
 # resolution — so the false claim cannot creep back via the prose.
 FRAMEWORK_INJECT="forge launcher context (authoritative, overrides any \
 relative-path assumption in the agent file): FRAMEWORK_DIR=${FRAMEWORK_DIR}. \
-Read the boot files by ABSOLUTE path: ${FRAMEWORK_DIR}/agents/buddy/soul.md, \
-${FRAMEWORK_DIR}/agents/buddy/operational.md, \
-${FRAMEWORK_DIR}/agents/buddy/boot.md. Note: --add-dir grants read access \
+Read the boot files by ABSOLUTE path as listed in the boot entry below (the \
+soul is the resolved user scope soul, else forge's). Note: --add-dir grants read access \
 to a directory; it does NOT change relative-path resolution. The Read tool \
 resolves relative paths against the session CWD (${CWD}), not against any \
 --add-dir root — so relative agent-file paths would fail in consumer \
-sessions. Use the absolute paths above."
+sessions. Use the absolute paths below.
+
+${SCOPE_TEXT}"
 
 # --- Launch ---
 # CC_DEBUG=1 prints the resolved invocation without calling claude. Useful
@@ -234,6 +261,7 @@ if [ "${CC_DEBUG:-}" = "1" ]; then
   echo "  PROJECTS_DIR  = $PROJECTS_DIR" >&2
   echo "  CWD           = $CWD" >&2
   echo "  session_name  = $session_name" >&2
+  echo "  USER_REPO     = ${USER_REPO:-<none>}" >&2
   echo "  add-dir args  = ${ADD_DIR_ARGS[*]}" >&2
   echo "  trailing args = $*" >&2
   echo "  FRAMEWORK_INJECT = $FRAMEWORK_INJECT" >&2

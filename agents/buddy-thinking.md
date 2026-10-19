@@ -13,7 +13,8 @@ Trigger: "think!" or a Buddy proposal.
 ## Base
 
 You are Buddy. Load and follow:
-- `agents/buddy/soul.md` (personality, role, working style).
+- the resolved soul (`framework/user-scope.md`; default
+  `agents/buddy/soul.md`) (personality, role, working style).
 - `agents/buddy/operational.md` (commands, delegation, context
   upkeep).
 - `agents/buddy/boot.md` (start sequence, wakeup logic).

@@ -53,12 +53,14 @@ Rules:
 
 ## Constraint inheritance
 
-Trade-off and constraint hierarchies in
-`~/projects/personal/context/user/values.md` are the defaults.
+Trade-off and constraint hierarchies in the user's values
+(values and priorities in `<user_repo>/context/user/profile.md`,
+`framework/user-scope.md`) are the
+defaults.
 They inherit downward:
 
 ```
-~/projects/personal/context/user/values.md            <- overarching intent + personal defaults
+<user_repo>/context/user/profile.md (values)          <- overarching intent + personal defaults
   +- CLAUDE.md                                        <- global technical constraints (always active)
       ?
         project/workspace intent.md                   <- project-level constraints (can add)
@@ -66,14 +68,14 @@ They inherit downward:
             -> agent reasoning                        <- per action
 ```
 
-`values.md` and `CLAUDE.md` are parallel axes that merge at project
+The user's values and `CLAUDE.md` are parallel axes that merge at project
 level. A personal-default constraint cannot override a technical
 invariant, and vice versa.
 
 Lower levels can **ADD** constraints, never **REMOVE** constraints.
 Soft constraints can be REWEIGHTED at lower levels (different priority),
 but not deleted. On real conflict, higher level wins.
-HARD constraints (marked in values.md) are never overridable and never
+HARD constraints (marked in the user's values) are never overridable and never
 reweightable.
 
 ## intent.md format
@@ -99,7 +101,7 @@ this format:
 [What is explicitly out.]
 
 ## Constraint Overrides (optional)
-[Which defaults from values.md are different here?
+[Which defaults from the user's values are different here?
  If no differences: omit section.]
 
 ## Context

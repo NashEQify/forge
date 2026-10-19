@@ -2,7 +2,7 @@
 
 Guardrails (delta check, write-quality gate, unloading) apply — see SKILL.md.
 
-Invoked when 7f USER-SIGNAL detects information about the user (life mode only). Dispatcher routes type=USER here.
+Invoked when information about the user should be filed in the user scope. Target root: `<user_repo>/context/user/` (`framework/user-scope.md`), reached from any repo the session runs in. LOCATE through its `navigation.md`; the file names below (`profile.md`, `inner-life.md`, `connections.md`) are the defaults — when `navigation.md` routes a topic to another file in that folder, write there (new topic → new file, linked from `navigation.md`). No user scope → do not write; report the fact as unroutable.
 
 ## Decay thresholds (named constants)
 
