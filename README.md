@@ -5,15 +5,16 @@
 **Useful context, better reasoning, coherent delivery — across AI sessions.**
 
 Forge is a shared set of skills, instructions and supporting tools for working
-with AI agents. It helps an agent remember what matters, examine difficult questions,
-and carry software work through to a verified result. You keep your existing agent
-application and working folders.
+with AI agents. Its **Knowledge Processor automatically saves relevant new knowledge
+as you work and retrieves saved context when a task needs it**. Forge also helps
+you examine difficult questions and carry software work through to a verified
+result. You keep your existing agent application and working folders.
 
 Three capabilities ship together. Use the parts your work needs.
 
 | Capability | What it helps you do | Example |
 |---|---|---|
-| **Knowledge and continuity** | Keep useful knowledge in the right place, retrieve relevant context and resume open work | Continue an application, plan a trip, or maintain infrastructure knowledge without reconstructing every earlier conversation |
+| **Knowledge and continuity** | Automatically save relevant new knowledge during work, retrieve it when needed and resume open work | Continue an application, plan a trip, or maintain infrastructure knowledge without reconstructing every earlier conversation |
 | **General reasoning** | Examine assumptions, compare alternatives and test a decision from independent perspectives | Decide between approaches with a Council, clarify a problem with Frame, or work back to first principles with Bedrock |
 | **Software development** | Turn an intent into specifications, implementation, tests and reviews, with tracked progress | Build a feature across sessions or investigate and repair a defect |
 
@@ -41,14 +42,29 @@ more scrutiny.
   also requests commit and push to the active project's tracked upstream unless
   local rules restrict it. Selected development work contributes its tracked state.
 
-Useful facts are maintained during the conversation, not only at `save`. A small
-profile and topic navigation help the agent find relevant detail without loading
-your entire history. Dates, qualifications and source evidence stay where needed;
-the system does not need a transcript of every interaction.
+**Continuous knowledge maintenance is active by default in configured Buddy
+sessions, including software-development chats.** You do not need to ask the agent
+to remember each useful fact or wait until `save`. The Knowledge Processor compares
+new information with existing records, updates relevant facts, decisions and
+corrections, and retrieves saved context before work that depends on it. Information
+already recorded does not generate another entry.
 
-Continuity is stored in files in your workspaces. It is not automatic access to
-past chats or a background memory service. The agent still needs access to the
-right files and must actually read them.
+Personal knowledge belongs in your configured user repository; project knowledge
+stays with its project. **A user repository is optional and can have any name.**
+Without one, Forge still maintains project knowledge; it does not create a personal
+workspace or store personal facts in the project as a fallback.
+Local storage rules, permissions and requests such as
+“do not save this” remain binding. This ongoing maintenance does not itself
+authorize commits or pushes.
+
+A small profile and topic navigation help the agent find relevant detail without
+loading your entire history. Dates, qualifications and source evidence stay where
+needed; the system does not need a transcript of every interaction.
+
+Continuity is stored in files in your workspaces. “Automatic” describes the agent's
+instructions to maintain and retrieve knowledge during work; execution depends on
+the agent following those instructions and having file access. It is not automatic
+access to past chats or a background memory service.
 
 ## Choose your starting point
 
