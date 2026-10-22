@@ -30,16 +30,13 @@ Examples of unacceptable behavior:
 
 ## Project-specific notes
 
-This project is opinionated about engineering discipline. **Direct,
-substantive technical critique is welcome and expected.** "Your code
-violates Pre-Delegation Non-Negotiable" is fine. "You're an idiot for
-proposing this" is not.
+This project is opinionated about working with AI agents. Direct, substantive
+critique of methods, code and documentation is welcome. Critique the proposal and
+its evidence rather than attacking the person making it.
 
-Disagreement with design decisions (Single-Class skills, Buddy=Dispatcher
-rule, hook-driven enforcement) is fair game for technical discussion.
-Persistent demands to overturn already-decided architectural choices
-without new evidence are not — see [`docs/reviews/council/`](docs/reviews/council/)
-for the decision history.
+Capability boundaries, shared rules and review methods are open to technical
+discussion. Explain the concrete problem and trade-offs when proposing a change;
+the [contribution guide](CONTRIBUTING.md) describes how to do that.
 
 ## Enforcement Responsibilities
 

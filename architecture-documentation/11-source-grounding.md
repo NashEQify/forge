@@ -1,130 +1,95 @@
 # 11 — Source Grounding
 
-Which technical statements are backed by which files. Traceability is a
-mandatory part of the public-OSS quality bar — no invented features.
+Public documentation explains the system; canonical contracts and implementation
+support its technical claims. Use this index to check a claim at its responsible
+owner without relying on copied line counts or an old inventory snapshot.
 
-## Methodology
+## Capability and scope
 
-Every technical claim in `architecture-documentation/` is traceable back
-to a file path. The mapping below is the audit table.
-
-## Mapping: claim → evidence
-
-### Tier-0 invariants
-
-| Claim | Evidence |
+| Claim or question | Authority |
 |---|---|
-| Shared Buddy invariants under Claude Code | [`../CLAUDE.md`](../CLAUDE.md) §1-6, §9-10 |
-| Shared Buddy invariants under Codex / OpenCode | [`../AGENTS.md`](../AGENTS.md) §1-6, §9-10 |
-| Boot instruction: `Load and follow: agents/buddy/{soul,operational,boot}.md` | [`../CLAUDE.md`](../CLAUDE.md):5, [`../AGENTS.md`](../AGENTS.md):4-5 |
-| Codex explicit AGENTS boot and 40 roles generated from neutral sources | [`../scripts/generate_codex_agents.py`](../scripts/generate_codex_agents.py) `boot_instructions`, `generate_roles`; [`../scripts/setup-codex.sh`](../scripts/setup-codex.sh) |
-| Codex report-role defaults, parent runtime caveat and inline handoff | [`../scripts/generate_codex_agents.py`](../scripts/generate_codex_agents.py) `generate_roles`; [`../agents/buddy/operational.md`](../agents/buddy/operational.md) Read-only review transport |
-| Frozen-zones SoT: `docs/STRUCTURE.md` | [`../CLAUDE.md`](../CLAUDE.md):80 |
-| Stale-cleanup invariant (all refs in the same commit) | [`../CLAUDE.md`](../CLAUDE.md):36-42 |
-| Pre-delegation and authorization across phases | [`../CLAUDE.md`](../CLAUDE.md) §2-3; [`../framework/process-map.md`](../framework/process-map.md) §Authorization |
+| Three independent capabilities and their dependencies | [Capability ownership](../framework/capabilities.md) |
+| Installation availability versus workflow selection | [Process map: selection](../framework/process-map.md#workflow-selection) |
+| Authorization survives phase changes without expanding scope | [Process map: authorization](../framework/process-map.md#authorization) |
+| Proportional development process and DIRECT eligibility | [Process map: DIRECT](../framework/process-map.md#direct-eligibility) |
+| Who writes each development artifact | [Agent autonomy](../framework/agent-autonomy.md) |
 
-### Buddy model
+## Knowledge and continuity
 
-| Claim | Evidence |
+| Claim or question | Authority |
 |---|---|
-| RECEIVE → ACT → BOUNDARY structure | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):3-5 |
-| Intake: incident / defect / substantive / trivial; authorized incident recovery precedes final RCA | [`../agents/buddy/operational.md`](../agents/buddy/operational.md) §Phase 1: RECEIVE; [`../workflows/runbooks/fix/WORKFLOW.md`](../workflows/runbooks/fix/WORKFLOW.md) §Incident recovery |
-| Routing table (code → MCA, architecture → solution-expert, security → security, sysadmin → Buddy) | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):37-42 |
-| Boot sequence ORIENT → STATUS-CHECK (pull decision) → RESOLVE → ROUTE → LOAD → RESUME → GREET | [`../agents/buddy/boot.md`](../agents/buddy/boot.md) §Boot sequence |
-| Persist gate blocking on status change | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):99-104 |
-| Source-grounding discipline (>5 turns old → read) | [`../agents/buddy/operational.md`](../agents/buddy/operational.md):54-57 |
+| Semantic capture, owner placement, retrieval and validity | [Knowledge Processor](../skills/knowledge_processor/SKILL.md) |
+| Personal location, profile interface and configuration | [User scope](../framework/user-scope.md), [resolver](../scripts/user_scope.py) |
+| Same-scope coherent reads and conditional publication | [Continuity contract](../framework/continuity.md), [helper](../scripts/continuity.py) |
+| Interrupted publication and stale-baseline recovery | [Continuity: recovery](../framework/continuity.md#recovery-without-stale-replay) |
+| Common save and publication authorization | [Save runbook](../workflows/runbooks/save/WORKFLOW.md) |
+| Context ownership and navigation upkeep | [Housekeeping runbook](../workflows/runbooks/context_housekeeping/WORKFLOW.md) |
+| Minimal boot and ordinary resume | [On-demand start](../agents/buddy/boot-on-demand.md) |
 
-### Skill anatomy
+The helper protects file operations; it does not decide whether a claim is true
+or whether its intended change is authorized. Semantic and storage evidence must
+be considered together.
 
-| Claim | Evidence |
+## General reasoning
+
+| Claim or question | Authority |
 |---|---|
-| Single-class skill model | [`../framework/skill-anatomy.md`](../framework/skill-anatomy.md) §Format definition |
-| Mandatory frontmatter fields | [`../framework/skill-anatomy.md`](../framework/skill-anatomy.md) §Frontmatter |
-| 7 mandatory sections + 2 optional | [`../framework/skill-anatomy.md`](../framework/skill-anatomy.md) §Required sections |
-| `invocation.primary` vocabulary (5 values) | [`../framework/skill-anatomy.md`](../framework/skill-anatomy.md) §invocation |
-| Anti-inflation: new skills only with a standalone-justification | [`../framework/skill-anatomy.md`](../framework/skill-anatomy.md) §Inflation guard |
-| Naming convention `verb_object` default | [`../framework/skill-anatomy.md`](../framework/skill-anatomy.md) §Naming convention |
-| Mode convention: max 3 modes per skill | [`../framework/skill-anatomy.md`](../framework/skill-anatomy.md) §Modes |
-| Instruction loading/coherence and size signals | [`../skills/_protocols/piebald-budget.md`](../skills/_protocols/piebald-budget.md) |
+| Problem framing | [Frame](../skills/frame/SKILL.md) |
+| First-principles drill and synthesis | [Bedrock](../skills/bedrock_drill/SKILL.md) |
+| Independent perspectives and Council modes | [Council](../skills/council/SKILL.md) |
+| Isolation and briefing constraints | [Context isolation](../skills/_protocols/context-isolation.md) |
+| Complete reports before consolidation | [Consolidation preservation](../skills/_protocols/consolidation-preservation.md) |
+| Evidence-pointer expectations | [Evidence schema](../skills/_protocols/evidence-pointer-schema.md) |
 
-### Skill inventory
+These describe required method behavior. They do not independently prove that a
+particular model followed every instruction or that independent reviewers cannot
+share a mistaken assumption.
 
-| Claim | Evidence |
+## Software development
+
+| Claim or question | Authority |
 |---|---|
-| 41 active skills (42 in tree, 1 deprecated) | [`../framework/skill-map.md`](../framework/skill-map.md) AUTO block + `find skills -maxdepth 2 -name SKILL.md \| xargs -I{} grep -l 'status: active' {}` |
-| 15 skill-level protocols | `ls skills/_protocols/*.md \| grep -v navigation` |
-| Direct-invocable capabilities list | [`../framework/skill-map.md`](../framework/skill-map.md) AUTO block §Direct-Invokable |
-| Cross-cutting skills | [`../framework/skill-map.md`](../framework/skill-map.md) AUTO block §Cross-cutting |
+| Development routing and gates | [Process map](../framework/process-map.md), selected [runbooks](../workflows/runbooks/) |
+| Task and plan validation | [Plan engine](../scripts/plan_engine.py) |
+| Exact workflow state, routes and evidence | [Workflow engine](../scripts/workflow_engine.py) |
+| Bound export/restore without progression | [Development continuation](../framework/development-continuation.md) |
+| Definition compatibility | [Compatibility contract](../framework/workflow-compatibility.md) and [manifest](../framework/workflow-compatibility.yaml) |
+| Task status reconciliation | [Task-status skill](../skills/task_status_update/SKILL.md) |
+| Local workflow-state exclusion from Git | [Git ignore rules](../.gitignore) |
 
-### Workflows
+A handoff is a continuation route, not a substitute for authoritative engine state.
+A source repository's ignore rules also do not establish how another consumer
+synchronizes its files; inspect that consumer's rules before making a transport claim.
 
-| Claim | Evidence |
+## Installation and hosts
+
+| Claim or question | Authority |
 |---|---|
-| 8 active workflows | `ls workflows/runbooks/` (`build`, `context_housekeeping`, `docs-rewrite`, `fix`, `research`, `review`, `save`, `solve`) |
-| Workflow-routing table "what do I want → which workflow" | [`../framework/process-map.md`](../framework/process-map.md):14-31 |
-| 5-phase standard for producer class (specify/prepare/execute/verify/close) | [`../workflows/runbooks/build/WORKFLOW.md`](../workflows/runbooks/build/WORKFLOW.md) phase sections |
-| DIRECT eligibility; STANDARD/FULL path determination | [`../framework/process-map.md`](../framework/process-map.md#direct-eligibility); [`../workflows/runbooks/build/WORKFLOW.md`](../workflows/runbooks/build/WORKFLOW.md) §Path Determination |
-| solve 5 phases | [`../workflows/runbooks/solve/WORKFLOW.md`](../workflows/runbooks/solve/WORKFLOW.md) |
-| save 3 groups (A pre-write, B content-writes parallel, C post-write) | [`../workflows/runbooks/save/WORKFLOW.md`](../workflows/runbooks/save/WORKFLOW.md):5-25 |
+| Daily/full selection and optional-method closure | [Profiles](../framework/install-profiles.yaml), [closure helper](../scripts/capability_closure.py) |
+| Current CLI and managed host plans | [Shared installer](../scripts/forge_install.py), its `--help` output |
+| Setup aliases use the shared coordinator | [setup-cc](../scripts/setup-cc.sh), [setup-codex](../scripts/setup-codex.sh), [setup-oc](../scripts/setup-oc.sh) |
+| Baseline, activation, retry and rollback | [Activation contract](../framework/installation-activation.md), [implementation](../scripts/install_activation.py) |
+| Codex roles and boot entries | [Codex generator](../scripts/generate_codex_agents.py) |
+| Claude launcher and OpenCode launcher | [cc](../orchestrators/claude-code/bin/cc), [oc](../orchestrators/opencode/bin/oc) |
+| Cursor rules-based support | [Cursor adapter](../orchestrators/cursor/README.md) |
+| Commit-time checks and advisory limits | [Git hook](../orchestrators/claude-code/hooks/pre-commit.sh) |
+| Mechanical versus protocol enforcement | [Enforcement registry](../framework/enforcement-registry.md) |
 
-### Personas
+## Verify a documentation claim
 
-| Claim | Evidence |
-|---|---|
-| 40 personas including Buddy + boards + council + code-review + standalone | `ls agents/*.md` plus `agents/buddy/` |
-| Spec-Board: chief, adversary[-2], implementer, impact, consumer, architect-roots (7) | `ls agents/board-*.md \| grep -v ux` |
-| UX-Board: ux-heuristic, ux-ia, ux-interaction (3) | `ls agents/board-ux-*.md` |
-| Code-Review-Board: 14 personas (multi-axis hybrid) | `ls agents/code-*.md` |
-| Standalone: main-code-agent, council-member, solution-expert, security, tester, test-skeleton-writer, plan-adversary, brief-architect, buddy-thinking, spec-text-drift-batch | `ls agents/<name>.md` |
-| Persona loading/coherence review; no length-only gate | [`../skills/_protocols/piebald-budget.md`](../skills/_protocols/piebald-budget.md) |
+1. Find its owner above and read the surrounding contract, not just a matching phrase.
+2. Inspect the implementation or current CLI when the claim concerns mechanical behavior.
+3. Distinguish intended behavior from an executed check and from live host acceptance.
+4. Record the concrete result and remaining uncertainty; do not turn missing evidence
+   into a passed check.
 
-### Hooks
+For an installation, a nonempty evidence file and its recorded hash are not proof
+of its assertions. Fresh acceptance observations must support the claimed targets.
+For a capability, a successful example does not establish reliability across all
+models, hosts and future sessions.
 
-| Claim | Evidence |
-|---|---|
-| 3 hook scripts | `ls orchestrators/claude-code/hooks/*.sh` |
-| Pre-commit 6 checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE, SECRET-SCAN, SOURCE-VERIFICATION, ANTI-PHANTOM) | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
-| 3 checks BLOCK (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE), 3 checks WARN | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
-| frozen-zones legacy SoT (hook removed; convention-only) | [`../.claude/frozen-zones.txt`](../.claude/frozen-zones.txt) |
+If this guide disagrees with an owner, report the specific discrepancy and affected
+reader action. Repair the explanation and its links rather than inventing a new
+contract in public documentation.
 
-### Adapter
-
-| Claim | Evidence |
-|---|---|
-| Claude-Code adapter active | `ls orchestrators/claude-code/` |
-| OpenCode adapter active with constraints | `ls orchestrators/opencode/` + [`../AGENTS.md`](../AGENTS.md) §OC constraints |
-| Cursor adapter present | `ls orchestrators/cursor/` (rules-only adapter) |
-| `cc` launcher scope routing | [`../orchestrators/claude-code/bin/cc`](../orchestrators/claude-code/bin/cc):91-191 |
-| OC wrapper single-liner | [`../orchestrators/opencode/bin/oc`](../orchestrators/opencode/bin/oc) |
-| `~/.claude/agents` as a mandatory symlink | [`../orchestrators/claude-code/bin/cc`](../orchestrators/claude-code/bin/cc):38-89 |
-
-### Engines + generators
-
-| Claim | Evidence |
-|---|---|
-| `plan_engine.py` ~4.6k LoC | `wc -l scripts/plan_engine.py` |
-| `workflow_engine.py` ~2.5k LoC | `wc -l scripts/workflow_engine.py` |
-| `generate_skill_map.py` regenerates the AUTO block | [`../scripts/generate_skill_map.py`](../scripts/generate_skill_map.py) + [`../framework/skill-map.md`](../framework/skill-map.md) marker |
-| `generate_navigation.py` regenerates AUTO blocks in 8 navigation.md files | [`../scripts/generate_navigation.py`](../scripts/generate_navigation.py) |
-| `skill_fm_validate.py` pre-commit Check 3 | [`../scripts/skill_fm_validate.py`](../scripts/skill_fm_validate.py) + [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
-| Generator + validator pattern | [`../skills/consistency_check/REFERENCE.md`](../skills/consistency_check/REFERENCE.md) §6 + §8 |
-
-### Consumer repositories
-
-| Claim | Evidence |
-|---|---|
-| Framework is mounted INTO consumer repos (consumer repo is CWD; framework via `--add-dir $FRAMEWORK_DIR`) | [`../orchestrators/claude-code/bin/cc`](../orchestrators/claude-code/bin/cc) §"Build --add-dir args" |
-
-## How to verify this documentation
-
-If you find a claim in this documentation doubtful:
-
-1. Look up the relevant mapping in the table above.
-2. Open the evidence file at the given path / line number.
-3. Read the context.
-4. If the evidence does not hold up: that is a documentation bug —
-   please report it.
-
-## Next step
-
-For issues / known stumbling blocks: [`12-troubleshooting.md`](12-troubleshooting.md).
+Next: [Troubleshooting](12-troubleshooting.md).

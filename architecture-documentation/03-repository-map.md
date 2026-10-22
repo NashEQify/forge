@@ -1,190 +1,93 @@
 # 03 — Repository Map
 
-How the repo is organised and where to look for which question.
+Use this map to find the owner of a behavior. The framework checkout supplies
+reusable methods and tools; the active consumer workspace supplies its goals,
+knowledge and local rules. They may be separate directories.
 
 ## Top-Level
 
-```
-forge/
-├── CLAUDE.md                      # Tier 0 — Claude Code invariants
-├── AGENTS.md                      # Tier 0 — OpenCode invariants
-├── README.md                      # Public OSS entry point
-├── intent.md                      # Vision / Done / Non-Goals / Context
-│
-├── agents/                        # Persona definitions (tool-neutral SoT)
-│   ├── buddy/                     # Buddy tier 1 (soul, operational, boot, ...)
-│   ├── _protocols/                # Persona-level cross-cutting protocols
-│   ├── templates/                 # Persona templates
-│   ├── navigation.md              # Reader journey + auto inventory
-│   └── <persona>.md               # 40 personas (board, code, council, etc.)
-│
-├── framework/                     # Methodology — tier-1 .md files only
-│   ├── README.md
-│   ├── navigation.md              # Reader journey for framework/
-│   ├── process-map.md             # Tier 1 — workflow routing
-│   ├── skill-map.md               # Tier 1 — skill inventory (AUTO block)
-│   ├── skill-anatomy.md           # Tier 1 — format standard for skills
-│   ├── boot-navigation.md         # Tier 1 — boot index
-│   ├── agent-autonomy.md          # Tier 1 — permission/gate/routing
-│   ├── agent-patterns.md          # Tier 1 — pattern catalogue
-│   ├── intent-tree.md             # Tier 1 — intent inheritance
-│   ├── milestone-execution.md     # Tier 1 — multi-task orchestration
-│   ├── spec-engineering.md        # Spec theory (5 primitives)
-│   ├── spec-authoring.md          # Redirect → skills/spec_authoring/
-│   ├── task-format.md             # Task-format SoT
-│   ├── test-plan-format.md        # Test-plan SoT
-│   ├── scripts.md                 # Script inventory
-│   ├── agent-skill-map.md         # Persona × skill map
-│   ├── context-and-loading.md     # Context loading semantics
-│   ├── external-review-bundle-format.md
-│   ├── getting-started.md
-│   ├── models.md
-│   └── workflow-engine-cookbook.md  # CLI cookbook + multi-machine warnings
-│
-├── skills/                        # 41 active skills (+1 deprecated = 42 dirs)
-│   ├── _protocols/                # Skill-level cross-cutting protocols
-│   ├── navigation.md              # Reader journey
-│   └── <skill>/SKILL.md           # Per skill: frontmatter + 7 sections
-│       └── REFERENCE.md           # Optional tier-2 detail
-│
-├── workflows/                     # 9 workflow runbooks
-│   ├── runbooks/
-│   │   ├── navigation.md
-│   │   └── <workflow>/WORKFLOW.md
-│   └── templates/
-│
-├── references/                    # Reference docs (a11y, perf, orch, ctx-md)
-│   └── navigation.md
-│
-├── tests/                         # TESTCASES.md + hook tests + fabrication-mitigation
-│
-├── orchestrators/                 # Adapter layer
-│   ├── claude-code/
-│   │   ├── bin/                   # cc, sysadmin launcher
-│   │   └── hooks/                 # 3 hook scripts: buddy-boot-inject + session-start-remote + pre-commit.sh
-│   ├── opencode/
-│   │   ├── bin/oc                 # OC launcher
-│   │   ├── .opencode/             # agent + command wrappers
-│   │   └── opencode.jsonc.example
-│   └── cursor/
-│       └── rules/                 # Cursor rules (no PreToolUse API)
-│
-├── .codex/                        # Codex adapter artifacts
-│   ├── agents/                    # TOML templates; neutral agents/*.md are SoT
-│   └── hooks.json                 # Legacy artifact, not the Codex boot contract
-│   #   setup-codex.sh generates roles/skills and explicit managed AGENTS boot entries
-│
-├── scripts/                       # Engines + generators
-│   ├── plan_engine.py             # Computed planning layer
-│   ├── workflow_engine.py         # YAML-driven workflow orchestration
-│   ├── generate_skill_map.py      # AUTO-block skill-map
-│   ├── generate_navigation.py     # AUTO-block navigation
-│   ├── skill_fm_validate.py       # Pre-commit skill-frontmatter validator
-│   ├── generate-{architecture,control,status}.py
-│   ├── consistency_check.py
-│   ├── import_graph_check.py
-│   ├── validate_evidence_pointers.py
-│   ├── validate_runbook_consistency.py
-│   ├── deploy-docs.sh
-│   ├── setup-cc.sh / setup-oc.sh
-│   ├── lib/                       # yaml_loader.py etc.
-│   ├── vendor/
-│   └── hooks/  →  ../orchestrators/claude-code/hooks  (symlink)
-│
-├── .claude/                       # Claude Code workspace config
-│   ├── agents/                    # 40 persona wrappers
-│   ├── skills/                    # Skill wrappers (user-level discovery)
-│   ├── frozen-zones.txt           # legacy SoT (hook removed; convention-only now)
-│   └── settings.json              # SessionStart hook registration (boot-inject + resume-nudge)
-│
-├── docs/                          # Project bookkeeping (no public content)
-│   ├── plan.yaml                  # North Star + operational + phases + milestones
-│   ├── tasks/                     # Self-contained tasks
-│   ├── specs/                     # Specs (pre-build, implementation, reference)
-│   ├── reviews/                   # Board + council outputs
-│   │   ├── board/                 # Spec-Board / Code-Review-Board reviews
-│   │   └── council/               # Architectural-Council synthesis
-│   ├── architecture/              # Architecture notes
-│   └── solve/                     # Solve workflow state files
-│
-├── architecture-documentation/    # Public OSS docs (THIS directory)
-│   ├── README.md                  # Start here
-│   └── 01-overview.md … 13-operational-handbook.md
-│
-├── context/                       # Session bookkeeping
-│   ├── session-handoff.md
-│   ├── session-log.md
-│   ├── system/                    # System description
-│   └── history/                   # Frozen Zone (WORM)
-│
-├── CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, LICENSE
-└── .gitignore, .git/, .claude/, .venv/
-```
-
-## Per-Directory Reader Journey (compact)
-
-| Directory | What lives here? | Where for which question? |
+| Path | What belongs here | Start with |
 |---|---|---|
-| Repo root | tier-0 + vision files + public-doc entry | "Who is the agent?" → CLAUDE.md / AGENTS.md. "What is the project?" → README.md / intent.md |
-| `agents/` | Persona definitions | "What does persona X look like?" → `<name>.md`. Buddy → `buddy/`. Protocols → `_protocols/` |
-| `agents/buddy/` | Buddy tier 1 | Who-is-Buddy → `soul.md`. How-he-runs → `operational.md`. How-he-boots → `boot.md` |
-| `framework/` | Methodology | Routing → `process-map.md`. Skills → `skill-map.md` (skills live at repo-root `skills/`). Workflows → repo-root `workflows/runbooks/` |
-| `skills/` | 41 active skills (+1 deprecated = 42 dirs) | "Which skill for X?" → see `navigation.md` lookup table |
-| `skills/_protocols/` | Skill-level mechanisms | "How do I isolate reviewer context?" → `context-isolation.md` |
-| `workflows/runbooks/` | 9 workflows | "What does workflow X do?" → `<name>/WORKFLOW.md` |
-| `references/` | Reference docs | a11y → `accessibility-checklist.md`. Orch pattern → `orchestration-patterns.md` |
-| `agents/_protocols/` | Persona-level mechanisms | "Reviewer base rules?" → `reviewer-base.md` |
-| `orchestrators/` | Adapter layer | Claude Code → `claude-code/`. OpenCode → `opencode/`. Cursor → `cursor/`. Codex → `generate_codex_agents.py` + `setup-codex.sh` (roles, skills, AGENTS boot) |
-| `scripts/` | Engines + generators | "plan_engine.py" + "workflow_engine.py" are the two central ones |
-| `.claude/` | Workspace config for Claude Code | wrappers, hook registration, path whitelist |
-| `docs/` | Project bookkeeping | plan → `plan.yaml`. Tasks → `tasks/`. Reviews → `reviews/` |
-| `architecture-documentation/` | Public OSS docs | You are here |
+| `README.md` | Product introduction and reader routes | [README](../README.md) |
+| `architecture-documentation/` | Public explanations and practical guides | [Documentation hub](README.md) |
+| `agents/` | Canonical roles and Buddy's entry procedures | [Role navigation](../agents/navigation.md) |
+| `framework/` | Shared contracts, ownership and routing | [Capability ownership](../framework/capabilities.md) |
+| `skills/` | Executable methods and their references | [Skill map](../framework/skill-map.md) |
+| `skills/_protocols/` | Shared method protocols | [Protocol navigation](../skills/_protocols/navigation.md) |
+| `workflows/runbooks/` | Common save/housekeeping and development runbooks | [Process map](../framework/process-map.md) |
+| `scripts/` | Installers, continuity helpers, engines and generators | [Script reference](../framework/scripts.md) |
+| `orchestrators/` | Host launchers, adapters and integration assets | [Host integrations](07-tool-integrations.md) |
+| `.claude/` | Claude wrappers and integration files | [Claude adapter](07-tool-integrations.md#claude-code) |
+| `.codex/` | Repository Codex configuration and role templates | [Codex adapter](07-tool-integrations.md#codex) |
+| `references/` | Supporting reference material | [Reference navigation](../references/navigation.md) |
+
+A folder can serve more than one capability. For example, `scripts/continuity.py`
+serves common knowledge storage, while `scripts/workflow_engine.py` owns development
+state. Do not infer dependencies from physical proximity.
+
+## Where each capability starts
+
+| Question | Canonical entry |
+|---|---|
+| Where should a new fact go? | [Knowledge Processor](../skills/knowledge_processor/SKILL.md) |
+| How are concurrent updates protected? | [Continuity](../framework/continuity.md) |
+| Which files describe the person? | [User scope](../framework/user-scope.md) |
+| How do I save or resume ordinary work? | [Save runbook](../workflows/runbooks/save/WORKFLOW.md) and [minimal boot](../agents/buddy/boot-on-demand.md) |
+| How do I examine a problem? | [Frame](../skills/frame/SKILL.md) or [Bedrock](../skills/bedrock_drill/SKILL.md) |
+| How do I compare independent perspectives? | [Council](../skills/council/SKILL.md) |
+| Which software process applies? | [Process map](../framework/process-map.md) |
+| What exact software state must survive? | [Development continuation](../framework/development-continuation.md) |
+| What is installed together? | [Install profiles](../framework/install-profiles.yaml) |
+
+## Consumer workspace
+
+A consumer keeps its established content organization. These are common routes,
+not a requirement to create every file for every conversation:
+
+```text
+<workspace>/
+  intent.md                    goal and workflow selection
+  AGENTS.md or CLAUDE.md        local working rules
+  context/
+    navigation.md              routes to project knowledge
+    session-handoff.md         current continuation, if this is the local name
+    <topic>.md                 project-owned facts and decisions
+  docs/                        domain documents; software records when selected
+```
+
+Keep an existing handoff name such as `session-handover.md`; do not create a
+competing file merely to match this illustration. Follow the workspace's explicit
+navigation and storage instructions before defaults.
+
+The configured user repository adds `context/user/profile.md`, optional `soul.md`,
+`navigation.md` and topic files. Its profile is a short boot interface; detail is
+retrieved on demand. Personal and project scope remain distinct even when both
+use the same repository root.
+
+## Local state versus shared content
+
+The machine setting lives at `${XDG_CONFIG_HOME:-~/.config}/forge/user.yaml`, unless
+`FORGE_USER_CONFIG` overrides it. It identifies the user repository and installation
+selection. It is not a place to copy personal knowledge.
+
+Installation manifests and journals track managed files and activation. Continuity
+locks coordinate local writers. Pending continuity records preserve unfinished
+publication in their responsible scope. These have different owners and must not
+be treated as interchangeable caches.
+
+Development `.workflow-state/` is local and gitignored in Forge. An exact workflow
+reference in a committed handoff does not make its state available on another
+machine. Check availability and compatibility before continuing there.
 
 ## Navigation Layer
 
-For each top-level-3 directory there is a `navigation.md` with
-- `## What lives here?` (manual, reader journey)
-- `## Where for which question?` (manual, lookup table)
-- `## Inventory (auto)` (generated by `scripts/generate_navigation.py`)
+Navigation files and generated indexes reduce the amount an agent needs to load.
+Follow the current topic's route instead of reading every directory. Generated
+`AUTO` blocks come from their declared sources; edit the source and regenerate
+rather than correcting the generated list by hand.
 
-8 targets:
-- `framework/navigation.md`
-- `skills/navigation.md`
-- `skills/_protocols/navigation.md`
-- `workflows/runbooks/navigation.md`
-- `references/navigation.md`
-- `agents/navigation.md`
-- `agents/buddy/navigation.md`
-- `agents/_protocols/navigation.md`
+The [structure contract](../docs/STRUCTURE.md) describes artifact placement and
+frozen zones. Frozen history is preserved; retiring a live artifact includes
+updating its live references and navigation in the same change.
 
-Drift protection: `consistency_check` Check 8 (existence + idempotency + manual-filled).
-
-## Convention Notes
-
-### Frozen Zones (convention)
-
-`.claude/frozen-zones.txt` lists the WORM glob patterns by convention.
-`context/history/**` is WORM (write-once-read-many); corrections via
-`.correction.md` sidecar. Discipline-enforced by Buddy; no mechanical
-block.
-
-### Naming Convention (skills)
-
-`framework/skill-anatomy.md` §Naming:
-- Default: `verb_object` (`task_creation`, `verify_amendment`)
-- Allowed: `object` when the verb is implicit (`spec_board`, `council`, `testing`)
-- Maximum 3 words / underscore segments
-
-### Skill format
-
-Every active skill has a `SKILL.md` entrypoint under `skills/` and may
-have supporting references. Keep purpose, essential constraints and routing
-in the entrypoint; link conditional detail with a concrete read trigger.
-References are not assumed to load automatically. See
-`framework/skill-anatomy.md` for the format specification and
-`skills/_protocols/piebald-budget.md` for loading and size-review guidance.
-
-## Next step
-
-The 29-discipline mental model that turns the directory layout into a
-working framework: [`04-core-concepts.md`](04-core-concepts.md).
+Next: [Core concepts](04-core-concepts.md) · [Source grounding](11-source-grounding.md).

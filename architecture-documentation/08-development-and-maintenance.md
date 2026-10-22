@@ -1,374 +1,119 @@
 # 08 — Development + Maintenance
 
-How the framework itself is developed and maintained.
+Maintain the owner of a behavior and verify its consumers. Forge's common
+continuity and reasoning capabilities must remain usable without software task
+machinery. Software development has its own explicit state and checks.
 
-## Repo-internal workflows
+## Start with the affected contract
 
-`docs/plan.yaml` defines the programme:
-- **north_star:** opinionated workflows + codified discipline patterns as a
-  Skill + Discipline Layer; mechanical prevention is Claude-Code-coupled,
-  methodology + state engine are standards-portable
-- **operational_intent:** the active workstream pulling toward the north star
-- **Phases:** Foundation, Harness Refactor, Deferred
-- **Milestones:** dev-infra, reliable-execution, tier2-harness, opencode-compat,
-  cc-patterns-advanced, context-assembly, deferred
+| Change | Primary owner | Check the boundary |
+|---|---|---|
+| Knowledge admission, placement or retrieval | [Knowledge Processor](../skills/knowledge_processor/SKILL.md) | Scope, qualifications and usable routes |
+| Protected publication or recovery | [Continuity](../framework/continuity.md) | Stale baselines, interrupted writes and scope containment |
+| Generic reasoning method | Its skill and required protocols | Supplied-context use and complete independent reports |
+| Software progression | Runbook and workflow/plan owner | Exact state, selected obligations and compatibility |
+| Host discovery or source update | [Installation activation](../framework/installation-activation.md) | Managed ownership, selected closure and fresh-session behavior |
 
-Tasks under `docs/tasks/<id>.{md,yaml}`. Self-contained format
-(`framework/task-format.md` SoT).
+Installation availability must not become an implicit workflow selector. Do not
+make generic methods depend on software task files simply because a development
+caller uses them.
 
 ## Engines
 
-### plan_engine.py (~4.6k LoC)
+The [plan engine](../scripts/plan_engine.py) validates software planning data.
+The [workflow engine](../scripts/workflow_engine.py) interprets definitions,
+selected routes, progress and evidence. Use the current CLI help and
+[engine cookbook](../framework/workflow-engine-cookbook.md) rather than copied
+commands from an older guide.
 
-`scripts/plan_engine.py` — computed planning layer.
+The [development continuation adapter](../framework/development-continuation.md)
+binds exact runs and required task/plan checks. Export preserves authoritative state;
+restore reads it without advancing or unpausing. A display summary cannot replace
+that state. Missing or incompatible selected state must remain a visible blocker.
 
-```bash
-python3 scripts/plan_engine.py --boot          # session boot state
-python3 scripts/plan_engine.py --status        # current state
-python3 scripts/plan_engine.py --next [-l N]   # follow-up tasks
-python3 scripts/plan_engine.py --critical-path # critical path
-python3 scripts/plan_engine.py --check [MS]    # milestone check
-python3 scripts/plan_engine.py --validate      # pre-commit gate
-python3 scripts/plan_engine.py --after TASK    # after task X
-python3 scripts/plan_engine.py --dashboard-json # dashboard feed
-```
+Workflow definition changes can alter the meaning of existing evidence. Compatibility
+is fingerprint-based, with exact reviewed transitions in the
+[compatibility manifest](../framework/workflow-compatibility.yaml). Do not infer
+compatibility from unchanged names or step counts. Preserve old routes and unfinished
+obligations during both upgrade and rollback.
 
-Reads `docs/tasks/*.yaml` + `docs/plan.yaml`, builds DAGs, computes
-milestone status, critical path, next actions.
+## Generators
 
-**Pre-commit integration:** `--validate` must show 0 errors, otherwise
-BLOCK (pre-commit Check 1).
+| Source | Generated surface | Tool |
+|---|---|---|
+| Skill metadata | Skill map | [generate_skill_map.py](../scripts/generate_skill_map.py) |
+| Skill metadata and entry definitions | Host skill wrappers | [generate_skill_wrappers.py](../scripts/generate_skill_wrappers.py) |
+| Neutral roles | Codex role files | [generate_codex_agents.py](../scripts/generate_codex_agents.py) |
+| Role/skill relevance metadata | Agent skill-awareness sections | [generate_agent_skill_map.py](../scripts/generate_agent_skill_map.py) |
+| Navigation sources | Navigation AUTO blocks | [generate_navigation.py](../scripts/generate_navigation.py) |
+| Workflow catalog | Discovery router | [generate_workflow_router.py](../scripts/generate_workflow_router.py) |
 
-**Auto-venv:** when the PyYAML library is missing and a `.venv` is
-present, the script restarts itself under `.venv/bin/python3` (PEP-668
-bypass).
+Edit canonical sources before regenerating their derived surfaces. Inspect each
+generator's source for its destinations and supported check options; do not assume
+`--help` or `--check` is implemented by every generator. Generating
+repository files and activating installed host integrations are different actions.
+The latter belongs to the coordinated installer.
 
-### workflow_engine.py (~2.5k LoC)
+Run relevant generators again to check idempotency: a second run should introduce
+no additional intended changes. Report the actual diff/check result rather than
+claiming a clean tree when other work is present.
 
-`scripts/workflow_engine.py` — YAML-driven workflow orchestration.
+## Validation and tests
 
-```bash
-python3 scripts/workflow_engine.py --start <workflow> [--task <id>]
-python3 scripts/workflow_engine.py --next [--id <wf-id>]
-python3 scripts/workflow_engine.py --complete <step-id> [--route <key>] [--evidence <text>]
-python3 scripts/workflow_engine.py --skip <step-id> --reason "<text>"
-python3 scripts/workflow_engine.py --status [--id <wf-id>]
-python3 scripts/workflow_engine.py --validate [--before-commit]
-python3 scripts/workflow_engine.py --recover [--id <wf-id>]
-python3 scripts/workflow_engine.py --abort <wf-id> --reason "<text>"
-python3 scripts/workflow_engine.py --pause [--id <wf-id>]
-python3 scripts/workflow_engine.py --resume [--id <wf-id>]
-python3 scripts/workflow_engine.py --handoff-context  # legacy display; exact save uses development contribution
-python3 scripts/workflow_engine.py --boot-context     # boot resume
-python3 scripts/workflow_engine.py --find --task <id>
-python3 scripts/workflow_engine.py --guard <guard> [<task-id>]
-```
+Choose checks for the changed behavior. Documentation needs source, link, anchor
+and reader-journey checks. Metadata needs its schema validator. Runtime helpers
+need focused tests that exercise their actual failure boundaries.
 
-Encapsulates workflow definitions (`workflows/runbooks/*/WORKFLOW.md`)
-with state-file tracking.
+Useful maintained checks include [skill frontmatter validation](../scripts/skill_fm_validate.py),
+[runbook consistency](../scripts/validate_runbook_consistency.py),
+[evidence-pointer validation](../scripts/validate_evidence_pointers.py) and
+[structural consistency](../skills/consistency_check/SKILL.md).
 
-## Generators (Drift pattern Gen+Validator)
-
-### generate_skill_map.py
-
-Reads all SKILL frontmatter under `skills/*/SKILL.md`. Writes the AUTO
-block in `framework/skill-map.md`:
-
-```
-<!-- SKILL-MAP-AUTO-START -->
-### Direct-Invokable Capabilities (`invocation.primary: user-facing`)
-<list>
-### Workflow-Step / Sub-skill (`workflow-step` | `sub-skill`)
-<list>
-...
-<!-- SKILL-MAP-AUTO-END -->
-```
-
-Idempotent. Validator: `consistency_check` Check 6 (boot-map drift).
-
-### generate_skill_wrappers.py
-
-Reads all `skills/*/SKILL.md` frontmatter and regenerates the
-Claude-Code discovery wrappers under `.claude/skills/<name>/SKILL.md`
-(thin file: `name` + `description` from the SoT + a fixed pointer
-body carrying a generation marker). A skill is wrapper-eligible iff
-`status ∉ {archived,deprecated}` AND `disable-model-invocation ≠ true`
-AND (`invocation.primary ∈ {user-facing, cross-cutting}` OR
-`cc_wrapper: true`) AND `cc_wrapper ≠ false`. `cc_wrapper` is an
-optional override-only frontmatter field. The generator only deletes
-directories it provably authored (generation-marker check); a
-non-generated/hand-authored directory is left in place with a stderr
-WARN, never removed. Idempotent. Validator: `consistency_check`
-Check 10 (wrapper drift). Decision record: `docs/decisions/ADR-001`.
-
-### generate_navigation.py
-
-Regenerates the AUTO block in 8 navigation.md files under the top-level
-3-cap. Targets are hard-coded in the `TARGETS` constant.
-
-```bash
-python3 scripts/generate_navigation.py
-# → "generate_navigation: all up to date" or list of updated files
-```
-
-Validator: `consistency_check` Check 8 (navigation-layer drift). Three
-sub-checks:
-- A: existence (all targets exist, no disk drift)
-- B: AUTO-block sync (idempotency: no diff on second run)
-- C: manual-section filled (no placeholder text remaining)
-
-### skill_fm_validate.py
-
-Pre-commit Check 3 (SKILL-FM-VALIDATE). Validates the frontmatter of all active SKILL.md files:
-
-| Check | Severity |
-|---|---|
-| YAML validity | BLOCK |
-| Required fields present (`name`, `description`, `status`, `invocation.primary`) | BLOCK for modified/added |
-| `invocation.primary` in vocabulary | BLOCK |
-| `invocation.secondary` list format / element vocabulary | WARN on unknown element |
-| `disable-model-invocation` bool | BLOCK on non-bool |
-| `modes` list format | BLOCK on non-list |
-| max 3 modes | WARN |
-| `relevant_for` list format | BLOCK on non-list |
-| `relevant_for` references unknown agent | WARN |
-
-Skip on repos without `skills/` (graceful degradation for consumers).
-
-### generate_agent_skill_map.py
-
-Generator + validator for agent-skill awareness (`--check` mode).
-
-```bash
-python3 scripts/generate_agent_skill_map.py            # write
-python3 scripts/generate_agent_skill_map.py --check    # exit 1 on drift
-python3 scripts/generate_agent_skill_map.py --agent main-code-agent
-```
-
-Reads `relevant_for: [agents]` from each `skills/*/SKILL.md`. Writes the
-AUTO block between markers in opt-in `agents/<name>.md` (markers:
-`<!-- AGENT-SKILLS-AUTO-START -->` / `<!-- AGENT-SKILLS-AUTO-END -->`).
-Plus aggregated `framework/agent-skill-map.md` as a reverse lookup.
-
-Wildcard skills (`relevant_for: ["*"]`) are injected into every opt-in
-agent. Unknown-agent refs → WARN. Path stability: uses the directory
-name (underscored), not the `name` field (which can be hyphenated).
-
-### validate_runbook_consistency.py
-
-`consistency_check` Check 9. Heuristic check workflow.yaml ↔ WORKFLOW.md:
-paired existence, derived_from format (`WORKFLOW.md@YYYY-MM-DD`),
-step-name keyword presence in md, phase-comment parity.
-
-```bash
-python3 scripts/validate_runbook_consistency.py            # all
-python3 scripts/validate_runbook_consistency.py --staged   # pre-commit mode
-python3 scripts/validate_runbook_consistency.py --runbook build
-```
-
-WARN-only — drift is heuristic (not every yaml step has to appear in md).
+For common capabilities, check use without development-only sources where the
+selected profile permits it. For activation, verify actual installed entrypoints
+and acceptance behavior. A fixture or static test does not establish live consumer
+acceptance; report those evidence classes separately.
 
 ## Hooks
 
-`orchestrators/claude-code/hooks/` contains the shared Git checks and
-two scripts for configured Claude entrypoints:
+Installed shared Git hooks check plan data, commit format and skill frontmatter,
+with advisory secret, source-evidence and stale-enforcement checks. They run at
+commit time, not on every write. Their actual behavior is in
+[pre-commit.sh](../orchestrators/claude-code/hooks/pre-commit.sh).
 
-```
-buddy-boot-inject.sh           Claude SessionStart — Buddy boot on configured entrypoints
-session-start-remote.sh        Claude SessionStart — resume-nudge (recent handoff check)
-pre-commit.sh                  git pre-commit + commit-msg, 6 checks (3 BLOCK + 3 WARN)
-```
-
-Shared Git hooks work across harnesses when installed in the active repository.
-Codex boots through the managed AGENTS entry from `scripts/setup-codex.sh`.
-Each hook is self-contained with a header doc block + exit-code convention.
-
-### Hook care
-
-Maintain hooks according to their actual invocation surface:
-1. Verify shared Git checks in the active consumer repository and Claude
-   SessionStart behavior on configured Claude entrypoints. Script presence
-   alone does not establish host invocation; verify Codex AGENTS boot in a
-   fresh session separately. No framework tool-event hooks are active.
-2. Write `orchestrators/claude-code/hooks/<name>.sh` (header doc
-   mandatory) and `tests/hooks/test-<name>.sh`.
-3. Add an entry to `orchestrators/claude-code/settings.json.template`
-   under the matching lifecycle event; use `__FRAMEWORK_DIR__`
-   placeholder.
-4. Run `bash $FRAMEWORK_DIR/scripts/setup-cc.sh` to re-merge into
-   `~/.claude/settings.json` (idempotent — preserves user keys).
-5. Doc update in `CLAUDE.md §Active Hooks` + `02-architecture.md`
-   table + this section.
-6. If hook is genuinely architectural (hard-to-reverse +
-   surprising-without-context + real-trade-off): add an ADR.
-
-Remove a hook:
-1. Stale cleanup (CLAUDE.md Inv-5): clean up all refs in one commit.
-2. Remove the entry from `orchestrators/claude-code/settings.json.template`.
-3. Re-run `setup-cc.sh` (the merge strips forge's old hooks slot
-   before writing the new one).
-4. Delete the hook file + test file.
-5. Doc update.
+Resolve a blocking check at its source. If the check is defective, preserve its
+output and investigate it; deleting the hook or suppressing the diagnostic does
+not validate the change. Host boot integration remains a separate verification.
 
 ## Conventions
 
-### Commit format (CG-CONV, pre-commit Check 2)
+Follow [skill anatomy](../framework/skill-anatomy.md) for a new skill and justify
+why an existing method cannot own the responsibility. Follow
+[artifact structure](../docs/STRUCTURE.md) for placement and historical records.
 
-Conventional-Commits format. Examples:
+Retiring a skill, role or route includes its live references and generated discovery
+surfaces. Search names and enumerate the relevant live inventory; preserve frozen
+history. A rename alone does not remove a dependency.
 
-```
-feat(framework): reintroduce navigation-layer with generator + validator
-fix(scripts): explicit utf-8 encoding for cross-platform (Windows)
-chore(save): end-of-session persistence pass
-docs(framework): boot-navigation entry for new skill X
-refactor(agents): consolidate code-quality + code-architecture + code-performance
-```
-
-Allowed types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `style`,
-`perf`, `revert`.
-
-The pre-commit hook BLOCKS on the wrong form.
-
-### Frozen zones
-
-`.claude/frozen-zones.txt` is a convention reference;
-`context/history/**` stays WORM by discipline. Writes stay within
-intent-scope by discipline.
-
-### Skill anatomy (v2)
-
-Every new SKILL.md follows `framework/skill-anatomy.md`:
-- Frontmatter with required fields
-- 7 mandatory sections + 2 optional
-- `Standalone` block on new skills (mandatory)
-- Focused entrypoint with explicit read triggers for conditional references
-- Naming: `verb_object` default
-
-Pre-commit Check 3 (SKILL-FM-VALIDATE, BLOCK) catches structural frontmatter drift; spec-board
-L1 catches content drift (process quality, standalone, naming).
-
-### Persona format
-
-`agents/<name>.md` (SoT) + wrapper under `.claude/agents/<name>.md`.
-Loading/coherence and size-review guidance: `skills/_protocols/piebald-budget.md`.
-
-### Workflow format
-
-`workflows/runbooks/<name>/WORKFLOW.md`. Producer class has 5 phases.
-Keep narrative distinct from runtime step detail. Per phase: skills, input, output, gate, failure,
-autonomy, protocols.
-
-### Protocol format
-
-Skill-level (`skills/_protocols/`) and persona-level (`agents/_protocols/`).
-Self-contained, with a clearly referenced "Loaded by:" list.
-
-## Tests
-
-### Behavioural observations
-
-Buddy / agent behaviour observations are captured in the rolling
-dogfood feed (`docs/dogfood-learnings/forge-feed.md`) as pattern
-findings rather than as discrete test cases.
-
-### Generator idempotency (effectively a self-test)
-
-```bash
-python3 scripts/generate_skill_map.py
-python3 scripts/generate_navigation.py
-python3 scripts/generate_skill_wrappers.py --check
-git diff --name-only -- ':(glob)**/navigation.md'
-git diff --name-only -- 'framework/skill-map.md'
-# navigation/skill-map diff empty + generate_skill_wrappers --check exit 0 = idempotent
-```
-
-### Lints
-
-```bash
-ruff check .
-mypy scripts/
-```
-
-`skills/python_code_quality_enforcement/SKILL.md` records the conventions
-(ruff config, mypy strictness, naming patterns).
-
-### CI
-
-Currently **no automated CI**. Lifecycle is primarily pre-commit. Adding
-a GitHub Actions workflow would be sensible (running pre-commit checks +
-generator idempotency + lints in CI).
+Task status changes go through [task_status_update](../skills/task_status_update/SKILL.md),
+which owns dependent graph and plan reconciliation. Raw task YAML edits bypass that
+process. This requirement concerns tracked development tasks, not ordinary knowledge.
 
 ## Maintenance routines
 
-### context_housekeeping (workflow)
+Housekeeping reconciles owners, routes and freshness using the common continuity
+boundary. It need not start a development engine. Knowledge migrations must preserve
+working-tree qualifications and usable routes while recovering partial publications.
 
-`workflows/runbooks/context_housekeeping/WORKFLOW.md` — periodic
-maintenance of the context system.
-
-Trigger: user imperative "context cleanup", or a drift suspicion.
-
-Phases:
-1. Inventory + drift detection (`consistency_check` several checks)
-2. Cleanup + consolidation
-
-### Audit triggers
-
-On every structural change check:
-- Adapter sync (Check 3)
-- Boot-map drift (Check 6)
-- Navigation drift (Check 8)
-- Stale refs (Check 1)
-- Refactoring checklists (Check 5)
-
-Detail: `skills/consistency_check/REFERENCE.md`.
-
-### Skill migration v1 → v2
-
-Migration corridor:
-- Phase 1 hot skills (6 of them) immediately
-- Phase 2 on-touch (8 weeks)
-- Phase 3 cut-off bulk (remaining)
-
-Effectively all active skills are on v2. New skills MUST
-go directly to v2 (pre-commit Check 3 BLOCK).
-
-### Persona migration / consolidation
-
-For persona consolidation (multi-axis hybrid):
-1. Document council decision or user mandate
-2. Extend the target persona (multi-axis or mode)
-3. Delete the old persona file (git history is the archive)
-4. Stale cleanup in the same commit (all refs)
-5. Update adapter wrappers (`.claude/agents/`)
-
-Detail: `framework/skill-anatomy.md` §Consolidation mechanics.
-
-## Release / versioning
-
-Currently **no formal version scheme**. Tags are operations markers:
-
-| Tag | Meaning |
-|---|---|
-| `frozen-zone-verified` | Last successful `consistency_check` run (frozen zones intact) |
-
-If needed semver could be introduced (e.g. after larger refactor waves). A
-big consolidation phase would be a logical v0.x → v1.0 trigger but it has
-not been tagged that way.
+Framework source and integration updates require stopped-session maintenance.
+Prepare the actual existing baseline before changing sources, then install and
+verify the resulting generation. The [installation guide](05-installation.md) gives
+the procedure; neither a Git pull nor unchanged wrappers proves a usable activation.
 
 ## Contribution notes
 
-Today this is more of a single-user project. For external contributions
-the following would need clarifying:
-- Add a LICENSE file (probably MIT)
-- CONTRIBUTING.md with conventions (standard skill format, pre-commit hook, stale
-  cleanup, frozen zones)
-- Add CI pipeline
-- Issue templates
-- PR template with pre-commit-check list
+Use [CONTRIBUTING.md](../CONTRIBUTING.md) for contribution conventions. Describe the
+consumer-visible result, relevant checks and remaining limits. Avoid absolute
+reliability claims or inventory counts that become stale as files change.
 
-Until then: the pre-commit hook is the primary quality gate.
-
-## Next step
-
-Audience-specific guides: [`09-agent-guide.md`](09-agent-guide.md) and
-[`10-human-guide.md`](10-human-guide.md).
+Next: [Agent guide](09-agent-guide.md) · [Source grounding](11-source-grounding.md).

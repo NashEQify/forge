@@ -1,307 +1,150 @@
 # forge
 
-<img src="assets/vibeforge-logo.png" align="right" width="294" alt="forge mascot — a friendly furnace with headphones smithing code on a circuit-board anvil. The forged code reads: def forge(vibes): build(); ship()." />
+<img src="assets/vibeforge-logo.png" align="right" width="220" alt="Forge mascot: a furnace working at an anvil" />
 
-**Sharp intent in, coherent result out — forge manages the complexity in
-between.** Your half of the deal is the *what* and the *why*: the sharper
-the intent, the more of the *how* forge takes off your hands. It's not a
-vending machine — you still make the judgment calls at the gates — but the
-coordination that would otherwise drown a single session, forge carries.
+**Useful context, better reasoning, coherent delivery — across AI sessions.**
 
-Forge brings three capabilities together in one installation:
+Forge is a shared set of skills, instructions and supporting tools for working
+with AI agents. It helps an agent remember what matters, examine difficult questions,
+and carry software work through to a verified result. You keep your existing agent
+application and working folders.
 
-- **Knowledge and continuity:** capture useful facts at their responsible topics,
-  retrieve the context a question needs, and preserve open work across sessions.
-  Personal details stay in the configured user repository; project knowledge stays
-  with its project. Everyday recipes, applications, travel and technical work use
-  the same rules.
-- **General reasoning:** Council, Frame and Bedrock support decisions and problem
-  analysis with explicit evidence, alternatives and uncertainty. They can work from
-  supplied context without a software project or persistent repository.
-- **Software development:** build, fix, review and release workflows add specs,
-  tests, independent reviews and exact development continuation when selected.
+Three capabilities ship together. Use the parts your work needs.
 
-The capabilities share authorization, evidence discipline and host integration.
-They ship in one repository, installer and coordinated release. `daily` and `full`
-remain compatible installation presets; making development available does not
-activate it for every conversation. Your working folder and ordinary commands stay
-valid. See [capability ownership](framework/capabilities.md).
+| Capability | What it helps you do | Example |
+|---|---|---|
+| **Knowledge and continuity** | Keep useful knowledge in the right place, retrieve relevant context and resume open work | Continue an application, plan a trip, or maintain infrastructure knowledge without reconstructing every earlier conversation |
+| **General reasoning** | Examine assumptions, compare alternatives and test a decision from independent perspectives | Decide between approaches with a Council, clarify a problem with Frame, or work back to first principles with Bedrock |
+| **Software development** | Turn an intent into specifications, implementation, tests and reviews, with tracked progress | Build a feature across sessions or investigate and repair a defect |
 
-A focused boot profile and navigation keep relevant context small while topic files
-retain useful detail, exceptions and source evidence. `save` reconciles knowledge
-and the session handoff; explicitly selected software work contributes its exact
-state. A paused workflow keeps its identity and pause status on session restoration.
+Knowledge work needs no software task system. A reasoning method can use the
+context you provide without a repository. Software workflows compose these
+capabilities when development is selected. Installing more capabilities does not
+turn every conversation into a build.
 
-For complex software work, Forge coordinates the model's implementation and review
-work so a project can remain coherent across many sessions. Decisions still belong
-to the user. The same reasoning and continuity capabilities also serve daily work
-without imposing software tasks or build gates on it.
+## What changes in everyday use
 
-forge is dogfooded — developed by using it on real work. The core is
-stable and won't shift out from under you; what keeps improving is the
-nitty-gritty detail. Opinionated. Pre-1.0.
+You describe the work in ordinary language. **Buddy**, Forge's conversational
+entry, uses the active project's intent and rules to choose the appropriate depth.
+A small question can stay a small question; a consequential decision can receive
+more scrutiny.
 
-## What you actually get
+- **“Use what we already know for this application.”** Relevant topic records and
+  current drafts are read before answering. Personal details stay in your configured
+  user repository; project knowledge stays with its project.
+- **“Compare these options with a Council.”** The method considers distinct
+  perspectives and surfaces assumptions, disagreement and uncertainty. Its output
+  is a proposal or analysis; it does not silently become your decision.
+- **“Implement this feature.”** In a software project, Forge can organize the
+  specification, coding, testing and independent review needed for the change.
+- **“Save.”** Reconcile useful knowledge and the session handoff. An explicit save
+  also requests commit and push to the active project's tracked upstream unless
+  local rules restrict it. Selected development work contributes its tracked state.
 
-Cleaner code, less rework, more autonomous execution — and work that
-keeps its place across sessions. Most of it is how the workflow steps
-are wired (controls against the ways coding agents go wrong); the rest
-is session-spanning state. The major pieces:
+Useful facts are maintained during the conversation, not only at `save`. A small
+profile and topic navigation help the agent find relevant detail without loading
+your entire history. Dates, qualifications and source evidence stay where needed;
+the system does not need a transcript of every interaction.
 
-- **Reviews run cold and adversarial** — reviewers derive findings
-  without inheriting the orchestrator's framing, and one reviewer's
-  whole job is to attack the premise, so a plausible-but-wrong frame
-  doesn't slip through.
-- **Claims are checked against the real code, with receipts** — against
-  what's actually on disk, not the model's belief about it, and every
-  finding cites a file and line. No hand-waving.
-- **Structure before code** — a deep-modules lens makes a
-  structural-purity pass that feeds a two-stage brief, so the work
-  carries architectural awareness before a line is written;
-  Architecture-Comprehension then checks coherence at the milestone
-  layer, catching breaks a local view misses — a producer wired with no
-  consumer, a deploy-state that can't support the change.
-- **Multiple perspectives on the hard calls** — a spec-board on the
-  spec, a code-review-board on the diff, a council on architecture
-  decisions, instead of a single-view tunnel. You can also convene a
-  council by hand any time you want fresh perspectives on a question.
-- **Effort scales to the stakes** — small things don't get
-  over-processed. That's the "stays simple" anchor.
-- **Sessions don't start cold** — `save` writes a structured handoff the
-  next session reads on boot; the workflow engine holds each multi-step
-  workflow's place; work is a validated task plan with milestones and a
-  critical path. A paused multi-day build resumes where it stopped, instead
-  of re-deriving context.
+Continuity is stored in files in your workspaces. It is not automatic access to
+past chats or a background memory service. The agent still needs access to the
+right files and must actually read them.
 
-Several of these are facets of forge's **seven review-quality
-dimensions** — proportionality, anti-anchoring, evidence, orchestrator
-verification, multi-surface, finder-angles, finding-triage.
+## Choose your starting point
 
-→ [how the review apparatus works](architecture-documentation/02-architecture.md) ·
-[the seven dimensions](architecture-documentation/04-core-concepts.md#seven-review-quality-dimensions)
-
-## Quick Start
-
-You don't call commands. You tell Buddy what you want; Buddy classifies
-the input (discuss / incident / substantial) and routes to a workflow:
-
-| You say | Workflow |
+| You want to… | Read |
 |---|---|
-| `solve <problem>` | open-ended: frame → refine → artifact → execute |
-| `build task X` | spec → spec-board → code → code-review-board → close |
-| `fix bug X` | recover active incidents within authorization, then diagnose and repair the cause |
-| `review spec X` | multi-perspective spec-board (4-7 personas + chief) |
-| `research X` | knowledge artifact, not code |
-| `save` | writes the session-handoff so the next session picks up the thread — run it mid-session or at session end (one command, the footprint adapts) |
+| Use Forge for everyday work and recurring context | [Daily use](architecture-documentation/13-operational-handbook.md) |
+| Understand the three capabilities and their boundaries | [Overview](architecture-documentation/01-overview.md) |
+| Install Forge or update an existing installation | [Installation](architecture-documentation/05-installation.md) |
+| Use Frame, Bedrock or Council | [Usage and methods](architecture-documentation/06-usage-workflows.md) |
+| Build or maintain software | [Development workflows](architecture-documentation/06-usage-workflows.md#software-development) |
+| Understand or extend the implementation | [Architecture](architecture-documentation/02-architecture.md) · [Maintainer guide](architecture-documentation/08-development-and-maintenance.md) |
 
-For standalone frame / drill / council use, just ask in plain language;
-Buddy picks the entry point.
+## Installation
 
-**`save` is the session-end skill.** Without it, the next session
-starts cold — workflow state in `.workflow-state/<id>.json` still
-resumes, but the discussion thread, open decisions, and "where I was
-heading" don't. Type `save` before you close the terminal — or any
-time mid-day when you're switching context and want to leave a
-breadcrumb; it's the same command, and the footprint adapts. See
-[Cross-session continuity](#cross-session-continuity) below.
+Forge runs inside an existing agent host. The coordinated installer supports
+Codex, Claude Code and OpenCode integrations; their available features differ.
+Cursor rules are provided separately. See [host support](architecture-documentation/07-tool-integrations.md)
+for the distinction between shipped instructions and verified host behavior.
 
-## How it works
-
-Every session enters through **Buddy** — the single orchestrator persona.
-Buddy handles intake, classifies the request, and routes to one of the
-eight workflows; sub-agents do the actual work.
-
-A `build`, for example, walks the same arc every time: scoping → spec
-interview → a spec-board (4–7 reviewer personas in parallel + a chief
-consolidator) → main-code-agent implements → a code-review-board on the
-diff → close. The eight workflows carry the methodology; the 41 active
-skills carry the moves inside each phase. The boards and the council run
-context-isolated. A Chief consolidates where the review mode requires one;
-Buddy decides and verifies pivotal claims against their sources, consulting
-individual findings when needed. The council runs in
-four modes (light / standard / full / interactive), scaled to the
-decision.
-
-```
- plain-text             ┌───────────────────────────────────────────┐
- intent  ─────────────► │ BUDDY   intake · classify · route · path  │
-                        └────────────────────┬──────────────────────┘
-                                             │  --start <workflow> --route <path>
-                                             ▼
-┌─ WORKFLOW · the home (1 of 8 — shared 5-phase shape) ─────────────────────────────┐
-│  state persisted per step (.workflow-state) → pause & resume                      │
-│                                                                                   │
-│  ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐              │
-│  │ Specify │──►│ Prepare │──►│ Execute │──►│ Verify  │──►│  Close  │              │
-│  └────┬────┘   └─────────┘   └────▲────┘   └────┬────┘   └────┬────┘              │
-│       │ steps                     │             │             │                   │
-│       │                  re-fix   └─────────────┘ review      │                   │
-│       │    converge / retry ≤3  → else escalate               │                   │
-│       │                                                       │                   │
-│       └─ a step spawns a COLD sub-routine, reads ONE signal:  │                   │
-│            spec-board · code-board · council · code-agent     │                   │
-│            context-isolated personas + a chief → one signal   │                   │
-└───────────────────────────────────────────────────────────────┼───────────────────┘
-                                                                ▼
-                                                             RESULT — committed, deployed
-
- same backbone, 8 workflows:
-   build · fix · review · solve · research  →  Specify·Prepare·Execute·Verify·Close
-   docs-rewrite → 7 phases ·  save → 3 groups ·  context_housekeeping → 2 groups
-   path sets depth:  DIRECT verifies locally  …  FULL runs every applicable gate
-
- BOOT: host-specific (Codex: AGENTS) · git pre-commit: 3 BLOCK + 3 WARN
-```
-
-*Intent in at the top, result out at the bottom — the workflow is the home
-that carries everything in between.*
-
-→ each workflow drawn in full — phases, steps, loops, where boards / council
-spawn: [per-workflow diagrams](architecture-documentation/workflow-diagrams.md)
-
-## Cross-session continuity
-
-Multi-session work doesn't restart from scratch — but only if you end
-sessions with `save`.
-
-- **`save`** — the user-triggered persistence skill for both
-  session-end and mid-session. Type `save` before closing the terminal; Buddy writes a
-  structured session-handoff (meta-summary, open topics, decisions,
-  next steps). The next session reads it on boot and picks up the
-  thread. Run it mid-day for a context switch too — same command, a
-  lighter footprint when there's nothing to close out.
-- **Workflow engine** — non-trivial workflows (`build`, `fix`,
-  `solve`, `review`, `research`, `docs-rewrite`) persist state per
-  task in `.workflow-state/<id>.json`. Pause a multi-day build
-  mid-step today, resume at the same step tomorrow, on a different
-  machine, with full phase history.
-- **Boot continuity** — on session start the orchestrator loads
-  active intent, session-handoff, and in-flight workflows, then tells
-  you where you left off. No manual context reconstruction.
-
-## Setup
-
-forge runs on top of an existing coding-agent harness — Claude Code,
-OpenCode, Codex, or Cursor. You need `git`, `bash`, `jq`, and Python
-3.10+. One command provisions the Claude Code adapter — the `cc`
-launcher, persona + skill discovery, the SessionStart boot hook, and
-the git pre-commit checks:
+Clone Forge and choose an installation preset:
 
 ```bash
 git clone https://github.com/NashEQify/forge ~/forge
-bash ~/forge/scripts/setup-cc.sh
 ```
 
-Then start a session in any repo:
+- **`daily`** provides knowledge and continuity, save/housekeeping, and Bedrock,
+  without the software tooling. Council and Frame can be added explicitly.
+- **`full`** makes the development tooling and general methods available as well.
+
+For example, preview a daily installation using an **existing** personal workspace:
 
 ```bash
-cc <project>        # Claude Code (or bare `cc` for the current dir)
+python3 ~/forge/scripts/forge_install.py \
+  --profile daily --user-repo ~/projects/personal --check
 ```
 
-Other harnesses: `setup-oc.sh` (OpenCode), `setup-codex.sh` (Codex);
-Cursor ships rules under `orchestrators/cursor/`. For Codex, use Python
-with PyYAML available and an existing consumer checkout:
+Python with PyYAML is required. `--check` reports planned changes or conflicts;
+it does not install anything. Follow the [installation guide](architecture-documentation/05-installation.md)
+for application, activation verification and prerequisites. Existing installations
+must use the coordinated update procedure: preserve the old state, update during
+a maintenance window, install and verify before resuming.
 
-```bash
-bash ~/forge/scripts/setup-codex.sh --check ~/projects/my-app
-bash ~/forge/scripts/setup-codex.sh ~/projects/my-app
-bash ~/forge/scripts/install-git-hooks.sh ~/projects/my-app
-bash ~/forge/scripts/setup-codex.sh --check ~/projects/my-app
-bash ~/forge/scripts/install-git-hooks.sh --check ~/projects/my-app
-```
+A personal workspace is optional for project-only knowledge and supplied-context
+reasoning. There is one shared implementation, not a separate Forge fork per person
+or kind of project. Profile selection controls what is installed; project intent
+controls how it is used.
 
-The first check reports pending changes or conflicts without writing. Resolve
-conflicts before installation. Codex setup generates roles and skill wrappers
-and merges explicit AGENTS boot instructions; Git hooks are installed separately.
-Verify instruction loading in a fresh session opened in the consumer checkout.
-See the [Codex setup guide](architecture-documentation/05-installation.md#codex)
-for migration and verification details.
+## How the parts work together
 
-**Full details** — prerequisites, per-harness setup, consumer-repo
-wiring, verification:
-[`05-installation.md`](architecture-documentation/05-installation.md).
+**Knowledge and continuity** provide the common capture, retrieval and save rules.
+The Knowledge Processor decides what belongs where and what has changed. Protected
+file operations compare the read baseline before publishing changes and retain
+recovery information for interrupted multi-file updates.
 
-## Honest cost & scope
+**General reasoning** provides reusable methods. Frame clarifies the problem;
+Bedrock examines its underlying assumptions; Council brings independent perspectives
+to a choice. Methods can return an answer directly. Saving their results is a
+separate, authorized action.
 
-The discipline layer isn't free. A `build` for a substantial task
-spawns a 4-7 persona spec-board (5-15k tokens each), a code-review-
-board on the diff, and persists workflow state across phases. When a
-hard architectural decision comes up it can also convene a council
-(3-7 context-isolated members + adversary + chief) — conditional, but
-another multiplier on the turns it touches.
-**50-200k tokens go to the discipline layer per substantial build, on
-top of the actual implementation** (more when a council is convened).
-That earns its keep when a board catches a spec-violation worth a day
-of re-work; it's wasteful on a typo-fix.
+**Software development** adds specifications, tasks, implementation, tests, review
+and release processes. Its workflow engine tracks explicitly selected work; it is
+not a prerequisite for the other capabilities.
 
-For a 30-minute script, a slash-command catalog is faster — forge is
-overkill there. It earns its keep on **complex, agent-driven work**:
-tasks big enough that a stock agent loses the thread, and builds that
-span many sessions where context loss costs more than the discipline
-overhead. And yes, it's **for vibe coding** — not a brake on it, but the
-thing that keeps you vibing when the work gets too complex to hold
-together in a single session.
+All three share authorization, evidence standards and host integration. Concrete
+storage choices, domain rules and operational approvals remain with the workspace.
+A separate infrastructure repository can keep its own technical knowledge while
+using the same common methods.
 
-**Adapters.** forge's discipline lives in several layers: skills
-(markdown + YAML), workflow runbooks, the workflow engine (Python +
-YAML state), persona definitions, task / plan YAMLs, and a thin hook
-layer (configured Claude SessionStart boot + shared git pre-commit). Most of it is
-harness-neutral — any harness that loads MD + YAML and can spawn
-sub-agents can run forge. An adapter buys mechanical persona / skill
-discovery, tier-0 anchor loading, host-specific boot integration, and
-shared commit-time checks installed in the repo's git hooks. Codex boots
-through explicit AGENTS instructions; Claude SessionStart hooks do not
-establish Codex boot.
+[Architecture and ownership](architecture-documentation/02-architecture.md) ·
+[Canonical capability contract](framework/capabilities.md)
 
-Cursor is the fourth shipped adapter; it has no tool-event API and no
-SessionStart hook, so its mechanical layer is git pre-commit plus the
-rules + persona wrapper — everything else runs identically. Any
-harness without a dedicated adapter can still load the skills and run
-the workflows; discovery is just less mechanical.
+## Scope and limits
 
-**What this isn't.** Not a generic agent framework, not a marketplace,
-not a LangChain-style abstraction, not an onboarding product.
-Adapter-based on top of an existing harness, not a re-implementation.
+Forge is opinionated and pre-1.0. It supplies methods and supporting mechanisms,
+not a guarantee that a model will follow every instruction or make correct judgments.
+Independent review can catch mistakes; it can also share mistaken assumptions.
+Host permissions, tool availability and actual instruction loading matter.
 
-## Inventory (live)
+Everyday continuity and a multi-agent review have very different costs. A Council
+or review board requires additional model calls, time and tokens. Use that depth
+when the uncertainty and consequences justify it; no measured universal cost or
+quality improvement is claimed.
 
-- **Skills:** [`framework/skill-map.md`](framework/skill-map.md) (41 active + 1 deprecated)
-- **Personas:** [`agents/navigation.md`](agents/navigation.md) (40, incl. boards + council)
-- **Workflows + Routing:** [`framework/process-map.md`](framework/process-map.md)
-- **Protocols / References / Hooks:** [`architecture-documentation/02-architecture.md`](architecture-documentation/02-architecture.md)
+Forge does not replace your model or agent application, run a hosted knowledge
+service, or make background automations happen from notes alone. Files and imports
+remain subject to your storage and privacy rules. File locks coordinate cooperating
+Forge writers; they cannot protect against every external editor.
 
-## Where to go next
+## Explore and contribute
 
-| If you are... | Start with |
-|---|---|
-| **Just trying it out** | [Quick Start](#quick-start) above |
-| **Daily user / practitioner** | [`13-operational-handbook.md`](architecture-documentation/13-operational-handbook.md) |
-| **Want to understand the model** | [`01-overview.md`](architecture-documentation/01-overview.md) → [`02-architecture.md`](architecture-documentation/02-architecture.md) |
-| **Building a skill** | [`04-core-concepts.md`](architecture-documentation/04-core-concepts.md) + [`08-development-and-maintenance.md`](architecture-documentation/08-development-and-maintenance.md) |
-| **Adding an adapter** | [`07-tool-integrations.md`](architecture-documentation/07-tool-integrations.md) |
-| **Agent patterns forge hardens against** | [`framework/agent-patterns.md`](framework/agent-patterns.md) |
+The [documentation hub](architecture-documentation/README.md) offers routes for
+users, software builders and maintainers. The [skill map](framework/skill-map.md),
+[role index](agents/navigation.md) and [process map](framework/process-map.md) are
+reference material when you need the implementation details.
 
-## Read more
+Contributions: [CONTRIBUTING.md](CONTRIBUTING.md). Security reporting:
+[SECURITY.md](SECURITY.md). Community guidelines: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
-1. [`13-operational-handbook.md`](architecture-documentation/13-operational-handbook.md) —
-   methodology-in-practice, daily patterns. If you read one file, read this.
-2. [`architecture-documentation/`](architecture-documentation/README.md) —
-   13-file reader-journey hub.
-3. [`framework/skill-anatomy.md`](framework/skill-anatomy.md) —
-   strict shape every skill follows (mechanically validated).
-4. [`framework/agent-patterns.md`](framework/agent-patterns.md) —
-   the agent failure modes forge hardens against.
-5. [`references/agentic-design-principles.md`](references/agentic-design-principles.md) —
-   research-derived design principles backing the framework's skill /
-   persona / runbook design. Historical reference, not consulted in
-   the runtime loop.
-
-## Contributing
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for conventions, PR process, and
-hook setup. Security policy: [`SECURITY.md`](SECURITY.md). Code of conduct:
-[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
-
-## License
-
-[MIT](LICENSE).
+[MIT license](LICENSE).

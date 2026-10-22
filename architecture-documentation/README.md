@@ -1,109 +1,77 @@
-<p align="center">
-  <img src="../assets/vibeforge-logo.png" width="200" alt="forge mascot" />
-</p>
+# Forge documentation
 
-# architecture-documentation/ — start here
+Forge helps you carry useful context across sessions, reason through difficult
+questions, and deliver software with appropriate verification. These capabilities
+share one conversational entry, **Buddy**, while remaining independently useful.
 
-Public-OSS architecture, installation, and usage
-documentation for **forge** — disciplined LLM capabilities
-between you and your coding agent: opinionated workflows
-plus a multi-perspective reasoning substrate (Boards +
-Council) plus shared commit-time checks and host-specific
-boot integration.
+Start with the outcome you want. You do not need to learn the workflow engine to
+maintain knowledge or use a reasoning method.
 
-This documentation is aimed at **two audiences in
-parallel**:
-- **Humans** (maintainers, OSS contributors, curious
-  readers) — reader-journey-first, prose where it helps.
-- **Coding agents** (Claude Code, OpenCode, Codex, Cursor) —
-  source-path-bound, invariants explicit, do / don't
-  explicit.
+## Choose a route
 
-Where the same content serves both, it is consolidated.
-Where the audiences diverge, there are two files (see 09
-+ 10).
+| Your goal | Start here | Continue with |
+|---|---|---|
+| Understand what Forge does | [Overview](01-overview.md) | [Human guide](10-human-guide.md) |
+| Use it for recurring everyday work | [Daily handbook](13-operational-handbook.md) | [Knowledge and continuity](06-usage-workflows.md#knowledge-and-continuity) |
+| Clarify a problem or compare options | [Reasoning methods](06-usage-workflows.md#general-reasoning) | [Visual guide](workflow-diagrams.md#general-reasoning) |
+| Build or maintain software | [Software development](06-usage-workflows.md#software-development) | [Development flows](workflow-diagrams.md#software-development) |
+| Install or upgrade | [Installation](05-installation.md) | [Host integrations](07-tool-integrations.md) |
+| Extend or maintain Forge | [Architecture](02-architecture.md) | [Maintainer guide](08-development-and-maintenance.md) |
 
----
+## First use
+
+1. [Install and verify the selected profile](05-installation.md) in your agent host.
+2. Open your working folder. Its intent and rules establish the goal and boundaries.
+3. Describe the result you want, the relevant context and any limits on action.
+4. Review the result and its evidence. Use `save` when you want session persistence
+   and the active project's authorized commit/push behavior.
+
+For example: “Continue the application using the current draft and our earlier
+constraints.” That is ordinary knowledge work. “Use Frame to examine why this plan
+keeps slipping” invokes a reasoning method. “Implement the approved change” selects
+development work in the applicable project context.
 
 ## Reader journey
 
-Read in this order:
+These pages answer different questions; they are not a mandatory reading sequence.
 
-| Step | File | Time | Content |
-|---|---|---|---|
-| 1 | [`01-overview.md`](01-overview.md) | 5 min | What is it, for whom, what problem |
-| 2 | [`02-architecture.md`](02-architecture.md) | 15 min | Tier model, Buddy, skills, workflows, boards, hooks |
-| 3 | [`03-repository-map.md`](03-repository-map.md) | 5 min | Where what lives, quick orientation |
-| 4 | [`04-core-concepts.md`](04-core-concepts.md) | 15 min | Skill anatomy, pre-delegation, single-class, cross-loading |
-| 5 | [`05-installation.md`](05-installation.md) | 10 min | Setup for Claude Code / OpenCode / (Cursor) |
-| 6 | [`06-usage-workflows.md`](06-usage-workflows.md) | 15 min | Solve / build / fix / save quickstart + patterns |
-| 7 | [`07-tool-integrations.md`](07-tool-integrations.md) | 10 min | Adapter details per tool |
-| 8 | [`08-development-and-maintenance.md`](08-development-and-maintenance.md) | 10 min | Engines, generators, hooks, tests, conventions |
-
-Audience-specific (parallel, not sequential):
-- [`09-agent-guide.md`](09-agent-guide.md) — for coding
-  agents (start-here, invariants, do / don't).
-- [`10-human-guide.md`](10-human-guide.md) — for human
-  readers (storyline, motivation).
-
-Practitioner level (methodology + daily use):
-- **[`13-operational-handbook.md`](13-operational-handbook.md)**
-  — if you only read one file, read this. Methodology in
-  practice, what's operationally different,
-  commands / triggers, what a typical day looks like, how
-  consumer repos actually consume the framework.
-
-Appendix:
-- [`workflow-diagrams.md`](workflow-diagrams.md) — one
-  diagram per workflow (phases, steps, loops, where
-  boards / council spawn).
-- [`11-source-grounding.md`](11-source-grounding.md) —
-  which claims are backed by which files.
-- [`12-troubleshooting.md`](12-troubleshooting.md) —
-  known pitfalls.
-
----
+| Page | Question it answers |
+|---|---|
+| [01 — Overview](01-overview.md) | What does Forge help with, and what does it require? |
+| [02 — Architecture](02-architecture.md) | Which component owns each responsibility? |
+| [03 — Repository map](03-repository-map.md) | Where are the implementation and reference files? |
+| [04 — Core concepts](04-core-concepts.md) | What do the main terms mean? |
+| [05 — Installation](05-installation.md) | How do I install, activate and update safely? |
+| [06 — Usage and workflows](06-usage-workflows.md) | Which capability or method fits this request? |
+| [07 — Tool integrations](07-tool-integrations.md) | What differs between agent hosts? |
+| [08 — Development and maintenance](08-development-and-maintenance.md) | How do I change Forge itself? |
+| [09 — Agent guide](09-agent-guide.md) | How should an agent load and follow the contracts? |
+| [10 — Human guide](10-human-guide.md) | What should I delegate, decide and check? |
+| [11 — Source grounding](11-source-grounding.md) | Where can I verify these explanations? |
+| [12 — Troubleshooting](12-troubleshooting.md) | What do I do when setup or continuity fails? |
+| [13 — Daily handbook](13-operational-handbook.md) | How do I start, continue, correct and save work? |
+| [Visual guide](workflow-diagrams.md) | How do the capabilities and development flows connect? |
 
 ## Quick entry points
 
-**"I just want to get started"** →
-[`05-installation.md`](05-installation.md) quickstart
-block.
+- **Existing user updating:** follow [coordinated installation](05-installation.md).
+  A source update and successful installer exit do not alone prove activation.
+- **Context is missing or stale:** start with the [daily handbook](13-operational-handbook.md#retrieve-and-correct-context),
+  then [troubleshooting](12-troubleshooting.md) if retrieval or recovery is blocked.
+- **A decision needs more scrutiny:** compare [Frame, Bedrock and Council](06-usage-workflows.md#general-reasoning).
+- **A software workflow was interrupted:** use [selected development continuation](13-operational-handbook.md#continue-software-work).
+- **You need the exact rule:** consult [source grounding](11-source-grounding.md).
 
-**"I want to understand what the framework does BEFORE
-using it"** → [`01-overview.md`](01-overview.md) +
-[`10-human-guide.md`](10-human-guide.md).
+## Documentation and authority
 
-**"What's different about this repo? How do I use it
-day to day?"** →
-[`13-operational-handbook.md`](13-operational-handbook.md).
-That is the single-file entry into methodology practice.
+These pages explain the reader experience. Exact lifecycle rules live in the
+[capability contract](../framework/capabilities.md), [Knowledge Processor](../skills/knowledge_processor/SKILL.md),
+[process map](../framework/process-map.md) and linked method/runbook sources.
+Installation profiles make capabilities available; project intent selects their use.
 
-**"I'm a coding agent in a session, what do I need to
-know?"** → [`09-agent-guide.md`](09-agent-guide.md).
-Tier-0 anchors: [`../CLAUDE.md`](../CLAUDE.md) /
-[`../AGENTS.md`](../AGENTS.md).
+Examples describe intended operation, not proof that a particular host has loaded
+its instructions. Check the actual host, permissions, files and outcome when that
+matters. Review depth costs time and model calls; use it where consequences and
+uncertainty justify it.
 
-**"I want to change or add a skill / workflow /
-persona"** →
-[`08-development-and-maintenance.md`](08-development-and-maintenance.md)
-+ [`04-core-concepts.md`](04-core-concepts.md) §skill
-standard skill format.
-
-**"I want to use the framework in a new tool (Cursor,
-another harness)"** →
-[`07-tool-integrations.md`](07-tool-integrations.md)
-§extending with a new adapter.
-
----
-
-## Quality bar
-
-- Concrete, not generic.
-- Source-grounded: every technical claim has a file
-  path.
-- No invented features.
-- Uncertainties marked transparently.
-
-Source-grounding trace:
-[`11-source-grounding.md`](11-source-grounding.md).
+[Project home](../README.md) · [Contributing](../CONTRIBUTING.md) · [Security](../SECURITY.md)

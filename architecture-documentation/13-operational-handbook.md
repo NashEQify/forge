@@ -1,638 +1,128 @@
-# 13 — Operational Handbook
+# 13 — Daily handbook
 
-How the framework actually *operates* day-to-day. The methodology behind
-the file structure. What's different from baseline Claude Code or
-OpenCode usage. How sessions, commands, and workflows fit together.
+Use your ordinary working folder and describe what you want to accomplish. Buddy
+uses the project's rules, relevant knowledge and your authorized user scope to
+continue the work. Software workflow machinery is needed only for selected software
+work; you can use knowledge and reasoning directly.
 
-If you only read one file in `architecture-documentation/`, this is a
-strong candidate.
+For setup or an upgrade, use [installation](05-installation.md). This page starts
+with a verified installation and covers the work between sessions.
 
----
+## Start a session
 
-## The methodology in one paragraph
+Open the workspace that owns the work. The current directory identifies the active
+project; framework files supply shared methods, while the project's own intent,
+navigation and rules supply its goals and boundaries.
 
-You open a terminal, run `cc <scope>`. Buddy boots — reads Tier-0
-invariants, the operational rules, the boot routing. He greets you and
-asks what's up. Whatever you say, he routes through three phases:
-**RECEIVE** (incident? substantive? trivial?), **ACT** (delegate, dispatch
-boards, work skills), **BOUNDARY** (persist context, update task state,
-close the loop). Host-specific integration boots Buddy (configured Claude
-SessionStart or explicit Codex AGENTS instructions); installed shared Git
-hooks run six commit-time checks. When
-Buddy needs to do something non-trivial, he writes a Plan-Block before
-acting. When he needs multiple perspectives, he dispatches a Board and
-uses Chief consolidation where required, then verifies pivotal claims against
-sources and owns the decision. A clear implementation instruction authorizes
-its scope across phases; unresolved decisions or material scope/risk changes
-require clarification.
+The agent should load the applicable boot context, check relevant pending recovery,
+and read the current handoff before relying on saved state. With configured user
+scope, the short profile provides person-wide context; detailed topics are read
+when relevant. Missing user scope does not prevent project-only work.
 
-That's the loop. Everything else is detail.
+Give a concrete first request:
 
----
+> Continue the comparison from the latest draft. Check our earlier constraints,
+> then tell me which unresolved question matters most.
 
-## What's different from baseline Claude Code / OpenCode usage
+## Retrieve and correct context
 
-If you've used Claude Code without this framework, here's what changes:
+When a question depends on prior work, expect the agent to read its topic owner
+and linked evidence. If navigation is incomplete, a bounded search can locate the
+material. “No relevant record found in the searched scope” is different from
+“this never happened.”
 
-### 1. Buddy is the only entry point
+Useful corrections can be made during the conversation:
 
-You don't talk to specialized agents directly. You talk to **Buddy**.
-Buddy decides whether to do it himself, dispatch a sub-agent, or invoke a
-multi-perspective board. This collapses the "which agent should I call?"
-question into a single conversation.
+> The schedule changed. Keep the earlier date as historical context and use the
+> new date for the current plan.
 
-### 2. Authorization follows the approved scope
+Knowledge maintenance distinguishes new, changed and already-present information.
+Repeating the same fact need not create another entry. Corrections should update
+the current owner and affected routes or summaries, preserving source meaning and
+uncertainty. [Knowledge Processor](../skills/knowledge_processor/SKILL.md) owns these rules.
 
-A clear implementation request authorizes work within its scope. Buddy records
-that approval and carries it across phases; routine signoff steps do not ask
-for the same decision again. Clarify an unresolved consequential decision or
-a material scope/risk change. Diagnosis-only requests do not authorize a fix,
-and bookkeeping cannot introduce substantive decisions. Live, destructive
-and publication actions retain their explicit boundaries. Sources:
-`CLAUDE.md §2` and `framework/process-map.md` §Authorization.
+## Keep personal and project information in scope
 
-### 3. Pre-Delegation is not negotiable
-
-Before a sub-agent call, Buddy records the delegation. DIRECT needs scope,
-goal, agent and success criteria in the turn. Other paths use a persisted
-brief. A Plan-Block makes the intended work explicit:
-
-```
-Scope:        what's touched, what's not
-Tool/Agent:   which sub-agent, with which constraints
-Alternatives: min 2, with reason why-not
-Expected:     what artefacts come back
-```
-
-Plus a Self-Review (Scope-Check, Instance-vs-Class, Rationalization-Reflex).
-For non-trivial actions, additionally a Plan-Adversary review (a
-context-isolated persona that argues why the plan is wrong).
-
-This is `CLAUDE.md §3` + `skills/_protocols/plan-review.md`. Buddy
-authors the brief with the protocol open rather than relying on a hook
-to flag thin prompts.
-
-### 4. Boards investigate independently; Buddy decides
-
-Spec-Board (4-7 reviewers depending on depth) and Code-Review-Board (L1
-focused / L2 full) operate by **anchoring discipline**: Buddy spawns
-context-isolated reviewers, waits for them all to complete, lets the
-Chief consolidate where required, then verifies pivotal claims against their
-sources and makes the decision. He may inspect relevant findings to resolve
-contradictions without routinely repeating every review.
-
-Read-only reviewers and Chiefs return complete artifacts inline. Buddy persists
-them verbatim with agent, scope/revision and run provenance before a downstream
-Chief reads them. Parent runtime settings can override role defaults; effective
-permissions must be checked. Sources: shared Invariant 1 and
-`agents/buddy/operational.md` §Read-only review transport.
-
-### 5. Skills, Workflows, Personas — three separate layers
-
-Vanilla Claude Code has agents and slash-commands. The framework adds:
-
-- **Skills** (`skills/<name>/SKILL.md`): methodology with
-  7-section anatomy + 5-mode invocation axis. Skills don't run, they're
-  *applied*.
-- **Workflows** (`workflows/runbooks/<name>/WORKFLOW.md`): phase
-  sequences that compose skills (e.g. `build` has Specify → Prepare →
-  Execute → Verify → Close).
-- **Personas** (`agents/<name>.md`): tool-neutral agent definitions
-  with their own discipline (reviewer-base, reasoning-trace, first-
-  principles-check).
-
-The User triggers Workflows. Workflows invoke Skills. Skills (sometimes)
-dispatch Personas. Three layers, clear contract.
-
-### 6. Mechanical enforcement at multiple levels
-
-| Level | Mechanism | Examples |
-|---|---|---|
-| Boot-time | Host-specific integration | Configured Claude SessionStart: `buddy-boot-inject`, `session-start-remote`; Codex: managed AGENTS boot entry |
-| Commit-time | git pre-commit hook | 6 checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE = BLOCK; SECRET-SCAN, SOURCE-VERIFICATION, ANTI-PHANTOM = WARN) |
-| Index-level | Generator + Validator | `generate_skill_map.py` + `consistency_check` Check 6, `generate_navigation.py` + Check 8 |
-
-Use the selected adapter installer for boot integration and install shared
-Git hooks in each consumer repo. Codex uses `scripts/setup-codex.sh` plus
-`scripts/install-git-hooks.sh`; verify boot in a fresh session.
-
----
-
-## How to use it well
-
-Frame, drill, council, board — these are not "magic-think" tools. Garbage
-in, garbage out applies more, not less, to multi-agent runs: parallel
-reviewers all multiply the same mush.
-
-| Tool | What it needs |
+| Information | Responsible location |
 |---|---|
-| **Frame** (8-step problem analysis) | A sharp problem statement. Not "think about X" — your current best understanding, named. |
-| **Bedrock-drill** (recursive axiom challenge) | A candidate axiom. *"I believe X because Y"* — the drill challenges Y. Without Y, no drill. |
-| **Council** (3-7 architects + adversary) | A real decision: >1 option, irreversibility risk, your trade-off sketch. Not "what do you think generally". |
-| **Spec-Board** (4-7 reviewers + chief) | A written spec. Run spec-authoring first, then board the spec. Boarding a vibe wastes parallel reviewers. |
-| **Code-Review-Board** (L1: 2 / L2: 13 reviewers) | A diff to review. Narrower scope = sharper review. |
-| **`solve` workflow** (open-ended problem) | A problem you can't see the shape of. If you can — `build` is faster. |
-| **`fix` workflow** | A defect to investigate. For active outages or ongoing harm, use authorized Incident recovery before final RCA. |
-
-Common short-circuit: *"drill my intent first"* — if Buddy starts producing
-without asking, you can force the clarification step. Don't accept solution-
-output before intent is sharp.
-
-The cost of bringing weak input is high — the multi-perspective machinery
-amplifies the input quality. Sharp input + 4 reviewers = 4× sharp signal.
-Mush input + 4 reviewers = 4× confused noise.
-
-Pattern overview: see [`../framework/agent-patterns.md`](../framework/agent-patterns.md)
-— the agent failure modes forge hardens against.
-
----
-
-## Commands and triggers
-
-The framework has **no slash-commands**. Buddy responds to natural-language
-trigger words, defined in `agents/buddy/operational.md §Commands`:
-
-| User says | Buddy does |
-|---|---|
-| (initial greeting) | Boot sequence ORIENT → STATUS-CHECK (pull decision) → RESOLVE → ROUTE → LOAD → RESUME → GREET |
-| `wakeup` | Re-boot session continuity from `session-handoff.md` + `plan_engine --boot` |
-| `save` | Session persist (mid + end of session, one adaptive command) via `workflows/runbooks/save/WORKFLOW.md` |
-| `checkpoint` | Save + drift-check + sculpting (deep version) |
-| `sleep` | Forget the session (no persist) |
-| `think!` | THINK-Stance: deeper analysis mode (`agents/buddy/think-operational.md`) |
-| `consistency check` | Invoke `consistency_check` skill (12 checks) |
-| `solve <problem>` | Trigger solve-Workflow (problem with open solution-form) |
-| `build <task>` | Trigger build-Workflow |
-| `fix <bug>` | Trigger fix-Workflow; active incidents use authorized recovery before final RCA |
-| `review <spec>` | Trigger review-Workflow (no code) |
-| `research <topic>` | Trigger research-Workflow (knowledge artefact) |
-| `frame <problem>` | Standalone frame-Skill (8-step problem analysis) |
-| `task: <description>` | Invoke `task_creation` skill |
-### Council mechanics
-- **External-Review-Bundle** (`framework/external-review-bundle-format.md`):
-  when argument-decisive override + re-council inversion + high-effort
-  follow-on task + architectural decision (all four) align, an
-  external-discipline check pays off. Bundle with mandatory upload
-  list + self-sanity-check + substantive-vs-structural output format.
-- **Council adversary mandatory:** 4 domain members + 1 adversary. The
-  adversary does smart-but-wrong + explicit authority check, no lean
-  statement. Empirically: ~20-30% catch rate for drift the domain
-  members miss.
-
-Detail of the council discipline:
-[`../skills/council/SKILL.md`](../skills/council/SKILL.md).
-
-Workflow-Engine has CLI commands too:
-
-```bash
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --start <wf> --task <id>
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --next --id <wf-id>
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --complete <step-id>
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --status
-```
-
-These are run by Buddy (or you) via terminal-integration. State files live
-under `docs/<workflow>/<date>-<slug>.md`.
-
----
-
-## Workflow-Engine — cross-session workflow continuity
-
-The framework's most important state mechanism for multi-session work.
-Buddy uses it (mandatory, per `agents/buddy/operational.md §Workflow-Engine`)
-for non-trivial workflows (`build` STANDARD/FULL, `fix`, `review`, `solve`,
-`research`, `docs-rewrite`).
-
-### What it is
-
-`scripts/workflow_engine.py` is a YAML-driven state machine. Workflow
-definitions live alongside their runbooks: `workflows/runbooks/<name>/workflow.yaml`.
-Each definition has steps with `id`, `instruction`, `completion`-check,
-`on_fail`-policy, optional `skill_ref` and `context_refs`.
-
-State persists in `.workflow-state/<workflow-id>.json` (gitignored — runtime
-state per local checkout). The workflow-state JSON contains: workflow-id,
-current step, step-history (completed/skipped/failed), variables, parent
-linkage for sub-workflows.
-
-### Why it exists
-
-Three failure modes it prevents:
-
-1. **Orchestrator forgets mid-workflow.** Buddy is in build Phase Verify
-   on turn 47, gets a side-question, comes back, forgets where he was. The
-   engine's `--boot-context` / `--next` surface the current step when
-   Buddy reads workflow state (no longer auto-injected every turn).
-
-2. **Cross-session resumption.** Session crashes, new agent boots. Boot-step
-   `WORKFLOW-RESUME` calls `--boot-context`. Active workflows surface in
-   the greeting. Buddy reads the corresponding state-files (`docs/<workflow>/<slug>.md`)
-   to rehydrate content state. Picks up exactly where left off.
-
-3. **External reviewer / new agent need to know state.** `--status` lists
-   all active workflows. Each workflow's state-file has its phase outputs
-   in markdown. Anyone reading the repo can see "currently in solve workflow,
-   step `frame-report`, here's what's been done so far" without asking Buddy.
-
-### CLI
-
-```bash
-# Start a workflow
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --start solve --task 123
-
-# Show next step (instruction + skill_ref + context_refs)
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --next
-
-# Mark step complete (advances to next, runs completion-check)
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --complete frame-report
-
-# Skip step with reason (when step is conditional and N/A)
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --skip discovery --reason "AC empirically clear"
-
-# All active workflows (compact summary)
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --status
-
-# After crash: restart in-progress steps
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --recover
-
-# Pause / resume
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --pause --id <wf-id>
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --resume --id <wf-id>
-
-# Compact resume-block for boot
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --boot-context
-
-# Workflow-state for session-handoff
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --handoff-context
-
-# Find workflow by task-id
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --find --task 123
-```
-
-### How it integrates
-
-- **Boot/restore:** common continuity reads scoped handoff/recovery. Only explicitly
-  bound development loads the adapter to validate exact selected workflow state;
-  it does not call the mutating `--resume` command.
-- **Selected step:** Buddy uses explicit instance identity for engine progression.
-- **Save:** the development adapter exports bound state references and required
-  checks once. Common save carries this contribution; `--handoff-context` remains a
-  legacy display, not exact-state authority or automatic discovery of selection.
-
-### When to use, when to skip
-
-**Mandatory** for: `build` STANDARD/FULL, `fix`, `review`, `solve`,
-`research`, `docs-rewrite`.
-
-**Optional / skip-eligible**:
-- `build` / verified-known-fix DIRECT path (risk-based eligibility in `framework/process-map.md`)
-- `save` (lifecycle workflow, no multi-session continuity)
-- `context_housekeeping` (ad-hoc maintenance)
-
-When in doubt: trigger the engine. CLI overhead is low (~3 calls per
-workflow), cost-of-forgetting is high.
-
-### State-file convention vs engine
-
-The two are **complementary**:
-
-| Mechanism | What it tracks | Persistence |
-|---|---|---|
-| `workflow_engine` `.workflow-state/<id>.json` | Step-pointer (which step is current) | Local-only, gitignored |
-| State-File `docs/<workflow>/<slug>.md` | Phase content (findings, decisions, outputs) | Git-committed, version-controlled |
-| Task-YAML `workflow_phase` field | Atomic phase status (specify/prepare/...) | Git-committed |
-
-The engine knows *where you are*; the state-file knows *what's been done*;
-the task-yaml knows the *phase boundary*. Together they make workflow
-state durable across sessions and visible to outsiders.
-
----
-
-## A typical session, step by step
-
-You open a terminal:
-
-```
-$ cc framework
-```
-
-`cc` script (auto-detected `FRAMEWORK_DIR`):
-- Verifies `~/.claude/agents` symlink → `$FRAMEWORK_DIR/.claude/agents`
-- Verifies `~/.claude/skills` symlink
-- `cd $FRAMEWORK_DIR`
-- Calls `claude --add-dir $FRAMEWORK_DIR --agent buddy -n framework`
-
-Claude Code finds `.claude/agents/buddy.md` (the wrapper). Wrapper says:
-*"Load `agents/buddy/{soul,operational,boot}.md` and follow boot.md".*
-
-Buddy (you, in agent-mode) reads the three files and runs the boot
-sequence:
-
-```
-ORIENT  → date / hostname / pwd
-RESOLVE → ls $CWD/intent.md → found, read it
-ROUTE   → CWD inside framework, no consumer-context wiring
-LOAD    → user profile.md + boot-navigation.md + intent-load
-RESUME  → session-buffer + session-handoff + plan_engine --boot
-GREET   → "Boot done. What's up?"
-```
-
-You: *"There's a bug in `scripts/generate_skill_map.py`. It misses skills
-whose frontmatter `status` field is on a folded line."*
-
-Buddy classifies: **substantive** (you want him to do something).
-Buddy writes a Plan-Block:
-
-```
-Scope: scripts/generate_skill_map.py + tests
-Tool/Agent: main-code-agent (production code, not orchestrator)
-Alternatives:
-  - Alt 1: Buddy direct — would violate Code-Delegation invariant
-  - Alt 2: Inline patch via Edit — no test, regression-prone
-Expected: fix + failing test reproducing the bug + Pre-commit pass
-```
-
-Plus self-review (Scope-Check, Instance-vs-Class, Rationalization-Reflex).
-For non-trivial: also Plan-Adversary.
-
-Buddy routes to the **fix** workflow. Phase Specify:
-- `root_cause_fix` skill, Phase A: Symptom → Hypothesis → Drill
-- Test plan: failing test that reproduces the folded-line frontmatter gap
-
-Phase Execute: `main-code-agent` is dispatched (with the Plan-Block as
-delegation-artefact and the test plan). The sub-agent works in isolation
-and produces a fix + green test.
-
-Phase Verify: `code_review_board` L1 (because effort=S, ≤5 files). Two
-reviewers in parallel: `code-review` (correctness/architecture/performance
-multi-axis) + `code-adversary` (concurrency/edge/data-corruption). Then
-`code-chief` consolidates.
-
-Buddy reads `code-chief`'s signal and verifies pivotal claims against their
-sources, consulting relevant findings as needed. If PASS and verification
-supports it → Phase Close. If NEEDS-WORK → fix iteration via
-`convergence_loop` (max 3 passes, rising severity threshold).
-
-Phase Close:
-- `task_status_update` skill: status=done, workflow_phase=done
-- `knowledge_processor mode=process`: extract any new learning to context
-- Pre-commit hook fires:
-  - PLAN-VALIDATE: 0 errors → PASS
-  - CG-CONV: commit message format → PASS
-  - SKILL-FM-VALIDATE: no skill changes → SKIP
-  - SECRET-SCAN: no secrets staged → PASS
-  - SOURCE-VERIFICATION: no board/council review → SKIP
-- Commit lands.
-
-Total turns: ~15-25 depending on depth. The framework adds 5-10 turns of
-overhead vs. raw "fix this bug" Claude Code use. The trade is that you
-get a documented plan, an isolated review, and a state that's persisted
-for next session.
-
----
-
-## How consumer repos consume the framework
-
-You have a consumer repo, say `~/projects/personal/`. It has its own
-`intent.md`, its own `docs/tasks/`, its own context. You want Buddy in
-that repo, with the same methodology.
-
-### What you do once
-
-```bash
-# Pre-commit hook — same hook everywhere
-bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh ~/projects/personal
-```
-
-That's it. No vendoring. No version pinning. No re-install on framework
-update.
-
-### What happens at session start
-
-```
-$ cc personal       # or: cd ~/projects/personal && cc
-```
-
-`cc` looks up `personal` under `$PROJECTS_DIR/`, finds `intent.md`, cds
-there, calls Claude Code with `--add-dir $FRAMEWORK_DIR --add-dir <CWD>`.
-
-Buddy boots. RESOLVE finds `~/projects/personal/intent.md`. ROUTE
-determines context-paths:
-- consumer has `context/`? → write context-updates there
-- consumer has `docs/backlog.md`? → use that backlog (not framework's)
-
-LOAD pulls in the always-load files (the user's `profile.md`
-from their own repo, boot-navigation.md from framework) + intent-load
-files specified in the consumer's intent.md "Context" field.
-
-### Who the user is
-
-One machine setting, `~/.config/forge/user.yaml`, points to the person's
-own user repository. Inside it, one fixed convention for everyone:
-`context/user/` holds an optional `soul.md` (default: forge's), short
-`profile.md` (who they are, including values; always loaded), and
-`navigation.md` to the
-detail files (`framework/user-scope.md`). The soul and user facts follow the person
-into every repo. Install with one installer and a profile:
-
-```bash
-python3 $FRAMEWORK_DIR/scripts/forge_install.py --profile full --user-repo ~/notes
-python3 $FRAMEWORK_DIR/scripts/forge_install.py --profile daily --check
-```
-
-`full` installs all roles, skills, hooks and launchers; `daily` installs
-knowledge maintenance, save, the bedrock drill and the boot entry for
-everyday on-demand work without software tooling.
-
-The framework methodology is now live: pre-delegation discipline,
-boards, hooks, all of it. Consumer-specific content (its tasks, specs,
-context) is what the work happens *on*. The framework is what defines
-*how*.
-
-### Path discipline across repos
-
-The pre-commit-hook is the single mechanical gate that runs in any repo
-where you've symlinked it. It calls `plan_engine.py --validate` (which
-auto-detects `BUDDY_PROJECT_ROOT` vs `FRAMEWORK_ROOT`), runs `skill_fm_validate.py`
-(skipped gracefully in consumer repos that don't have `skills/`),
-and enforces commit-message convention.
-
-OpenCode under a consumer: same `oc` command, same auto-detected config.
-Cursor: project-rules under `.cursor/rules/` symlink to
-`$FRAMEWORK_DIR/orchestrators/cursor/rules/`.
-
----
-
-## What's different operationally vs. just "using Claude Code"
-
-If you're used to vanilla Claude Code, here's what changes:
-
-| Aspect | Vanilla CC | with forge |
-|---|---|---|
-| Session start | greet, go | Boot sequence with intent.md detection, parallel file loads, plan_engine state |
-| First task | "fix this" → fix | "fix this" → Plan-Block → fix → review → close |
-| Multi-perspective review | manual spawn | Spec-Board / Code-Review-Board with depth modes, chief consolidation, anti-anchoring discipline |
-| Decisions | one-shot | Architectural Council for irreversible (3-4 personas in parallel, context-isolated) |
-| State persistence | manual `/save` if you remember | `save` workflow with 3 groups (Pre-Write, Content-Writes parallel, Post-Write), session-handoff + session-log |
-| Config drift | "let me update the prompt" | Tier-0 invariants + Tier-1 operational + Skill-Anatomy enforced via hook |
-| Skill management | text in prompts | Single-class skills with `invocation` axis, frontmatter mechanically validated |
-| Cross-repo | duplicate everything | Single SoT + adapters; consumers point at framework |
-| Drift detection | none | `consistency_check` skill with 12 checks |
-| Stale cleanup | manual sweep | Stale-Cleanup invariant (discipline) |
-
-The cost is higher per-task overhead. The win is that work compounds:
-nothing falls through the cracks, multi-session continuity is real,
-methodology drift is bounded.
-
----
-
-## Daily use patterns
-
-### Start a feature (clear intent)
-
-```
-You: "build feature X — spec is at docs/specs/x.md"
-Buddy: → Path determination (process-map safety floors, scope, reversibility, evidence)
-       → Phase Specify (frame interview if no spec, spec_board if spec exists)
-       → Phase Prepare (test-design + delegation artefact)
-       → Phase Execute (main-code-agent)
-       → Phase Verify (code-review-board L1 or L2)
-       → Phase Close (task_status_update done, commit)
-```
-
-### Investigate a bug
-
-```
-You: "diagnose why the hook is failing on Linux"
-Buddy: → fix workflow Phase Specify with root_cause_fix Phase A
-       → Symptoms → Hypotheses → Drill (1-3 hypotheses, narrowest first)
-       → Test plan reproducing the bug
-       → Repair approval (this request authorized diagnosis only)
-       → Phase Execute: implement + green test
-       → Phase Verify: code-review-board L1
-       → Lessons Learned via knowledge_processor
-```
-
-### Research a topic
-
-```
-You: "research SOTA on agentic-skill libraries"
-Buddy: → research workflow
-       → CONTEXT-LOAD (existing research in <active-context>/research/)
-       → SCOPE + QUALITY-LEVEL (Standard or High?)
-       → WebFetch / WebSearch / synthesis
-       → PERSIST via knowledge_capture
-       → State-File at docs/research/<date>-<topic>.md
-```
-
-### Write a new spec
-
-```
-You: "we need a spec for the new dashboard panel"
-Buddy: → spec_authoring skill
-       → Phase 1: source-grounding + interview + solution-space exploration
-       → Phase 2: spec writing (5 primitives)
-       → spec_board for quality review (4-7 reviewers depending on depth)
-       → convergence_loop for NEEDS-WORK iterations (max 3)
-```
-
-### Architectural decision
-
-```
-You: "should we use SQLite or Postgres for the new feature?"
-Buddy: → council skill, Architectural mode
-       → Briefing-file written to docs/reviews/council/<date>-<topic>-briefing.md
-       → 3-4 council-members spawned in parallel, context-isolated
-       → Each member writes <date>-<topic>-<role>.md
-       → Buddy synthesizes to <date>-<topic>-synthesis.md
-       → User-acceptance per decision
-```
-
-### End of session
-
-```
-You: "save"
-Buddy: → save workflow
-       → Group A (Pre-Write, sequential): dispatcher + reconciliation + workflow-state
-       → Group B (Content-Writes, parallel batch):
-         - session-handoff.md (merge, never blind-overwrite)
-         - session-log.md (decisions/errors)
-         - context updates (overview.md + history)
-       → Group C (Post-Write): commit, pre-commit hooks fire
-```
-
----
-
-## When the framework gets in your way
-
-Pre-Commit-Hook BLOCKs your commit. `consistency_check` flags
-drift. Generators show a diff after running.
-
-These are not bugs in the framework. They're the framework working — it's
-catching something that would have been latent drift in your repo.
-
-The right responses:
-
-| Block | Reason | Action |
-|---|---|---|
-| PLAN-VALIDATE BLOCK | `plan_engine.py --validate` reports errors | Fix the task / plan YAML until `--validate` is clean |
-| SKILL-FM-VALIDATE BLOCK | Skill frontmatter invalid | Read `framework/skill-anatomy.md` §Frontmatter-Schema; fix fields |
-| CG-CONV BLOCK | Commit message format | Use `<type>(<scope>): <message>`. Types: feat/fix/chore/docs/refactor/test/style/perf/revert |
-| `consistency_check` ERROR | Stale ref / orphan / drift | Fix in same commit (Stale-Cleanup invariant) |
-
-When you're tempted to bypass with `--no-verify`: don't. Investigate the
-root cause. The framework's whole value proposition is that the discipline
-isn't optional.
-
----
-
-## Files you'll touch in daily work
-
-| File | When | Why |
-|---|---|---|
-| `intent.md` | New project; intent shift | Vision/Done/Non-Goals/Context |
-| `docs/tasks/<id>.{md,yaml}` | New task | Self-contained task with intent_chain |
-| `docs/plan.yaml` | Milestone change | Programme SoT (north_star, phases, milestones) |
-| `skills/<name>/SKILL.md` | New skill / skill update | Skill anatomy mandatory |
-| `workflows/runbooks/<name>/WORKFLOW.md` | New workflow / workflow update | 5-phase model for producer-class |
-| `agents/<persona>.md` | Persona behavior change | SoT for both CC + OC adapter |
-| `context/session-handoff.md` | Auto, via save | Don't hand-edit during session |
-| `framework/skill-map.md` | Auto-block via generator | Don't hand-edit AUTO section |
-
-When in doubt: `framework/process-map.md` (workflow routing) or `agents/navigation.md`
-(persona lookup) for "where do I go for X?".
-
----
-
-## Cross-references for deep dives
-
-| Topic | Read |
-|---|---|
-| Tier-0 invariants in detail | [`../CLAUDE.md`](../CLAUDE.md) + [`../AGENTS.md`](../AGENTS.md) |
-| Buddy's operational rules | [`../agents/buddy/operational.md`](../agents/buddy/operational.md) |
-| Boot sequence detail | [`../agents/buddy/boot.md`](../agents/buddy/boot.md) |
-| Skill anatomy spec | [`../framework/skill-anatomy.md`](../framework/skill-anatomy.md) |
-| Workflow routing | [`../framework/process-map.md`](../framework/process-map.md) |
-| Permission/Gate/Routing triple | [`../framework/agent-autonomy.md`](../framework/agent-autonomy.md) |
-| Plan-Block + Self-Review mechanic | [`../skills/_protocols/plan-review.md`](../skills/_protocols/plan-review.md) |
-| Frame skill (problem analysis) | [`../skills/frame/SKILL.md`](../skills/frame/SKILL.md) |
-| Bedrock-Drill (first principles) | [`../skills/bedrock_drill/SKILL.md`](../skills/bedrock_drill/SKILL.md) |
-| Spec-Board mechanics | [`../skills/spec_board/SKILL.md`](../skills/spec_board/SKILL.md) |
-| Code-Review-Board mechanics | [`../skills/code_review_board/SKILL.md`](../skills/code_review_board/SKILL.md) |
-| Council mechanics | [`../skills/council/SKILL.md`](../skills/council/SKILL.md) |
-| Convergence loop | [`../skills/convergence_loop/SKILL.md`](../skills/convergence_loop/SKILL.md) |
-| Consistency check (12 checks) | [`../skills/consistency_check/SKILL.md`](../skills/consistency_check/SKILL.md) |
-| Pre-commit hook script | [`../orchestrators/claude-code/hooks/pre-commit.sh`](../orchestrators/claude-code/hooks/pre-commit.sh) |
-| Workflow-Engine source | [`../scripts/workflow_engine.py`](../scripts/workflow_engine.py) |
-| Workflow-YAML schema example | [`../workflows/runbooks/solve/workflow.yaml`](../workflows/runbooks/solve/workflow.yaml) |
-| Boot status-check script | [`../scripts/git-status-check.sh`](../scripts/git-status-check.sh) |
-
-## Next step
-
-You've reached the end of the reader-journey set. From here:
-- [`README.md`](README.md) (this directory's index) for a re-orientation.
-- [`../README.md`](../README.md) (repo root) for the public-OSS framing.
-- [`../intent.md`](../intent.md) for the framework's stated identity
-  (vision, pillars, non-goals).
-- [`../framework/agent-patterns.md`](../framework/agent-patterns.md)
-  for the agent failure modes forge hardens against.
+| How you want to collaborate with Buddy | Configured user `soul.md` |
+| Concise person-wide values and defaults | Configured user `profile.md` |
+| Personal topic facts and preferences | Responsible user topic file |
+| An activity, draft, technical setup or project decision | Its project/topic owner |
+| Where to continue open work | Existing session handoff, with leading-file pointers |
+
+The [user-scope contract](../framework/user-scope.md) defines resolution. Configuring
+that scope authorizes its maintenance, subject to explicit limits such as “do not
+save.” A blocked personal write is reported as deferred; private content is not
+parked in another project's context. Maintenance alone does not authorize commits,
+pushes or operational changes.
+
+## Use a method during ordinary work
+
+Ask for **Frame** to clarify the problem, **Bedrock** to examine an assumption or
+**Council** to compare consequential alternatives. Supply what you know and what
+remains uncertain. The result can stay inline; invoking a method does not require
+software bookkeeping or change the whole project's mode.
+
+For example: “Use Frame on why this preparation keeps expanding. We have two weeks,
+and the outcome is a usable first version.” See [usage and methods](06-usage-workflows.md#general-reasoning).
+
+## Save and finish
+
+Say `save` for a checkpoint or at session end. The common save process:
+
+1. Reconciles useful session changes at their responsible owners.
+2. Updates worked-on topics in the handoff while retaining other open work.
+3. Carries any explicitly selected development contribution and its blockers.
+4. Publishes coherent knowledge, navigation and continuation state.
+5. Performs authorized Git persistence and checks the actual outcome.
+
+An explicit `save` requests commit and push to the active project's tracked upstream
+unless local rules restrict it. Separate user-repository changes follow that
+repository's rules. Say “save locally without committing or pushing” when that is
+your intended boundary. Local continuity also works without Git.
+
+The completion report should distinguish knowledge/handoff persistence, Git commit
+and push, and any partial outcome. A successful local write is not evidence of a
+successful push. The [save runbook](../workflows/runbooks/save/WORKFLOW.md) defines the checks.
+
+## Continue software work
+
+When development is selected, its adapter records the exact workflow identities,
+state references and required task/plan checks. Save carries that contribution;
+the next session validates it before continuation.
+
+Restoring a session does not advance steps, complete tasks or unpause workflows.
+Authoritative state files remain necessary: a short handoff summary cannot replace
+them. Gitignored workflow state does not travel automatically with Git. A move to
+another machine needs that state handled explicitly, with compatibility verified.
+
+Missing or incompatible state blocks exact development continuation. It does not
+require abandoning unrelated everyday work. Keep the blocker visible and use the
+[development continuation contract](../framework/development-continuation.md) for recovery.
+
+## Handle interruptions honestly
+
+Protected continuity uses scoped baselines and recovery records. If an interrupted
+change leaves owners and navigation inconsistent, inspect and reconcile the actual
+files before relying on them. Preserve later corrections; do not blindly replay
+an old proposed write or delete recovery records to silence a warning.
+
+“Owner updated; reconciliation pending” is a partial result. A blocked private
+write remains unpersisted until its authorized owner can be updated. Separate
+repositories have separate publication operations, not a global transaction.
+See [troubleshooting](12-troubleshooting.md) and [protected continuity](../framework/continuity.md).
+
+## Housekeeping and updates
+
+Ask for housekeeping when routes, ownership or current views need broader attention.
+It uses the same knowledge lifecycle, preserves useful qualifications and history,
+and does not delete information simply for age or low mention frequency. It creates
+no background schedule by itself.
+
+Framework upgrades use coordinated maintenance with affected sessions stopped
+before the source changes. Installation can remain `validation_pending` until a
+fresh session supplies real verification. Follow [installation](05-installation.md)
+for preparation, validation and recovery instead of updating live integrations.
+
+[Human guide](10-human-guide.md) · [Usage](06-usage-workflows.md) · [Documentation hub](README.md)

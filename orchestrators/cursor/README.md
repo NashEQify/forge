@@ -1,84 +1,36 @@
-# Cursor Adapter
+# Cursor rules and persona templates
 
-Cursor integration for forge. Cursor is an IDE (not a
-CLI agent like Claude Code / OpenCode), so this adapter has a different
-shape from `orchestrators/claude-code/` or `orchestrators/opencode/`:
-no launcher scripts, but **project rules** that align Cursor's agent mode
-with the framework behaviour.
+This directory supplies Forge-oriented rules under `rules/` and persona templates
+under `agents/`. It is a rules-based integration, not a managed installation target
+of `scripts/forge_install.py` and not proof of parity with another host.
 
-## What this adapter delivers
+Use the [host integration guide](../../architecture-documentation/07-tool-integrations.md)
+and inspect the templates before adopting them in a project's Cursor configuration.
+Verify the rule format, loading behavior and tool permissions against the Cursor
+version you actually use. Preserve existing project rules; do not replace a user's
+rule directory blindly.
 
-1. **Tier-0 anchor via the `AGENTS.md` convention.** Cursor supports
-   `AGENTS.md` as the standard repo doc for agent behaviour — that is the
-   same convention OpenCode uses. `AGENTS.md` from the framework
-   repo therefore applies under Cursor as well.
+## Scope
 
-2. **Project rules** under `rules/`. Cursor automatically loads
-   `.cursor/rules/*.md` into the composer/chat context. Here we ship the rules
-   that steer Cursor's agent towards Buddy behaviour: boot-sequence hint,
-   tier model, pre-delegation, persona discovery.
+The consumer's intent and local rules still determine whether software workflows
+apply. Installed instructions must not force everyday knowledge work into tasks,
+boards or test chains. The common Knowledge Processor and continuity contracts stay
+authoritative; project rules retain storage, privacy and operational approvals.
 
-3. **Persona wrappers** under `agents/`. Analogous to `.claude/agents/`
-   wrappers — short Cursor-specific frontmatter, the actual content
-   stays under `agents/<name>.md` (orchestrator-neutral).
+A persona template supplies instructions. It does not prove that a separate agent
+ran independently. If the host cannot execute a selected method's required agent
+separation, report that limitation or choose an applicable interaction mode. Do not
+label sequential role-playing as an independent Council.
 
-## Limitations vs. Claude Code / OpenCode
+Forge has no FACTS background hook or universal automatic engine trigger. Shared
+Git hooks can run independently of the editor when installed in the repository.
+They do not enforce every tool call or establish host-specific sandboxing.
 
-| Aspect | Claude Code | OpenCode | Cursor |
-|---|---|---|---|
-| Sub-agent discovery | `~/.claude/agents/` | `.opencode/agent/` | project rules + manual via @-mention |
-| Pre-commit hook | git symlink | git symlink | git symlink |
-| FACTS background hook | yes | no | no |
-| Workflow-engine trigger | mechanical | mechanical | manual |
+## Verification
 
-**Consequence:** Cursor's mechanical layer is the git pre-commit hook
-(git triggers it independently of the agent tool) plus the project
-rules + persona wrapper. There is no write-time hook on any harness;
-the user + agent hold path/scope discipline mentally.
-
-## Setup
-
-1. Symlink `.cursor/rules/` in the consumer repo to the framework:
-   ```bash
-   ln -s "$FRAMEWORK_DIR/orchestrators/cursor/rules" .cursor/rules
-   ```
-
-2. Install the pre-commit hook (same mechanism as CC/OC):
-   ```bash
-   bash "$FRAMEWORK_DIR/scripts/install-git-hooks.sh"
-   ```
-
-3. Open the Cursor agent — the rules under `.cursor/rules/` get loaded
-   automatically. `AGENTS.md` from the repo root is also honoured (Cursor convention).
-
-## Persona invocation
-
-Cursor's agent mode (as of late 2025) has no sub-agent-discovery mechanism
-analogous to Claude Code's `@<agent>`. Personas are invoked via a mention
-pattern:
-
-```
-@buddy review the plan below...
-@code-review look through the diff...
-```
-
-The Cursor agent then reads the referenced persona definition from
-`agents/<name>.md` and follows it.
-
-## Known open points
-
-- **Sub-agent spawn:** Cursor's agent mode currently has no analogous
-  `Task` tool like Claude Code. Multi-persona boards therefore run under
-  Cursor sequentially via @-mention instead of in parallel. Workaround: Buddy
-  manually collects the outputs of the individual persona invocations.
-
-- **Workflow engine:** workflow-engine invocations (`workflow_engine.py
-  --next` etc.) run via Cursor's terminal integration manually —
-  no auto-trigger.
-
-## Status
-
-**Minimal-viable adapter.** Sufficient to apply forge methodology under
-Cursor. The parity gap vs CC is now just parallel sub-agent spawn
-(open, depends on Cursor's composer roadmap) — the hook layer (git
-pre-commit + boot) is portable, and there's no write-time hook to match.
+Open a fresh session in the intended consumer and check which rules were loaded,
+which files/tools are accessible and whether the intended method can actually run.
+This repository's templates alone do not establish current Cursor feature support.
+For coordinated Forge source upgrades, follow
+[installation activation](../../framework/installation-activation.md) and preserve
+any separately managed Cursor configuration.

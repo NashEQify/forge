@@ -1,330 +1,146 @@
 # 12 — Troubleshooting
 
-Known stumbling blocks and workarounds.
+Start with the boundary that failed: host entry, installation, continuity or selected
+development state. Preserve the current files and diagnostic output before trying
+a repair. A generic reset can destroy the evidence needed to recover safely.
 
 ## Setup problems
 
-### "claude: command not found"
+### Missing Python dependency or host command
 
-The Claude Code CLI is not installed or not on `$PATH`. Install:
-https://docs.anthropic.com/claude/docs/claude-code (or equivalent).
+Use the Python environment that provides PyYAML, and verify the intended host CLI
+is installed and on the launcher's PATH. Creating a virtual environment does not
+change the environment of every desktop host. Follow [installation prerequisites](05-installation.md#prerequisites).
 
-### "Unknown scope: <name>"
+### `--check` exits nonzero
 
-`cc` could not resolve the scope you passed. Built-in scope:
-`framework` (alias `forge`). All other scopes resolve dynamically
-under `$PROJECTS_DIR/<scope>/` (case-insensitive, requires
-`intent.md`).
+Exit 1 means changes are planned; exit 2 indicates a reported conflict or error.
+Read the paths and error text before applying. A preview is read-only and does
+not complete installation.
+Use the shared installer's current `--help`; old host-specific setup flags may no
+longer exist because all setup aliases now forward to the coordinator.
 
-Solutions:
-- Create an `intent.md` in the project, OR
-- Use the exact directory name, OR
-- `cd` into the project and run `cc` without a scope argument.
+### Managed file, directory or symlink conflict
 
-### "Ambiguous scope '<name>'"
+An ownership check found content it cannot safely replace. Preserve the current
+content, identify whether it is user-owned or an edited generated file, and compare
+it with the intended managed output. Reconcile through the coordinated procedure.
 
-Several directories under `$PROJECTS_DIR/` match the scope name
-case-insensitively. `cc` lists all matches. Solution: use the exact
-case-sensitive directory name.
+Do not delete host directories, replace symlinks by hand or remove ownership
+manifests as a general workaround. `--migrate-legacy` recognizes only specific
+byte-identical legacy content; it is not a force-overwrite option.
 
-### "WARNING: ~/.claude/agents points at X, not at the framework"
+### Installation says `validation_pending`
 
-The symlink exists but points at a different path than expected
-(`$FRAMEWORK_DIR/.claude/agents`). Typically means: an old setup
-state.
+Application finished but fresh acceptance has not. Keep ordinary sessions stopped.
+Inspect `--maintenance status`, use the exact operation ID for a controlled
+acceptance session, and record the checks actually performed. Submit that evidence
+only after the installed generation works for the claimed targets.
 
-Solution:
-```bash
-rm ~/.claude/agents
-ln -s $FRAMEWORK_DIR/.claude/agents ~/.claude/agents
-```
+See [verification](05-installation.md#verification). Writing “passed” into a file
+without running acceptance does not establish a verified installation.
 
-Same idea for `~/.claude/skills`.
+### Installation was interrupted or source changed unexpectedly
 
-### "WARNING: ~/.claude/agents is a real directory (not a symlink)"
+Inspect maintenance status. Keep affected sessions stopped during partial activation
+or recovery. The coordinator's retry and rollback operate on journaled, matched
+states; unknown later edits remain conflicts. Preserve the journal and locks.
 
-You have a real directory there, probably from an early manual setup.
-Back up the contents, then replace the directory with a symlink:
-```bash
-mv ~/.claude/agents ~/.claude/agents.bak
-ln -s $FRAMEWORK_DIR/.claude/agents ~/.claude/agents
-# Merge any mergeable content from ~/.claude/agents.bak into the framework repo
-```
+If sources were updated before baseline preparation, say so: a later preparation
+cannot recover the missing old working-tree state. Do not reset the repository or
+reconstruct an old generation from wrappers alone. Use
+[the activation contract](../framework/installation-activation.md) to assess recovery.
 
-### `plan_engine.py: ERROR: PyYAML required`
+## Host entry problems
 
-PyYAML is missing. `plan_engine.py` itself attempts to switch to a
-`.venv` if one is present:
+### `cc` cannot resolve a project scope
 
-```bash
-python3 -m venv $FRAMEWORK_DIR/.venv
-$FRAMEWORK_DIR/.venv/bin/pip install pyyaml
-```
+Named scopes resolve under `PROJECTS_DIR` and require `intent.md`; `framework` and
+`forge` are built-in scopes. Check the intended directory and configuration.
+Running from the consumer directory without a scope preserves that CWD.
+For ambiguous names, use the exact matching name or enter the intended directory.
 
-After that, `plan_engine.py` runs automatically under `.venv` (auto
-relaunch).
+### Buddy did not load the intended instructions
 
-## Hook problems
+Check the actual host entry: Codex managed AGENTS block, configured Claude boot,
+OpenCode launcher/configuration, or Cursor project rules. Verify the framework root,
+consumer CWD and selected profile in a fresh session. Access to a directory does
+not prove that its instructions loaded.
 
-### A hook BLOCKs a write
+A generated role's read-only default is not proof of effective sandbox restrictions.
+Inspect runtime permissions and report any mismatch. The
+[host guide](07-tool-integrations.md) separates these mechanisms.
 
-The hook is doing what it should — check the block output. Typical
-causes:
+### A software board starts during ordinary work
 
-| Check | Block reason | Fix |
-|---|---|---|
-| `pre-commit` Check 1 (PLAN-VALIDATE) | `plan_engine.py --validate` reports errors | Run `python3 scripts/plan_engine.py --validate` locally and fix the errors |
-| `pre-commit` Check 2 (CG-CONV, commit-msg) | Commit message format | Use conventional-commit form (`feat(scope): msg`) |
-| `pre-commit` Check 3 (SKILL-FM-VALIDATE) | SKILL frontmatter incomplete or unknown invocation | Check the frontmatter against `framework/skill-anatomy.md` |
-| `pre-commit` Check 5 (SOURCE-VERIFICATION) | Board/council review missing line-numbered evidence pointers | Add evidence pointers per `_protocols/evidence-pointer-schema.md` |
+Check the workspace's intent and workflow selection. `full` makes tools available;
+it does not select development. On-demand work follows local rules and explicitly
+requested methods. Correct the selection at its source rather than deleting useful
+skills from the installation.
 
-### Pre-commit hook BLOCKs with "PLAN-VALIDATE"
+## Knowledge and save problems
 
-Tasks or plan have an inconsistency. Locally:
+### A personal fact would be written into the project
 
-```bash
-python3 $FRAMEWORK_DIR/scripts/plan_engine.py --validate
-```
+Stop that write. Personal facts belong only to the configured user scope. If access
+is unavailable, report the fact as deferred; do not park it in a shared project
+handoff. Check [user-scope resolution](../framework/user-scope.md#3-resolution).
 
-The output shows concrete errors — typically: blocked_by cycles,
-missing spec_ref, invalid status values.
+### A pending continuity operation remains
 
-### Hook does not seem to fire
+Use the continuity helper's scoped recovery interface. Inspect original, proposed
+and current content plus dependent routes, then reconcile against a fresh snapshot.
+Do not delete the pending record because one destination already contains the text.
+An interrupted write may have completed before progress was recorded.
 
-Check:
-1. Is the hook registered in `~/.claude/settings.json` (user-global)?
-   `jq '.hooks' ~/.claude/settings.json` should list it. If missing, the
-   template was edited without re-running setup: `bash $FRAMEWORK_DIR/scripts/setup-cc.sh`.
-2. Is the hook executable? (`chmod +x orchestrators/claude-code/hooks/<name>.sh`)
-3. For claude-desktop / claude-web: verify the entrypoint gate inside the
-   hook script doesn't `exit 0` early (some hooks intentionally fire only
-   on specific `CLAUDE_CODE_ENTRYPOINT` values).
-4. For git hooks: is the symlink at `.git/hooks/<name>` correct?
+### Conditional publication reports a stale baseline
 
-## Buddy problems
+Recapture the required same-scope files and reconcile the intended change with the
+new evidence. Do not retry prepared text blindly or bypass the helper with raw
+writes. External writers may require an actual exclusive maintenance window.
+See [continuity](../framework/continuity.md).
 
-### "Buddy ignores a convention"
+### Save cannot report completion
 
-If Buddy systematically violates a convention:
-1. Check whether the convention can be anchored mechanically (a hook).
-   If yes: add a hook instead of repeating the prompt-text convention.
-2. If only mentally anchorable: extend the Tier-1 operational rules
-   (Buddy loads them at boot).
+Identify whether the blocker is common knowledge reconciliation, a separate
+repository's publication policy, or selected development obligations. Report partial
+persistence accurately. An unrelated development blocker need not prevent ordinary
+work, but it must remain visible and must not be silently cleared.
 
-Convention drift in the prompt text is a well-known pattern and the
-reason the framework leans so heavily on mechanical enforcement.
+## Development problems
 
-### Buddy starts without a greeting / without booting
+### A handoff refers to missing workflow state
 
-The boot did not run. Check:
-- Was Buddy initiated correctly (`cc framework` or `--agent buddy`)?
-- Are `agents/buddy/{soul,operational,boot}.md` accessible?
-- Under OpenCode: is `oc` running with the correct
-  `OPENCODE_CONFIG_DIR`?
+The handoff does not contain the complete engine state. `.workflow-state/` is local
+and gitignored in Forge; pushing the handoff does not transfer it. Confirm the exact
+selected run and its authoritative state location. Do not recreate progress from
+prose or bind every locally discovered workflow.
 
-### Buddy writes to the wrong directory
+### A workflow definition is incompatible
 
-Scope is held by discipline. If you see it happening: tell Buddy
-directly that the write was out of scope; check whether `intent.md`
-scope is unclear or the touched file's intent isn't documented.
+Preserve the selected state and inspect the definition fingerprint and reviewed
+compatibility mapping. Names and step counts do not prove equivalent semantics.
+Restore is read-only with respect to progression; an engine resume command can
+change pause state. Follow [development continuation](../framework/development-continuation.md).
 
-### Buddy runs a board without a plan-block
+### A Git hook blocks a commit
 
-CLAUDE.md §3 violated. Fix: explicitly tell Buddy to "write a
-plan-block first and then trigger the board". The discipline lives in
-`_protocols/plan-review.md`; if Buddy repeatedly skips plan-blocks,
-the discipline is being internalized poorly and needs explicit
-reinforcement.
+Read the named check. Applicable plan errors, commit format and skill frontmatter
+can block. Secret scan, source verification and anti-phantom diagnostics are advisory.
+Correct the responsible source or investigate a reproducible validator defect.
+Do not remove the hook to turn a failing check into a success claim.
 
-## Skill / workflow problems
+### Navigation or generated wrappers are stale
 
-### Skill-FM-Validate BLOCKs a new skill
-
-Mandatory fields are missing or `invocation.primary` has an unknown
-value. Check:
-- `name`: present, `lower_snake_case` or `kebab-case`
-- `description`: present with a "Use when" trigger
-- `status`: `active | draft | archived`
-- `invocation.primary`: one of the 5 values (`user-facing |
-  workflow-step | sub-skill | hook | cross-cutting`)
-- `disable-model-invocation`: bool if present
-- `modes`: list if present, otherwise omit
-
-Detail: `framework/skill-anatomy.md §Frontmatter-Schema`.
-
-### Skill is large or required guidance is missed
-
-Apply `skills/_protocols/piebald-budget.md`. Check for duplicated or
-irrelevant loaded content, conflicting instructions and missing read triggers.
-Remove duplication or move substantial conditional detail to a reference
-with an explicit trigger. Keep essential action constraints visible before
-the dependent action. Retain a cohesive structure when it serves the task;
-line count alone requires neither a split nor an exception approval.
-
-### Workflow engine says "step not found"
-
-The state file is out of sync with the runbook. Fix:
-```bash
-python3 scripts/workflow_engine.py --recover --id <wf-id>
-```
-
-OR check the state file manually under `docs/build|fix|review|solve/...`.
-
-### `consistency_check` shows ERRORS
-
-Structural drift. The output indicates concretely which check produced
-which findings.
-
-| Check | Typical cause | Fix |
-|---|---|---|
-| 1 (Dead refs) | Skill/workflow archived without stale-cleanup | `grep -rn <name>`, fix all refs |
-| 2 (Orphan files) | Skill without a caller | Check whether legitimate or a real orphan |
-| 3 (Adapter-SoT-Sync) | `agents/<name>.md` and `.claude/agents/<name>.md` diverge | Update the wrapper |
-| 6 (Boot-map drift) | A skill on disk is not in `boot-navigation.md` | Add to `boot-navigation.md` |
-| 8 (Navigation-layer drift) | Generator not run or manual section empty | `python3 scripts/generate_navigation.py` |
-
-## Workflow-specific problems
-
-### `save` hangs at "reconciliation"
-
-Pre-write Group A Step 2 found unmatched status changes. The output
-indicates which YAMLs. Solution:
-```bash
-git diff HEAD -- docs/tasks/*.yaml
-```
-Check whether the status change was legitimate. If yes: invoke the
-`task_status_update` skill to set the status change cleanly. If no:
-revert.
-
-### `build` Phase Verify fails with code-review findings
-
-The code-review-board produced findings. Buddy reads the Chief's signal,
-verifies pivotal claims against sources and consults relevant findings to
-resolve contradictions. Fix:
-- Work through HIGH/MAJOR findings systematically.
-- On architectural conflict: consult solution-expert.
-- On spec conflict: back to the spec (spec-engineering mantra).
-- Re-review after the fix (`code_review_board L1` is usually enough).
-
-### Sub-agent ESCALATED without a clear reason
-
-Read the return summary, check the incident block. Typical causes:
-- Spec was not clear enough → `spec_authoring` or spec update
-- MUST constraints were missing in delegation → extend the gate file
-- Architectural conflict → solution-expert
-
-## General workarounds
-
-### "I want to change a skill manually that lives in the AUTO block"
-
-Wrong question. The AUTO block is regenerated from the frontmatter.
-Fix:
-- Change the skill frontmatter (`skills/<name>/SKILL.md`)
-- Run `python3 scripts/generate_skill_map.py`
-- Commit the diff.
-
-### "I want to edit a frozen zone"
-
-Convention-enforced (WORM) — there's no mechanical block. If truly
-necessary:
-- Corrections via `.correction.md` sidecar (a convention, not a file
-  modification)
-- Or an explicit user OK to write into the zone — rarely justified.
-
-### "I want to disable a hook"
-
-Typically means: you are working against the framework. The first
-question is *"why does the hook bother me?"* — most of the time the
-answer is that the hook is pointing out a real drift problem, not that
-the hook is wrong.
-
-If genuinely necessary (e.g. during a massive refactor): temporarily
-edit `~/.claude/settings.json` (the user-global file `setup-cc.sh`
-writes) to remove the offending hook entry, or comment out the entry
-in `orchestrators/claude-code/settings.json.template` and re-run
-`setup-cc.sh`. Either way: do not commit a template change that
-disables hooks; restore before pushing.
-
-### "git commit hangs"
-
-The pre-commit hook is running, probably `plan_engine.py --validate`.
-For large repos this can take a few seconds. If it hangs longer than
-30s: check the hook output (run `.git/hooks/pre-commit` locally).
-
-## Public-OSS adoption issues
-
-The framework is not yet fully public-OSS-ready. Known
-issues:
-
-### LICENSE missing
-
-No LICENSE file in the repo. To be added for public-OSS status
-(probably MIT, in line with the lift source `addyosmani/agent-skills`).
-
-### Single-user defaults
-
-Paths are hard-coded to a single user's home directory. On adoption
-these need to be generalised per user:
-- `orchestrators/claude-code/bin/cc` (FRAMEWORK_DIR / PROJECTS_DIR
-  defaults)
-- `orchestrators/opencode/bin/oc` (OPENCODE_CONFIG_DIR default)
-
-An env-var-driven generalisation would be the way.
-
-### CI missing
-
-Today no automated CI. Pre-commit hooks are the only gate. A GitHub
-Actions workflow would make sense:
-- Pre-commit checks
-- Generator idempotency
-- Lints
-- TESTCASES.md smoke tests
-
-### CONTRIBUTING.md / issue templates missing
-
-For external contributions the setup would have to be extended:
-- CONTRIBUTING.md with conventions (standard skill format, pre-commit,
-  stale-cleanup)
-- Issue templates
-- PR template with a pre-commit-check list
-
-### Cursor: harness parity
-
-The discipline layer is shared across supported harnesses. Git hooks run
-when installed in the active repo; boot integration differs: configured
-Claude SessionStart, Codex managed AGENTS, OpenCode launcher, Cursor rules.
-There are no framework tool-event hooks (PreToolUse / PostToolUse /
-UserPromptSubmit). Write-time discipline lives in Buddy reasoning + protocols.
-Full adapter
-shape: [`07-tool-integrations.md`](07-tool-integrations.md) §Cursor.
+Edit the canonical source and run the relevant generator, then inspect its diff
+and check idempotency. Installed integration changes still need coordinated
+activation. See [maintenance](08-development-and-maintenance.md#generators).
 
 ## When nothing helps
 
-1. `python3 $FRAMEWORK_DIR/scripts/plan_engine.py --validate` — check
-   whether the framework itself is consistent.
-2. Run `python3 $FRAMEWORK_DIR/scripts/generate_skill_map.py` and
-   `python3 $FRAMEWORK_DIR/scripts/generate_navigation.py` — both must
-   be idempotent (no diff).
-3. Read the logs: `~/.claude/logs/...` (CC logs), repo `logs/` (hook
-   logs).
-4. Open an issue in the GitHub repo.
+Record the exact command, selected profile, host, operation or workflow identity,
+observed output and preserved local changes. Remove secrets and personal content
+before sharing a report. Use [CONTRIBUTING.md](../CONTRIBUTING.md) for a reproducible
+issue, or [SECURITY.md](../SECURITY.md) for a security concern.
 
-## When the framework is blocking you
-
-The 6 pre-commit checks (PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE,
-SECRET-SCAN, SOURCE-VERIFICATION, ANTI-PHANTOM) exist to catch schema +
-format drift before it ships. If you are pushing back against a BLOCK:
-re-examine the assumption that you are really on the right path. Most
-of the time the conflict is in a drift in your mental model of the
-repo, not in the framework.
-
-But: if there is a genuine bug in the framework — a hook BLOCKs
-something it should not, a generator is not idempotent, a convention
-is contradictory — document it transparently (an issue, an ADR via
-`documentation_and_adrs/SKILL.md`). The public-OSS quality bar is
-honest drift labelling, not drift hiding.
-
-## Next step
-
-Daily-use methodology + commands:
-[`13-operational-handbook.md`](13-operational-handbook.md).
+Next: [Daily operations](13-operational-handbook.md).

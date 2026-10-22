@@ -1,70 +1,44 @@
-# Agents
+# Agent roles
 
-Tool-neutral agent definitions (source of truth).
-Adapters under `orchestrators/` and `.claude/agents/` reference
-these files.
+These files define Forge's roles. The [role index](navigation.md) lists their
+current owners. Host adapters expose selected roles through their discovery
+mechanisms; an installed role is not an instruction to delegate every request.
 
-## Agent landscape
+## Responsibilities
 
-| Agent | Role | SoT | Model | Intent |
-|-------|------|-----|-------|--------|
-| **Buddy** | Personal assistant, orchestrator, planner | `agents/buddy/` (soul, operational, boot, context-rules) | Opus | Yes |
-| **buddy-thinking** | Buddy with maximum thinking depth (deep thinking for spec interviews, strategic questions) | `agents/buddy-thinking.md` | Opus | Yes |
-| **Solution Expert** | Architecture sparring, Architecture Board (6 personas) | `agents/solution-expert.md` | Opus | Yes |
-| **main-code-agent** | Full development agent — direct recipient of Buddy delegations (plan → implement → review → test). Workflow detail in `skills/return_summary/SKILL.md`. Execute steps inlined into the build runbook. | `agents/main-code-agent.md` | Opus | Yes |
-| **Security** | Offensive security agent — recon, exploitation, credential audit, forensics | `agents/security.md` | Sonnet | Yes |
+| Role family | Responsibility |
+|---|---|
+| [Buddy](buddy/) | Understand the user's intent, retrieve relevant context, coordinate authorized work and own decisions |
+| [Council members](council-member.md), [adversary](council-adversary.md), [Chief](council-chief.md) | Independent decision perspectives, challenges and consolidation when the selected method requires them |
+| [Main code agent](main-code-agent.md) | Implement delegated software work and supply verification evidence |
+| Spec and code review roles | Investigate the supplied specification or implementation from distinct perspectives |
+| [Tester](tester.md) and [test skeleton writer](test-skeleton-writer.md) | Design or execute the selected testing work |
+| [Security](security.md) | Authorized security investigation within its defined scope |
 
+A Chief consolidates findings and disagreement. Buddy owns the resulting decision
+and verifies load-bearing claims against their sources. Role names do not prove
+independent execution, model diversity or effective read-only permissions.
 
-### Sub-agents (orchestrated by Buddy in parallel)
+## Context and delegation
 
-| Agent | Role | SoT | Model | Intent |
-|-------|------|-----|-------|--------|
-| **board-chief** | Spec Board: consistency, completeness, final arbiter | `agents/board-chief.md` | Opus | No |
-| **board-adversary** | Spec Board: smart-but-wrong, E2E, boundary tracing, edge cases. **Double instance in deep pass 1**: once Opus (prefix F-A-), once Sonnet (prefix F-A3-) for a cheaper third E2E perspective. | `agents/board-adversary.md` | Opus / Sonnet | No |
-| **board-adversary-2** | Spec Board: like adversary + first-principles analysis | `agents/board-adversary-2.md` | Opus / Sonnet | No |
-| **board-implementer** | Spec Board: buildability, API check, integration | `agents/board-implementer.md` | Sonnet | No |
-| **board-impact** | Spec Board: blast radius, interface breaks, dependency chains | `agents/board-impact.md` | Opus | No |
-| **board-consumer** | Spec Board: readability, clarity, self-containment | `agents/board-consumer.md` | Sonnet | No |
-| **council-member** | Architecture Council: single-perspective analysis | `agents/council-member.md` | Sonnet | No |
+Every delegation supplies its scope, question, relevant evidence and success
+criteria. Reviewers investigate independently under the selected method's
+[dispatch protocol](../skills/_protocols/dispatch-template.md). Complete returns
+are preserved before consolidation. The supplied intent and constraints matter;
+reviewers need not inherit the parent conversation to understand them.
 
-### Sub-agents (delegated by main-code-agent)
+Ordinary knowledge work can remain in the primary conversation. Council and other
+general methods can be invoked without software bookkeeping. Development delegation
+follows the [selected process](../framework/process-map.md) and its runbook.
 
-| Agent | Role | SoT | Model | Intent |
-|-------|------|-----|-------|--------|
-| **test-skeleton-writer** | TDD red phase: test skeletons without impl code in context | `agents/test-skeleton-writer.md` | Sonnet | No |
-| **tester** | Spec-driven test engineer: derive tests from spec, write, run, PASS / FAIL | `agents/tester.md` | Sonnet | No |
+## Host discovery
 
-**Intent levels:** *Yes* = actively runs the agent check,
-verifies the derivation chain, can say STOP when intent isn't
-intact. *Reads* = receives `intent_chain` as context for
-orientation but doesn't run an own agent check. *No* = works
-against specs / criteria; intent is irrelevant for the task.
+- Claude Code wrappers are under `.claude/agents/` in the framework.
+- OpenCode wrappers are under `orchestrators/opencode/.opencode/agent/`.
+- Codex roles are generated into its configured agents directory by the installer.
+- Cursor includes separate rules and persona templates; these alone do not provide
+  independent-agent execution.
 
-## Delegation pattern
-
-```
-User
-  +-- Buddy (planned work: spec → board → delegate → track)
-  |     +-- Spec Board (parallel: board-chief, board-adversary [Opus + Sonnet double instance in deep pass 1, prefix F-A- / F-A3-], board-adversary-2, board-implementer, board-impact, board-consumer)
-  |     +-- Architecture Council (parallel: N x council-member)
-  |     +-- Solution Expert (architecture / framework decisions)
-  |     +-- main-code-agent
-  |     |     +-- test-skeleton-writer (TDD red phase)
-  |     |     +-- tester (test design + execution)
-  |     |     +-- code-review / code-adversary / code-spec-fit / code-* (Code Review Board, dispatched by Buddy after the MCA return)
-  |     +-- security (security assessments, pentests, forensics)
-  +-- Agent direct (direct conversation; the agent writes into the shared memory)
-```
-
-Development process: `framework/process-map.md` + workflow
-runbooks under `workflows/runbooks/`.
-Board detail: `workflows/templates/spec-board.yaml`.
-Council detail: `workflows/templates/council.yaml`.
-
-## Adapters
-
-Every SoT file here is tool-neutral (no frontmatter).
-Adapters are thin and reference here:
-
-- **Claude Code:** `.claude/agents/<name>/<name>.md`.
-- **OpenCode:** `orchestrators/opencode/.opencode/agent/<name>.md`.
+Model selection and runtime permissions depend on the installed host configuration.
+[Host integrations](../architecture-documentation/07-tool-integrations.md) explains
+the supported surfaces and the limits of each setup.

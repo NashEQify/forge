@@ -1,52 +1,36 @@
-# Intent — forge (PUBLIC MIRROR STUB)
+# Intent — Forge
 
-> **You are reading the OSS mirror.** Active development happens in
-> the private `forge_dev` SoT. This repository is produced solely by
-> `forge_dev/scripts/release-sync.sh` (one-way rsync, exclude-list-
-> driven, `--delete`) and is **never hand-edited** except for one-
-> time release hygiene. If you arrived here intending to write a
-> task, file, spec, or dogfood-feed entry: stop. Switch to
-> `forge_dev`. The misroute case the per-repo split was created to
-> prevent (2026-05-25): a parallel session interpreted *"forge feed
-> this"* as *"land in the public forge repo"* instead of the
-> private `forge_dev/docs/dogfood-learnings/forge-feed.md` log.
->
-> The full framework — Vision, Positioning, Pillars, Consumer model,
-> Adapter layers, Non-Goals — is documented for OSS consumers in
-> [README.md](README.md) and [architecture-documentation/](architecture-documentation/),
-> which describe the framework from the consumer's single-repo
-> perspective. The active development intent (this file's counterpart
-> in `forge_dev`) is not part of the public surface; the project
-> intent doesn't change what the framework is, only how its
-> maintainer reasons about it.
->
-> Canonical topology statement (mirrored from `forge_dev`):
-> `CLAUDE.md` Invariant 8 + [docs/STRUCTURE.md](docs/STRUCTURE.md)
-> §Repo topology. Symmetric stubs (excluded from sync, hand-
-> maintained on this side): `docs/plan.yaml` (north_star only),
-> `docs/tasks/.gitkeep` (convention marker), `intent.md` (this
-> file).
+Forge helps people work coherently with AI agents across sessions: preserve useful
+context, reason through difficult questions and deliver verified software changes.
 
-## For OSS consumers
+One distribution provides three capabilities:
 
-You probably want one of these instead:
+- **Knowledge and continuity:** reconcile useful information at the right owner,
+  retrieve relevant context and preserve open work without loading an entire history.
+- **General reasoning:** clarify problems, examine assumptions and compare options
+  with Frame, Bedrock and Council. Supplied context is enough; no software project
+  or permanent repository is required.
+- **Software development:** organize specifications, implementation, testing,
+  review and release for selected development work.
 
-- **[README.md](README.md)** — what forge is, what's in the
-  workshop, how it works, honest scope.
-- **[architecture-documentation/](architecture-documentation/)** —
-  deeper framing per area: workflows, skills, discipline layer,
-  adapter mechanics.
-- **[orchestrators/](orchestrators/)** — per-harness setup
-  (`claude-code/`, `opencode/`, `cursor/`).
-- **GitHub repo description + issues** — current state, known
-  caveats, where to file feedback.
+These capabilities share authorization, evidence standards and host integration.
+They do not require every user to follow the same workflow or organize their files
+identically. Installation availability and active workflow selection are separate.
+The user retains goals, consequential decisions and control over their information.
 
-## For developers who arrived in the wrong CWD
+Forge is an opinionated, pre-1.0 set of instructions, skills and supporting tools.
+It does not replace an agent host, provide a hosted memory service or guarantee
+model correctness. Verification must distinguish a mechanism's implementation from
+its observed behavior in the host being used.
 
-You want `forge_dev`. The public mirror has no live tasks
-(`docs/tasks/` carries only `.gitkeep`), no live plan
-(`docs/plan.yaml` is a north_star stub), no operational context
-(`context/` is excluded by sync), and no dogfood feed
-(`docs/dogfood-learnings/` is excluded by sync). Writes here would
-either be lost on the next sync (`rsync --delete` enforces it) or,
-worse, propagate confusion if force-pushed.
+## Using this repository
+
+Start with [README.md](README.md), the [documentation hub](architecture-documentation/README.md)
+or [installation](architecture-documentation/05-installation.md). Work in your own
+consumer directory and follow its intent, storage rules and approval boundaries.
+
+This is the public distribution mirror. Maintainer task state, private knowledge
+and development review records are not shipped here. Source changes are published
+through the maintainer's release process; contributions follow
+[CONTRIBUTING.md](CONTRIBUTING.md). This mirror-specific intent stays separate from
+the maintainer's active development intent.

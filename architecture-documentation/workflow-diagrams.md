@@ -1,291 +1,159 @@
-# Workflow diagrams — one per workflow
+# Visual guide — capabilities and workflows
 
-The README shows the *shared shape* every workflow follows. This page
-draws each of the eight workflows in full: its real phases (boxed), the
-steps inside them, where a board / council / agent is spawned, the loops,
-and where the result leaves the workflow.
+These diagrams explain the operating shape. Canonical method contracts and runbooks
+define the actual steps, gates and completion requirements. Not every request starts
+a software workflow.
 
-## The shared shape
+## Choose the relevant capability
 
-A **workflow is the home** — the container the work lives in, with its
-place persisted per step (`.workflow-state/<id>.json`) so a paused run
-resumes exactly where it stopped, even across sessions and machines.
-
-Inside the home are **phases** (the boxes); inside phases are **steps**
-(listed to the right). A step is where a **skill** runs — and some skills
-spawn a **cold sub-routine**: a board, a council, or the code-agent, each
-running context-isolated (reviewers never see the orchestrator's framing)
-and returning their artifacts to the step. A Chief consolidates where required;
-Buddy owns the decision and verifies pivotal claims against sources. Read-only
-reviewers return complete artifacts inline for Buddy to persist verbatim with
-provenance before downstream Chief consumption.
-When a check fails the flow **loops** — fix and re-review, bounded to a
-fixed number of passes, then it escalates. The **result** leaves the
-container at the bottom — it is the output of the whole workflow, not of
-any single board pass.
-
-```
-legend
-  ┌─────────┐
-  │  phase  │  steps run inside the phase (listed right) — a step runs a skill
-  └────┬────┘
-       ▼            phases run top → bottom
-  ◄ ≤N              a bounded loop: N passes, then escalate to the user
-  cold → 1 signal   independent review; Chief consolidates where required,
-                    Buddy verifies pivotal claims and decides
-  RESULT            leaves the container at the bottom — the workflow's output
+```mermaid
+flowchart TD
+    A[Describe the result and constraints] --> B{What does the work need?}
+    B --> K[Knowledge and continuity]
+    B --> R[General reasoning]
+    B --> D[Selected software development]
+    K --> KR[Retrieve, reconcile and continue]
+    R --> RR[Clarify, examine or compare]
+    D --> DR[Specify, implement and verify]
+    KR --> O[Useful result with evidence and limits]
+    RR --> O
+    DR --> O
 ```
 
-The path (or route) is chosen *before* the phases run and sets the depth:
-DIRECT uses a bounded lifecycle with relevant verification; the heaviest path
-runs every applicable gate. Eligibility comes from `framework/process-map.md`.
-Effort scales to the stakes.
+The capabilities compose: a decision can use stored knowledge, and a development
+workflow can invoke a reasoning method. The [capability contract](../framework/capabilities.md)
+owns the boundaries. Profile selection controls availability, not workflow selection.
 
-Signoff steps record existing authorization when it covers the scope. Ask for
-a new decision only when scope/risk changes or a consequential decision remains
-open. Commit, push and deploy each require authorization covering that action;
-the diagrams do not grant publication or live-change permissions.
+## Knowledge and continuity
 
----
-
-## Producers — `build` · `fix` · `review` · `research` · `solve`
-
-### build — implement a feature or task
-
-```
-┌─ build · implement a feature or task ─────────────────────────────────────────────┐
-│  paths: DIRECT · STANDARD · FULL · SUB-BUILD · STD-IMPL-ONLY · AUTHORITY-ONLY     │
-│                                                                                   │
-│  ┌─────────┐                                                                      │
-│  │ Specify │  interview (frame) · spec-write · board ─► spec-board | council      │
-│  └────┬────┘                                                                      │
-│  ┌────▼────┐                                                                      │
-│  │ Prepare │  test-design (+adversary) · architect-lens · brief-author · sign-off │
-│  └────┬────┘                                                                      │
-│  ┌────▼────┐                                                                      │
-│  │ Execute │  main-code-agent:  plan → impl-plan-review → implement → L0          │
-│  └────┬────┘                                                                      │
-│  ┌────▼────┐                                                                      │
-│  │ Verify  │  code-review-board (L1 / L2) · spec-drift    ◄ review → re-fix ≤3    │
-│  └────┬────┘                                                                      │
-│  ┌────▼────┐                                                                      │
-│  │ Close   │  bookkeeping (ADR · risk · knowledge) · commit + deploy              │
-│  └────┬────┘                                                                      │
-│       │  FULL: spec in levels  E1 ─► board ─► E2 ─► board ─► E3 ─► board (deep)   │
-└───────┼───────────────────────────────────────────────────────────────────────────┘
-        ▼
-     RESULT — committed, deployed
+```mermaid
+flowchart TD
+    A[Question or useful new information] --> B[Find the authorized owner]
+    B --> C[Capture coherent context and check recovery]
+    C --> D{Pending reconciliation?}
+    D -->|Yes| E[Inspect actual files and reconcile]
+    E --> F[Reason from current evidence]
+    D -->|No| F
+    F --> G{Knowledge changed?}
+    G -->|No| H[Use it without redundant writes]
+    G -->|Yes| I[Reconcile owner and affected routes]
+    I --> J[Publish against the protected baseline]
+    J --> K{Baseline still current?}
+    K -->|No| C
+    K -->|Yes| L[Verify outcome and report limits]
 ```
 
-### fix — root-cause a bug, no symptom-patching
+Personal and project scopes remain separate. Pending recovery must be resolved or
+the dependent result qualified. Read the [Knowledge Processor](../skills/knowledge_processor/SKILL.md)
+and [protected publication contract](../framework/continuity.md) for exact semantics.
 
-For an active outage or ongoing harm, run authorized recovery before the
-permanent-repair phases below: preserve essential evidence, restore safely,
-verify the actual service/user outcome, and record **Restored** separately
-from **Resolved**. Final RCA and repair gates do not block authorized recovery.
-See [`fix` §Incident recovery](../workflows/runbooks/fix/WORKFLOW.md#incident-recovery).
+### Save and resume
 
-```
-┌─ fix · root-cause a bug, no symptom-patching ─────────────────────────────────────┐
-│  paths: STANDARD · SUB-FIX · (FULL reserved)                                      │
-│                                                                                   │
-│  ┌─────────┐                                                                      │
-│  │ Specify │  root-cause (symptoms → hypotheses → drill ◄ ≤3) · RED test first    │
-│  └────┬────┘                                                                      │
-│  ┌────▼────┐                                                                      │
-│  │ Prepare │  fix-brief (architect, on substantial fixes) · sign-off              │
-│  └────┬────┘                                                                      │
-│  ┌────▼────┐                                                                      │
-│  │ Execute │  make the RED test green ◄ ≤3 · regression suite green               │
-│  └────┬────┘                                                                      │
-│  ┌────▼────┐                                                                      │
-│  │ Verify  │  code-review-board (light / L1 / L2) · spec-drift   ◄ re-fix ≤2      │
-│  └────┬────┘                                                                      │
-│  ┌────▼────┐                                                                      │
-│  │ Close   │  lessons (knowledge) · risk follow-up · commit + deploy              │
-│  └────┬────┘                                                                      │
-│       │  SUB-FIX (nested in a parent build) skips Close — parent owns task status │
-└───────┼───────────────────────────────────────────────────────────────────────────┘
-        ▼
-     RESULT — committed, deployed
+```mermaid
+flowchart LR
+    A[Useful changes during work] --> B[Reconcile knowledge]
+    B --> C[Update open-topic handoff]
+    D[Selected development contribution] -. when selected .-> C
+    C --> E[Protected publication]
+    E --> F[Authorized commit and push]
+    F --> G[Report actual persistence]
+    G --> H[Later session reads and validates]
 ```
 
-### review — validate a spec, no code
+An explicit `save` requests active-project upstream commit/push unless local rules
+restrict it. Ordinary continuous maintenance alone does not. Without Git, save can
+still preserve local continuity. A partial publication or missing selected domain
+contribution stays visible; the diagram's arrows are not success evidence.
+[Save runbook](../workflows/runbooks/save/WORKFLOW.md).
 
-```
-┌─ review · validate a spec, no code ────────────────────────────────────────────────┐
-│                                                                                    │
-│  ┌──────────┐                                                                      │
-│  │ routing  │  classify ─► spec-board (std/deep) | sectional | arch-coherence | ux │
-│  └────┬─────┘                                                                      │
-│  ┌────▼─────┐                                                                      │
-│  │ board    │  spawn the routed board, cold → chief consolidates → 1 signal        │
-│  └────┬─────┘                                                                      │
-│  ┌────▼─────┐                                                                      │
-│  │ converge │  NEEDS-WORK → fix → re-board   ◄ ≤3, PASS at 0 crit + 0 high         │
-│  └────┬─────┘                                                                      │
-│  ┌────▼─────┐                                                                      │
-│  │ close    │  remaining findings → follow-up task                                 │
-│  └────┬─────┘                                                                      │
-│  ┌────▼─────┐                                                                      │
-│  │ commit   │  update board_result + readiness                                     │
-│  └────┬─────┘                                                                      │
-│       │                                                                            │
-└───────┼────────────────────────────────────────────────────────────────────────────┘
-        ▼
-     RESULT — validated spec
+## General reasoning
+
+```mermaid
+flowchart TD
+    A[Problem, constraints and available evidence] --> B{Where is the uncertainty?}
+    B -->|Problem shape| F[Frame]
+    B -->|Underlying assumption| D[Bedrock]
+    B -->|Choice between alternatives| C[Council]
+    F --> FO[Reformulated problem and solution space]
+    D --> DO[Assumptions, values and implications]
+    C --> CO[Positions, trade-offs and recommendation]
+    FO --> R[Usable inline report with uncertainty]
+    DO --> R
+    CO --> R
+    R --> U[User-owned decisions remain explicit]
+    R -. authorized persistence .-> P[Knowledge owner or caller artifact]
 ```
 
-### research — close a knowledge gap, output is knowledge not code
+Supplied context is sufficient. No repository, software task or engine record is
+required. Independent Council modes collect member investigations before Chief
+consolidation and Buddy's source checks. Interactive Council uses moderated dialogue.
+[Frame](../skills/frame/SKILL.md) · [Bedrock](../skills/bedrock_drill/SKILL.md) · [Council](../skills/council/SKILL.md).
 
-```
-┌─ research · close a knowledge gap — output is knowledge, not code ──────┐
-│  quality: standard · high (≥3 sources + adversary)                      │
-│                                                                         │
-│  ┌──────────┐                                                           │
-│  │ scope    │  read prior research · pick the quality level   ◄ ≤2      │
-│  └────┬─────┘                                                           │
-│  ┌────▼─────┐                                                           │
-│  │ research │  web search · web fetch · API docs              ◄ ≤3      │
-│  └────┬─────┘                                                           │
-│  ┌────▼─────┐                                                           │
-│  │ synth    │  consensus · matrix · position  (high: + adversary)  ◄ ≤2 │
-│  └────┬─────┘                                                           │
-│  ┌────▼─────┐                                                           │
-│  │ capture  │  persist findings · close context gaps · flag impact      │
-│  └────┬─────┘                                                           │
-│  ┌────▼─────┐                                                           │
-│  │ commit   │  git pre-commit hooks                                     │
-│  └────┬─────┘                                                           │
-│       │                                                                 │
-└───────┼─────────────────────────────────────────────────────────────────┘
-        ▼
-     RESULT — knowledge artifact
-```
+## Software development
 
-### solve — a problem whose solution shape is still open
+Development is selected by project intent or explicit invocation. On-demand projects
+retain their own working rules; old task files or installed tooling do not select
+software automatically. [Process map](../framework/process-map.md#workflow-selection).
 
-```
-┌─ solve · a problem whose solution shape is still open ────────────────────────────┐
-│  single path · frame depth: quick · focused · deep                                │
-│                                                                                   │
-│  ┌──────────┐                                                                     │
-│  │ frame    │  frame (8 sub-steps): reformulate → first-principles → recommend    │
-│  └────┬─────┘                                                                     │
-│  ┌────▼─────┐                                                                     │
-│  │ refine   │  user dialog · council (only if >1 path AND hard-to-reverse)        │
-│  └────┬─────┘                                                                     │
-│  ┌────▼─────┐                                                                     │
-│  │ artifact │  author the artifact (spec / runbook / protocol / plan)             │
-│  └────┬─────┘                                                                     │
-│  ┌────▼─────┐                                                                     │
-│  │ validate │  classify → routed board → convergence ◄ ≤3 → delta-verify          │
-│  └────┬─────┘                                                                     │
-│  ┌────▼─────┐                                                                     │
-│  │ apply    │  direct | hand off to build | hand off to docs-rewrite | self-apply │
-│  └────┬─────┘                                                                     │
-│  ┌────▼─────┐                                                                     │
-│  │ close    │  ADR (when the decision meets the triple) · knowledge wrap-up       │
-│  └────┬─────┘                                                                     │
-│  ┌────▼─────┐                                                                     │
-│  │ commit   │  git commit + push · deploy                                         │
-│  └────┬─────┘                                                                     │
-│       │                                                                           │
-└───────┼───────────────────────────────────────────────────────────────────────────┘
-        ▼
-     RESULT — reproducible solution artifact
+```mermaid
+flowchart TD
+    A[Selected software outcome] --> B{What is needed?}
+    B -->|Defined feature| C[Build]
+    B -->|Defect| D[Fix]
+    B -->|Existing spec validation| E[Review]
+    B -->|Knowledge gap| F[Research]
+    B -->|Open solution shape| G[Solve]
+    B -->|Reader-facing rewrite| H[Docs-Rewrite]
+    C --> I[Appropriate checks and closeout]
+    D --> I
+    E --> I
+    F --> I
+    G --> I
+    H --> I
+    I --> J[Selected state contributes to continuity]
 ```
 
----
+### Build and fix
 
-## Other shapes — `docs-rewrite` · `save` · `context_housekeeping`
-
-### docs-rewrite — rewrite reader-facing docs, reader-journey-first
-
-```
-┌─ docs-rewrite · rewrite reader-facing docs, reader-journey-first ────────────┐
-│                                                                              │
-│  ┌───────────┐                                                               │
-│  │ Research  │  Explore agent → research doc        ◄ follow-ups ≤2          │
-│  └─────┬─────┘                                                               │
-│  ┌─────▼─────┐                                                               │
-│  │ Structure │  page plan + reader journeys  (every persona finds an entry)  │
-│  └─────┬─────┘                                                               │
-│  ┌─────▼─────┐                                                               │
-│  │ Write     │  one writer agent per page, parallel   ◄ rewrites ≤2          │
-│  └─────┬─────┘                                                               │
-│  ┌─────▼─────┐                                                               │
-│  │ Coherence │  uniform terms · transitions · no redundancy                  │
-│  └─────┬─────┘                                                               │
-│  ┌─────▼─────┐                                                               │
-│  │ Assemble  │  index · nav · cross-links · stale cleanup  (mkdocs --strict) │
-│  └─────┬─────┘                                                               │
-│  ┌─────▼─────┐                                                               │
-│  │ Review    │  spec-board (ux): 3 UX personas       ◄ re-review ≤1          │
-│  └─────┬─────┘                                                               │
-│  ┌─────▼─────┐                                                               │
-│  │ Close     │  task update · build-test · commit · deploy · verify          │
-│  └─────┬─────┘                                                               │
-│        │                                                                     │
-└────────┼─────────────────────────────────────────────────────────────────────┘
-         ▼
-      RESULT — live site
+```mermaid
+flowchart LR
+    A[Authorized feature] --> B[Select proportional Build path]
+    B --> C[Establish required contract and preparation]
+    C --> D[Implement]
+    D --> E[Verify behavior and review]
+    E --> F[Close selected obligations]
 ```
 
-### save — persist the session so the next one boots warm
+Eligible DIRECT work uses a short complete lifecycle rather than every preparation
+gate. Larger or consequential changes retain their selected path's safeguards.
+The [Build runbook](../workflows/runbooks/build/WORKFLOW.md) and runtime route definition
+own the detailed sequence.
 
-```
-┌─ save · persist the session so the next one boots warm ───────────────────────────┐
-│  3 groups · mid-session vs end-of-session footprint auto-adapts                   │
-│                                                                                   │
-│  ┌────────────┐                                                                   │
-│  │ Pre-write  │  dispatcher · reconcile gaps/task-status · workflow-state handoff │
-│  └─────┬──────┘                                                                   │
-│  ┌─────▼──────┐                                                                   │
-│  │ Writes     │  PARALLEL: session-handoff.md (9-pt merge)  ‖  history/ entry     │
-│  └─────┬──────┘                                                                   │
-│  ┌─────▼──────┐                                                                   │
-│  │ Post-write │  commit + push · buffer cleanup                                   │
-│  └─────┬──────┘                                                                   │
-│        │                                                                          │
-└────────┼──────────────────────────────────────────────────────────────────────────┘
-         ▼
-      RESULT — next session reads the handoff on boot
+```mermaid
+flowchart TD
+    A[Defect or incident] --> B{Ongoing harm?}
+    B -->|Yes| C[Authorized bounded recovery]
+    C --> D[Verify service and user outcome]
+    D --> E[Record restored state and remaining uncertainty]
+    B -->|No| F[Investigate cause]
+    E --> F
+    F --> G[Verify cause and define regression evidence]
+    G --> H[Authorized permanent repair]
+    H --> I[Verify and close selected obligations]
 ```
 
-### context_housekeeping — periodic upkeep of the context system
+Recovery preserves authorization boundaries and distinguishes restored service from
+a resolved cause. [Fix runbook](../workflows/runbooks/fix/WORKFLOW.md).
 
-```
-┌─ context_housekeeping · periodic upkeep of the context system ────────────────┐
-│  2 groups                                                                     │
-│                                                                               │
-│  ┌──────────┐                                                                 │
-│  │ analysis │  read-only: line-counts · nav · orphans · dead-links · currency │
-│  └────┬─────┘                                                                 │
-│  ┌────▼─────┐                                                                 │
-│  │ curation │  per area: resize · update/remove stale · split/merge  ◄ resume │
-│  └────┬─────┘                                                                 │
-│       │                                                                       │
-└───────┼───────────────────────────────────────────────────────────────────────┘
-        ▼
-     RESULT — context system curated
-```
+## State is evidence, not automatic execution
 
----
+A saved continuation points to exact selected development state. Restore validates
+it without advancing or unpausing work. Workflow summaries do not replace the full
+state, and gitignored state does not move automatically through Git.
 
-## How they relate
+Housekeeping follows the common knowledge lifecycle. An upgrade follows coordinated
+installation and fresh verification. Neither needs to invent a software workflow
+for ordinary knowledge use.
 
-All eight share one backbone — engine-tracked state per step, boards and
-council spawned cold inside steps, bounded loops that escalate on
-overshoot, a terminal phase whose output leaves the container. They differ
-in their phases and in which sub-routines each step reaches for. Workflows
-also hand off to one another: a `solve` can hand its artifact to `build`; a
-`build` interview can spawn a `research` sub-workflow; `research` can feed
-back into `solve` or `build`.
-
-For the model behind the diagrams — the tier stack, the engine, and how
-boards stay context-isolated — see
-[`02-architecture.md`](02-architecture.md) and
-[`06-usage-workflows.md`](06-usage-workflows.md). Routing (which workflow
-for which intent) lives in
-[`../framework/process-map.md`](../framework/process-map.md).
+[Usage and methods](06-usage-workflows.md) · [Daily handbook](13-operational-handbook.md) ·
+[Architecture](02-architecture.md) · [Documentation hub](README.md)

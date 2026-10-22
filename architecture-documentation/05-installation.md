@@ -1,371 +1,208 @@
 # 05 — Installation
 
-Forge ships knowledge/continuity, general reasoning and software development in one
-coordinated distribution. Availability does not activate software workflows. See
-[capability ownership and source inventory](../framework/capabilities.md),
-[protected continuity](../framework/continuity.md), and
-[coordinated activation](../framework/installation-activation.md).
-
+Forge installs instructions and tools into existing agent hosts. Use the shared
+installer to preview, apply and verify one coherent installation. Existing installs
+must preserve their current generation **before** updating framework sources.
 
 ## Prerequisites
 
-| Tool | Use |
-|---|---|
-| **git** | repo cloning + pre-commit hook |
-| **bash** | hooks + launcher (`cc`, `oc`) |
-| **jq** | hook logic (Stop/SessionEnd JSON-payload parsing) |
-| **Python 3.10+** | engines (`plan_engine.py`, `workflow_engine.py`) + generators |
-| **PyYAML** | plan/task/workflow YAML parsing |
-| **Claude Code CLI** | when using the CC adapter |
-| **OpenCode CLI** | when using the OC adapter |
-| **Codex Desktop / CLI** | when using the Codex adapter |
-| `chub` CLI | optional, for the `get_api_docs` skill |
-| `gitleaks` | optional, for the SECRET-SCAN pre-commit check (`brew install gitleaks` or via [GitHub releases](https://github.com/gitleaks/gitleaks/releases)) |
+- An installed agent host: Codex, Claude Code or OpenCode for its managed integration.
+- Git and Python 3.10+ with PyYAML available to the Python interpreter running setup.
+- Bash and the Unix command-line tools used by the shell launchers.
+- A local Forge checkout and permission to update the intended managed host files.
+- An existing user workspace if you want persistent personal context.
+
+Host applications and model access are separate from Forge. Cursor has a
+[rules-based adapter](07-tool-integrations.md#cursor), outside the coordinated
+host installation described here.
 
 ## Quickstart
 
+Clone the distribution and inspect the installer:
+
 ```bash
-# 1. Clone the repo
-git clone https://github.com/NashEQify/forge ~/projects/forge
-
-# 2. Set FRAMEWORK_DIR (overridable, default $HOME/projects/forge)
-export FRAMEWORK_DIR=$HOME/projects/forge
-
-# 3. Python venv (PEP-668 bypass if needed)
-cd $FRAMEWORK_DIR
-python3 -m venv .venv
-.venv/bin/pip install pyyaml
-
-# 4. Setup script for Claude Code (symlinks + whitelist)
-bash scripts/setup-cc.sh
-
-# 5. Test launch
-$FRAMEWORK_DIR/orchestrators/claude-code/bin/cc framework
+git clone https://github.com/NashEQify/forge ~/forge
+python3 ~/forge/scripts/forge_install.py --help
 ```
 
-If everything is running, `cc framework` opens a Claude Code session with Buddy
-as the initial agent, the framework repo as the working directory, and `--add-dir
-$FRAMEWORK_DIR` (which is identical here).
+If PyYAML is unavailable, create an isolated environment and activate it before
+running the remaining Python commands:
+
+```bash
+python3 -m venv ~/forge/.venv
+source ~/forge/.venv/bin/activate
+python3 -m pip install pyyaml
+```
+
+The `cc` and `oc` launchers call `python3`; their environment must also provide
+PyYAML. Do not assume creating a virtual environment changes every host's runtime.
 
 ## User and install profile
 
-Every machine is installed the same way; only the user and the profile differ.
-
-```bash
-# Who the user is: their own repo (convention: context/user/ with optional
-# soul.md, profile.md, navigation.md — framework/user-scope.md)
-python3 $FRAMEWORK_DIR/scripts/forge_install.py --profile full --user-repo ~/notes --check
-python3 $FRAMEWORK_DIR/scripts/forge_install.py --profile full --user-repo ~/notes
-```
-
-- `--profile full` — all Codex roles and skills, Codex boot block, and the
-  Claude Code launcher, hooks and symlinks (applied through the unchanged
-  `scripts/setup-cc.sh`; skipped with a warning when HOME is a staged test
-  home).
-- `--profile daily` — knowledge processor, bedrock drill and a `save` entry
-  for Codex (`~/.agents/skills`) and Claude Code (`~/.claude/skills`), plus
-  managed boot blocks in `~/.codex/AGENTS.md` and `~/.claude/CLAUDE.md`. No
-  roles, hooks or launcher; always on-demand. A sparse checkout needs the
-  profile's `required_paths` (`framework/install-profiles.yaml`), e.g.
-  `git sparse-checkout add workflows/runbooks/save`.
-- `--skill-link PATH` (repeatable) links an external skill directory into
-  the skill roots; recorded in `~/.config/forge/user.yaml`.
-- `--force-user-config` replaces a different existing `user.yaml`.
-- Switching profiles: full → daily removes forge-owned Codex roles and
-  stops with exact manual steps while full-only Claude Code surfaces remain
-  (forge hook in `~/.claude/settings.json`, `~/.claude/{agents,skills}`
-  symlinks, `~/.local/bin/cc`); daily → full removes the forge-owned daily
-  Claude block and skills before `setup-cc.sh` runs.
-- `scripts/setup-codex.sh` is the full-profile Codex entry; it refuses on a
-  machine whose `user.yaml` says `daily`. `scripts/setup-cc.sh` has no such
-  guard — on a daily machine never run it directly; `forge_install.py
-  --check` reports the resulting surfaces as a conflict.
-- Exit codes: 0 done / nothing pending, 1 changes pending under `--check`,
-  2 conflict (nothing written), 3 a step after the write failed (the
-  message names what was applied). Text outside the managed blocks is never
-  edited; leftover text from an older installer is a conflict to clean up
-  by hand.
-- OpenCode bakes the soul and boot files into `opencode.jsonc`: re-run
-  `scripts/setup-oc.sh` after adding or removing `context/user/soul.md`.
-  The Codex and Claude Code blocks name the soul conditionally and need no
-  re-run.
-
-Without `~/.config/forge/user.yaml` sessions run with forge's soul and no
-personal context, and say so in the greeting.
-
-## Tool-Specific Setup Guides
-
-### Claude Code
-
-#### 1. Workspace symlinks (`scripts/setup-cc.sh` does this automatically)
-
-`cc` expects two user-level symlinks:
-
-```bash
-ln -s $FRAMEWORK_DIR/.claude/agents ~/.claude/agents
-ln -s $FRAMEWORK_DIR/.claude/skills ~/.claude/skills
-```
-
-**Why:** Claude Code discovers sub-agents via walk-up from the CWD or via
-`~/.claude/agents/`. We use the user-level location so that framework
-agents are available in every working directory, regardless of the consumer repo.
-
-`cc` creates these symlinks idempotently on first run when missing
-(`orchestrators/claude-code/bin/cc:38-89`). On a divergent target there is
-a warning, no auto-fix.
-
-#### 2. Pre-commit hook (per repo)
-
-`setup-cc.sh` installs the hook in the framework repo itself. For every
-**consumer repo**, run once from inside the repo:
-
-```bash
-bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh
-```
-
-Or pass the repo path explicitly:
-
-```bash
-bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh /path/to/consumer-repo
-```
-
-What it does:
-
-- Symlinks `.git/hooks/{pre-commit,commit-msg}` to
-  `orchestrators/claude-code/hooks/pre-commit.sh` (same file serves
-  both hook events — mode-detection via `$0` basename).
-- Idempotent. Re-running is a no-op with `OK` output. Broken symlinks
-  and wrong-target symlinks are auto-corrected; existing non-symlink
-  files at the hook path are NOT overwritten (operator action
-  required).
-- Worktrees handled — uses `git rev-parse --git-dir`.
-- Self-probe: validator rejects bad input (exit ≠ 0 on
-  `--validate -1`); hook executes via the freshly-installed symlink.
-
-Other modes:
-
-```bash
-bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh --check       # probe only, no writes
-bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh --uninstall   # remove symlinks
-```
-
-On the next `git commit` the pre-commit checks run (see
-[`02-architecture.md`](02-architecture.md) §Pre-Commit 6 Checks).
-
-#### 3. Hook registration (`~/.claude/settings.json`)
-
-Forge owns the `hooks` slot in **`~/.claude/settings.json`** (user-global,
-not per-project). `setup-cc.sh` merges them in from
-`orchestrators/claude-code/settings.json.template`, substituting
-`__FRAMEWORK_DIR__` with the detected forge checkout. Hooks fire in
-every Claude Code session regardless of CWD or entrypoint
-(`cc` terminal launcher, `claude` CLI, claude-desktop, claude-web).
-Consumer repos do not need their own `.claude/settings.json` for forge;
-if they want project-specific overrides, they drop them into a
-`.claude/settings.local.json` (CC merges that over the global).
-
-#### 4. cc launcher
-
-`orchestrators/claude-code/bin/cc <scope>`:
-
-| Scope | Effect |
+| Preset | Available capabilities |
 |---|---|
-| `framework` / `forge` | `cd $FRAMEWORK_DIR` (built-in) |
-| `<name>` (dynamic) | case-insensitive lookup under `$PROJECTS_DIR/<name>/`; requires `intent.md` in the matched directory |
-| (no scope) | stays in the current CWD (Buddy does the intent.md lookup) |
+| `daily` | Knowledge maintenance, save, housekeeping, minimal boot and Bedrock; no software tooling or full host launchers |
+| `full` | All roles, skills, software tooling, hooks and launchers, plus on-demand use |
 
-`cc` automatically sets:
-- `--add-dir $FRAMEWORK_DIR` (always)
-- `--add-dir $CWD` (when CWD ≠ FRAMEWORK_DIR)
-- `--agent buddy` (boot agent)
-- `-n <session_name>` (terminal title)
+Council and Frame can be added to `daily` through `--method council` and
+`--method frame`. Selection persists on repeat installs when no replacement method
+selection is supplied. See [profile definitions](../framework/install-profiles.yaml).
 
-**Debug mode:** `CC_DEBUG=1 cc <scope>` shows the resolved invocation without
-calling Claude.
+Use an **existing** user workspace. The installer records its path; it does not
+invent a profile or reorganize its content. Personal context follows
+[the user-scope convention](../framework/user-scope.md). Without `--user-repo`, an
+existing machine configuration is retained; an unconfigured installation has no
+user scope. Project-only continuity and supplied-context reasoning remain useful.
 
-#### 5. First session start
-
-```bash
-cc framework  # or: cc <project-name>  (dynamic under $PROJECTS_DIR)
-```
-
-Buddy boots:
-1. ORIENT — `date / hostname / pwd`
-2. RESOLVE — `ls $CWD/intent.md` (upward search)
-3. ROUTE — context path
-4. LOAD — user `profile.md` + `boot-navigation.md` + intent-load
-5. RESUME — `session-buffer.md` + `session-handoff.md` + optionally `plan_engine --boot`
-6. GREET
-
-If `intent.md` is missing: Buddy offers to create it. Format:
-`framework/intent-tree.md` §intent.md format.
-
-### OpenCode
-
-#### 1. Configuration
+Preview a daily installation:
 
 ```bash
-export OPENCODE_CONFIG_DIR=$FRAMEWORK_DIR/orchestrators/opencode/.opencode
-export OPENCODE_CONFIG=$FRAMEWORK_DIR/orchestrators/opencode/opencode.jsonc
+python3 ~/forge/scripts/forge_install.py \
+  --profile daily --user-repo ~/projects/personal --check
 ```
 
-#### 2. Launcher
-
-`orchestrators/opencode/bin/oc` is a minimal wrapper:
+Add optional methods by including the same options in preview and application:
 
 ```bash
-$FRAMEWORK_DIR/orchestrators/opencode/bin/oc
+python3 ~/forge/scripts/forge_install.py \
+  --profile daily --user-repo ~/projects/personal \
+  --method council --method frame --check
 ```
 
-#### 3. OC constraints (`AGENTS.md §OC Constraints`)
+`--check` writes nothing. Exit 0 means no planned changes, 1 means changes are
+planned, and 2 indicates a reported conflict or error. Inspect the output before
+applying. A check is not live acceptance.
+Once the intended targets are reviewed and affected sessions are stopped, apply
+with the same arguments and omit `--check`.
 
-- The consumer repo is the CWD; the framework is mounted via the
-  OpenCode launcher (`$FRAMEWORK_DIR/orchestrators/opencode/bin/oc`).
-- A consumer's project-level `AGENTS.md` (in the consumer repo root)
-  applies in addition to the framework AGENTS.md, never instead — both
-  are loaded.
-- Commands: trigger words without prefix (`wakeup`, `save`, `checkpoint`, `think!`).
-- **No write-time path guard** (on any harness) — Buddy stays within intent scope by discipline
+For full installation and a managed Codex boot block in an existing project:
+
+```bash
+python3 ~/forge/scripts/forge_install.py \
+  --profile full --user-repo ~/projects/personal \
+  ~/projects/my-app --check
+```
+
+The positional project path adds a Codex boot entry. `--consumer-root PATH` has a
+different purpose: explicitly scope development-state compatibility checks during
+maintenance. Include authorized affected consumers when that check is needed.
+
+## One installer for managed hosts
+
+`setup-cc.sh`, `setup-codex.sh` and `setup-oc.sh` are compatibility entrypoints;
+**all forward their arguments to `forge_install.py`**. Their names do not restrict
+installation to one host. `full` plans the managed Codex, Claude Code and OpenCode
+surfaces together. Preview the whole plan, including configuration and hooks.
+
+Managed-file hashes protect ownership. Unknown files, edited managed files and
+unexpected links may stop installation. Preserve those changes and reconcile the
+conflict; do not replace directories or links from a generic cleanup recipe.
+`--migrate-legacy` only adopts recognized byte-identical legacy content.
+
+`CODEX_HOME` and `AGENTS_HOME` environment variables can select Codex destinations.
+The current shared CLI has no `--codex-home` or `--agents-home` flags. Changing a
+configured profile may require passing `--user-repo` to update its machine setting.
+Do not use `--force-user-config` as a substitute for understanding that change.
 
 ### Codex
 
-Use an existing consumer checkout. These examples assume the framework was
-cloned as in Quickstart; the installer resolves its root from its own location.
-Activate the Python environment so its `python3` can import PyYAML:
+The installer manages role files, skill wrappers and a boot block in the Codex home
+AGENTS file and supplied projects' AGENTS files. Surrounding project instructions
+remain local authority. Test discovery and instruction loading in a fresh session;
+file presence alone does not prove either.
 
-```bash
-export FRAMEWORK_DIR="$HOME/projects/forge"
-source "$FRAMEWORK_DIR/.venv/bin/activate"
-forge_consumer="$HOME/projects/my-app"
-python3 -c 'import yaml'
-bash "$FRAMEWORK_DIR/scripts/setup-codex.sh" --check "$forge_consumer"
-```
+### Claude Code
 
-`--check` never writes. Exit 0 means current; exit 1 means pending changes
-or a conflict, distinguished in the output. Unknown/edited files and symlinks
-are conflicts. Review and preserve custom content before resolving them.
-For a legacy installation, `--migrate-legacy` can adopt only byte-identical
-known legacy roles and skill wrappers; use it in both check and install commands
-when needed. It does not force-overwrite customizations.
+Full installation prepares Claude discovery, configured SessionStart integration
+and the `cc` launcher. Daily uses managed boot/skill entries without the full
+launcher setup. A full-to-daily conflict needs a reviewed migration; do not delete
+existing host directories simply because a diagnostic mentions them.
 
-Once the check shows only the intended changes, install and verify:
+### OpenCode
 
-```bash
-bash "$FRAMEWORK_DIR/scripts/setup-codex.sh" "$forge_consumer"
-bash "$FRAMEWORK_DIR/scripts/install-git-hooks.sh" "$forge_consumer"
-bash "$FRAMEWORK_DIR/scripts/setup-codex.sh" --check "$forge_consumer"
-bash "$FRAMEWORK_DIR/scripts/install-git-hooks.sh" --check "$forge_consumer"
-```
-
-Codex setup generates 40 roles from `agents/*.md`, installs skill wrappers,
-and merges explicit boot blocks into `~/.codex/AGENTS.md` and the consumer's
-`AGENTS.md`, preserving surrounding instructions. Installed paths are absolute;
-source templates remain portable. `CODEX_HOME` / `AGENTS_HOME` or the flags
-`--codex-home` / `--agents-home` select alternate installation roots.
-
-It removes only recognized obsolete Forge Claude-hook commands from existing
-Codex `hooks.json` files; Codex boot uses AGENTS instructions. Git hooks are
-installed separately. Existing custom Git hooks or `core.hooksPath` settings
-require explicit integration. Codex `config.toml` and credentials are untouched.
-
-Open a fresh Codex session in the consumer checkout. Verify that it loads
-the resolved soul, `operational.md` and `boot.md` from the framework root while
-keeping the consumer's `intent.md`, CWD and project rules active. Check role
-and skill availability. Report roles return complete artifacts inline for the
-parent to persist verbatim; their read-only/no-approval defaults can be
-overridden by the parent runtime. Verify effective permissions in that session.
-A file check alone does not verify boot or sandbox enforcement.
-
-Source and behavior details: [Codex integration](07-tool-integrations.md#codex).
-
-### Cursor
-
-Minimal-viable adapter shipped under `orchestrators/cursor/`. Cursor
-is an IDE (no CLI agent), so the adapter ships project rules — not a
-launcher:
-
-1. Symlink the rules into the consumer repo:
-   ```bash
-   ln -s "$FRAMEWORK_DIR/orchestrators/cursor/rules" .cursor/rules
-   ```
-2. Install the pre-commit hook (same mechanism as CC / OC):
-   ```bash
-   bash "$FRAMEWORK_DIR/scripts/install-git-hooks.sh"
-   ```
-3. Open Cursor — rules under `.cursor/rules/` load automatically.
-   `AGENTS.md` from the repo root is honoured (Cursor convention).
-
-**Limitations:** Cursor has no SessionStart hook, so its mechanical
-layer is the git pre-commit hook plus the rules + persona wrapper.
-Personas are invoked via `@<name>` mentions; multi-persona boards run
-sequentially, not in parallel. Full readme:
-`orchestrators/cursor/README.md`.
-
-## Consumer-Repo Setup
-
-A consumer repo (e.g. your own project) needs:
-
-1. **`intent.md`** at the repo root — format `framework/intent-tree.md` §intent.md format:
-   ```markdown
-   # Intent — <name>
-   ## Vision
-   <1-3 sentences>
-   ## Done
-   <What does "done" mean?>
-   ## Non-Goals
-   <What explicitly not>
-   ## Context
-   <mode signal + boot/on-demand/not-relevant split>
-   ```
-
-2. **Optional `context/` directory** with `history/` and `overview.md`. Buddy
-   auto-creates this when missing.
-
-3. **Optional `docs/backlog.md` + `docs/tasks/`** when the repo has its own tasks.
-
-4. **Pre-commit hook** when the repo should operate under Buddy's
-   engineering discipline:
-   ```bash
-   bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh
-   ```
-   Idempotent, worktree-safe, includes a self-probe. See §"Pre-commit
-   hook (per repo)" above for modes and details.
-
-Buddy finds these files automatically via the `ls` boot sequence (`agents/buddy/boot.md`).
+Full installation prepares `oc` and its generated configuration. The launcher uses
+`~/.config/forge/opencode.jsonc` and the framework's OpenCode wrapper directory.
+Keep the consumer as the active working directory.
 
 ## Verification
 
-After setup, check the following:
+An apply command can succeed while returning **`validation_pending`**. Ordinary
+sessions must remain stopped until acceptance of that exact generation. Inspect:
 
 ```bash
-# 1. Symlinks correct?
-ls -la ~/.claude/agents      # → $FRAMEWORK_DIR/.claude/agents
-ls -la ~/.claude/skills      # → $FRAMEWORK_DIR/.claude/skills
-
-# 2. cc debug
-CC_DEBUG=1 cc framework
-# → shows FRAMEWORK_DIR, PROJECTS_DIR, CWD, session_name, add-dir args, would exec
-
-# 3. plan_engine
-python3 $FRAMEWORK_DIR/scripts/plan_engine.py --validate
-# → Summary: 0 errors
-
-# 4. skill validator
-python3 $FRAMEWORK_DIR/scripts/skill_fm_validate.py
-# → no BLOCK output
-
-# 5. generators idempotent?
-python3 $FRAMEWORK_DIR/scripts/generate_skill_map.py
-python3 $FRAMEWORK_DIR/scripts/generate_navigation.py
-# → "all up to date" or no git diff
-
-# 6. Pre-commit hook installed?
-ls -la $FRAMEWORK_DIR/.git/hooks/pre-commit
-# → symlink to orchestrators/claude-code/hooks/pre-commit.sh
+python3 ~/forge/scripts/forge_install.py --maintenance status
 ```
 
-If 1-6 are all clean, the setup is correct.
+Record the returned operation ID. For a controlled fresh acceptance session through
+a full-profile launcher, substitute that exact ID:
 
-## Next Step
+```bash
+~/.local/bin/cc --forge-validation-operation "<operation-id>"
+~/.local/bin/oc --forge-validation-operation "<operation-id>"
+```
 
-How to actually use the framework: [`06-usage-workflows.md`](06-usage-workflows.md).
+The full installer places these launchers in `~/.local/bin`. Bare `cc` and `oc`
+require that directory to precede competing commands on PATH; `cc` can otherwise
+resolve a C compiler. These are alternatives for the host being checked, not
+instructions to launch both.
+A wrong operation ID, partial installation or source drift refuses entry. For other
+host entrypoints, start a controlled fresh acceptance session and verify the same
+installed generation and selected capabilities. Before that session, check the
+exact pending generation without marking ordinary sessions ready:
+
+```bash
+python3 ~/forge/scripts/forge_install.py --maintenance status \
+  --validation-operation "<operation-id>" --require-ready
+```
+
+Verify what was actually installed: normal entry and instruction loading, relevant
+retrieval, authorized capture/save/resume, and exact selected development continuation
+where applicable. Record host, profile, source generation, observations and limits
+in an evidence file. Check runtime permissions separately from role defaults.
+
+Only after those checks have actually succeeded, submit the evidence:
+
+```bash
+python3 ~/forge/scripts/forge_install.py --maintenance validate \
+  --operation-id "<operation-id>" --validation-evidence /path/to/actual-evidence.md
+python3 ~/forge/scripts/forge_install.py --maintenance status --require-ready
+```
+
+The evidence file must contain real observations. The installer records its hash;
+it cannot establish the truth of a written “passed” claim. Skipped or inaccessible
+targets must remain explicitly unverified.
+
+## Updating an existing installation
+
+Follow [coordinated activation](../framework/installation-activation.md):
+
+1. Identify the source checkout, affected integrations, selected methods and
+   authorized consumers. Preserve configuration and local changes.
+2. Stop affected sessions before any pull or source edit, and keep them stopped.
+3. From the currently installed generation, prepare the actual working-tree baseline:
+
+```bash
+python3 ~/forge/scripts/forge_install.py --maintenance prepare \
+  --consumer-root /path/to/authorized-consumer
+```
+
+4. Perform the authorized source update without discarding local work.
+5. Preview and apply the intended installation, then perform fresh acceptance above.
+
+Repeat `--consumer-root` for additional explicitly authorized consumers. Omit it
+when no consumer development state is selected for checking. Do not scan unrelated
+workspaces. Preparing after an update cannot retroactively preserve the old baseline.
+
+## Interrupted installation
+
+Inspect `--maintenance status` first. Use `--maintenance retry` or
+`--maintenance rollback` for the journaled operation as appropriate. Retry accepts
+journal-proven states; unknown later edits remain conflicts. Rollback checks the
+matched source/integration baseline and selected workflow compatibility, preserving
+consumer content. It is not a repository reset.
+
+Keep sessions stopped during `applying`, `recovery_required` or unresolved
+`validation_pending`. Do not unlink coordination locks, erase journals or hand-edit
+workflow state to make an installation appear ready.
+
+Next: [Host integrations](07-tool-integrations.md) · [Troubleshooting](12-troubleshooting.md).
