@@ -107,7 +107,7 @@ within `research/` (prefix `sota-`, suffix
 - Extend existing files (don't duplicate).
 
 **SOTA files (`sota-*.md`):**
-- Compact but complete. Max 200 lines (context limit).
+- Compact but complete. Around 200 lines prompts decomposition review under knowledge_processor; preserve meaningful content.
 - Structure: consensus → matrix → position → what to steal /
   avoid.
 - Cross-references to related SOTA files.
@@ -123,7 +123,7 @@ within `research/` (prefix `sota-`, suffix
 **Interview insights:**
 - Per insight: what was said + relevance to the active scope.
 - Context header: who, when, which context.
-- Max 200 lines.
+- Size is a review signal under knowledge_processor, not an eviction limit.
 
 ## Process — step by step
 
@@ -237,7 +237,7 @@ Return summary with:
 - **Retry:** not foreseen — the skill writes or reports open
   points.
 - **Escalate:** knowledge not fully persistable (e.g. too
-  complex for the 200-line limit) → open points in the
+  complex for focused sectional retrieval) → open points in the
   return summary.
 - **Abort:** no substantive knowledge in the context → skip
   with rationale.
@@ -256,8 +256,9 @@ Return summary with:
    cite sources. A session reference is enough for
    internally developed knowledge.
 
-4. **200-line limit:** context files (`context/`) max 200
-   lines. Research files (`docs/research/`) and solve state
+4. **Size review:** context files (`context/`) around 200
+   lines trigger a relevance/decomposition review, never deletion. Use the protected
+   continuity interface for context publication. Research files (`docs/research/`) and solve state
    files (`docs/solve/`) have NO line limit — they may be as
    long as needed.
 

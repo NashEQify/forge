@@ -1,15 +1,15 @@
 ---
 name: plan-adversary
-description: Plan-review adversary persona — reviews the plan block + self-review BEFORE execution. Inline-only persona (not-spawned-but-reserved). Full persona definition in `skills/_protocols/plan-review.md`.
+description: Plan-review adversary persona — reviews the plan block + self-review BEFORE execution. Inline or independently dispatched as required by the selected method. Full persona definition in `skills/_protocols/plan-review.md`.
 ---
 
 # Agent: plan-adversary (stub pointer)
 
-**Status:** this persona is **inline-only** and **not actively
-spawned**. The persona definition + mechanics live in
+**Status:** this persona is inline by default; a selected method that requires
+independent dispatch (including Frame and standard/full Council) takes precedence.
+The persona definition + mechanics live in
 `skills/_protocols/plan-review.md` as the single source of
-truth — this file is a stub pointer with the CC-subagent
-frontmatter in case explicit spawn is ever required.
+truth — this file is a discoverable pointer for supported agent runtimes.
 
 ## Where the content lives
 
@@ -31,9 +31,9 @@ frontmatter in case explicit spawn is ever required.
 - Bind rule (plan ↔ execution).
 - Gate rule (hard gate).
 
-On explicit spawn: Buddy calls `plan-adversary` as a CC
+On explicit spawn: the caller invokes `plan-adversary` as an independent
 subagent → the adversary prompt template from
-`_protocols/plan-review.md` §adversary-prompt-template is the
+`skills/_protocols/plan-review.md` §adversary-prompt-template is the
 persona behaviour.
 
 ## When inline-persona instead of spawn
@@ -44,7 +44,8 @@ existing-primitives reuse) inline in the frame report without
 a sub-agent dispatch. The persona runs directly in the Buddy
 turn — no separate sub-agent context.
 
-**Explicit spawn only on:**
+**Explicit spawn on:**
+- A selected method requiring an independent plan/frame review.
 - Extremely high stakes (foundation spec, schema change,
   cross-layer impact).
 - Disagreement between Buddy's inline check and the user's
@@ -60,11 +61,11 @@ adversary personas).
 
 This file is a stub. The full persona definition (anti-rat /
 anti-patterns / reasoning / check focus) lives in
-`_protocols/plan-review.md` as the single source of truth.
+`skills/_protocols/plan-review.md` as the single source of truth.
 Consequence for CC: subagent discovery still finds
 `plan-adversary` (frontmatter name); the body just points to
 the protocol SoT.
 
 REMEMBER: your job is to find plan weaknesses before
 execution. "Overall solid" is always a rationalization. Full
-discipline in `_protocols/plan-review.md`.
+discipline in `skills/_protocols/plan-review.md`.

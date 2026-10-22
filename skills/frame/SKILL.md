@@ -39,6 +39,15 @@ preparation (solution-candidate input).
 | depth | no | quick \| standard \| deep. Default: standard |
 | caller | no | solve \| build \| scoping \| standalone. Default: standalone. **Drives the step-2 drill trigger:** solve → full drill always (solve override). Others → per the mode table. MUST be set explicitly by the calling workflow. |
 
+## Standalone boundary
+
+Supplied problem, constraints and evidence are sufficient without a repository or
+user scope. Preserve all depth/caller options. Use caller-owned temporary transport
+for independent review; `skills/_protocols/dispatch-template.md` defines complete
+attributed returns before consolidation. No automatic tasks, ADR, engine or durable
+writeback. Missing evidence is a stated limit. Development paths below apply only
+when the caller explicitly selects that development workflow.
+
 ## Output context
 
 - **Inside solve:** the frame report goes into the state-file body
@@ -99,7 +108,7 @@ preparation (solution-candidate input).
    the plan; deviation = explicit rationale. Trigger definition,
    templates, adversary prompt, existing-primitives survey:
    `_protocols/plan-review.md` (SoT).
-4. **Repo check** (always, source grounding). Grep / glob for
+4. **Source check** (always, source grounding). With a repository caller, grep / glob for
    similar artifacts. Mark hits as part of the solution space, or
    as "touched but different". **On >1 hit:** analysis-mode gate
    (required proof sentence per `_protocols/analysis-mode-gate.md`)
@@ -107,7 +116,8 @@ preparation (solution-candidate input).
    cross-phase source grounding
    (`_protocols/cross-phase-source-grounding.md`) — mapping table
    required.
-5. **Identify constraints** (always). Hard (CLAUDE.md invariants,
+   Standalone: inspect supplied evidence/context instead; no repository is required.
+5. **Identify constraints** (always). Hard (applicable authorization and supplied constraints,
    sovereignty, skill taxonomy) vs negotiable. Instruction size is
    a loading/coherence review signal, not a hard constraint.
 6. **SOTA research** (conditional). Triggers: uncertainty + thin
@@ -136,6 +146,10 @@ preparation (solution-candidate input).
 
 FIRST present all approaches fairly, THEN evaluate. No
 favourite-approach-first + strawmen.
+
+Standalone step 6 uses supplied evidence and available research tools directly.
+The development research runbook is an optional caller integration, never a
+standalone dependency or a requirement to create engine state.
 
 ## Contract
 
@@ -273,5 +287,5 @@ check, small, reversible. User override wins.
 | Detail mechanics, examples, edge cases | `REFERENCE.md` (this directory) |
 | Plan + review (step 3) | `skills/_protocols/plan-review.md` |
 | Source grounding (step 4) | `agents/buddy/operational.md` §Source-Grounding |
-| Research sub-workflow (step 6) | `workflows/runbooks/research/WORKFLOW.md` |
+| Research in an explicitly selected development caller (optional integration) | `workflows/runbooks/research/WORKFLOW.md` |
 | Use in workflow | `workflows/runbooks/solve/WORKFLOW.md` |

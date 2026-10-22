@@ -1,47 +1,178 @@
-# Install profiles — consumed by scripts/forge_install.py.
-# SoT for what each profile installs. Who the user is comes from the machine
-# setting (framework/user-scope.md), never from a profile.
+# Capability composition and required source closure. Optional selection is installer-owned.
 version: 1
-
 profiles:
   full:
-    description: >-
-      Everything: all roles, skills, hooks and launchers for software
-      development and on-demand work.
+    description: 'Everything: all roles, skills, hooks and launchers for software development and on-demand
+      work.'
     codex_roles: true
-    skills: all                   # every build_desired-eligible skill
-    entries: {}                   # full discovers save via workflow-router
-    codex_boot: true              # ~/.codex/AGENTS.md managed block
-    claude_boot_block: false      # Claude Code full boots via hook + cc
-    claude_setup: scripts/setup-cc.sh
-    boot_files: [soul, operational, boot]
-    required_paths: [agents, framework, scripts, skills, workflows, orchestrators, .claude]
-
-  daily:
-    description: >-
-      Everyday knowledge work with on-demand Forge methods: knowledge
-      maintenance, save, bedrock drill and the boot entry. No software
-      tooling, roles, hooks or launchers.
-    codex_roles: false
-    skills: [knowledge-processor, bedrock-drill]
-    entries:
+    skills: all
+    entries: &id001
       save:
         source: workflows/runbooks/save/WORKFLOW.md
-        description: >-
-          Persist the working state: knowledge, navigation, session
-          handoff and history, then commit and push as the project permits.
-          Use when the user says "save" or "speichern" or asks for an
-          end-of-work backup; NOT for filing a single fact (that is
-          knowledge-processor).
+        description: Persist common knowledge and session handoff. Use when the user requests save or
+          speichern; selected development contributes its exact state separately.
+      housekeeping:
+        source: workflows/runbooks/context_housekeeping/WORKFLOW.md
+        description: Review and reconcile context ownership, routes and freshness using common continuity.
+          Use when the user requests context housekeeping.
     codex_boot: true
-    claude_boot_block: true       # ~/.claude/CLAUDE.md managed block
-    claude_setup: null
-    boot_files: [soul, boot-on-demand]
+    claude_boot_block: false
+    claude_setup: scripts/setup-cc.sh
+    boot_files:
+    - soul
+    - boot
     required_paths:
-      - agents/buddy
-      - framework
-      - scripts
-      - skills/knowledge_processor
-      - skills/bedrock_drill
-      - skills/_protocols
-      - workflows/runbooks/save
+    - agents
+    - framework
+    - scripts
+    - skills
+    - workflows
+    - orchestrators
+    - .claude
+    capabilities:
+    - continuity
+    - bedrock
+    - council
+    - frame
+    - development
+  daily:
+    description: 'Everyday knowledge work with on-demand Forge methods: knowledge maintenance, save, bedrock
+      drill and the boot entry. No software tooling, roles, hooks or launchers.'
+    codex_roles: false
+    skills:
+    - knowledge-processor
+    - bedrock-drill
+    entries: *id001
+    codex_boot: true
+    claude_boot_block: true
+    claude_setup: null
+    boot_files:
+    - soul
+    - boot-on-demand
+    required_paths: []
+    capabilities:
+    - continuity
+    - bedrock
+capability_sets:
+  continuity:
+    skills:
+    - knowledge-processor
+    required_paths:
+    - agents/buddy/soul.md
+    - agents/buddy/boot-on-demand.md
+    - framework/continuity.md
+    - framework/user-scope.md
+    - framework/installation-activation.md
+    - scripts/continuity.py
+    - scripts/user_scope.py
+    - scripts/git-status-check.sh
+    - workflows/runbooks/save/WORKFLOW.md
+    - workflows/runbooks/context_housekeeping/WORKFLOW.md
+    - skills/knowledge_processor/SKILL.md
+    - skills/knowledge_processor/modes/process.md
+    - skills/knowledge_processor/modes/user-signal.md
+    - skills/knowledge_processor/modes/wrap-up.md
+    - skills/knowledge_processor/reference/brain-forward.md
+    - skills/knowledge_processor/reference/concepts.md
+  bedrock:
+    skills:
+    - bedrock-drill
+    required_paths:
+    - skills/bedrock_drill/SKILL.md
+    - skills/bedrock_drill/REFERENCE.md
+    - skills/_protocols/analysis-mode-gate.md
+    - skills/_protocols/dispatch-template.md
+  council:
+    skills:
+    - council
+    roles:
+    - council-member
+    - council-chief
+    - council-adversary
+    - plan-adversary
+    required_paths:
+    - skills/council/SKILL.md
+    - skills/_protocols/plan-review.md
+    - skills/_protocols/context-isolation.md
+    - skills/_protocols/dispatch-template.md
+    - skills/_protocols/consolidation-preservation.md
+    - skills/_protocols/content-preservation.md
+    - skills/_protocols/piebald-budget.md
+    - skills/_protocols/analysis-mode-gate.md
+    - skills/_protocols/evidence-pointer-schema.md
+    - skills/_protocols/discourse.md
+    - agents/council-member.md
+    - agents/council-chief.md
+    - agents/council-adversary.md
+    - agents/plan-adversary.md
+    - agents/_protocols/reviewer-reasoning-trace.md
+    - agents/_protocols/first-principles-check.md
+  frame:
+    skills:
+    - frame
+    depends_on:
+    - bedrock
+    roles:
+    - plan-adversary
+    required_paths:
+    - skills/frame/SKILL.md
+    - skills/frame/REFERENCE.md
+    - skills/_protocols/plan-review.md
+    - skills/_protocols/analysis-mode-gate.md
+    - skills/_protocols/cross-phase-source-grounding.md
+    - skills/_protocols/dispatch-template.md
+    - agents/plan-adversary.md
+  development:
+    required_paths:
+    - agents/buddy/boot.md
+    - agents/buddy/operational.md
+    - framework/development-continuation.md
+    - framework/workflow-compatibility.yaml
+    - framework/workflow-compatibility.md
+    - scripts/development_continuation.py
+    - scripts/workflow_engine.py
+    - scripts/plan_engine.py
+    - workflows/runbooks/save/workflow.yaml
+    - workflows/runbooks/context_housekeeping/workflow.yaml
+installation_required_paths:
+- framework/install-profiles.yaml
+- scripts/forge_install.py
+- scripts/install_activation.py
+- scripts/managed_install.py
+- scripts/capability_closure.py
+- scripts/generate_codex_agents.py
+- scripts/generate_skill_wrappers.py
+- scripts/setup-codex.sh
+- scripts/setup-cc.sh
+- scripts/setup-oc.sh
+reference_classification:
+  historical_prefixes:
+  - docs/
+  optional_development:
+  - agents/buddy/operational.md
+  - framework/development-continuation.md
+  - framework/workflow-engine-cookbook.md
+  - scripts/workflow_engine.py
+  - scripts/plan_engine.py
+  - workflows/runbooks/build/workflow.yaml
+  - skills/documentation_and_adrs/SKILL.md
+  - skills/adversary_test_plan/SKILL.md
+  - skills/code_review_board/SKILL.md
+  - agents/board-chief.md
+  - agents/brief-architect.md
+  - agents/code-architect-lens.md
+  - agents/_protocols/spec-reviewer-protocol.md
+  - agents/_protocols/code-reviewer-protocol.md
+  - agents/_protocols/ux-reviewer-protocol.md
+  - agents/_protocols/reviewer-base.md
+  - scripts/lib/yaml_loader.py
+  - scripts/validate_evidence_pointers.py
+  - workflows/runbooks/fix/WORKFLOW.md
+  - agents/buddy/boot.md
+  - workflows/templates/council.yaml
+  - workflows/runbooks/research/WORKFLOW.md
+  - workflows/runbooks/build/WORKFLOW.md
+  - workflows/runbooks/solve/WORKFLOW.md
+  optional_methods:
+  - skills/frame/SKILL.md
+  - skills/council/SKILL.md

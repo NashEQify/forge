@@ -25,7 +25,7 @@ consumer-repo sessions.
 | Script | Purpose | Callers | Path (canonical) |
 |--------|-------|----------|------------------|
 | `plan_engine.py` | plan state + critical path + validate + boot output | Buddy boot, task_creation step 5, wakeup | `$FRAMEWORK_DIR/scripts/plan_engine.py` |
-| `workflow_engine.py` | YAML-driven workflow state machine. Cross-session continuity. `--start` / `--next` / `--complete` / `--status` / `--recover` / `--boot-context` / `--handoff-context`. State persists in `.workflow-state/` (gitignored). Required for non-trivial workflows (operational.md §Workflow Engine). | Buddy boot (`--boot-context`), save workflow A.3 (`--handoff-context`), MUST be called at workflow start | `$FRAMEWORK_DIR/scripts/workflow_engine.py` |
+| `workflow_engine.py` | Development workflow state machine; explicit selected runs only. Common save and boot do not enumerate engine state. | Selected development caller through `development_continuation.py` | `$FRAMEWORK_DIR/scripts/workflow_engine.py` |
 | `git-status-check.sh` | parallel git fetch + status-sb for FRAMEWORK_DIR + active CWD. 5s network timeout. Output shows non-clean repos (ahead/behind). Prevents working on stale state in multi-machine workflows. | Buddy boot step 2 STATUS-CHECK | `$FRAMEWORK_DIR/scripts/git-status-check.sh` |
 | `deploy-docs.sh` | mkdocs build + server sync for `docs/` | solve/spec_board/docs-rewrite/fix workflows | `$FRAMEWORK_DIR/scripts/deploy-docs.sh` |
 | `generate-architecture.py` | architecture doc generator | docs-rewrite workflow | `$FRAMEWORK_DIR/scripts/generate-architecture.py` |
@@ -53,3 +53,12 @@ consumer repos via that path.
 If an agent (MCA, council-member, etc.) works in a consumer repo and sees
 a script call in a skill/workflow without the `$FRAMEWORK_DIR` prefix:
 **that's a drift bug**. Flag it in the next sweep or fix it directly.
+
+## Shared continuity and installation
+
+| Script | Public responsibility | Contract |
+|---|---|---|
+| `continuity.py` | Scoped coherent snapshots and protected semantic publication/recovery | [Continuity](continuity.md) |
+| `development_continuation.py` | Explicit development bindings exported into common handoffs | [Development continuation](development-continuation.md) |
+| `install_activation.py` | Installation mutation exclusion and durable recovery | [Installation activation](installation-activation.md) |
+| `forge_install.py --maintenance …` | Public prepare/status/retry/rollback/validate entry | [Installation activation](installation-activation.md) |

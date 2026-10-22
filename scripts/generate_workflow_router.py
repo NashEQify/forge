@@ -66,11 +66,13 @@ ROUTER_DIR = "workflow_router"
 ROUTER_NAME = "workflow-router"
 
 DESC_PREFIX = "forge workflow router — Use when you need to: "
-DESC_SUFFIX = "; → open process-map.md and start via workflow_engine."
+DESC_SUFFIX = "; → use the direct common or method entry; start the engine only for selected development."
 
 INSTRUCTION = (
-    "Match a need → open `framework/process-map.md` → start it: "
-    "`python3 scripts/workflow_engine.py --start <name> --task <id>`"
+    "Save and housekeeping invoke their common runbook directly. Bedrock, Frame and Council "
+    "invoke their skill directly; installation availability never selects development. For selected "
+    "development, open `framework/process-map.md`, then start the matching engine workflow: "
+    "`python3 scripts/workflow_engine.py --start <name> --task <id>`. Existing bound runs retain their engine obligations."
 )
 
 
@@ -188,12 +190,15 @@ def render_body(phrases: list[tuple[str, str]]) -> str:
         "<name>/WORKFLOW.md`) and `framework/process-map.md` are the "
         "SoT.",
         "",
-        "| Workflow | Use case | Runbook |",
-        "|---|---|---|",
+        "| Entry | Use case | Owner | Dispatch |",
+        "|---|---|---|---|",
     ]
     for dir_name, phrase in phrases:
         runbook = f"`workflows/runbooks/{dir_name}/WORKFLOW.md`"
-        lines.append(f"| `{dir_name}` | {phrase} | {runbook} |")
+        dispatch = "Direct common procedure" if dir_name in {"save", "context_housekeeping"} else "Selected development engine"
+        lines.append(f"| `{dir_name}` | {phrase} | {runbook} | {dispatch} |")
+    for name, directory in (("bedrock-drill", "bedrock_drill"), ("frame", "frame"), ("council", "council")):
+        lines.append(f"| `{name}` | Reason about the supplied problem | `skills/{directory}/SKILL.md` | Direct generic method |")
     lines += [
         "",
         INSTRUCTION,

@@ -15,6 +15,10 @@ through wrappers.
 
 | File | Purpose |
 |---|---|
+| Shared capability boundaries and ownership | [capabilities.md](capabilities.md) |
+| Coherent reads, protected publication and recovery | [continuity.md](continuity.md) |
+| Exact selected development continuation | [development-continuation.md](development-continuation.md) |
+| Safe installation and recovery | [installation-activation.md](installation-activation.md) |
 | `process-map.md` | workflow routing (what-do-I-want -> which workflow) |
 | `skill-map.md` | skill inventory (AUTO block via `scripts/generate_skill_map.py`) |
 | `skill-anatomy.md` | format standard for skills |

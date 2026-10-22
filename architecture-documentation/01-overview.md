@@ -1,5 +1,12 @@
 # 01 — Overview
 
+Forge ships knowledge/continuity, general reasoning and software development in one
+coordinated distribution. Availability does not activate software workflows. See
+[capability ownership and source inventory](../framework/capabilities.md),
+[protected continuity](../framework/continuity.md), and
+[coordinated activation](../framework/installation-activation.md).
+
+
 > **A note on context:** Task IDs that appear in this documentation
 > point to internal development tasks in consumer repos that exercised
 > a particular mechanism while it was being built. They are

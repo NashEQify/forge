@@ -8,46 +8,34 @@ the intent, the more of the *how* forge takes off your hands. It's not a
 vending machine — you still make the judgment calls at the gates — but the
 coordination that would otherwise drown a single session, forge carries.
 
-Coding models are already very capable. The lever for getting more out
-of them isn't a bigger model — it's orchestration. That's what forge
-is: **disciplined LLM capabilities** between you and your coding agent.
-It lets a solo dev vibe reliably on work a standard agent can't hold
-together. It spends more tokens and time running
-opinionated workflows over the LLM, and gives back cleaner code, less
-rework, and more autonomous execution. The benefit:
-you get far more out of the same model than you would by just plain
-prompting or a stock agent.
+Forge brings three capabilities together in one installation:
 
-The workflows are everyday dev work — build, fix, review, solve, research,
-docs — and their top-level shape follows familiar software practice. What's tuned
-to how coding agents actually behave is **how each step is wired
-underneath**, built to control for the ways agents go wrong — both the
-well-known agentic behaviours and the ones observed dogfooding forge in
-productive use ([the tendencies, described](framework/agent-patterns.md)).
-Hard-to-undo decisions get a multi-perspective board or a council
-before they land; when you're unsure, you can put the question to the
-council yourself — decision-support, not a replacement for your
-judgment. You stay in the driver's seat.
+- **Knowledge and continuity:** capture useful facts at their responsible topics,
+  retrieve the context a question needs, and preserve open work across sessions.
+  Personal details stay in the configured user repository; project knowledge stays
+  with its project. Everyday recipes, applications, travel and technical work use
+  the same rules.
+- **General reasoning:** Council, Frame and Bedrock support decisions and problem
+  analysis with explicit evidence, alternatives and uncertainty. They can work from
+  supplied context without a software project or persistent repository.
+- **Software development:** build, fix, review and release workflows add specs,
+  tests, independent reviews and exact development continuation when selected.
 
-Work that outgrows a single session keeps its thread. At session end
-you trigger the `save` skill; it writes a structured handoff the next
-session reads on boot. Alongside it, the workflow engine tracks where
-each multi-step workflow stands — which step, what state — so a paused
-build resumes exactly there, and the work itself is organized as tasks
-with dependencies: a validated plan with milestones and a critical
-path, surfaced at every start. A multi-day, multi-step build doesn't
-lose its place.
+The capabilities share authorization, evidence discipline and host integration.
+They ship in one repository, installer and coordinated release. `daily` and `full`
+remain compatible installation presets; making development available does not
+activate it for every conversation. Your working folder and ordinary commands stay
+valid. See [capability ownership](framework/capabilities.md).
 
-It stays simple to use and understand — a small set of processes, not a
-cage. Aimed at a single dev on complex work, whether you're shipping a
-product or building a system to last: the velocity of vibe-coding with
-the coherence of process.
+A focused boot profile and navigation keep relevant context small while topic files
+retain useful detail, exceptions and source evidence. `save` reconciles knowledge
+and the session handoff; explicitly selected software work contributes its exact
+state. A paused workflow keeps its identity and pause status on session restoration.
 
-If you write all your code by hand, the full forge workflow is overkill —
-it earns its weight when an agent is doing the work. The exception is the
-decision layer: the **council** (hard architecture and strategy calls) and
-the **boards** (multi-perspective spec and code review) work as standalone
-decision-support, whoever wrote the code.
+For complex software work, Forge coordinates the model's implementation and review
+work so a project can remain coherent across many sessions. Decisions still belong
+to the user. The same reasoning and continuity capabilities also serve daily work
+without imposing software tasks or build gates on it.
 
 forge is dogfooded — developed by using it on real work. The core is
 stable and won't shift out from under you; what keeps improving is the

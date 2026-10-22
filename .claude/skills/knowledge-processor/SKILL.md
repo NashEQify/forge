@@ -1,6 +1,6 @@
 ---
 name: knowledge-processor
-description: 'The context-write mechanism — reconcile new information against existing knowledge so `context/` and the user''s own repo stay accurate. Triggers when new information must be folded in: a fact, decision, correction or changed state in the conversation (same response cycle under continuous maintenance), a task status change, save, or an agent return; NOT a standalone workflow — it is cross-cutting infrastructure.'
+description: Reconcile useful new information with scoped knowledge and retrieve relevant context before dependent work. Shared continuity infrastructure for all work; no software workflow or user repository is required for project knowledge.
 ---
 
 # Skill: knowledge-processor (Wrapper)

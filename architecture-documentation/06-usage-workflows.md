@@ -251,26 +251,15 @@ When `research` is invoked as a sub-workflow from `solve` step 6 or
 
 **Trigger:** user says `save` (the single command for mid- and end-of-session).
 
-**Three groups** (group order is mandatory; group B in parallel):
+Save uses the common [continuity runbook](../workflows/runbooks/save/WORKFLOW.md):
+reconcile useful deltas and selected domain contributions, publish coherent knowledge
+and handoff through scoped recovery, then commit/push only as authorized. It works
+without development; file presence does not trigger task or plan checks. Required
+software checks and exact selected state are supplied by the development adapter.
 
-```
-A. Pre-Write (sequential)
-   1. Dispatcher (Buddy inline: triage PENDING from session-buffer.md)
-   2. Reconciliation (gap check + task status)
-   3. Workflow state (workflow_engine --handoff-context)
-
-B. Content writes (PARALLEL — one batch)
-   4. Session handoff (merge default, never overwrite blindly)
-   5. Session log (decision/error notes)
-   6. Context updates (overview.md + history entries)
-
-C. Post-Write
-   7. Commit (pre-commit hooks run)
-```
-
-Run `save` mid-session too — it's the same command; the footprint
-adapts (the history entry fires on task-closeout, buffer cleanup
-skips when empty).
+History preserves meaningful decisions, obligations and trajectories; an interim
+save alone creates no entry. Dependent writes are protected as one scoped operation,
+not parallel blind overwrites. Interrupted reconciliation remains visible on resume.
 
 ## Patterns
 
@@ -338,15 +327,13 @@ git diff --name-only        # → empty if nothing drifted
 If the second run produces a diff the first wasn't idempotent —
 generator bug. The validator hook (`consistency_check` Check 6/8) catches that.
 
-### Pattern 6 — Hook + handoff (session continuity)
+### Pattern 6 — Scoped continuity and selected development
 
-The session-continuity pattern:
-
-- **Hook (computed):** `plan_engine --boot` returns a machine-readable session state.
-- **Handoff (narrative):** `session-handoff.md` contains a 9-point structure with
-  user decisions, errors, open topics.
-
-Both are written on `save`, loaded on `wakeup`.
+Common handoff preserves open goals/state, leading files, next steps/blockers and
+necessary decisions, approvals and failed attempts. No nine-heading template is
+required. Explicitly bound development contributes authoritative workflow references;
+session restoration validates them without advancing or unpausing. Common continuity
+needs neither task graph nor engine. See [development continuation](../framework/development-continuation.md).
 
 ### Pattern 7 — Persist gate on status change
 

@@ -58,7 +58,17 @@ the Authorization section applies to both modes.
 | Research / evaluate / spike | **Research** | `workflows/runbooks/research/WORKFLOW.md` |
 | Rewrite reader-facing docs / README / positioning (reader-journey-first) | **Docs-Rewrite** | `workflows/runbooks/docs-rewrite/WORKFLOW.md` |
 
-### Housekeeping (1)
+### Common continuity and generic reasoning
+
+Save (`workflows/runbooks/save/WORKFLOW.md`), housekeeping
+(`workflows/runbooks/context_housekeeping/WORKFLOW.md`), Council, Frame and Bedrock
+have direct entries without an engine prerequisite; `framework/capabilities.md`
+defines ownership. Software intent or an explicit development invocation binds
+`framework/development-continuation.md` before progressing selected work. Preserve
+unfinished bindings across ordinary saves; task/plan/state-file presence does not
+create them. Restore exact selected state without advancing or unpausing.
+
+### Common save
 
 | I want to... | Workflow | Runbook |
 |-------------|---------|---------|

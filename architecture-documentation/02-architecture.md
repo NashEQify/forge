@@ -1,5 +1,12 @@
 # 02 — Architecture
 
+Forge ships knowledge/continuity, general reasoning and software development in one
+coordinated distribution. Availability does not activate software workflows. See
+[capability ownership and source inventory](../framework/capabilities.md),
+[protected continuity](../framework/continuity.md), and
+[coordinated activation](../framework/installation-activation.md).
+
+
 ## High-Level
 
 ```

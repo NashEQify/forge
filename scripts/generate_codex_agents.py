@@ -22,8 +22,6 @@ sys.dont_write_bytecode = True
 import yaml  # noqa: E402 - disable bytecode before third-party/project imports
 
 try:
-    from .codex_legacy import legacy_hashes
-    from .generate_skill_wrappers import build_desired
     from .managed_install import (
         InstallConflict,
         InstallPlan,
@@ -33,11 +31,8 @@ try:
         read_file,
         safe_path,
     )
-    from .user_scope import UserScope, boot_text, daily_rules, unusable_setting
-    from .user_scope import resolve as resolve_user_scope
+    from .user_scope import UserScope, boot_text, daily_rules
 except ImportError:
-    from codex_legacy import legacy_hashes
-    from generate_skill_wrappers import build_desired
     from managed_install import (
         InstallConflict,
         InstallPlan,
@@ -47,8 +42,7 @@ except ImportError:
         read_file,
         safe_path,
     )
-    from user_scope import UserScope, boot_text, daily_rules, unusable_setting
-    from user_scope import resolve as resolve_user_scope
+    from user_scope import UserScope, boot_text, daily_rules
 
 
 # These roles execute or author files; the others produce reports.
@@ -89,7 +83,7 @@ def boot_instructions(
             "when no Buddy role was explicitly selected:\n\n"
             + "\n".join(
                 f"- {framework}/agents/buddy/{part}.md"
-                for part in ("soul", "operational", "boot")
+                for part in ("soul", "boot")
             )
             + "\n\n" + _TAIL
         )
@@ -314,7 +308,7 @@ def plan_codex(
     skills: dict[str, str],
     scope: UserScope | None,
     profile: str = "full",
-    roles: bool = True,
+    roles: bool | list[str] = True,
     legacy_roles: dict[str, set[str]] | None = None,
     legacy_skills: dict[str, str] | None = None,
     legacy_skill_hashes: dict[str, set[str]] | None = None,
@@ -326,8 +320,14 @@ def plan_codex(
     """
     agents = codex_home / "agents"
     if roles:
+        desired_roles = generate_roles(framework, framework)
+        if isinstance(roles, list):
+            missing = set(roles) - {Path(name).stem for name in desired_roles}
+            if missing:
+                raise ValueError(f"selected method roles unavailable: {sorted(missing)}")
+            desired_roles = {name: text for name, text in desired_roles.items() if Path(name).stem in roles}
         managed_files(
-            plan, agents, generate_roles(framework, framework), legacy_hashes=legacy_roles
+            plan, agents, desired_roles, legacy_hashes=legacy_roles
         )
     elif read_file(agents / ".forge-managed.json") is not None:
         managed_files(plan, agents, {})
@@ -422,59 +422,26 @@ def main(argv: list[str] | None = None) -> int:
         if args.install:
             if args.output_root or args.framework_root:
                 raise ValueError("--install derives framework paths from --repo")
-            codex_home = safe_path(args.codex_home)
-            agents_home = safe_path(args.agents_home)
-            # Mandatory inputs must validate before any ownership/cleanup planning.
-            skills = build_desired(
-                repo / "skills",
-                tool_label="Codex",
-                discovery_label="Codex",
-                framework_root=repo,
-            )
-            legacy_roles = None
-            legacy_skills = None
-            legacy_skill_hashes = None
-            if args.migrate_legacy:
-                legacy_roles = legacy_hashes("roles", repo)
-                legacy_skill_hashes = legacy_hashes("skills")
-                legacy_skills = {
-                    f"{name}/SKILL.md": content
-                    for name, content in build_desired(
-                        repo / "skills", tool_label="Codex", discovery_label="Codex"
-                    ).items()
-                }
-            unusable = unusable_setting()
-            if unusable:
-                raise InstallConflict(
-                    f"machine setting unusable ({unusable}); fix it or run "
-                    "scripts/forge_install.py --profile ... --user-repo ... "
-                    "--force-user-config"
-                )
-            scope = resolve_user_scope(repo)
-            if scope.profile == "daily":
-                raise InstallConflict(
-                    f"machine setting {scope.config_path} selects the daily profile; "
-                    "setup-codex.sh installs the full profile. Use "
-                    "scripts/forge_install.py --profile daily (or switch with "
-                    "forge_install.py --profile full --user-repo ... --force-user-config)"
-                )
-            plan_codex(
-                plan,
-                codex_home,
-                agents_home,
-                repo,
-                skills=skills,
-                scope=scope,
-                legacy_roles=legacy_roles,
-                legacy_skills=legacy_skills,
-                legacy_skill_hashes=legacy_skill_hashes,
-            )
-            for project in args.projects:
-                project = safe_path(project)
-                if not project.is_dir():
-                    raise ValueError(f"project directory missing: {project}")
-                plan_boot(plan, project, repo)
-                plan_hook_cleanup(plan, project / ".codex", repo)
+            # Every host installation uses the coordinated activation boundary.
+            # This legacy entry preserves argument spelling and exit-code family.
+            try:
+                from . import forge_install
+            except ImportError:
+                import forge_install
+            forwarded = (["--check"] if args.check else []) + (["--migrate-legacy"] if args.migrate_legacy else [])
+            forwarded.extend(str(project) for project in args.projects)
+            previous = {key: os.environ.get(key) for key in ("CODEX_HOME", "AGENTS_HOME")}
+            try:
+                os.environ["CODEX_HOME"] = str(safe_path(args.codex_home))
+                os.environ["AGENTS_HOME"] = str(safe_path(args.agents_home))
+                return int(forge_install.main(forwarded, framework=repo) != 0)
+            finally:
+                for key, value in previous.items():
+                    if value is None:
+                        os.environ.pop(key, None)
+                    else:
+                        os.environ[key] = value
+
         else:
             if args.output_root is None or args.projects:
                 raise ValueError(

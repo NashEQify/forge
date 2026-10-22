@@ -36,6 +36,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import fnmatch
+import hashlib
 import json
 import os
 import re
@@ -251,15 +252,16 @@ def _load_state_quiet(workflow_id: str) -> dict[str, Any] | None:
 
 
 @contextlib.contextmanager
-def _state_lock():
+def _state_lock(directory: Path | None = None):
     """Acquire an exclusive flock on STATE_DIR/_lock for atomic state ops.
 
     Prevents race conditions when boot-context, --next, --complete run
     concurrently against the same .workflow-state/ (e.g. UserPromptSubmit
     hook firing while boot is still parallelising). Unix-only (fcntl).
     """
-    _ensure_state_dir()
-    lock_path = STATE_DIR / "_lock"
+    if directory is None:
+        _ensure_state_dir()
+    lock_path = (directory or STATE_DIR) / "_lock"
     fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR, 0o644)
     try:
         if fcntl is not None:
@@ -2523,6 +2525,167 @@ def find_active_workflow_for_next(
     return _resolve_unique(pool, None, task_id)
 
 
+
+def _continuation_definition(state: dict[str, Any]) -> dict[str, Any]:
+    """Validate interpretation without evaluating guards or transitioning steps."""
+    if state.get("schema_version") not in ("1", "2", 1, 2):
+        raise ValueError("unsupported state schema")
+    if type(state.get("revision", 0)) is not int or state.get("revision", 0) < 0:
+        raise ValueError("invalid state revision")
+    if not isinstance(state.get("variables"), dict) or not isinstance(state.get("steps"), dict):
+        raise ValueError("invalid state variables or steps")
+    if "paused" in state and type(state["paused"]) is not bool:
+        raise ValueError("invalid paused state")
+    definition_path = discover_workflow_yaml(state.get("workflow", ""))
+    if not definition_path:
+        raise ValueError("workflow definition unavailable")
+    definition = load_workflow_yaml(definition_path)
+    declared = {step["id"]: step for step in definition["steps"]}
+    if set(state["steps"]) != set(declared):
+        raise ValueError("workflow step vocabulary changed")
+    if state.get("current_step") is not None and state["current_step"] not in declared:
+        raise ValueError("unknown current step")
+    route = state.get("selected_route")
+    if route is not None and route not in definition.get("routes", {}):
+        raise ValueError("unknown selected route")
+    valid = TERMINAL_STEP_STATUSES | {STATUS_PENDING, STATUS_IN_PROGRESS}
+    for step_id, step in state["steps"].items():
+        if not isinstance(step, dict) or step.get("status") not in valid:
+            raise ValueError("unknown step status")
+        if step.get("route") is not None and step["route"] not in declared[step_id].get("routes", {}):
+            raise ValueError("unknown classification route")
+    # Unknown fields remain conservative compatibility boundaries. Only documented
+    # discovery/display metadata is excluded; manual instruction is executable meaning.
+    projection = {k: v for k, v in definition.items()
+                  if k not in {"description", "need_phrase", "trigger", "derived_from"}}
+    projection.setdefault("iteration_cap", DEFAULT_ITERATION_CAP)
+    projection.setdefault("routes", {})
+    projection["steps"] = []
+    defaults = {"required": True, "commit_gate": False, "depends_on": [],
+                "on_fail": "block", "skill_ref": "", "context_refs": [], "routes": {}}
+    for step in definition["steps"]:
+        normalized = {k: v for k, v in step.items() if k != "name"}
+        for key, value in defaults.items():
+            normalized.setdefault(key, value)
+        projection["steps"].append(normalized)
+    return projection
+
+
+def continuation_compatible(workflow: str, observed_fingerprint: str,
+                            current_fingerprint: str, *, direction: str | None = None) -> bool:
+    """Accept identity or an exact, reviewed directional definition transition."""
+    if direction not in (None, "upgrade", "rollback"):
+        raise ValueError("unknown compatibility direction")
+    if any(not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value)
+           for value in (observed_fingerprint, current_fingerprint)):
+        return False
+    if observed_fingerprint == current_fingerprint:
+        return True
+    import yaml
+    manifest = FRAMEWORK_ROOT / "framework/workflow-compatibility.yaml"
+    try:
+        data = yaml.safe_load(manifest.read_text())
+        if not isinstance(data, dict) or data.get("version") != 1:
+            return False
+        for mapping in data.get("mappings", []):
+            if (mapping.get("workflow") != workflow or mapping.get("review_status") != "accepted"
+                    or not mapping.get("preserved_obligations")):
+                continue
+            for selected in ("upgrade", "rollback") if direction is None else (direction,):
+                if selected not in mapping.get("allowed_directions", []):
+                    continue
+                pair = (mapping.get("prior"), mapping.get("current"))
+                if selected == "rollback":
+                    pair = pair[::-1]
+                if pair == (observed_fingerprint, current_fingerprint):
+                    return True
+    except (OSError, ValueError, TypeError, AttributeError, yaml.YAMLError):
+        return False
+    return False
+
+
+def continuation_lifecycle(state: dict[str, Any]) -> dict[str, Any]:
+    """Engine terminal markers own lifecycle, including aborts with pending steps."""
+    if state.get("aborted"):
+        return {"status": "aborted", "terminal": True}
+    if state.get("completed") and all(
+            step["status"] in TERMINAL_STEP_STATUSES for step in state["steps"].values()):
+        return {"status": "completed", "terminal": True}
+    return {"status": "paused" if state.get("paused") else "active", "terminal": False}
+
+
+def export_selected_states(
+    project_root: Path, workflow_ids: list[str], references: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Engine-owned exact snapshot. Never selects by presence or changes state.
+
+    All selected runs are observed under the engine's existing lock. An archived
+    run must have exactly one matching identity; ambiguity is always a blocker.
+    """
+    if not isinstance(workflow_ids, list) or any(
+        not isinstance(wid, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", wid)
+        for wid in workflow_ids
+    ) or len(workflow_ids) != len(set(workflow_ids)):
+        raise ValueError("explicit unique workflow IDs required")
+    references = references or {}
+    if not isinstance(references, dict) or set(references) - set(workflow_ids):
+        raise ValueError("invalid state references")
+    result: dict[str, Any] = {"schema_version": 1, "states": [], "blockers": []}
+    if not workflow_ids:
+        return result
+    root = project_root.resolve(strict=True)
+    directory = root / ".workflow-state"
+    if not directory.is_dir():
+        result["blockers"] = [{"workflow_id": wid, "reason": "state_missing"} for wid in workflow_ids]
+        return result
+    if fcntl is None:
+        raise ValueError("state locking unavailable")
+    if directory.is_symlink() or (directory / "_lock").is_symlink():
+        raise ValueError("unsafe state directory")
+    with _state_lock(directory):
+        for wid in workflow_ids:
+            try:
+                reference = references.get(wid, f".workflow-state/{wid}.json")
+                if not isinstance(reference, str):
+                    raise ValueError("invalid state reference")
+                given = Path(reference)
+                source = given if given.is_absolute() else root / given
+                if ".." in given.parts or not source.is_relative_to(directory):
+                    raise ValueError("state reference outside owner")
+                candidates = []
+                # Identity uniqueness is global even after a reference relocates.
+                # Inspect identity only for unrelated runs; never export their contents.
+                paths = sorted(directory.glob("*.json"))
+                if (directory / "archive").is_dir():
+                    paths += sorted((directory / "archive").glob("*.json"))
+                if source.exists() and source not in paths:
+                    raise ValueError("state reference outside allowed owner paths")
+                for path in paths:
+                    if path.is_symlink() or not path.resolve().is_relative_to(directory):
+                        raise ValueError("unsafe state reference")
+                    try:
+                        raw = path.read_bytes()
+                        state = json.loads(raw)
+                    except (OSError, ValueError):
+                        if path == source:
+                            raise
+                        continue
+                    if path == source and (not isinstance(state, dict) or state.get("workflow_id") != wid):
+                        raise ValueError("state reference identity mismatch")
+                    if isinstance(state, dict) and state.get("workflow_id") == wid:
+                        candidates.append((path, raw, state))
+                if len(candidates) != 1:
+                    raise ValueError("state missing or ambiguous")
+                path, raw, state = candidates[0]
+                interpretation = _continuation_definition(state)
+                result["states"].append({"workflow_id": wid, "state_file": str(path.relative_to(root)),
+                    "revision": state.get("revision", 0), "sha256": hashlib.sha256(raw).hexdigest(),
+                    "definition_fingerprint": hashlib.sha256(json.dumps(interpretation, sort_keys=True).encode()).hexdigest(),
+                    "state": state, "lifecycle": continuation_lifecycle(state)})
+            except (OSError, ValueError, TypeError, KeyError, SchemaError) as exc:
+                result["blockers"].append({"workflow_id": wid, "reason": str(exc)})
+    return result
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -2534,6 +2697,7 @@ def main() -> None:
     )
 
     group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--export-selected", action="store_true", help="Read exact explicitly selected state; JSON request on stdin")
     group.add_argument("--start", metavar="WORKFLOW", help="Start a new workflow")
     group.add_argument("--next", action="store_true", help="Show next step")
     group.add_argument("--complete", metavar="STEP_ID", help="Complete a step")
@@ -2600,7 +2764,16 @@ def main() -> None:
     # AmbiguousWorkflowError — caught here and rendered as a LOUD refusal with
     # a copy-paste --id list + EXIT_AMBIGUOUS, never a silent wrong-instance guess.
     try:
-        if args.start:
+        if args.export_selected:
+            try:
+                request = json.load(sys.stdin)
+                result = export_selected_states(PROJECT_ROOT, request.get("workflow_ids"), request.get("references"))
+                print(json.dumps(result))
+                sys.exit(4 if result["blockers"] else 0)
+            except (ValueError, TypeError, OSError) as exc:
+                print(json.dumps({"schema_version": 1, "states": [], "blockers": [str(exc)]}))
+                sys.exit(4)
+        elif args.start:
             cmd_start(args)
         elif args.next:
             cmd_next(args)

@@ -29,6 +29,14 @@ has a `navigation.md` with reader-journey sections (`## What lives here?`,
 
 ---
 
+## Shared entries before development routing
+
+Common `save` and `context_housekeeping` enter their `WORKFLOW.md` directly.
+Knowledge maintenance follows `skills/knowledge_processor/SKILL.md`; generic
+Council, Frame and Bedrock use their skill contracts with supplied context.
+Only explicitly selected development work uses the workflow engine and the
+development-specific catalogue below. Profile availability does not select work.
+
 ## Workflows (8)
 
 | Workflow | Runbook | Purpose |

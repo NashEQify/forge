@@ -1,6 +1,6 @@
 ---
 name: workflow-router
-description: 'forge workflow router — Use when you need to: implement a feature or task; do periodic context-system maintenance; rewrite reader-facing docs / README / positioning; fix a bug or handle an incident; research, evaluate or spike; review or validate a spec; persist a session; solve a problem whose solution shape is still open; → open process-map.md and start via workflow_engine.'
+description: 'forge workflow router — Use when you need to: implement a feature or task; do periodic context-system maintenance; rewrite reader-facing docs / README / positioning; fix a bug or handle an incident; research, evaluate or spike; review or validate a spec; persist a session; solve a problem whose solution shape is still open; → use the direct common or method entry; start the engine only for selected development.'
 ---
 
 # Skill: workflow-router (Wrapper)

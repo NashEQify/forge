@@ -38,7 +38,7 @@ cascade. The test: "Do other files / agents / processes read this
 text and derive behavior from it?" If yes → check immediately.
 
 Buddy runs the cascade with the recursive **IMPACT CHAIN pattern**
-(`skills/knowledge_processor/SKILL.md`, step 2): the methodology
+(`skills/knowledge_processor/SKILL.md`, §5 Bounded impact and protected publication): the methodology
 change is the initial "information" → LOCATE (every spot that
 interprets the concept) → ASSESS (semantically: do logic,
 assumptions, and derivations still hold?) → ACT (fix inconsistencies
@@ -123,39 +123,14 @@ stage independently.
 A reminder: corrections to archived facts go through the corrections
 addendum (see STRUCTURE.md), never via mutation.
 
-## Life-domain maintenance
+## Knowledge and life-domain maintenance
 
-**First-time domain creation:** no objective without a domain file.
-When an objective needs a domain that doesn't exist yet:
-
-1. Clarify domain principles with the user ("Are there general rules
-   that apply to everything in this area?").
-2. Create the domain file (`context/life/<domain>.md`, based on
-   TEMPLATE).
-3. Update `context/life/overview.md`.
-4. Only then: create the workspace + objective.
-
-The domain has to start with substance (principles, constraints),
-not as an empty shell.
-
-**overview.md updates:** `context/life/overview.md` does not need to
-update on every single status change. Updates can batch — on `save`,
-at the end of a work unit, or when Buddy switches the context path.
-The information isn't lost (it's in the workspace's backlog.md); the
-overview.md is the aggregated view that doesn't have to be
-second-precise.
-
-## User-context organization principles
-
-- No rigid categories. The overview structures itself organically.
-- From coarse to fine: when the overview gets full, detail moves
-  into subfolders.
-- Save more rather than less. Detail goes into deeper levels — rarely
-  read, costs nothing.
-- **Facts** — just store, no clarifying question.
-- **Interpretations** — verify briefly before storing.
-- User-scope rules always apply globally (the resolved user repo,
-  `framework/user-scope.md`), even inside project contexts.
+Apply `skills/knowledge_processor/SKILL.md` for admission, placement, relevance,
+validity, retrieval, bounded impact and history. Apply `framework/continuity.md`
+for coherent snapshots, protected publication and interrupted reconciliation.
+User location/privacy is owned by `framework/user-scope.md`. A new topic follows
+existing vocabulary; no mandatory domain scaffold or repeated permission question.
+Preserve concrete project conditions and all meaningful details during migration.
 
 ## History format
 
@@ -183,7 +158,7 @@ in the consumer's own override files, not in the framework.
 
 ### User facts — standing consent, visible proof
 
-User facts (people, places, preferences, hardware, events) go to
+Portable person facts go to
 `<user_repo>/context/user/` via `knowledge_processor (mode=user-signal)`,
 maintained in the same response cycle with the FACTS line as visible
 proof (`knowledge_processor` §Continuous maintenance). Configuring the user

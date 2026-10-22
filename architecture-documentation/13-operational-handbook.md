@@ -271,12 +271,13 @@ python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --find --task 123
 
 ### How it integrates
 
-- **Boot-Step `WORKFLOW-RESUME`** (`agents/buddy/boot.md` §6 RESUME) calls
-  `--boot-context` automatically. Active workflows surface in GREET.
-- **On-demand step read** — Buddy calls `--next --brief` to surface the
-  current step as `WORKFLOW-ENGINE: <step info>` when needed.
-- **Save-Workflow Step A.3** calls `--handoff-context` to bake state into
-  session-handoff.
+- **Boot/restore:** common continuity reads scoped handoff/recovery. Only explicitly
+  bound development loads the adapter to validate exact selected workflow state;
+  it does not call the mutating `--resume` command.
+- **Selected step:** Buddy uses explicit instance identity for engine progression.
+- **Save:** the development adapter exports bound state references and required
+  checks once. Common save carries this contribution; `--handoff-context` remains a
+  legacy display, not exact-state authority or automatic discovery of selection.
 
 ### When to use, when to skip
 

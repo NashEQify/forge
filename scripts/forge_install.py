@@ -1,31 +1,13 @@
 #!/usr/bin/env python3
-"""Install forge for one machine with an install profile (full | daily).
+"""Install the selected Forge capability closure as one recoverable generation.
 
-Usage: forge_install.py [--profile full|daily] [--check]
-                        [--user-repo PATH [--skill-link PATH ...] [--force-user-config]]
-
-Profiles: framework/install-profiles.yaml. User scope: framework/user-scope.md
-(machine setting ${XDG_CONFIG_HOME:-~/.config}/forge/user.yaml, override
-FORGE_USER_CONFIG). Destinations follow HOME, CODEX_HOME, AGENTS_HOME.
-
-- daily: Codex skills (~/.agents/skills) + Codex home boot block; Claude Code
-  skills (~/.claude, names skills/<n>/SKILL.md) + managed block in
-  ~/.claude/CLAUDE.md; skill_links as symlinks; no roles, hooks or launcher.
-  Previously owned Codex roles are removed; full-profile Claude Code surfaces
-  (forge hooks in settings.json, ~/.claude/{agents,skills} symlinks, the cc
-  launcher) are a conflict naming the manual steps.
-- full: Codex roles + all skills + home boot block + hook cleanup; Claude Code
-  surfaces are checked read-only and applied by the unchanged setup-cc.sh
-  (never under --check and never against a staged HOME, because setup-cc.sh
-  also installs git hooks into the framework checkout). What a daily install
-  owns in ~/.claude (block, state, skills, manifest) is removed first.
-
-Hash ownership as in managed_install.py: any conflict aborts before the first
-write. Text outside the managed blocks is never edited; legacy person-specific
-text there is a conflict for a manual rollout step. --check never writes,
-prints one pending path per line and exits 1 when anything is pending.
-Exit 2: conflict or error, nothing written. Exit 3: changes were applied and a
-later step failed (the message names the step); a re-run converges.
+Ordinary installation composes Codex, Claude and OpenCode host plans. Maintainers
+use --maintenance prepare before changing sources, status/retry/rollback after
+interruption, and validate with an exact operation ID and fresh-session evidence.
+--check observes pending changes without writing. Source and integration state
+remain stopped at validation_pending until evidence is explicitly accepted.
+Unknown local edits are conflicts; rollback never resets a repository or rewrites
+consumer workflow state. Machine settings and ownership checks remain preserved.
 """
 
 from __future__ import annotations
@@ -33,13 +15,17 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import pwd
 import re
 import subprocess
 import sys
 from pathlib import Path
 
 sys.dont_write_bytecode = True
+
+try:
+    from . import install_activation
+except ImportError:
+    import install_activation
 
 import yaml  # noqa: E402 - disable bytecode before third-party/project imports
 
@@ -368,14 +354,6 @@ def claude_full_drift(framework: Path, home: Path, *, removing: bool) -> list[st
     return pending
 
 
-def staged_home(home: Path) -> bool:
-    try:
-        real = pwd.getpwuid(os.getuid()).pw_dir
-    except KeyError:
-        return True
-    return os.path.realpath(home) != os.path.realpath(real)
-
-
 def prune_empty_dirs(removed: list[Path], roots: list[Path]) -> None:
     """rmdir (non-recursive) directories emptied by owned-file removals."""
     for path in removed:
@@ -409,14 +387,207 @@ def prune_empty_skill_dirs(skill_roots: list[Path]) -> None:
                 child.rmdir()
 
 
-def main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
+def source_inventory(framework: Path, closure: list[str]) -> list[Path]:
+    """Actual bytes, including local edits and old routes, not Git HEAD."""
+    paths = set()
+    roots = [framework / rel for rel in closure]
+    roots += [framework / name for name in ("scripts", "framework", "workflows", "agents", "skills", "orchestrators", ".claude")]
+    roots += [framework / name for name in ("AGENTS.md", "CLAUDE.md", "intent.md")]
+    for root in roots:
+        if root.is_file() or root.is_symlink():
+            paths.add(root)
+        elif root.is_dir():
+            paths.update(p for p in root.rglob("*") if (p.is_file() or p.is_symlink()) and "__pycache__" not in p.parts and ".git" not in p.parts)
+    return sorted(paths)
+
+
+# Exact source bytes from the immediately preceding installed generation. Only
+# the installation root substitution is normalized; user edits remain conflicts.
+PREDECESSOR_LAUNCHER_HASHES = {
+    "cc": "ca12a48770763ff66aa5ce99615924de790223d0b9bf6aeed02dace4bf4da7ca",
+    "oc": "58587bfd8a3715907e54711ad4c2967e62a90b0ad12cd7facd801f537f896cdf",
+}
+
+
+def framework_git_hooks(framework):
+    """Resolve only this explicitly selected framework's default Git hooks."""
+    if not (framework / '.git').exists():
+        return []
+    def git(*args):
+        return subprocess.run(['git', '-C', str(framework), *args], text=True,
+                              capture_output=True, timeout=10)
+    configured = git('config', '--get', 'core.hooksPath')
+    if configured.returncode != 1:
+        raise ValueError('custom or unreadable core.hooksPath; preserve existing hook routing')
+    common = git('rev-parse', '--path-format=absolute', '--git-common-dir')
+    if common.returncode:
+        raise ValueError('cannot resolve framework Git common directory')
+    hookdir = Path(common.stdout.strip()) / 'hooks'
+    if hookdir.is_symlink():
+        raise ValueError('framework Git hooks directory is a symlink')
+    paths = []
+    for name in ('pre-commit', 'commit-msg'):
+        target = hookdir / name
+        effective = git('rev-parse', '--path-format=absolute', '--git-path', 'hooks/' + name)
+        if effective.returncode or Path(effective.stdout.strip()).resolve() != target.resolve():
+            raise ValueError('framework Git hook routing conflict: ' + name)
+        paths.append(target)
+    return paths
+
+
+def plan_full_hosts(plan, framework, home, scope, modes, host):
+    """Host planning uses read-only Git resolution; mutation belongs to activation."""
+    links = []
+    launchers = {}
+    for name, adapter, marker in (("cc", "claude-code", "CC"), ("oc", "opencode", "OC")):
+        if host not in {"all", name}:
+            continue
+        source = (framework / f"orchestrators/{adapter}/bin/{name}").read_text()
+        needle = f'FRAMEWORK_DIR_INSTALLED=""  # SUBSTITUTED-BY-SETUP-{marker}'
+        if source.count(needle) != 1:
+            raise ValueError(f"launcher substitution marker invalid: {name}")
+        launchers[name] = source.replace(needle, f'FRAMEWORK_DIR_INSTALLED="{framework}"  # SUBSTITUTED-BY-SETUP-{marker}')
+        modes[home / ".local/bin" / name] = 0o755
+    # Retain other previously owned launchers when an individual public entry runs.
+    binroot = home / ".local/bin"
+    _, _, owned = read_manifest(binroot)
+    for name in owned:
+        if name not in launchers:
+            launchers[name] = (binroot / name).read_text()
+    if launchers:
+        legacy_hashes = {}
+        for name in launchers:
+            current = read_file(binroot / name)
+            if current is None or name not in PREDECESSOR_LAUNCHER_HASHES:
+                continue
+            marker = f'FRAMEWORK_DIR_INSTALLED="{framework}"  # SUBSTITUTED-BY-SETUP-{name.upper()}'
+            neutral = f'FRAMEWORK_DIR_INSTALLED=""  # SUBSTITUTED-BY-SETUP-{name.upper()}'
+            normalized = current.replace(marker.encode(), neutral.encode())
+            if digest(normalized) == PREDECESSOR_LAUNCHER_HASHES[name]:
+                legacy_hashes[name] = {digest(current)}
+        managed_files(plan, binroot, launchers, legacy=launchers, legacy_hashes=legacy_hashes)
+    if host in {"all", "cc"}:
+        hook_source = framework / 'orchestrators/claude-code/hooks/pre-commit.sh'
+        for target in framework_git_hooks(framework):
+            if not hook_source.is_file():
+                raise ValueError('missing framework Git hook source')
+            current = install_activation.identity(target)
+            if current['kind'] == 'absent':
+                links.append((target, str(hook_source)))
+            elif current['kind'] != 'link' or target.resolve() != hook_source.resolve():
+                raise ValueError('unowned framework Git hook: ' + str(target))
+        root = home / ".claude"
+        settings_path = root / "settings.json"
+        old = read_file(settings_path)
+        settings = json.loads(old) if old else {}
+        if not isinstance(settings, dict):
+            raise ValueError("Claude settings must be a JSON object")
+        template = json.loads((framework / "orchestrators/claude-code/settings.json.template").read_text().replace("__FRAMEWORK_DIR__", json.dumps(str(framework))[1:-1]))
+        hooks = settings.get("hooks")
+        if hooks and hooks != template.get("hooks"):
+            for groups in hooks.values():
+                for group in groups:
+                    for hook in group.get("hooks", []):
+                        if FORGE_HOOK_DIR not in hook.get("command", ""):
+                            raise ValueError("custom Claude hooks conflict with coordinated setup")
+        settings.update(template)
+        plan.add(settings_path, (json.dumps(settings, indent=2) + "\n").encode(), expected=old)
+        for name in ("skills", "agents"):
+            link = root / name
+            target = framework / ".claude" / name
+            if not target.is_dir():
+                raise ValueError(f"missing generated host source: {target}")
+            if link.is_symlink():
+                if not _forge_checkout_link(link, name):
+                    raise ValueError(f"unowned Claude link: {link}")
+                if os.readlink(link) != str(target):
+                    links.append((link, str(target)))
+            elif link.exists():
+                if name != "skills" or not any(p.is_relative_to(link) and new is not None for p, (_, new) in plan.files.items()):
+                    raise ValueError(f"unowned Claude host directory: {link}")
+            else:
+                links.append((link, str(target)))
+    if host in {"all", "oc"}:
+        template = framework / "orchestrators/opencode/opencode.jsonc.example"
+        text = template.read_text().replace("${FRAMEWORK_DIR}", str(framework)).replace("${HOME}", str(home))
+        values = {"FORGE_USER_INSTRUCTIONS": [json.dumps(p) + "," for p in [scope.soul, *scope.boot]],
+                  "FORGE_USER_DIR_ALLOW": [json.dumps(scope.user_repo.rstrip("/") + "/**") + ': "allow",'] if scope.configured else []}
+        for name, lines in values.items():
+            pattern = re.compile(r"^([ \t]*)// \$\{" + name + r"\}[ \t]*$", re.M)
+            text = pattern.sub(lambda m: "\n".join(m.group(1) + line for line in lines), text)
+        # Runtime configuration is installed in host state, never written into source.
+        config = home / ".config/forge/opencode.jsonc"
+        managed_files(plan, config.parent, {config.name: text}, legacy={config.name: text})
+    return links
+
+
+def prepare_baseline(transaction, framework, home, codex_home, agents_home, consumer_roots):
+    """Bootstrap from a predecessor that does not ship this coordinator.
+
+    Inspect only known installation surfaces and manifest-owned paths, never
+    discover consumers or scan host credentials/session stores.
+    """
+    targets = set(framework_git_hooks(framework))
+    for root in (codex_home / "agents", agents_home / "skills", home / ".claude", home / ".claude/agents",
+                 home / ".local/bin", home / ".config/forge"):
+        if root.is_symlink():
+            targets.add(root)
+            continue
+        if not root.exists():
+            continue
+        manifest, raw, owned = read_manifest(root)
+        targets.add(manifest)
+        if raw:
+            for name in owned:
+                if Path(name).is_absolute() or ".." in Path(name).parts:
+                    raise ValueError(f"unsafe previous manifest entry: {name}")
+                targets.add(root / name)
+    for base, names in ((codex_home, ["AGENTS.md", ".forge-codex-boot.json", "hooks.json"]),
+                        (home / ".claude", ["CLAUDE.md", ".forge-claude-boot.json", "settings.json"]),
+                        (home / ".local/bin", ["cc", "oc"]),
+                        (home / ".config/forge", ["opencode.jsonc"]),
+                        (home / ".local/state/forge", ["selection.json"])):
+        targets.update(base / name for name in names)
+    skills = home / ".claude/skills"
+    if skills.is_symlink():
+        targets.add(skills)
+    # Explicit user skill links are installation identities, not their targets.
+    cfg = config_path(os.environ)
+    if cfg:
+        targets.add(cfg)
+        config, _ = load_config(cfg)
+        scope = from_config(framework, config, config=cfg)
+        for target in scope.skill_links:
+            for root in (agents_home / "skills", home / ".claude/skills"):
+                if not root.is_symlink():
+                    targets.add(root / Path(target).name)
+    transaction.prepare(source_inventory(framework, []), sorted(targets), consumer_roots=consumer_roots)
+    data = transaction._load()
+    data["compatibility"] = install_activation.workflow_compatibility(data)
+    transaction._save(data)
+    return transaction.status()
+
+
+def _main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--profile", choices=PROFILES)
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--user-repo", type=Path)
     parser.add_argument("--skill-link", type=Path, action="append", default=None)
     parser.add_argument("--force-user-config", action="store_true")
+    parser.add_argument("--maintenance", choices=["prepare", "status", "retry", "rollback", "validate"])
+    parser.add_argument("--operation-id")
+    parser.add_argument("--require-ready", action="store_true")
+    parser.add_argument("--validation-operation")
+    parser.add_argument("--validation-evidence", type=Path)
+    parser.add_argument("--consumer-root", type=Path, action="append", default=[])
+    parser.add_argument("--method", action="append", default=[])
+    parser.add_argument("--methods", default="")
+    parser.add_argument("--migrate-legacy", action="store_true")
+    parser.add_argument("projects", nargs="*", type=Path)
     args = parser.parse_args(argv)
+    if args.validation_operation and args.maintenance != "status":
+        parser.error("--validation-operation requires --maintenance status")
     if (args.skill_link or args.force_user_config) and args.user_repo is None:
         parser.error("--skill-link and --force-user-config require --user-repo")
     env = os.environ
@@ -428,9 +599,51 @@ def main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
         agents_home = safe_path(Path(env.get("AGENTS_HOME") or home / ".agents"))
         claude_root = home / ".claude"
 
+        transaction = install_activation.Activation(framework, install_activation.journal_path(home))
+        if args.maintenance in {"status", "retry", "rollback", "validate"}:
+            if args.check and args.maintenance != "status":
+                raise ValueError("--check cannot mutate maintenance state")
+            if args.validation_operation and args.maintenance != "status":
+                raise ValueError('--validation-operation requires maintenance status')
+            if args.maintenance == "status":
+                result = (transaction.validation_status(args.validation_operation, compatibility=install_activation.workflow_compatibility)
+                          if args.validation_operation else transaction.status())
+            elif args.maintenance == "retry":
+                result = transaction.retry(compatibility=install_activation.workflow_compatibility)
+            elif args.maintenance == "rollback":
+                result = transaction.rollback(compatibility=install_activation.workflow_compatibility)
+            else:
+                if not args.operation_id or not args.validation_evidence:
+                    raise ValueError("validate requires --operation-id and --validation-evidence")
+                result = transaction.validate(args.operation_id, args.validation_evidence)
+            print(json.dumps(result, sort_keys=True))
+            return int(args.require_ready and not result.get("validation_session") and result["phase"] not in {"complete", "rolled_back"})
+
+        if args.maintenance == "prepare":
+            if args.check:
+                raise ValueError("--check cannot prepare maintenance")
+            result = prepare_baseline(transaction, framework, home, codex_home, agents_home, args.consumer_root)
+            print(json.dumps(result, sort_keys=True))
+            return 0
+
+        if not args.check and args.maintenance != "prepare":
+            state = transaction.status()
+            if state["phase"] in {"applying", "recovery_required"}:
+                if state.get("reason"):
+                    raise ValueError(state["reason"])
+                result = transaction.retry(compatibility=install_activation.workflow_compatibility)
+                if result["phase"] != "prepared":
+                    print(json.dumps(result, sort_keys=True))
+                    return 0
+                state = result
+            if state["phase"] == "prepared":
+                transaction.seal_updated_sources(source_inventory(framework, []))
         cfg = config_path(env)
         data, cfg_warnings = load_config(cfg) if cfg is not None else (None, [])
         file_profile = data.get("profile") if data else None
+        selection = home / ".local/state/forge/selection.json"
+        selection_raw = read_file(selection)
+        installed_selection = json.loads(selection_raw) if selection_raw else {}
         unusable = unusable_setting(env)
         if unusable and args.profile is None and args.user_repo is None:
             raise InstallConflict(
@@ -448,12 +661,23 @@ def main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
                 "pass --user-repo to rewrite the machine setting"
             )
         profile_name = args.profile or (
-            file_profile if file_profile in PROFILES else "full"
+            file_profile if file_profile in PROFILES else installed_selection.get("profile", "full")
         )
         profile = load_profile(framework, profile_name)
+        try:
+            from .capability_closure import compose_profile, validate_closure
+        except ImportError:
+            from capability_closure import compose_profile, validate_closure
+        selected_methods = args.method + [name for name in args.methods.split(",") if name]
+        if not selected_methods:
+            selected_methods = installed_selection.get("methods", [])
+        profile = compose_profile(framework, profile, selected_methods)
+        closure = validate_closure(framework, profile)
         check_required_paths(framework, profile)
 
         plan = InstallPlan()
+        desired_selection = (json.dumps({"profile": profile_name, "methods": selected_methods}, sort_keys=True) + "\n").encode()
+        plan.add(selection, desired_selection, expected=read_file(selection))
         if args.user_repo is not None:
             if cfg is None:
                 raise ValueError("cannot locate the machine setting (HOME unset)")
@@ -494,6 +718,15 @@ def main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
 
         links: list[tuple[Path, str]] = []
         codex = select_skills(framework, profile, CODEX_LABELS)
+        legacy_roles = legacy_skills = legacy_skill_hashes = None
+        if args.migrate_legacy:
+            try:
+                from .codex_legacy import legacy_hashes
+            except ImportError:
+                from codex_legacy import legacy_hashes
+            legacy_roles = legacy_hashes("roles", framework)
+            legacy_skill_hashes = legacy_hashes("skills")
+            legacy_skills = {f"{name}/SKILL.md": content for name, content in build_desired(framework / "skills", **CODEX_LABELS).items()}
         plan_codex(
             plan,
             codex_home,
@@ -502,7 +735,8 @@ def main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
             skills=codex,
             scope=scope,
             profile=profile_name,
-            roles=bool(profile.get("codex_roles")),
+            roles=bool(profile.get("codex_roles")) or profile.get("method_roles", []),
+            legacy_roles=legacy_roles, legacy_skills=legacy_skills, legacy_skill_hashes=legacy_skill_hashes,
         )
         links += plan_links(agents_home / "skills", scope.skill_links, set(codex))
 
@@ -525,6 +759,24 @@ def main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
                 release_completed={"CLAUDE.md": migrated},
             )
             links += plan_links(claude_root / "skills", scope.skill_links, set(claude))
+            role_wrappers = {}
+            for role in profile.get("method_roles", []):
+                source = framework / "agents" / f"{role}.md"
+                sections = re.split(r"(?m)^---[ \t]*$", source.read_text(), maxsplit=2)
+                if len(sections) != 3:
+                    raise ValueError(f"invalid selected method role: {source}")
+                metadata = yaml.safe_load(sections[1])
+                header = yaml.safe_dump({"name": role, "description": metadata["description"]}, sort_keys=False).strip()
+                role_wrappers[f"{role}.md"] = (
+                    "---\n" + header + "\n---\n\n"
+                    "<!-- generated-by: scripts/forge_install.py -->\n"
+                    f"Read and follow the canonical role at `{source}`.\n"
+                    f"Resolve framework references against `{framework}` and bare `_protocols/` references against `{framework / 'agents'}`.\n"
+                    "Use the caller's execution and output context as specified by the canonical role.\n"
+                )
+            if role_wrappers or (claude_root / "agents/.forge-managed.json").exists():
+                managed_files(plan, claude_root / "agents", role_wrappers)
+
             if not whole:
                 check_legacy_text(claude_root / "CLAUDE.md", CLAUDE_START, CLAUDE_END)
             plan_block(
@@ -538,17 +790,28 @@ def main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
             )
         else:
             stale_links = plan_daily_claude_removal(plan, claude_root, scope.skill_links)
+            # Existing managed daily directories remain hash-owned directories.
+            # Upgrade their contents without an unsafe directory-to-link swap.
+            if (claude_root / "skills").is_dir() and not (claude_root / "skills").is_symlink():
+                for path in list(plan.files):
+                    if path == claude_root / ".forge-managed.json" or path.is_relative_to(claude_root / "skills"):
+                        del plan.files[path]
+                claude = select_skills(framework, profile, CLAUDE_LABELS)
+                managed_files(plan, claude_root, {f"skills/{name}/SKILL.md": content for name, content in claude.items()})
+        modes = {}
         if profile.get("claude_setup"):
-            removing = bool(plan.changes()) and any(
-                path.is_relative_to(claude_root) for path in plan.changes()
-            )
-            claude_pending = claude_full_drift(framework, home, removing=removing)
-            if scope.skill_links:
-                print(
-                    "forge install: skill links not applied to Claude Code: "
-                    "~/.claude/skills is the framework symlink",
-                    file=sys.stderr,
-                )
+            # Host plans share the same preflight, journal and source generation.
+            links += plan_full_hosts(plan, framework, home, scope, modes, "all")
+        if args.projects:
+            try:
+                from .generate_codex_agents import plan_boot, plan_hook_cleanup
+            except ImportError:
+                from generate_codex_agents import plan_boot, plan_hook_cleanup
+            for project in args.projects:
+                if not project.is_dir():
+                    raise ValueError(f"project directory missing: {project}")
+                plan_boot(plan, project, framework, scope=None, profile=profile_name)
+                plan_hook_cleanup(plan, project / ".codex", framework)
 
         changes = plan.changes()
         pending = [str(path) for path in changes]
@@ -558,59 +821,45 @@ def main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
                 print(path)
             return int(bool(pending + claude_pending))
 
-        applied = 0
-        step = "apply"
-        try:
-            try:
-                plan.apply()
-            finally:
-                applied = plan.written
-            step = "skill links"
-            for link in stale_links:
-                link.unlink()
-                applied += 1
-            for link, target in links:
-                link.parent.mkdir(parents=True, exist_ok=True)
-                link.symlink_to(target, target_is_directory=True)
-                applied += 1
-            step = "empty directory cleanup"
-            # Every planned removal, also ones an interrupted earlier run already did.
-            removed = [p for p, (_, new) in plan.files.items() if new is None]
-            prune_empty_dirs(removed + stale_links, [agents_home / "skills", claude_root, codex_home / "agents"])
-            prune_empty_skill_dirs(
-                [agents_home / "skills"] + ([claude_root / "skills"] if daily_claude else [])
-            )
-            skills_dir = claude_root / "skills"
-            if (
-                not daily_claude
-                and skills_dir.is_dir()
-                and not skills_dir.is_symlink()
-                and not any(skills_dir.iterdir())
-            ):
-                skills_dir.rmdir()  # lets setup-cc.sh create the framework symlink
-        except (OSError, ValueError) as exc:
-            raise ApplyFailure(applied, step, exc) from exc
-        print(f"forge install ({profile_name}): {applied} changes applied")
+        source_paths = source_inventory(framework, closure)
+        targets = [*plan.files, *(p for p, _ in links), *stale_links]
         if profile.get("claude_setup"):
-            if staged_home(home):
-                print(
-                    "forge install: Claude Code full setup skipped for a staged HOME "
-                    f"(setup-cc.sh also installs git hooks); pending: {len(claude_pending)}",
-                    file=sys.stderr,
-                )
-            else:
-                result = subprocess.run(
-                    ["bash", str(framework / profile["claude_setup"])], check=False
-                )
-                if result.returncode != 0:
-                    raise ApplyFailure(
-                        applied, profile["claude_setup"], f"exit {result.returncode}"
-                    )
+            targets.extend(framework_git_hooks(framework))
+        state = transaction.status()
+        if state["phase"] == "complete" and not pending:
+            data = transaction._load()
+            transaction._check(data, integration=True, source=True)
+            print(json.dumps(state, sort_keys=True))
+            return 0
+        if state["phase"] in {"unprepared", "complete", "rolled_back"}:
+            transaction.prepare(source_paths, targets, consumer_roots=args.consumer_root, closure=closure)
+        elif state["phase"] == "validation_pending":
+            data = transaction._load()
+            transaction._check(data, integration=True, source=True)
+            if pending:
+                raise ValueError("activation awaits validation; validate or rollback before another change")
+            print(json.dumps(state, sort_keys=True))
+            return 0
+        result = transaction.apply(plan, [*( (p, None) for p in stale_links), *links],
+                                   source_paths=source_paths, modes=modes,
+                                   compatibility=install_activation.workflow_compatibility, closure=closure)
+        print(json.dumps(result, sort_keys=True))
         return 0
     except ApplyFailure as exc:
         print(f"forge install: {exc}", file=sys.stderr)
         return 3
     except (OSError, ValueError, yaml.YAMLError) as exc:
+        print(f"forge install: conflict: {exc}", file=sys.stderr)
+        return 2
+
+
+def main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
+    arguments = sys.argv[1:] if argv is None else argv
+    shared = "--check" in arguments or ("--maintenance" in arguments and arguments[arguments.index("--maintenance") + 1:][:1] == ["status"])
+    try:
+        with install_activation.machine_lock(shared=shared):
+            return _main(arguments, framework=framework)
+    except (OSError, ValueError) as exc:
         print(f"forge install: conflict: {exc}", file=sys.stderr)
         return 2
 

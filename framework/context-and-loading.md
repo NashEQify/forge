@@ -1,75 +1,41 @@
-# System — Context Mechanics & Loading Order
+# Context mechanics and loading
 
-Detail extracted from overview.md. Referenced by consistency_check,
-context-management.md. overview.md carries the short version; this file
-holds the deeper model.
+Knowledge and continuity, general reasoning, and software development are separate
+capabilities in one distribution. Availability is not selection; full installations
+can use on-demand context without activating software bookkeeping.
 
-## Context system — mechanics
+## Owners and reads
 
-**Pattern per area:** `context/<area>/navigation.md` (index) +
-`overview.md` (curated top level) + detail files.
+`framework/user-scope.md` owns person location/privacy. The executable admission,
+retrieval, validity, semantic delta and bounded impact lifecycle belongs solely to
+`skills/knowledge_processor/SKILL.md`. `framework/continuity.md` owns protected
+snapshot/publication/recovery mechanics. Boot and housekeeping invoke these owners.
 
-**Active areas:** user/, life/, selfhosting/, machine-setup/, system/
-(this area), history/.
+Resolve the soul at bootstrap, configured profile after freshness/recovery checks,
+and the project's required entry/handoff. Navigate into relevant topics and their
+local rules on demand; current sections precede evidence unless the question needs
+history. Cross-repository routes resolve from their owning entry and confer no
+permission. Project visitors do not adopt another person's identity.
 
-**Context maintenance:** the knowledge-processor skill implements
-brain-logic as agent behavior for project/system context. Triggers:
-task status changes (all repos), save, entropy audit at boot.
-User context (`<user_repo>/context/user/`, `framework/user-scope.md`) is
-maintained during the work; configuring the user repo is the person's
-consent for that (`knowledge_processor` §Continuous maintenance).
-Store facts without clarification; verify interpretations before
-storing; uncertain information is asked, not stored.
+## Loading and continuation
 
-**Intake gate (pre-harness enforcement, Buddy):** 4-point MUST checklist
-immediately on new information — BEFORE acting (FACTS, ACTIONABLE,
-INCIDENT, INTERPRETATION). Definition: `agents/buddy/operational.md`.
+- Host adapter: thin canonical entry, authorization and effective permissions.
+- Boot: resolved soul, project-mode boot branch, minimal configured profile and
+  required project entry/handoff. On-demand does not load development operational rules.
+- Topic: relevant navigation/current/evidence under one coherent scope snapshot.
+- Selected development: its adapter restores exact explicitly bound state; common
+  continuity carries the contribution envelope without interpreting engine state.
 
-**Session continuity (ARCH-008):** `plan_engine --boot` (project state),
-`context/session-handoff.md` (discussion context from the previous
-session), `context/session-log.md` (history index). Project sessions:
-`<CWD>/docs/current-hook.md` (step pointer, optional).
+After compaction/resume reload required rules/handoff and relevant topics; check
+scoped pending recovery before dependent answers. A statement that context is
+“unloaded” does not remove it from a model window. No hook or asynchronous worker
+is assumed. Source updates require the coordinated activation procedure; an old
+session is never silently treated as upgraded after a pull.
 
-**Context routing:** boot.md sets the active context path (4 cases).
-All skills/triggers operate on that path.
+## Existing context vocabulary
 
-**Context management (dynamic):** based on the **Context Availability
-Model** — three states: available (in workspace), loaded (in context
-window), active (referenced in reasoning). Transitions are tier-dependent.
-**Context Manifest** declares which context must be available per task.
-**Context Switch Protocol** defines the 4-step transition
-(FLUSH -> UNLOAD -> LOAD -> ORIENT). **Active Context Register**
-persists as `workspace/.context-register.md`. **Proactive sculpting**
-releases on-demand context. Details: `docs/specs/context-management.md`.
-
-## Loading order (compaction safety)
-
-**Tier 0 — system-injected (highest priority, ALWAYS visible):**
-`CLAUDE.md` / `AGENTS.md` — invariants + adapter constraints.
-Injected by CC/OC runtime.
-
-**Tier 1 — boot-loaded (compaction-safe):**
-the resolved soul (`framework/user-scope.md`, default
-`agents/buddy/soul.md`), `operational.md`, `boot.md`, the user's `profile.md` —
-process rules, character, commands.
-
-**Tier 2 — boot-read (compaction-prone):**
-`context/plan_engine --boot` (curated distillate),
-`docs/session-buffer.md`.
-
-**Tier 3 — on-demand (only when needed):**
-`context-rules.md`, task files, detail context, skills, specs,
-design principles, ADRs.
-
-Consequence: invariants belong in tier 0. Process rules belong in
-tier 1. If a rule is forgotten after compaction, it was in the wrong
-tier.
-
-## Adapter pattern
-
-SoT under `agents/` is tool-neutral. Adapters are thin:
-- **Claude Code**: `.claude/agents/<n>/<n>.md` — frontmatter
-  (name, tools, model) + "Load and follow"
-- **OpenCode**: `orchestrators/opencode/.opencode/agent/<n>.md` —
-  frontmatter + "Load and follow"
-- Model field is mandatory. Switch via model-switch skill.
+Use each repository's overview/navigation/topic organization. Optional historical
+context-management documents describe proposals, not additional runtime obligations.
+No global context register, mandatory task graph, hook pointer, or parallel fact
+registry is introduced for ordinary knowledge work. Domain-specific state stays
+with its selected owner.

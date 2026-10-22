@@ -1,65 +1,20 @@
 # Mode: wrap-up
 
-Guardrails (delta check, write-quality gate, unloading) apply — see SKILL.md.
+Apply `../SKILL.md` and the common save entry in
+`workflows/runbooks/save/WORKFLOW.md`. Reconcile the session's actual deltas using
+process/user-signal, then merge the existing handoff under protected publication.
+Checkpoint deltas are input, not proof that owners and pending work are reconciled.
 
-Brain Logic is part of wrap-up. First read `modes/process.md` and run EXTRACT → IMPACT CHAIN → SIGNAL CHECK.
+Retain goal/current state, leading files and next steps/blockers for open topics,
+with decisions, failed attempts, approvals and job status needed for continuation.
+Preserve untouched open work. Closed topics need at most a result pointer; their
+meaningful evidence stays at its owner/history. No compulsory nine-heading blocks.
 
-The proof block from process.md applies to the Brain Logic part. wrap-up adds a history delta as a separate section — no second EXTRACT/IMPACT/SIGNAL block.
+Create history only for the canonical future-use threshold or an explicit domain
+closeout obligation. Prefer a concise outcome, rationale, verification and remaining
+limits with source links. A long session or save alone is insufficient. Never erase
+working notes before their unique useful claims and dependencies are preserved.
 
-## plan_engine --boot output refresh
-
-On every save: regenerate `context/plan_engine --boot output` from the source files. Overwrite completely (read source, delta-check, write). No append, no merge. The template is in the header of plan_engine --boot output itself. Missing source → omit the section.
-
-## History entry
-
-- Has a history entry already been written this session?
-- If no AND the session had substantial work: create a history entry (`context/history/YYYY-MM-DD-HHMM-<topic>.md`)
-- If no substance: no history entry. Message: "Nothing substantial to document."
-
-### Format
-
-```markdown
-# <Speaking title>
-
-Date: YYYY-MM-DD HH:MM
-Agent: <which agent>
-
-## What it was about
-
-<Context: starting situation, goal. 2-4 sentences>
-
-## What was done
-
-<Summary. 3-10 sentences. Key statements, not every detail.>
-
-## Decisions and outcomes
-
-- <Concrete decisions>
-- <Changes>
-- <New findings>
-
-## Open points
-
-- <What remains to do>
-- <Open questions>
-```
-
-## Checkpoint aggregation + delta mode
-
-If checkpoints have happened: aggregate checkpoint deltas as the primary input, the delta check runs against unwritten lists. Without checkpoints: full reconstruction against all potentially affected context files (more error-prone).
-
-## Intent drift check
-
-Does the session's work fit the operational intent (plan.yaml)? Drift → document as an open point, suggest an intent update.
-
-## Working-document cleanup
-
-Temporary working documents? Completed → absorb + delete. Still in progress → keep.
-
-## Open points from history → backlog (cross-check)
-
-The primary gate is ACTIONABLE in the IMPACT CHAIN ACT step and Agent Check 7c. In the history entry, "open points" serves as a safety net:
-
-- Every open point that requires concrete action MUST reference a task (→ Task NNN). No task → incident — flow did not trigger the task gate. Create the task immediately.
-- Pure observations, questions, "user decides later" → no task, but mark explicitly.
-- At the end: `Backlog: → Task NNN, NNN` or `Backlog: no action needed — <reason>`.
+Common wrap-up receives any explicitly selected domain contribution opaquely;
+it does not discover development by file presence, invoke engines or create a
+software backlog. An unavailable required contribution makes save partial.

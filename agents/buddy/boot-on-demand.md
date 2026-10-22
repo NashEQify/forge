@@ -14,10 +14,17 @@ machine) has already named the person's soul, user repo and install profile.
    the remote was not checked. A repo that is behind: ask once, batched,
    before reading anything else ("Remote has N newer commits in <repo>. Pull
    first?") unless the project's rules grant a standing session-start pull.
-   Fast-forward only, keep local changes; after a pull re-read the changed
-   instructions, including the soul. Ahead is only a note. (The soul itself is
+   Framework sources are shared mutable runtime inputs: do not pull or reinstall
+   them from an active boot. Follow `framework/installation-activation.md`: stop
+   affected sessions before source changes, preserve a matched baseline, install
+   and validate, then start a fresh session. Standing pull permission does not
+   prove that other sessions stopped. Consumer-only fast-forward follows local
+   authorization and preserves changes; reread affected instructions. Ahead is a note. (The soul itself is
    read before this step, from the entry: it shapes even the pull question.)
-3. **The person:** read `<user repo>/context/user/profile.md` (if present;
+3. **Recovery and the person:** read `framework/continuity.md` and capture the
+   configured user profile plus personal pending status in a coherent snapshot;
+   check project pending with required project entry/handoff separately. Reconcile
+   pending work or qualify/block dependent work. Then read `<user repo>/context/user/profile.md` (if present;
    who the person is, including values and priorities) and `<framework>/skills/knowledge_processor/SKILL.md`
    §Continuous maintenance — its rules apply from the first answer. Detail
    about the person is reached later through `context/user/navigation.md`.
@@ -41,14 +48,16 @@ machine) has already named the person's soul, user repo and install profile.
    - approvals keep their stated scope: do not renew an old host/session
      approval or carry it to other targets, do not re-ask one already given
      for this continuation; diagnosis-only stays diagnosis;
-   - catch up pending maintenance items from the handoff before dependent
-     work; do not start other open topics unasked.
+   - catch up scoped pending recovery before dependent work. Carry opaque domain
+     bindings from the handoff; only a present explicit development binding loads
+     `framework/development-continuation.md` to restore exact selected state. Do not
+     infer selection from task/plan/state files or start unrelated open topics.
 6. **Greet:** one short line with status and next step (style: soul). Mention
    only a pull outcome, an unchecked remote, ahead status or a user-scope
    warning, if any.
 
 Not part of on-demand start: the chub check, plan/workflow probes, the Forge
-skill index, automatic `context/` creation and `operational.md` (read it only
-for explicit Forge method work). Forge workflows, Councils and boards run
+skill index, automatic `context/` creation and development `operational.md` (read it only
+for explicitly selected development work). Generic methods use their own contracts. Forge workflows, Councils and boards run
 only on explicit request. Authorization, secrets and the project's own
 approvals stay binding.

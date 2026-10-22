@@ -22,6 +22,15 @@ uses: [_protocols/plan-review, _protocols/context-isolation, _protocols/dispatch
 
 # Skill: council
 
+Generic reasoning method. Required inputs: problem, constraints, evidence/context,
+method options; optional authorized output destination. No user repo, Git repository,
+development workflow, task or automatic writeback is required. Without a destination,
+use a private temporary execution root and the dispatch protocol's complete-return
+transport. Supplied intent/values anchor standalone work; a repository intent is
+required only when that repository is the selected caller. Report rationale,
+alternatives, uncertainty and usable evidence inline. Proposals are not accepted
+user decisions. Optional domain adapters below apply only to selected development.
+
 Buddy checklist + operational detail.
 
 ## 0. Plan + review (required without a frame)
@@ -51,9 +60,10 @@ Walk-through: (1) Is CURRENT-SCOPE path internally consistent? Check producer + 
 
 ### 1.1 Mode choice (after gate passes)
 
-Detailed mode-profile table (aligned with `workflows/templates/council.yaml`):
+Detailed mode-profile table (complete here; `workflows/templates/council.yaml`
+is an optional development integration, not a runtime dependency):
 
-| Mode | Members | Adversary | Chief | Frame-check | Coherence-check (Buddy-side) | Discourse | ADR |
+| Mode | Members | Adversary | Chief | Frame-check | Coherence-check (Buddy-side) | Discourse | Development ADR |
 |------|---------|-----------|-------|-------------|------------------------------|-----------|-----|
 | **light** (default) | 3 | — | yes (all modes — Inv 1) | — | required | — | optional |
 | **standard** | 3 | yes | yes | yes (`plan-adversary`) | required | — | yes |
@@ -66,24 +76,24 @@ Trigger short-form:
 - **full** — >2 dimensions OR foundational pattern OR ≥2 hard constraints.
 - **interactive** — user explicit ask only (Buddy moderates a dialog — see §10).
 
-**Chief is required for all council modes**. Chief consolidates member
+**Chief is required for all independent-member council modes (light/standard/full)**. Interactive is explicitly moderated dialogue, not a claim of independent-agent execution. Chief consolidates member
 outputs; Buddy owns the decision and verifies pivotal claims per Invariant 1.
 Light omits adversary/frame-check/discourse, not the Chief.
 
-**Coherence-check** is a Buddy-side rule (`agents/buddy/operational.md` §Architecture-Comprehension B), applied unconditionally on every chief return. Not a duplicated council step.
+**Coherence-check:** after every Chief return, check the recommendation against supplied intent, constraints, source evidence and viable alternatives. Buddy owns the decision. Development callers additionally apply their architectural obligations.
 
 **Member model config**: use the host's available, authorized model settings.
 Inherited model settings are the default; do not invent unavailable models
 or claim model diversity from different role names. Legacy Opus/Sonnet mixes
 in templates are Claude-specific examples, not a portable Codex requirement.
 
-Default = light (proportional release valve). **Mode escalation** (light → standard → full) is criterion-driven, not Buddy-uncertain — picking standard/full just because Buddy feels uncertain is mode inflation. (Separate axis: **user escalation** vs council — see `agents/buddy/operational.md` §Multi-perspective engagement Council-before-user-escalation rule; that rule says when §1.0 fires AND the alternative is asking the user, council wins. Both rules coexist: §1.0 governs whether council fires AND which mode; council-before-user-escalation governs council-vs-user when §1.0 fires.)
+Default = light (proportional release valve). **Mode escalation** (light → standard → full) is criterion-driven, not Buddy-uncertain — picking standard/full just because Buddy feels uncertain is mode inflation. If §1.0 warrants Council and the alternative is escalating an unresolved decision to the user, use Council first within existing authorization. Escalate only unresolved dissent, consequential user-owned decisions or scope changes. Selected development callers additionally follow their operational contract.
 
 ## 2. Pre-council frame check (standard / full)
 
 **Trigger:** Buddy-drafted briefing without upstream frame report. (When `frame/SKILL.md` already produced a frame-report for this question, reference it — don't re-run.) Mode determines whether the trigger applies; light skips frame-check by mode.
 
-Buddy drafts briefing → dispatches `plan-adversary` cold-start on the draft (criteria 1-6 per `_protocols/plan-review.md`; focus: does question pre-decide by shape? option-set complete? stakeholders missing?) → persists return verbatim as `docs/reviews/council/<date>-<topic>-frame-check.md` → distills concerns into FINAL briefing.
+Buddy drafts briefing → dispatches `plan-adversary` cold-start on the draft (criteria 1-6 per `_protocols/plan-review.md`; focus: does question pre-decide by shape? option-set complete? stakeholders missing?) → persists return verbatim at the declared execution-root frame-check path (§7; private temporary storage is sufficient) → distills concerns into FINAL briefing.
 
 Members see FINAL briefing only. Council-chief reads BOTH at CHIEF-1.0.
 
@@ -94,7 +104,7 @@ Members see FINAL briefing only. Council-chief reads BOTH at CHIEF-1.0.
 **MUST NOT:** Buddy's proposal · pre-classified conflicts · severity tags · lean hints. Brief-contagion empirically demonstrated.
 
 > **`intent_chain anchoring` is REQUIRED and load-bearing — not droppable.** Its
-> one-line `vision` (from the active `intent.md`, `framework/intent-tree.md`) is the
+> one-line `vision` (from supplied intent, or the active `intent.md` for a repository caller) is the
 > **standing** intent grounding a cold member receives: a standardized alignment
 > derivation, NOT decision-curated content. It is the sanctioned exception to the
 > "cold-analysis gets nothing" anti-anchoring rule — the author-separability line: a standing
@@ -111,14 +121,14 @@ Members see FINAL briefing only. Council-chief reads BOTH at CHIEF-1.0.
 5. Wait, then spawn `council-chief` with all member outputs + adversary + (when present) frame-check artifact.
 6. Read chief consolidated → recommended verdict + tracking-table verification.
 7. (Full + dissent) Discourse one round per `_protocols/discourse.md`.
-8. Buddy decides. Post-council coherence check applies via `agents/buddy/operational.md` §Architecture-Comprehension B (unconditional Buddy-side rule — not duplicated as a council step). Risk carry-forward when positions unresolved. ADR per `documentation_and_adrs/SKILL.md` on substantial decisions.
+8. Buddy checks pivotal claims against sources and the recommendation against supplied intent/constraints (§1.1), then owns the decision. Carry unresolved risks into the result. An explicitly selected development caller adds its own coherence and ADR obligations (§12).
 
 ## 5. Anti-patterns
 
 - **NOT** Buddy's proposal in briefing → cold-start per §3; proposal stays in frame-check artifact.
 - **NOT** consolidate without council-chief (≥3 members) → Inv 1 hard rule; chief is consolidator-tool.
 - **NOT** skip pre-council frame check on standard/full → frame-check IS how you find brief contamination.
-- **NOT** adopt chief recommendation without post-council coherence check per `agents/buddy/operational.md` §Architecture-Comprehension B → unconditional Buddy-side, escalate on topology contradiction. §B also requires the **decision-grounding C-VERIFY** on the verdict's pivotal code/spec claims before adoption: re-execute each unless a non-asserter lens already did (a present/`file_exists` pointer ≠ verified); FALSIFIED or hard-to-reverse+un-groundable → re-frame / escalate to user, never self-adopt.
+- **NOT** adopt a Chief recommendation without checking pivotal claims and fit to supplied constraints. A present file is not evidence its interpretation is correct. Falsified or consequential ungroundable claims require reframing or a stated decision limit. Development-specific C-VERIFY obligations remain with that caller.
 - **NOT** `code-adversary` for council adversary → `council-adversary` (architecture-decision-tuned).
 - **NOT** light mode on hard-to-reverse → standard or full.
 
@@ -126,7 +136,7 @@ Members see FINAL briefing only. Council-chief reads BOTH at CHIEF-1.0.
 
 **INPUT:** decision-question + intent_chain + context-files. Optional: frame report, ADR catalogue, deploy-state observations.
 
-**OUTPUT:** council-decision artifact (`docs/reviews/council/<date>-<topic>-decision.md`) with: chief consolidation + recommended-verdict label + Buddy's actual decision + rationale + risk carry-forward (when applicable) + ADR pointer (when substantial). Backward-compat: also valid for `docs/tasks/{task_id}-council-decision.md` per existing `workflows/templates/council.yaml`.
+**OUTPUT:** inline decision/rationale, alternatives, uncertainty and usable evidence; complete execution artifacts at the caller-owned destination (§7). An authorized development caller retains its decision artifact and required ADR pointer. No automatic durable writeback.
 
 **DOES NOT:** implement; write spec; choose autonomously (user decides on user-facing decisions; Buddy decides on framework-internal per soul.md).
 
@@ -134,7 +144,12 @@ Members see FINAL briefing only. Council-chief reads BOTH at CHIEF-1.0.
 
 ## 7. Output paths
 
-Base: `docs/reviews/council/<date>-<topic>-{briefing,frame-check,{perspective},consolidated,decision}.md`. Build-context backward-compat: `docs/tasks/{task_id}-council-*.md` per `workflows/templates/council.yaml`.
+With an authorized durable repository destination, base: `docs/reviews/council/<date>-<topic>-{briefing,frame-check,{perspective},consolidated,decision}.md`. Build-context backward-compat: `docs/tasks/{task_id}-council-*.md` per `workflows/templates/council.yaml`.
+
+Without that destination, all §2/§4/§7 paths are relative to the private temporary
+execution root; this is execution transport, not durable knowledge writeback.
+Returned inline evidence must remain usable without inaccessible temporary links.
+Persist an accepted result only through the caller's selected continuity owner.
 
 ## 8. Boundary
 
@@ -192,15 +207,17 @@ Mirrors `code_review_board/SKILL.md` §Risk carry-forward. Decision artifact YAM
 
 ## 12. ADR-trigger conditions
 
-ADR REQUIRED on:
+For an explicitly selected development caller, ADR REQUIRED on:
 - Hard-to-reverse decision (data/schema/contract/identity)
 - Decision spans ≥2 components or layers
 - ≥1 HARD constraint (security, sovereignty per the user's values) explicitly traded off
 - Council mode = standard or full (light optional)
 
-Via `documentation_and_adrs/SKILL.md`. Decision-file references ADR id.
+Via `documentation_and_adrs/SKILL.md` in that development caller. Otherwise return rationale/alternatives/uncertainty inline; no ADR or task is mandatory or automatically written.
 
-## 13. Workflow_engine handshake
+## 13. Optional development caller handshake
+
+Only a selected development caller loads this section’s engine/runbook references. Standalone invocation never starts or probes an engine.
 
 **Build-context council** (specify-phase substitute for spec_board): Buddy MUST trigger `python3 scripts/workflow_engine.py --start build --task <id>` in the SAME tool block as council spawn. Engine state SoT for cross-session recovery. This is Buddy-side discipline — `workflows/runbooks/build/workflow.yaml` board step has `alternative_skill_refs: skills/council/SKILL.md` as documentation-intent only (engine reads `skill_ref`).
 

@@ -40,6 +40,17 @@ below. If violated: shorten the text — don't post-rationalize.
 
 ## Output transport
 
+For standalone reasoning the caller may supply a private temporary execution root
+instead of a repository. Output paths and evidence ranges resolve within that root;
+Git, task files, durable repository paths and development bookkeeping are not required.
+Keep the brief, supplied evidence, attributed complete member returns, consolidation
+and decision available through final result assembly. Persist returns verbatim before
+Chief consumption even in this temporary mode. The caller owns cleanup under the
+host's temporary-storage policy; disclose lack of cross-session recovery unless
+retention was explicitly authorized. Missing temporary storage/agent capability is
+an execution limit, never permission to fabricate independent review. Development
+callers retain their separately selected evidence-placement obligations.
+
 Reviewers and Chiefs are read-only investigators. The output path identifies
 where Buddy will persist the artifact, not permission for the reviewer to
 write there. No dispatch may override platform instructions or permissions.

@@ -13,6 +13,18 @@ This reconciles two principles:
 
 **Skip rule:** chief consolidation **required for all council modes** (light / standard / full — N≥3 always per `skills/council/SKILL.md` §1.1). Buddy NEVER synthesizes member outputs directly per Inv 1; chief is the consolidator-tool that lets Buddy read a consolidated input and decide. Light is light by virtue of no-adversary + no-frame-check + no-discourse, NOT by skipping chief.
 
+## Generic execution and transport
+
+The caller supplies the problem, intent/constraints, evidence and execution root.
+A private temporary root is sufficient; no repository, Git, user profile, task or
+workflow engine is mandatory. Resolve evidence paths against that root. Return the
+complete attributed artifact inline; output paths are destinations for the caller,
+not write permission. The caller materializes exact returns before Chief consumption
+per `skills/_protocols/dispatch-template.md`. Missing/truncated required returns are
+an execution limit, never a completed Council. No automatic ADR or knowledge writeback.
+Development-only references below are conditional caller obligations or historical
+attribution; they do not add dependencies to standalone reasoning.
+
 ## Chief role-constraint (consolidation-only)
 
 Chief operates ON member outputs + frame-check artifact (when present), NOT on the briefing's underlying domain or system (existence-checking a cited mechanism is a narrow carve-out — see §Verify-mechanism-exists). CAN warm-start with prior-cycle context because member outputs are cold-start = independent evidence.
@@ -30,10 +42,10 @@ Protocols: `_protocols/reviewer-reasoning-trace.md`, `_protocols/first-principle
 ## Pre-consolidation gates (CHIEF-1.0, 1.1, 1.2)
 
 ### CHIEF-1.0 Chain-of-custody audit (when pre-council frame-check ran)
-Read the frame-check artifact (path in dispatch). For each substantive concern in the artifact (framing-trap / reversibility / missing-stakeholder / default-bypass per `agents/council-adversary.md` §4 mandatory checks, or plan-adversary findings per `_protocols/plan-review.md`), identify whether a council member addressed it (confirmed, extended, contested). Unaddressed concerns surface as consolidation findings with `source: frame-check:F-CAD-<NNN>` or `source: frame-check:F-PA-<NNN>` at original severity.
+Read the frame-check artifact (path in dispatch). For each substantive concern in the artifact (framing-trap / reversibility / missing-stakeholder / default-bypass per `agents/council-adversary.md` §4 mandatory checks, or plan-adversary findings per `skills/_protocols/plan-review.md`), identify whether a council member addressed it (confirmed, extended, contested). Unaddressed concerns surface as consolidation findings with `source: frame-check:F-CAD-<NNN>` or `source: frame-check:F-PA-<NNN>` at original severity.
 
 ### CHIEF-1.1 Evidence-pointer gate (closure-claim validity)
-Every member position "option A wins because X / Y / Z" MUST carry ≥1 evidence-pointer per claim (per `_protocols/evidence-pointer-schema.md` §2). Missing → re-dispatch the member. NEVER consolidate position-claims that lack pointers.
+Every member position "option A wins because X / Y / Z" MUST carry ≥1 evidence-pointer per claim (per `skills/_protocols/evidence-pointer-schema.md` §2). Missing → re-dispatch the member. NEVER consolidate position-claims that lack pointers.
 
 ### CHIEF-1.2 Live-state-vs-decision-claim contradictions
 When member output references live observations (current deploy state, config snapshot, monitoring evidence, runtime constraint) AND a position claims a future behaviour, build a 2-column live-observation → decision-claim-affected table. Inconsistent rows = CRITICAL findings — the decision assumes state that does not hold.
@@ -46,7 +58,7 @@ Mirror of `agents/board-chief.md` §Disposition value-floor on the council-side.
 - *"Future-edit safety"* / *"completeness"* without named consumer → watch-item with named trigger.
 - Real measurable cost + named concrete consumer → follow-up task justified.
 
-Hard floors retain: ADR-mandate on substantial / hard-to-reverse decisions; security / sovereignty escalates regardless.
+Selected development callers retain their ADR mandate on substantial or hard-to-reverse decisions. Standalone results retain the same substantive rationale and risk warnings inline without creating an ADR or task. Security and sovereignty concerns remain visible regardless of caller.
 
 ## Verify-mechanism-exists discipline
 
@@ -89,7 +101,7 @@ Output a **recommended verdict label** (Buddy decides):
 
 | Pattern (mechanical predicate) | Recommended verdict label |
 |---|---|
-| ≥3 members in the SAME convergence cluster (chief MERGE-eligible per `_protocols/consolidation-preservation.md` §MERGE rule: identical root cause) AND same recommended action | CONVERGED-recommended |
+| ≥3 members in the SAME convergence cluster (chief MERGE-eligible per `skills/_protocols/consolidation-preservation.md` §MERGE rule: identical root cause) AND same recommended action | CONVERGED-recommended |
 | ≥3 members on same recommended action but landing in DIFFERENT clusters (RELATED, not MERGED — similar symptoms, different roots) | FRAGILE-CONVERGENCE-recommended (Buddy probe: which root is load-bearing?) |
 | ≥2 distinct clusters with OPPOSING recommended actions (e.g. one cluster says option A, another says option B) | DISSENT-recommended (escalate to full mode discourse, or Buddy-decide if light) |
 | No actionable plurality (each member in own cluster, no shared action) | NO-CONVERGENCE-recommended (re-frame against revised question OR user-decide) |

@@ -31,9 +31,22 @@ if [ -z "${FRAMEWORK_DIR:-}" ]; then
   fi
 fi
 export FRAMEWORK_DIR
+VALIDATION_ARGS=()
+if [ "${1:-}" = "--forge-validation-operation" ]; then
+  if [ -z "${2:-}" ]; then
+    echo "validation launch requires an exact pending operation ID" >&2
+    exit 2
+  fi
+  VALIDATION_ARGS=(--validation-operation "$2")
+  shift 2
+fi
+if ! python3 -B "$FRAMEWORK_DIR/scripts/forge_install.py" --maintenance status --require-ready "${VALIDATION_ARGS[@]}"; then
+  echo "oc: STOP — coordinated installation is not validated; inspect maintenance status." >&2
+  exit 1
+fi
 
 OC_CONFIG_DIR="$FRAMEWORK_DIR/orchestrators/opencode/.opencode"
-OC_CONFIG="$FRAMEWORK_DIR/orchestrators/opencode/opencode.jsonc"
+OC_CONFIG="$HOME/.config/forge/opencode.jsonc"
 
 # Verify config exists. If not, hint at setup-oc.sh.
 if [ ! -f "$OC_CONFIG" ]; then

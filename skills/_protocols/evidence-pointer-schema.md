@@ -15,6 +15,17 @@ Canonical spec authority:
 
 ---
 
+## Standalone reasoning scope
+
+Pointer syntax and evidence honesty apply without an engine or Git repository.
+A caller-owned private temporary execution root may hold supplied evidence and
+complete reviewer returns; paths/ranges resolve relative to that root. Use explicit
+structural arguments for reasoning not supported by a file. Validator/engine/hook
+references in this protocol describe optional software integrations, not mandatory
+standalone dependencies. Final inline conclusions include usable excerpts/references
+rather than relying solely on temporary paths that may disappear. Developer-specific
+schema/API/code examples illustrate evidence; they do not select development work.
+
 ## 1. schema_version
 
 Required field in the output frontmatter (top-level layout) OR per

@@ -1,12 +1,9 @@
 ---
 name: knowledge-processor
 description: >
-  The context-write mechanism — reconcile new information against existing
-  knowledge so `context/` and the user's own repo stay accurate. Triggers when
-  new information must be folded in: a fact, decision, correction or changed
-  state in the conversation (same response cycle under continuous
-  maintenance), a task status change, save, or an agent return; NOT a
-  standalone workflow — it is cross-cutting infrastructure.
+  Reconcile useful new information with scoped knowledge and retrieve relevant
+  context before dependent work. Shared continuity infrastructure for all work;
+  no software workflow or user repository is required for project knowledge.
 status: active
 relevant_for: ["solution-expert"]
 invocation:
@@ -17,248 +14,195 @@ modes: [process, wrap-up, user-signal]
 uses: []
 ---
 
-# Skill: knowledge-processor
+# Knowledge Processor
 
-## Purpose
+Canonical semantic lifecycle for knowledge and continuity. Modes specialize this
+contract; boot, save and housekeeping invoke it. No database, hook, background
+worker, automatic import or development engine is implied.
 
-Brain logic as agent behaviour: process new information against
-existing knowledge. Keeps the context system (`context/`)
-accurate, not just current. Pre-brain as LLM reasoning on context
-files, post-brain as structured queries — the logic stays.
+## Inputs and scope
 
-## Context path
-
-Operates on the **active context path** (set by boot.md context
-routing). Project with its own `context/` → project path.
-Without `context/` → user scope only. All paths relative to
-the active context path. **Exception — always global:**
-user-scope facts go to the resolved user repo
-(`<user_repo>/context/user/`, `framework/user-scope.md`) regardless of
-the active project path. No user scope configured → do not write; report
-the fact as unroutable.
-
-## Inputs
-
-- **information:** what was observed / changed / experienced
-  (raw input or summary).
-- **mode:** `process` | `wrap-up` | `user-signal`.
-
-**Close-phase input (build / fix / solve, when `close_retro` fired):** the
-`information` is the retro's **§Patterns-Emerged** section
-(`docs/<workflow>/<slug>-retro.md`) — already distilled — consumed via
-`mode=process` rather than re-extracting from raw artifacts. Other
-invocations (standalone, save, agent-return) are unchanged. (spec 374 §6.)
-
-## Mode routing
-
-| Mode | Loads | Pipeline |
-|------|-------|----------|
-| process | modes/process.md | EXTRACT → IMPACT CHAIN → SIGNAL CHECK |
-| wrap-up | modes/wrap-up.md (calls process internally) | brain logic + history |
-| user-signal | modes/user-signal.md | CLASSIFY → LOCATE → UPDATE/CREATE → IMPACT CHAIN → CONNECT → REPORT |
-
-## Contract
-
-### INPUT
-- **Required:** information — what was observed / changed /
-  experienced (raw input or summary).
-- **Required:** mode — `process` | `wrap-up` | `user-signal`.
-- **Context:** active context path (set by boot.md context
-  routing). Mode-specific files: `modes/process.md`,
-  `modes/wrap-up.md`, `modes/user-signal.md`.
-
-### OUTPUT
-**DELIVERS:**
-- mode=process: context-file updates (delta-checked) + IMPACT
-  CHAIN (LOCATE + ASSESS + ACT).
-- mode=wrap-up: history entry + context updates as session
-  closure.
-- mode=user-signal: user-profile updates (CLASSIFY → LOCATE →
-  UPDATE/CREATE → IMPACT CHAIN → CONNECT → REPORT).
-- Delta-check proof: NEW / CHANGED / PRESENT classification per
-  piece of information.
-
-**DOES NOT DELIVER:**
-- No uncertain information — only observed or derived (marked
-  as `[Derived]`).
-- No interpretation without a marker.
-
-**ENABLES:**
-- All workflows (close phase): persisting session knowledge.
-- Boot: accurate context for the next session via
-  `overview.md` + session handoff.
-- All agents: current, delta-checked context files for routing
-  and decisions.
-
-### DONE
-- Delta check per planned information: NEW / CHANGED / PRESENT
-  classified.
-- Only NEW and CHANGED written; PRESENT skipped.
-- Write-quality gate: observed / derived / uncertain —
-  uncertain is NOT written.
-- IMPACT CHAIN executed (LOCATE + ASSESS + ACT).
-- On wrap-up: history entry written.
-- On user-signal: CLASSIFY → LOCATE → UPDATE/CREATE → IMPACT
-  CHAIN → CONNECT → REPORT.
-
-### FAIL
-- **Retry:** not foreseen — the skill writes or skips
-  (delta check).
-- **Escalate:** uncertain information → ask the user instead
-  of writing. Incident mode → ACT deferred until the fix is
-  done.
-- **Abort:** not foreseen — the skill is idempotent (the delta
-  check prevents double writes).
+Input: candidate information or retrieval need, active project, configured user
+scope if any, and mode `process`, `user-signal` or `wrap-up`. Resolve location and
+permissions through `framework/user-scope.md`. Project knowledge belongs to its
+verified project/topic owner; private person facts only to the resolved
+`<user_repo>/context/user/`. No user scope: project continuity still works; report
+unroutable person facts, never create a profile or private fallback in the project.
+A visiting agent retains its own user identity and follows the visited project's
+entry and authorization rules without adopting another person's profile.
 
 ## Continuous maintenance
 
-Applies to the user scope whenever one is configured
-(`framework/user-scope.md` — configuring it is the person's consent), and to
-a project's context when the project's rules require ongoing maintenance. Runtime-neutral and
-instruction-level: no hook, no background agent. Project rules may add
-specifics (provenance, sensitive data, storage places); they do not need to
-restate these rules.
+Configuring user scope authorizes its maintenance; project rules authorize project
+maintenance. Honor explicit limits including “do not save”. Reconcile useful new
+facts, decisions, corrections and changed state in the same response cycle, before
+final output. A task-specific instruction remains with that task/topic. Checkpoint
+substantive results before a topic switch; keep goal, next step, blockers and leading
+files in the existing handoff. New leading drafts/results update their topic
+pointer and handoff in the same operation, including externally stored results.
+After compaction/resume reread project rules, configured boot set, full handoff and
+relevant topics; check pending reconciliation before dependent work.
 
-- **Same response cycle.** Fold a new relevant fact, decision, correction,
-  confirmed goal/preference or changed state into its responsible file
-  before sending the final answer — do not wait for `save` or session end.
-  Delta check first; write NEW/CHANGED only; uncertain → ask, or keep it as
-  a marked open question, never as fact. Honor "do not save". Tentative
-  thinking, AI interpretations and third-party claims are not user facts.
-- **Keep the scope.** An instruction for one task or topic is filed with
-  that task/topic, not promoted to repository-wide rules. Judge profile
-  content and execution rules of one source separately.
-- **New leading file.** When a new leading version of a result appears
-  (draft, deck, document), switch the responsible navigation and the
-  handoff to it in the same cycle — a new session must land on the newest
-  version.
-- **Task-scoped working rules** (e.g. where drafts of an assignment go) are
-  recorded in the handoff or the topic's local notes, not only in a tool's
-  memory; other sessions and runtimes cannot see tool memory.
-- **Checkpoint.** In long sessions, after a substantive interim result and
-  before a topic switch: knowledge to its leading place; assignment,
-  decisions and open work to the handoff. Do not accumulate over many turns
-  in chat only.
-- **Before each write** re-read the target file: parallel sessions write
-  to the same user files.
-- **After compaction or resume:** re-read the project rules, the user boot
-  set and the complete handoff, then the affected topic files; catch up
-  pending maintenance before dependent work. Never claim from memory that
-  maintenance was done — check the files.
-- **Write blocked:** for project context, note a concrete pending item
-  (target file, missing information) in that project's handoff; if that is
-  blocked too, report the missing persistence explicitly. For **user-scope**
-  facts, never park them in another repository's files — report them as
-  `deferred:` in the FACTS line and catch up when the user repo is
-  writable (`framework/user-scope.md` §4).
-- **Supersede, don't append.** Replace outdated statements in current
-  knowledge and align affected summaries and links; historical evidence
-  stays unchanged.
+FACTS line while continuous maintenance applies:
+`FACTS: keine | {Fakt} → {Ziel} [geschrieben|deferred:{Grund}]`.
+Report only actual writes. Private deferred payloads never enter another repo's
+handoff. A blocked write is **not persisted**; state target and reason in the
+conversation, retry only with available source and authorized writable owner.
+Project deferrals may stay in that project's handoff. Conversation-only retention
+cannot promise recovery after context loss.
 
-**FACTS line** — proof of the check, as the last line of an answer:
+## Executable lifecycle
 
-`FACTS: keine | {Fakt} → {Ziel} [geschrieben|deferred:{Grund}]`
+### 1. Retrieve and establish a coherent baseline
 
-Every answer carries the line while continuous maintenance is active;
-`FACTS: keine` when nothing qualified. "pending" is not a value — write now, or defer with a reason. A `deferred:` item is
-resolved or carried into the handoff before the next commit or save.
+Before an answer/update needing stored context, identify the verified owner and
+read its entry/navigation, topic-local rules and relevant current sections. Follow
+qualifying evidence when needed. General questions need no personal retrieval.
+Use the protected snapshot/publication interface in `framework/continuity.md` for
+same-scope dependent reads; check its pending record before PRESENT or dependent
+answers. Release protection before reasoning. Additional dependent reads require a
+revalidated snapshot, not independently read files from potentially mixed states.
 
-## Entropy audit
+If routes are missing **or** current material is insufficient, inspect linked
+evidence, then bounded filename/text search in the owner area, expanding to the
+relevant repository as needed. Stop when supported, relevant search is exhausted,
+or access fails. Finding one file is not sufficient by itself. Say “no relevant
+record found in the searched scope”, never “did not happen”. Missing access is a
+limit, not absence. Repair a missing route under existing maintenance authority.
+Resolve links from the containing file or its declared repository root, never the
+caller's CWD. Cross-repo routes use a verified location and confer no permission.
+For external artifact directories first establish the owning workspace and its
+rules; otherwise report the ownership gap before dependent work.
 
-No mode — triggered at boot and periodically. Logic and triggers:
-`reference/concepts.md`.
+Use retrieved facts, settled choices, open questions and prior constraints in the
+answer: do not re-ask answered questions, call known facts new, or bypass decisions.
+Reading a file alone is not proof of using it. No permanent per-answer audit log.
 
-## From coarse to fine
+### 2. Admit, scope and compare
 
-- `overview.md` = curated top-level summary (evergreen).
-- Detail files = depth (sprout). More important content
-  displaces less important content into detail files.
-- `navigation.md` = index (quick routes to every file in the
-  area).
-- Max 200 lines per MD under `context/`.
-- Maturity promotion (seed → sprout → evergreen):
-  `reference/concepts.md`.
+Identify the future question/decision/continuation each candidate supports. Keep
+subject and applicability (person-wide, topic, event/task/setup) distinct from
+certainty. Separate user statements, observations, proposals, third-party reports
+and marked inferences. Unknowns can be retained as open questions, never facts.
+Useful adverse outcomes, exceptions, rationale and unresolved work matter too.
+Do not infer lasting taste from one setup request, relationships from name mentions,
+consumption from ownership, or acceptance from an assistant proposal.
 
-## Guardrails (apply to ALL modes)
+Classify **NEW / CHANGED / PRESENT** against the baseline. Compare meaning, scope,
+attribution, support, uncertainty and retraction. Confirmation of an inference or
+withdrawal of its evidence is CHANGED even with identical proposition wording.
+Repeated evidence is PRESENT; do not increment observation counts. With no pending
+reconciliation or discovered inconsistency, PRESENT ends without writing or a new
+impact traversal. Explicit instructions need no repeated-observation threshold.
+This admission filter never authorizes discarding existing data during migration.
 
-### Delta check (MUST — before every context write)
+### 3. Place and curate
 
-For every planned context write:
+| Content | Leading owner |
+|---|---|
+| Person-wide values, identity, constraint defaults | Concise user `profile.md` |
+| Collaboration with the person | User `soul.md` |
+| Personal topic knowledge/scoped preferences | Responsible user topic file |
+| Inner motives/reflection | `inner-life.md` when present/relevant |
+| Current activity, task or technical setup | Responsible project/topic file |
+| Dated experience/source evidence | Topic evidence section or linked detail |
+| Findability | Navigation routes, not duplicate facts |
 
-**Step 1:** read the target file. MUST, no opt-out.
+Split mixed person/activity input at the boundary and cross-link; one leading home
+per claim. Minimal implications in summaries link to that owner. Topic names follow
+the repository vocabulary; no empty life-domain tree or file per fact. A small topic
+can be a section. Legacy facets are evidence, never file selectors or boot-promotion
+rules. Read `connections.md` only for relevant actual relationships.
 
-**Step 2:** classify per piece of information:
+Every new owner must be reachable through question/topic descriptions and useful
+aliases. User profile links to user navigation, which links to the person's activity
+navigation for recall from another CWD. Project visitors enter the project directly.
+Bulk evidence may use topic-local indexes instead of one root row per source.
 
-```
-Delta check for [filename]:
-  NEW:     [information not yet in the file]
-  CHANGED: [information that exists but is stale / wrong → what gets replaced]
-  PRESENT: [information already correctly in the file → not written again]
-```
+### 4. Validity and provenance
 
-**Step 3:** only NEW and CHANGED are written. PRESENT is
-skipped.
+Check time-bound state against the question and available observation/validity date.
+Past plans are historical; an unresolved defect is an observation as of its last
+check, not proof it still occurs. Stable values need no automatic interview.
+Compare equal subject/scope before declaring conflict: later dates alone do not
+supersede different contexts. Clear corrections update directly; unresolved
+contradictions remain visible, asking only when resolution matters now.
+Distinguish changed reality from correcting an earlier error. Retained erroneous
+claims link to correction and basis; immutable originals stay intact with a
+correction at the current owner/evidence index. Retraction is not a guessed replacement.
+No expiry invented from silence, no immunity from a `stable` label, no age deletion.
 
-When everything is PRESENT: "Delta check: no new information —
-write skipped."
+Keep enough attribution, applicability/observation date and source/extract to
+interpret and verify. Shared section metadata applies only to claims sharing it;
+mark exceptions. A source link cannot replace unique meaningful content. Migration
+or storage date is not reconfirmation. Repeated save timestamps, confidence badges
+and counters are optional, not required. No raw transcripts or secrets; obey source
+storage restrictions. Preserve rationale and qualifications in the current view.
 
-### Write-quality gate (MUST — before every write commit)
+### 5. Bounded impact and protected publication
 
-```
-Write quality: observed / derived / uncertain
-```
+Inspect owner, navigation and known dependent summaries/links. If local and
+consistent, stop. Expand targeted search for unclear ownership, contradictory or
+duplicate current claims, or changed person-wide constraints/contracts. Read enough
+surrounding content to understand hits; full files only when necessary. Follow actual
+affected dependencies until reconciled. Preserve approval, incident, security and
+migration floors. New work uses the project's existing task/plan/handoff convention;
+no automatic software task creation from knowledge capture.
 
-- **observed:** directly from user input, commit, file, tool
-  output — fact.
-- **derived:** logical inference — mark as
-  `[Derived: ...]` in the context text.
-- **uncertain:** NOT written — ask the user or note as an open
-  point.
+For moves/replacements/deletions enumerate relevant live inventory **and** search
+references before removal; repair live routes and preserve frozen history. Review
+current views by synthesis/replacement, not append-only transcripts. Prefer targeted
+edits; preserve unrelated simultaneous changes.
 
-### Unloading after a write
+Publish through `framework/continuity.md`: protected baseline comparison through
+atomic replace, with durable scoped recovery **before** multifile mutation. A final
+reread alone is insufficient. A changed baseline requires semantic reconciliation,
+never blind retry. Cooperating locks cannot cover external editors: establish an
+exclusive window or equivalent storage protection, otherwise defer affected writes.
+Project recovery: `<project_root>/context/maintenance-pending.md`; personal recovery:
+`<user_repo>/context/user/maintenance-pending.md`, distinct even in the same repo.
+Never put private payloads in project recovery. Project-only visitors check only the
+project scope. Recovery rereads actual files, preserves later corrections and clears
+only reconciled operations. Report **owner updated; reconciliation pending** for
+partial publication; do not claim complete save. Cross-repo operations are separate
+scoped publications, never a promised global transaction.
 
-After every context write check whether the topic can be
-unloaded. Criteria: `reference/concepts.md`.
+### 6. History, imports and maintenance
 
-### Incident mode (MUST — during an active root-cause-fix)
+History preserves decisions, obligations, meaningful trajectories and unresolved
+conflicts; no new entry per correction/save or agent self-chronicle. Explicit domain
+audit/closeout obligations remain effective. Handoff contains goal/current state,
+leading file, next step/blocker per open topic plus necessary decisions, approvals,
+failed attempts and job status; no nine-heading template required.
 
-When a root-cause-fix is running (recognizable: Buddy is in the
-`root_cause_fix` skill):
+Imports use existing source/package indexes and original-storage policy. Distinguish
+discovery, actual source reading, attachment review, relevance screening and knowledge
+integration. A summary/metadata scan proves none of the later stages. Record enough
+coverage, resume position, unread attachments and pending integration at the existing
+owner. Scope-complete assessment is not a completely read corpus. Counts are dated
+snapshots unless automatically maintained; no duplicate manual status inventory.
+This contract does not authorize reading excluded content or expanding retention.
 
-- **EXTRACT runs normally** — facts are identified and
-  collected.
-- **IMPACT CHAIN: LOCATE + ASSESS run normally** — impacts are
-  recognized.
-- **ACT phase is deferred** — no context writes until the fix
-  is done.
-  Reason: diagnostic facts describe a transient state. The fix
-  changes that state. Context writes during diagnosis are
-  stale after the fix.
-- **After the fix is closed:** process the collected EXTRACT
-  + ASSESS output in one pass. ACT on the end state, not on
-  intermediate states.
+Around 200 lines, or earlier for mixed topics, review decomposition; coherent longer
+files can remain with sectional retrieval. Never evict by size, age or low mentions.
+Review touched topics during use; wider housekeeping is explicit/lifecycle-triggered,
+not a new scheduled job. Use the same lifecycle, not a separate decay algorithm.
 
-Proof output during incident mode:
+## Modes and outcome
 
-```
-7e INCIDENT-MODE: [N] facts collected, ACT deferred until the fix is closed.
-```
+- `process`: `modes/process.md` — project facts/impact; routes person facts separately.
+- `user-signal`: `modes/user-signal.md` — personal placement under the shared lifecycle.
+- `wrap-up`: `modes/wrap-up.md` — common continuity/history, selected domain contribution.
 
-**Not affected:** SIGNAL CHECK. When a systemic signal is
-recognized during diagnosis (e.g. "this error type is happening
-the third time"), the signal is noted immediately —
-independent of the fix status.
+DONE: admitted deltas reconciled at authorized owners, routes/current views coherent,
+pending operation clear, and actual outcome verified. No-change PRESENT is success.
+FAIL: report unavailable scope, evidence, coherent snapshot or pending recovery;
+retain recoverable work in its scope, never claim completion on partial persistence.
+Close-phase retros supply their Patterns-Emerged as process input; do not re-extract
+raw sessions. Selected development closeout audit obligations remain domain-owned.
 
-### Other
-
-- No secrets in context files. Max 200 lines per MD (exception:
-  `detailed-overview.md`). Keep navigation consistent after an
-  update.
-
-- **Patch over rewrite:** update existing context files via a
-  targeted replace (single section / paragraph) instead of a
-  full rewrite. Full rewrite only when >50% of the content
-  changes.
-
-Concepts, forward compatibility, session-buffer relationship:
-`reference/`.
+Incident handling: collect observations and locate/assess impact; defer transient
+current-state replacement until the incident's recovery/fix boundary. Preserve
+necessary incident checkpoints and approvals under local incident rules. Afterwards
+reconcile observed end state and relevant failed attempts. No live action is
+implicitly authorized by knowledge maintenance.

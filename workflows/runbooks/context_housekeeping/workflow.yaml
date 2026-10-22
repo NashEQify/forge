@@ -1,54 +1,41 @@
 name: context_housekeeping
-description: "Periodic upkeep of the context system — analysis (read-only) then curation."
-need_phrase: "do periodic context-system maintenance"
-trigger: ["context_housekeeping", "context-housekeeping"]
-derived_from: "WORKFLOW.md@2026-06-02"
-
-# Engine-state-machine version of runbooks/context_housekeeping/WORKFLOW.md.
-# No top-level routes — a single linear path (ad-hoc maintenance, no path
-# variants). The markdown is the human-prose SoT; this yaml is engine-readable
-# for state tracking + cross-session continuity: every non-trivial workflow
-# has a workflow.yaml so the generic --start/--next/--complete cycle works
-# uniformly.
-
+description: "Periodic upkeep of the context system \u2014 analysis (read-only) then curation."
+need_phrase: do periodic context-system maintenance
+trigger:
+- context_housekeeping
+- context-housekeeping
+derived_from: WORKFLOW.md@2026-10-22
 steps:
-
-  - id: phase-analysis
-    name: "Phase 1 — analysis (read-only)"
-    category: content
-    instruction: >
-      Check the entire context system (read-only, no writes): line counts
-      (>200 lines), navigation consistency (every file linked in its
-      navigation.md), orphan files, dead links, currency (facts still
-      correct?), structure assessment (areas sensibly cut?). Emit a report
-      of problems + recommendations. Ref: WORKFLOW.md §Phase 1.
-    completion:
-      type: manual
-    on_fail: block
-
-  - id: phase-curation
-    name: "Phase 2 — curation (knowledge_processor per area)"
-    category: content
-    instruction: >
-      Create the status file (workspace/.housekeeping-progress.md) listing
-      every area from the phase-1 report as pending. Per problem area, call
-      knowledge_processor (diff before write; asks before changing existing
-      files). After EVERY area: update the status file (done / skipped +
-      reason) — checkpoint obligation on this long-running step. No automatic
-      bulk fixes — review every change. Skip (required: false) when phase-1
-      found nothing actionable. Ref: WORKFLOW.md §Phase 2.
-    skill_ref: skills/knowledge_processor/SKILL.md
-    completion:
-      type: manual
-    on_fail: block
-    required: false
-
-  - id: phase-close
-    name: "Close — delete status file, commit"
-    category: deterministic
-    instruction: >
-      Delete the status file once every area is done / skipped (leave no
-      artifacts). Commit the curation changes if any were made.
-    completion:
-      type: manual
-    on_fail: block
+- id: phase-analysis
+  name: "Phase 1 \u2014 analysis (read-only)"
+  category: content
+  instruction: Follow WORKFLOW.md Phase 1 using the shared Knowledge Processor lifecycle. Read-only
+    scoped inventory of ownership, navigation, validity, duplicates and source coverage; size
+    is a review signal, never a deletion rule. Preserve this legacy step and its recorded completion
+    evidence.
+  completion:
+    type: manual
+  on_fail: block
+- id: phase-curation
+  name: "Phase 2 \u2014 curation (knowledge_processor per area)"
+  category: content
+  instruction: Follow WORKFLOW.md Phase 2 through Knowledge Processor and protected continuity
+    publication. Resume any legacy area checklist and scoped pending record against actual files
+    before proceeding. Preserve source meaning and later edits; retain completed/remaining area
+    progress. Existing authorization suffices for routine curation; ask only for unresolved
+    consequential choices. Skip only if analysis found nothing actionable.
+  skill_ref: skills/knowledge_processor/SKILL.md
+  completion:
+    type: manual
+  on_fail: block
+  required: false
+- id: phase-close
+  name: "Close \u2014 delete status file, commit"
+  category: deterministic
+  instruction: 'Follow WORKFLOW.md Close: remove only fully reconciled area progress, preserve
+    unresolved recovery and meaningful evidence. Commit only within existing authorization.
+    Keep the legacy completion obligation; do not report complete while required reconciliation
+    is pending.'
+  completion:
+    type: manual
+  on_fail: block

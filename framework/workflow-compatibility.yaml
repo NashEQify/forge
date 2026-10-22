@@ -1,0 +1,19 @@
+# Exact reviewed transitions; unrelated edits must fail closed.
+version: 1
+mappings:
+- workflow: save
+  prior: 9aff780ec2fc0dec721e554c86839e516e3cec9c2f7e02b1357c65502fe2a2c8
+  current: e98ed60250a8dd9e9e23a5753aeed0bf40d16db958a980cf2d3883779acbb367
+  allowed_directions:
+  - upgrade
+  - rollback
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility.md
+- workflow: context_housekeeping
+  prior: 3fc9946536ecbe2c8b767b7d6aa0626bdbf67a87c9d3d92737fe5ec04477071c
+  current: 1623150a8c633d53e85d113b420ae3d81b2493b78544cfd9e97fbf57b5c4c328
+  allowed_directions:
+  - upgrade
+  - rollback
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility.md

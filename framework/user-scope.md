@@ -37,7 +37,20 @@ installation, not the person.
 ```
 
 `profile.md` is read in every session in every repo, so keep it short; detail belongs in topic files reached through `navigation.md`.
-The whole user repo stays readable; boot does not preload it.
+The whole authorized user repo stays readable; boot does not preload it.
+Profile links to user navigation; user navigation offers a route to the person's
+activity/project navigation for recall from another CWD. Activities and technical
+setups belong to their project owners even inside the personal repository.
+Personal topic preferences remain in user scope. Placement, semantic admission,
+retrieval, validity and history have one owner: `skills/knowledge_processor/SKILL.md`.
+`inner-life.md` is for relevant reflections, not an automatic bucket for preferences.
+No unconditional companion-file loading or fixed life-domain taxonomy.
+
+Recovery uses `framework/continuity.md`: user operations use
+`<user_repo>/context/user/maintenance-pending.md`; project operations use
+`<project_root>/context/maintenance-pending.md`. They stay distinct when both roots
+are the same. Project-only visitors do not inspect personal recovery. Check pending
+work and capture a coherent scoped snapshot before dependent reads or mutations.
 
 ## 3. Resolution
 

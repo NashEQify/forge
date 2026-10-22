@@ -42,19 +42,15 @@ reload the affected instructions from disk before using them.
      is not approval. An explicit pull instruction in the current request,
      or a standing session-start pull permission in the project's rules,
      already answers this question for the repos it covers.
-   - On approval, inspect the working tree and run `git pull --ff-only` in
-     each approved repo. Preserve local work: no automatic stash, reset,
-     rebase, merge commit or branch switch. If the pull cannot fast-forward
-     or local changes block it, report the concrete blocker and ask how to
-     proceed; do not silently resume against the old state.
-   - After a successful pull, reload the affected adapters (`AGENTS.md` /
-     `CLAUDE.md`), the resolved soul and the framework boot files from
-     disk. Follow their updated sequence; only then begin RESOLVE and load
-     context/session state. Do not rely on pre-pull copies or repeat an
-     already resolved pull question for the same remote revision. If the
-     user declines, acknowledge that and boot from the current local state.
+   - For framework source changes, use `framework/installation-activation.md`.
+     Stop affected sessions before updating shared sources, preserve a matched
+     source/integration baseline, install and validate before fresh-session use.
+     An active boot never silently pulls/reinstalls the framework. Standing pull
+     permission is not evidence that other sessions stopped. Consumer-only approved
+     fast-forward updates preserve local changes; no reset/stash/rebase/branch switch.
+     Reread changed consumer instructions before use. If update is unavailable,
+     report the concrete limit; do not claim the old session is newly upgraded.
 
-3. **RESOLVE:** run routing (see Routing below).
    Then resolve workflow selection from the active intent per
    `$FRAMEWORK_DIR/framework/process-map.md` section Workflow selection.
    The **daily** install profile (named in the entry) always selects
@@ -64,6 +60,9 @@ reload the affected instructions from disk before using them.
    from its step 3 (steps 1–2 are done) and GREET as it says. Skip the
    generic steps 4–6 here; a project may explicitly require its own probes.
    This branch also governs generic boot summaries supplied by adapters.
+   **For software:** load `$FRAMEWORK_DIR/agents/buddy/operational.md` before
+   development process work; bind the explicit selection through the development
+   continuation adapter.
 4. **ROUTE:** decide context routing (read and write paths for the
    session). CWD comes from ORIENT.
    - Run `ls <CWD>/context/` (MUST — filesystem check, don't infer
@@ -78,7 +77,9 @@ reload the affected instructions from disk before using them.
      Not found → no local backlog.
    The result holds for the entire session. Rules: see "Context
    routing".
-5. **LOAD:** load context. Two categories: always-load (Buddy
+5. **LOAD:** first follow `framework/continuity.md` for scoped recovery checks
+   and coherent snapshots of required profile/project context. Pending work blocks
+   dependent use until reconciled or explicitly qualified. Then load context. Two categories: always-load (Buddy
    infrastructure, scope-independent) + intent-load (from the
    Context field of the active intent.md).
    - **always-load** (Buddy tier, every session):
@@ -108,17 +109,15 @@ reload the affected instructions from disk before using them.
      `python3 $FRAMEWORK_DIR/scripts/plan_engine.py --boot`. The
      output gives in-progress tasks, critical path, next actions,
      milestone status, warnings.
-   - **Workflow resume (required):** run
-     `python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --boot-context`.
-     The output lists active workflows (workflow_id + name +
-     current_step + state-file path). Empty output → no active
-     workflows. On output: Buddy MUST surface them in GREET (see
-     step 7) AND read the state files of the active workflows
-     (`docs/<workflow>/<slug>.md`) before the first user-substance
-     turn so the content state is in mind.
+   - **Selected development continuation:** load the existing handoff through
+     `framework/continuity.md` with pending status, then use
+     `framework/development-continuation.md` to restore explicit bindings without
+     advancing or unpausing. Software intent binds task/plan-only checks even with
+     no workflow IDs. Legacy selected work requires explicit session evidence;
+     ambiguous selection blocks exact continuation, never binds every active run.
    - **Session handoff:** `<CWD>/context/session-handoff.md`. The
      handoff carries the discussion context from the last session
-     (meta-summary + open topics in the 9-point structure). Not
+     (open goals/state, leading files and next steps/blockers, with necessary decisions, approvals and failed attempts). Not
      found → fresh start.
 7. **GREET:** short greeting (style: soul.md).
 
@@ -130,7 +129,7 @@ reload the affected instructions from disk before using them.
    **On user-scope warnings (§User scope):** one line — no user scope
    configured, user folder or a boot file missing.
 
-   **On Workflow-Resume findings (step 6):** active workflows as a
+   **On Workflow-Resume findings (step 6):** selected bound workflows/blockers as a
    one-liner list in GREET (`Active: solve workflow [step:
    frame-report, state: docs/solve/<slug>.md]`). Nothing found:
    don't mention it.

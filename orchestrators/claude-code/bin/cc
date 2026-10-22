@@ -64,58 +64,15 @@ fi
 
 export FRAMEWORK_DIR PROJECTS_DIR
 
-# --- Pre-flight: User-level agents symlink for framework SoT ---
-# Claude Code discovers subagents via walk-up from CWD or ~/.claude/agents/.
-# We use the user-level location so framework agents are available in every
-# working directory, regardless of consumer repo. Idempotent.
-USER_AGENTS_DIR="$HOME/.claude/agents"
-FRAMEWORK_AGENTS_DIR="$FRAMEWORK_DIR/.claude/agents"
-if [ -d "$FRAMEWORK_AGENTS_DIR" ]; then
-  if [ ! -e "$USER_AGENTS_DIR" ]; then
-    mkdir -p "$HOME/.claude"
-    ln -s "$FRAMEWORK_AGENTS_DIR" "$USER_AGENTS_DIR"
-    echo "cc: angelegt $USER_AGENTS_DIR -> $FRAMEWORK_AGENTS_DIR" >&2
-  elif [ -L "$USER_AGENTS_DIR" ]; then
-    current_target="$(readlink -f "$USER_AGENTS_DIR" 2>/dev/null || true)"
-    expected_target="$(readlink -f "$FRAMEWORK_AGENTS_DIR" 2>/dev/null || true)"
-    if [ "$current_target" != "$expected_target" ]; then
-      echo "WARNUNG: $USER_AGENTS_DIR zeigt auf $current_target," >&2
-      echo "         nicht auf Framework ($expected_target)." >&2
-    fi
-  elif [ -d "$USER_AGENTS_DIR" ]; then
-    echo "WARNUNG: $USER_AGENTS_DIR ist ein echtes Verzeichnis (kein Symlink)." >&2
-    echo "         Framework-Agents koennen divergieren — pruefen oder ersetzen." >&2
+# Host setup is a coordinated maintenance operation, never a session side effect.
+VALIDATION_ARGS=()
+if [ "${1:-}" = "--forge-validation-operation" ]; then
+  if [ -z "${2:-}" ]; then
+    echo "validation launch requires an exact pending operation ID" >&2
+    exit 2
   fi
-else
-  echo "WARNUNG: $FRAMEWORK_AGENTS_DIR nicht gefunden." >&2
-  echo "         forge clonen nach $FRAMEWORK_DIR oder FRAMEWORK_DIR env var setzen." >&2
-fi
-
-# --- Pre-flight: User-level skills symlink for framework SoT ---
-# Claude Code injectet user-level Skills (~/.claude/skills/) in die
-# available-skills System-Reminder fuer proaktive Discovery — analog
-# zur Agents-Logik oben. Idempotent.
-USER_SKILLS_DIR="$HOME/.claude/skills"
-FRAMEWORK_SKILLS_DIR="$FRAMEWORK_DIR/.claude/skills"
-if [ -d "$FRAMEWORK_SKILLS_DIR" ]; then
-  if [ ! -e "$USER_SKILLS_DIR" ]; then
-    mkdir -p "$HOME/.claude"
-    ln -s "$FRAMEWORK_SKILLS_DIR" "$USER_SKILLS_DIR"
-    echo "cc: angelegt $USER_SKILLS_DIR -> $FRAMEWORK_SKILLS_DIR" >&2
-  elif [ -L "$USER_SKILLS_DIR" ]; then
-    current_target="$(readlink -f "$USER_SKILLS_DIR" 2>/dev/null || true)"
-    expected_target="$(readlink -f "$FRAMEWORK_SKILLS_DIR" 2>/dev/null || true)"
-    if [ "$current_target" != "$expected_target" ]; then
-      echo "WARNUNG: $USER_SKILLS_DIR zeigt auf $current_target," >&2
-      echo "         nicht auf Framework ($expected_target)." >&2
-    fi
-  elif [ -d "$USER_SKILLS_DIR" ]; then
-    echo "WARNUNG: $USER_SKILLS_DIR ist ein echtes Verzeichnis (kein Symlink)." >&2
-    echo "         Framework-Skills koennen divergieren — pruefen oder ersetzen." >&2
-  fi
-else
-  echo "WARNUNG: $FRAMEWORK_SKILLS_DIR nicht gefunden." >&2
-  echo "         CC-Skill-Wrapper unter \$FRAMEWORK_DIR/.claude/skills/ erwartet." >&2
+  VALIDATION_ARGS=(--validation-operation "$2")
+  shift 2
 fi
 
 # --- Scope routing: first arg selects working directory ---
@@ -190,6 +147,11 @@ if [ "$FRAMEWORK_DIR_ENV_EXPLICIT" -eq 0 ] \
   echo "cc: framework checkout detected in CWD — FRAMEWORK_DIR re-bound $FRAMEWORK_DIR -> $CWD" >&2
   FRAMEWORK_DIR="$CWD"
   export FRAMEWORK_DIR
+fi
+
+if ! python3 -B "$FRAMEWORK_DIR/scripts/forge_install.py" --maintenance status --require-ready "${VALIDATION_ARGS[@]}"; then
+  echo "cc: STOP — coordinated installation is not validated; inspect maintenance status." >&2
+  exit 1
 fi
 
 ADD_DIR_ARGS=()

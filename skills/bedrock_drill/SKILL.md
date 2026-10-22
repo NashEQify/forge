@@ -26,6 +26,16 @@ drills the load-bearing one further until bedrock (physics / logic
 from the bottom up. Complement to `frame` (breadth), not a
 replacement. Detail mechanics: `REFERENCE.md`.
 
+## Standalone boundary
+
+Supplied problem/context suffice; no Git/user repository, development workflow,
+task or durable destination is required. Return the report inline with uncertainty.
+The caller owns optional persistence through continuity; a proposed conclusion is
+not a user decision. Independent review, when selected, uses caller-owned private
+temporary transport per `skills/_protocols/dispatch-template.md`. Existing modes,
+max_depth and output_format remain unchanged. Development references below apply
+only when that caller is explicitly selected.
+
 ## Who runs it
 
 Buddy (primary). v0.2.0: standalone + as step 2 inside `frame`.
@@ -141,7 +151,8 @@ defaults stay invisible.
 From leaves upward: "Given [X] → [Y] because [Z]" per layer.
 **Derivation integrity check (required):** 3 hard-coded questions
 (Q1: logical link? Q2: contradiction with another branch? Q3:
-plausible to outsiders?), each PASS / FAIL + a one-sentence
+concrete counter-reason why Y might not follow from X, and whether it is
+refutable?), each PASS / FAIL + a one-sentence
 rationale. 1 FAIL → revision (re-formulate Y, re-run all 3, max 2
 per layer). 3rd FAIL → user escalation. **Limitation:**
 self-critique, no independent verifier. High stakes → council

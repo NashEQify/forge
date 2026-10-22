@@ -13,6 +13,18 @@ trace: intent / plan / simulate / impact),
 `_protocols/first-principles-check.md` (required drill before
 analysis output, as a section in the output file).
 
+## Generic execution and transport
+
+The caller supplies the problem, intent/constraints, evidence and execution root.
+A private temporary root is sufficient; no repository, Git, user profile, task or
+workflow engine is mandatory. Resolve evidence paths against that root. Return the
+complete attributed artifact inline; output paths are destinations for the caller,
+not write permission. The caller materializes exact returns before Chief consumption
+per `skills/_protocols/dispatch-template.md`. Missing/truncated required returns are
+an execution limit, never a completed Council. No automatic ADR or knowledge writeback.
+Development-only references below are conditional caller obligations or historical
+attribution; they do not add dependencies to standalone reasoning.
+
 ## Context isolation
 
 Your context is isolated — you do NOT see what other members
@@ -48,12 +60,9 @@ In the call prompt you receive:
   simplicity, sovereignty).
 - **Briefing path:** self-contained briefing file with the
   question, options, context.
-- **Output path:** where you write your analysis.
+- **Output path:** where the caller materializes your complete inline analysis.
 
-Read the briefing file. Read referenced context files when
-needed. Read
-the user's constraint defaults (values and priorities in `<user_repo>/context/user/profile.md`,
-`framework/user-scope.md`; no user scope → no personal defaults).
+Read the briefing file. Read referenced context files when needed. Use supplied constraint defaults; only read an explicitly authorized user profile when the caller supplies that scope.
 
 ## Output
 
@@ -78,7 +87,7 @@ fully. Don't repeat the recommended option here.}
 - severity: BLOCKER | MAJOR | MINOR (BLOCKER = "must reconsider", MAJOR = "needs explicit acceptance", MINOR = "worth noting")
 - evidence:
     - kind: file_range | grep_match | file_exists
-      path: <repo-relative>
+      path: <execution-root-relative>
       lines: <start>-<end>
       quote: "<verbatim 1-3 lines>"
 - description: {what + why from this perspective}
@@ -128,5 +137,4 @@ Explicit > silent.
 
 - Analyse ONLY from your perspective. No overall synthesis.
 - You see NO other analyses. Work independently.
-- Read-only (except for the output file). Bash for read-only
-  commands and `chub` only.
+- Read-only including the output destination. Return complete content inline; no writes.

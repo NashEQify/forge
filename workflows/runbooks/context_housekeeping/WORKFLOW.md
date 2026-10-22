@@ -1,121 +1,45 @@
-# Workflow: context-housekeeping
+# Context housekeeping
 
-## Purpose
-
-Periodic upkeep of the context system. Triggered manually
-when you suspect that the context has become inconsistent,
-overloaded, or poorly structured over time.
-
-The context system is a living system: areas emerge, grow,
-get restructured or merged. This workflow ensures the
-structure stays healthy.
-
-## When to run
-
-- After larger restructuring work.
-- When you feel that context is stale or unwieldy.
-- Periodically (e.g. monthly) as a health check.
+Common continuity entry: explicitly requested or project lifecycle-triggered review
+of the selected context scope. No development engine is required. Apply the same
+`skills/knowledge_processor/SKILL.md` lifecycle, with protected reads/publication and
+recovery from `framework/continuity.md`; no second decay or deletion algorithm.
 
 ## Phase 1: analysis
 
-Check the entire context system:
-
-1. **Line counts:** check every MD file under `context/`
-   for >200 lines.
-2. **Navigation consistency:** every file must be linked
-   in the corresponding `navigation.md`.
-3. **Orphan files:** files that exist but are not linked
-   in any `navigation.md`.
-4. **Dead links:** links in `navigation.md` pointing at
-   non-existent files.
-5. **Currency:** is the content still correct? Have facts
-   changed?
-6. **Structure assessment:** are the areas still
-   sensibly cut? Are there topics that justify their own
-   area? Are there areas that could be merged?
-
-Emit a report with problems and recommendations.
+Read-only: establish authorized scope and local conventions. Inspect topic ownership,
+question-based routes, broken links, duplicate current views, time-bound validity and
+source/import coverage. Size around 200 lines or mixed content prompts review, not
+automatic splitting. A coherent long source can remain. Source/evidence indexes may
+route to bulk records without every record in the root navigation. Report concrete
+findings and proposed changes; an index miss is not proof content never existed.
 
 ## Phase 2: curation
 
-### Preparation
+Within existing authorization, use KP to reconcile each affected topic and its actual
+dependents. Preserve useful content, qualifiers, rationale, adverse results and frozen
+history. Structural changes require live inventory plus reference search before
+removal. No blanket taxonomy, age expiry or speculative empty-area creation.
 
-Before the first write: create the status file
-(`workspace/.housekeeping-progress.md`). Enter every area
-from the phase-1 report with status "pending":
+Maintain bounded progress for multi-area work at its existing authorized owner;
+legacy `workspace/.housekeeping-progress.md` remains readable for resumption. It is
+an area checklist, not the publication journal. Before each multifile mutation the
+shared protected boundary records its scoped pending operation. After interruption
+check actual pending/owner state before trusting a “done” checklist; preserve later
+corrections. Mark areas done only after routes and dependent views agree. Retain
+incomplete areas with their next step/blocker; never delete unresolved recovery.
 
-```
-# Housekeeping Progress
-Phase: 2
-Started: YYYY-MM-DD
-Areas:
-  - <area-1>: pending
-  - <area-2>: pending
-  [...]
-```
+## Close
 
-### Per area
+Remove the completed area checklist only when all areas are reconciled or explicitly
+skipped with reasons retained where useful. A partial publication is partial
+housekeeping. History follows KP's future-use rule; no automatic agent chronicle.
+Commit/push only under the project's existing authorization.
 
-For every problem found, call the knowledge_processor skill
-(`skills/knowledge_processor/SKILL.md`):
+## Legacy development tracking
 
-- Files >200 lines: the skill decides what stays in the
-  overview and what moves into detail files.
-- Stale content: the skill updates or removes.
-- Missing areas: the skill creates a new area
-  (navigation.md + overview.md).
-- Oversized areas: the skill splits into sensible
-  sub-areas.
-- Too-small areas: the skill folds into an appropriate
-  existing area.
-
-The skill works editorially (from coarse to fine) and asks
-before changes to existing files.
-
-**After every area: update the status file** (done /
-skipped + reason). That is a MUST — checkpoint obligation
-on long-running tasks. On abort or session restart: read
-the status file, continue at the last "done".
-
-### Closing
-
-Delete the status file when every area is done / skipped.
-Leave no artifacts.
-
-## Guardrails
-
-- Phase 1 is read-only (analysis only).
-- Phase 2 uses the knowledge_processor skill with its own
-  guardrails (diff before write, new files direct).
-- No automatic bulk fixes — review every change
-  individually.
-
-## Workflow-Engine Integration
-
-This runbook is tracked by `scripts/workflow_engine.py` when engine-driven
-(some lifecycle / ad-hoc runs are skip-eligible — see the cookbook's *Skip
-allowed for* list). The engine holds step state in `.workflow-state/<id>.json`
-(SoT for the step pointer; persistent + cross-session-recoverable) and is
-**Buddy-driven `[WORKFLOW]`** — it advances only when Buddy drives
-`--complete`, a discipline-run state-tracker, not an autonomous runtime
-(ADR-007 O-4, affirming ADR-004: no force-gate).
-
-Generic cycle (identical across every workflow):
-
-```bash
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --start <name> --task <id> [--route <path>]
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --next                       # current step + instruction
-python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --complete <step> --evidence "<short>"
-#   classification step (mid-flow route): --complete <step> --route <key>
-#   skip-eligible step: --skip <step> --reason "<why>"   ·   re-run: --retry <step> --reason "<why>"
-#   >=2 workflows live? add --id <wf> (from --next `ID:`) — engine refuses keyless (exit 5)
-```
-
-`on_fail` per step: `block` (fix + retry), `warn` (`--complete --force` + reason),
-`skip` (auto `warn_skipped`), `escalate` (pauses, user decision). Cross-session
-resume surfaces active workflows at session start (`--boot-context`).
-
-Full CLI + path-routing + extension API (`--guard` / `--handoff-context`) +
-multi-machine constraint + skip-eligible list:
-`framework/workflow-engine-cookbook.md`. Operational invariant:
-`agents/buddy/operational.md` §Workflow engine.
+`workflow.yaml` keeps historical step IDs/completion semantics for already selected
+engine-driven runs. That development compatibility adapter can forward each step to
+this common procedure while retaining its pending obligations. Do not start an engine
+for ordinary housekeeping or infer development selection from an old state file.
+Exact selected-state restore belongs to `framework/development-continuation.md`.

@@ -1,4 +1,11 @@
-# Forward compatibility (Brain)
+> Historical design notes only. The current Markdown lifecycle is defined in
+> `../SKILL.md`. Facet routing, immediate-stable promotion, decay matrices,
+> automatic contradiction interviews and maturity-based placement below are
+> obsolete assumptions, not requirements for this release or a future system.
+> No future Brain redesign, service, dual-write or async mechanism is implemented
+> or authorized by this document. Preserve these notes as design history only.
+
+# Historical future-system discussion (not an executable contract)
 
 Documents how this skill changes once the Brain is built (ARCH-009). No code — design intent.
 

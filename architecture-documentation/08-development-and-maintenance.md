@@ -58,7 +58,7 @@ python3 scripts/workflow_engine.py --recover [--id <wf-id>]
 python3 scripts/workflow_engine.py --abort <wf-id> --reason "<text>"
 python3 scripts/workflow_engine.py --pause [--id <wf-id>]
 python3 scripts/workflow_engine.py --resume [--id <wf-id>]
-python3 scripts/workflow_engine.py --handoff-context  # save workflow group A
+python3 scripts/workflow_engine.py --handoff-context  # legacy display; exact save uses development contribution
 python3 scripts/workflow_engine.py --boot-context     # boot resume
 python3 scripts/workflow_engine.py --find --task <id>
 python3 scripts/workflow_engine.py --guard <guard> [<task-id>]

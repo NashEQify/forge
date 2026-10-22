@@ -34,7 +34,7 @@ sys.dont_write_bytecode = True
 PROFILES = ("full", "daily")
 # Framework boot files per install profile (mirrors boot_files in
 # framework/install-profiles.yaml; a test keeps both in sync).
-PROFILE_BOOT_FILES = {"full": ("soul", "operational", "boot"), "daily": ("soul", "boot-on-demand")}
+PROFILE_BOOT_FILES = {"full": ("soul", "boot"), "daily": ("soul", "boot-on-demand")}
 KNOWN_KEYS = {"version", "user_repo", "profile", "skill_links"}
 USER_BOOT_FILES = ("profile.md",)
 NONE_CONFIGURED = "User scope: none configured (forge soul in use)."
@@ -45,7 +45,7 @@ MAINTENANCE_ANCHOR = (
     "maintenance, {skill}); the start procedure loads those rules. After "
     "compaction re-read them, the project rules and the handoff."
 )
-DAILY_OPERATIONAL = "read operational.md only for explicit Forge method work"
+DAILY_OPERATIONAL = "load development instructions only for explicitly selected software development"
 _RULES_COMMON = (
     "This install is on-demand: no automatic boards,\n"
     "role delegation, plan/workflow engine or development test chains. Installed\n"
@@ -286,7 +286,6 @@ def _unresolved_text(scope: UserScope, framework: Path) -> str:
         "Read before the first answer:",
         f"- soul: <user_repo>/context/user/soul.md if {config} names a user repo "
         f"and it exists, else {forge_soul(framework)}",
-        f"- {buddy / 'operational.md'} (full profile only)",
         f"- {buddy / 'boot.md'}",
         f"User scope: not resolved (PyYAML missing); read {config} per "
         "framework/user-scope.md",
@@ -325,7 +324,7 @@ def boot_text(
     for part in PROFILE_BOOT_FILES[profile]:
         lines.append(f"- soul: {soul}" if part == "soul" else f"- {buddy / (part + '.md')}")
     if profile == "daily":
-        lines.append(f"This install is on-demand: {DAILY_OPERATIONAL} ({buddy / 'operational.md'}).")
+        lines.append(f"This install is on-demand: {DAILY_OPERATIONAL}.")
     if neutral:
         return "\n".join(lines) + "\n"
     if scope.configured:
@@ -418,3 +417,45 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+@dataclass(frozen=True)
+class ContinuityScope:
+    """Location and privacy boundary; callers still need write authorization."""
+
+    kind: str
+    owner_root: Path
+    content_root: Path
+    pending_path: Path
+    lock_path: Path
+
+
+def resolve_continuity_scope(
+    kind: str, project_root: Path, user_scope: UserScope | None = None,
+) -> ContinuityScope:
+    """Resolve one scope without consulting the other scope's recovery record."""
+    if kind == "project":
+        root = Path(project_root).resolve(strict=True)
+        content = root
+        pending = root / "context" / "maintenance-pending.md"
+        lock = root / "context" / ".continuity-project.lock"
+    elif kind == "personal":
+        if user_scope is None or not user_scope.configured or not user_scope.user_repo:
+            raise ValueError("personal scope is unavailable")
+        root = Path(user_scope.user_repo).resolve(strict=True)
+        content = root / "context" / "user"
+        pending = content / "maintenance-pending.md"
+        lock = content / ".continuity-personal.lock"
+    else:
+        raise ValueError("unknown continuity scope")
+    if not root.is_dir():
+        raise ValueError("scope owner is not a directory")
+    for path in (content, pending.parent, pending, lock):
+        if not path.resolve().is_relative_to(root):
+            raise ValueError("scope path escapes its owner")
+        for part in (path, *path.parents):
+            if part == root:
+                break
+            if part.is_symlink():
+                raise ValueError("scope paths may not contain symlinks")
+    return ContinuityScope(kind, root, content, pending, lock)
