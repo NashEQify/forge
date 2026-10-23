@@ -15,7 +15,7 @@ invocation:
   secondary: [user-facing, sub-skill]
 disable-model-invocation: false
 modes: [standard, deep, ux]
-uses: [_protocols/plan-review, _protocols/discourse, _protocols/context-isolation, _protocols/content-preservation, _protocols/dispatch-template, _protocols/consolidation-preservation, _protocols/piebald-budget, _protocols/skill-guardrails, _protocols/analysis-mode-gate, convergence_loop, _protocols/evidence-pointer-schema]
+uses: [_protocols/plan-review, _protocols/discourse, _protocols/context-isolation, _protocols/content-preservation, _protocols/dispatch-template, _protocols/consolidation-preservation, _protocols/piebald-budget, _protocols/skill-guardrails, _protocols/analysis-mode-gate, convergence_loop, _protocols/evidence-pointer-schema, _protocols/mechanism-model]
 ---
 
 # Skill: spec-board
@@ -81,6 +81,16 @@ L1+ spec submitted without either section → **FAIL before §1.0 runs:
 2. **§Test-Strategy missing** → FAIL. Author adds bug-class catalog
    per §Convention: §Test-Strategy.
 
+**Pre-gate FAIL (any spec above L0, new or amended) — §Mechanism-Lifecycle:** the
+diff introduces or changes a state carrier (two or more states, two or
+more operations; any derived state; any "X changes only via Y" / "never
+X" invariant; a hold / settlement / undo flow) and the owning spec has no
+`§Mechanism-Lifecycle` section for it, or the section has an empty cell →
+**FAIL before §1.0 runs.** Author adds / completes it per
+`skills/_protocols/mechanism-model.md`. This gate applies to legacy specs
+too once the amendment touches the mechanism (the no-retrofit boundary
+ends at the touch).
+
 **Board review of §Test-Strategy** (when present): every AC ≥1
 bug_class row (no orphan); no duplicate bug_class (semantic dedup);
 each bug_class is a noun phrase (not test-case name). Vague /
@@ -117,6 +127,32 @@ readability → `board-consumer`; first principles → `board-adversary-2`.
 Include `board-architect-roots` when ANY of: spec has ≥6 LDs;
 spec touches a state machine; diff replaces a previously-flagged
 structural pattern.
+
+### 2b. Implementer trigger (producer check)
+
+Include `board-implementer` — in any mode, including a lean
+verification-only pass — on the pass that **adds or changes** a cell
+whose producer is `unbuilt: Task N` or whose placement is `task-N` /
+`beyond-MVP`, or that specifies a flow (settlement, undo, retry,
+supplement, completion) whose caller does not exist in `src/` at HEAD.
+A pass that leaves those cells untouched does not add the seat. Its
+mandate: for each such operation, grep the producer site and confirm
+the placement (planned caller task with `blocked_by` and an explicit
+refusal now, or built now when no caller task is planned) or raise a
+finding; a producer "specified in another task" is not a producer
+(`_protocols/mechanism-model.md` §Scope and placement). The one lens
+that asks "who produces this field" has caught the no-producer
+CRITICALs where it ran and was absent where the flows were built on
+speculation.
+
+### 2c. After a mechanism redesign
+
+When a pass or the Simplify-before-patch gate replaces the mechanism
+(new derived state, new sole exit, new state vocabulary), the next pass
+is a cold seat over the **whole updated matrix** — `board-adversary` +
+`board-implementer` (or `spec-verification`) with the mandate "attack
+every cell", no chief — never an orchestrator-only verification of the
+fix.
 
 **User-review prompt (foundation specs):** "What would none of
 these agents see?" → `## User-Review` in consolidated. Required, no gate.
@@ -181,9 +217,13 @@ findings in same consolidated.
 10. NEEDS-WORK: fix → next pass; CONVERGED: DONE. Before fix pass ≥ 2
     (counted across the task's passes on the mechanism), record the
     Simplify-before-patch check (`skills/convergence_loop/SKILL.md`
-    §Simplify-before-patch gate): a recurring class with a simpler
-    mechanism or a faulty spec clause → propose the spec simplification
-    or invariant to the caller instead of patching the next route.
+    §Simplify-before-patch gate), `model` row first: a mechanism
+    without a `§Mechanism-Lifecycle` section gets one before the fix
+    brief; a recurring class with a simpler mechanism or a faulty spec
+    clause → propose the spec simplification or invariant to the caller
+    instead of patching the next route, and the proposal names the
+    cells it removes. Every fix on a mechanism edits its matrix in the
+    same change.
 
 ## 4a. Cross-task AC validation
 
@@ -213,22 +253,43 @@ Unaddressed cross-task AC = NEEDS-WORK blocker. Defense-in-depth pair
 with `agents/buddy/operational.md` §Architecture-Comprehension B
 (post-return).
 
-## 4b. Derived-state invariant route enumeration (MUST before PASS)
+## 4b. Mechanism cells — the review unit (MUST before PASS)
 
-Trigger: the spec states an invariant of the form "X changes only via
-Y" (or "X is derived from Z", "never X except Y") over state derived
-from a log or store. Before PASS the consolidated lists **every
-operation that changes the derivation's inputs after the introducing
-record**, at least: withdraw / retraction; processing or meaning
-successor (replacement, revision); scope move; field edits of a
+When a `§Mechanism-Lifecycle` section is in scope
+(`skills/_protocols/mechanism-model.md`), reviewers review **cells, not
+prose**, and the consolidated reports cell coverage:
+
+- **Adversary:** every `→` cell with the next state's invariants
+  re-checked, every `✗` cell with a constructed scenario against its
+  guard, every `unreachable` cell with an attempt to reach it; findings
+  name the cell. A textual contradiction — "X is exempt from Y" inside a
+  section that states "X changes only via Y" — is a cell conflict and a
+  HIGH.
+- **Verification / implementer:** every operation has a grepped
+  producer site or `unbuilt: Task N`; every cell is placed per the plan
+  (`task-N` cells have their owning task `blocked_by`-wired; nothing is
+  left out for lack of a consumer); every cross-spec pointer resolves to
+  the owning section; every invariant names its cells and locus.
+- **No PASS with an empty cell.** A blocking finding on a `now` cell is
+  never `residual`; a blocking route "accepted, routed" to another task
+  is NEEDS-WORK at HIGH. Lower-severity residuals carry the cell
+  annotation (`_protocols/mechanism-model.md` §Bind rules).
+
+**Derived-state invariants (special case).** For an invariant of the
+form "X changes only via Y" (or "X is derived from Z", "never X except
+Y") over state derived from a log or store, the matrix columns MUST
+include **every operation that changes the derivation's inputs after the
+introducing record**, at least: withdraw / retraction; processing or
+meaning successor (replacement, revision); scope move; field edits of a
 replacement (quality / confidence / provenance fields); cross-principal
-acts (another actor touching the same inputs). Each row carries a guard
-(spec clause that enforces Y on that route) or a stated
-unreachability reason. A row with neither = NEEDS-WORK at HIGH.
-A spec gate that only checks what the introducing record carries misses
-every after-the-fact route; recurring route findings on one invariant
-go to the Simplify-before-patch gate (`skills/convergence_loop/SKILL.md`),
-which usually answers with a derived-state rule instead of more guards.
+acts (another actor touching the same inputs). Each cell carries a guard
+(spec clause that enforces Y on that route) or a stated unreachability
+reason. A cell with neither = NEEDS-WORK at HIGH. A gate that only checks
+what the introducing record carries misses every after-the-fact route;
+recurring findings on one mechanism go to the Simplify-before-patch gate
+(`skills/convergence_loop/SKILL.md`), which usually answers with a
+derived-state rule instead of more guards — and must then update the
+matrix, not add a log entry.
 
 **Fix values and rulings are cross-spec claims.** A reviewer-proposed
 validator / rule, or a Buddy ruling on a cross-task contract, is checked
@@ -248,7 +309,10 @@ Mechanic: `_protocols/discourse.md`.
 - [ ] Merge spot-check (up to 3 available MERGED findings — same root cause? No merges → not applicable).
 - [ ] Minority re-check (scan REMOVED + low-severity single-agent).
 - [ ] Piebald-budget check on skill / runbook / persona reviews.
-- [ ] §4b route table present when a derived-state invariant is in scope.
+- [ ] §4b cell coverage reported when a `§Mechanism-Lifecycle` section is
+  in scope; no empty cell; no blocking finding on a `now` cell in
+  `residual`; the
+  derived-state columns present for every "only via" invariant.
 - [ ] Downgraded scale / latency finding carries a measured bound at
   the target scale, or a filed follow-up whose trigger a slope leg
   (N vs 4N, `skills/testing/SKILL.md` §Oracle discipline) can fire.

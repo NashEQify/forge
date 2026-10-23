@@ -13,7 +13,7 @@ invocation:
 disable-model-invocation: false
 cc_wrapper: true
 modes: [l1, l2]
-uses: [_protocols/discourse, _protocols/context-isolation, _protocols/content-preservation, _protocols/dispatch-template, _protocols/consolidation-preservation, _protocols/evidence-pointer-schema]
+uses: [_protocols/discourse, _protocols/context-isolation, _protocols/content-preservation, _protocols/dispatch-template, _protocols/consolidation-preservation, _protocols/evidence-pointer-schema, _protocols/mechanism-model]
 ---
 
 # Skill: code-review-board
@@ -122,6 +122,16 @@ never safety-floor selection or evidence requirements.
      cases under `--collect-only`) asserts coverage it does not provide.
    Design-side mandate: `skills/testing/SKILL.md`
    §Execution-faithfulness.
+   **Mechanism cells (when the diff touches a state carrier):** the
+   brief carries the owning spec's `§Mechanism-Lifecycle` matrix
+   (`_protocols/mechanism-model.md`) and marks the cells in scope.
+   Reviewers review cells, not the diff's own framing: an in-scope cell
+   without a guard or a test, a cell the code decides differently from
+   the matrix, a placed (`task-N` / `beyond-MVP`) cell driven by a
+   hand-built fixture, or an operation the matrix omits are findings and
+   name the cell. A blocking finding on a state carrier without a section
+   triggers the retro-model (`_protocols/mechanism-model.md` §Trigger);
+   the board brief of the next pass then carries it.
 5. **TEAM COMPOSITION** — risk → agents + focus points. Includes the
    **L2-trigger table**: five rows (public API / wire; security / auth /
    secrets; real migration doubt; new subsystem; live infrastructure),
@@ -158,7 +168,11 @@ the diff change spec-defined behavior (→ spec-drift-check gate);
 faithfulness rules; a latency AC on a growing log or store has its N
 and 4N slope leg (`skills/testing/SKILL.md` §Oracle discipline). On L1
 this item owns test coverage; conformance and test vacuity sit with
-`code-domain-logic` (above).
+`code-domain-logic` (above). (4) mechanism cells — when a
+`§Mechanism-Lifecycle` matrix is in scope, every in-scope cell has a
+guard or a test (or a generator that spans it), every placed cell has
+only refusal tests and its owning task is `blocked_by`-wired, and the matrix was edited in the same
+change as any mechanism decision the diff implements.
 
 **L2 (full board):** L1 core + `code-review` + risk specialists from
 the table below, 5-7 reviewers + chief; `code-spec-fit` when a spec_ref
@@ -229,13 +243,18 @@ cases, decided from the fix diff:
 | Fix diff | Re-verify |
 |---|---|
 | **Line-local:** touches only the finding's lines AND adds no guard, branch or rule to a mechanism that drew a HIGH | **light:** one `code-verification` re-runs every fix-now reproduction (red→green) |
-| **Otherwise** (new guard / branch / rule on a HIGH mechanism, or edits beyond the finding's lines, or oracle hunks present) | **light + scoped `code-adversary`:** cold-start on the fix diff with the mandate "find a new route of the same class against the fix"; two-phase per §5a |
-| **Mechanism replaced** by the Simplify-before-patch gate | `code-adversary` + `code-domain-logic` on the new mechanism (`code-architect-roots` only if structure changed beyond it), two-phase per §5a |
+| **Otherwise** (new guard / branch / rule on a HIGH mechanism, or edits beyond the finding's lines, or oracle hunks present) | **light + mechanism-scoped `code-adversary`:** cold-start with the owning spec's `§Mechanism-Lifecycle` matrix and the fix diff; mandate "attack the **mechanism**, with the whole matrix as context, not the fix"; returns a coverage table over the invariants and the matrix rows / columns the fix touches (cell · probe · result); two-phase per §5a |
+| **Mechanism replaced** by the Simplify-before-patch gate | matrix updated first; then `code-adversary` + `code-domain-logic` on the **whole updated matrix** (`code-architect-roots` only if structure changed beyond it), two-phase per §5a |
 
 No chief in any case. Reproductions alone prove only that the reported
-routes are closed; the scoped adversary is the channel that finds a new
-route of the same class, which is the evidence the Simplify-before-patch
-gate needs. Detail: REFERENCE.md.
+routes are closed; a re-verify scoped to the fix diff finds only the
+next side of the same mechanism (observed three times in a row on one
+build). The adversary's unit is therefore the mechanism: it reads the
+whole matrix, probes the invariants and the rows / columns the fix
+touches, and reports which it reached, which held and which failed —
+that table is the evidence the Simplify-before-patch gate reads. A
+missing section follows the retro-model trigger
+(`_protocols/mechanism-model.md` §Trigger). Detail: REFERENCE.md.
 
 **Oracle edits on a fix pass (MUST):** a change to a differential
 oracle (reference implementation, golden, property) goes in a separate
@@ -250,10 +269,14 @@ every spec that produces or consumes the field
 **Simplify-before-patch gate (MUST before fix pass ≥ 2, counted across
 the task's spec and code passes on the mechanism):** record the check
 per `skills/convergence_loop/SKILL.md` §Simplify-before-patch gate in
-the build log before briefing the fix. Same class + simpler mechanism or
-spec at fault → propose the simplification to the caller instead of
-patching routes. A simplification that removes the class counts as
-fixing its HIGHs.
+the build log before briefing the fix — `model` row first (the
+`§Mechanism-Lifecycle` section present or written now), then same class
+/ simpler mechanism / spec at fault answered against the matrix. Same
+class + simpler mechanism or spec at fault → propose the simplification
+to the caller instead of patching routes, showing the whole updated
+matrix. A simplification that removes the class counts as fixing its
+HIGHs. A `patch` names every cell it changes (fix brief
+`§Mechanism-cells`).
 
 **Disposition-respect + guarantee-carrier rigor on the fix-pass (MUST).**
 Two guards, the first unconditional:
@@ -374,8 +397,9 @@ adopt.
 
 ```
 PASS:            0C + 0H
-PASS_WITH_RISKS: 0C + ≤2H (carry-forward MANDATORY)
-FAIL:            ≥1C or >2H → triage → MCA fixes fix-now → re-review (max 2)
+PASS_WITH_RISKS: 0C + ≤2H (carry-forward MANDATORY), no H or invariant-falsifying finding open on a `now` mechanism cell
+FAIL:            ≥1C or >2H, or an open H or invariant-falsifying finding on a `now` mechanism cell (Mechanism-cell floor below)
+                 → triage → MCA fixes fix-now → re-review (max 2)
 ```
 
 **Risk carry-forward** (on PASS_WITH_RISKS / FAIL non-fix-now /
@@ -428,10 +452,28 @@ impact does NOT doing this followup have?":
   surface; on a platform / middleware the consumable surface IS the
   deliverable and zero-built-consumers is the normal pre-launch state.
   Decided by reading the Vision (observable), not by judging intent.
+  On a mechanism, "no consumer yet" only places the work in its
+  caller's task (`_protocols/mechanism-model.md` §Scope and placement,
+  rule 4 — the one home of the rule).
 
 `new_task` without operational-impact sentence = validation fail.
 Hard floors override: CRITICAL, security/auth/consent/crypto, schema
 / public-API contract, full-path tasks stay `fix-now` / `new_task`.
+
+**Mechanism-cell floor (blocking severities only):** a CRITICAL / HIGH
+finding, or one that falsifies a stated invariant, on a `now` cell of a
+`§Mechanism-Lifecycle` matrix is `fix-now` or goes to the
+Simplify-before-patch gate — never `new_task`, `accept`, `watch_item` or
+`absorb_next`. An open live cell at blocking severity makes the verdict
+FAIL (with the gate record), not PASS_WITH_RISKS. MEDIUM / LOW on a live
+cell follow the triage above (standalone LOW → `accept`; `new_task`
+MEDIUM+), with the cell annotated in the matrix (`✗ accepted: <reason>`
+or `→ task-N` plus the `blocked_by` edge). Cells placed in another task
+or beyond the MVP leave as `blocked_by` edges (beyond-MVP: the plan /
+milestone entry), not `remaining_findings` rows. Rule and placement: `_protocols/mechanism-model.md` §Scope and
+placement, §Bind rules — parking an invariant's open blocking routes on
+the next producer's task was the recurring way one mechanism stayed
+defective across tasks.
 
 **Bundling content-split:** bundled items tagged
 `value_class: real-impact | nice-to-have`. Preserve each reviewer's

@@ -158,6 +158,21 @@ Three categories, with reconciliation triggers:
   if the bug_class belongs to no existing AC, that is category (e)
   territory (AC scope), not (f).
 
+- **(g) State-carrier amendment without / outside §Mechanism-Lifecycle
+  (touch-it-fix-it for the lifecycle discipline)** — when the amendment
+  adds, removes or re-routes a state, an operation, a guard, an
+  enforcement locus or an invariant of a mechanism (incl. a derived
+  state or an "only via" rule) AND the owning spec has no
+  `§Mechanism-Lifecycle` section for it, the amendment MUST add the
+  section in the SAME commit (schema: `_protocols/mechanism-model.md`),
+  with every cell filled. When the section exists, the amendment MUST
+  edit the affected cells in the SAME commit — a ruling, simplification
+  or user decision recorded only in a build log, verdict or changelog
+  while the matrix stays stale is divergence of this category.
+  → **Reconcile in same commit** as a §mechanism-lifecycle strand.
+  Triggers only on amendment-into-mechanism; wording, cross-ref and
+  §Changelog edits do NOT trigger.
+
 **Strand-scope stop rule:** the spec-drift-fix strand covers the
 §-sections that name the diverged symbol(s). Recursion stops at the
 first §-section that doesn't name the symbol — even if that

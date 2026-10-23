@@ -71,6 +71,18 @@ the first line of code in your head. If you can't → finding.
 - **Integration** — does the spec match existing interfaces?
 - **Dependencies** — are all preconditions (tasks, services,
   schemas) satisfied?
+- **Producers and placement:** for every operation in the spec's
+  `§Mechanism-Lifecycle` table and every flow the spec specifies
+  (settlement, undo, retry, supplement, completion), grep the
+  production call site that performs it. A flow whose caller is
+  unbuilt must be placed in the planned caller task with a
+  `blocked_by` edge and refused explicitly until then, or built now if
+  no such task is planned; a flow built here on a fixture that guesses
+  the caller's call shape is a finding (CRITICAL when the flow's main
+  input has no carrier). A producer named in spec prose is not a
+  producer; a test fixture is not a producer. "No consumer yet" is
+  never a reason to drop a cell (`_protocols/mechanism-model.md`
+  §Scope and placement).
 - **Paths and conventions** — do referenced file paths match?
 - **First-run / bootstrap:** what must exist before the first
   line of productive code runs? DB tables, seed data, config

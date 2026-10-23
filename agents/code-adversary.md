@@ -155,9 +155,21 @@ flow back to Buddy for distillation into the board brief.
   it.
 - **State leaks:** mutable state leaking between requests /
   sessions / users.
+- **Mechanism cells (when the brief carries a `§Mechanism-Lifecycle`
+  matrix):** your unit is the cell, not the diff. Probe the cells in
+  scope — each `✗` with a scenario against its guard, each `→` with the
+  next state's invariants, each `unreachable` with an attempt to reach
+  it, each placed (`task-N` / `beyond-MVP`) cell for a fixture that
+  drives the flow anyway — and return a coverage table (cell · probe ·
+  reached / held / failed) over the invariants and the rows / columns in
+  scope. An operation the matrix omits is a finding on the matrix. On a
+  re-verify your mandate is the mechanism, with the whole matrix as
+  context, whatever side the fix touched: the next defect sits in the
+  adjacent cell.
 
 Additional output field: `attack_scenario` (REQUIRED — no
-finding without a concrete scenario).
+finding without a concrete scenario). With a matrix in scope: the
+coverage table (REQUIRED).
 
 ## Finding prefix
 

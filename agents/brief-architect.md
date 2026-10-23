@@ -110,6 +110,20 @@ outputs differ. Mode-specific notes are inline.
    by-user). Silent omission of the recommendation is invalid
    output per spec 372 AC-5.
 
+   **`mode=brief` — mechanism ingestion (when the scope touches a state
+   carrier):** read the owning spec's `§Mechanism-Lifecycle` section
+   (`skills/_protocols/mechanism-model.md`) end-to-end before splitting
+   into LDs. The brief's `## Mechanism-cells` block
+   (`_protocols/mca-brief-template.md`) lists the cells in scope, the
+   placed cells (`task-N` / `beyond-MVP`: explicit refusal, refusal
+   tests only, owning task `blocked_by`-wired) and the forbidden-adjacent
+   cells; `structural_invariants` cites the matrix invariants by name.
+   A scope that changes a state carrier whose spec has no section is
+   `escalate: mechanism model missing` — the section comes with the spec
+   amendment (category (g)) or the retro-model
+   (`_protocols/mechanism-model.md` §Trigger); do not derive one inside
+   the brief, where no reviewer will check it.
+
    **Per-note triage (MANDATORY, CLAUDE.md Inv 9).** Lens notes are
    advisory authority by design, not auto-binding. For each
    distinct note in the lens output (each §Decomposition-Recommendation
@@ -129,6 +143,13 @@ outputs differ. Mode-specific notes are inline.
    moved, narrowed). Auto-binding every lens note is the failure
    mode: lens notes that should have been advisory become binding by
    default; per-note triage surfaces which actually belong in scope.
+   **Exception — state or vocabulary notes.** A lens note that names
+   a missing state, a squeezed lifecycle phase or an output the
+   consumer needs as a state ("the kernel interface needs a pending
+   output") is a matrix-edit candidate for the owning spec's
+   `§Mechanism-Lifecycle` section, never flattened into a narrower
+   rule in an LD ("outputs IN/OUT/UNDEC only"). Classify it binding
+   (cell added) or escalate; `drop` is invalid for this class.
 
 2. **Explore Thoroughly**:
    - Read any files provided to you in the initial prompt
@@ -227,6 +248,14 @@ outputs differ. Mode-specific notes are inline.
      §-section, per
      `skills/_protocols/spec-amendment-discipline.md`
      §Same-commit reconciliation rule.
+     **If the amendment adds, removes or re-routes a state, operation,
+     guard, enforcement locus or invariant of a mechanism:** the
+     edit-list carries a §mechanism-lifecycle strand (category (g)) —
+     the owning spec's `§Mechanism-Lifecycle` section is created (every
+     cell filled and placed, producers grepped, placed cells with
+     their owning task) or its affected cells are edited, in the same
+     return. Per-side prose (an entry recipe here, an undo paragraph
+     there) without the matrix edit is an invalid amendment.
    - **`mode=retro_spec_update`:** classify each finding per the
      four-category model from `retroactive_spec_update/SKILL.md`
      §Phase 2d: MATCH (no change), SPEC-GAP (extend spec),

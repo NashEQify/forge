@@ -119,9 +119,23 @@ User + agent write together. Agent proposes; user decides.
    decode path named, and version bump, upcast or empty-store
    precondition with its ending trigger.
 
+8. **§Mechanism-Lifecycle (state carrier present):** when the spec
+   introduces a thing with two or more states and two or more operations
+   that change it — a derived state, a hold / settlement / undo flow, an
+   "X changes only via Y" invariant — write the section per
+   `skills/_protocols/mechanism-model.md` **before** the board: states
+   per carrier, every operation with its grepped producer and its
+   consumer, the states × operations matrix with every cell filled and
+   placed (`now` / `task-N` / `beyond-MVP` — the vision decides what is
+   modelled, the plan when it is built), invariants with enforcement
+   locus. Rule: protocol §Scope and placement. Phase 1 elicits it with the user: walk each
+   state and ask "what can happen to it, who does that, what must hold
+   afterwards?" — one table instead of one rule per scenario.
+
 **Without 1-3 spec is not findable. Without 4 not reviewable. Without
 5 brief author re-derives surface. Without 6 test contract is implicit
-— post-build coverage gaps then spawn bundle-tasks.**
+— post-build coverage gaps then spawn bundle-tasks. Without 8 the
+mechanism is reviewed one route at a time, across many passes.**
 
 ### Verify-before-recommend
 
@@ -274,6 +288,12 @@ sharpening.
   skill) without grounding it against the live SoT and citing `file:line`;
   a source task's claim about a third surface may be stale and propagates
   verbatim into the new spec.
+- **NOT** write a state-bearing mechanism as one bullet per side (entry
+  recipe, exit recipe, undo paragraph) spread over several specs.
+  INSTEAD one `§Mechanism-Lifecycle` matrix in the owning spec, every
+  cell filled, other specs pointing at it
+  (`_protocols/mechanism-model.md`). Because: per-side prose is reviewed
+  per side; the defects live in the cells nobody wrote.
 
 Extended anti-patterns + Lessons-table (full failure-shape +
 discipline-rule rows): REFERENCE.md.

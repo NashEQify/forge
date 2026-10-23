@@ -31,9 +31,10 @@ artefacts: []
 ```markdown
 ## Specify
 - Spec: {spec_path}
+- Mechanism model: {n/a — no state carrier | <spec> §Mechanism-Lifecycle: <name> (cells: N; placed: list → task-N / beyond-MVP)}
 - Board: {PASS|NEEDS-WORK} — {0C/0H or finding summary}
-- Simplify-before-patch: {n/a | one check block per fix pass >= 2, per convergence_loop}
-- Decisions: {interview/council key decisions}
+- Simplify-before-patch: {n/a | one check block per fix pass >= 2, per convergence_loop (model row first)}
+- Decisions: {interview/council key decisions — each mechanism decision names the matrix cells it edited}
 
 ## Prepare
 - Delegation: {delegation_path}
@@ -46,7 +47,8 @@ artefacts: []
 
 ## Verify
 - Code review: {PASS|FAIL} {light|L1|L2} — {finding summary}
-- Simplify-before-patch: {n/a | one check block per fix pass >= 2, per convergence_loop}
+- Mechanism cells: {n/a | in-scope cells covered N/N; re-verify coverage table at <review path>}
+- Simplify-before-patch: {n/a | one check block per fix pass >= 2, per convergence_loop (model row first; patch names its cells)}
 - UX review: {PASS|skipped} — {findings or reason for skip}
 - Spec amendment: {no | yes, reason}
 - ADR check: {ADR-NNN written | skipped: <which-triple-condition-missing>}

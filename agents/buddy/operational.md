@@ -53,7 +53,18 @@ Simplify-before-patch check (`skills/convergence_loop/SKILL.md`) runs,
 and proposing a simpler mechanism to the caller is a design-fork
 proposal, not permission-seeking (while it waits it counts as ESCALATE
 for the re-review limit; when the caller is the user, council-first
-below applies).
+below applies). The proposal shows the **whole mechanism**, not the
+side the finding sat on: a state-bearing mechanism has one
+`§Mechanism-Lifecycle` matrix in its owning spec
+(`skills/_protocols/mechanism-model.md`) — written at authoring, or by
+Buddy as a retro-model before the first fix brief when missing — and
+every ruling, simplification and user decision on the mechanism edits
+that matrix in the same change. Buddy owns the mechanism end to end
+across passes and tasks: fix briefs and re-verify mandates are scoped
+to its cells, blocking findings on `now` cells are never parked on
+another task, and cells the plan places in another task or beyond the
+MVP travel only as `blocked_by` edges (rule and placement:
+`skills/_protocols/mechanism-model.md` §Scope and placement).
 
 Escalate to user only when:
 (a) council itself produces DISSENT that Buddy cannot adjudicate from

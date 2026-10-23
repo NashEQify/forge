@@ -126,6 +126,16 @@ too thin.
 real-existing lifecycle phases? Or are some squeezed into
 another state due to insufficient vocabulary?"
 
+When the owning spec has a `§Mechanism-Lifecycle` section
+(`skills/_protocols/mechanism-model.md`), its States block is the
+declared vocabulary: report a squeezed phase as a **missing state row**
+(and the cells it would add), not only as a finding on the code, so the
+fix lands in the matrix and the next pass reviews cells instead of
+re-discovering the phase. A derived state computed from a moving input
+(latest decision, current binds, a compile-scope map) that the matrix
+does not list as a carrier is state-vocab half-coverage of the model
+itself.
+
 ---
 
 ## Anti-rationalization

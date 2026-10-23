@@ -159,6 +159,31 @@ Three pattern classes the invariant should defend against (mirror
 - **State-vocabulary half-coverage:** initial state squeezed into a
   working state. State the lifecycle vocabulary explicitly.
 
+**Mechanism cells (MUST when the brief touches a state carrier).** When
+the owning spec has a `§Mechanism-Lifecycle` section
+(`_protocols/mechanism-model.md`), `structural_invariants.value` cites
+its invariants by name, and the brief carries a `## Mechanism-cells`
+block before `## Acceptance-Criteria`:
+
+```yaml
+mechanism_cells:
+  section: "<spec> §Mechanism-Lifecycle: <name>"
+  in_scope: ["<state> × <op>", ...]      # each maps to a code site + a test in the plan
+  placed: ["<state> × <op> → task-N | beyond-MVP", ...]  # explicit refusal now; refusal tests only; blocked_by wired
+  forbidden_adjacent: ["<state> × <op>", ...] # cells another task or a later build owns
+```
+
+A cell the MCA finds it cannot honour as written is STOP + spec
+amendment (the matrix is edited in the same change), not a local
+decision; a mid-build ruling that changes a cell without editing the
+matrix is drift of category (g)
+(`_protocols/spec-amendment-discipline.md`). When the build changes a
+state carrier whose spec has no section, the section comes with the spec
+amendment (category (g)) or the retro-model
+(`_protocols/mechanism-model.md` §Trigger) before dispatch; on a legacy
+spec the build does not change, the block is `mechanism_cells: n/a —
+legacy spec, carrier unchanged`.
+
 ### 5. vision_alignment
 
 What the active `intent.md` Vision says the touched surface IS, so MCA

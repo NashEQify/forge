@@ -76,6 +76,18 @@ stop. Your job is to find weaknesses, not praise the spec.
 - **E2E data-flow simulation:** trace 3-5 concrete inputs
   through the entire pipeline. At every component boundary:
   what comes in, what goes out, does it match?
+- **Mechanism cells (when the spec has a `§Mechanism-Lifecycle`
+  section, `_protocols/mechanism-model.md`):** review the matrix, not
+  the prose around it. Every `✗` cell gets a scenario against its
+  guard, every `→` cell a check of the next state's invariants, every
+  `unreachable` cell an attempt, every placed (`task-N` /
+  `beyond-MVP`) cell a check that the plan really places it there and
+  the `blocked_by` edge exists. An operation you can
+  perform on a carrier that is not a column — undo, supplement,
+  duplicate, retry, scope move, another principal's act, erasure — is
+  a HIGH on the matrix. A textual "X is exempt from Y" inside an "X
+  changes only via Y" section is a cell conflict. Return a
+  coverage table (cell · probe · result) with your findings.
 - **First-run / bootstrap:** what happens on the very first
   call? Implicit assumptions about existing state that don't
   hold on day 0?

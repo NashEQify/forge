@@ -99,7 +99,11 @@ When the brief's §Implicit-Decisions-Surfaced contains a
 "smell-transfer" OR "cycle-symptom-cause" for ANY LD,
 `code-architect-roots` is REQUIRED on the specialist-set, not
 optional. The state-vocab half-coverage concern is structurally
-invisible to the other specialists.
+invisible to the other specialists. A state-vocab LD is also the
+trigger for a `§Mechanism-Lifecycle` section in the owning spec
+(`_protocols/mechanism-model.md`); architect-roots reads the section's
+States block as the declared vocabulary and reports a squeezed phase as
+a missing state row, not only as a finding on the code.
 
 Note: post-build architect-roots is now gated to "new exported
 contract or replicable-downstream pattern" per `agents/code-architect-roots.md`.
@@ -277,16 +281,20 @@ Not full L1 / L2 redo.
 | Re-review type | Composition | When |
 |----------------|-------------|------|
 | Light re-verify | One `code-verification` re-running every fix-now reproduction (red→green) | Line-local fix: only the finding's lines, no new guard / branch / rule on a mechanism that drew a HIGH, no oracle hunk |
-| Light + scoped adversary (default otherwise) | The light re-verify plus `code-adversary` cold-start on the fix diff, mandate "find a new route of the same class against the fix", two-phase | Any other fix pass (new guard / branch / rule on a HIGH mechanism, edits beyond the finding's lines, oracle hunks) |
+| Light + mechanism-scoped adversary (default otherwise) | The light re-verify plus `code-adversary` cold-start with the owning spec's `§Mechanism-Lifecycle` matrix and the fix diff, mandate "attack the mechanism, with the whole matrix as context, not the fix", returning a coverage table over the invariants and the matrix rows / columns the fix touches (cell · probe · result), two-phase | Any other fix pass (new guard / branch / rule on a HIGH mechanism, edits beyond the finding's lines, oracle hunks). A missing section follows the retro-model trigger (`_protocols/mechanism-model.md` §Trigger) |
 | Fix verification (no reproduction) | Single reviewer per cluster, scope = the finding's `affected_scope` | Judgment findings without a runnable reproduction |
 | Bundled fix verification | Convergence-axis grouping — ~3 reviewers covering the systemic patterns in the bundle (correctness/architecture via `code-review`; concurrency/state-machine via `code-domain-logic` or `code-adversary`; cross-spec amendment fitness via `code-spec-fit` if relevant). Buddy may add a 4th for an axis the brief's risk-assessment names dominant (e.g. `code-security` on an auth-fix-pass). | Judgment findings without reproductions in a fix-pass with >5 clusters OR >5 files OR cross-spec amendments touched |
-| Replaced-mechanism re-verify | `code-adversary` + `code-domain-logic` two-phase on the new mechanism (`code-architect-roots` if structure changed beyond it), no chief | After a fix pass in which the Simplify-before-patch gate replaced a mechanism |
+| Replaced-mechanism re-verify | Matrix updated first; `code-adversary` + `code-domain-logic` two-phase on the whole updated matrix (`code-architect-roots` if structure changed beyond it), no chief | After a fix pass in which the Simplify-before-patch gate replaced a mechanism |
 | Fresh angle (exception) | Full board (L1 / L2 per the original level) | Only if pass-1.5 surfaces an architecture concern OR Buddy explicitly wants a fresh take |
 
 Rationale: the verdict file documents `file:line` per finding; the
 fix touches that scope, nothing else can change. A 5-reviewer redo
 of unaffected modules is risk-theater + 2-3× wallclock / token cost
-without new signal. Full-board re-runs are reserved for fresh
+without new signal. The one scope that is *not* "nothing else can
+change" is a mechanism: a fix on one side of a state carrier moves
+the next defect to an adjacent cell, so the single adversary's scope
+is the mechanism's matrix (same reviewer count, wider mandate), not
+the fix diff. Full-board re-runs are reserved for fresh
 analysis at a new convergence-pass scope, not for "did the fix
 land?" verification.
 

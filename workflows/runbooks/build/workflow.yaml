@@ -150,6 +150,15 @@ steps:
       Persisted-shape change: record the migration-needed check
       (deprecation_and_migration §Migration-needed check: decode path, then
       version bump / upcast / empty-store precondition with ending trigger).
+      State carrier (two or more states, two or more operations; any derived
+      state; any "X changes only via Y" invariant; a hold / settlement / undo
+      flow): write the §Mechanism-Lifecycle section in the owning spec per
+      skills/_protocols/mechanism-model.md — states, every operation with its
+      grepped producer and its consumer, the states × operations matrix with
+      every cell filled and placed (now / task-N / beyond-MVP: the vision
+      decides what is modelled, the plan when it is built; protocol §Scope
+      and placement), invariants with enforcement locus. One matrix, not one
+      rule per scenario; the board, test design, brief and re-verify read it.
 
       Source-spec-reduce is a final sub-step — when a source spec is overlaid:
       3-way triage (existing-task / new-task / delete) → source patches +
@@ -200,11 +209,19 @@ steps:
       per pass (history, never rewritten) and, at adoption with 0C+0H, the
       adoption verdict docs/reviews/board/{task_id}-spec-verdict.md (spec_board
       §7: adopted pass, reviewed revision, pivotal pointers re-checked
-      against the adopted spec). Completion binds to that verdict only. Before every fix pass >= 2, record the
-      Simplify-before-patch check (skills/convergence_loop/SKILL.md) in
-      the build log; a recurring class with a simpler mechanism or a
-      faulty spec clause goes to the caller as a simplification proposal,
-      not another route patch.
+      against the adopted spec). Completion binds to that verdict only.
+      Pre-gate: a diff that introduces or changes a state carrier without a
+      complete §Mechanism-Lifecycle section in the owning spec FAILs before
+      depth is chosen (spec_board §1.0); reviewers check cells, no PASS with
+      an empty cell, no blocking finding on a now cell in residual;
+      board-implementer joins the pass that adds or changes an unbuilt or
+      placed cell (§2b). Before every fix pass >= 2,
+      record the Simplify-before-patch check (skills/convergence_loop/SKILL.md)
+      in the build log, model row first; a recurring class with a simpler
+      mechanism or a faulty spec clause goes to the caller as a simplification
+      proposal showing the whole updated matrix, not another route patch.
+      After a mechanism redesign the next pass is a cold seat over the whole
+      matrix (§2c), not an orchestrator-only verification.
     skill_ref: skills/spec_board/SKILL.md
     completion:
       type: compound
@@ -265,7 +282,13 @@ steps:
       a named reference oracle are ruled before MCA dispatch; latency ACs on
       a growing log/store carry an N and 4N slope leg; a lens-adopted single
       owner gets an independent oracle and its old parity tests become
-      wiring tests.
+      wiring tests. With a §Mechanism-Lifecycle section in scope
+      (testing/SKILL.md §Derivation from §Mechanism-Lifecycle): the property
+      generator's axes are the matrix axes and its span counts as cell
+      coverage; explicit TCs only for cells it does not reach (refusal-only
+      on placed cells; unreachable cells carry a reason), the oracle is written from
+      the matrix as separate arms, and every TC runs in the state the matrix
+      names, not in a world where the clause trivially holds.
 
       Below threshold or skipped adversary mode: skip with one-line rationale.
     skill_ref: skills/testing/SKILL.md
@@ -337,7 +360,11 @@ steps:
       The architect's brief covers required sections per spec 306
       §5.1 (qualitative content guidance, not strict schema). MCA
       input validation per main-code-agent.md is "delegation input
-      exists" only.
+      exists" only. A brief that touches a state carrier carries the
+      ## Mechanism-cells block (mca-brief-template.md): cells in scope,
+      placed cells (explicit refusal now; blocked_by wired),
+      forbidden-adjacent cells; a missing section follows
+      skills/_protocols/mechanism-model.md §Trigger.
 
       Enforcement class [DISCIPLINE]: eligibility is applied by
       Buddy — the engine does not evaluate skip_when (the
@@ -367,6 +394,13 @@ steps:
       Apply framework/process-map.md section Authorization in both modes.
       Compare the synthesized brief with the already approved scope. Record
       the matching authorization and continue without another routine gate.
+      Structural check before any dispatch: a brief above the
+      mca-brief-template.md §Trigger without its
+      ## Implicit-Decisions-Surfaced block, or a brief
+      touching a state carrier without its ## Mechanism-cells block, is
+      returned to the author — not signed off. A precedent ("as task N") is
+      not a reason to skip a block or a seat; the skip names the coverage
+      that makes it redundant.
       If synthesis introduces a consequential decision, changed scope/risk,
       or unresolved divergence, present it for user approval before dispatch.
 
@@ -434,18 +468,28 @@ steps:
       architect-roots + Buddy checklist, trigger lenses, no chief at <= 3
       reviewers) is the default for bounded engine / contract builds; L2
       only on a named trigger (public API / wire, security, real migration
-      doubt, new subsystem, live infrastructure). Re-verify after a fix
-      pass: light (reproductions re-run) only for a line-local fix; any
-      new guard / branch / rule on a mechanism that drew a HIGH, or an
-      oracle hunk, adds a scoped code-adversary hunting a new route of the
-      same class (skill §4). Buddy owns the decision
-      and verifies pivotal claims after reading the reports or Chief
-      consolidation. Fix passes: oracle edits go in a separate hunk citing
-      their ruling and are reviewed by a non-implementer (testing/SKILL.md
-      §Oracle discipline). Before every fix pass >= 2 (counted across the task's
-      spec and code passes on the mechanism), record the
-      Simplify-before-patch check (skills/convergence_loop/SKILL.md) in the
-      build log before briefing the fix.
+      doubt, new subsystem, live infrastructure). The review brief carries
+      the owning spec's §Mechanism-Lifecycle matrix when the diff touches a
+      state carrier (skill §2 step 4); reviewers and the L1 checklist check
+      cells. Re-verify after a fix pass: light (reproductions re-run) only
+      for a line-local fix; any new guard / branch / rule on a mechanism
+      that drew a HIGH, or an oracle hunk, adds a code-adversary whose
+      mandate is the mechanism with the whole matrix as context, not the
+      fix — returning a coverage table over the invariants and the rows /
+      columns the fix touches (skill §4). Buddy owns the
+      decision and verifies pivotal claims after reading the reports or
+      Chief consolidation. Fix passes: oracle edits go in a separate hunk
+      citing their ruling and are reviewed by a non-implementer
+      (testing/SKILL.md §Oracle discipline); the fix brief carries the
+      §Mechanism-cells block and the matrix is edited in the same change.
+      Before every fix pass >= 2 (counted across the task's spec and code
+      passes on the mechanism), record the Simplify-before-patch check
+      (skills/convergence_loop/SKILL.md) in the build log before briefing
+      the fix, model row first. Verdict floor (skill §5): a CRITICAL / HIGH
+      or invariant-falsifying finding on a now cell is fix-now or a
+      simplification, never new_task / accept / watch_item; lower severities
+      follow the normal triage with the cell annotated; placed cells leave
+      the task as blocked_by edges on the owning task.
 
       On post-board FAIL with `target: spec_text` entries in
       remaining_findings (per spec 306 §4.7 + §4.8): Buddy dispatches

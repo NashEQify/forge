@@ -156,6 +156,13 @@ Severity is YOUR judgment per-axis (matches the
 `agents/_protocols/reviewer-base.md` §Cumulative file totals
 discipline at review-time: mechanical reporting, judgment severity).
 
+**State-bearing scope:** when the owning spec has a
+`§Mechanism-Lifecycle` section (`skills/_protocols/mechanism-model.md`),
+read its States block before judging the modules; a lifecycle phase the
+modules squeeze into another state is reported as a **missing state
+row** (a matrix-edit candidate for brief-architect), not as a module
+note.
+
 ### Phase 3: Decide decomposition-recommendation
 
 If the module-state table surfaces structural friction worth

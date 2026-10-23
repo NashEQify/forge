@@ -148,6 +148,18 @@ claim — every load-bearing claim was independently re-executed.
   prior pass's mechanism class, recommend the simpler mechanism or
   structural invariant (`skills/convergence_loop/SKILL.md`
   §Simplify-before-patch gate), not another route patch.
+- You route a CRITICAL / HIGH (or invariant-falsifying) finding on a
+  mechanism to `new_task` / `watch_item` because "the producer is
+  another task's" — check the cell: if it is `now`, the finding is
+  fix-now or a simplification (`skills/code_review_board/SKILL.md` §5
+  mechanism-cell floor). Only cells the matrix places in a planned task
+  or beyond the MVP leave the task, and as `blocked_by` edges, not as
+  carried risks (`_protocols/mechanism-model.md` §Scope and placement).
+  MEDIUM / LOW follow the normal triage with the cell annotated.
+- You name the pattern ("HIGHs in this mechanism in every pass") and
+  then predict "one fix pass, then a scoped re-review" — a named
+  recurrence is the Simplify-before-patch trigger, and the re-review
+  unit is the mechanism's matrix, not the fix-now set.
 
 ## Consolidation (CHIEF-1)
 

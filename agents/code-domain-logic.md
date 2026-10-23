@@ -54,7 +54,13 @@ error.
 ## Check focus
 
 - **State machines:** every transition valid? Invalid ones
-  caught? Idempotency?
+  caught? Idempotency? With a `§Mechanism-Lifecycle` matrix in the
+  brief (`_protocols/mechanism-model.md`): walk the matrix cell by
+  cell — does the code decide each cell as the matrix says (same
+  next state, same guard, same enforcement locus)? For each derived
+  state, list every input that can change it and check that each is
+  a matrix column; an input that is not is a finding on the matrix.
+  Report the cells you could not reach.
 - **Algorithms:** correct for every input range? Bounds (0, 1,
   MAX, empty, null)?
 - **Business rules:** complete? Forgotten condition? Negation

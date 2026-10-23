@@ -63,7 +63,8 @@ sections optional, brief author writes a one-line rationale why.
 
 ## Mandatory sections in the fix brief
 
-Three mandatory sections (in addition to the pointer block + authority refs):
+Three mandatory sections (in addition to the pointer block + authority refs),
+plus a fourth whenever the fix touches a state carrier:
 
 **Workflow scope (instance stamping):** when the fix runs inside a workflow step
 and `workflow_engine.py --next` reports a `NOT-YOURS:` line (≥2 workflows live),
@@ -129,6 +130,33 @@ Bleed-risk examples:
 
 Below threshold (no adjacent bleed risk identified): section is a one-liner
 `out_of_scope: []  # no adjacent bleed-risk identified`.
+
+### Section 4: Mechanism cells (MUST when the fix touches a state carrier)
+
+A fix on one side of a mechanism moves the next defect to an adjacent cell
+(observed as entry → exit → undo across three consecutive re-checks on one
+build). The scope bound above keeps the fix from widening; this section keeps
+it from being a slice. It names the fix's position in the owning spec's
+`§Mechanism-Lifecycle` matrix (`_protocols/mechanism-model.md`):
+
+```yaml
+mechanism_cells:
+  section:   "<spec> §Mechanism-Lifecycle: <name>"
+  changed:   ["<state> × <op>: <old cell> → <new cell>", ...]   # every cell the fix changes
+  intact:    ["<state> × <op>: <guard that still holds>", ...]  # the cells the fix must leave as they are
+  matrix_edit: "same change — <spec>:<lines>"                   # the section is updated with the fix, never only the build log
+```
+
+`changed` is the fix's whole effect on the mechanism — a fix that cannot list
+its cells is not yet a fix brief, and the Simplify-before-patch record's
+`decision: patch (...)` quotes this list. `intact` is the re-verify
+adversary's starting point: its mandate is the mechanism against the matrix,
+so every `intact` cell gets probed, not only the `changed` ones. A fix that
+would re-place a `now` cell into another task or beyond the MVP is a design
+fork for the caller (a plan change), not a fix.
+
+Below threshold (the fix touches no state carrier): one-liner
+`mechanism_cells: n/a  # no state carrier touched`.
 
 ---
 

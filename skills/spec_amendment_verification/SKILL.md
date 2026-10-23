@@ -89,7 +89,8 @@ For every changed spec, against every referenced spec:
 | **References** | Section numbers, line refs, version tags up to date? |
 | **NATS** | Subject names, consumer configs, event payloads consistent? |
 | **Locks** | Lock namespaces, advisory-lock signatures aligned? |
-| **Derived-state routes** | Amendment touches an "X changes only via Y" invariant → every input-changing operation (withdraw, processing / meaning successor, scope move, replacement field edits, cross-principal acts) has a guard or a stated unreachability reason (`skills/spec_board/SKILL.md` §4b) |
+| **Mechanism cells** | Amendment touches a state carrier → the owning spec's `§Mechanism-Lifecycle` matrix was edited in the same change (no second model in a log), no cell is empty, every cell is placed per the plan (`task-N` cells have their owning task `blocked_by`-wired), every cross-spec pointer resolves to the owning section (`skills/_protocols/mechanism-model.md`) |
+| **Derived-state routes** | Amendment touches an "X changes only via Y" invariant → every input-changing operation (withdraw, processing / meaning successor, scope move, replacement field edits, cross-principal acts) is a matrix column with a guard or a stated unreachability reason (`skills/spec_board/SKILL.md` §4b) |
 | **Fix values** | A new validator / rule taken from a review finding or ruling agrees with every spec that produces or consumes the field, and names the contract-owner spec |
 
 No completeness check on the spec itself — only cross-spec

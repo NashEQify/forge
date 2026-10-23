@@ -74,6 +74,37 @@ specs), the catalog **is the test contract**:
   Single commit at adversary-run end (or folded later).
 - Legacy specs without catalog: derive per upstream table above.
 
+### Derivation from §Mechanism-Lifecycle (state carriers)
+
+When the spec has a `§Mechanism-Lifecycle` section
+(`skills/_protocols/mechanism-model.md`), the matrix is the test
+contract for that mechanism, beside the bug-class catalog:
+
+- **Generator axes = matrix axes.** A property generator over the
+  mechanism produces every state × every operation (including the
+  consumer-side inputs of each derived state), not the shapes the
+  implementer happened to think of. A generator whose axes span a cell
+  **is** that cell's coverage, asserted by the matrix oracle; a
+  generator that cannot produce a cell is a plan gap.
+- **Explicit TCs only where the generator does not reach:** a `→` or
+  `✗` cell outside the generator's axes gets its own TC (next state +
+  invariants, or guard + error); a placed (`task-N` / `beyond-MVP`)
+  cell gets a refusal TC only — no fixture composes the absent caller's
+  call shape; an `unreachable` cell needs its stated reason in the
+  matrix, not a TC.
+- **Oracle from the matrix, not from the code.** The reference oracle
+  (derived-state function, invariant checker) is written as separate
+  arms from the matrix rows and invariants, by someone other than the
+  implementer (§Oracle discipline). A memo-equals-oracle test where both
+  read the same implementation proves nothing about the cells.
+- **Tests in the right world.** A TC for an exemption or a guard runs in
+  the state the matrix names (e.g. "after the demotion exists"), not in a
+  world where the clause trivially holds. A fixture that produces the
+  defect as setup is a finding.
+- Cells and bug classes are complementary: a `✗` cell without a
+  `bug_class` row gets one (category (f) append); a bug class without a
+  cell names which carrier it guards.
+
 ### Bug-class dedup (at creation time)
 
 Before adding TC for a new `bug_class`, check catalog/plan for
