@@ -56,11 +56,14 @@ Frontmatter, body content per phase, drift notes: `REFERENCE.md`.
 above). Pick mid-flow via `--complete routing --route <key>`.
 
 **2. board-dispatch** — dispatch the routed skill. Output paths:
-- spec_board               → `docs/reviews/board/{spec_name}-consolidated-pass1.md`
+- spec_board               → `docs/reviews/board/{spec_name}-consolidated-pass{N}.md`
 - sectional_deep_review    → `docs/reviews/sectional/{spec_name}-deep.md`
 - architecture_coherence_review → `docs/reviews/architecture/{spec_name}-coherence.md`
 
-Chief consolidates findings into the verdict file. Buddy reads ONLY
+Chief consolidates findings per pass. At adoption Buddy writes the
+adoption verdict `docs/reviews/board/{task_id}-spec-verdict.md`
+(task-less run: `{spec_name}-verdict.md`; `skills/spec_board/SKILL.md`
+§7); the completion gate checks only it and requires `schema_version: 1`. Buddy reads ONLY
 the chief signal (CLAUDE.md §1).
 
 **3. convergence-loop** — on NEEDS-WORK: fix-loop via `convergence_loop`,

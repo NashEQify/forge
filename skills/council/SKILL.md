@@ -225,6 +225,11 @@ Only a selected development caller loads this section’s engine/runbook referen
 
 Default = skip (council is Buddy-judgmental per §1.0; engine does not auto-fire architectural decisions). See `framework/workflow-engine-cookbook.md` for engine shape.
 
+**Split rulings (development caller):** a ruling that splits a capability
+and moves its gate / proof half to a sibling names that half, every
+producer / consumer of the ungated half, and the fail-closed edge; the
+caller applies its task-creation split-gap check in the same change.
+
 ## 14. Skip rationales (template)
 
 Acceptable §1.0 skip phrases (write inline at decision point):

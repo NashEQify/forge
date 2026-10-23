@@ -86,7 +86,7 @@ implemented).
    rationale: ERROR). Detail: `REFERENCE.md` §7.
 8. **Navigation-layer drift** — `navigation.md` per top-level
    depth-3 directory exists; the AUTO block is regenerated (no
-   diff on a re-run of `scripts/generate_navigation.py`); the
+   diff: `scripts/generate_navigation.py --check`, exit 1 on drift); the
    manual reader-journey sections are filled (no placeholder
    text left). Expected `navigation.md` targets + bash diff:
    `REFERENCE.md` §8. Disk has `navigation.md` without a

@@ -36,6 +36,18 @@ COMMIT_MSG_HOOK="$(git rev-parse --git-path hooks/commit-msg)"
 BLOCK=0
 WARNINGS=()
 
+# indent_head N TEXT — first N lines of TEXT, indented by four spaces.
+# Pipe-free on purpose: under `set -o pipefail`, `echo "$big" | head -N`
+# lets head exit first, echo dies with SIGPIPE (141) and the hook aborts
+# silently, turning a WARN check into an unexplained BLOCK.
+indent_head() {
+  local n="$1" i=0 line
+  while [ "$i" -lt "$n" ] && IFS= read -r line; do
+    printf '    %s\n' "$line"
+    i=$((i + 1))
+  done <<< "$2"
+}
+
 # ---------- Hook-Mode-Detection ----------
 #
 # This script handles BOTH pre-commit and commit-msg hook invocations:
@@ -164,7 +176,7 @@ if command -v gitleaks &>/dev/null; then
   set -e
   if [ "$GITLEAKS_RET" -ne 0 ]; then
     # gitleaks exit 1 means findings; any other non-zero is error
-    LEAKS_RENDERED=$(echo "$GITLEAKS_OUT" | head -10 | sed 's/^/    /')
+    LEAKS_RENDERED=$(indent_head 10 "$GITLEAKS_OUT")
     WARNINGS+=("SECRET-SCAN: gitleaks reported finding(s) in staged content:"$'\n'"${LEAKS_RENDERED}"$'\n'"    Review carefully before pushing. False positive? Add to .gitleaksignore.")
   fi
 else
@@ -220,7 +232,7 @@ if [ -f "$VALIDATOR" ]; then
       VAL_RC=$?
       set -e
       if [ "$VAL_RC" -ne 0 ]; then
-        EVIDENCE_WARNINGS+=("SOURCE-VERIFICATION ($VAL_RC fail across ${#FILTERED_FILES[@]} file(s)):"$'\n'"$(echo "$VAL_OUT" | head -20 | sed 's/^/    /')")
+        EVIDENCE_WARNINGS+=("SOURCE-VERIFICATION ($VAL_RC fail across ${#FILTERED_FILES[@]} file(s)):"$'\n'"$(indent_head 20 "$VAL_OUT")")
       fi
     fi
 
@@ -270,7 +282,7 @@ if [ -n "$STAGED_DOCS" ]; then
     done < <(grep -nE "(${PHANTOM_NAMES}).{0,40}(${LIVE_VERB})|(${LIVE_VERB}).{0,40}(${PHANTOM_NAMES})" "$f" 2>/dev/null)
   done <<< "$STAGED_DOCS"
   if [ ${#PHANTOM_HITS[@]} -gt 0 ]; then
-    RENDERED=$(printf '    %s\n' "${PHANTOM_HITS[@]}" | head -10)
+    RENDERED=$(indent_head 10 "$(printf '%s\n' "${PHANTOM_HITS[@]}")")
     WARNINGS+=("ANTI-PHANTOM: doc(s) state live enforcement for a purged hook-name. Reframe to an honest enforcement-class statement (see framework/enforcement-registry.md) or add a historical marker:"$'\n'"${RENDERED}")
   fi
 fi

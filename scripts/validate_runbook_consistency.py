@@ -149,6 +149,10 @@ def check_runbook(runbook_dir: Path) -> tuple[list[str], list[str]]:
         if not sname:
             warnings.append(f"[{name}] step '{sid}' has no 'name' field")
             continue
+        # Engine-internal bookkeeping steps (workflow_phase transitions) are
+        # not runbook prose; the engine owns them.
+        if "(engine-internal)" in sname:
+            continue
         keywords = extract_keywords(sname, n=2)
         if not keywords:
             continue
@@ -171,6 +175,11 @@ def check_runbook(runbook_dir: Path) -> tuple[list[str], list[str]]:
     md_phases = set()
     for m in re.finditer(r"^###\s+Phase:\s*(.+?)\s*$", md_text, re.MULTILINE):
         md_phases.add(m.group(1).strip().lower())
+    # Compact form: a "## Phase intent" section listing "- **Name** — ...".
+    pi = re.search(r"^##\s+Phase intent\b.*?$(.*?)(?=^##\s|\Z)", md_text, re.MULTILINE | re.DOTALL)
+    if pi:
+        for m in re.finditer(r"^-\s+\*\*([A-Za-z][\w-]*)\*\*\s+—", pi.group(1), re.MULTILINE):
+            md_phases.add(m.group(1).strip().lower())
     only_yaml = yaml_phases - md_phases
     only_md = md_phases - yaml_phases
     if only_yaml:

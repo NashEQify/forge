@@ -26,9 +26,10 @@ This reframing reconciles two principles:
 
 **Skip rule** (per spec 306 §4.6.a + workflow.yaml mechanical
 enforcement): chief consolidation is **required** when N ≥ 3
-reviewers (L2 board, spec-board standard / deep). For N ≤ 2
-(L1 board, light-path single verification-agent), Buddy reads
-reviewer outputs directly — chief overhead unjustified.
+reviewers (spec-board standard / deep). For N ≤ 2, Buddy reads
+reviewer outputs directly — chief overhead unjustified. The code
+board has its own threshold (`skills/code_review_board/SKILL.md` §1.3:
+chief from four reviewers).
 
 ## Chief role-constraint (consolidation-only)
 

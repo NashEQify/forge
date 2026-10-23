@@ -132,6 +132,8 @@ answers in consolidated: (1) "Weakest point in PASS — what tips it?"
 
 **Deep:** pass 1 (7) → chief → DISCOURSE → chief → SAVE; pass 2+
 (4) → chief → discourse → SAVE → fix → next; final (2) → Buddy direct.
+Every fix from pass 2 on is preceded by the §4 step 10
+Simplify-before-patch check.
 
 Chief consolidation: analysis-mode gate
 (`_protocols/analysis-mode-gate.md`) before findings classification.
@@ -176,7 +178,12 @@ findings in same consolidated.
    claims (`agents/buddy/operational.md` §Architecture-Comprehension B:
    re-execute unless independently re-executed; FALSIFIED → re-frame)
    → SAVE (NON-NEGOTIABLE).
-10. NEEDS-WORK: fix → next pass; CONVERGED: DONE.
+10. NEEDS-WORK: fix → next pass; CONVERGED: DONE. Before fix pass ≥ 2
+    (counted across the task's passes on the mechanism), record the
+    Simplify-before-patch check (`skills/convergence_loop/SKILL.md`
+    §Simplify-before-patch gate): a recurring class with a simpler
+    mechanism or a faulty spec clause → propose the spec simplification
+    or invariant to the caller instead of patching the next route.
 
 ## 4a. Cross-task AC validation
 
@@ -206,6 +213,29 @@ Unaddressed cross-task AC = NEEDS-WORK blocker. Defense-in-depth pair
 with `agents/buddy/operational.md` §Architecture-Comprehension B
 (post-return).
 
+## 4b. Derived-state invariant route enumeration (MUST before PASS)
+
+Trigger: the spec states an invariant of the form "X changes only via
+Y" (or "X is derived from Z", "never X except Y") over state derived
+from a log or store. Before PASS the consolidated lists **every
+operation that changes the derivation's inputs after the introducing
+record**, at least: withdraw / retraction; processing or meaning
+successor (replacement, revision); scope move; field edits of a
+replacement (quality / confidence / provenance fields); cross-principal
+acts (another actor touching the same inputs). Each row carries a guard
+(spec clause that enforces Y on that route) or a stated
+unreachability reason. A row with neither = NEEDS-WORK at HIGH.
+A spec gate that only checks what the introducing record carries misses
+every after-the-fact route; recurring route findings on one invariant
+go to the Simplify-before-patch gate (`skills/convergence_loop/SKILL.md`),
+which usually answers with a derived-state rule instead of more guards.
+
+**Fix values and rulings are cross-spec claims.** A reviewer-proposed
+validator / rule, or a Buddy ruling on a cross-task contract, is checked
+against every spec that produces or consumes the field (SPEC-MAP) and
+cites the contract-owner spec, before the spec edit — the citing
+(consuming) spec may have drifted from the owner.
+
 ## 5. Discourse
 
 Deep: ALWAYS after chief. Standard: Buddy decision (proportional).
@@ -218,6 +248,10 @@ Mechanic: `_protocols/discourse.md`.
 - [ ] Merge spot-check (up to 3 available MERGED findings — same root cause? No merges → not applicable).
 - [ ] Minority re-check (scan REMOVED + low-severity single-agent).
 - [ ] Piebald-budget check on skill / runbook / persona reviews.
+- [ ] §4b route table present when a derived-state invariant is in scope.
+- [ ] Downgraded scale / latency finding carries a measured bound at
+  the target scale, or a filed follow-up whose trigger a slope leg
+  (N vs 4N, `skills/testing/SKILL.md` §Oracle discipline) can fire.
 - [ ] All findings fixed (C+H+M+L).
 - [ ] Delta-Verify mini-board if §3a trigger fired — 0 new highs.
 - [ ] Task YAML `board_result` + `readiness` updated.
@@ -240,6 +274,19 @@ Full schema, example, acceptance scenarios: REFERENCE.md
 
 Reviews: `docs/reviews/board/{spec-name}-{role}-pass{N}.md`
 Consolidated: `docs/reviews/board/{spec-name}-consolidated-pass{N}.md`
+(task-qualified `{spec-name}-consolidated-task{id}-pass{N}.md` when
+another task already owns the plain namespace). Pass files are history:
+never rewrite their pointers after a spec amendment.
+
+**Adoption verdict (the completion artifact):** at adoption (0C+0H)
+Buddy writes `docs/reviews/board/{task_id}-spec-verdict.md` (build, and
+review runs with a task); a task-less review run falls back to
+`docs/reviews/board/{spec-name}-verdict.md`. Frontmatter `schema_version: 1`
+(the gate refuses a verdict without it), `adopted_from:` (the consolidated pass
+file), `reviewed_revision:` (commit of the adopted spec) and an evidence
+block holding the verdict's pivotal pointers, re-checked against the
+adopted spec. The workflow `pointer_check` binds to this file only, so a
+legitimate later correction never invalidates review history.
 
 ## 7a. Review-mode variants
 

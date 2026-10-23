@@ -2,7 +2,7 @@ name: docs-rewrite
 description: "Rewrite reader-facing documentation reader-journey-first — structure follows the audience, not the system. Covers the architecture-doc site, the README, and positioning / intent surfaces; a from-scratch rewrite or an audience-driven re-frame."
 need_phrase: "rewrite reader-facing docs / README / positioning"
 trigger: ["docs-rewrite", "readme-rewrite", "positioning-rewrite"]
-derived_from: "WORKFLOW.md@2026-05-09"
+derived_from: "WORKFLOW.md@2026-10-23"
 
 steps:
   # ==========================================================================
@@ -40,27 +40,18 @@ steps:
     on_fail: block
 
   # ==========================================================================
-  # Phase: Audience
+  # Phase: Structure
   # ==========================================================================
 
   - id: audience-define
-    name: "Define the audience (reader-journey-first)"
+    name: "Define the audience and page plan (reader-journey-first)"
     category: content
     instruction: >
-      Who reads the docs? Which reader journey? Structure follows
-      audience, not the system shape.
-    completion:
-      type: manual
-    on_fail: block
-
-  # ==========================================================================
-  # Phase: Update
-  # ==========================================================================
-
-  - id: intent-update
-    name: "intent.md update (post-rewrite state)"
-    category: content
-    instruction: "Update intent.md to reflect the post-rewrite state."
+      Who reads the docs? One reader journey per persona; structure follows
+      audience, not the system shape. Page plan: per page title, file name,
+      core question, 3-5 content points from research, dependencies, plus
+      the stale-cleanup list. Gate: mapping table research point -> page
+      without gaps (WORKFLOW.md Phase: Structure).
     completion:
       type: manual
     on_fail: block
@@ -70,40 +61,72 @@ steps:
   # ==========================================================================
 
   - id: write-docs
-    name: "Write the architecture documentation"
+    name: "Write the documentation pages"
     category: content
     instruction: >
-      `architecture-documentation/` folder with README + N structured
-      files. Reader journey in the README. Source-grounded — every
-      technical claim has a file path.
+      One general-purpose writer per page (parallel where independent) into
+      the target docs location from the scope (e.g. architecture-documentation/).
+      Each page answers its core question; every technical claim is
+      source-grounded with a file path.
     completion:
       type: manual
     on_fail: block
 
   # ==========================================================================
-  # Phase: Verify
+  # Phase: Coherence
   # ==========================================================================
 
   - id: verify
-    name: "Verification"
+    name: "Coherence and source-grounding check"
     category: content
     instruction: >
-      Source-grounding check: are all claims about file paths traceable?
-      Is the reader journey clear? No invented features?
+      Buddy direct: uniform terms, transitions, no redundancy, tone; all
+      file-path claims traceable; no invented features (WORKFLOW.md Phase:
+      Coherence).
     completion:
       type: manual
     on_fail: block
 
-  - id: deploy
-    name: "Deploy (conditional)"
-    category: deterministic
+  # ==========================================================================
+  # Phase: Assemble
+  # ==========================================================================
+
+  - id: assemble
+    name: "Assemble index, navigation, links and stale cleanup"
+    category: content
     instruction: >
-      If a docs site exists: run `$FRAMEWORK_DIR/scripts/deploy-docs.sh`
-      (env required: DEPLOY_REMOTE + DEPLOY_REMOTE_PATH).
+      Update the index / README entry per journey, site nav when a site
+      config exists, cross-links; remove replaced pages and their live
+      references (invariant 5). Local link and anchor check passes.
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: intent-update
+    name: "intent.md update (post-rewrite state)"
+    category: content
+    instruction: "When positioning or intent surfaces are in scope: update intent.md to the post-rewrite state."
     required: false
     completion:
       type: manual
     on_fail: warn
+
+  # ==========================================================================
+  # Phase: Review
+  # ==========================================================================
+
+  - id: ux-review
+    name: "UX review (spec_board mode=ux)"
+    category: content
+    instruction: >
+      spec_board mode=ux with board-ux-heuristic, board-ux-ia,
+      board-ux-interaction on the page plan + 2-3 core pages + index.
+      Gate: 0 critical + 0 high; max 1 re-review.
+    skill_ref: skills/spec_board/SKILL.md
+    tier1_pointer_exempt: "UX consolidation is <date>-<slug>-keyed under docs/docs-rewrite/, not an engine variable"
+    completion:
+      type: manual
+    on_fail: block
 
   # ==========================================================================
   # Phase: Close
@@ -125,3 +148,14 @@ steps:
       type: manual
     commit_gate: true
     on_fail: block
+
+  - id: deploy
+    name: "Deploy (conditional)"
+    category: deterministic
+    instruction: >
+      Only when deployment was authorized and a docs site exists: run `$FRAMEWORK_DIR/scripts/deploy-docs.sh`
+      (env required: DEPLOY_REMOTE + DEPLOY_REMOTE_PATH).
+    required: false
+    completion:
+      type: manual
+    on_fail: warn

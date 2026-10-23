@@ -113,6 +113,12 @@ User + agent write together. Agent proposes; user decides.
    `bug_class | AC ref | levels | implementation`. One row per
    defect class; no duplicates. Phase 1 interview elicits the catalog.
 
+7. **Stored-data shape change:** when the spec changes a persisted
+   payload / event / record shape, record the migration-needed check
+   (`skills/deprecation_and_migration/SKILL.md` §Migration-needed check):
+   decode path named, and version bump, upcast or empty-store
+   precondition with its ending trigger.
+
 **Without 1-3 spec is not findable. Without 4 not reviewable. Without
 5 brief author re-derives surface. Without 6 test contract is implicit
 — post-build coverage gaps then spawn bundle-tasks.**

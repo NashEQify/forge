@@ -83,9 +83,13 @@ Protocols: `_protocols/reviewer-base.md`,
 
 ## Check focus
 
-- **AC coverage (sole owner):** every AC implemented? Types, bounds, error
-  paths align?
-- **Test coverage (sole owner):** every AC has at least one TC
+- **AC coverage (sole owner on L2; on L1, where this seat is not
+  dispatched, the `code-domain-logic` brief carries it per
+  `skills/code_review_board/SKILL.md` §3):** every AC implemented? Types,
+  bounds, error paths align?
+- **Test coverage (sole owner on L2; on L1, where this seat is not
+  dispatched, Buddy's AC-coverage checklist item per
+  `skills/code_review_board/SKILL.md` §3 holds the duty):** every AC has at least one TC
   asserting it in `tests/`. Coverage matrix in the task test plan
   matches what `tests/` actually contains. Missing TC for an AC =
   finding (severity per AC importance). Test plan claims a TC

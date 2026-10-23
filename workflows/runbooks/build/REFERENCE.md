@@ -32,6 +32,7 @@ artefacts: []
 ## Specify
 - Spec: {spec_path}
 - Board: {PASS|NEEDS-WORK} — {0C/0H or finding summary}
+- Simplify-before-patch: {n/a | one check block per fix pass >= 2, per convergence_loop}
 - Decisions: {interview/council key decisions}
 
 ## Prepare
@@ -44,7 +45,8 @@ artefacts: []
 - Scope deviations: {none | description}
 
 ## Verify
-- Code review: {PASS|FAIL} L{0|1|2} — {finding summary}
+- Code review: {PASS|FAIL} {light|L1|L2} — {finding summary}
+- Simplify-before-patch: {n/a | one check block per fix pass >= 2, per convergence_loop}
 - UX review: {PASS|skipped} — {findings or reason for skip}
 - Spec amendment: {no | yes, reason}
 - ADR check: {ADR-NNN written | skipped: <which-triple-condition-missing>}

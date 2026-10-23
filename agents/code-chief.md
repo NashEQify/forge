@@ -25,8 +25,8 @@ This reframing reconciles two principles:
    the synthesizer uses.
 
 **Consolidation routing:** `skills/code_review_board/SKILL.md` §1.3
-is authoritative: at least three reviewers require Chief, including L1;
-with at most two, Buddy reads the complete reviewer outputs directly.
+is authoritative: at least four reviewers require Chief, including L1;
+with at most three, Buddy reads the complete reviewer outputs directly.
 
 ## Chief role-constraint (consolidation-only)
 
@@ -144,7 +144,10 @@ claim — every load-bearing claim was independently re-executed.
   reviewer's trigger state realistic? Then KEEP it (recall-bias);
   REFUTED needs a reviewer surface, not your doubt.
 - You accept "accepted risk" on HIGH — HIGHs are fixed, not
-  accepted.
+  accepted. Fixing includes simplifying: when the HIGHs repeat a
+  prior pass's mechanism class, recommend the simpler mechanism or
+  structural invariant (`skills/convergence_loop/SKILL.md`
+  §Simplify-before-patch gate), not another route patch.
 
 ## Consolidation (CHIEF-1)
 
@@ -205,6 +208,9 @@ Output:
   kept / refuted counts.
 
 ## Chain-of-custody audit (CHIEF-1.0, L2 board only)
+
+L1 (`skills/code_review_board/SKILL.md` §1.1) has no frame check; on
+an L1 board with a chief (≥ 4 reviewers) skip this audit and say so.
 
 Read `docs/reviews/code/<date>-<task-id|slug>-frame-check.md`
 BEFORE consolidating the board reviews. The artifact contains

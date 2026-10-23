@@ -140,6 +140,22 @@ def _validate_completion(comp: dict[str, Any], step_id: str) -> list[str]:
                 f"step '{step_id}': pointer_check requires 'source_file' "
                 f"(Spec 299 §2.1)"
             )
+        # Optional: source_file_fallback (used when source_file stays
+        # unresolved) and min_schema_version (refuses legacy sources).
+        fallback = comp.get("source_file_fallback")
+        if fallback is not None and (not isinstance(fallback, str) or not fallback.strip()):
+            errors.append(
+                f"step '{step_id}': pointer_check 'source_file_fallback' must be "
+                f"a non-empty string"
+            )
+        min_sv = comp.get("min_schema_version")
+        if min_sv is not None and (
+            isinstance(min_sv, bool) or not isinstance(min_sv, int) or min_sv < 0
+        ):
+            errors.append(
+                f"step '{step_id}': pointer_check 'min_schema_version' must be "
+                f"a non-negative integer"
+            )
     # manual: no extra fields needed
     return errors
 

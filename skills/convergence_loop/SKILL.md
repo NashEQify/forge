@@ -116,6 +116,9 @@ proportionality triage.
 Scope narrowing (pass 2+) refers to the ANALYSIS scope of the next
 pass, not to the FIX scope.
 
+Before fix pass ≥ 2, the §Simplify-before-patch gate decides whether
+the fix patches routes or replaces the mechanism.
+
 ### Test scope between passes (NON-NEGOTIABLE)
 
 Between passes, MCA fixes findings (per `Fix scope` above). The
@@ -161,6 +164,73 @@ Never fold an unclassified net-new failure into a fix-pass.
 
 ESCALATE signals "this needs architect / human judgment, not more
 agent iteration".
+
+### Simplify-before-patch gate (before every fix pass ≥ 2, MUST)
+
+Applies to spec boards and code boards alike. Route-by-route fixing of
+one mechanism does not converge: each pass closes the reported route
+and the next pass finds a new route of the same class. Convergence
+comes when the mechanism is simplified or one structural invariant is
+stated. The orchestrator usually knows this when asked; this gate asks.
+
+**Counting.** Fix passes count across the task's whole review history
+of the mechanism: spec-board passes and code-board passes both count.
+A first code-board fix pass on a mechanism that already drew blocking
+findings in a spec pass is fix pass ≥ 2.
+
+**Record (before dispatching the fix pass).** In the build log / task
+state file (a spec-only review: the consolidated file), write:
+
+```
+### Simplify-before-patch check — before fix pass {N}
+- same_class: yes|no — {mechanism or guiding rule}; prior {ids} vs new {ids}
+- simpler_mechanism: yes|no — {named candidate + the finding ids it removes, or why none}
+- spec_is_problem: yes|no — {clause}
+- decision: patch | propose-simplification → {caller / PMO / user}
+```
+
+`same_class` compares the new blocking findings (C/H, BLOCKER/MAJOR)
+with those of every earlier pass on the same mechanism or guiding rule
+("never X", "X changes only via Y"), judged from the findings and the
+symbols / rules the previous fix diff touched. Prior ids are the
+evidence; a `no` names the different mechanism. Unsure counts as `yes`
+for `same_class` only. `simpler_mechanism: yes` requires a named
+candidate (mechanism or invariant) and the finding ids it removes;
+`spec_is_problem: yes` requires the clause. Without them the answer is
+`no`, and the `same_class: yes` row below still forces the invariant +
+property generator. For a derived-state invariant, findings on different
+rows of the `skills/spec_board/SKILL.md` §4b route table are the same
+class.
+
+**Decision rule.**
+
+| Answers | Decision |
+|---|---|
+| `same_class: yes` AND (`simpler_mechanism: yes` OR `spec_is_problem: yes`) | **Stop route patching.** Propose the simplification to the caller (PMO / user) unprompted: a spec amendment and/or one structural invariant whose checks assert effects, not classifications, plus a property generator covering the input shapes of every probe so far. This is a legitimate design fork, not permission-seeking. |
+| `same_class: yes`, both others `no` | Patch, but the fix pass MUST add the effect-asserting invariant + property generator above, and the record names why no simpler mechanism exists. |
+| `same_class: yes` in two consecutive checks | **Propose-simplification regardless** of the other answers: the invariant route already failed once. |
+| `same_class: no` | Patch normally. |
+
+The proposal carries one recommended simplification with its evidence
+(the recurring finding ids), not an option menu. A spec simplification
+runs through the existing amendment path (build workflow amendment
+threshold, spec-drift check). The proposal is a design-fork proposal,
+not permission-seeking; while it waits for an answer it counts as the
+ESCALATE of §Termination for the re-review limit, which counts the
+simplified fix pass like any other. When the caller is the user (no
+PMO session in between), the council-before-user rule of
+`agents/buddy/operational.md` applies first: a light council shapes the
+recommendation when its §1.0 gate fires.
+
+A spec stays changeable while no real data (persisted, non-test) or
+shipped consumer depends on it; a locked status alone is no reason to
+keep patching.
+
+**Two rules read with this gate.** "HIGHs are fixed, not accepted"
+stays: a simplification that removes the class fixes every HIGH of the
+class (each is then closed by re-running its reproduction). Running a
+delegated build to done means finishing the task, not the current
+design.
 
 ## State format between passes
 

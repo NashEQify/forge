@@ -53,9 +53,13 @@ steps:
       evidence per shared Invariant 1; complete inline reports are persisted
       verbatim before downstream consumption.
       Output paths:
-      - spec_board               → docs/reviews/board/{spec_name}-consolidated-pass1.md
+      - spec_board               → docs/reviews/board/{spec_name}-consolidated-pass{N}.md
       - sectional_deep_review    → docs/reviews/sectional/{spec_name}-deep.md
       - architecture_coherence_review → docs/reviews/architecture/{spec_name}-coherence.md
+      At adoption Buddy writes docs/reviews/board/{task_id}-spec-verdict.md
+      (task-less run: docs/reviews/board/{spec_name}-verdict.md; spec_board
+      §7 adoption verdict, schema_version: 1) for whichever skill ran;
+      completion binds to it, not to a historical pass file.
     skill_ref: skills/spec_board/SKILL.md
     # This step dispatches the routed skill; the pointer_check completion below
     # backs whichever runs. alternative_skill_refs declares the other Tier-1
@@ -67,7 +71,9 @@ steps:
       type: compound
       checks:
         - type: pointer_check
-          source_file: "docs/reviews/board/{spec_name}-consolidated-pass1.md"
+          source_file: "docs/reviews/board/{task_id}-spec-verdict.md"
+          source_file_fallback: "docs/reviews/board/{spec_name}-verdict.md"
+          min_schema_version: 1
         - type: manual
     on_fail: block
 

@@ -47,7 +47,13 @@ Buddy-uncertain) AND the next decision step would be asking the user,
 dispatch council first (default light mode is enough for most cases).
 The framework's autonomy bound is: *Buddy runs through workflows +
 skills + boards + council semi-autonomously; user-escalation is the
-exception, not the default*.
+exception, not the default*. Running a delegated build to done means
+finishing the task, not the current design: before fix pass ≥ 2 the
+Simplify-before-patch check (`skills/convergence_loop/SKILL.md`) runs,
+and proposing a simpler mechanism to the caller is a design-fork
+proposal, not permission-seeking (while it waits it counts as ESCALATE
+for the re-review limit; when the caller is the user, council-first
+below applies).
 
 Escalate to user only when:
 (a) council itself produces DISSENT that Buddy cannot adjudicate from
@@ -107,7 +113,8 @@ Chief consolidation, and Buddy's decision/claim verification are distinct.
   + pre-council frame check (plan-adversary on briefing draft) +
   post-council §Architecture-Comprehension B re-apply (unconditional).
 - **Code-Review-Board** (code diff): `skills/code_review_board/SKILL.md`
-  (L1 focused / L2 full board / fix-pass single-reviewer pass-1.5).
+  (light / L1 default / L2 on named triggers; fix-pass re-verify per its
+  §4 table).
   **A load-bearing code change MUST get a board before it is trusted —
   keyed on the change, not the author.** Whether the code came back from
   MCA (`status=done`) OR Buddy wrote it directly on the orchestrator path,
@@ -354,7 +361,9 @@ judgment across five axes, not a numeric threshold:
   take Buddy out of the role.
 - **safety-floor** — no security / auth / schema / public-API /
   secrets / data migration / live infrastructure / full-path touch
-  (Inv 9: safety floors precede any shortcut and require L2 review).
+  (Inv 9: safety floors precede any shortcut and rule out the light
+  review; which floors need L2 is named in
+  `skills/code_review_board/SKILL.md` §1.1, the rest run L1 + lens).
 
 Intent of the judgment: cut the cost when context-transfer would
 cost more than it conveys; preserve MCA's specialization where it

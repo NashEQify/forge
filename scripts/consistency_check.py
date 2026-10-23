@@ -158,6 +158,16 @@ def _step_skill_ref_matches(step: dict, skill_dir_name: str) -> bool:
     return False
 
 
+def _step_tier1_exempt(step: dict) -> bool:
+    """True when the step declares `tier1_pointer_exempt: <reason>`: its
+    artifact has no engine-resolvable path (e.g. a <date>-<topic> council
+    output, a conditional spec patch), so a pointer_check would create a
+    stale-pointer class. The reason must be a non-empty string; a bare
+    `true` does not count."""
+    reason = step.get("tier1_pointer_exempt")
+    return isinstance(reason, str) and bool(reason.strip())
+
+
 def check_tier1_drift(
     skills_roots: list[Path] | None = None,
     workflows_root: Path | None = None,
@@ -191,7 +201,7 @@ def check_tier1_drift(
         for _wf_path, _wf_data, step in steps:
             if _step_skill_ref_matches(step, skill_name):
                 any_ref = True
-                if _step_has_pointer_check(step):
+                if _step_has_pointer_check(step) or _step_tier1_exempt(step):
                     protected = True
                     break
                 if _step_has_top_level_pointer_check(step):
@@ -247,7 +257,7 @@ def check_tier1_multi_workflow_drift(
             if _step_skill_ref_matches(step, skill_name):
                 d = per_wf.setdefault(wf_path, {"any": False, "protected": False})
                 d["any"] = True
-                if _step_has_pointer_check(step):
+                if _step_has_pointer_check(step) or _step_tier1_exempt(step):
                     d["protected"] = True
         for wf_path, d in per_wf.items():
             if d["any"] and not d["protected"]:

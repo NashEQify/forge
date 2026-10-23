@@ -806,6 +806,39 @@ def _detect_evidence_layout_now(
     return "per_finding"
 
 
+def _unresolved_outside(value: Any, available: set[str] | frozenset[str] = frozenset()) -> list[str]:
+    """Unresolved `{var}` names in a string value, minus prior producer outputs."""
+    if not isinstance(value, str):
+        return []
+    return [name for name in _has_unresolved_vars(value) if name not in available]
+
+
+def _pointer_source_field(
+    comp: dict[str, Any], available: set[str] | frozenset[str] = frozenset(),
+) -> str:
+    """Which field a pointer_check reads its path from (L1, review 2026-10-23).
+
+    `source_file` is primary. When it still carries unresolved variables after
+    resolution (e.g. `{task_id}` unset because the workflow was started without
+    `--task`) and `source_file_fallback` resolves fully, the fallback is used.
+    In every other case the primary stays selected, so a fully unresolved pair
+    keeps the clean unresolved-variable block on `source_file`.
+    """
+    if comp.get("type") != "pointer_check":
+        return "source_file"
+    primary = comp.get("source_file")
+    fallback = comp.get("source_file_fallback")
+    if (
+        isinstance(primary, str)
+        and _unresolved_outside(primary, available)
+        and isinstance(fallback, str)
+        and fallback
+        and not _unresolved_outside(fallback, available)
+    ):
+        return "source_file_fallback"
+    return "source_file"
+
+
 def _check_pointer(
     comp: dict[str, Any], state: dict[str, Any], step_state: dict[str, Any],
 ) -> tuple[bool, str]:
@@ -819,10 +852,18 @@ def _check_pointer(
        - pro Pointer Mechanik (existence + grep -F + range etc.)
     4. Exit 0 passes, exit 1 is a valid negative, other exits raise evaluation errors.
     5. An unavailable validator is an evaluation error, never manual success.
+    6. Optional `source_file_fallback` replaces an unresolved `source_file`
+       (see `_pointer_source_field`); the repo-boundary check applies to
+       whichever path is used.
+    7. Optional `min_schema_version` (int): a source whose schema_version is
+       missing, 0 or below the minimum is a valid negative instead of the
+       legacy skip.
     """
-    source_file = comp.get("source_file")
+    source_field = _pointer_source_field(comp)
+    source_file = comp.get(source_field)
     if not source_file:
         return False, "pointer_check: 'source_file' required"
+    min_sv = comp.get("min_schema_version")
 
     # Resolve relativ zu PROJECT_ROOT
     abs_source = (PROJECT_ROOT / str(source_file)).resolve()
@@ -862,6 +903,13 @@ def _check_pointer(
         sv = get_schema_version(str(abs_source))
     except Exception as exc:  # noqa: BLE001
         raise CompletionEvaluationError(f"pointer_check schema evaluation error: {exc}") from exc
+
+    if min_sv is not None and (sv is None or sv < min_sv):
+        got = "missing" if sv is None else str(sv)
+        return False, (
+            f"pointer_check fail: schema_version >= {min_sv} required, "
+            f"got {got} ({source_file})"
+        )
 
     try:
         exit_code, messages = validate_file(
@@ -906,13 +954,11 @@ def _validate_completion_inputs(
 ) -> set[str]:
     """Validate external inputs up front; defer only prior producer outputs."""
     available = set(available_outputs or ())
-    for field in ("path", "command", "pattern", "source_file"):
+    source_field = _pointer_source_field(comp, available)
+    for field in ("path", "command", "pattern", source_field):
         val = comp.get(field)
         for item in val if isinstance(val, list) else [val]:
-            unresolved = (
-                [name for name in _has_unresolved_vars(item) if name not in available]
-                if isinstance(item, str) else []
-            )
+            unresolved = _unresolved_outside(item, available)
             if unresolved:
                 raise CompletionEvaluationError(
                     f"unresolved variable(s) {{{', '.join(unresolved)}}} "
@@ -921,6 +967,15 @@ def _validate_completion_inputs(
     ctype = comp.get("type", "manual")
     if ctype not in VALID_COMPLETION_TYPES:
         raise CompletionEvaluationError(f"unknown completion type: {ctype}")
+    if ctype == "pointer_check":
+        min_sv = comp.get("min_schema_version")
+        if min_sv is not None and (
+            isinstance(min_sv, bool) or not isinstance(min_sv, int) or min_sv < 0
+        ):
+            raise CompletionEvaluationError(
+                f"pointer_check min_schema_version must be a non-negative integer "
+                f"(value: {min_sv!r})"
+            )
     if ctype == "compound":
         checks = comp.get("checks")
         if not isinstance(checks, list) or not checks:

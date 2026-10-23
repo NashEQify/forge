@@ -182,6 +182,7 @@ steps:
       Yes → spec patch in the SAME block-commit. No spec-defined behaviour
       touched: skip with one-line rationale.
     skill_ref: skills/spec_amendment_verification/SKILL.md
+    tier1_pointer_exempt: "conditional spec patch inside the fix block-commit; no standalone artifact path"
     required: false
     completion:
       type: manual

@@ -60,6 +60,19 @@ all → `blocked_by: []`.
 
 Trigger questions + worked example: `REFERENCE.md`.
 
+**(c) Split-gap check (MUST when this task comes from a split).** When
+a capability is split and the gate / proof / validation half moves to a
+sibling task, the other half ships an ungated surface. In the SAME
+change as the split:
+- add the gate sibling to `blocked_by` of **every** producer and
+  consumer task of the ungated half (not only of the ungated task
+  itself) — list them from the spec's producer / consumer surface;
+- give the ungated half an AC that it **fails closed** at its edge
+  (rejects or downgrades the privileged value) until the gate sibling
+  lands.
+The same applies when a council or verdict rules a split: the ruling
+names the gate half, its producers / consumers and the fail-closed edge.
+
 **Lifecycle symmetry:** this step **builds** the `blocked_by`
 graph; closure on terminal status (replace on superseded/absorbed,
 remove on wontfix, keep on done) is `task_status_update` Step 4.

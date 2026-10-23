@@ -26,9 +26,11 @@ Buddy checklist. Detail: REFERENCE.md. Protocols:
 ### 1.0 Proportionality gate (MANDATORY — runs before table)
 
 Safety floors are evaluated first: security/auth/secrets, schema/data
-migration, public or cross-component contract changes and live infrastructure
-require L2 with the relevant specialists. No count or majority can cancel a
-safety floor. Include the actual authorization and impact, not merely LOC.
+migration, public or cross-component contract changes and live
+infrastructure exclude `light`. No count or majority can cancel a safety
+floor. Include the actual authorization and impact, not merely LOC.
+Which floor needs the full board is named in §1.1 (L2 triggers); the
+other floor surfaces run L1 with the matching trigger lens (§3).
 
 Below those floors, ALL DIRECT criteria in `framework/process-map.md` plus
 an executed regression/behavior check allow `light` (single independent
@@ -39,40 +41,50 @@ certainty. Pure typo/format-only changes need a diff check, not this board.
 ### 1.1 Level-choice table
 
 ```
-light:   all DIRECT criteria + executed relevant tests, no safety-floor
-         surface → single code-verification.
-L1:      above light AND ≤5 files AND no new module AND no schema
-         change AND effort S-M → 2-3 reviewers; consolidation per §1.3.
-L2:      >5 files OR new exported behavior (new public API, state vocab,
-         error taxonomy) OR contract-cross-spec OR schema OR L-XL
-         → 5-7 reviewers + chief.
-         Shape-preserving extraction (brief: shape-preserving=true
-         AND existing tests cover) → L1.
-Unclear: L2 UNLESS §1.0 fired light.
+light:   all DIRECT criteria + executed relevant tests (red→green), no
+         safety-floor surface → single code-verification. Also the
+         re-verify after a fix pass (re-runs the reproductions; plus a
+         scoped code-adversary unless the fix is line-local, §4).
+L1:      above light, no L2 trigger → core team + Buddy checklist +
+         trigger lenses (§3); consolidation per §1.3. DEFAULT for
+         bounded engine / contract builds — file count, new module, new
+         state vocabulary, error taxonomy, internal cross-component
+         contract or effort alone do NOT escalate.
+L2:      only on a named trigger: new public API or wire (external
+         consumer or cross-process: REST / SSE / CLI / event / published
+         package); security / auth / secrets / consent / crypto; real
+         migration doubt (stored data must be read or rewritten under the
+         new shape, strict read-path decoders included); new subsystem
+         (§1.2); live infrastructure → full board + chief (§3, §4a).
+Unclear: whether an L2 trigger applies → resolve the fact; still
+         unclear → L2.
 ```
 
 ### 1.2 Counting + triggers
 
-- **Test files = 0.5×** toward file count.
-- **Spec amendments:** bookkeeping = no cross-spec trigger; contract
-  (new state-vocab, SSE type, public API, schema break, invariant) = trigger.
+- **Spec amendments:** bookkeeping = no trigger; public API / wire or a
+  schema break with real migration doubt = L2 trigger; new state-vocab,
+  invariant or internal contract = L1 (architect-roots is in its core).
 - **NEW MODULE vs NEW SUBSYSTEM:** file in existing dir = MODULE (L1);
   new top-level dir at subsystem depth = SUBSYSTEM (L2).
 - **`code-architect-roots` REQUIRED on L2** when `effort: L|XL OR
   pattern-replacement OR LD-count ≥ 6` AND change introduces new
   exported contract or replicable-downstream pattern. Shape-preserving
-  extractions: idle (see `agents/code-architect-roots.md`).
-- **Optional L1+:** L1 + 1 risk-specialist when one risk-class dominates.
+  extractions: idle on L2 (see `agents/code-architect-roots.md`). On L1
+  it is core and always dispatched; on shape-preserving work its focus
+  narrows to the diff's own contracts.
 
 Detail (incl. post-MCA-return trigger consequence): REFERENCE.md.
 
 ### 1.3 Consolidation
 
-With at most two reviewers, Buddy reads the complete reports directly.
-With three or more reviewers, a Chief consolidates their persisted returns,
-including when an L1 review has three reviewers. Buddy owns the verdict and
-verifies pivotal claims in either case. Reviewer count controls consolidation
-overhead, never safety-floor selection or evidence requirements.
+With at most three reviewers (L1 core alone), Buddy reads the complete
+reports directly and consolidates: keep/refute triage per §5, reports
+persisted verbatim before reading, verdict at the §7 path. With four or
+more reviewers (L1 plus trigger lenses, every L2), a Chief consolidates
+their persisted returns. Buddy owns the verdict and verifies pivotal
+claims in either case. Reviewer count controls consolidation overhead,
+never safety-floor selection or evidence requirements.
 
 ## 2. Review brief (MUST before dispatch)
 
@@ -110,28 +122,60 @@ overhead, never safety-floor selection or evidence requirements.
      cases under `--collect-only`) asserts coverage it does not provide.
    Design-side mandate: `skills/testing/SKILL.md`
    §Execution-faithfulness.
-5. **TEAM COMPOSITION** — risk → agents + focus points.
+5. **TEAM COMPOSITION** — risk → agents + focus points. Includes the
+   **L2-trigger table**: five rows (public API / wire; security / auth /
+   secrets; real migration doubt; new subsystem; live infrastructure),
+   each `yes | no` with an evidence pointer (file:line, grep or spec
+   clause). Copy it into the verdict. A missing row counts as `yes`.
 
 ## 3. Team composition
 
-**Core (L1 + L2):** `code-review` + `code-adversary`.
+**L1 core:** `code-adversary` + `code-domain-logic` +
+`code-architect-roots`, one parallel cold-start dispatch (brief per §2,
+cold-start rules per §4a; no separate frame check). **With a spec_ref**
+the `code-domain-logic` brief names two extra focus points that
+`code-spec-fit` covers on L2: AC conformance (every AC implemented;
+types, bounds and error paths match the spec) and test vacuity (does
+the guarding test of each HIGH-risk AC go red on a one-line mutant of
+the guarded branch; record the mutant).
 
-**L2 specialists (from risk assessment):**
+**L1 trigger lenses** (join only on the named trigger, logged in the
+dispatch header):
+
+| Lens | Trigger |
+|---|---|
+| `code-review` | the diff touches a hot path, or a path with a latency / throughput AC, that has no measurable perf-budget test |
+| `code-data` | stored shape changes: it settles the migration-needed check (`skills/deprecation_and_migration/SKILL.md`); if its return leaves doubt, re-level to L2 |
+| `code-reliability` | async / lock / worker / event-loop paths |
+| `code-api-contract` | new exported interface consumed by other in-repo components (external API / wire → L2) |
+| `code-security` | any auth / input / secrets touch found after level choice → re-level to L2 |
+
+**L1 Buddy checklist (replaces `code-spec-fit` on L1; written into the
+verdict):** (1) hand-offs — every cross-task / producer→consumer seam
+the ACs name is wired or owned by a named task; (2) spec drift — does
+the diff change spec-defined behavior (→ spec-drift-check gate);
+(3) AC coverage — each AC maps to a green test, with the §2 step 4
+faithfulness rules; a latency AC on a growing log or store has its N
+and 4N slope leg (`skills/testing/SKILL.md` §Oracle discipline). On L1
+this item owns test coverage; conformance and test vacuity sit with
+`code-domain-logic` (above).
+
+**L2 (full board):** L1 core + `code-review` + risk specialists from
+the table below, 5-7 reviewers + chief; `code-spec-fit` when a spec_ref
+exists.
 
 | Risk area | Agent |
 |---|---|
 | Auth / input / secrets | code-security |
-| State machine / business logic | code-domain-logic |
+| State machine / business logic | code-domain-logic (core) |
 | Infra / worker / NATS / DB | code-reliability |
 | Schema / queries / migrations | code-data |
 | API contracts (REST / SSE) | code-api-contract |
 | LLM / prompt / token budget | code-ai-llm |
 | Code docs + spec readability | code-docs-consumer |
-| Pattern-purity / structural roots | **code-architect-roots** (REQUIRED on §1.2 trigger) |
-| Spec exists (spec_ref) | code-spec-fit (conditional; **sole test-coverage owner**) |
+| Pattern-purity / structural roots | code-architect-roots (core) |
+| Spec exists (spec_ref) | code-spec-fit (conditional; **sole test-coverage owner on L2**) |
 | Retroactive spec drift | code-spec-drift (conditional) |
-
-L2 minimum: core + 2. Maximum: core + all.
 
 **Specialist names MUST resolve to real `agents/code-*.md`.**
 Hallucinated labels (`code-async`, `code-concurrency`) fall through
@@ -143,7 +187,7 @@ non-matching name, substitute by risk-area from the §3 table above
 ## 4. Buddy checklist
 
 1. Write brief (5 steps).
-2. Decide level.
+2. Decide level (§1) and, on L1, the trigger lenses (§3).
 3. Check L0 from MCA return (ruff 0, mypy 0).
 4. Assemble prompts: `reviewer-base` + `code-reviewer-protocol` +
    `reviewer-reasoning-trace` + `first-principles-check` + persona;
@@ -153,19 +197,23 @@ non-matching name, substitute by risk-area from the §3 table above
    chief verdict, NO lens framing as autonomous authority, NO
    brief-author rationale.
 5. Dispatch.
-   - **L1:** parallel, context-isolated.
+   - **L1:** core + trigger lenses, parallel, context-isolated,
+     cold-start. Buddy works the §3 L1 checklist alongside.
    - **L2:** pre-board frame check + board dispatch per §4a — Buddy
-     runs adversary (+ architect-roots when §1.2 trigger) cold-start
+     runs adversary + architect-roots cold-start
      first, persists their returns verbatim as the frame-check
      artifact (`docs/reviews/code/<date>-<task-id|slug>-frame-check.md`,
      slug fallback when no task), distills the substantive findings
      (severity-preserving) into the board brief as scope/context
-     content, then dispatches the board (code-review + risk
-     specialists) parallel cold-start.
-6. **L1:** Apply §1.3 to the actual reviewer count. Buddy owns the verdict
-   and verifies pivotal source claims; inspect individual findings when
-   needed, without routinely redoing the reviews.
-7. **L2:** Chief consolidates (F-C-DRILL-MISSING / F-C-TRACE-MISSING
+     content, then dispatches the board (code-review + domain-logic +
+     risk specialists) parallel cold-start.
+6. **L1:** Apply §1.3 to the actual reviewer count (≤ 3: Buddy
+   consolidates, no chief). Buddy owns the verdict and verifies pivotal
+   source claims; inspect individual findings when needed, without
+   routinely redoing the reviews. Write the checklist result into the
+   verdict.
+7. **L2** (and L1 with ≥ 4 reviewers, without the frame-check audit):
+   Chief consolidates (F-C-DRILL-MISSING / F-C-TRACE-MISSING
    enforced; chain-of-custody audit per `agents/code-chief.md`
    §CHIEF-1.0 — chief reads frame-check artifact and audits board
    coverage of its substantive concerns; pre-consolidation gates
@@ -175,8 +223,37 @@ non-matching name, substitute by risk-area from the §3 table above
 8. SAVE.
 
 **Fix-pass dispatch (post-FAIL):** scope-focused tests + L0 on touched
-files only, full-suite once at convergence-end, single-reviewer-per-cluster
-re-review. Detail: REFERENCE.md.
+files only, full-suite once at convergence-end. **Re-verify** — three
+cases, decided from the fix diff:
+
+| Fix diff | Re-verify |
+|---|---|
+| **Line-local:** touches only the finding's lines AND adds no guard, branch or rule to a mechanism that drew a HIGH | **light:** one `code-verification` re-runs every fix-now reproduction (red→green) |
+| **Otherwise** (new guard / branch / rule on a HIGH mechanism, or edits beyond the finding's lines, or oracle hunks present) | **light + scoped `code-adversary`:** cold-start on the fix diff with the mandate "find a new route of the same class against the fix"; two-phase per §5a |
+| **Mechanism replaced** by the Simplify-before-patch gate | `code-adversary` + `code-domain-logic` on the new mechanism (`code-architect-roots` only if structure changed beyond it), two-phase per §5a |
+
+No chief in any case. Reproductions alone prove only that the reported
+routes are closed; the scoped adversary is the channel that finds a new
+route of the same class, which is the evidence the Simplify-before-patch
+gate needs. Detail: REFERENCE.md.
+
+**Oracle edits on a fix pass (MUST):** a change to a differential
+oracle (reference implementation, golden, property) goes in a separate
+hunk citing the ruling it implements and is reviewed by the scoped
+`code-adversary` of the re-verify (oracle hunks always select that case),
+never only by the implementer
+(`skills/testing/SKILL.md` §Oracle discipline). Ruling-driven fix values
+and validators cite the contract-owner spec and are checked against
+every spec that produces or consumes the field
+(`skills/spec_board/SKILL.md` §4b).
+
+**Simplify-before-patch gate (MUST before fix pass ≥ 2, counted across
+the task's spec and code passes on the mechanism):** record the check
+per `skills/convergence_loop/SKILL.md` §Simplify-before-patch gate in
+the build log before briefing the fix. Same class + simpler mechanism or
+spec at fault → propose the simplification to the caller instead of
+patching routes. A simplification that removes the class counts as
+fixing its HIGHs.
 
 **Disposition-respect + guarantee-carrier rigor on the fix-pass (MUST).**
 Two guards, the first unconditional:
@@ -265,8 +342,8 @@ receive the enriched brief and do normal persona Check focus on it — no
 do NOT read the frame-check artifact (chief-audit surface, not reviewer
 input).
 
-**Board dispatch** (parallel, cold-start): code-review + risk
-specialists per team composition.
+**Board dispatch** (parallel, cold-start): code-review + domain-logic
++ risk specialists per team composition.
 
 **Code-quote mandate (all reviewers):** every finding AND every
 "verified X" non-finding carries ≥1 verbatim `file:line` quote
@@ -362,7 +439,8 @@ provenance when merging duplicate evidence. Agreement can strengthen
 confidence; reviewer count alone changes neither severity nor disposition.
 Apply the same impact criteria to solo and convergent findings.
 
-**Test-coverage findings = `code-spec-fit` sole owner.** Coverage
+**Test-coverage findings = `code-spec-fit` sole owner on L2** (L1:
+the §3 checklist's AC-coverage item). Coverage
 findings name (a) concrete failure-mode missing tests catch, (b) why
 existing test surface (integration, indirect, contract-pinning)
 doesn't catch it, (c) smallest test set that closes gap. "Coverage at
@@ -372,11 +450,19 @@ integration level" = valid `accept`.
 = closed); self-introduced narrower than original → `accept`; Buddy
 MUST NOT offer paths A/B/C.
 
-**Re-review:** max 2 → ESCALATE. Default single-reviewer pass-1.5
-(scope = `affected_scope`). Bundled (>5 clusters/files) or pass-2+
-→ §5a two-phase. Full table: REFERENCE.md.
+**Re-review:** max 2 → ESCALATE. Default = the §4 re-verify table
+(light for line-local fixes, light + scoped adversary otherwise).
+Findings without a reproduction: single-reviewer
+pass-1.5 (scope = `affected_scope`); bundled (>5 clusters/files),
+replaced mechanism or other multi-reviewer re-reviews → §5a two-phase.
+Full table: REFERENCE.md.
 
 ## 5a. Re-review two-phase (multi-reviewer re-reviews)
+
+The default re-review is the §4 re-verify table; its scoped adversary
+and replaced-mechanism cases use this section's two-phase. Before the fix pass that precedes a pass-2+ re-review,
+the §4 Simplify-before-patch gate runs; a recurring class is answered by
+a simpler mechanism or invariant, not by another route patch.
 
 Triggers: any re-review with >1 reviewer dispatched
 (multi-reviewer pass-1.5, bundled clusters, pass-2+). Warm-start
@@ -390,6 +476,11 @@ no two-phase. All three conditions required — single-reviewer alone
 is not enough (a bundled multi-cluster dispatch with one reviewer
 still inherits cross-cluster prior-frame contagion). The exception
 is scoped by reviewer count + cluster count + single-finding focus.
+Second exception: the reproduction re-run of the §4 re-verify (one
+`code-verification`) is mechanical red→green evidence per finding, so it
+needs no two-phase. The scoped adversary and the replaced-mechanism
+re-verify follow the two-phase, with every subsumed prior finding's
+reproduction re-run in the Phase-2 table.
 
 **Phase 1 — cold-derive (60-70%):** diff + scope + persona + spec
 (locked) + code paths. FORBIDDEN: prior board findings / brief
@@ -457,8 +548,10 @@ tracking table present, SAVE done.
 ## 10. Anti-patterns
 
 - **NOT** dispatch without brief. INSTEAD run 5 steps first.
-- **NOT** L1 on cross-package / schema / new-exported-behavior.
-  INSTEAD when unclear → L2.
+- **NOT** L1 on an L2 trigger (public API / wire, security, real
+  migration doubt, new subsystem, live infrastructure). INSTEAD when
+  unclear → L2. Equally **NOT** L2 on file count or new state vocabulary
+  alone — that is L1.
 - **NOT** route LOW to `new_task` or write cost-justification escape.
   INSTEAD `accept` or re-classify MEDIUM with named defect. Text
   justifications hallucinate; only mechanical rule enforces.

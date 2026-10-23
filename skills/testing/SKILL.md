@@ -130,6 +130,34 @@ design-time triggers:
   Captured-but-orphaned is an incomplete AC, not a deferred nicety. A
   present-but-inert net reads as coverage while guarding nothing.
 
+### Oracle discipline (test-design, MUST when an oracle exists)
+
+A differential test is only as independent as its oracle (reference
+implementation, golden, property, spec-bullet arms).
+
+- **Independence.** The implementing agent does not edit the oracle in
+  the same hunk as the implementation. Oracle edits go in a separate
+  diff hunk, each citing the ruling or spec clause it implements, and
+  are reviewed by someone other than the implementer (adversary or
+  verifier). An oracle that mirrors the code line for line, or is
+  written in the same change as its spec by the same author, hides the
+  gaps it shares with the code: write it from the spec bullets as
+  separate arms.
+- **RED skeletons against the reference.** Before the MCA dispatch, run
+  every record-level RED assertion against the in-repo reference oracle
+  (when one exists) and list each disagreement in the test plan. A
+  skeleton that contradicts the reference is fixed or the reference is
+  ruled wrong — before handoff, not during implementation.
+- **Single-owner decompositions.** When a plan-time lens merges two
+  copies of a rule into one contract owner, add an independent oracle
+  for that owner (spec-bullet arms or properties) and relabel the old
+  parity tests between the former copies as wiring tests: both sides
+  now share one implementation and can no longer disagree.
+- **Latency on a growing log or store.** A latency AC carries a
+  two-size slope leg: measure at N and 4N and assert the growth stays
+  within the stated complexity, not only the absolute budget at one
+  size. One size hides superlinear terms.
+
 ### L1 Logic / semantic + Iteration protocol
 
 L1 = simulation, completeness, consistency, DRY check, constraint
@@ -200,6 +228,11 @@ design first. Fields missing → warning.
 
 Spec-process integration: `Interview → Spec → Review → TEST
 DESIGN → PRE-IMPL EVAL → Decomposition → Delegation`.
+
+**Shared fixtures are collision surfaces.** Before each gate run, check
+`git status` on shared `tests/**` fixtures (`conftest.py`, fixture
+data). An uncommitted change from a parallel session is resolved before
+the round, not worked around in scratch copies.
 
 ## Boundary
 

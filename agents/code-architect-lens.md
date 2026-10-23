@@ -178,6 +178,15 @@ bug-class the in-process gate covers, and propose the once-at-HEAD
 form for the heavy gate. Brief-architect ingests this as a binding
 amendment to the brief's verification section.
 
+**Single-owner consequence (MUST when the recommendation merges
+copies):** when the recommendation merges two copies of a rule into
+one contract owner, the block also names (a) the independent oracle
+the build adds for that owner (spec-bullet arms or properties) and
+(b) the existing parity tests between the former copies, relabeled as
+wiring tests (`skills/testing/SKILL.md` §Oracle discipline). After the
+merge both sides share one implementation, so a parity test cannot
+fail on a wrong rule.
+
 If the recommendation is concrete enough to feed directly into
 the brief's plan (specific files / specific shape change), also
 emit a §Decomposition-Strand block — a sequenced edit-list the

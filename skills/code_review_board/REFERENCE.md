@@ -12,7 +12,7 @@ contract (proportionality gate + hard floors + level choice).
 3. PARALLEL agent reviews (context-isolated).
 4. CHIEF-1 consolidation — dedup, severity ranking,
    recall-biased keep/refute triage. Consolidation also applies to L1
-   with three reviewers; canonical routing: `SKILL.md` §1.3.
+   with four or more reviewers; canonical routing: `SKILL.md` §1.3.
 5. DISCOURSE (L2 only, optional).
 6. CHIEF-2 synthesis (L2 only) — confidence adjustment.
 7. VERDICT.
@@ -36,19 +36,19 @@ just because the happy path doesn't exercise it.
 
 | Agent | Focus | L1 | L2 |
 |-------|-------|----|-----|
-| code-review | Correctness + architecture + performance (3 axes) | ✓ | ✓ |
-| code-adversary | Smart-but-wrong, race conditions | ✓ | ✓ |
-| code-security | Auth, injection, validation | — | ✓ |
-| code-domain-logic | State machines, business rules | — | ✓ |
-| code-reliability | Observability, failure recovery | — | ✓ |
-| code-data | Schema, queries, migrations | — | ✓ |
-| code-api-contract | REST, schema pipeline, SSE | — | ✓ |
+| code-review | Correctness + architecture + performance (3 axes) | trigger: hot path / latency-AC path without perf-budget test | ✓ |
+| code-adversary | Smart-but-wrong, race conditions | ✓ core | ✓ |
+| code-security | Auth, injection, validation | — (security → L2) | ✓ |
+| code-domain-logic | State machines, business rules | ✓ core | ✓ |
+| code-reliability | Observability, failure recovery | trigger: async / lock paths | ✓ |
+| code-data | Schema, queries, migrations | trigger: stored-shape change (settles migration check; doubt → L2) | ✓ |
+| code-api-contract | REST, schema pipeline, SSE | trigger: new in-repo exported interface | ✓ |
 | code-ai-llm | Prompt, model, token budget | — | ✓ |
 | code-docs-consumer | Code docs + spec readability | — | ✓ |
-| code-chief | Consolidation, discourse synthesis | 3+ reviewers per §1.3 | ✓ |
-| code-spec-fit | Spec conformance + sole test-coverage owner | — | ✓ + spec_ref |
+| code-chief | Consolidation, discourse synthesis | 4+ reviewers per §1.3 | ✓ |
+| code-spec-fit | Spec conformance + sole test-coverage owner | — (Buddy checklist, `SKILL.md` §3) | ✓ + spec_ref |
 | code-spec-drift | Retroactive spec drift | — | ✓ + retroactive |
-| code-architect-roots | Pattern-purity (post-build) — gated trigger | — | ✓ + new-contract |
+| code-architect-roots | Pattern-purity (post-build) | ✓ core | ✓ (gated trigger, `SKILL.md` §1.2) |
 
 **Multi-axis persona:** code-quality + code-architecture +
 code-performance were absorbed into code-review as a 3-axis
@@ -66,17 +66,20 @@ The distinction is mechanical: a new file in an existing directory
 tree is NEW MODULE; a new top-level directory at the same depth as
 existing subsystems is NEW SUBSYSTEM.
 
-Aligned with WORKFLOW.md gate 8: L2 triggers on **new exported
-behavior** (new public API surface, new state machine, new schema),
-not on file-creation. Shape-preserving extractions stay at L1.
+L2 triggers are the five named in `SKILL.md` §1.1 (public API / wire,
+security, real migration doubt, new subsystem, live infrastructure).
+New state vocabulary, a new state machine or a schema change without
+migration doubt stay at L1, as do shape-preserving extractions.
 
-## Optional L1+ mid-tier
+## L1 trigger lenses (replaces the former L1+ mid-tier)
 
-L1 + 1 risk-specialist (drawn from L2 specialist set per the
-brief's risk-assessment top-1 entry) is a precision-escalation
-option below the safety floors when effort=S/M but a single risk-class
-dominates (e.g. bounded error handling → core + reliability).
-It never overrides `SKILL.md` §1.0; security-sensitive work still requires L2.
+L1 adds a specialist only on the named trigger in `SKILL.md` §3
+(hot path or latency / throughput-AC path without a perf-budget test
+→ code-review; stored-shape change → code-data, which settles the
+migration-needed check and re-levels to L2 on doubt; async / lock →
+code-reliability, new in-repo exported
+interface → code-api-contract). It never overrides `SKILL.md` §1.0;
+security-sensitive work still requires L2.
 
 ## Post-MCA-return trigger consequence
 
@@ -253,7 +256,8 @@ Default: **max 2 re-reviews → ESCALATE**. But:
   to settle — better 4 reviews than permanent architecture drift.
 - **Buddy decision per pass:** if severity does NOT drop from
   pass N to pass N+1 (e.g. the same convergence cluster shows up
-  again) → ESCALATE instead of continuing. The limit override
+  again) → run the Simplify-before-patch gate (`SKILL.md` §4) and
+  propose the simplification, or ESCALATE, instead of continuing. The limit override
   applies only on measurable progress.
 - **User-override pattern:** the user may say "re-review more than
   2x if needed — your call", which explicitly empowers Buddy without
@@ -263,14 +267,20 @@ Non-foundation tasks: max 2 re-reviews stays strict.
 
 ## Re-review composition (full table)
 
-Default re-review on FAIL = **single-reviewer pass-1.5**: the SAME
-reviewer that flagged the finding cluster reads the fix. Not full
-L1 / L2 redo.
+Default re-review on FAIL = the **re-verify table** (`SKILL.md` §4): one
+`code-verification` re-runs every fix-now reproduction, plus a scoped
+`code-adversary` unless the fix is line-local. A judgment
+finding without a runnable reproduction goes to single-reviewer
+pass-1.5: the SAME reviewer that flagged the cluster reads the fix.
+Not full L1 / L2 redo.
 
 | Re-review type | Composition | When |
 |----------------|-------------|------|
-| Fix verification (default) | Single reviewer per cluster, scope = the finding's `affected_scope` | After every MCA fix-pass on FAIL |
-| Bundled fix verification | Convergence-axis grouping — ~3 reviewers covering the systemic patterns in the bundle (correctness/architecture via `code-review`; concurrency/state-machine via `code-domain-logic` or `code-adversary`; cross-spec amendment fitness via `code-spec-fit` if relevant). Buddy may add a 4th for an axis the brief's risk-assessment names dominant (e.g. `code-security` on an auth-fix-pass). | Fix-pass with >5 clusters OR >5 files OR cross-spec amendments touched |
+| Light re-verify | One `code-verification` re-running every fix-now reproduction (red→green) | Line-local fix: only the finding's lines, no new guard / branch / rule on a mechanism that drew a HIGH, no oracle hunk |
+| Light + scoped adversary (default otherwise) | The light re-verify plus `code-adversary` cold-start on the fix diff, mandate "find a new route of the same class against the fix", two-phase | Any other fix pass (new guard / branch / rule on a HIGH mechanism, edits beyond the finding's lines, oracle hunks) |
+| Fix verification (no reproduction) | Single reviewer per cluster, scope = the finding's `affected_scope` | Judgment findings without a runnable reproduction |
+| Bundled fix verification | Convergence-axis grouping — ~3 reviewers covering the systemic patterns in the bundle (correctness/architecture via `code-review`; concurrency/state-machine via `code-domain-logic` or `code-adversary`; cross-spec amendment fitness via `code-spec-fit` if relevant). Buddy may add a 4th for an axis the brief's risk-assessment names dominant (e.g. `code-security` on an auth-fix-pass). | Judgment findings without reproductions in a fix-pass with >5 clusters OR >5 files OR cross-spec amendments touched |
+| Replaced-mechanism re-verify | `code-adversary` + `code-domain-logic` two-phase on the new mechanism (`code-architect-roots` if structure changed beyond it), no chief | After a fix pass in which the Simplify-before-patch gate replaced a mechanism |
 | Fresh angle (exception) | Full board (L1 / L2 per the original level) | Only if pass-1.5 surfaces an architecture concern OR Buddy explicitly wants a fresh take |
 
 Rationale: the verdict file documents `file:line` per finding; the
@@ -306,8 +316,10 @@ class.
   INSTEAD run the preservation check (consolidation-preservation).
   Because: silent loss happens in the code board too.
 - **NOT** re-run the full L1 / L2 board for fix verification post-FAIL.
-  INSTEAD single-reviewer pass-1.5 of the finding cluster (Re-review
-  composition above). Because: 5 reviewers re-doing unaffected scope
+  INSTEAD the §4 re-verify table (reproductions re-run, plus a scoped
+  adversary unless line-local), or single-reviewer
+  pass-1.5 for a cluster without a reproduction (Re-review composition
+  above). Because: 5 reviewers re-doing unaffected scope
   = risk-theater + 2-3× wallclock / token cost without new signal.
 - **NOT** brief MCA with `pytest tests/` as DoD on fix-pass dispatch.
   INSTEAD scope-files explicit. Because: re-running untouched modules

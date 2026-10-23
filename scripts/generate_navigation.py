@@ -236,10 +236,13 @@ def render_auto_block(label: str, files: list[tuple[str, str]], dirs: list[tuple
     return "\n".join(lines)
 
 
-def update_navigation(target_path: Path, auto_content: str, scan_label: str) -> bool:
+def update_navigation(
+    target_path: Path, auto_content: str, scan_label: str, check: bool = False
+) -> bool:
     """Update navigation.md, preserving manual content outside AUTO-Block.
 
-    Returns True if file was modified.
+    Returns True if the file was (or, with check=True, would be) modified.
+    check=True never writes.
     """
     if target_path.exists():
         existing = target_path.read_text(encoding="utf-8")
@@ -270,13 +273,23 @@ def update_navigation(target_path: Path, auto_content: str, scan_label: str) -> 
         new_text = existing.rstrip() + f"\n\n## Inventar (auto)\n\n{AUTO_START}\n{auto_content}\n{AUTO_END}\n"
 
     if new_text != existing:
+        if check:
+            return True
         target_path.parent.mkdir(parents=True, exist_ok=True)
         target_path.write_text(new_text, encoding="utf-8")
         return True
     return False
 
 
-def main() -> int:
+def main(argv: Optional[list[str]] = None) -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Regenerate navigation.md AUTO blocks.")
+    parser.add_argument(
+        "--check", action="store_true",
+        help="read-only: report drift, exit 1 if any file would change",
+    )
+    args = parser.parse_args(argv)
     root = repo_root(Path.cwd())
     if yaml is None:
         print(
@@ -293,12 +306,16 @@ def main() -> int:
             continue
         files, dirs = scan_dir(scan_path, excludes)
         auto_content = render_auto_block(label, files, dirs)
-        if update_navigation(target_path, auto_content, label):
-            print(f"generate_navigation: wrote {target_path}")
+        if update_navigation(target_path, auto_content, label, check=args.check):
+            verb = "drift" if args.check else "wrote"
+            print(f"generate_navigation: {verb} {target_path}")
             changed += 1
         else:
             print(f"generate_navigation: unchanged {target_path}")
 
+    if changed and args.check:
+        print(f"\ngenerate_navigation: DRIFT in {changed} navigation.md file(s)")
+        return 1
     if changed:
         print(f"\ngenerate_navigation: updated {changed} navigation.md file(s)")
     else:

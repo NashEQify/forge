@@ -15,7 +15,8 @@ or a project handoff. Follow actual workspace ownership when CWD is an external
 artifact directory. Inspect Git status only where Git exists.
 
 Reconcile useful session/checkpoint deltas at their existing owners through KP.
-Triage an existing session buffer without dropping unresolved work. Framework-feedback
+Triage an existing session buffer without dropping unresolved work (step
+`dispatcher-final`, the inline dispatcher final run). Framework-feedback
 routing is optional only when an authorized framework contribution is actually in
 scope; generic save requires neither that repo nor its development files.
 
@@ -45,7 +46,8 @@ For separate repositories use separate authorized operations; no global transact
 History follows KP's meaningful trajectory/decision/obligation threshold, not session
 length or save frequency. Domain-mandated audit evidence remains effective through
 the selected contribution. Preserve immutable history and unique source meaning.
-Remove only buffer items actually reconciled. Verify all required routes and pending
+Remove only buffer items actually reconciled (step `buffer-cleanup`, the
+session-buffer cleanup). Verify all required routes and pending
 work before claiming complete. Keep useful open defer premises with their revisit
 condition in the handoff; no software task system is invented for this purpose.
 

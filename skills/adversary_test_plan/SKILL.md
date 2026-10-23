@@ -138,7 +138,13 @@ Non-included TCs are adversary private notes, not skill output.
 - v2 written to `docs/tasks/<id>.md` test-plan section (replaces v1
   with consolidations).
 - `test-skeleton-writer` consumes v2 + writes RED skeletons for ALL
-  TCs (tester + adversary).
+  TCs (tester + adversary) and reports reference-oracle disagreements;
+  Buddy rules each before the MCA dispatch.
+- **Oracle independence:** when the plan relies on a differential
+  oracle, the adversary checks it was written from the spec bullets,
+  not mirrored from code; later oracle edits follow
+  `skills/testing/SKILL.md` §Oracle discipline (separate hunk, cited
+  ruling, reviewed by a non-implementer).
 - `delegation-artefact` references v2 + RED skeleton path.
 - **Post-return check (Augenmaß verification):** ratio plausible,
   `patterns_chosen` with code-trigger rationale, `patterns_excluded`

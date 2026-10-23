@@ -123,7 +123,8 @@ mechanical and lives in the parent gate's `instruction:`:
 
 **Coverage rule (post-build):** reviewers verify the pre-build test plan was
 honored (every planned TC in `tests/` and green); they do NOT re-design
-coverage. Test-coverage findings are `code-spec-fit`'s sole lens; imagined
+coverage. Test-coverage findings are `code-spec-fit`'s sole lens on L2 (L1:
+Buddy's AC-coverage checklist item, `code_review_board` §3); imagined
 edge-case TCs without an AC or known bug-class are out-of-scope.
 
 ## Conditional evaluations the user actually faces

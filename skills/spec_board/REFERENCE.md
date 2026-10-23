@@ -20,7 +20,8 @@ the task state file, not into the agents' review files.
 ## 4 NON-NEGOTIABLEs
 
 1. **Convergence threshold:** 0C + 0H. HIGHs are never accepted
-   risk.
+   risk; a simplification that removes a recurring class fixes its
+   HIGHs (`skills/convergence_loop/SKILL.md` §Simplify-before-patch gate).
 2. **Fix scope:** synthesize fixes ALL findings (C+H+M+L), not
    just HIGHs.
 3. **Context isolation:** pass 2+ reviewers receive NO previous

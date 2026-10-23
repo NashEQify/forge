@@ -22,6 +22,7 @@ task_ref: NNN | null
 artefacts:
   - docs/specs/foo.md
   - docs/reviews/board/foo-consolidated-pass1.md
+  - docs/reviews/board/NNN-spec-verdict.md   # task-less run: foo-verdict.md
 ---
 ```
 

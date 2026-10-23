@@ -346,13 +346,12 @@ a target. Disk has navigation.md without a generator target →
 Re-running the generator must produce no diff.
 
 ```bash
-python3 scripts/generate_navigation.py >/dev/null
-git diff --name-only -- ':(glob)**/navigation.md'
+python3 scripts/generate_navigation.py --check
 ```
 
-When the list is non-empty → **ERROR**: "AUTO-block drift in
-<file>". Auto-repair hint: the generator already regenerated;
-just commit the diff.
+Exit 1 (the output names each drifted file) → **ERROR**: "AUTO-block
+drift in <file>". `--check` never writes. Auto-repair: run the
+generator without `--check` and commit the diff.
 
 **C) Manual-section-filled check:**
 The two manual sections (`## What lives here?` and `## Where

@@ -11,6 +11,12 @@ reviewer-heuristic-sets systematically miss when L2 produces
 substantial findings (5H+12M+10L) without naming structural
 roots. The reviewer-distribution itself is signal.
 
+**On L1 it is core and always dispatched**
+(`skills/code_review_board/SKILL.md` §3). On a shape-preserving
+refactor, bug fix or additive change, L1 dispatch narrows its focus to
+the diff's own contracts: no forward-looking findings about future
+extractions (the rationale below still holds).
+
 REQUIRED L2 specialist on (POST-BUILD) ONLY when the change
 **introduces a new exported contract** (new public API surface,
 new state vocabulary, new error taxonomy) OR **establishes a
@@ -18,7 +24,7 @@ replicable-downstream pattern** (first instance that other
 modules will mirror — e.g. the §2.A reference implementation
 that §2.B, §2.C will pattern-match against).
 
-**IDLE post-build (NOT dispatched)** on: shape-preserving refactor
+**IDLE post-build on L2 (NOT dispatched there)** on: shape-preserving refactor
 or extraction (existing pattern moved, no new contract);
 additive change within an established pattern; bug fix;
 test-only change; documentation change. Rationale: post-build

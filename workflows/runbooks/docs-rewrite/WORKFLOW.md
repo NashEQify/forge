@@ -100,8 +100,9 @@ Page-plan logic:
 - **Input:** per agent: page-plan entry + relevant
   research excerpt + persona context + writing
   guidelines + neighbour-page titles (for boundary).
-- **Output:** finished markdown page as a file in
-  `docs/architecture/framework/`.
+- **Output:** finished markdown page as a file in the
+  target docs location from the scope (e.g.
+  `architecture-documentation/`).
 - **Gate:** the page answers its core question. Length
   in the estimated range. No file listings as a goal in
   themselves.
@@ -145,20 +146,24 @@ Check points:
 - **Agent:** Buddy direct.
 - **Input:** all written pages + page plan +
   stale-cleanup plan.
-- **Output:** index.md (updated), mkdocs-framework.yml
-  nav (updated), cross-links, old pages removed /
-  replaced.
-- **Gate:** all pages in nav. `mkdocs build --strict`
-  PASS. Each journey has an entry on index.md.
-  Stale-cleanup complete (invariant 6).
+- **Output:** index / README entry (updated), site nav
+  (updated, when the project has a site config such as
+  `mkdocs.yml`), cross-links, old pages removed /
+  replaced; intent.md updated when positioning or intent
+  surfaces are in scope.
+- **Gate:** all pages reachable from the index / nav.
+  Local link + anchor check passes (`mkdocs build
+  --strict` where a site config exists). Each journey has
+  an entry on the index. Stale-cleanup complete
+  (invariant 5).
 - **Failure:** build error or missing links → fill in.
   Mechanical.
 - **Autonomy:** mechanical.
 
-Stale cleanup (invariant 6):
+Stale cleanup (invariant 5):
 1. Old pages marked "replaced" in the page plan →
    remove.
-2. mkdocs-framework.yml nav → remove old entries.
+2. Site nav (if any) → remove old entries.
 3. Cross-links in other files pointing to removed pages
    → update.
 4. `grep -rn` on removed file names in docs/ and
@@ -172,7 +177,7 @@ Stale cleanup (invariant 6):
   board-ux-interaction).
 - **Input:** page plan + 2–3 core pages + index.md.
   Context in the dispatch: "This is framework
-  documentation (markdown / mkdocs), not a UI spec.
+  documentation (markdown), not a UI spec.
   Check navigability, comprehensibility, information
   architecture for the defined personas."
 - **Output:** UX findings (navigation,
@@ -190,18 +195,19 @@ Stale cleanup (invariant 6):
 ### Phase: Close
 - **Agent:** Buddy direct.
 - **Input:** all pages, review result.
-- **Output:** deployed site.
-- **Gate:** `mkdocs build --strict` PASS + deploy +
-  visual check (or user request).
+- **Output:** committed docs; deployed site only when a
+  site exists and deployment is authorized.
+- **Gate:** link check (or `mkdocs build --strict` with a
+  site config) PASS; deploy + visual check only when
+  deploying.
 - **Failure:** build error → fix. Deploy error → fix.
   Mechanical.
 
 Steps:
 1. TASK-UPDATE — task_status_update if a task exists
    (BEFORE commit, so the YAML lands in the commit).
-2. BUILD-TEST —
-   `mkdocs build --strict -f mkdocs-framework.yml`
-   locally.
+2. BUILD-TEST — local link + anchor check, or
+   `mkdocs build --strict` when a site config exists.
 3. COMMIT-GUARD — the pre-commit hook (PLAN-VALIDATE,
    CG-CONV, SKILL-FM-VALIDATE BLOCK; SECRET-SCAN,
    SOURCE-VERIFICATION WARN).

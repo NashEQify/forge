@@ -31,6 +31,9 @@ Before any substantive work:
 - **Spec** (path in the call prompt) — for AC context.
 - **test-plan-format.md** (`framework/test-plan-format.md`) —
   schema reference.
+- **Reference oracle** (only when the test plan names one, e.g. a
+  `reference.py` or golden corpus) — to check skeleton oracles against
+  it (Flow step 8). It is test-side code, not the implementation.
 
 ## DO NOT read
 
@@ -96,12 +99,18 @@ Without a TC scope: every TC.
 7. Verify: ALL tests must FAIL (RED).
    When a test PASSes: the test is wrong (it tests
    triviality instead of behaviour).
+8. Reference-oracle check (when the plan names a reference oracle):
+   evaluate every record-level RED assertion's expected value against
+   the reference and list each disagreement. Do not silently align
+   either side; the parent rules which one is wrong before the MCA
+   dispatch (`skills/testing/SKILL.md` §Oracle discipline).
 
 ## Output (back to the parent)
 
 ```
 RED phase done.
 Tests: {N} written, {N} FAIL (RED).
+Reference-oracle disagreements: {none | n/a (no reference) | list TC → expected vs reference}
 Files:
   - tests/{spec_name}/test_{group1}.py
   - tests/{spec_name}/test_{group2}.py

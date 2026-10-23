@@ -86,6 +86,30 @@ What only this skill delivers:
 - Decision: maintain a legacy system or invest in
   migration?
 
+### Migration-needed check (MUST before any "no migration needed")
+
+Run whenever a change touches the shape of persisted data (a stored
+payload, event, row, document or file format) — including a spec or
+design decision that concludes "no migration needed". Judge the **read
+path**, not only the DDL:
+
+1. **Name the decode path.** Where is stored data read back, and is it
+   re-validated strictly (`extra=forbid`, closed literal / enum types,
+   required fields)? A JSON/JSONB column with no CHECK or index on the
+   field can still break every read through a strict decoder.
+2. **Classify the change.** Field removal, rename, literal / enum
+   narrowing or a newly required field against a strict decoder =
+   pre-change rows fail to decode.
+3. **Pick exactly one and write it into the decision:** a
+   `schema_version` bump with a decoder for the old version; an
+   upcast on read; or a stated **empty-store precondition** naming
+   the trigger that ends it (e.g. "first real append in production")
+   and the task or gate that must migrate before that trigger.
+
+"No migration: no column reads the field" without step 1 is not a
+valid conclusion. A real doubt here is an L2 trigger for the code
+board (`skills/code_review_board/SKILL.md` §1.1).
+
 ### Do not call for
 
 - Pure skill-as-mode consolidation (e.g. ux_review →
