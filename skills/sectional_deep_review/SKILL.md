@@ -15,6 +15,10 @@ disable-model-invocation: false
 uses: [spec_board, _protocols/context-isolation, _protocols/content-preservation, _protocols/dispatch-template, _protocols/evidence-pointer-schema]
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: sectional-deep-review
 
 Buddy checklist + operational detail for deep review of large
@@ -52,6 +56,29 @@ PHASE 3 — CONVERGENCE + DONE
    Deep.
 5. **Reference briefs:** per group: neighbour passages, code
    files, consumer expectations.
+
+## Mandatory consuming owner
+
+Before initiating a software review intended to satisfy a mandatory result,
+readiness or completion boundary, load `skills/_protocols/evidence-pointer-schema.md`
+§9. Resolve one exact owner and capture before dispatch. Declare code subject
+state/output exclusions before enumeration and check that they omit no required
+reviewed inputs. Use persisted-success capture stdout for producer metadata and
+pass each assigned slot, scope/focus and history neutrally. Preserve complete
+returns verbatim with actual actors, paths and raw-byte digests before consumption.
+A canonical verdict path is only a locator; retain prior payloads before replacing
+it. Buddy's explicit current decision selects the current reports of the final
+applicable review and names any history; it answers each adoption diagnostic. Adopt it through §9, then check the applicable policy before any
+mandatory result/readiness write or completion. Current negative evidence supports
+repair; it grants no success permission. Identity does not replace substantive
+coverage, source interpretation, severity/risk rules or authorization.
+
+Preserve the parent review owner's exact identity through group/full/convergence
+handoffs; nested board calls must not create competing captures. Each relevant fix
+requires retry and fresh capture before its existing applicable verification.
+Earlier group reports remain attributed history after later fixes. Completion
+consumes the complete-spec final/convergence attempt, never accumulated old group
+approvals. Its explicit decision must pass spec_success before forward task writes.
 
 ## Phase 1 — SECTIONAL REVIEWS
 
@@ -91,7 +118,7 @@ After all sectional fixes. Complete updated spec.
 Standard Deep Convergence (`spec_board/SKILL.md`):
 Pass 2+: 4 agents (Adv + Adv2 + Impl + Impact),
 context-isolated.
-Final: 2 agents (Adv + Impl). 0C + 0H → `board_result = pass`.
+Final: 2 agents (Adv + Impl). 0C + 0H → `board_result = APPROVED` after current spec_success qualification.
 
 ## Post-pass (NON-NEGOTIABLE)
 
@@ -136,6 +163,8 @@ Final: 2 agents (Adv + Impl). 0C + 0H → `board_result = pass`.
   pass.
 
 ### DONE
+- Final applicable full-spec/convergence decision adopted and spec_success checked
+  before review-derived forward writes, via task_status_update with the exact owner.
 - All pattern groups individually reviewed and fixed.
 - Full-spec Deep Board + discourse on the entire post-fix spec
   executed.
@@ -209,7 +238,7 @@ Final: 2 agents (Adv + Impl). 0C + 0H → `board_result = pass`.
 
 | Group content | Agent |
 |---|---|
-| API, Pydantic, schema | code-api-contract |
+| API, schema models (e.g. Pydantic), interface schema | code-api-contract |
 | Token budget, readability | board-consumer |
 | Security, auth | board-adversary-2 |
 | Cross-spec interfaces | board-impact |

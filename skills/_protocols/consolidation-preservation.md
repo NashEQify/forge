@@ -14,6 +14,21 @@ chief-internal tracking mechanism get "forgotten". Demonstrated in a
 real consolidation pass: 4 of 34 raw findings silently lost, all
 single-agent.
 
+## Captured mandatory source set
+
+When carrying a captured mandatory software review, load
+`skills/_protocols/evidence-pointer-schema.md` §9 before consuming sources.
+Receive captured run/subject/slot and exact selected source path/digest/actor
+references after their complete verbatim persistence. Preserve source attribution,
+scope limits, uncertainty and meaningful dissent alongside the tracking table.
+Chief recommendations remain separate from Buddy's decision. Return the captured
+envelope and supported current evidence, including top-level evidence when clean.
+A subsequent Chief return is a separately persisted payload in a registered slot;
+never edit an earlier selected return. If a new producer is needed, repeat the
+capture on the same subject with the added slot before dispatch
+(`skills/_protocols/evidence-pointer-schema.md` §9). Relevant subject
+changes require retry and fresh applicable review; history cannot fill current slots.
+
 ## Preservation contract (NON-NEGOTIABLE)
 
 **Every finding from every sub-review MUST appear in the

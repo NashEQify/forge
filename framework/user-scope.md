@@ -42,7 +42,11 @@ Profile links to user navigation; user navigation offers a route to the person's
 activity/project navigation for recall from another CWD. Activities and technical
 setups belong to their project owners even inside the personal repository.
 Personal topic preferences remain in user scope. Placement, semantic admission,
-retrieval, validity and history have one owner: `skills/knowledge_processor/SKILL.md`.
+retrieval, validity, provenance, history and restructuring have one owner:
+`skills/knowledge_processor/SKILL.md` (one current statement per claim, §3–§4;
+restructuring, §6). Restructuring the top-level files (`soul.md`, `profile.md`,
+`navigation.md`) or changing what is boot-loaded is a proposal to the person; content
+writes to them follow the knowledge processor.
 `inner-life.md` is for relevant reflections, not an automatic bucket for preferences.
 No unconditional companion-file loading or fixed life-domain taxonomy.
 
@@ -66,7 +70,11 @@ work and capture a coherent scoped snapshot before dependent reads or mutations.
 
 Never substitute another person's repository or a remembered path. The
 deterministic implementation is `scripts/user_scope.py` (`--json`, `--soul`,
-`--boot-text`); injectors hand its result to the session. Without an
+`--boot-text`); injectors hand its result to the session. A session-start
+injector also includes the resolved soul and, in the `full` profile,
+`agents/buddy/operational.md` as whole files where the host carrier has room
+(`agents/buddy/boot.md` §User scope). An install-time block includes no
+files: the person's files and framework Markdown change without a reinstall. Without an
 injection, an agent resolves the same way by reading the machine setting.
 
 The soul follows the **person**, not the repository: the resolved soul
@@ -80,12 +88,11 @@ career, correction of their profile) belongs to the user scope regardless of
 which repo the session runs in. File it under `<user_repo>/context/user/` at
 its responsible topic file, found through `navigation.md` (new topic → new
 file, linked from `navigation.md`), following
-`skills/knowledge_processor/SKILL.md` (mode `user-signal`). Project facts stay
-in the project's `context/`.
+`skills/knowledge_processor/SKILL.md` (mode `user-signal`; update where the subject
+already stands, §5). Project facts stay in the project's `context/`.
 
 Authority: configuring a user repo is the person's standing consent that
-Buddy maintains that user scope during the work (`knowledge_processor`
-§Continuous maintenance). It does not widen permissions for other
+Buddy maintains that user scope during the work (`skills/knowledge_processor/continuous-maintenance.md`). It does not widen permissions for other
 repositories, commits or pushes; commit and push of the user repo follow that
 repo's own rules (`save` persists it separately when it is not the active
 project).

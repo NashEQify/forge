@@ -24,7 +24,7 @@ interpretation. Users retain one conversational entry and their current folders.
 | KP concepts reference | Explanatory only; brain-forward is historical, not required execution |
 | `framework/continuity.md`, `scripts/continuity.py` | Required protected snapshot/publication/recovery interface |
 | `agents/buddy/boot-on-demand.md` | Common minimal entry; conditional selected-domain restore |
-| `agents/buddy/boot.md`, `operational.md` | Development boot/composition; delegates on-demand early |
+| `agents/buddy/boot.md`, `boot-software.md`, `operational.md` | Development boot/composition; delegates on-demand early |
 | `framework/context-and-loading.md`, Buddy context rules | Loading/composition; forward lifecycle to KP |
 | Save and housekeeping `WORKFLOW.md` | Common direct entrypoints, no engine prerequisite |
 | Save/housekeeping `workflow.yaml` | Development compatibility adapters for already tracked runs |

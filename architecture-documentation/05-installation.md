@@ -83,16 +83,20 @@ python3 ~/forge/scripts/forge_install.py \
   ~/projects/my-app --check
 ```
 
-The positional project path adds a Codex boot entry. `--consumer-root PATH` has a
-different purpose: explicitly scope development-state compatibility checks during
-maintenance. Include authorized affected consumers when that check is needed.
+The positional project path adds a Codex boot entry when Codex is among the hosts.
+`--consumer-root PATH` has a different purpose: explicitly scope development-state
+compatibility checks during maintenance. Include authorized affected consumers when
+that check is needed.
 
 ## One installer for managed hosts
 
 `setup-cc.sh`, `setup-codex.sh` and `setup-oc.sh` are compatibility entrypoints;
-**all forward their arguments to `forge_install.py`**. Their names do not restrict
-installation to one host. `full` plans the managed Codex, Claude Code and OpenCode
-surfaces together. Preview the whole plan, including configuration and hooks.
+**all forward their arguments to `forge_install.py`**; their names do not choose a
+host. `--host claude-code|codex|opencode` (repeat it for several) chooses the
+assistants; without it, a new installation writes only for those whose command
+(`claude`, `codex`, `opencode`) is on `PATH` and stops if it finds none, and an
+existing installation keeps its recorded hosts. Preview the whole plan, including
+configuration and hooks.
 
 Managed-file hashes protect ownership. Unknown files, edited managed files and
 unexpected links may stop installation. Preserve those changes and reconcile the
@@ -174,7 +178,10 @@ targets must remain explicitly unverified.
 
 ## Updating an existing installation
 
-Follow [coordinated activation](../framework/installation-activation.md):
+Follow [coordinated activation](../framework/installation-activation.md).
+Classify the change first: instruction-only Markdown takes its light path (edit,
+regenerate derived files when needed, consistency check, commit). Every other
+change takes these steps:
 
 1. Identify the source checkout, affected integrations, selected methods and
    authorized consumers. Preserve configuration and local changes.

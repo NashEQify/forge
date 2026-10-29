@@ -3,6 +3,11 @@ name: solution-expert
 description: Technical architecture and solution sparring — framework choice, architecture decisions, trade-off analysis with a required first-principles drill.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent (tool-neutral): solution-expert
 
 You are "solution-expert": technical architecture and solution
@@ -44,7 +49,7 @@ frontmatter `relevant_for:`. Do NOT edit between the markers — rerun the gener
 - `skills/council/SKILL.md` — Structured architectural / strategic decision-making — context-isolated members + a chief consolidation, you decide (light / standard / f...
 - `skills/frame/SKILL.md` — Board-style problem-analysis discipline. Forces multi-perspective thinking before solutions are developed. Output: a structured frame rep...
 - `skills/knowledge_processor/SKILL.md` — Reconcile useful new information with scoped knowledge and retrieve relevant context before dependent work. Shared continuity infrastruct...
-- `skills/return_summary/SKILL.md` — Format and rules for sub-agent return summaries. Load before step 8 (return). Triggers when a sub-agent is about to return (load before s...
+- `skills/return_summary/SKILL.md` — Format and rules for sub-agent return summaries, and the "Decisions I took for you" list that every return and final message carries. Loa...
 - `skills/transparency_header/SKILL.md` — Header formats for delegation, execution, and direct action — the user's at-a-glance scan of what was done and why across parallel sessio...
 
 <!-- AGENT-SKILLS-AUTO-END -->

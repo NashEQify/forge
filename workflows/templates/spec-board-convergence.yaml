@@ -1,0 +1,533 @@
+# Spec Board — convergence loop, process, failure modes and propagation
+#
+# Lookup unit of workflows/templates/spec-board.yaml (same version). Read it when running
+# the board's convergence loop or process, handling a failure mode or post-review step,
+# applying tier behavior, or propagating a board change (propagation_checklist).
+
+# ============================================================
+# Convergence-Loop (Deep-Modus)
+# ============================================================
+#
+# Quick hat keinen Loop — 1 Pass, dann converged or escalate zu Deep.
+# Deep laeuft bis konvergiert, mit drei Safety-Mechanismen:
+#   1. Divergenz-Erkennung (stoppt wenn Spec schlechter wird)
+#   2. Stagnation-Warning (meldet wenn nach 3 Passes noch neue Findings)
+#   3. Safety Valve (harter Stop bei 5 Passes)
+#
+# Abgrenzung zu convergence_loop/SKILL.md:
+#   convergence_loop/SKILL.md definiert das generische Intra-Gate-Protokoll
+#   (Default: max 3 Passes, BLOCKER/MAJOR/MINOR).
+#   spec-board.yaml definiert den Board-spezifischen Konvergenz-Mechanismus
+#   der die generischen Defaults UEBERSCHREIBT:
+#     - 5 statt 3 max Passes (Board hat mehr Reviewer → braucht mehr Raum)
+#     - critical/high/medium/low statt BLOCKER/MAJOR/MINOR
+#     - Divergenz-Erkennung (nicht im generischen Protokoll)
+#   Mapping: BLOCKER = critical, MAJOR = high, MINOR = medium + low.
+
+convergence_loop:
+
+  scope: deep_only  # Standard ist 1-Pass, kein Loop
+
+  agent_narrowing: >
+    Phase-basiertes Narrowing (v6.0):
+      Pass 1 (Discovery): 7 Agents (5 Opus + 2 Sonnet)
+      Pass 2+ (Convergence): 4 Agents (Adv + Adv2 + Impl + Impact, alle Opus)
+      Final (Verification): 2 Agents (Adv + Impl, Opus)
+    Consumer + Adversary-3 liefern in Pass 2+ empirisch keine Unique HIGHs.
+    Ihr Wert liegt im frischen ersten Blick (Discovery), nicht in Fix-Verifikation.
+
+  algorithm: >
+    pass = 1
+    prev_new_count = null  # Wird nach Pass 1 initialisiert
+
+    LOOP:
+      1. Review: Buddy spawnt Agents parallel (Context-Isolation).
+         Pass 1: 7 Agents. Pass 2+: 4 Agents (siehe agent_narrowing).
+         Model-Override je nach Phase (siehe Model Override).
+      2. Consolidate + Decide: Chief (1 Opus-Call) liest alle 7 Review-Files.
+         a. Deduplizieren: Gleicher Abschnitt UND gleiche primitive = gleicher Punkt.
+            Vergibt konsolidierte C-{NNN} IDs mit Mapping auf Original F-{role}-{NNN}.
+         b. Finding-Tracking (pass > 1): RESOLVED | STILL_PRESENT | NEW.
+            Berechne: resolved_count, still_present_count, new_count.
+            Pass 1: Alle Findings sind INITIAL. prev_new_count = Anzahl INITIAL high+.
+         c. Convergence-Check: 0 critical + 0 high (in konsolidierten Findings)?
+            Ja → Chief schreibt Final Arbiter Decision → DONE.
+            Nein → weiter.
+         c2. Fix-Scope: ALLE Findings (critical + high + medium + low) werden
+             im synthesize-Step gefixt, nicht nur die ueber dem Convergence-Threshold.
+             Der Threshold (0 critical + 0 high) bestimmt wann KONVERGIERT wird,
+             nicht was GEFIXT wird. Ohne vollstaendige Fixes akkumulieren medium/low
+             Findings ueber Passes and werden nie adressiert.
+             (Empirisch bewiesen: nur-H-Fixes fuehrten zu stagnierender
+             M/L-Akkumulation in einem UX-Board-Lauf.)
+         d. Divergence-Check (pass > 1):
+            new_count >= prev_new_count UND > 0 → WARNING. Loop laeuft weiter.
+            Ausnahme pass 2 + escalated_from quick: ausgesetzt.
+         e. Kein Pass-Limit. Loop laeuft bis 0C+0H.
+         f. Stagnation-Check (pass 3-4): new_count > 0 → WARNING.
+         g. Schreibt Findings-Briefing for synthesize (Input for Step 4a).
+         h. Schreibt consolidated-passN.md + Signal-Zeile for Buddy.
+         Signal-Format: "CONVERGED | NEEDS-WORK {N} findings | DIVERGED | STAGNATION"
+         Bei NEEDS-WORK mit Divergenz-Entscheidungen: Signal enthaelt Optionen
+         for User-Approval (Buddy praesentiert, entscheidet nicht).
+         Output: docs/reviews/board/{spec-name}-consolidated-pass{N}.md
+      3. Persist board progress:
+         Update the task summary through its existing owner. Commit only under
+         framework/process-map.md section Authorization. This internal checkpoint
+         is not a user save request and grants no push/deploy authority.
+         Buddy liest NUR das Chief-Signal (nicht die 7 Review-Files).
+      4. Fix (synthesize-Modus):
+         4a. synthesize-Run: Buddy spawnt 7 Agents im synthesize-Modus
+             (siehe operation_modes.synthesize).
+             Input: aktuelle Spec + Findings-Briefing (von Chief in Step 2g geschrieben).
+             Agents schreiben Fix-Vorschlaege aus ihrer Perspektive.
+         4b. Aggregation + Build: Chief aggregiert alle 7 Proposals and baut
+             die neue Spec-Version (spec_version++).
+             Input: alle 7 synthesize-Files + aktuelle Spec + User-Entscheidungen.
+             Output: neue Spec-Version + Aggregations-Dokument.
+         4c. Aggregation-Check (parallel):
+             Adversary: prueft E2E-Flow der Integration.
+             Implementer: prueft Buildability der Integration.
+             Output: OK or Korrekturen.
+         4d. Bei Korrekturen: Chief baut erneut mit Korrektur-Input.
+      5. SAVE (mechanisch, nach Fixes).
+      6. State Update: prev_new_count = new_count, pass++
+      → GOTO LOOP
+
+    buddy_role_in_loop: >
+      Buddy dispatches independent reviewers, persists their complete inline
+      returns verbatim with provenance, and reads the Chief consolidation.
+      Buddy owns the decision and checks pivotal source claims. Relevant
+      findings may be inspected to resolve contradictions; do not routinely
+      repeat every review. Escalate new user decisions or changed scope,
+      not each routine phase transition. Shared Invariants 1/2 apply.
+      Chief ist der analytische Controller. Chief konsolidiert, prueft
+      Convergence, schreibt Findings-Briefings, aggregiert synthesize-Ergebnisse,
+      and trifft die Final-Arbiter-Entscheidung.
+
+  finding_tracking:
+    description: >
+      Finding-Tracking ist AUSSCHLIESSLICH Aufgabe des Chief (Phase 2 Aggregation).
+      Individuelle Reviewer erhalten KEINE vorherigen Findings.
+
+      Rationale: Vorherige Findings an Reviewer zu geben erzeugt Anchoring
+      Bias — Reviewer fokussieren auf Fix-Verification statt Fresh Analysis.
+      Empirisch bewiesen: tainted Passes uebersehen 5+ High-Findings die ein
+      frischer Blick findet.
+
+      Neuer Ablauf ab Pass 2:
+      1. Reviewer bekommen NUR Spec-Pfad + Output-Pfad (identisch zu Pass 1)
+      2. Reviewer machen FRISCHE Analyse (voller Scope, variierte Patterns)
+      3. Chief (Phase 2) erhaelt: aktuelle 7 Review-Files + vorheriges
+         konsolidiertes File → Chief mappt alt auf neu:
+         - Vorheriges Finding nicht mehr im aktuellen Pass → RESOLVED
+         - Vorheriges Finding erneut gefunden → STILL_PRESENT
+         - Neues Finding ohne Vorgaenger → NEW
+      4. Divergence/Stagnation-Checks bleiben unveraendert (basieren auf Chiefs Counts)
+
+      Vorteil: Reviewer-Bias eliminiert. Tracking-Faehigkeit erhalten.
+      Kosten: Chief muss mehr Mapping-Arbeit leisten (akzeptabel — Chief ist Opus).
+
+    reviewer_prompt_pass2plus: >
+      Identisch zu Pass 1. Reviewer erhalten KEINE vorherigen Findings.
+      Jeder Pass ist eine frische Analyse auf der aktuellen Spec-Version.
+
+    chief_aggregation_pass2plus: >
+      PASS {N} AGGREGATION — Du erhaeltst:
+      1. Die 7 Review-Files des aktuellen Passes
+      2. Das konsolidierte File aus Pass {N-1} (mit C-{NNN} IDs)
+
+      AUFGABE:
+      A) Dedupliziere die 7 aktuellen Review-Files (wie Pass 1)
+      B) Finding-Tracking: Mappe JEDES konsolidierte Finding aus Pass {N-1}:
+         - RESOLVED: Kein Reviewer hat dieses Problem in Pass {N} erneut gefunden
+         - STILL_PRESENT: Mindestens 1 Reviewer hat dasselbe Problem erneut gefunden
+           (Mapping nach Abschnitt + Problemkern, nicht nach Wortlaut)
+         - NEW: Finding das in Pass {N} auftaucht ohne Entsprechung in Pass {N-1}
+
+      Format:
+      ## Finding Tracking (Pass {N-1} → {N})
+      ### C-{ID}: {RESOLVED | STILL_PRESENT}
+      - mapped_to: {F-{role}-{NNN} aus Pass {N} | "nicht erneut gefunden"}
+      - evidence: {rationale}
+
+      ## Consolidated Findings (Pass {N})
+      ### C-{NNN}: {Kurzbeschreibung} [NEW | STILL_PRESENT]
+      - severity / scope / primitive / description / suggested_fix
+      - source: F-{role_initial}-{NNN} (+ weitere wenn Duplikat)
+
+      ## Counts
+      - resolved: {N}, still_present: {N}, new: {N}
+
+# ============================================================
+# Prozess
+# ============================================================
+#
+# Im Deep-Modus wiederholen sich Phase 1 and Phase 2 pro Pass (Loop).
+# Phase 3 steuert den Loop. Phase 4 ist der abschliessende Schritt nach Konvergenz.
+
+process:
+
+  phase_1_independent_review:
+    title: Unabhaengige Reviews
+    description: >
+      Buddy spawnt Reviewer PARALLEL via Agent tool.
+      Anzahl je nach Modus: Standard 3-4, Deep Pass 1: 7, Deep Pass 2+: 4.
+      Jeder Sub-Agent hat eigenes Context Window (CC Sub-Agent-Isolation).
+      Jeder bekommt: Spec-Pfad + Output-Pfad (identisch in jedem Pass, KEINE vorherigen Findings).
+      Buddy setzt den model-Parameter beim Spawn je nach Modus/Phase.
+
+      Impact Analyst bekommt zusaetzlich: SPEC-MAP.md + Nachbar-Spec-Header.
+      Spec Consumer bekommt Spec + Consumption Profile (nur Deep Pass 1).
+
+      Foundation-Flag: Wenn gesetzt, Chief bekommt DR-Scorecard-Instruktion.
+
+      Tier 1: Buddy spawnt Agents parallel (Standard: 3-4, Deep: 7/4/2).
+      Tier 2: Harness dispatcht entsprechende Anzahl CC-Instanzen parallel.
+
+    output_format: >
+      # Review: {spec-name} — {role} — Pass {N}
+
+      ## Findings
+      ### F-{role_initial}-{NNN}: {Kurzbeschreibung}
+      - severity: critical | high | medium | low
+      - scope: local | cross-cutting | foundation
+      - primitive: P1-P5 | cross-check | blast-radius | readability | document_architecture
+      - description: {Problem}
+      - suggested_fix: {Vorschlag}
+      - affected_sections: {Sections}
+
+      ## Summary
+      - critical: {N}, high: {N}, medium: {N}, low: {N}
+      - finding_count: {N}
+      - overall: PASS | NEEDS-WORK | FAIL
+
+  phase_2_aggregation:
+    title: Consolidation + Convergence Decision
+    agent: board-chief
+    description: >
+      Chief liest ALLE Review-Files des aktuellen Passes (7 Files).
+      Deduplizieren: gleicher Abschnitt + gleiche primitive = gleicher Punkt.
+      Bei Duplikaten: hoehere Severity gewinnt, mehr Reviewer = hoehere Konfidenz.
+      Konsolidiertes File: severity absteigend sortiert.
+      Chief vergibt konsolidierte C-{NNN} IDs mit Mapping auf Original F-IDs.
+
+      Ab Pass 2: Finding-Tracking-Counts berechnen:
+        resolved_count, still_present_count, new_count
+      Dann Convergence-Check, Divergence-Check, Stagnation-Check (siehe Loop).
+
+      Eskalation Standard→Deep pruefen (wenn Modus = standard and >= 1 critical or >= 3 high in konsolidierten Findings).
+
+      Chief schreibt Signal-Zeile am Ende des konsolidierten Files:
+        CONVERGED | NEEDS-WORK {N} high+ | DIVERGED | STAGNATION
+      Bei NEEDS-WORK: Chief schreibt Findings-Briefing for synthesize.
+      Bei Divergenz-Entscheidungen die User-Approval brauchen: Optionen im Signal.
+
+      Buddy liest NUR das Signal (nicht die 7 Review-Files).
+      Buddy persists board progress and updates the task summary through its
+      existing owner. Commit only under framework/process-map.md section
+      Authorization; this internal checkpoint is not a user save request and
+      grants no push/deploy authority.
+      Buddy dispatcht naechsten Schritt mechanisch basierend auf Signal.
+    output: "docs/reviews/board/{spec-name}-consolidated-pass{N}.md"
+
+  phase_3_convergence_loop:
+    title: Convergence Loop
+    description: >
+      Nur wenn Konvergenz nicht erreicht (Deep-Modus).
+      Fix via synthesize-Modus (7 Agents). Buddy schreibt keinen Spec-Content.
+      Neue Sub-Agent-Instanzen mit aktualisierter Spec (KEINE vorherigen Findings — Bias-Praevention).
+      SAVE nach jedem review-Run UND nach jedem synthesize-Run.
+      Loop-Steuerung: siehe convergence_loop.algorithm.
+    fail_paths:
+      divergence:
+        action: escalate_to_human
+        reason: "Spec divergiert — neue Findings uebersteigen or gleichen vorherige"
+        recommendation: "Council statt weiterer Passes"
+      stagnation:
+        action: user_decision
+        reason: "Pass >= 3, weiterhin neue high-Findings"
+        options: ["continue", "stop", "council"]
+        tier_2_default: "stop (nach 5 Min Timeout)"
+      safety_valve:
+        action: escalate_to_human
+        reason: "5 Passes, nicht konvergiert"
+
+  phase_4_final_decision:
+    title: Final Decision
+    agent: board-chief  # Gespawnt als separater Sub-Agent (frischer Context)
+    model: opus
+    description: >
+      Chief (Opus) als Final Arbiter. Gespawnt als neuer Sub-Agent (nicht im
+      Buddy-Context, sondern frisch mit Context-Isolation).
+
+      Input: finale Spec + letztes konsolidiertes Findings-File +
+      Convergence-Trajectory (pass_count, resolved_trend, new_trend).
+      NICHT alle Findings aus allen Passes — nur der aktuelle Zustand.
+
+      Entscheidungs-Matrix:
+        0 crit + 0 high + 0 medium → FREIGEGEBEN
+        0 crit + 0 high + N medium (dokumentiert als Risiken) → FREIGEGEBEN MIT RISIKEN
+        Verbleibende high/critical (sollte nicht vorkommen nach Loop) → ZURUECK
+
+      ZURUECK-Handling: Buddy dispatcht synthesize-Run mit Arbiter-Feedback
+      als Findings-Briefing. Chief aggregiert and baut neue Spec-Version
+      (spec_version++). Danach Board re-run von Pass 1 mit frischen Reviewern.
+      Max 2 volle Board-Reruns. Danach: User-Eskalation.
+    output: "docs/reviews/board/{spec-name}-final.md"
+    gate_update: "spec_review.status: pass | pass_with_risks | fail"
+
+# ============================================================
+# Failure Modes
+# ============================================================
+
+failure_modes:
+
+  fm_1_agent_failure:
+    description: "Sub-Agent liefert kein Output (Timeout, Crash, leeres File)"
+    detection: "Review-File fehlt or ist leer nach Agent-Return"
+    mitigation: >
+      Retry: Buddy spawnt den fehlgeschlagenen Agent einmal erneut.
+      Bei erneutem Fehler: Skip mit Warnung an User.
+      Minimum-Viable-Review: Chief + mindestens 1 weiterer Reviewer muessen
+      erfolgreich sein. Ohne Chief: Board-Review ungueltig, User-Eskalation.
+    severity: high
+
+  fm_2_format_mismatch:
+    description: "Sub-Agent produziert Output der nicht dem erwarteten Format entspricht"
+    detection: "Chief kann keine Findings parsen (fehlende Severity, fehlende IDs)"
+    mitigation: >
+      Chief extrahiert was parsebar ist, markiert den Rest als FORMAT_WARNING.
+      Findings ohne Severity: default zu medium.
+      Findings ohne ID: Chief vergibt temporaere ID.
+    severity: medium
+
+  fm_3_dedup_false_positive:
+    description: "Aggregation wertet zwei verschiedene Findings als gleich"
+    detection: "Reviewer in Pass N+1 meldet Finding als NEW das in Pass N existierte"
+    mitigation: >
+      Finding wird als NEW behandelt (konservativ). Chief merkt sich den
+      Dedup-Fehler for kuenftige Passes.
+    severity: low
+
+  fm_4_consumer_breaks_isolation:
+    description: "Consumer-Agent liest Dateien ausserhalb der Spec (bricht First-Reader-Simulation)"
+    detection: >
+      Nicht mechanisch erkennbar in Tier 1 (CC Sub-Agent hat Filesystem-Zugang).
+      Prompt-Level-Instruktion ist einzige Mitigation.
+    mitigation: >
+      board-consumer.md enthaelt explizites MUST NOT for Datei-Zugriff.
+      Bekannte Limitation: keine mechanische Enforcement in CC Sub-Agent-Modus.
+    severity: medium
+
+  fm_5_escalation_loop:
+    description: "Quick eskaliert zu Deep, Deep divergiert, User eskaliert erneut"
+    detection: "ZURUECK nach 2 Board-Reruns"
+    mitigation: >
+      Max 2 volle Board-Reruns. Danach: User-Eskalation mit Empfehlung
+      Council or fundamentale Spec-Ueberarbeitung.
+    severity: high
+
+  fm_6_finding_id_collision:
+    description: "Zwei Reviewer vergeben gleiche Finding-ID innerhalb eines Passes"
+    detection: "Aggregation findet doppelte IDs"
+    mitigation: >
+      Namespaced IDs (F-{role_initial}-{NNN}) verhindern Kollisionen.
+      Fallback: Chief haengt Reviewer-Kuerzel an bei Kollision.
+    severity: low
+
+  fm_7_chief_failure_in_aggregation:
+    description: "Chief crasht waehrend synthesize-Aggregation (Step 4b) or Final Arbiter (Phase 4)"
+    detection: "Chief-Agent returnt ohne Output or mit Fehler nach synthesize-Run"
+    mitigation: >
+      Retry: Buddy spawnt Chief einmal erneut mit identischem Input
+      (7 synthesize-Files + aktuelle Spec sind auf Disk, kein State verloren).
+      Bei erneutem Fehler: User-Eskalation mit Verweis auf die 7 Proposals
+      (User kann manuell aggregieren or neuen synthesize-Run ausloesen).
+      KEIN automatisches Verwerfen der Proposals.
+    severity: high
+
+# ============================================================
+# Post-Review Artefakt
+# ============================================================
+
+post_review:
+  description: >
+    Nach Final Decision: Board-Artefakt schreiben.
+    Pfad: docs/reviews/board/{spec-name}-board-review.yaml
+  schema: >
+    spec: <dateiname.md>
+    spec_version: <version>
+    board_version: "5.2"
+    content_hash: <SHA256 via sha256sum | null>
+    date: YYYY-MM-DD
+    mode: standard | deep
+    foundation: true | false
+    escalated_from: standard | null
+    result: PASS | PASS_WITH_RISKS | FAIL
+    convergence:
+      passes: <int>
+      converged: true | false
+      final_counts: {critical: 0, high: 0, medium: N, low: N}
+    finding_tracking:
+      total_resolved: <int>
+      total_new_last_pass: <int>
+    review_files:
+      - <Pfad zu Review-Files>
+
+# ============================================================
+# Output-Pfade (kanonisch)
+# ============================================================
+#
+# SoT for alle Output-Pfade. SKILL.md and gates-template.yaml verweisen hierher.
+#
+# Einzel-Reviews:   docs/reviews/board/{spec-name}-{role}-pass{N}.md
+# Konsolidiert:     docs/reviews/board/{spec-name}-consolidated-pass{N}.md
+# Final Arbiter:    docs/reviews/board/{spec-name}-final.md
+# Board-Artefakt:   docs/reviews/board/{spec-name}-board-review.yaml
+
+# ============================================================
+# Tier-Verhalten
+# ============================================================
+
+tier_behavior:
+
+  tier_selection:
+    description: >
+      Tier 1 (Standard): CC-Session vorhanden (interaktiv).
+      Tier 2: Batch/headless Ausfuehrung via Harness.
+      Default: Tier 1. Tier 2 wird explizit konfiguriert.
+
+  tier_1:
+    description: >
+      CC-basiert. Buddy spawnt Reviewer parallel via Agent tool.
+      Context-Isolation durch CC Sub-Agent-Mechanismus.
+      Buddy setzt model-Parameter beim Spawn je nach Modus/Phase.
+      Chief aggregiert (review-Konsolidierung + synthesize-Aggregation).
+      Buddy persists inline artifacts, reads Chief consolidation, verifies
+      pivotal claims and owns the decision per shared Invariant 1.
+    execution: >
+      Standard (3-4 Agents, alle Opus):
+        board-adversary "Spec: {path}. Output: {output_path}."
+        board-implementer "Spec: {path}. Output: {output_path}."
+        board-impact "Spec: {path}. SPEC-MAP: {spec_map_path}. Output: {output_path}."
+        [board-chief nur bei Variante B] "Spec: {path}. Output: {output_path}."
+      Wartet auf alle. Dispatcht Chief for Konsolidierung.
+
+      Deep Pass 1 (7 Agents, 5 Opus + 2 Sonnet):
+        Wie Standard + board-chief + board-adversary-2 + board-adversary (sonnet, prefix F-A3-) + board-consumer (sonnet).
+      Deep Pass 2+ (4 Agents, alle Opus):
+        board-adversary + board-adversary-2 + board-implementer + board-impact.
+      Wartet auf alle. Dispatcht Chief for Konsolidierung/Aggregation.
+
+  tier_2:
+    description: >
+      Harness dispatcht 7 CC-Instanzen parallel (headless).
+      Jede bekommt Workspace mit Spec + Sub-Agent-Prompt.
+      Impact Analyst bekommt zusaetzlich SPEC-MAP + Neighbor-Headers.
+      Consumer bekommt Spec + Consumption Profile.
+      Harness wartet, dispatcht Chief for Aggregation.
+
+# ============================================================
+# Propagation Checklist
+# ============================================================
+#
+# Bei JEDER change an Reviewer-Anzahl, Model-Split, Convergence-Semantik,
+# Output-Format or Severity-Labels muessen folgende Dateien geprueft werden:
+
+propagation_checklist:
+  files:
+    - workflows/runbooks/build/WORKFLOW.md  # Phase Specify, BOARD Step
+    - workflows/runbooks/build/WORKFLOW.md  # Specify-Phase (Spec Board)
+    - framework/spec-engineering.md  # Schritt 3a-3c
+    - agents/README.md  # Sub-Agent-Tabelle + Delegationsmuster
+    - agents/buddy/multi-perspective.md  # Board + Council
+    - skills/convergence_loop/SKILL.md  # Board-Agents-Referenz
+    - skills/spec_board/SKILL.md  # Callable Skill
+    - decisions.md  # ADR-Eintrag
+
+# ============================================================
+# Migration Notes (v5.2 → v6.0)
+# ============================================================
+#
+# changeen v5.2 → v6.0:
+#   Quick eliminiert. 2 Modi: Standard (3-4 Agents, 1 Pass) + Deep (7→4→2, Convergence)
+#   Standard: 2 Varianten — reviewed Spec (3 Agents) vs neue Spec (4 Agents)
+#   Alle Standard-Agents: Opus (kein Sonnet). Sonnet Implementer empirisch unzureichend.
+#   Deep Discovery: Pass 1 only (vorher Pass 1-2). Narrowing ab Pass 2 (4 Agents).
+#   Deep Convergence: Consumer + Adversary-3 fallen raus (marginale Returns nach Pass 1)
+#   Deep Verification: 2 Agents (Adv + Impl), Buddy liest direkt
+#   Eskalation: Standard→Deep (vorher Quick→Deep). Trigger verschaerft: >=1C or >=3H (vorher >=1H)
+#   Implementer Model: Sonnet→Opus in allen Modi
+#   Minimum-Viable-Review = 3 Agents als implemented markiert
+#   Bestehende Board-Artefakte mit mode: quick bleiben gueltig (implizit Standard)
+#
+# ============================================================
+# Migration Notes (v5.1 → v5.2)
+# ============================================================
+#
+# changeen v5.1 → v5.2:
+#   Consumer bekommt neue Lens "Document Architecture" (Context-Budget, Decomposition, Duplikation)
+#   Consumer bekommt Consumption Profile als Extra-Input (loaded_by, co_loaded, pattern)
+#   Consumer-Fokus erweitert: + document_architecture
+#   Buddy erstellt Consumption Profile vor Consumer-Dispatch (Checkliste Punkt 6)
+#   Kein Breaking Change: Alle anderen Reviewer unveraendert. Board-Mechanik identisch.
+#   Kosten: ~100 Tokens mehr im Consumer-Prompt
+#   Trigger: Board hat Dateilaenge/Operational Fitness nicht als Finding erkannt (Session 35/36)
+#   ADR: ausstehend
+#
+# ============================================================
+# Migration Notes (v5.0 → v5.1)
+# ============================================================
+#
+# changeen v5.0 → v5.1:
+#   Neuer Betriebsmodus: synthesize (Agents fixen Findings statt finden)
+#   Save-Step nach jedem Board-Run (review + synthesize) — NON-NEGOTIABLE
+#   Convergence-Loop: Step 8 (Save), Step 9 (Fix via synthesize or Buddy),
+#     Step 10 (Save), Step 11 (State Update). Vorher: Step 8 (Fix), Step 9 (State Update).
+#   creation-Modus (Session 15) = Unterkategorie von synthesize
+#   Kein Breaking Change: review-Modus ungeaendert
+#   ADR: ausstehend
+#
+# ============================================================
+# Notes — third adversary
+# ============================================================
+#
+# board-adversary-3 has no separate persona file. The third adversary in
+# Deep Pass 1 is board-adversary dispatched a second time with model=sonnet
+# and finding_prefix=F-A3-. The output shape (3 adversary reviews) is
+# unchanged.
+#
+# ============================================================
+# Migration Notes (v4.0 → v5.0)
+# ============================================================
+#
+# changeen v4.0 → v5.0:
+#   5 Reviewer → 7 Reviewer
+#   Neues Persona: Adversary 2 (board-adversary-2, Opus) — First-Principles
+#   Neues Persona: Adversary 3 (board-adversary-3, Sonnet) — guenstigere 3. E2E-Perspektive
+#   Adversary 1 + 2 + 3: alle E2E, smart-but-wrong, Boundary-Tracing, Scope-Complete, Alternative-Approach
+#   Adversary 2 zusaetzlich: First-Principles (Intent/Task Decomposition, Alternative Assessment)
+#   Impact: neu Cross-Spec E2E (Daten ueber Spec-Grenzen verfolgen)
+#   Quick: 2x Opus + 5x Sonnet (vorher: 2x Opus + 3x Sonnet)
+#   Deep: 4x Opus + 3x Sonnet (vorher: 3x Opus + 2x Sonnet)
+#   expected_cc_calls: per_pass 7 (vorher: 5), total quick: 8 (vorher: 6)
+#   Finding-ID-Prefixe: A2, A3 neu
+#   ADR: ausstehend
+#
+# Migration Notes (v3.0 → v4.0):
+#   3 Reviewer → 5 Reviewer
+#   Neues Persona: Impact Analyst (board-impact, Opus)
+#   Neues Persona: Spec Consumer (board-consumer, Sonnet)
+#   Quick: 2x Opus + 3x Sonnet (vorher: 1x Opus + 2x Sonnet)
+#   Deep: 3x Opus + 2x Sonnet (vorher: 2x Opus + 1x Sonnet)
+#   expected_cc_calls: 6 pro Pass (vorher: 4)
+#   Output-Pfade: vereinheitlicht auf docs/reviews/board/
+#   Finding-IDs: namespaced (F-{role_initial}-{NNN})
+#   ADR: ausstehend
+#
+# Bestehende Board-Artefakte (3-Reviewer, ohne board_version-Feld):
+#   Sind implizit v3.0. Bleiben gueltig. Keine Migration noetig.
+#
+# Council-Modi (light/standard/full in council.yaml) sind NICHT betroffen.
+# Council hat eigene Modus-Logik, unabhaengig vom Board.

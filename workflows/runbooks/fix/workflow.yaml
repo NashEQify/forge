@@ -93,7 +93,7 @@ steps:
       covering: root-cause hypothesis (from prior root-cause step),
       fix-implementation plan, scope-focused test/verification,
       RETURN-SUMMARY structure, sign-off field per spec 306 §5.2.
-      DIRECT eligibility is defined by framework/process-map.md; verified
+      DIRECT eligibility is defined by framework/direct-eligibility.md; verified
       known fixes meeting all criteria use an inline delegation.
 
       On external library API references in the fix scope: invoke
@@ -126,8 +126,9 @@ steps:
     instruction: >
       MCA inline OR Buddy direct (orchestrator path). Fix-diff
       makes the RED test green per the architect-authored fix-
-      brief. Add regression coverage where it makes sense. Verify
-      regression suite is still green before completing.
+      brief. Add regression coverage where it makes sense. Run the
+      tests that exercise the fix's changes before completing
+      (skills/testing/run-strategy.md §Test selection).
     skill_ref: skills/root_cause_fix/SKILL.md
     completion:
       type: manual
@@ -146,6 +147,13 @@ steps:
     name: "Code review (light / L1 / L2 per spec 306 §4.4a)"
     category: content
     instruction: >
+      Before mandatory review dispatch, load skills/_protocols/evidence-pointer-schema.md
+      section 9. Capture this exact workflow/step before production; pass its owner
+      to nested skills without a competing capture. Use successful capture stdout
+      for run/subject metadata, preserve complete current returns, write and adopt
+      an explicit decision, then check the declared policy before completion or
+      review-derived task writes. Relevant fixes require retry and fresh applicable
+      capture. For code, declare state/report/decision exclusions before capture.
       Select light / L1 / L2 using skills/code_review_board/SKILL.md §1.
       Safety floors precede file counts and other size signals. DIRECT
       eligibility comes from framework/process-map.md; a fix is not
@@ -165,11 +173,15 @@ steps:
         # by task-id (skills/code_review_board/SKILL.md §7), independent of the
         # specify-gate type; {spec_name} mis-derived it when spec-name != task-id.
         # Canonical verdict name = [DISCIPLINE] (writer follows SKILL §7); this
-        # pointer_check = [WORKFLOW] safety net (blocks → --force on a missing/
+        # pointer_check = [WORKFLOW] safety net (refuses mandatory adoption even with force on a missing/
         # non-canonical name, engine-run only). No separate consolidated pointer.
         # (Mirror of the build workflow code-review-board step.)
         - type: pointer_check
           source_file: "docs/reviews/code/{task_id}-verdict.md"
+          min_schema_version: 1
+          review_owner_workflow: self
+          review_owner_step: code-review
+          review_policy: code_success
         - type: manual
     on_fail: block
 
@@ -223,9 +235,10 @@ steps:
       Persist to context.
 
       (b) risk follow-up — read code-review verdict file; non-empty
-      `remaining_findings:` → file ONE follow-up task via task_creation.
-      Orthogonal to close_retro (routes REVIEW findings, not lessons). No
-      remaining: skip with rationale.
+      `remaining_findings:` → route each entry by its `target:` via
+      skills/risk_followup_routing/SKILL.md. Orthogonal to close_retro
+      (routes REVIEW findings, not lessons). No remaining: skip with
+      rationale.
 
       (c) §Framework-Feed — the retro's forge-feed-format entries land as
       forge-feed entries (this replaces the old workflow-retro safety net).
@@ -241,6 +254,10 @@ steps:
     name: "Commit + deploy"
     category: deterministic
     instruction: >
+      First make sure the tests skills/testing/run-strategy.md §Test selection
+      asks for ran after the last code change; run them now if not, and do
+      not rerun them after a hash-checked transfer.
+
       Flip task status=done via the task_status_update skill — NOT a raw
       `status:` YAML edit. The skill runs the cross-task graph closure,
       plan.yaml ref sweep, atomic archive move + integrity guard, and the

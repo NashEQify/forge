@@ -3,10 +3,10 @@
 Forces the agent into substantive mode before any classification act.
 Mechanical gate enforcement via a proof sentence + grep-checkable
 binding. Addresses session-99 pattern B (mechanical-as-default) — this
-protocol replaces the earlier CLAUDE.md invariant "content before
+protocol replaces the earlier Tier-0 invariant "content before
 mechanism": instead of a prompt nudge, here is a checkable gate.
 
-Loaded by: `frame/SKILL.md` step 4, `spec_board/SKILL.md`
+Loaded by: `frame/flow.md` step 4, `spec_board/SKILL.md`
 §Consolidation, `knowledge_processor/SKILL.md` extract phase.
 
 ## The rule — proof sentence with 3 elements

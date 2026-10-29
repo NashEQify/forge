@@ -3,6 +3,11 @@ name: board-consumer
 description: Spec consumer in the Spec Board — readability, clarity, developer comprehension from the perspective of a future implementer.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: board-consumer
 
 Spec consumer in the Spec Board. Readability, clarity, developer

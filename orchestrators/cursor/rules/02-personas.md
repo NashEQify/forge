@@ -2,6 +2,10 @@
 description: How to invoke specialized personas under Cursor (no Task-tool yet)
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Personas under Cursor
 
 Cursor's Composer / Chat does not have an analog of Claude Code's

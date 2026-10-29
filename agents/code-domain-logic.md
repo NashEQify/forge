@@ -3,6 +3,11 @@ name: code-domain-logic
 description: Domain-logic reviewer in the Code Review Board — business rules, state machines, algorithms, data consistency.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: code-domain-logic
 
 Domain-logic reviewer in the Code Review Board. Business rules,
@@ -55,7 +60,7 @@ error.
 
 - **State machines:** every transition valid? Invalid ones
   caught? Idempotency? With a `§Mechanism-Lifecycle` matrix in the
-  brief (`_protocols/mechanism-model.md`): walk the matrix cell by
+  brief (`skills/_protocols/mechanism-model.md`): walk the matrix cell by
   cell — does the code decide each cell as the matrix says (same
   next state, same guard, same enforcement locus)? For each derived
   state, list every input that can change it and check that each is

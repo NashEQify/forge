@@ -26,13 +26,15 @@ Required at the end of the extended test plan v2:
 
 ```yaml
 adversary_coverage:
-  total_advanced_tcs: <N>
+  total_advanced_tcs: <N>       # zero is valid with substantive evidence below
   scope_signal:
     deltas_or_acs: <N>          # number of deltas / ACs / schema changes in the task
     ratio: <total_advanced_tcs / deltas_or_acs>
     proportional_check: >
-      "<if ratio > 2: active rationale why more TCs are honest here.
-       If ratio <= 2: 'Augenmaß within range'.>"
+      "<explain the actual coverage/oracle scrutiny and value of additions or
+       refinements; if zero additions, cite strengthened assertions/fixtures or
+       evidence of sufficient existing coverage. If ratio > 2, actively justify
+       the breadth. The ratio describes scope; it is not a success quota.>"
   patterns_chosen:
     - NEW-V-001: "<why this pattern class is relevant for THIS code>"
     - Compensation-Bug: "<why ...>"
@@ -44,7 +46,7 @@ adversary_coverage:
   consolidations: []           # empty when none; otherwise per consolidation
                                # an entry with merged set + rationale
   spec_assumption_diff: "<which spec assumptions are non-trivially testable?>"
-  implementer_blindspots: "<which edge cases would implementer bias have missed?>"
+  implementer_blindspots: "<which blind spots were challenged, and how do new, refined or existing assertions cover them?>"
 ```
 
 ## Augenmaß: 3 stop-and-think questions
@@ -81,8 +83,10 @@ without consolidation is forbidden — only replace-with-rationale.
 
 ## Red flags (full)
 
-- Adversary returns only 1-2 TCs ("looks fine") — pattern lessons
-  not taken seriously, adversary mindset not active.
+- Adversary returns "looks fine" without substantive coverage and oracle
+  scrutiny — pattern lessons not taken seriously, regardless of additions.
+  Zero additions with evidenced refinements or sufficient existing coverage
+  are valid; unresolved identified defects remain failures.
 - Adversary TCs have no `pattern_class` annotation — no pattern
   discipline, just arbitrary tests.
 - Adversary TCs are all happy-path variations — adversary violates
@@ -113,14 +117,14 @@ without consolidation is forbidden — only replace-with-rationale.
 |---|---|
 | "Spec coverage is enough" | NEW-V-001 5x replay in 388. Coverage heuristics don't catch it. The adversary mindset is tuned differently. |
 | "Adversary duplicates the code-review-board" | The Code Review Board checks CODE post-implementation. adversary-test-plan checks the TEST PLAN pre-implementation. Different timing, different artifact. |
-| "Skill is overhead on a trivial build" | The trigger condition holds — below threshold is skip-eligible. NEW-V-001 5x in substantial builds, not in trivial ones. |
+| "Skill is overhead on a trivial build" | It runs only on a safety floor; without one it is skipped. |
 | "The adversary is the LLM, not real bug-finding" | Per dogfooding audit: the adversary persona finds HIGH findings other reviewers miss (4-fold in 388). Empirically supported. |
 | "The tester should do this" | The tester is spec-derivative (ACs → TCs). The adversary is critique (what's NOT-in-spec-but-needed). Different reasoning modes — separate skill design. |
-| "More TCs are safer" | The other way round: many TCs dilute bind sharpness and push MCA into workaround patterns (trivial-green skeletons, implementation fragments that only serve tests). 5-10 high-signal > 30+ ritualistic. Pattern replay 459 (41/6) is the concrete negative example. |
+| "More TCs are safer" | The other way round: many TCs dilute bind sharpness and push MCA into workaround patterns (trivial-green skeletons, implementation fragments that only serve tests). Necessary high-signal cases or assertion/fixture refinements beat ritualistic additions; zero new cases can be valid with evidence. Pattern replay 459 (41/6) is the concrete negative example. |
 | "When I have a pattern class, I should test it too" | Pattern-class coverage is no longer required. The class needs a clear code trigger for an adversary TC. Race only on concurrency, compensation only on multi-step transactions. Classes without a trigger belong in `patterns_excluded` with rationale. |
 | "I don't know whether the TC is relevant — leave it in to be safe" | Default-to-include is the TC-inflation root. When unsure: leave out. Adversary private note, not skill output. Skill output must have an active defence (pattern-replay evidence / spec-authority gap / security surface). |
 | "Adversary TCs are all setup variations of one idea — keep all" | Consolidation rule: variations of one idea belong in one TC with multiple setup branches, not in 5 separate TCs. Consolidation requires a `consolidations` entry with rationale, but it is allowed and desired. |
-| "The `proportional_check` rationale is bureaucracy" | The other way round: it is the only audit trail for Augenmaß. Without it Buddy can't verify whether 41 TCs are honest or ritualistic. At ratio ≤2: one sentence is enough. At ratio >2: an active defence per TC cluster. |
+| "The `proportional_check` rationale is bureaucracy" | The other way round: it is the only audit trail for Augenmaß. Without it Buddy can't verify whether 41 TCs are honest or ritualistic. A ratio alone cannot establish a satisfactory result. Explain actual coverage and oracle scrutiny, including evidenced zero additions; at ratio >2, actively defend each TC cluster. |
 
 ## Discipline rationale
 
@@ -135,9 +139,10 @@ the inflation effort was invested; only the bind label differed.
 The real problem: writing too many
 TCs.
 
-Solution: the adversary writes fewer, with an active selection
-discipline. `scope_signal.ratio` is the only audit trail;
-`patterns_excluded` is the visible selection act; the consolidation
+Solution: the adversary challenges coverage and oracles with an active selection
+discipline. The coverage rationale records refinements or evidenced sufficient
+existing coverage as well as additions; `scope_signal.ratio` is descriptive,
+not proof of quality. `patterns_excluded` is the visible selection act; the consolidation
 rule prevents redundancy; the stop-and-think questions are the
 internal touchstones.
 

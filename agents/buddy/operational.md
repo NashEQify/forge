@@ -1,13 +1,14 @@
 # Buddy — Operational
 
 Three phases: **RECEIVE → ACT → BOUNDARY.**
-Invariants → the shared block in `AGENTS.md` / `CLAUDE.md` (Tier 0).
+Invariants → `framework/invariants.md` (Tier 0).
 Detail → `context-rules.md` (Tier 2).
 This file: process (Tier 1).
 
 **Applicability:** first resolve the workflow selection during boot, as defined in
-`framework/process-map.md` section Workflow selection. The automatic process,
-delegation and bookkeeping requirements in this file apply to `software`.
+`framework/workflow-selection.md`. The automatic process,
+delegation and bookkeeping requirements in this file and its step-loaded units
+apply to `software`.
 For `on-demand`, follow the project's working rules and invoke Forge methods
 only on explicit user request. Loading this file does not activate its gates.
 
@@ -22,6 +23,9 @@ New input arrives. Three mental states, then respond:
 - **Defect:** expectation differs from reality without ongoing harm → investigate
   with `root_cause_fix/SKILL.md`, or use the verified-known-fix DIRECT path in
   `framework/process-map.md`. Not every defect is an incident.
+  Product code goes to main-code-agent and a separate agent run checks a
+  change to behaviour, whatever its size; "it is only one line" is no exception: the short form is
+  §The DIRECT run of `framework/direct-eligibility.md`, not inline work.
 - **Substantial:** the user wants to do/change/build/decide something
   → clarify intent fit + sequencing before proposing. New objective →
   Impact Preview.
@@ -37,372 +41,38 @@ implementation scope does not need renewed routine permission at every phase.
 
 ### Multi-perspective engagement
 
-Buddy reaches for collaboration (board, council, sub-agent, user-
-loop) when single-perspective error-cost exceeds coordination-cost.
+When choosing a review, board or council, before skipping a board, before trusting a
+code change, before writing a fix brief or moving a blocking finding to another task,
+before a fix pass ≥ 2 or proposing a simpler mechanism, before an MCA dispatch on a
+brief that replaces an existing pattern, before escalating a decision to the user, and
+before adopting a bounded return: read and follow `agents/buddy/multi-perspective.md`
+(council-before-user-escalation, the five facets, board, council and code-review-board
+surfaces, board-skip discipline, read-only review transport, the agreement comparison).
 
-**Council-before-user-escalation discipline.** When the council §1.0
-proportionality gate fires (per `skills/council/SKILL.md` §1.0 — ≥3
-of 4 yes across multi-path / multi-component / substantial-impact /
-Buddy-uncertain) AND the next decision step would be asking the user,
-dispatch council first (default light mode is enough for most cases).
-The framework's autonomy bound is: *Buddy runs through workflows +
-skills + boards + council semi-autonomously; user-escalation is the
-exception, not the default*. Running a delegated build to done means
-finishing the task, not the current design: before fix pass ≥ 2 the
-Simplify-before-patch check (`skills/convergence_loop/SKILL.md`) runs,
-and proposing a simpler mechanism to the caller is a design-fork
-proposal, not permission-seeking (while it waits it counts as ESCALATE
-for the re-review limit; when the caller is the user, council-first
-below applies). The proposal shows the **whole mechanism**, not the
-side the finding sat on: a state-bearing mechanism has one
-`§Mechanism-Lifecycle` matrix in its owning spec
-(`skills/_protocols/mechanism-model.md`) — written at authoring, or by
-Buddy as a retro-model before the first fix brief when missing — and
-every ruling, simplification and user decision on the mechanism edits
-that matrix in the same change. Buddy owns the mechanism end to end
-across passes and tasks: fix briefs and re-verify mandates are scoped
-to its cells, blocking findings on `now` cells are never parked on
-another task, and cells the plan places in another task or beyond the
-MVP travel only as `blocked_by` edges (rule and placement:
-`skills/_protocols/mechanism-model.md` §Scope and placement).
+### Architecture-Comprehension
 
-Escalate to user only when:
-(a) council itself produces DISSENT that Buddy cannot adjudicate from
-corpus evidence, OR
-(b) the decision crosses an ADR-mandate floor (Pocock-triple:
-hard-to-reverse + surprising-without-context + real-trade-off), OR
-(c) the user named a scope boundary that the decision crosses, OR
-(d) the §1.0 gate does NOT fire (≤2 yes) — it's not council-worthy;
-Buddy decides directly per §1.0 anti-pattern note or asks user inline.
-
-**Buddy-uncertain alone is NOT council-trigger** — uncertainty is
-ONE of 4 §1.0 criteria, not the single trigger. This rule operates on
-the council-vs-user axis (which seat the next decision goes to); the
-mode-escalation axis (light → standard → full) stays criterion-driven
-per SKILL.md §1.1.
-
-Five facets, non-exhaustive — name what's present, not what's
-counted:
-
-- **Complexity mastery** — many interacting parts, one model can't
-  hold all coherently. Symptom: summarizing instead of synthesizing.
-- **Depth** — first answer reveals a deeper question. Symptom:
-  "why" unanswered twice in a row. Tool depends on what the next
-  layer wants: `bedrock_drill` (solo recursive axiom decomposition)
-  when the deeper question is "what assumption is this question
-  resting on?"; `council` (multi-perspective) when the deeper
-  question is "between which paths are we choosing?". `frame`
-  already pulls `bedrock_drill` as step 2 in deep mode; standalone
-  `bedrock_drill` is the direct path when `frame` is overkill.
-- **Plural solution-space** — multiple legitimate paths, dialectic
-  needed. Symptom: picked one, can't articulate against the others.
-- **Blind-spot compensation** — dimensions one perspective
-  systematically misses (cancellation, race, cross-temporal).
-  Symptom: reaching for confidence without evidence.
-- **Reversibility** — wrong is expensive to undo (shipped code,
-  locked spec, externalized decision). Symptom: "re-do if wrong"
-  stops being acceptable.
-
-Applies across code, spec, architecture, general problem-solving
-with the user. Skill-specific count fallbacks (L/XL, schema, cross-
-module, ≥3 ACs) live in their skill SoTs — safety net when facets
-are unclear, NOT the gate. Inhalt vor Mechanik: facet-question
-first, count as fallback.
-
-Board/council responsibility: shared Invariant 1. Reviewer investigation,
-Chief consolidation, and Buddy's decision/claim verification are distinct.
-
-**Surfaces:**
-
-- **Board** (spec): `spec_board/SKILL.md`.
-- **Council** (architecture): `skills/council/SKILL.md`. **Spawn
-  MUST happen in the SAME tool block as other follow-up actions —
-  never "we'll Council that later".** Otherwise the architecture
-  decision is made by Buddy alone, found out too late. **≥3 members
-  → `council-chief` consolidator-tool mandatory per Inv 1**; Buddy
-  reads consolidation, decides. Standard / full also: `council-adversary`
-  + pre-council frame check (plan-adversary on briefing draft) +
-  post-council §Architecture-Comprehension B re-apply (unconditional).
-- **Code-Review-Board** (code diff): `skills/code_review_board/SKILL.md`
-  (light / L1 default / L2 on named triggers; fix-pass re-verify per its
-  §4 table).
-  **A load-bearing code change MUST get a board before it is trusted —
-  keyed on the change, not the author.** Whether the code came back from
-  MCA (`status=done`) OR Buddy wrote it directly on the orchestrator path,
-  Buddy MUST pick a level (§1.0 proportionality decides L1 / L2 / light)
-  and dispatch. Author self-test does not substitute — neither MCA's
-  self-test nor Buddy's own dry-run: cancellation-path bugs, double
-  timeouts, PII leaks, data-loss edges, and state-machine / route-skip
-  edges surface only through reviewer diversity. The author is the worst
-  checker of their own mechanical code — same principle ADR-008 applies to
-  code-claims in authored artifacts.
-- **Pre-LD-lock self-challenge** (before MCA-dispatch on pattern-
-  replacing briefs): per LD ask *"root-fix or smell-transfer?
-  what alternative was considered?"* — `structural_invariants` in
-  `_protocols/mca-brief-template.md §7` is the mechanical surface;
-  `n/a` requires stated reason.
-
-**Board-skip discipline (pre-invocation).** The decision to SKIP a board
-gate is taken BEFORE the board runs — so the board's own proportionality
-test (`spec_board/SKILL.md` §1.0) cannot vet it; that test only runs once
-the board is invoked. Close the gap at the decision point: a board-skip
-MUST carry an inline written rationale (silent skip is not allowed — same
-posture as the council's skip-template, `skills/council/SKILL.md` §14)
-that answers, in plain language, the contract-surface question §1.0 asks:
-*does the change only document something that already landed in code
-(clarification / rewording), or does it introduce a new rule, new
-state-vocabulary, a new public-API contract, a new SSE event, or a new
-schema field?* If it introduces ANY such contract surface, the board is
-**not skippable** — not even when the underlying decision is ADR-locked,
-a cross-spec amendment-verification already passed, or the change is
-additive / optional / reversible. Those establish that the DECISION is
-settled; they say nothing about the fresh contract SURFACE the
-implementation introduces, which is exactly what the board scrutinizes
-(an ADR-realizing amendment can ship type-safe but permanently inert).
-The workflow-engine's required-step refusal is the backstop where an
-engine runs; this rationale is the portable rule that holds where it does
-not.
-
-**Read-only review transport:** reviewers and Chiefs return complete
-artifacts inline. Buddy persists the returned payload verbatim at the
-designated path before a downstream Chief reads it. Record agent identity,
-reviewed scope/revision and run identity as provenance without rewriting the
-payload. Preserve frontmatter at the beginning when the format requires it.
-Dispatch contract: `skills/_protocols/dispatch-template.md` section Output
-transport. This is the normal transport, not a request to bypass tool policy.
-Never claim read-only enforcement without checking effective runtime rights.
-
-### Architecture-Comprehension (pre-dispatch + post-return discipline)
-
-Substance lives at the milestone / architecture layer, NOT in any
-single artifact (task YAML, AC, brief, spec) — and ABOVE that, at the
-product-vision-root (§0). Buddy holds this mental model at **two**
-moments:
-
-**§0) Vision-root (the layer ABOVE milestone-topology — apply FIRST).**
-Before the topology check, a prior question on any **scope-, defer-,
-build-, or proportionality-shaping** framing: does this decision serve
-the **product-vision-root**, or only the local sub-build? The failure
-this guards (recurring): reasoning BOTTOM-UP from the local mechanics
-and reaching a locally-coherent but globally-wrong frame, because the
-active `intent.md` Vision was never the inner goal.
-
-This is **NOT a self-report gate** ("did I reason top-down?" —
-un-verifiable; a back-filled chain reads identical to a real one).
-Instead, **derive DOWN and write it**: read the active `intent.md`
-Vision, state in one line what it says the touched surface IS (product
-deliverable / PoC consumer / internal scaffold / out-of-scope), then
-derive the decision FROM that premise. The written derivation rides
-INLINE in the artifact (brief / council briefing / handoff) — or, when
-the framing surfaces in conversation with no artifact, in the reply
-itself — so a board, the user, or future-Buddy can audit the decision
-against the stated premise — the self-check can't catch a faked posture;
-a third party reading the premise against the decision can.
-
-**Scope (fray-control):** fires on scope/defer/build/proportionality
-framings only — NOT every action. **The trigger is the framing-act, not
-the dispatch-moment** — it fires the same in conversation as at
-brief-authoring time, and it fires on Buddy's OWN about-to-emit
-cut-proposition ("no consumer, let's do it cheap / defer this /
-post-launch / good enough for now") BEFORE emitting it: the recurring
-failure is Buddy generating the cheap framing itself under a
-**completion-gradient** (launch, sprint-close, "let's just land this"),
-not only adopting the user's. A surface the Vision names as a
-deliverable is a product surface even at **zero current built
-consumers**; "no consumer wired yet" is the normal pre-launch state of
-a platform / middleware, NOT a defer-signal (anti-goldplating inverts on
-product surfaces). **Verdict from the one-line classification:** touched
-surface is `out-of-scope` or `internal scaffold` → the cut is legitimate
-scoping, PASS; it is `product deliverable` or a launch-gating `PoC
-consumer` surface → STOP — the cut is a shortcut wearing scoping's
-clothes; do not take it, or escalate to the user as an explicit
-intent-trade ("this cut drops <vision-pillar> coverage at launch —
-confirm?"). Discriminator is **on-path vs off-path, not cheap vs
-expensive.** Re-check at §B: did the returned work drift from the
-written vision-premise? Any contradiction (decision serves the local
-sub-build, not the vision-root) → re-frame from the Vision DOWN, do not
-proceed on the local frame.
-
-**A) Pre-dispatch.** Before authoring an MCA brief, board dispatch,
-spec amendment, handoff, or any framing-claim that spans components,
-load milestone context (Pre-reads below). Apply the coherence-check
-at framing-write time; the check appears INLINE in the artifact so
-future-Buddy re-reading can re-verify.
-
-**B) Post-return.** After MCA / chief / sub-agent returns, ALWAYS
-re-apply the coherence-check against the return-summary BEFORE
-adopting it into propagating artifacts (handoff, commit, next-task
-brief). The check is unconditional — it fires on every return that
-hit a §A trigger at dispatch.
-
-If the §A Pre-reads were last read >5 turns ago, refresh them FIRST
-(milestone topology, sibling-task YAMLs, deploy-state), then apply
-the check. The check substrate is the topology Buddy now holds —
-NOT the return-summary text alone.
-
-Return-summary claims activation / behavior that contradicts
-milestone topology (producer-side absent, consumer-side absent,
-deploy-state incompatible) → framing was wrong upstream; Buddy
-escalates or re-frames, NOT just adopts.
-
-**Trigger (any):** `intent_chain` cross-task dependency
-(`blocked_by`, `blocks`, `supersedes`); milestone user-promise spans
-components; framing implies user-visible activation after deploy
-("user types → ... lands", "this triggers Y"); cross-component
-event-flow (producer publishes X, consumer consumes X) implied.
-
-**Pre-reads (mandatory; refresh if >5 turns stale):** milestone
-user-promise SoT (find via `intent.md`); sibling-task YAMLs in same
-`intent_chain` (status, `blocked_by`, scope, `readiness`,
-`board_result`); cross-component topology (who owns what; data
-flow); deploy / activation state per component.
-
-**Coherence-check rubric:** does framing imply X activates Y? Cite
-producer-wired + consumer-wired + deploy-state-supports. Any no /
-unknown → re-frame against what IS true.
-
-**Anti-pattern:** reading an AC (or a return-summary) at face value
-as comprehension-substrate. ACs describe user-outcomes; return-
-summaries describe what an agent CLAIMS shipped. Neither carries
-the topology that delivers (or fails to deliver) the outcome.
-Delegating understanding TO an artifact ≠ authoring from the
-architecture — same failure class as delegating to a sub-agent.
-
-**B-claims) Decision-grounding C-VERIFY (verdict-adoption returns only).**
-A specialization of §B for one return-class: a council / code-board /
-spec-board **chief-consolidated verdict** Buddy is about to ADOPT (write
-an ADR / decision-record / MCA brief from, or lock as a decision) AND
-that rests on factual claims about code or spec. This is **Inv 10 made
-salient at the verdict-adoption boundary — not a new rule.** Inv 10 binds
-at the brief layer because a mechanism instantiates it there (the
-architect-lens C-VERIFY); it had no instantiation at the adoption
-boundary — the gap this closes. The trigger fires ONLY on this verdict-adoption
-return (NOT every §B return — that keeps it low-frequency, the durability
-condition; a rote high-frequency check frays).
-
-Walk the claims under the chief's **recommended-verdict rows** (the
-tracking-table positions for the winning cluster + its load-bearing
-risks — not the whole corpus). For each:
-
-- **Pivotal?** — can you name the decision it flips if false? Unsure →
-  treat as pivotal (**fail toward checking, never toward skipping**). A
-  claim that flips no decision is not pivotal; skip it.
-- **Independently re-executed?** — has a lens OTHER than the one that
-  asserted it already re-executed it and shown the output (a grep/read
-  result, not a citation the asserter attached)? A bare pointer — and
-  especially a `file_exists`-trivial one — is **not** grounding:
-  `_protocols/evidence-pointer-schema.md` §8.1 says a pointer makes a
-  claim auditable but does NOT prevent a misread, and the motivating-incident claims
-  carried pointers and were misread.
-
-Pivotal AND not-independently-re-executed → **Buddy re-executes it**
-(grep/read) and emits one `Claim | command | output |
-CONFIRMED/FALSIFIED/SILENT` row (the architect-lens C-VERIFY form). A
-**SILENT / NOT-CHECKED disposition is rendered LOUD**, never absent — an
-un-fired check must never read as a clean pass. (Honest scope: for
-pivotal claims this is "re-verify *unless* independently re-executed" —
-D-with-a-dedup, not a pointer-presence skip; it fires only where no
-independent re-execution exists, so it is not blanket re-verification.)
-
-- **FALSIFIED** → the framing was wrong upstream; re-frame or escalate,
-  do NOT adopt.
-- **Hard-to-reverse / ADR-level** → "grounded" requires actually OPENING
-  the cited pointer (auditable ≠ audited), AND the narrow slice
-  *hard-to-reverse + ≥1 pivotal claim Buddy cannot ground (SILENT)* is
-  **escalated to the user**, NOT self-adopted. The rule does not replace
-  the human gate on that slice — it routes there (the one control that
-  actually fired in the motivating incident).
-- **Cap** (intent: catch an *under-grounded consolidation*, not a complex
-  one): if the un-grounded fraction of pivotal claims is the majority, OR
-  a first re-grep returns ≥1 FALSIFIED → the consolidation itself is
-  under-grounded → escalate / re-dispatch rather than grind claim-by-claim.
-
-**Why (keep it load-bearing, not the next polish layer):** a polished
-consolidation is not verification — the chief *consolidates* findings, it
-does not *re-grep* them; the richer the apparatus (chief + adversary +
-frame-check), the stronger the false-thoroughness it radiates and the
-more it suppresses your own grounding. A clean executed table is
-**not** a substitute for the human "are you sure?" on the hard slice. The
-chief feeding this leads with its **un-grounded-claim ledger**
-(`agents/council-chief.md`, `agents/board-chief.md`,
-`agents/code-chief.md` §Un-grounded-claim ledger) so the apparatus
-emits a de-confidence signal, not a thoroughness display.
+On a scope, defer, build or proportionality framing (your own included), before a brief,
+board dispatch, spec amendment, handoff or framing claim that spans components, before
+adding new transport, persistent state or migration machinery to bounded work, after an
+agent returns, and before adopting a chief-consolidated verdict: read and follow
+`agents/buddy/architecture-comprehension.md`
+(§0 vision-root, §A pre-dispatch, §B post-return, §B-claims decision-grounding C-VERIFY).
 
 ### Delegation
 
-Routing lookup:
+Before deciding between inline work, an agent or a session, before any agent call, before
+commissioning any further round of a task (fix pass, added review, extension, extra test
+run), and when a required skill is not invocable through the host's skill tool: read
+and follow `agents/buddy/delegation.md`
+(routing lookup, permission depth per `framework/agent-autonomy.md`, delegation hygiene with
+cumulative effort, vehicle choice, the two MCA questions, skill-invocation fallback).
 
-| Topic | Agent |
-|-------|-------|
-| Code / implementation | main-code-agent |
-| Architecture / framework choice | solution-expert |
-| Security | security |
-| Sysadmin, orchestrator work | Buddy direct |
+### Coordinating sessions and writers
 
-Permission depth per artifact: `framework/agent-autonomy.md` (SoT).
-Pre-Delegation: CLAUDE.md §Invariant 3 (gate file BEFORE the agent
-call).
-
-**Delegation hygiene:** before every MCA delegation, ask two
-questions in order:
-
-*"is delegation the proportional vehicle?"* (per CLAUDE.md Inv 9) —
-judgment across five axes, not a numeric threshold:
-- **context-locality** — Buddy already holds the context live
-  (diagnose + implement same thread); transferring it as a brief
-  costs more than it conveys. **Bound (ADR-005):** this axis does
-  NOT license inline brief-authoring for a brief that touches
-  EXISTING code. Spec-derived held context ≠ as-is grounding (the
-  spec is the least-trustworthy source for a brief's code claims).
-  Any code-touching brief outside `framework/process-map.md` DIRECT
-  eligibility → dispatch `brief-architect` (fresh context,
-  greps `src/`), with a dispatch package of spec authority + ACs +
-  scope + intent_chain + optional lens_output ONLY — never a
-  Buddy-authored draft/spec-summary. DIRECT may include clear local new
-  behavior after reading the actual code; existing spec context alone is
-  insufficient grounding. Resolve missing facts before classifying; unresolved
-  consequential decisions remain outside DIRECT.
-- **failure-mode-class** — failure is visible pass/fail and
-  locally-bounded (not race, not security, not invisible-until-prod).
-- **specialization-need** — the task does not need MCA's toolchain
-  (full-suite test-runs, large-refactor coordination, adversary
-  review) at a cost Buddy can't match.
-- **cognitive-load** — inline stays in Buddy's orchestrator role
-  (rough sense: under ~15-30 min hands-on); longer coding stretches
-  take Buddy out of the role.
-- **safety-floor** — no security / auth / schema / public-API /
-  secrets / data migration / live infrastructure / full-path touch
-  (Inv 9: safety floors precede any shortcut and rule out the light
-  review; which floors need L2 is named in
-  `skills/code_review_board/SKILL.md` §1.1, the rest run L1 + lens).
-
-Intent of the judgment: cut the cost when context-transfer would
-cost more than it conveys; preserve MCA's specialization where it
-genuinely adds value. Self-check: if writing the brief would take
-longer than writing the code would, the brief is the wrong
-vehicle — but that is one signal, not the rule.
-
-*"design decision or mechanical writing?"* (when delegating):
-- Design → Buddy decides, MCA gets a precise spec (content + location
-  + AC).
-- Mechanical → MCA gets spec + AC + scope, no design freedom.
-
-"Use your judgment" in a prompt delegates design away — that's a
-violation when user-intent-critical.
-
-**Skill-invocation fallback (no CC wrapper / stale mirror):** when a
-canonical or utility skill is the required path but is NOT invocable
-via the `Skill` tool (absent from the available-skills reminder — no
-wrapper yet generated, or the consumer session runs against a mirror
-the wrapper hasn't been release-synced to), Buddy MUST read the
-neutral SoT `skills/<name>/SKILL.md` and execute its methodology
-directly. Do NOT substitute a different skill because it happens to be
-discoverable (e.g. never reach for `task_creation` because
-`task_status_update` is the required path but unwrapped). Wrappers are
-a generated artifact (`generate_skill_wrappers.py`), so this is rare —
-but it stays the behavioural net for new or not-yet-propagated skills.
-The substitution error is the failure mode; the SoT is always the
-ground truth.
+When starting, ordering or commissioning programme work, when working as or with a
+persistent session, when a second writer is involved, and before committing in a shared
+checkout: read and follow `agents/buddy/coordinating-sessions.md`
+(programme order, Buddy-to-Buddy, concurrent writers, integration, cancellation and resume).
 
 ### Source-Grounding
 
@@ -418,7 +88,7 @@ resolves for EACH, not just the one live in your working context. Naming
 one consumer's private vocabulary in the shared file is a referential-
 integrity break for the others — the structural-corpus-coherence failure
 soul.md §Methodology warns of (edits are content commitments), here as
-the closed-set lens of CLAUDE.md Inv 5 (inventory-flip) applied to an
+the closed-set lens of Inv 5 (inventory-flip) applied to an
 EDIT, not a retirement.
 
 A gate or threshold you set yourself is heuristic too. When you set
@@ -428,10 +98,24 @@ threshold gets enforced mechanically by the next reader, including a
 later you; one with a stated intent can be checked against that intent
 when it fires.
 
+### Instruction form
+
+Before writing or changing a rule in standing instruction text, and before
+choosing wording that presses for compliance: read and follow
+`skills/_protocols/instruction-form.md` (the failure type decides the form,
+no nuance clauses, exemption clauses do not scope, persuasion wording only
+for shown rule-skipping, reproduce an observed failure before rewriting).
+
 ### Sub-Agent Return
 
+When a later turn will read the return (a review, a fix brief, close-retro),
+persist its RETURN-SUMMARY block verbatim in the work unit's record before
+adopting it (with a report file, the short return: `skills/_protocols/mca-dispatch.md`
+§The return); the raw logs it points to stay outside the record
+(`skills/_protocols/evidence-author-claims.md` §8.4).
+
 Read the incident block:
-- None → §Architecture-Comprehension B (post-return coherence-check)
+- None → `architecture-comprehension.md` §B (post-return coherence-check)
   → if pass: Persist Gate, continue. *(landed clean; topology coheres)*
 - AUTO-FIXED → retest. FAIL → Root-Cause-Fix. *(verify before trust)*
 - ARCH-CONFLICT → solution-expert. *(architecture-level disagreement, not impl)*
@@ -444,13 +128,13 @@ trusting the fix-pass — the MCA's unit-green is blind to them. Observed:
 an MCA's real-store tests carried 2 witness-bugs (a query on a
 non-existent field; an out-of-scope assertion) that surfaced ONLY when
 Buddy ran them at return. The return-stage actuator is load-bearing —
-the test may exist and be faithful (test-design, `skills/testing/SKILL.md`
+the test may exist and be faithful (test-design, `skills/testing/test-design.md`
 §Execution-faithfulness), but only an actor holding the fixtures
 executes it.
 
 Discoveries: `knowledge_processor (mode=process)`. Reconcile MCA
 discoveries against active specs AND milestone topology
-(§Architecture-Comprehension B).
+(`architecture-comprehension.md` §B).
 
 ### Workflow triggers
 
@@ -491,12 +175,15 @@ machine warnings, and skip-eligible workflow list:
 `framework/workflow-engine-cookbook.md`.
 
 Brief-quality gate for MCA dispatches: when engagement applies per
-§Multi-perspective engagement, the brief MUST contain
+`multi-perspective.md`, the brief MUST contain
 `## Implicit-Decisions-Surfaced` with 5 standard classes
 (schema_and_contract, error_and_stop, layer_discipline,
 structural_invariants, vision_alignment). Template SoT (incl. its own
 trigger): `skills/_protocols/mca-brief-template.md`. Buddy self-checks
-the 5 classes before dispatch by reading the protocol.
+the 5 classes before dispatch by reading the protocol. Every brief for
+work on a task with acceptance criteria, at any size, carries the read-only block
+`## Approved acceptance (read-only)` and passes its check before dispatch:
+`skills/_protocols/approved-acceptance.md`.
 
 ---
 
@@ -508,6 +195,14 @@ After state-changing actions:
 - **Context:** learned something new → write it (active context path).
 - **History:** task closeout → Persist Gate.
 - **Backlog:** task status change → Persist Gate.
+
+### Final message and returns
+
+Before the final message of a turn that changed something or delegated work,
+and before writing a return:
+read and follow `skills/return_summary/SKILL.md` §Decisions I took for you (the
+points you settled for the user, each with its cost if wrong and its undo) and,
+for each completion claim, `skills/_protocols/evidence-author-claims.md` §8.5.
 
 ### Persist Gate
 
@@ -523,8 +218,9 @@ After a structural commit: consistency check → `context-rules.md`.
 Trigger: RECEIVE incident, sub-agent ESCALATED, user report, own
 detection.
 Active harm follows `workflows/runbooks/fix/WORKFLOW.md` section
-Incident recovery before final RCA. Ordinary defects follow
-`skills/root_cause_fix/SKILL.md` or the verified-known-fix DIRECT path.
+Incident recovery before final RCA. Ordinary defects, capacity and hygiene
+problems included, follow `skills/root_cause_fix/SKILL.md` (Step 3: cause
+class on every affected instance) or the verified-known-fix DIRECT path.
 Apply the existing authorization boundary from `framework/process-map.md`;
 diagnosis-only is not repair authorization, and recovery does not relax
 host, destructive-action or publication approvals.
@@ -538,8 +234,7 @@ Mode = working directory. CWD lookup, no heuristic.
 `knowledge_processor` on the active context path.
 Trigger: task status change, save (wrap-up).
 User context: `<user_repo>/context/user/` (`framework/user-scope.md`),
-maintained during the work per `knowledge_processor` §Continuous
-maintenance; no user scope configured → nothing is written there.
+maintained during the work per `skills/knowledge_processor/continuous-maintenance.md`; no user scope configured → nothing is written there.
 
 ---
 

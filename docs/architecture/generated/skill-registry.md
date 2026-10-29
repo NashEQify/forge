@@ -4,49 +4,53 @@
 
 | Skill | Description | Status |
 |-------|-------------|--------|
-| adversary-test-plan | Adversary-driven test-plan extension BEFORE implementation. | active |
-| api-and-interface-design | API and interface design discipline. | active |
-| architecture-coherence-review | Cross-spec coherence review for specs that share contracts. | active |
-| bedrock_drill | Recursive first-principles drill with bottom-up synthesis. | active |
+| adversary-test-plan | Adversary extension of a test plan BEFORE implementation — a code-adversary adds the edge-case tests the implementer's bias systematically misses (RED tests as a required pre-fix gate). | active |
+| api-and-interface-design | API and interface design discipline (Hyrum's law, contract-first, validate at boundaries, prefer addition over modification). | active |
+| architecture-coherence-review | Cross-spec coherence review for specs that share contracts or interfaces. | active |
+| bedrock-drill | Recursive first-principles drill with bottom-up synthesis. | active |
 | caveman | Ultra-compressed communication mode. | active |
+| close-retro | Close-phase distill — a dedicated read-only agent reads a work-unit's artifacts (brief, review verdict, spec-drift, ACs, optional friction-log) into a retro 1-pager (§Stale-Decisions T0×T1 + §Patterns-Emerged + §Framework-Feed) that the close emit-steps consume (distill→emit). | active |
 | code-review-board | Multi-perspective code review. | active |
 | consistency-check | Checks the structural integrity of the repo. | active |
 | convergence-loop | Intra-gate iteration protocol. | active |
-| council | Structured architectural / strategic decision-making. | active |
-| cross-spec-consistency-check | Pre-authoring conflict detection between specs in the source-grounding set of the current build run. | active |
-| deprecation-and-migration | Deprecation and migration discipline. | active |
-| documentation-and-adrs | Capture decisions and documentation — why, alternatives, trade-offs. | active |
+| council | Structured architectural / strategic decision-making — context-isolated members + a chief consolidation, you decide (light / standard / full / interactive modes). | active |
+| cross-spec-consistency-check | Pre-authoring conflict detection across the specs in a build's source-grounding set — API naming drift, double authority, schema drift, authority overlap. | active |
+| deprecation-and-migration | Deprecation and migration discipline (code-as-liability; strangler / adapter / feature-flag patterns; churn + zombie-code handling). | active |
+| documentation-and-adrs | Capture decisions + documentation with the why, alternatives, and trade-offs — ADRs, README / changelog, API docs, agent-ready rules (CLAUDE.md). | active |
 | frame | Board-style problem-analysis discipline. | active |
+| frontend-design-tty | Design system for dark, terminal-inspired web UIs (monospace, mint/sage on dark blue-grey, box-drawing borders, no rounded corners) — concrete CSS tokens + component patterns. | active |
 | frontend-ui-engineering | Production-quality UI discipline. | active |
-| frontend_design_tty | Design system for dark, terminal-inspired web UIs (monospace, mint/sage on dark blue-grey, box drawing, hex labels, no rounded corners). | active |
 | get-api-docs | Fetch current API documentation for external libraries before coding against them. | active |
-| impl-plan-review | Multi-perspective review of the implementation plan BEFORE coding. | active |
-| improve-codebase-architecture | Codebase-wide architecture improvement via the deep-modules pattern (Ousterhout / Feathers). | active |
-| knowledge-capture | Persist knowledge from context windows, conversations, and research sessions. | draft |
-| knowledge-processor | Brain logic as agent behaviour. | active |
-| pre-build-spec-audit | Concept mining + MVP reconciliation against pre-existing specs. | active |
+| impl-plan-review | Multi-perspective review of an implementation plan BEFORE coding — validate the implementer's reading of the spec before code is written. | active |
+| improve-codebase-architecture | Codebase-wide architecture improvement via the deep-modules pattern (Ousterhout / Feathers) — find tightly-coupled modules worth consolidating and deepening. | active |
+| knowledge-capture | Persist a larger knowledge artifact (research, SOTA map, solve state, interview insights) from a context window or session. | draft |
+| knowledge-processor | Reconcile useful new information with scoped knowledge and retrieve relevant context before dependent work. | active |
+| pre-build-spec-audit | Mine pre-MVP / pre-build specs for methodology, architecture, and pattern ideas worth carrying into the current build scope (a concept harvest, NOT a compliance check against old specs). | active |
 | python-code-quality-enforcement | Python code quality and conventions for forge consumers. | active |
-| retroactive-spec-update | Retroactively update existing specs to match the as-is code state. | active |
-| return-summary | Format and rules for sub-agent return summaries. | active |
-| risk-followup-routing | Routes chief-verdict `remaining_findings:` entries per their `target:` annotation (7-value enum: spec_text / new_task / watch_item / accept / absorb_next / closes_with / re_review). | active |
-| root-cause-fix | 5-step root-cause analysis and fix. | active |
+| retroactive-spec-update | Sync an EXISTING spec to the as-is code (code = evidence, git = scope) — only "what does the code already do that the spec omits", never "what could be added". | active |
+| return-summary | Format and rules for sub-agent return summaries, and the "Decisions I took for you" list that every return and final message carries. | active |
+| risk-followup-routing | Route a chief verdict's `remaining_findings:` entries by their `target:` annotation (instead of one task per finding). | active |
+| root-cause-fix | Evidence-driven diagnosis and permanent defect repair. | active |
 | scoping | Translate a high-level intent into an approved spec hierarchy (L0-L3). | active |
-| sectional-deep-review | Deep review for large foundation specs (>1000 lines, many subsections). | active |
+| sectional-deep-review | Deep review for a large foundation spec (>1000 lines, many subsections) by splitting it into pattern groups + a final full-spec composition pass. | active |
 | security-and-hardening | Security-first development discipline. | active |
+| session-diagnosis | Read a session's transcript and its subagent transcripts in place, check first whether Forge loaded, then report per dimension what happened, with a path:line for every finding and the question whether the problem occurs without Forge. | active |
 | shipping-and-launch | Production-launch discipline with pre-launch checklist + feature-flag strategy + staged rollout + rollback plan + monitoring. | active |
-| show-open-tasks | Render a fast terminal overview of the OPEN tasks in a docs/tasks/ tree (status not in a terminal set), grouped by priority and sorted by created date descending (newest first). | active |
-| source-spec-reduce | Post-authoring source-spec reduction: cut each absorbed section + leave a pointer stub. | active |
+| show-open-tasks | Fast terminal overview of the OPEN tasks in a docs/tasks/ tree, grouped by priority, newest first. | active |
+| source-spec-reduce | Post-authoring source-spec reduction — cut each absorbed section, leave a pointer stub, archive the source when fully dissolved. | active |
 | spec-amendment-verification | Read-only cross-spec verification after spec amendments. | active |
-| spec-authoring | Interview-based authoring of a NEW spec. | active |
-| spec-board | Multi-perspective spec quality review. | active |
+| spec-authoring | Interview-based authoring of a NEW spec or spec section — solution-space exploration + intent_chain / intent alignment. | active |
+| spec-board | Multi-perspective review of whether an EXISTING spec is rebuild-ready — could an implementer rebuild it 1:1 from the spec alone? Use when a spec needs a quality check after writing and before build (completeness / consistency / contract / dependency gaps); reach for it instead of eyeballing a spec yourself. | active |
 | spec-update | DEPRECATED. | deprecated |
-| task-creation | Structured task creation. | active |
-| task-status-update | Coherent task-status change. | active |
+| task-creation | Create a new, self-contained task (acceptance criteria + duplicate / dependency check). | active |
+| task-status-update | Closing or completing a task (status→done), or any other task-status change — start (→in_progress), block, supersede, wontfix, absorbed. | active |
 | testing | Methodology and formats for test-case design and execution across the entire SSDLC. | active |
-| transparency-header | Header formats for delegation, execution, and direct conversation. | active |
+| transparency-header | Header formats for delegation, execution, and direct action — the user's at-a-glance scan of what was done and why across parallel sessions. | active |
+| ux-authoring | Draw out and write the UX of a change a person operates: a look contract (tokens, components) and an experience contract (surfaces, states, named-protagonist journeys, voice), with a surface-closure check. | active |
+| workflow-router | 'forge workflow router — Use when you need to: implement a feature or task; do periodic context-system maintenance; rewrite reader-facing docs / README / positioning; fix a bug or handle an incident; research, evaluate or spike; review or validate a spec; persist a session; solve a problem whose solution shape is still open; → use the direct common or method entry; start the engine only for selected development.' | active |
 | youtube-subtitles | Read YouTube videos via subtitles instead of watching them. | active |
 | zoom-out | User-triggered: provide a wider context / higher abstraction level for an unfamiliar code area. | active |
 
-Active: 40 | Other: 2
+Active: 44 | Other: 2
 
-*Status: 2026-06-02*
+*Status: 2026-10-29*

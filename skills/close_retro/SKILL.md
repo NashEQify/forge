@@ -17,6 +17,10 @@ disable-model-invocation: false
 uses: []
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: close-retro
 
 Upgrades the `workflow retro` close sub-step from a missed-entry backstop
@@ -39,7 +43,8 @@ operational checklist.
   `workflow retro` sub-step is already skip-eligible).
 
 A mandated every-close fire is the rote-ritual-thin-why shape that frays
-(intent.md §Positioning). Fire on signal-bearing work-units only.
+(`transparency_header/SKILL.md` §Why this exists). Fire on signal-bearing
+work-units only.
 
 ## Inputs (all present at close as a natural consequence of the workflow)
 
@@ -90,7 +95,13 @@ close_retro replaces the `workflow retro` sub-step; its three sections feed
 the workflow's **existing** close sub-steps (per `docs/specs/374` §8 table):
 
 - §Stale-Decisions → `documentation_and_adrs` ADR-triple (build/solve close;
-  fix has no ADR sub-step → §Stale-Decisions stays noted in the retro).
+  fix has no ADR sub-step → §Stale-Decisions stays noted in the retro). In
+  build and solve, a row whose action is not an ADR reaches its owner in the
+  same close: `re-open-task` → the task's notes or a new task
+  (`task_creation`), `amend-spec` → the spec's amendment path, `supersede` →
+  a new entry in the record that holds the T0 decision (decision record or
+  ADR), not an edit of the brief. `accept-shift` and `no-action` stay in the
+  retro.
 - §Patterns-Emerged → `knowledge_processor` (`information`, mode=process).
 - §Framework-Feed → forge-feed entries (the replaced sub-step's output).
 - `risk_followup_routing` (review `remaining_findings:`) — **untouched**;
@@ -106,7 +117,8 @@ safety-net behaviour (capture-now missed entries) — no regression.
    set + the target workflow (build/solve/fix — narrows the artifact set).
 3. Agent returns the retro 1-pager inline (read-only — no write target).
 4. Buddy writes it to `docs/<workflow>/<slug>-retro.md`.
-5. The close emit sub-steps consume it per the §8 mapping.
+5. The close emit sub-steps consume it per the §8 mapping; in build and solve,
+   route each non-ADR §Stale-Decisions row to its owner (§distill → emit).
 
 ## Boundary
 

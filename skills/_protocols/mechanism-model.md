@@ -7,15 +7,17 @@ written once in the authoring seat and read by every later step. The unit of
 spec review, test design, brief, fix brief and re-verify on a mechanism is a
 **cell of this table**, not a finding and not the last diff.
 
-**Consumed by:** `framework/spec-engineering.md` §Convention:
+**Consumed by:** `framework/spec-engineering-mechanism-lifecycle.md` §Convention:
 §Mechanism-Lifecycle; `skills/spec_authoring/SKILL.md` artifact checklist;
-`skills/spec_board/SKILL.md` §1.0 pre-gate, §2, §4b, §6;
-`skills/spec_amendment_verification/SKILL.md` CHECK; `skills/testing/SKILL.md`
+`skills/spec_board/depth-and-team.md` §1.0 pre-gate, §2; `skills/spec_board/checklist-and-dispatch.md` §4b;
+`skills/spec_board/post-pass.md` §6;
+`skills/spec_amendment_verification/SKILL.md` CHECK; `skills/testing/test-design.md`
 §Derivation from §Mechanism-Lifecycle; `agents/brief-architect.md`;
-`skills/_protocols/mca-brief-template.md` §structural_invariants;
+`skills/_protocols/mca-brief-template-decision-classes.md` §structural_invariants;
 `skills/_protocols/fix-brief-template.md` §Mechanism-cells;
-`skills/code_review_board/SKILL.md` §2 step 4, §3 checklist, §4 re-verify;
-`skills/convergence_loop/SKILL.md` §Simplify-before-patch gate (`model` row);
+`skills/code_review_board/brief-and-team.md` §2 step 4, §3 checklist;
+`skills/code_review_board/checklist-and-dispatch.md` §4 re-verify;
+`skills/convergence_loop/simplify-before-patch.md` §Simplify-before-patch gate (`model` row);
 `agents/code-adversary.md`, `agents/code-domain-logic.md`,
 `agents/board-adversary.md`, `agents/board-implementer.md`,
 `agents/code-chief.md`, `agents/code-architect-roots.md`,
@@ -66,62 +68,14 @@ boundary, as for §Module-Decomposition).
 
 The section lives **in the owning spec** (one home). Other specs that carry
 part of the mechanism point at it (`see <spec> §Mechanism-Lifecycle: <name>`)
-and do not copy the matrix.
+and do not copy the matrix. Decisions that bind separately built units belong to the architecture spine
+(`skills/_protocols/architecture-spine.md`), which points at this section and does not copy it.
 
 ## Schema
 
-```markdown
-## §Mechanism-Lifecycle: <mechanism name>
-
-**Owner:** <spec §, task id> · **Carriers:** <state-bearing things, one line each> ·
-**Cross-spec cells:** <spec § pointers, or none> · **Outside this model:** <retro-model only>
-
-### States
-<per carrier: every state incl. the absent / initial state and every terminal state;
- derived states name the inputs they are computed from>
-
-### Operations
-| op | kind (surface / flow) | producer (code site, or `unbuilt: Task N` / `beyond-MVP`) | consumer(s) (code site, or the vision / plan entry that names it) | actor |
-|---|---|---|---|---|
-
-### Matrix
-| op ↓ / state → | <s0> | <s1> | … |
-|---|---|---|---|
-| <op> | →<next> · now | ✗ <guard / error> · now | →<next> · task-N | →<next> · beyond-MVP | unreachable(<reason>) |
-
-### Invariants
-| invariant | carrier | cells that enforce it | enforcement locus (record / call / transaction / derived) |
-|---|---|---|---|
-
-### Placed cells (not built in this build)
-| cell | placement (`task-N` / `beyond-MVP`) | why there (caller task N builds the flow · plan places it beyond the MVP) | `blocked_by` wired | what this build does (explicit refusal; surface it builds) |
-|---|---|---|---|---|
-```
-
-### Content rules
-
-1. **No empty cell at lock.** A cell the author cannot fill is a finding
-   (spec board: MAJOR/HIGH), not a blank or a `?`.
-2. **Both axes.** Enumerate operations from the consumer side too: for every
-   input of a derived state, which writer changes it? A writer list by key type
-   alone misses the un-keyed input (673); a record-level view alone misses the
-   after-the-fact routes (678).
-3. **Every invariant per carrier**, not only the one the findings cluster on.
-   Each names the cells that enforce it and its enforcement locus. Moving a
-   check between loci (call → transaction → derived) is a matrix edit and is
-   recorded as one.
-4. **Producers are grepped, not recalled.** `unbuilt: Task N` requires a grep
-   showing no production construction site at HEAD (test harnesses, fixtures
-   and the authority's own validation code are not producers). The spec's own
-   prose naming a producer is not evidence that it exists. The grep states
-   what exists; it does not decide what is modelled or when it is built
-   (§Scope and placement).
-5. **Every cell carries a placement** — `now`, `task-N` or `beyond-MVP` —
-   except `unreachable` cells. See §Scope and placement.
-6. **`unreachable` carries its reason** (which guard or structural fact makes
-   the cell impossible) so the spec board can refute it.
-7. **The matrix is updated, never re-derived.** A later pass that finds a cell
-   wrong edits the cell; it does not write a second model in a log.
+When writing or editing a `§Mechanism-Lifecycle` section, and when a board checks its cells: read and follow
+`skills/_protocols/mechanism-model-schema.md` (the section template; content rules 1–7, from no empty cell at lock
+to update, never re-derive).
 
 ## Scope and placement (the vision decides what, the plan decides when)
 
@@ -151,7 +105,7 @@ here and do not restate it.
    work in the right task; it never removes a cell, never marks it
    `beyond-MVP`, and never re-routes a finding to `accept`. A consumer the
    vision or plan names is a consumer at zero built instances
-   (`skills/code_review_board/SKILL.md` §5 Vision-named-surface carve-out is
+   (`skills/code_review_board/verdict.md` §5 Vision-named-surface carve-out is
    the disposition-side form of this rule).
 
 Corollaries:

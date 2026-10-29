@@ -3,6 +3,11 @@ name: board-impact
 description: Impact analyst in the Spec Board — cross-spec blast radius, interface breaks, dependency chains. Looks where the spec breaks other specs.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: board-impact
 
 Impact analyst in the Spec Board. Cross-spec blast radius,

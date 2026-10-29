@@ -20,6 +20,10 @@ modes: [light, standard, full, interactive]
 uses: [_protocols/plan-review, _protocols/context-isolation, _protocols/dispatch-template, _protocols/consolidation-preservation, _protocols/content-preservation, _protocols/piebald-budget, _protocols/analysis-mode-gate, _protocols/evidence-pointer-schema, _protocols/discourse]
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: council
 
 Generic reasoning method. Required inputs: problem, constraints, evidence/context,
@@ -29,9 +33,9 @@ use a private temporary execution root and the dispatch protocol's complete-retu
 transport. Supplied intent/values anchor standalone work; a repository intent is
 required only when that repository is the selected caller. Report rationale,
 alternatives, uncertainty and usable evidence inline. Proposals are not accepted
-user decisions. Optional domain adapters below apply only to selected development.
+user decisions. Optional domain adapters (§12–§13 in `development.md`) apply only to selected development.
 
-Buddy checklist + operational detail.
+Buddy checklist (§4 in `run.md`) + operational detail.
 
 ## 0. Plan + review (required without a frame)
 
@@ -82,46 +86,21 @@ Light omits adversary/frame-check/discourse, not the Chief.
 
 **Coherence-check:** after every Chief return, check the recommendation against supplied intent, constraints, source evidence and viable alternatives. Buddy owns the decision. Development callers additionally apply their architectural obligations.
 
-**Member model config**: use the host's available, authorized model settings.
-Inherited model settings are the default; do not invent unavailable models
-or claim model diversity from different role names. Legacy Opus/Sonnet mixes
-in templates are Claude-specific examples, not a portable Codex requirement.
+**Member model config**: members, the adversary and the Chief take the Design row of
+`framework/models.md`, named in each call, from the host's available,
+authorized models; the `model:` keys in a council template's `member_config`
+do not set it. Do not invent unavailable models or claim model diversity
+from different role names.
 
 Default = light (proportional release valve). **Mode escalation** (light → standard → full) is criterion-driven, not Buddy-uncertain — picking standard/full just because Buddy feels uncertain is mode inflation. If §1.0 warrants Council and the alternative is escalating an unresolved decision to the user, use Council first within existing authorization. Escalate only unresolved dissent, consequential user-owned decisions or scope changes. Selected development callers additionally follow their operational contract.
 
-## 2. Pre-council frame check (standard / full)
+## 2–4, 9–10. Running the council (frame check, briefing, dispatch, perspectives, interactive)
 
-**Trigger:** Buddy-drafted briefing without upstream frame report. (When `frame/SKILL.md` already produced a frame-report for this question, reference it — don't re-run.) Mode determines whether the trigger applies; light skips frame-check by mode.
-
-Buddy drafts briefing → dispatches `plan-adversary` cold-start on the draft (criteria 1-6 per `_protocols/plan-review.md`; focus: does question pre-decide by shape? option-set complete? stakeholders missing?) → persists return verbatim at the declared execution-root frame-check path (§7; private temporary storage is sufficient) → distills concerns into FINAL briefing.
-
-Members see FINAL briefing only. Council-chief reads BOTH at CHIEF-1.0.
-
-## 3. Briefing format (cold-start clean — MANDATORY)
-
-**MUST:** question (1 sentence) · intent_chain anchoring · context-file paths · null option (1-2 sentences) · perspectives + ranks · per-option reversibility cost-band (S/M/L/XL effort × named consumers impacted) · artifact destinations · inline return contract (`_protocols/dispatch-template.md` section Output transport).
-
-**MUST NOT:** Buddy's proposal · pre-classified conflicts · severity tags · lean hints. Brief-contagion empirically demonstrated.
-
-> **`intent_chain anchoring` is REQUIRED and load-bearing — not droppable.** Its
-> one-line `vision` (from supplied intent, or the active `intent.md` for a repository caller) is the
-> **standing** intent grounding a cold member receives: a standardized alignment
-> derivation, NOT decision-curated content. It is the sanctioned exception to the
-> "cold-analysis gets nothing" anti-anchoring rule — the author-separability line: a standing
-> anchor is not the proposer's per-decision framing, a Buddy-selected fact/premise/hint
-> is (those stay in MUST-NOT). A briefing missing its `intent_chain` block is
-> **incomplete**, not merely terse.
-
-## 4. Buddy checklist (dispatch)
-
-1. §1.0 gate → mode pick.
-2. §2 pre-council frame check (standard / full).
-3. Write briefing per §3 (clean). Path: §7.
-4. Spawn N members + adversary in ONE tool block, parallel, `run_in_background: true` (subagent_type + perspective + briefing path + output path + file-output OVERRIDE).
-5. Wait, then spawn `council-chief` with all member outputs + adversary + (when present) frame-check artifact.
-6. Read chief consolidated → recommended verdict + tracking-table verification.
-7. (Full + dissent) Discourse one round per `_protocols/discourse.md`.
-8. Buddy checks pivotal claims against sources and the recommendation against supplied intent/constraints (§1.1), then owns the decision. Carry unresolved risks into the result. An explicitly selected development caller adds its own coherence and ADR obligations (§12).
+Once the §1 mode is picked, before drafting the briefing and dispatching members (light / standard / full), and
+before opening an interactive council: read and follow `skills/council/run.md` (§2 pre-council frame check, §3
+briefing format with the required `intent_chain` anchoring, §4 Buddy dispatch checklist, §9 perspective profiles,
+§10 interactive council phases 1-2-3). Section numbers are skill-wide: §0–§1, §5–§8, §11 and §14 here, §2–§4 and
+§9–§10 in `run.md`, §12–§13 in `development.md`.
 
 ## 5. Anti-patterns
 
@@ -153,82 +132,18 @@ Persist an accepted result only through the caller's selected continuity owner.
 
 ## 8. Boundary
 
-Spec review → `spec_board`. Code diff → `code_review_board`. Pre-code plan → `impl_plan_review`. Technical architecture moderator → `solution-expert` (instantiates this skill, 6 fixed perspectives per the user's values). Non-technical → this skill with situational perspectives (see §9 below).
-
-## 9. Perspective profiles
-
-### architecture (default for ARCH-XXX decisions)
-
-Ranks from the user's constraint hierarchy (values and priorities in `<user_repo>/context/user/profile.md`,
-`framework/user-scope.md`); without one, this default order applies:
-
-| Rank | Perspective | Focus |
-|------|-------------|-------|
-| 1 | Security | attack surface, credentials, data flow |
-| 2 | Sovereignty | open source, self-hosting, vendor lock-in |
-| 3 | Simplicity | absorption (new primitives absorb existing), maintainability |
-| 4 | Experience | dev/user happy path, friction count |
-| 5 | Compatibility | stack fit, migration cost, downstream consumers |
-| 6 | Scale | 10x volume, future-proofing, cost-per-month |
-
-Simplicity (rank 3) may propose closed-source ONLY when substantial benefit + explicit sovereignty trade-off documented.
-
-### life_domain (non-technical decisions)
-
-| Perspective | Focus |
-|-------------|-------|
-| pragmatist | fastest path to result, cost/benefit |
-| risk_analyst | worst case, reversibility |
-| long_term_thinker | 2 / 5 / 10 year view |
-| devils_advocate | why is the preferred option WRONG? |
-
-### Other profiles (instantiate situationally)
-- **project prioritization:** impact / effort / urgency / learning / risk
-- **infrastructure / ops:** reliability / security / sovereignty / simplicity / cost
-- **personal direction:** alignment / opportunity cost / reversibility / energy
-- **buy / invest:** need / sovereignty / cost / quality / alternatives
-
-## 10. Interactive council — phases 1-2-3
-
-### Phase 1: Intake check
-(1) Derivation chain — repeat intent anchoring; broken → STOP. (2) Problem vs symptom — name suspected real problem. (3) Null option — 1-2 sentences. Present candidates (2-4; frame-report candidates first). Close with: missing candidate? perspectives right? WAIT for user.
-
-### Phase 2: Council rounds
-Per round: pick 2-3 perspectives contributing most (not all every time). Each first-person, identifier prefixed, 2-4 sentences. Name conflicts immediately; default = rank wins; ask user if weighing differently. End with concrete question. WAIT for user.
-
-Moderation: drift against higher-ranked → object visibly. Consensus forming → summarise + phase 3. User overrides perspective → accept + document. No convergence after 2 rounds → summarise open conflicts, ask user directly.
-
-### Phase 3: Synthesis
-(1) Recommendation (1-2 options). (2) What's sacrificed (which perspective loses + concrete consequence). (3) Open risks. (4) Demand decision ("Are we going with X?", not "looks good?"). Done only when user has chosen.
+Spec review → `spec_board`. Code diff → `code_review_board`. Pre-code plan → `impl_plan_review`. Technical architecture moderator → `solution-expert` (instantiates this skill, 6 fixed perspectives per the user's values). Non-technical → this skill with situational perspectives (see §9 in `run.md`).
 
 ## 11. Risk carry-forward schema (council-side)
 
-Mirrors `code_review_board/SKILL.md` §Risk carry-forward. Decision artifact YAML `remaining_positions:` per entry: `id`, `severity`, `option`, `argument_summary`, `rationale_for_carry_over`, `proposed_action` (`re_council` / `ADR` / `monitor` / `accept`).
+Mirrors `code_review_board/verdict.md` §Risk carry-forward. Decision artifact YAML `remaining_positions:` per entry: `id`, `severity`, `option`, `argument_summary`, `rationale_for_carry_over`, `proposed_action` (`re_council` / `ADR` / `monitor` / `accept`).
 
-## 12. ADR-trigger conditions
+## 12–13. Development caller: ADR triggers and engine handshake
 
-For an explicitly selected development caller, ADR REQUIRED on:
-- Hard-to-reverse decision (data/schema/contract/identity)
-- Decision spans ≥2 components or layers
-- ≥1 HARD constraint (security, sovereignty per the user's values) explicitly traded off
-- Council mode = standard or full (light optional)
-
-Via `documentation_and_adrs/SKILL.md` in that development caller. Otherwise return rationale/alternatives/uncertainty inline; no ADR or task is mandatory or automatically written.
-
-## 13. Optional development caller handshake
-
-Only a selected development caller loads this section’s engine/runbook references. Standalone invocation never starts or probes an engine.
-
-**Build-context council** (specify-phase substitute for spec_board): Buddy MUST trigger `python3 scripts/workflow_engine.py --start build --task <id>` in the SAME tool block as council spawn. Engine state SoT for cross-session recovery. This is Buddy-side discipline — `workflows/runbooks/build/workflow.yaml` board step has `alternative_skill_refs: skills/council/SKILL.md` as documentation-intent only (engine reads `skill_ref`).
-
-**Solve-refine council** (opt-in via state-file marker): the `council-needed` guard at `scripts/workflow_engine.py` greps the solve state file for `council-required: true` (frontmatter or body). If present → guard exits 0, council step fires automatically. If absent → guard exits 1, refine step proceeds with user-dialog only. Buddy writes the marker when frame report's >1-path + hard-to-reverse criteria fire.
-
-Default = skip (council is Buddy-judgmental per §1.0; engine does not auto-fire architectural decisions). See `framework/workflow-engine-cookbook.md` for engine shape.
-
-**Split rulings (development caller):** a ruling that splits a capability
-and moves its gate / proof half to a sibling names that half, every
-producer / consumer of the ungated half, and the fail-closed edge; the
-caller applies its task-creation split-gap check in the same change.
+Only for an explicitly selected development caller, before a build-context or solve-refine council starts, when
+deciding whether an ADR is required (§4 step 8), and when a ruling splits a capability: read and follow
+`skills/council/development.md` (§12 ADR-trigger conditions, §13 optional development caller handshake with split
+rulings). Standalone invocation needs neither.
 
 ## 14. Skip rationales (template)
 

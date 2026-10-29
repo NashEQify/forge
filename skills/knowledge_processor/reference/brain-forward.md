@@ -75,8 +75,6 @@ What stays identical:
 - Decay thresholds (identical matrix)
 - CONTRADICTS: Buddy always asks (T1: synchronous, T2: via escalation)
 
-Reference: `docs/specs/user-model-t2.md`
-
 ## What does not change
 
 - **EXTRACT → IMPACT CHAIN → SIGNAL CHECK pipeline** — same process, different data basis
@@ -85,5 +83,3 @@ Reference: `docs/specs/user-model-t2.md`
 - **MUST NOT: dispatcher never writes directly into context/** — always via knowledge_processor (exception: decisions.md)
 - **Maturity promotion** — becomes an explicit field instead of implicit position, same logic
 - **Delta check** — before every write, whether MD or Brain entity
-
-Overall model: `docs/specs/knowledge-architecture.md`. Schema: `docs/specs/brain-schema.md`.

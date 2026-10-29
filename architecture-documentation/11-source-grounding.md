@@ -9,10 +9,14 @@ owner without relying on copied line counts or an old inventory snapshot.
 | Claim or question | Authority |
 |---|---|
 | Three independent capabilities and their dependencies | [Capability ownership](../framework/capabilities.md) |
-| Installation availability versus workflow selection | [Process map: selection](../framework/process-map.md#workflow-selection) |
+| The rules that hold in every project | [Framework invariants](../framework/invariants.md) |
+| Name a rule's intent before changing it; keep the whole outcome when delegating | [Work principle](../framework/work-principle.md) |
+| Installation availability versus workflow selection | [Workflow selection](../framework/workflow-selection.md) |
 | Authorization survives phase changes without expanding scope | [Process map: authorization](../framework/process-map.md#authorization) |
-| Proportional development process and DIRECT eligibility | [Process map: DIRECT](../framework/process-map.md#direct-eligibility) |
+| Proportional development process and DIRECT eligibility | [DIRECT eligibility](../framework/direct-eligibility.md) |
+| The coding agent builds at any size; a separate run checks and the reply names it | [Operational rules](../agents/buddy/operational.md#phase-1-receive), [the DIRECT run](../framework/direct-eligibility.md#the-direct-run), [code delegation](../framework/invariants.md#4-code-delegation) |
 | Who writes each development artifact | [Agent autonomy](../framework/agent-autonomy.md) |
+| Duplicate check and one task per deliverable | [Task creation](../skills/task_creation/SKILL.md) |
 
 ## Knowledge and continuity
 
@@ -24,7 +28,9 @@ owner without relying on copied line counts or an old inventory snapshot.
 | Interrupted publication and stale-baseline recovery | [Continuity: recovery](../framework/continuity.md#recovery-without-stale-replay) |
 | Common save and publication authorization | [Save runbook](../workflows/runbooks/save/WORKFLOW.md) |
 | Context ownership and navigation upkeep | [Housekeeping runbook](../workflows/runbooks/context_housekeeping/WORKFLOW.md) |
+| The start every session runs, whatever the request's size | [Start sequence](../agents/buddy/boot.md) (`full`), [on-demand start](../agents/buddy/boot-on-demand.md) (`daily`), [freshness check and greeting](../agents/buddy/boot-status.md) |
 | Minimal boot and ordinary resume | [On-demand start](../agents/buddy/boot-on-demand.md) |
+| Development context at start | [Software start](../agents/buddy/boot-software.md) |
 
 The helper protects file operations; it does not decide whether a claim is true
 or whether its intended change is authorized. Semantic and storage evidence must

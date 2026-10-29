@@ -54,13 +54,13 @@ development-specific catalogue below. Profile availability does not select work.
 
 ---
 
-## Skills (44 in tree — 42 active + 1 draft + 1 deprecated)
+## Skills (46 in tree — 44 active + 1 draft + 1 deprecated)
 
 Type legend: **Capability** = multi-phase, callable from workflow steps.
 **Utility** = single function, directly callable by Buddy.
 **Protocol** = rule/format loaded by other skills.
 
-The two tables below enumerate all 41 active skills. The
+The two tables below enumerate all 44 active skills. The
 `spec_board` UX-mode row is the same skill in a different mode, not
 a separate skill. `spec_update` is deprecated (still in tree) —
 see "Retired / deprecated skills" at the end of this section.
@@ -84,7 +84,7 @@ see "Retired / deprecated skills" at the end of this section.
 | `pre_build_spec_audit` | concept mining from pre-MVP/pre-build specs — methodology/architecture/pattern extraction + 5-way triage, conditional council | build specify (conditional — pre-build source specs in scope) |
 | `cross_spec_consistency_check` | pre-authoring conflict detection in source-grounding set (4 pattern classes, severity triage) | build specify (skip-eligible for greenfield without source-grounding set) |
 | `source_spec_reduce` | post-authoring source-spec section migration with 3-way triage + drift-items.yaml | build specify (skip-eligible for greenfield without source predecessor) |
-| `adversary_test_plan` | adversary-driven test-plan extension before implementation — code-adversary adds edge-case TCs the implementer misses; RED tests as pre-fix gate | build prepare step 4 (test-design, adversary mode: ≥3 ACs / schema change / cross-module / sub-build) |
+| `adversary_test_plan` | adversary-driven test-plan extension before implementation — code-adversary adds edge-case TCs the implementer misses; RED tests as pre-fix gate | build prepare step 4 (test-design, adversary mode on a safety floor only) |
 | `risk_followup_routing` | routes chief-verdict `remaining_findings:` per `target:` annotation (7-value enum), instead of one-task-per-finding | build close step 10 (close-bookkeeping), fix close |
 | `knowledge_processor` | context-system write mechanism (mode: process/wrap-up) | cross-cutting in all harmonized workflows |
 | `root_cause_fix` | 5-step root-cause analysis (phase A + B) | fix specify + execute |
@@ -96,6 +96,7 @@ see "Retired / deprecated skills" at the end of this section.
 | `frontend_ui_engineering` | production-quality UI discipline: component architecture, state decisions, design-system adherence (no AI aesthetic), A11y (WCAG 2.1 AA), 4 states. Code-side complement to `spec_board mode=ux` (spec side) + `code_review_board` (diff side). | build execute for frontend code, code_review_board UX specialists |
 | `frontend_design_tty` | design system for dark, terminal-inspired web UIs (monospace, mint/sage on dark blue-grey, box-drawing borders, hex labels, no rounded corners). Provides concrete CSS custom properties + component patterns + anti-patterns. Complements `frontend_ui_engineering` (methodology side). Used by consumer apps that declare TTY aesthetic. | manual when building UI, sub-skill of `frontend_ui_engineering` |
 | `close_retro` | close-phase distill→emit: read a work-unit's artifacts (brief / verdict / drift / ACs) → retro 1-pager (stale-decisions T0×T1 + patterns + framework-feed) the close emit-steps consume; dedicated read-only `close-retro` agent executes | build close-bookkeeping (distill); solve/fix fast-follow |
+| `ux_authoring` | draws out and writes the UX of a change a person operates: a look contract (tokens, components) and an experience contract (surfaces, states, named-protagonist journeys, voice) with a surface-closure check; reviewed by `spec_board mode=ux`, built from by `frontend_ui_engineering` | build specify (lifecycle UX stage), user-facing |
 
 ### Utilities (directly callable by orchestrator)
 
@@ -107,14 +108,15 @@ see "Retired / deprecated skills" at the end of this section.
 | `consistency_check` | structural repo integrity (dead refs, orphan files, adapter drift) | Buddy pre-commit gate, after structural changes |
 | `get_api_docs` | fetch current API docs for external libraries via chub CLI | build specify step 5 SPEC + step 7 EVAL |
 | `transparency_header` | header format for delegation + task start | Buddy on dispatch |
-| `return_summary` | agent return-summary format | all delegated agents |
+| `return_summary` | return format; the decisions list of returns and final messages | delegated agents; Buddy at the final message |
 | `python_code_quality_enforcement` | Python conventions, Ruff/Mypy tooling | MCA during coding |
 | `youtube_subtitles` | video summary via subtitles | manual for video research |
 | `documentation_and_adrs` | ADRs, README, changelog, API docs, agent rules (why-context) | after architecture/API decisions, before save for decision artifacts; solve/build close conditional |
 | `shipping_and_launch` | production-launch discipline (pre-launch checklist + feature flags + staged rollout + rollback) | before every production deploy |
 | `deprecation_and_migration` | code-as-liability discipline (decision framework + compulsory/advisory + strangler/adapter/feature-flag patterns + churn rule + zombie code) | when removing old systems/APIs/features |
-| `api_and_interface_design` | API authoring discipline (Hyrum's law + one-version rule + contract-first + validate-at-boundaries + Pydantic/SSE patterns) | when designing new APIs/interfaces |
+| `api_and_interface_design` | API authoring discipline (Hyrum's law + one-version rule + contract-first + validate-at-boundaries + schema and event-stream patterns, e.g. Pydantic/SSE) | when designing new APIs/interfaces |
 | `show_open_tasks` | fast terminal overview of OPEN tasks in a `docs/tasks/` tree, grouped by priority, newest first | Buddy directly on task-list/overview request |
+| `session_diagnosis` | transcript diagnosis: Forge loaded?, seven dimensions, `path:line` per finding | user asks why a session failed |
 | `zoom_out` | wider context / higher abstraction level for an unfamiliar code area | Buddy directly on "zoom out" / "bigger picture" request |
 | `caveman` | ultra-compressed communication mode (~75% token reduction, technical accuracy kept) | Buddy directly on "caveman mode" / "be brief" / `/caveman` |
 | `workflow_router` | injected workflow-discovery sign-post — need-phrased catalog of the 8 workflows (generated, points to `process-map.md`) | injected into available-skills reminder; surfaces a workflow on a matching need |
@@ -129,7 +131,7 @@ see "Retired / deprecated skills" at the end of this section.
 Deprecated (still in tree, do not invoke):
 - `spec_update` — split into `spec_authoring` (new spec/section) +
   `retroactive_spec_update` (code-as-evidence catch-up). Counted in the
-  43 tree files; not an active skill.
+  46 tree files; not an active skill.
 
 Retired (removed from tree; available in git history):
 - `ux_review` — absorbed into `spec_board` as `mode=ux`.
@@ -138,30 +140,5 @@ Retired (removed from tree; available in git history):
 
 ---
 
-## Utility exception (important mental model)
-
-**Rule:** users call workflows only (or steps within them). Skills are
-used by workflow steps, not called directly by users. Skills without a
-workflow-step call are orphan candidates.
-
-**Exception:** utility skills (table above) are called directly by Buddy
-as orchestrator work, not via workflow steps. That is cross-cutting
-infrastructure and by definition not workflow-embedded.
-`task_creation`, `task_status_update`, `consistency_check`,
-`transparency_header`, `return_summary` are not orphans — they are
-utility patterns.
-
----
-
-## Orphan check (quick reference)
-
-A skill is an orphan when:
-1. It is `type: capability` (not utility/protocol).
-2. It is called in **no** workflow runbook step (grep in
-   `workflows/runbooks/*/WORKFLOW.md`).
-3. It has no documented "intentional exception" (e.g. utility skill
-   called directly by Buddy).
-
-Orphan candidates need content review: what the skill does, whether the
-use case is covered elsewhere, and whether it should be integrated into
-a workflow (content-based check, not regex-based).
+Utility exception and orphan check (maintenance): `framework/skill-map.md`
+§Utility exception, §Orphan check.

@@ -3,6 +3,11 @@ name: code-spec-drift
 description: Retroactive spec-drift reviewer — checks whether the spec describes the actual code (code = evidence; the spec must catch up to the as-is state). Counterpart to code-spec-fit.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: code-spec-drift
 
 Retroactive spec-drift reviewer. Counterpart to

@@ -32,6 +32,24 @@ scoped pending recovery before dependent answers. A statement that context is
 is assumed. Source updates require the coordinated activation procedure; an old
 session is never silently treated as upgraded after a pull.
 
+### Buddy coordination refresh
+
+After resuming coordination or a meaningful task/topic change, refresh the
+resolved Soul and active intent before continuing. Before a decision changes
+approach, roles or protections, and before adopting a consequential agent
+recommendation into an implementation commission, reread the relevant Soul
+principles and apply them to that decision: which underlying assumptions does
+it touch, and how is their purpose preserved? Resolve the Soul through
+`framework/user-scope.md`, including the framework Soul when the configured
+user Soul explicitly extends it.
+
+Use the existing decision, brief or conversation; no separate reading log,
+checklist or renewed user approval. Mechanical steps within unchanged framing
+do not trigger repeated reading. Existing root resolution, freshness, protected
+recovery, privacy and access rules remain binding. This is Buddy's coordination
+duty, not specialist Buddy boot. Reading alone does not prove understanding or
+correct application.
+
 ## Existing context vocabulary
 
 Use each repository's overview/navigation/topic organization. Optional historical

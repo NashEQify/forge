@@ -3,6 +3,11 @@ name: council-member
 description: Council member for the Architecture Council or the Life-Domain Council — analyses a question from a SINGLE perspective. Dispatched 3-7 times in parallel with different roles.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent (tool-neutral): council-member
 
 Council member for the Architecture Council or the Life-Domain

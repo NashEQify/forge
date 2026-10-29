@@ -13,6 +13,10 @@ disable-model-invocation: false
 uses: []
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: consistency-check
 
 ## Purpose
@@ -55,7 +59,7 @@ Gate enforcement: pre-harness via
 (blocking). Post-harness via the pre-commit hook (when
 implemented).
 
-## The 12 checks (short form)
+## The 14 checks (short form)
 
 1. **Dead references** — scan `*.md` for path refs (backticks,
    "load and follow", SoT tables). Miss → ERROR.
@@ -63,10 +67,10 @@ implemented).
    incoming reference → WARNING.
 3. **Adapter-SoT sync** — `agents/` SoT ↔ `.claude/agents/` ↔
    `orchestrators/opencode/` → ERROR on divergence.
-3b. **Invariants sync (CLAUDE.md ↔ AGENTS.md)** — both have
-   `## Invariants`, invariants substantively identical,
-   `operational.md` delegates without duplication, "load and
-   follow" block present → ERROR on divergence (detail:
+3b. **Framework invariants** — `framework/invariants.md` holds
+   `## Invariants`, no adapter keeps a second copy, both adapters
+   point to it, `operational.md` delegates without duplication,
+   "load and follow" block present → ERROR on divergence (detail:
    `REFERENCE.md` §3b).
 4. **Navigation-tree sync** — `context/navigation.md` ↔
    directory structure → ERROR on miss.
@@ -89,13 +93,13 @@ implemented).
    diff: `scripts/generate_navigation.py --check`, exit 1 on drift); the
    manual reader-journey sections are filled (no placeholder
    text left). Expected `navigation.md` targets + bash diff:
-   `REFERENCE.md` §8. Disk has `navigation.md` without a
+   `REFERENCE-drift.md` §8. Disk has `navigation.md` without a
    generator target, or a generator target without a disk file
    → **ERROR**. AUTO-block drift → **ERROR**. Placeholder
    manual → **WARNING**.
 9. **Folder-taxonomy drift** — `docs/` subdirs/files vs
    `docs/STRUCTURE.md`. Undeclared path → **WARNING**; drift
-   alias → **ERROR**. Detail: `REFERENCE.md` §9.
+   alias → **ERROR**. Detail: `REFERENCE-drift.md` §9.
 10. **Wrapper + router drift** — two chained generators.
    (a) `skills/workflow_router/SKILL.md` (the workflow-router SoT)
    vs a fresh `scripts/generate_workflow_router.py` run; (b) CC
@@ -113,7 +117,7 @@ implemented).
    check is order-independent; the ordering only matters on the
    write/regen path. Mirrors the skill-map idempotence sub-check.
    Drift → **WARNING** (WARN-first calibration; escalate to BLOCK
-   after burn-in). Detail: `REFERENCE.md` §10.
+   after burn-in). Detail: `REFERENCE-drift.md` §10.
 11. **Enforcement-registry integrity** — every Live-table row in
    `framework/enforcement-registry.md` carries a valid class tag
    (`[STRUCTURAL]`/`[GATE]`/`[WORKFLOW]`/`[DISCIPLINE]`) and an
@@ -142,16 +146,42 @@ implemented).
    fix is deletion, not re-sync; no `docs/plan.yaml` → (d) skips). The
    "banner / currency claim / right SoT?" calls are read semantically — the
    LLM-strength judgment a pattern-match gets wrong. No reading-map
-   declared → (c) skips. Contract + vocabulary: `REFERENCE.md` §12.
+   declared → (c) skips. Contract + vocabulary: `REFERENCE-drift.md` §12.
+13. **User-scope drift** — when a user scope is configured
+   (`framework/user-scope.md`), read `<user_repo>/context/user/`:
+   (a) legacy facet tags, badges or counters, found by the exact
+   search in `REFERENCE-drift.md` §13 → **WARNING** per file with its count;
+   (b) one claim stated in two places, or a user-scope statement older
+   than evidence an activity area of the user repo holds
+   (`REFERENCE-drift.md` §13) → **WARNING** naming both places and the
+   current statement; (c) a topic file not
+   routed from `navigation.md` (recovery files excepted) → **WARNING**.
+   Judgment for (b), exact search for (a). Report only; reconciliation
+   stays with the knowledge processor under the user scope's
+   maintenance authority. No user scope → skip.
+14. **Instruction-unit size** — every instruction unit a step reads
+   whole (skill and protocol files, framework docs, `agents/buddy/` and
+   `agents/_protocols/` units, runbook narratives, adapter rules,
+   `CLAUDE.md`, `AGENTS.md`, the soul) stays within the unit budget, and
+   every lookup reference the guard lists (read for one entry: a check,
+   a row, a pattern) within its read ceiling; every file of the boot
+   entry's reread list exists. Both limits come from measured host
+   behaviour (`skills/_protocols/piebald-budget.md` §Loading policy), so
+   a unit arrives whole in one read on every host. Over budget or
+   missing → **ERROR**. Mechanically
+   `scripts/consistency_check.py --check instruction-units`
+   (non-zero exit on failure). A unit that fails is split at its
+   steps (`agents/buddy/operational.md` shows the pattern), not
+   trimmed of rules.
 
-Running checks 3b, 5, 6, 7, 8, and 10 requires `REFERENCE.md`
-to be co-loaded (sub-checks, scan targets, checklist items,
+Running checks 3b, 5, 6 and 7 requires `REFERENCE.md`, checks 8, 10
+and 13 `REFERENCE-drift.md`, to be co-loaded (sub-checks, scan targets, checklist items,
 bash).
 
 ## Frozen-zone integrity
 
 Every run checks the frozen zones (`docs/tasks/archive/`,
-`context/history/`, `documents/`, `docs/backlog-archive.md`)
+`context/history/`, `documents/`)
 for modify / rename / delete since the baseline tag. `A` = OK
 (WORM); `M / R / D` = INCIDENT. Exception:
 `.correction.md` (corrections addendum).
@@ -185,7 +215,9 @@ On ERROR: fix before task done. On WARNING: agent decision.
 - **No content review** — that's `spec_board` or
   `code_review_board`.
 - **No knowledge check** — that's `knowledge_processor` (IMPACT
-  CHAIN).
+  CHAIN). Check 13 only reports user-scope drift (copies, legacy
+  metadata, unrouted files); reconciling it is the knowledge
+  processor's.
 - **No linting** — that's `python_code_quality_enforcement`.
 - **No auto-fix** — the check reports; it does not fix itself.
 - **No self-growth** — on convention changes the skill must

@@ -21,6 +21,7 @@ profiles:
     boot_files:
     - soul
     - boot
+    invariants_unit: framework/invariants.md
     required_paths:
     - agents
     - framework
@@ -60,15 +61,21 @@ capability_sets:
     required_paths:
     - agents/buddy/soul.md
     - agents/buddy/boot-on-demand.md
+    - agents/buddy/codex-execution.md
     - framework/continuity.md
     - framework/user-scope.md
     - framework/installation-activation.md
+    - framework/installation-activation-full-path.md
     - scripts/continuity.py
     - scripts/user_scope.py
     - scripts/git-status-check.sh
     - workflows/runbooks/save/WORKFLOW.md
     - workflows/runbooks/context_housekeeping/WORKFLOW.md
     - skills/knowledge_processor/SKILL.md
+    - skills/knowledge_processor/continuous-maintenance.md
+    - skills/knowledge_processor/retrieve.md
+    - skills/knowledge_processor/write.md
+    - skills/knowledge_processor/history-imports.md
     - skills/knowledge_processor/modes/process.md
     - skills/knowledge_processor/modes/user-signal.md
     - skills/knowledge_processor/modes/wrap-up.md
@@ -92,6 +99,8 @@ capability_sets:
     - plan-adversary
     required_paths:
     - skills/council/SKILL.md
+    - skills/council/development.md
+    - skills/council/run.md
     - skills/_protocols/plan-review.md
     - skills/_protocols/context-isolation.md
     - skills/_protocols/dispatch-template.md
@@ -100,6 +109,10 @@ capability_sets:
     - skills/_protocols/piebald-budget.md
     - skills/_protocols/analysis-mode-gate.md
     - skills/_protocols/evidence-pointer-schema.md
+    - skills/_protocols/evidence-pointer-integrations.md
+    - skills/_protocols/evidence-author-claims.md
+    - skills/_protocols/evidence-review-capture.md
+    - skills/_protocols/evidence-review-adoption.md
     - skills/_protocols/discourse.md
     - agents/council-member.md
     - agents/council-chief.md
@@ -116,6 +129,7 @@ capability_sets:
     - plan-adversary
     required_paths:
     - skills/frame/SKILL.md
+    - skills/frame/flow.md
     - skills/frame/REFERENCE.md
     - skills/_protocols/plan-review.md
     - skills/_protocols/analysis-mode-gate.md
@@ -125,16 +139,26 @@ capability_sets:
   development:
     required_paths:
     - agents/buddy/boot.md
+    - agents/buddy/boot-status.md
+    - agents/buddy/boot-routing.md
     - agents/buddy/operational.md
+    - agents/buddy/multi-perspective.md
+    - agents/buddy/architecture-comprehension.md
+    - agents/buddy/delegation.md
+    - agents/buddy/coordinating-sessions.md
     - framework/development-continuation.md
+    - framework/development-continuation-close.md
     - framework/workflow-compatibility.yaml
     - framework/workflow-compatibility.md
+    - framework/workflow-compatibility-review-gates.md
+    - framework/workflow-compatibility-test-scope.md
     - scripts/development_continuation.py
     - scripts/workflow_engine.py
     - scripts/plan_engine.py
     - workflows/runbooks/save/workflow.yaml
     - workflows/runbooks/context_housekeeping/workflow.yaml
 installation_required_paths:
+- framework/work-principle.md
 - framework/install-profiles.yaml
 - scripts/forge_install.py
 - scripts/install_activation.py
@@ -149,15 +173,34 @@ reference_classification:
   historical_prefixes:
   - docs/
   optional_development:
+  - framework/process-map.md
+  - framework/workflow-selection.md
+  - framework/direct-eligibility.md
   - agents/buddy/operational.md
+  - agents/buddy/multi-perspective.md
+  - agents/buddy/architecture-comprehension.md
+  - agents/buddy/delegation.md
+  - agents/buddy/coordinating-sessions.md
   - framework/development-continuation.md
+  - framework/development-continuation-close.md
   - framework/workflow-engine-cookbook.md
+  - framework/workflow-engine-review-and-brief.md
+  - framework/workflow-engine-closure.md
+  - framework/workflow-engine-receipts.md
+  - framework/workflow-engine-parallel.md
   - scripts/workflow_engine.py
   - scripts/plan_engine.py
   - workflows/runbooks/build/workflow.yaml
+  - workflows/runbooks/build/lifecycle.md
   - skills/documentation_and_adrs/SKILL.md
+  - skills/documentation_and_adrs/adr-writing.md
+  - skills/documentation_and_adrs/verify-pass.md
   - skills/adversary_test_plan/SKILL.md
+  - skills/adversary_test_plan/challenge-and-integration.md
   - skills/code_review_board/SKILL.md
+  - skills/code_review_board/brief-and-team.md
+  - skills/code_review_board/checklist-and-dispatch.md
+  - skills/code_review_board/verdict.md
   - agents/board-chief.md
   - agents/brief-architect.md
   - agents/code-architect-lens.md
@@ -175,4 +218,7 @@ reference_classification:
   - workflows/runbooks/solve/WORKFLOW.md
   optional_methods:
   - skills/frame/SKILL.md
+  - skills/frame/flow.md
   - skills/council/SKILL.md
+  - skills/council/development.md
+  - skills/council/run.md

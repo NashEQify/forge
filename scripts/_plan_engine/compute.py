@@ -17,9 +17,13 @@ from _plan_engine.core import (
     PhaseProgress,
     Task,
     _emit_warn,
+    _GateObservation,
 )
 from _plan_engine.loading import (
     _archived_task_status,
+    _GateTaskRecords,
+    done_task_keys,
+    _task_root,
     _milestone_archived_credit,
 )
 
@@ -92,6 +96,25 @@ def assign_tasks_to_milestones(tasks: dict, milestones: dict[str, Milestone]):
 
 def compute_milestone_status(milestones: dict[str, Milestone], tasks: dict[int, Task]):
     """Compute status for all milestones. Bottom-up via topo sort on requires DAG."""
+    # Observe every gate once, before requires/group branches can skip it.
+    # Raw task evidence is shared only within this analysis, never persisted.
+    records_by_root = {}
+    for milestone in milestones.values():
+        milestone.gate_results = []
+        for gate in milestone.gate:
+            if gate.type == "task":
+                root = gate._project_root if gate._project_root is not None else _task_root(tasks, gate._repo)
+                if root not in records_by_root:
+                    records_by_root[root] = _GateTaskRecords(root)
+                gate._records = records_by_root[root]
+            try:
+                passed, detail = gate.check(tasks)
+            finally:
+                gate._records = None
+            evaluated = gate.type in ("task", "file") and not gate.preliminary
+            permits = passed or (gate.type != "script" and (gate.preliminary or gate.type == "manual"))
+            milestone.gate_results.append(_GateObservation(passed, detail, evaluated, permits))
+
     # Topological sort of milestones
     in_degree = dict.fromkeys(milestones, 0)
     children = defaultdict(list)  # parent → children that require it
@@ -147,7 +170,7 @@ def compute_milestone_status(milestones: dict[str, Milestone], tasks: dict[int, 
         no_tasks = not milestone_tasks
 
         if m.gate:
-            all_gate_pass = all(g.check(tasks)[0] for g in m.gate)
+            all_gate_pass = m._gates_allow_progress
             if all_gate_pass and (all_tasks_done or no_tasks):
                 m.status = "done"
                 continue
@@ -223,10 +246,11 @@ def _render_cp_item(item, tasks: dict) -> str:
         if t is None:
             # Archive-Awareness (mirror of GateCondition.check, ~L369): a dep
             # MOVED to docs/tasks/archive/ on reaching a terminal status is not
-            # dangling. task_status_update §Step-4 deliberately KEEPS a terminal
-            # id in other tasks' blocked_by, so an archived id legitimately
-            # surfaces here as a satisfied gate dep. Render it distinctly with
-            # its ACTUAL terminal status — the archive holds every terminal
+            # dangling. task_status_update (skills/task_status_update/closure.md
+            # §Step 4) deliberately KEEPS a terminal id in other tasks'
+            # blocked_by, so an archived id legitimately surfaces here as a
+            # satisfied gate dep. Render it distinctly with its ACTUAL
+            # terminal status — the archive holds every terminal
             # status (done / superseded / wontfix / absorbed), so a hardcoded
             # "done" mislabels e.g. a wontfix id (archive/161.yaml).
             arch_status = _archived_task_status(item)
@@ -867,15 +891,15 @@ def compute_blocking_score(
         for req in m.requires:
             ms_dependents[req].append(m.key)
 
-    actually_done = {t.key for t in tasks.values() if t.is_done}
+    # Archived done deps count as done (archived wontfix/superseded do not).
+    actually_done = done_task_keys(tasks)
 
-    # Precompute gate results ONCE — avoids re-evaluating script gates
-    # inside the per-task loop (which would spawn 139× subprocesses)
+    # Reuse the analysis observation even inside what-if simulations.
     gate_cache: dict[str, bool] = {}
     for m in milestones.values():
         if m.is_group:
             continue
-        gate_cache[m.key] = all(g.check(tasks)[0] for g in m.gate) if m.gate else True
+        gate_cache[m.key] = m._gates_allow_progress
 
     scores = {}
     for tid in tasks:
@@ -974,7 +998,8 @@ def compute_next_actions(
     Uses t.key throughout so the same logic applies to aggregate mode.
     """
     cp_set = _hashable_cp_set(critical_path)
-    done_keys = {t.key for t in tasks.values() if t.is_done}
+    # Archived done deps count as done (archived wontfix/superseded do not).
+    done_keys = done_task_keys(tasks)
 
     # Compute target path: milestones in the requires-chain of the target
     target_path_ms = set()

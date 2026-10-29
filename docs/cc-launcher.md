@@ -1,6 +1,6 @@
 # `cc` Launcher — Setup & Reference
 
-Detail companion to README §Setup → `cc` launcher (optional convenience).
+Detail companion to the [installation guide](../architecture-documentation/05-installation.md) for the `cc` launcher (optional convenience).
 
 ## Prerequisites
 
@@ -13,28 +13,23 @@ Detail companion to README §Setup → `cc` launcher (optional convenience).
 
 ## What `setup-cc.sh` does
 
-Load-bearing — without it, `cc` doesn't exist on your `$PATH` and
-Claude Code can't find the framework personas. Five steps, all
-idempotent:
+`setup-cc.sh` forwards to the coordinated installer. Follow
+[`framework/installation-activation.md`](../framework/installation-activation.md)
+for source changes, installation ownership and fresh-session verification.
 
-1. **Installs the `cc` launcher to `~/.local/bin/cc`**, with the
-   absolute install-time path to forge substituted into the script. The
-   launcher needs to know where forge lives without an env var; the
-   substitution bakes that in once.
-2. **Creates two user-level symlinks** — `~/.claude/agents` and
-   `~/.claude/skills` — pointing into forge. Claude Code discovers
-   personas and skills via these paths, so framework agents are
-   available from every working directory regardless of which repo
-   you're in.
-3. **Merges forge's SessionStart hooks** into `~/.claude/settings.json`
-   (boot-inject + resume-nudge), preserving your other keys.
-4. **Warns** if `~/.local/bin` isn't on your `$PATH`. Fix with
-   `export PATH="$HOME/.local/bin:$PATH"` in your shell rc.
-5. **Installs git hooks** in the framework repo —
-   `.git/hooks/{pre-commit,commit-msg}` symlinked to
-   `orchestrators/claude-code/hooks/pre-commit.sh`. Activates the
-   13-check pre-commit discipline suite (PLAN-VALIDATE, CG-CONV,
-   SKILL-FM-VALIDATE, …). Includes a self-probe at the end.
+Full setup plans the `cc` launcher at `~/.local/bin/cc`, Claude role/skill
+links and configured SessionStart integration from the settings template.
+The boot injector applies to configured desktop/web entrypoints; the remote
+script observes coordinated maintenance readiness and does not resume workflows
+or update/install the framework. The terminal launcher supplies its own boot
+injection. Existing unowned integration conflicts must be resolved through the
+installer, not overwritten manually.
+
+Full Claude setup also wires `pre-commit`, `pre-merge-commit` and `commit-msg` in the selected
+framework repository. The current six check families and availability limits
+are recorded in [`framework/enforcement-registry.md`](../framework/enforcement-registry.md).
+Installation/file checks establish managed integration, not proof of actual
+instruction loading in every host session. Ensure `~/.local/bin` is on `$PATH`.
 
 For consumer repos (not the framework checkout itself), wire the
 same hooks once per repo:
@@ -56,9 +51,10 @@ symlinks). Worktree-safe. Full reference:
 | `cc` (no scope, in any directory) | use current CWD, require `intent.md` (Buddy offers to create if missing) |
 | `cc <project>` | look up `$PROJECTS_DIR/<project>/` (default `~/projects/`), require `intent.md` |
 
-`cc` mounts both forge and your CWD via `--add-dir`, so every session
-sees the framework rules (CLAUDE.md, agents, skills) on top of the
-local repo content.
+`cc` makes the framework and consumer directories available via `--add-dir`
+when needed. This grants access; the launcher's explicit injection identifies
+the boot entry. Verify actual instruction loading in the launched session and
+retain the consumer's local rules; directory access alone does not prove loading.
 
 Project directories can live anywhere on disk — `cc` from inside the
 directory always works regardless of path. `cc <name>` only short-cuts

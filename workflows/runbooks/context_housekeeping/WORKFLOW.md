@@ -1,5 +1,9 @@
 # Context housekeeping
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 Common continuity entry: explicitly requested or project lifecycle-triggered review
 of the selected context scope. No development engine is required. Apply the same
 `skills/knowledge_processor/SKILL.md` lifecycle, with protected reads/publication and
@@ -9,8 +13,8 @@ recovery from `framework/continuity.md`; no second decay or deletion algorithm.
 
 Read-only: establish authorized scope and local conventions. Inspect topic ownership,
 question-based routes, broken links, duplicate current views, time-bound validity and
-source/import coverage. Size around 200 lines or mixed content prompts review, not
-automatic splitting. A coherent long source can remain. Source/evidence indexes may
+source/import coverage. Restructuring triggers and the operation follow KP §6 (size
+alone is a review signal, not automatic splitting). A coherent long source can remain. Source/evidence indexes may
 route to bulk records without every record in the root navigation. Report concrete
 findings and proposed changes; an index miss is not proof content never existed.
 

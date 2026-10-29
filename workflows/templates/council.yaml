@@ -98,15 +98,15 @@ modes:
       Reversible decisions, 3 perspectives sufficient.
       3 members + council-chief. No adversary, no frame-check, no discourse.
     members: 3
-    member_config:
-      - model: opus   # Primary perspective
-      - model: opus   # Contrasting perspective
-      - model: sonnet # Additional perspective
+    member_config:  # each member's model: framework/models.md, Design row
+      - perspective: primary
+      - perspective: contrasting
+      - perspective: additional
     chief: council-chief         # Inv 1 — chief consolidates even at N=3
     adversary: false
     frame_check: false
     discourse: false
-    coherence_check: required    # Buddy applies §Architecture-Comprehension B
+    coherence_check: required    # Buddy applies architecture-comprehension.md §B
     output: decision_file
     adr_required: optional
     expected_cc_calls: 4  # 3 members + 1 chief
@@ -118,9 +118,9 @@ modes:
       + post-council coherence check.
     members: 3
     member_config:
-      - model: opus
-      - model: opus
-      - model: sonnet
+      - perspective: primary
+      - perspective: contrasting
+      - perspective: additional
     chief: council-chief
     adversary: council-adversary
     frame_check: plan-adversary   # cold-start on briefing draft per §2
@@ -137,9 +137,9 @@ modes:
       + discourse on dissent.
     members: "4-6"
     member_config:
-      - model: opus   # Min 2×Opus
-      - model: opus
-      - model: sonnet
+      - perspective: primary
+      - perspective: contrasting
+      - perspective: additional
       # + additional per dimension count
     chief: council-chief
     adversary: council-adversary
@@ -195,7 +195,7 @@ process:
     agent: buddy
     description: >
       Buddy schreibt Briefing-Draft. NOCH NICHT final. Per
-      skills/council/SKILL.md §3: question + intent_chain + context-paths
+      skills/council/run.md §3: question + intent_chain + context-paths
       + null option + perspectives. MUST NOT: Buddy's proposal,
       pre-classified conflicts, severity tags, lean hints. Brief-contagion
       empirisch demonstriert.
@@ -258,7 +258,7 @@ process:
     agent: buddy
     description: >
       MANDATORY (unconditional, standard/full): Buddy applied
-      agents/buddy/operational.md §Architecture-Comprehension B
+      agents/buddy/architecture-comprehension.md §B
       (post-return) auf Chief-Output BEVOR Adoption. Topology-Contradiction
       (producer/consumer absent, deploy-state incompatible) → escalate
       oder re-frame, NICHT adopt. Pass → Buddy decides mit rationale.

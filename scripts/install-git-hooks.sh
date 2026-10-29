@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # install-git-hooks.sh — Idempotent git-hook install for the forge framework.
 #
-# Symlinks .git/hooks/{pre-commit,commit-msg} into the framework's
-# orchestrators/claude-code/hooks/pre-commit.sh. The hook script self-
-# detects the invocation mode via $0 basename, so the same
-# file serves both hook events.
+# Symlinks .git/hooks/{pre-commit,commit-msg,pre-merge-commit} into the
+# framework's orchestrators/claude-code/hooks/pre-commit.sh. The hook script
+# self-detects the invocation mode via $0 basename, so the same file serves
+# all three hook events.
 #
 # Usage:
 #   bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh            # uses $PWD as target repo
@@ -90,7 +90,7 @@ if [ -L "$HOOKS_DIR" ]; then
 fi
 
 # Git may resolve an existing hook symlink to its target; normalize both paths.
-for hook in pre-commit commit-msg; do
+for hook in pre-commit commit-msg pre-merge-commit; do
   if ! EFFECTIVE_HOOK="$(git -C "$TARGET_REPO" rev-parse --path-format=absolute --git-path "hooks/$hook")" || [ -z "$EFFECTIVE_HOOK" ]; then
     echo "CONFLICT: cannot resolve Git's effective $hook destination." >&2
     exit 1
@@ -112,7 +112,7 @@ echo "install-git-hooks: hook-script = $HOOK_SCRIPT"
 echo "install-git-hooks: mode = $MODE"
 
 # --- Helpers ---
-HOOKS=(pre-commit commit-msg)
+HOOKS=(pre-commit commit-msg pre-merge-commit)
 
 uninstall_one() {
   local hook="$1"
@@ -185,7 +185,7 @@ fi
 
 # install or check
 if [ "$MODE" = "install" ]; then
-  # Preflight both hooks before changing either one.
+  # Preflight every hook before changing any one.
   for hook in "${HOOKS[@]}"; do
     link="$HOOKS_DIR/$hook"
     if [ -L "$link" ]; then
@@ -254,7 +254,7 @@ if [ "$PROBE_FAILED" = "1" ]; then
 fi
 
 echo ""
-echo "install-git-hooks: OK — $HOOKS_DIR/{pre-commit,commit-msg} live."
+echo "install-git-hooks: OK — $HOOKS_DIR/{pre-commit,commit-msg,pre-merge-commit} live."
 echo ""
 echo "Hint:"
 echo "  Re-run any time (idempotent). --check probes without modifying."

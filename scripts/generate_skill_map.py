@@ -2,7 +2,7 @@
 """
 Regenerate the AUTO block in framework/skill-map.md from SKILL.md frontmatter.
 
-Markers (framework/skill-anatomy.md §Generator-Output-Strategie):
+Markers (framework/skill-anatomy-wrapper-and-checks.md §Generator output strategy):
   <!-- SKILL-MAP-AUTO-START -->
   ...
   <!-- SKILL-MAP-AUTO-END -->

@@ -19,11 +19,51 @@ ux-interaction). Extends `reviewer-base.md`.
 Each role formulates these steps in domain-specific terms inside
 its persona.
 
+**Contracts.** When the subject includes a look and an experience
+contract (`skills/ux_authoring/contracts.md`), their surfaces,
+journeys and states are the views and flows you check. Also a
+finding: a stated need or a surface missing from the closure table;
+a closure row still marked `no surface` or `no journey`; a decision
+without a source tag; a component missing from either contract.
+
 **Visible-output requirement:** steps 1/2/3/5 →
 `reviewer-reasoning-trace.md` (required section
 `## Reviewer-Reasoning-Trace`). Step 4 → `first-principles-check.md`
 (required section `## Reviewer-First-Principles-Drill`). Both
 sections in the review file.
+
+## Mandatory envelope and clean output
+
+When commissioned for a mandatory software-review result, load
+`skills/_protocols/evidence-pointer-schema.md` §9 and include these additional
+frontmatter fields in the existing finding layout:
+
+```yaml
+review_run_id: "<verbatim captured run>"
+review_subject_digest: "<verbatim captured subject>"
+review_slot: "<assigned captured slot>"
+```
+
+With no findings, use this supported layout instead of empty finding evidence:
+
+```markdown
+---
+schema_version: 1
+review_run_id: "<verbatim captured run>"
+review_subject_digest: "<verbatim captured subject>"
+review_slot: "<assigned captured slot>"
+evidence:
+  - kind: file_range
+    path: <reviewed-file>
+    lines: <start>-<end>
+    quote: "<checked source supporting the scoped conclusion>"
+---
+Checked scope, observations, qualifications and the role's existing conclusion.
+```
+
+Keep finding-owned support when findings exist; do not mix these layouts.
+The role's existing recommendation vocabulary is unchanged. Buddy's explicit
+adoption decision is separate.
 
 ## Output format
 

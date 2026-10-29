@@ -16,6 +16,8 @@
   "$schema": "https://opencode.ai/config.json",
   "instructions": [
     "${FRAMEWORK_DIR}/AGENTS.md",
+    "${FRAMEWORK_DIR}/framework/work-principle.md",
+    "${FRAMEWORK_DIR}/framework/invariants.md",
     // ${FORGE_USER_INSTRUCTIONS}
   ],
   "default_agent": "buddy",

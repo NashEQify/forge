@@ -38,7 +38,7 @@ cascade. The test: "Do other files / agents / processes read this
 text and derive behavior from it?" If yes → check immediately.
 
 Buddy runs the cascade with the recursive **IMPACT CHAIN pattern**
-(`skills/knowledge_processor/SKILL.md`, §5 Bounded impact and protected publication): the methodology
+(`skills/knowledge_processor/write.md`, §5 Bounded impact and protected publication): the methodology
 change is the initial "information" → LOCATE (every spot that
 interprets the concept) → ASSESS (semantically: do logic,
 assumptions, and derivations still hold?) → ACT (fix inconsistencies
@@ -110,7 +110,7 @@ enforced).
 Before every rename, refactor, or batch update:
 
 1. Identify frozen zones: `docs/tasks/archive/`, `docs/specs/archive/`,
-   `docs/backlog-archive.md`, `context/history/`, `documents/`.
+   `context/history/`, `documents/`.
 2. `grep` for the old term in frozen zones — hits are reported, NOT
    replaced.
 3. Downstream agents (main-code-agent, sub-agents) get an explicit
@@ -161,7 +161,7 @@ in the consumer's own override files, not in the framework.
 Portable person facts go to
 `<user_repo>/context/user/` via `knowledge_processor (mode=user-signal)`,
 maintained in the same response cycle with the FACTS line as visible
-proof (`knowledge_processor` §Continuous maintenance). Configuring the user
+proof (`skills/knowledge_processor/continuous-maintenance.md`). Configuring the user
 repo on a machine is the person's standing consent for this.
 
 Never a background mechanism or hook: writes happen in the visible

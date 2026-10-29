@@ -11,7 +11,7 @@ knowledge and local rules. They may be separate directories.
 | `README.md` | Product introduction and reader routes | [README](../README.md) |
 | `architecture-documentation/` | Public explanations and practical guides | [Documentation hub](README.md) |
 | `agents/` | Canonical roles and Buddy's entry procedures | [Role navigation](../agents/navigation.md) |
-| `framework/` | Shared contracts, ownership and routing | [Capability ownership](../framework/capabilities.md) |
+| `framework/` | Shared contracts, ownership and routing, and the rules that hold in every project | [Capability ownership](../framework/capabilities.md), [invariants](../framework/invariants.md) |
 | `skills/` | Executable methods and their references | [Skill map](../framework/skill-map.md) |
 | `skills/_protocols/` | Shared method protocols | [Protocol navigation](../skills/_protocols/navigation.md) |
 | `workflows/runbooks/` | Common save/housekeeping and development runbooks | [Process map](../framework/process-map.md) |

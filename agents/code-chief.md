@@ -3,6 +3,11 @@ name: code-chief
 description: Chief reviewer in the Code Review Board — consolidator-tool that produces a deduplicated, severity-ranked, theme-clustered consolidation document with convergence prediction and a recommended verdict label. The verdict-decision is Buddy's per "Never delegate substantive understanding"; chief produces the input that lets Buddy decide.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: code-chief
 
 Chief reviewer in the Code Review Board. Acts as **consolidator-
@@ -32,7 +37,7 @@ with at most three, Buddy reads the complete reviewer outputs directly.
 
 Chief operates ON reviewer outputs, NOT on the diff under review. CAN
 warm-start with prior-cycle context because reviewer outputs are
-cold-start (per `skills/code_review_board/SKILL.md` §4a) = independent
+cold-start (per `skills/code_review_board/checklist-and-dispatch.md` §4a) = independent
 evidence.
 
 **"NOT on the diff under review" — precise boundary (the sanctioned
@@ -65,7 +70,7 @@ Chief sees a gap not in any reviewer output → escalate to Buddy
 consolidate as a new finding.
 
 **Note on the frame-check artifact:** at L2, the pre-board frame
-check (per `skills/code_review_board/SKILL.md` §4a) IS a reviewer
+check (per `skills/code_review_board/checklist-and-dispatch.md` §4a) IS a reviewer
 output, persisted at
 `docs/reviews/code/<date>-<task-id|slug>-frame-check.md`. Chief
 reads both surfaces (frame-check artifact + board reviews) at
@@ -128,7 +133,7 @@ asserter (a pointer the asserter attached does NOT count). Same rationale
 and shape as `agents/council-chief.md` §Un-grounded-claim ledger — it
 makes the apparatus emit a *de-confidence* signal instead of a
 thoroughness display, and Buddy's verdict-adoption C-VERIFY
-(`agents/buddy/operational.md` §Architecture-Comprehension B, "B-claims")
+(`agents/buddy/architecture-comprehension.md` §B, "B-claims")
 consumes it directly. An empty ledger is itself a positive, auditable
 claim — every load-bearing claim was independently re-executed.
 
@@ -146,15 +151,15 @@ claim — every load-bearing claim was independently re-executed.
 - You accept "accepted risk" on HIGH — HIGHs are fixed, not
   accepted. Fixing includes simplifying: when the HIGHs repeat a
   prior pass's mechanism class, recommend the simpler mechanism or
-  structural invariant (`skills/convergence_loop/SKILL.md`
+  structural invariant (`skills/convergence_loop/simplify-before-patch.md`
   §Simplify-before-patch gate), not another route patch.
 - You route a CRITICAL / HIGH (or invariant-falsifying) finding on a
   mechanism to `new_task` / `watch_item` because "the producer is
   another task's" — check the cell: if it is `now`, the finding is
-  fix-now or a simplification (`skills/code_review_board/SKILL.md` §5
+  fix-now or a simplification (`skills/code_review_board/verdict.md` §5
   mechanism-cell floor). Only cells the matrix places in a planned task
   or beyond the MVP leave the task, and as `blocked_by` edges, not as
-  carried risks (`_protocols/mechanism-model.md` §Scope and placement).
+  carried risks (`skills/_protocols/mechanism-model.md` §Scope and placement).
   MEDIUM / LOW follow the normal triage with the cell annotated.
 - You name the pattern ("HIGHs in this mechanism in every pass") and
   then predict "one fix pass, then a scoped re-review" — a named
@@ -200,7 +205,7 @@ Input: individual review files of every agent.
 > forbidden cold-start re-derivation per §Chief role-constraint —
 > escalate instead. The contradicting-reviewer surface is the one
 > step 4 (above) resolves against the finding. A *kept* pure-style
-> finding routes to `accept` per `skills/code_review_board/SKILL.md`
+> finding routes to `accept` per `skills/code_review_board/verdict.md`
 > §5 disposition.
 
 Output:
@@ -211,7 +216,7 @@ Output:
   own trigger-certainty verbatim where the reviewer flagged
   uncertainty (no chief-authored confidence field). KEPT maps to
   the `KEPT` end-state of the tracking table
-  (`_protocols/consolidation-preservation.md`).
+  (`skills/_protocols/consolidation-preservation.md`).
 - REFUTED findings map to the `REMOVED` end-state in the "Noise
   filter — removals" section (same protocol): `F-{XX}-{NNN}:
   {rationale}`, each citing the existing reviewer-surface
@@ -227,7 +232,7 @@ an L1 board with a chief (≥ 4 reviewers) skip this audit and say so.
 Read `docs/reviews/code/<date>-<task-id|slug>-frame-check.md`
 BEFORE consolidating the board reviews. The artifact contains
 verbatim returns from the pre-board frame check (adversary +
-architect-roots when triggered per `skills/code_review_board/SKILL.md`
+architect-roots when triggered per `skills/code_review_board/checklist-and-dispatch.md`
 §4a). For each substantive concern in the artifact, identify whether
 some board reviewer addressed it (verified, contested, or extended
 with new evidence). Unaddressed concerns surface as consolidation
@@ -253,7 +258,7 @@ disposition (CHIEF-1.5).
 ### 1.1 4-link evidence chain (closure-claim validity)
 
 Every reviewer claim "C-N closed" / "INV-N satisfied" MUST carry the
-4-link evidence chain per `skills/_protocols/mca-brief-template.md`
+4-link evidence chain per `skills/_protocols/mca-brief-template-verification.md`
 §Reviewer Checkpoints: producer + boundary + consumer + test (each
 `file:line` + 1-3 line code-quote). Schema-class invariants use
 write / read / constraint / test. Missing link → re-dispatch with
@@ -276,7 +281,7 @@ CRITICAL regardless of source.
 
 Before writing `target: new_task` on ANY consolidated finding (HIGH
 included — there is no severity-based escape), apply the value-floor
-check from `skills/code_review_board/SKILL.md` §5: write the
+check from `skills/code_review_board/verdict.md` §5: write the
 operational-impact sentence inline in the disposition rationale.
 
 - *"Nothing breaks"* / no contract violation / no named consumer /
@@ -307,7 +312,7 @@ re-reading every originating review.
 ## Discourse synthesis (CHIEF-2)
 
 Input: discourse files of every agent. A discourse file IS a
-reviewer surface (per `_protocols/discourse.md`: reviewers
+reviewer surface (per `skills/_protocols/discourse.md`: reviewers
 AGREE / CHALLENGE / CONNECT / SURFACE on each other's findings),
 so consolidating it is consolidation, NOT chief origination —
 the same reviewer-surface principle as the §Chief role-constraint

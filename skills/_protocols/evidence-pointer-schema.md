@@ -28,14 +28,17 @@ schema/API/code examples illustrate evidence; they do not select development wor
 
 ## 1. schema_version
 
-Required field in the output frontmatter (top-level layout) OR per
-finding block (per-finding layout). Accepted values:
+Required in report frontmatter for both layouts. Accepted values:
 
 | Value | Meaning |
 |---|---|
 | `schema_version: 1` | current pointer requirement. Engine + validator enforce. |
 | `schema_version: 0` | legacy. Engine check and validator silent-skip (return pass / exit 0). |
 | (field missing) | legacy (same as `schema_version: 0`). Backward compatible. |
+
+The table describes default validation. Optional library `strict=True` or CLI `--strict` rejects missing/0 schema with exit 1; engine `min_schema_version` retains its existing policy. Unsupported schema forms/versions remain invalid, and malformed YAML remains a parse error. Historical reports are never automatically rewritten or relabelled.
+
+Default pointer validation and historical reading retain this compatibility. Mandatory current software-review adoption requires supported current-schema validation and the identity contract in §9. Historical reports are neither rewritten nor relabelled to satisfy it. Historical context used by a current scoped verification is distinct from mandatory current producer reports.
 
 Future versions: schema migration via version bump (e.g.
 `schema_version: 2`) with its own spec amendment.
@@ -200,6 +203,22 @@ block. Pattern for reviewer outputs.
 `schema_version: 1` is required in the output frontmatter
 (top-level YAML between `---` markers).
 
+Supported finding headings are ATX levels 2–4 (`##` through `####`) whose leading identifier matches `(F|UX)-[A-Z][A-Z0-9]*(?:-[A-Z][A-Z0-9]*)*-[0-9]+`, followed by a word boundary. Trailing titles, severity labels and punctuation are permitted.
+
+A finding remains open until the next heading of equal or shallower depth. Ordinary deeper subsections retain that owner. A deeper finding owns its own evidence; its pointers do not support its parent. After a nested finding closes, the nearest still-open parent resumes ownership.
+
+Both standalone `evidence:` and bullet `- evidence:` blocks are supported with their existing indentation forms. Each finding needs at least one non-empty evidence list; multiple blocks and pointers are allowed within that owner. Every block must contain a non-empty list of pointer mappings. Missing/empty evidence, wrong list shape or nonmapping entries fail validation; malformed YAML remains a parse error.
+
+Ordinary YAML comments remain inside an evidence block. A line within its indented
+body that also matches an ATX finding-like heading is ambiguous and fails structural
+validation; move the report heading outside the YAML indentation, or rewrite the
+comment so it does not resemble a finding heading. The diagnostic identifies the
+ambiguous line. This avoids silently discarding a finding or later source pointers.
+
+Ignore headings and evidence inside backtick or tilde fenced examples. Reject duplicate finding identifiers, orphan evidence and conflicting ownership. Diagnose unsupported finding-like headings beginning `F-` or `UX-`, and historical consolidation identifiers matching `C[0-9]+-[0-9]+`, rather than silently accepting them. Historical C2 reports require caller-owned normalization before current revalidation.
+
+Structural diagnostics identify the finding identifier and heading line, or the offending line when no owner exists, plus the reason. Pointer checks establish source structure/existence, not the truth of a conclusion.
+
 ### 5.2 `evidence_layout: top_level`
 
 `evidence:` block as a top-level frontmatter block. Pattern for
@@ -219,161 +238,33 @@ evidence:
 Body with source claims...
 ```
 
+Finding-bearing current reports retain per-finding evidence ownership. Reports with no findings use the existing top-level layout with non-empty evidence supporting the checked scope and conclusion. This includes clean light-verification reports and discourse supplements without new findings.
+
+Review adoption (§9.4) resolves every parseable quote in a current report and turns structural problems into diagnostics; it does not validate the decision artifact's layout. Ordinary pointer checks and the commit hook keep the structural validation of this section.
+
 ### 5.3 Auto-detect
 
-Validator + hook detect the layout automatically when
-`evidence_layout` is missing from the skill frontmatter. Detection
-logic:
-1. Top-level frontmatter contains an `evidence:` key → `top_level`.
-2. Otherwise per-finding grep for `^[ ]*evidence:` in the body →
-   `per_finding`.
-
-Default when the skill frontmatter `evidence_layout` is missing:
-`per_finding`.
+Honor an explicit `per_finding` or `top_level` selection. In `auto`, select `top_level` when frontmatter contains `evidence`; otherwise select `per_finding`. A top-level report requires non-empty frontmatter evidence and no finding structure or body evidence. A per-finding report requires supported findings with owned evidence and no frontmatter evidence. Conflicting layouts fail explicitly; fences do not contribute body structure. Never infer support by comparing global counts.
 
 ---
 
-## 6. Reviewer-output-protocol migration
+## 6.–7. Reviewer-protocol migration and cross-references
 
-Three live files (edit locations documented in
-`docs/specs/299-fabrication-mitigation.md` §1.6):
-
-- `agents/_protocols/spec-reviewer-protocol.md` — output-format
-  block.
-- `agents/_protocols/code-reviewer-protocol.md` — output-format
-  block.
-- `agents/_protocols/ux-reviewer-protocol.md` — output-format
-  block.
-
-In all three: the `evidence:` prose field is replaced by the
-pointer list (per-finding layout).
-
-`agents/_protocols/reviewer-base.md` is extended with the
-output-frontmatter requirement: `schema_version: 1` MUST appear in
-the output frontmatter.
-
----
-
-## 7. Cross-references
-
-- Spec: `docs/specs/299-fabrication-mitigation.md`
-- Engine check: `scripts/workflow_engine.py` `check_completion`
-  `pointer_check`
-- yaml_loader: `scripts/lib/yaml_loader.py`
-  `VALID_COMPLETION_TYPES` + `_validate_completion`
-- Validator: `scripts/validate_evidence_pointers.py`
-- Pre-commit Check 5 SOURCE-VERIFICATION:
-  `orchestrators/claude-code/hooks/pre-commit.sh`
-
----
+When changing the pointer format or one of its consumers: read `skills/_protocols/evidence-pointer-integrations.md`
+(§6 which reviewer protocols carry the format; §7 engine check, loader, validator and pre-commit check).
 
 ## 8. Author-side pointers (Buddy-authored artifacts)
 
-§§1-6 define the pointer format the **reviewer** owes in a review
-output (machine-checked by the validator + pre-commit Check 5
-SOURCE-VERIFICATION). This section extends the same evidence discipline
-to the **author** — the orchestrator writing an artifact a downstream
-consumer will trust as authority for code behaviour. It is
-discipline-only (no validator enforces it), the prose-level sibling of
-the machine-checked reviewer mandate. SoT for the author obligation:
-`CLAUDE.md` Inv 5 (completeness/absence) + Inv 10 (positive claims).
+Before writing an artifact a downstream consumer will trust as authority for code behaviour (a positive mechanical
+claim, a completeness or absence claim, a committed record that keeps evidence), and before a completion claim in a
+return, a final message or a task close: read and follow `skills/_protocols/evidence-author-claims.md` (§8.1 pointer
+at write time; §8.2 inventory-flip and its honest bound; §8.3 layers where the asserter owes the grounding; §8.4 what
+a committed record keeps; §8.5 the evidence each completion claim requires).
 
-The author is the worst checker of their own mechanical claims (shared
-lens): the same reading that produced a wrong claim re-reads it as
-correct. Two failure shapes, two author obligations:
+## 9. Mandatory software-review adoption
 
-### 8.1 Positive claim — pointer at write time (Inv 10)
-
-A load-bearing mechanical claim about how code behaves, written into a
-Buddy-authored ADR / decision-record / handoff / consequential inline
-assertion, carries its verifying command or `file:line` INLINE next to
-the claim. The pointer need not be the YAML mapping of §2 — a prose
-`(scripts/workflow_engine.py:796)` or a shown `grep`/`ls` line is
-enough. The point is auditability: the next reader can open the cited
-line and check the claim instead of re-trusting the author.
-
-| Without pointer | With pointer |
-|---|---|
-| "The engine treats `guard` as a stub — it never reads it." | "The engine reads `guard` in `evaluate_guard` at `scripts/workflow_engine.py:796` (`grep -n 'def evaluate_guard'`) — so the 'stub' reading is checkable in one line." |
-
-**Honest limit:** a pointer makes a claim auditable but does NOT prevent
-a MISREAD. The author can cite the right line and still conclude wrong.
-Only an independent reader catches the misread → §Independent
-verify-pass in `skills/documentation_and_adrs/SKILL.md`. (b) and (c) are
-complementary, not redundant.
-
-### 8.2 Completeness / absence claim — inventory-flip (Inv 5)
-
-You cannot prove absence over an OPEN form-space by matching a retired
-name: it has many surface-forms (canonical, label, spaced, prose
-paraphrase), and a name-grep that finds zero hits proves only that the
-*canonical* form is gone — not the variants. Prove completeness by the
-INVENTORY-FLIP instead:
-
-1. Enumerate a PINNED listing of what EXISTS in the dimension the
-   retired artifact lived in: the files in a dir (`ls agents/`, the
-   skill dirs), the named section-headers of a script. No knowledge of
-   the dead artifact's name-forms needed.
-2. Walk the doc's mechanism nouns (hook names, check names, skill/agent
-   names, engine-field names) and confirm each resolves to an entry in
-   that listing — a referential-integrity walk. Flag any claim that
-   resolves to nothing (a dangling mechanism-claim). The name-grep still
-   finds the obvious hits; it just cannot prove the absence — this walk
-   does.
-3. A "fully removed / all clean" claim ships the inventory-check shown
-   (command + output), not asserted.
-4. The verifier lens differs from the actor lens — don't verify a
-   name-removal with the same name-grep that did the removal.
-
-### 8.2.1 Honest bound — the flip does not magically close every dimension
-
-The flip is only as closed as its listing. **Pin the membership
-definition you used**, because for some dimensions "what counts as a
-member" is itself a judgment, and an unpinned count re-opens the very
-form-space the flip was supposed to close — one level up.
-
-Worked example (real): "the pre-commit checks" is NOT a single number.
-`grep -cE '^# -+ Check [0-9]+'` (section headers) → **6**; `grep -c
-'BLOCK=1'` → **4**; `grep -c 'WARNINGS+='` → **6**. Three lenses, three
-counts. The flip is sound ONLY when you pin which one you mean ("checks
-= the 6 `# Check N` section-headers in `pre-commit.sh`"). Unpinned, you
-have reproduced bedrock root-cause #1 (open-form-space by enumeration)
-inside the supposed fix.
-
-**Two tiers of dimension:**
-
-- **Closed-listing dimensions** — files in a dir, named section-headers,
-  skill/agent dirs: the flip genuinely closes the form-space. Strong.
-- **Judgment-membership dimensions** — "what counts as a check", a
-  config-key with no registry, a workflow-step name scattered across
-  many `workflow.yaml` files with no single index: there is no closed
-  listing to enumerate. Here the flip DEGRADES to a best-effort
-  referential walk against whatever partial listing you can assemble —
-  it NARROWS the open-ness, it does not prove absence. Say so; do not
-  claim a closed proof you do not have. If the dimension matters and has
-  no authoritative listing, that missing index is the real defect to
-  file, not something the flip papers over.
-
-This is the council L3 *live-state-vs-claim* axiom turned on the docs:
-validate claims-of-mechanism against a pinned real listing — and stay
-honest about which dimensions actually have one.
-
-### 8.3 Layers where the asserter owes the grounding
-
-The §8.1 positive-claim pointer is owed wherever a mechanical claim is
-AUTHORED, not only in an ADR/handoff. The grep-at-the-asserter
-discipline (Inv 10) extends to every layer that emits
-mechanism-claims or inherits citations — each grounded *at HEAD, by the
-asserter, at that layer*:
-
-| Layer | Claim shape | Where the trigger lives |
-|---|---|---|
-| Lens (importer/caller count) | "N callers/importers" — grep `import` statements, NOT name-mentions (prose/comments inflate the count) | `agents/code-architect-lens.md` |
-| Tester-design | tester output's mechanism-claims (hardcoded literals, path-labels, in-process-vs-network layer-classification) | `skills/adversary_test_plan/SKILL.md` |
-| Dispatch-authoring | a dispatch's "thin wrapper / reuses-existing" claims, and any `file:line`/symbol it cites | `skills/_protocols/dispatch-template.md` |
-| Brief-assembly (inherited) | every INHERITED symbol + `file:line` locator a brief carries from a prior artifact resolves at HEAD (phantom → no match; shifted → range moved) | `agents/brief-architect.md` |
-| Re-review (fix-completeness) | a fix-claim naming a third-party teardown/lifecycle API verified against the INSTALLED SDK surface, not the remembered API | `skills/code_review_board/SKILL.md` §5a |
-
-The principle is one (assert ⇒ ground at HEAD by the asserter); the
-triggers land at five read-sites — a lens author does not read the
-brief-architect's pre-flight, so each layer carries its own.
+Only for a software review meant to satisfy a mandatory result, readiness or completion boundary:
+- before initiating it or producing a report for it: read and follow
+  `skills/_protocols/evidence-review-capture.md` (§9 receipt, §9.1–§9.3 owner, capture request, reports);
+- before consuming its reports, adopting, checking the current result or writing review-derived tasks: read and
+  follow `skills/_protocols/evidence-review-adoption.md` (§9.4–§9.6).

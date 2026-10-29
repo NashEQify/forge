@@ -4,7 +4,8 @@ The executable authority is `../SKILL.md`; this file explains it rather than
 establishing another lifecycle. Placement follows ownership and retrieval needs,
 not psychological facets or maturity stages. Summaries expose minimal implications
 and link to responsible detail/evidence. More stored detail need not mean more
-boot context. Around 200 lines is a review signal, never an eviction trigger.
+boot context. Restructuring and its triggers are defined in `../history-imports.md` §6; size
+alone is a review signal, never an eviction trigger.
 
 ## Entropy audit compatibility
 

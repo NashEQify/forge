@@ -15,7 +15,7 @@ The tester in execution mode translates TCs 1:1 into test functions.
 ```yaml
 ---
 task_id: 115
-spec: docs/specs/navigate-mode.md
+spec: docs/specs/<name>.md
 spec_version: v1
 test_plan_spec_ref: v1          # Freshness: must == spec_version
 created: YYYY-MM-DD
@@ -130,7 +130,7 @@ Existing TCs are NOT changed (regression rule:
 ## TC scope (for incremental execution)
 
 MCA can pass a TC scope to tester execution mode:
-- `tc_scope: all` — execute all TCs (default)
+- `tc_scope: all` — execute all of the plan's TCs (default; not the whole suite)
 - `tc_scope: L4,L5` — only TCs with level L4 or L5
 - `tc_scope: L3,L4,L5` — L3 + regression of previous levels
 

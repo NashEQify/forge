@@ -1,14 +1,14 @@
 # Build Workflow: Structural-Roots Gap
 
 **Date:** 2026-05-09
-**Trigger:** Two-iteration workflow failure on a BuddyAI build task. In both
+**Trigger:** Two-iteration workflow failure on a consumer project's build task. In both
 iterations the build workflow was about to ship symptom-patches over a
 structurally-broken architecture. Root smells were caught only by an
 explicit user challenge — not by any gate, reviewer, or persona.
 
 The two patterns the user observed are summarised in
 `docs/tasks/467-prep-brief.md` and `docs/tasks/467-prep-brief-fp2.md`
-(BuddyAI repo). This document analyses the framework side: which step in
+(consumer repository). This document analyses the framework side: which step in
 this repo's build workflow lets these classes through, and what to change.
 
 ---
@@ -73,7 +73,7 @@ issues.
 **`code-domain-logic`** (`agents/code-domain-logic.md`) covers business
 state-machines (session gates, transitions, audit invariants). Would
 plausibly catch S-3 *if* the `_health_state` lifecycle were modelled as a
-business state-machine — but the persona's anchor pattern is BuddyAI
+business state-machine — but the persona's anchor pattern is the consumer project's
 session/audit, not generic state vocabulary.
 
 **`code-reliability`, `code-security`, `code-data`, `code-api-contract`,
@@ -96,7 +96,7 @@ not a calibration issue — it is a heuristic-coverage gap.
 That is the right intent, but it is generic ("the hard questions") and
 sits behind two structural incentives that pull the other way:
 
-1. **CLAUDE.md §Invariant 1 (Buddy = Dispatcher).** On Board/Council,
+1. **`CLAUDE.md §Invariant 1` (Buddy = Dispatcher).** On Board/Council,
    Buddy explicitly does NOT analyse findings. The invariant correctly
    prevents Buddy from over-stepping into review work — but it also means
    that *if* the board misses a class of problem, Buddy has no licensed
@@ -236,7 +236,7 @@ with `n/a + value: <reason>`, mirroring the existing class structure.)
 +different mechanism but **also** violates property P. The change moved the
 +smell into a new vehicle.
 +
-+Few-shot canonical example (S-1, BuddyAI):
++Few-shot canonical example (S-1, consumer project):
 +`RequestContext` had ContextVar-distance-action (one writer, one reader,
 +far apart, coupled only via process state). Refactor replaced ContextVar
 +with a shared-mutable Pydantic model. Same invariant violation
@@ -259,7 +259,7 @@ with `n/a + value: <reason>`, mirroring the existing class structure.)
 +*symptom* of misplaced module ownership. The fix accepts the workaround
 +instead of asking why the symbol lives in the wrong module.
 +
-+Few-shot canonical example (S-2.1, BuddyAI):
++Few-shot canonical example (S-2.1, consumer project):
 +`AppState` half-migration, `Any`-typed field, justified with "would
 +create import cycle". The cycle is symptom: the symbol the cycle drags
 +in conceptually belongs to a different module. Move-and-the-cycle-is-
@@ -284,7 +284,7 @@ with `n/a + value: <reason>`, mirroring the existing class structure.)
 +`uninitialized` phase coerced into a healthy-but-degraded state, or a
 +`transitioning` phase coerced into the destination state.
 +
-+Few-shot canonical example (S-3, BuddyAI):
++Few-shot canonical example (S-3, consumer project):
 +`_health_state` initialised to `"degraded"`. Semantically wrong:
 +`degraded` means "I checked and I'm not fully healthy" — but the initial
 +state is "I haven't checked yet". A separate `"uninitialized"` state
@@ -501,7 +501,7 @@ A 4-line addition to the existing question pair:
  violation when user-intent-critical.
 ```
 
-### 3.7 EDIT: `workflows/runbooks/build/WORKFLOW.md` §Phase Prepare step 4
+### 3.7 EDIT: `workflows/runbooks/build/WORKFLOW.md §Phase Prepare step 4`
 
 Mirror the YAML and operational.md change in the prose runbook:
 

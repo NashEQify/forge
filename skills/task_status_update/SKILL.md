@@ -19,6 +19,10 @@ disable-model-invocation: false
 uses: []
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: task-status-update
 
 The only allowed way to change `status` in a task YAML. Direct
@@ -36,6 +40,7 @@ terminal.
 | new_status | enum | yes | pending, in_progress, done, blocked, superseded, wontfix, absorbed. |
 | board_result | string | no | APPROVED, APPROVED_WITH_RISKS, REJECTED, PASS_WITH_RISKS, null. |
 | readiness | enum | no | raw, specced, reviewed, ready, implementing, done. |
+| review_owner_workflow_id / review_owner_step_id | string pair | conditional | Invocation-only exact owner for mandatory software-review-derived writes; never task YAML fields. |
 | reason | string | no | Free text for traceability; not stored. |
 | workflow_phase | string | no | Current workflow phase. Soft-validated. |
 | spec_phase_update | object | no | Spec-phase transition (see Step 3). |
@@ -54,15 +59,85 @@ Lookup `docs/tasks/{task_id}.yaml`, else
 `docs/tasks/archive/{task_id}.yaml`. Missing → error. Remember the
 source path (Step 5 uses it).
 
+### Step 1b: start and close preconditions
+
+Off-plan starts and held-back work never pass silently. Before Step 2:
+
+1. **Programme order (`in_progress`).** While the project has an active
+   agreed programme (it names its agreement), compare the start with the
+   agreement's next task and with the programme tasks at `in_progress`. Any
+   start that is not the agreed next task — listed in the agreement or not —
+   or that runs beside another `in_progress` programme task needs the user's
+   confirmation recorded in the agreement (`agents/buddy/coordinating-sessions.md`
+   §Programme order); without it, refuse the start. A paused task is set back to `pending` or `blocked`
+   through this skill, with its reason; there is no third state. Uncommitted
+   work it leaves gets the entry of item 2.
+2. **Commit state (`done`).** Take the task's changed paths from its diff or
+   its return's list of changes (never `context_manifest`, which lists
+   reads). Where this actor is the authorized committer, commit them before
+   the close and name the commit(s);
+   `git status --porcelain --untracked-files=all -- <paths>` is empty.
+   Otherwise (no commit authorization, a standing no-commit boundary, or
+   another committer such as the commissioning Buddy) add a `notes` entry
+   `Not committed at close: <reason>; owner: <who commits>; when: <event>`
+   and report it in the return, so the commissioning owner carries it in the
+   handoff's held-back list (`framework/process-map.md` §Authorization). The
+   close records this invocation writes follow the same rule: the close
+   commit, or the same entry. A deferral without reason, owner and an
+   observable `when` (a named authorization lift, a named task close or a
+   date; not "later") refuses the close.
+3. **Acceptance execution (`done`).** Acceptance the task's own criteria rest
+   on and that did not execute is not met: its scenarios counted `unexecuted`
+   in a suite, skipped for missing execution evidence, or a run not performed.
+   Refuse `done` unless a `notes` entry
+   `Unexecuted acceptance: <which>; owner: <who>; follow-up: <task id>`
+   records the qualification. Each criterion counted as met carries the
+   evidence its claim's row in `skills/_protocols/evidence-author-claims.md`
+   §8.5 requires, in the task's return or records.
+
 ### Step 2: write YAML
+
+Before a mandatory software-review-derived `board_result`, forward readiness
+(`reviewed|ready|implementing|done`) or `spec_states` ready write, load
+`skills/_protocols/evidence-pointer-schema.md` §9. The invocation supplies the exact
+owner pair; no ambient/latest discovery or new task-schema fields. First run:
+
+```bash
+python3 "$FRAMEWORK_DIR/scripts/workflow_engine.py" --review-check "$review_owner_step_id" --id "$review_owner_workflow_id" --review-policy evidence
+```
+
+Read the retained explicit decision and compare the requested fields to §9.6:
+spec/code PASS → APPROVED; spec NEEDS-WORK or code FAIL → REJECTED; code
+PASS_WITH_RISKS → APPROVED_WITH_RISKS (existing PASS_WITH_RISKS alias allowed);
+code PARTIAL → null. A requested mapping mismatch refuses the review-derived write.
+For forward readiness, spec_states ready or a spec `APPROVED`, additionally run the
+same exact-owner check with `spec_success` or `code_success` for the captured family
+BEFORE writing.
+Only a successful check and applicable existing risk/severity/authorization rules
+permit that write. On refusal/evaluation error leave all requested review-derived
+fields unchanged. Current negative evidence permits repair/non-forward raw|specced
+updates; it never grants forward readiness. Apply this precheck before Step 3 too.
+General reasoning/research and ordinary lifecycle bookkeeping do not acquire the
+requirement. This is a prescribed invocation, not an atomic task writer.
+
+
+When a review check supports the requested write, keep its whole returned receipt
+(owner, policy, result, reason and the `input` entry with run, subject digest,
+decision digest and `quotes_verified`) at the task's work or review-evidence owner
+before dependent use; the read-only checker does not persist it
+(`retention: not_persisted`). A
+model-authored summary or JSON object is not proof that the checker ran
+([Run receipts](../../framework/workflow-engine-receipts.md#run-receipts)). The review
+decision and mapping rules above remain authoritative.
 
 Write to the source path. Always:
 - `status: {new_status}`
 - `updated: {today YYYY-MM-DD}`
 
 Optional fields when given: `board_result`, `readiness`,
-`workflow_phase`. Don't touch others. Unknown `workflow_phase`
-value → WARN, still write (new workflows define new phases).
+`workflow_phase`, and the Step 1b `notes` entries. Don't touch others.
+Unknown `workflow_phase` value → WARN, still write (new workflows define
+new phases).
 
 Validate the touched task against `framework/task-schema.yaml` via
 `plan_engine --validate <id>`; on schema FAIL, fix before
@@ -82,129 +157,13 @@ Only when `spec_phase_update` is in the input. Writes to the task's
 `spec_name` is created at `raw` if absent. Invalid transition or
 unknown `current_phase` → abort.
 
-### Step 4: cross-task graph closure + critical-path blast radius
+### Steps 4–5.5: graph closure, archive move, persist gate
 
-Two parts: **(A)** graph closure on terminal status (MUST), **(B)**
-critical-path blast-radius visibility on every status change.
-
-#### (A) Graph closure — MUST on terminal status
-
-Lifecycle-symmetric with `task_creation` Step 1b — that step
-**builds** the `blocked_by` graph, this step **closes** it.
-
-Runs BEFORE Step 5 archive so the focal task stays at top level
-until the graph is consistent. On sweep failure, the focal task is
-re-readable; the archive move only happens after the sweep returns.
-
-**`closure_ref` existence guard (superseded / absorbed):** verify
-`closure_ref` resolves to an existing task whose status is NOT in
-`terminal_status`. Fail → abort with `closure_ref={id} does not
-point at an open task — ask the user, then re-run`.
-
-**Focal-task closure write:**
-
-- `superseded` → focal: `superseded_by: {closure_ref}`; successor
-  (`{closure_ref}`): `supersedes: {task_id}`.
-- `absorbed` → focal: `absorbed_by: {closure_ref}` (one-way —
-  no `absorbs:` on the absorbing task; its body documents what was
-  folded in).
-- `done` / `wontfix` → no closure-field write.
-
-Missing `closure_ref` on superseded / absorbed → abort with
-`closure_ref required for status={status} — ask the user, then
-re-run`.
-
-**`blocked_by` sweep on open tasks** (open = status NOT in
-`terminal_status`):
-
-- `done` → **keep** the entry (historical record; `plan_engine`
-  evaluates via status).
-- `superseded` / `absorbed` → **replace** `{task_id}` with
-  `{closure_ref}`.
-- `wontfix` → **remove** `{task_id}`; emit `wontfix on {task_id}
-  orphans N blocked-by entries — review each`.
-
-**`docs/plan.yaml` inline refs:** run
-`grep -nE 'Task {task_id}\b' docs/plan.yaml` (`\b` portable across
-ugrep / GNU / BSD — the project shell's `grep` is a ugrep wrapper).
-Inspect each hit in `operational_intent.goal`,
-`operational_intent.done`, each milestone's `desc`. Rewrite stale
-descs substantively. No hit → skip.
-
-After the sweep: `plan_engine --validate` (whole tree, no `<id>`
-arg) must PASS — dangling `blocked_by` is a graph error.
-
-#### (B) Critical-path blast radius — every status change
-
-A status change on a task that gates the critical path shifts what
-`plan_engine` computes downstream. On `in_progress` / `blocked` /
-terminal of a path-gating task, run `plan_engine.py --after
-{task_id}` and read what it un/blocks; a `blocked` on a path-gating
-task surfaces the stalled downstream set rather than passing
-silently. Non-terminal transitions change no `blocked_by` edges —
-this is visibility (path-position seen now), not a YAML write, and
-not deferred to `save`.
-
-### Step 5: auto-archive / reverse move
-
-Lifecycle move between `docs/tasks/` (active) and
-`docs/tasks/archive/` (history, WORM frozen zone). Move pair (yaml
-+ md) via two `git mv`; if the second fails, roll back the first.
-
-- `new_status == done` from top level → forward move to archive/.
-- `new_status != done` from archive/ → reverse move back.
-- Otherwise → no-op.
-
-**Terminal-close integrity guard (atomicity, forward move only).** The
-split-failure mode: writing `status` at the OLD path and THEN `git mv`
-stages the rename from the *original* blob — the status edit is stranded as
-an unstaged working-tree modification (`RM` in `git status`) and never
-reaches the commit, so the task is archived at a non-terminal status
-(silent corruption; the archive is WORM, so it then sits wrong
-indefinitely). A working-tree read does NOT catch this — the working file
-shows the new status while the index still holds the old. Guard: after the
-forward move, `git add` the archived YAML, then assert the **staged** blob
-carries the terminal status —
-`git show :docs/tasks/archive/{id}.yaml | grep -q '^status: {new_status}'`
-(the index is the layer the commit reads). Mismatch → re-write
-`status: {new_status}` + `git add` + re-verify; emit a LOUD warning. The
-close is thus self-correcting at the index level, so a split can never
-reach a commit.
-
-Aux files (`{id}-gates.md`, `{id}-delegation.md`,
-`{id}-test-plan.md`) stay at the source path — gitignored,
-operational state.
-
-Other terminal statuses (`superseded`, `wontfix`, `absorbed`) do
-NOT auto-move — their cross-refs would break under the move.
-
-Step 5 is the only legitimate write operation in
-`docs/tasks/archive/`; subsequent calls on already-archived files
-keep writing there per contract (see
-`consistency_check/REFERENCE.md` §Frozen Zone).
-
-### Step 5.5: persist gate (when new_status == done)
-
-On flip to `done` the agent MUST:
-
-1. Patch `context/overview.md`.
-2. Add `context/history/<entry>.md` close-out.
-3. If `workflow_engine.py --find --task {task_id}` shows an active
-   workflow not yet at `commit-deploy` → drive it (`--complete
-   commit-deploy`). No auto-abort.
-4. **Doc-currency backstop (when the project declares an architecture
-   reading-map per its `intent.md`):** run `consistency_check` check-12
-   (doc-currency) over the project's doc-set + reading-map. On a finding
-   (a banner naming a task as pending while its YAML is terminal; a
-   `last_updated` a banner date has overtaken; a reading-map SoT pointer
-   that no longer resolves or a doc-of-record the map omits), reconcile
-   the specific flagged item in this close — targeted, non-blocking. This
-   is the **universal** doc-currency point: every route (incl. DIRECT /
-   SUB-BUILD / fix) reaches a terminal status through this skill, so
-   neither a stale banner nor an un-indexed born-here spec can survive its
-   own close — the rot a diff-scoped Verify step structurally cannot see.
-   Generic: the map + path live in the consumer's `intent.md`; this names
-   the duty, not a path. No reading-map declared → skip.
+After Step 2 (and Step 3, when it applies) has written the task YAML, on every status change: read and follow
+`skills/task_status_update/closure.md` (Step 4 cross-task graph closure on terminal status with the `closure_ref`
+guard, `blocked_by` sweep and `docs/plan.yaml` ref sweep, and the critical-path blast radius on every change; Step 5
+auto-archive or reverse move with the terminal-close integrity guard; Step 5.5 persist gate on `done`). Then report
+per Step 6.
 
 ### Step 6: output
 
@@ -217,7 +176,14 @@ Status update: [{task_id}] {title}
   plan.yaml sweep: K descs rewritten | n/a
   critical-path: on-path | off-path | gates {ids} via --after | n/a
   archive: forward | reverse | no-op
+  order: agreed next | deviation confirmed by {who} | n/a
+  commit: {hashes} | not committed: {reason}, owner {who}, when {event} | n/a
+  acceptance: executed | unexecuted {which}, owner {who}, follow-up {id} | n/a
 ```
+
+`n/a` for `order` only off `in_progress` or outside a programme; for `commit`
+and `acceptance` only off `done`, or for a `done` without changed paths (say
+so).
 
 ## Anti-patterns
 

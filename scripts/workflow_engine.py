@@ -35,12 +35,13 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import copy
 import fnmatch
 import hashlib
 import json
 import os
 import re
-import subprocess
+import subprocess  # noqa: F401 — retained interception seam for observational regression tests
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -63,11 +64,19 @@ if str(_FRAMEWORK_ROOT) not in sys.path:
 from scripts.lib.yaml_loader import (  # noqa: E402
     SchemaError,
     VALID_COMPLETION_TYPES,
+    VALID_GUARD_TYPES,
     discover_workflow_yaml,
     list_available_workflows,
     load_workflow_yaml,
     resolve_task_id,
 )
+
+
+from scripts.lib.review_adoption import (  # noqa: E402
+    OPTION_FIELDS, POLICIES, ReviewEvaluationError, ReviewRefusal,
+    capture_subject, check_adoption, qualify_decision, validate_adoption_options,
+)
+
 
 # ---------------------------------------------------------------------------
 # Path resolution
@@ -215,6 +224,256 @@ def _generate_workflow_id(workflow_name: str, task_id: int | None) -> str:
 
 def _state_path(workflow_id: str) -> Path:
     return STATE_DIR / f"{workflow_id}.json"
+
+
+def _capture_check_view(path, details, *, errors="replace"):
+    raw = path.read_bytes()
+    details.setdefault('checked_input', []).append({'kind': 'file', 'path': str(path.relative_to(PROJECT_ROOT)), 'identity': {'sha256': hashlib.sha256(raw).hexdigest()}})
+    return raw.decode('utf-8', errors=errors)
+
+
+def _record_component(checks, comp, path, result, reason, *, details=None, producer=None, executed=True):
+    """Append one receipt check to the caller's local list; ``None`` records nothing."""
+    if checks is None:
+        return
+    details = details or {}
+    ctype = comp.get('type', 'manual')
+    entry = {'check': path, 'type': ctype, 'result': result,
+             'producer': producer or ('agent' if ctype == 'manual' else 'checker'),
+             'input': copy.deepcopy(details.get('checked_input', [])),
+             'detail': str(reason or result)[:300]}
+    if executed and (details.get('limits') or not details.get('checked_input')):
+        entry['partial'] = True
+    checks.append(entry)
+
+
+def _unevaluated(checks, comp, path, producer='checker'):
+    if comp.get('type') == 'compound':
+        for i, sub in enumerate(comp['checks']):
+            _unevaluated(checks, sub, path + '.' + str(i), producer)
+    else:
+        reason = 'Not evaluated: permitted force' if producer == 'forced' else 'Not evaluated'
+        _record_component(checks, comp, path, 'not_evaluated', reason, producer=producer, executed=False)
+
+
+def _evaluate_completion(comp, state, step_state, checks=None, path='completion', validated=False):
+    """Evaluate a completion tree; ``checks`` collects receipt entries named by ``path``."""
+    raw = comp
+    resolved = _resolve_completion_vars(comp, state.get('variables', {}))
+    if not validated:
+        try:
+            _validate_completion_inputs(resolved, _path=path)
+        except (CompletionEvaluationError, OSError, ValueError, TypeError) as exc:
+            origin = getattr(exc, '_completion_input', {})
+            failing = origin.get('definition', resolved)
+            failing_path = origin.get('path', path)
+            _record_component(checks, failing, failing_path + '.input', 'unknown', str(exc))
+            _unevaluated(checks, resolved, path)
+            raise
+    ctype = resolved.get('type', 'manual')
+    if ctype == 'compound':
+        messages = []
+        for i, child in enumerate(raw['checks']):
+            try:
+                ok, msg = _evaluate_completion(child, state, step_state, checks, path + '.' + str(i), True)
+            except BaseException:
+                for j, later in enumerate(raw['checks'][i+1:], i+1):
+                    _unevaluated(checks, _resolve_completion_vars(later, state.get('variables', {})), path + '.' + str(j))
+                raise
+            messages.append(msg)
+            if not ok:
+                for j, later in enumerate(raw['checks'][i+1:], i+1):
+                    _unevaluated(checks, _resolve_completion_vars(later, state.get('variables', {})), path + '.' + str(j))
+                return False, f'compound check [{i}] failed: {msg}'
+        return True, 'all compound checks passed (' + '; '.join(messages) + ')'
+    details = {}
+    try:
+        ok, msg = _evaluate_leaf(resolved, state, step_state, details)
+    except BaseException as exc:
+        _record_component(checks, resolved, path, 'unknown', str(exc), details=details)
+        raise
+    producer = details.pop('producer', None)
+    result = 'not_evaluated' if producer == 'legacy' else 'passed' if ok else 'failed'
+    _record_component(checks, resolved, path, result, msg, details=details, producer=producer)
+    return ok, msg
+
+
+def _typed_completion_method(checks, force=False):
+    if force:
+        return 'forced'
+    producers = {c['producer'] for c in checks}
+    if 'agent' in producers:
+        return 'agent-confirmed'
+    if 'legacy' in producers:
+        return 'legacy-unverified'
+    return 'verified'
+
+
+def _receipt(operation, step_state, checks):
+    """One plain run receipt for a transition, written in the same save."""
+    return {'operation': operation, 'at': _utcnow(), 'iteration': step_state.get('iterations', 1),
+            'checks': checks}
+
+
+def _receipt_summary(checks):
+    return ', '.join(f"{c['check']}={c['result']}/{c['producer']}" for c in checks)
+
+
+def _refusal_checks(checks):
+    evaluated = [c for c in checks if c['result'] != 'not_evaluated']
+    return '; checks: ' + _receipt_summary(evaluated) if evaluated else ''
+
+
+def _review_owner(workflow_id: str, step_id: str, *, mutate: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Read one exact owner, including retained archives only for observation."""
+    if not isinstance(workflow_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", workflow_id):
+        raise CompletionEvaluationError("Review operation requires an exact --id workflow")
+    if not isinstance(step_id, str) or not step_id.strip():
+        raise CompletionEvaluationError("Review operation requires an exact owner step")
+    paths = [path for path in (_state_path(workflow_id), ARCHIVE_DIR / f"{workflow_id}.json") if path.exists()]
+    if not paths:
+        raise CompletionEvaluationError("Review owner state missing")
+    records = []
+    for path in paths:
+        try:
+            records.append(json.loads(path.read_text(encoding="utf-8")))
+        except (OSError, ValueError) as exc:
+            raise CompletionEvaluationError(f"Unreadable review owner state: {exc}") from exc
+    if any(record != records[0] for record in records[1:]):
+        raise CompletionEvaluationError("Conflicting active/archive review owner state")
+    state = records[0]
+    if not isinstance(state, dict) or state.get("workflow_id") != workflow_id:
+        raise CompletionEvaluationError("Invalid review owner identity")
+    step = state.get("steps", {}).get(step_id)
+    if not isinstance(step, dict):
+        raise CompletionEvaluationError("Exact review owner step missing")
+    if mutate and (any(path.parent == ARCHIVE_DIR for path in paths) or state.get("paused") or state.get("aborted") or state.get("completed")):
+        raise CompletionEvaluationError("Review owner workflow is not live/mutable")
+    iteration = step.get("iterations", 1)
+    if type(iteration) is not int or iteration < 1:
+        raise CompletionEvaluationError("Invalid existing owner iteration")
+    return state, step
+
+
+def _review_capture_record(state: dict[str, Any], step: dict[str, Any], step_id: str) -> dict[str, Any]:
+    record = step.get("review")
+    if not isinstance(record, dict):
+        raise ReviewRefusal("No captured review on exact owner")
+    if (record.get("owner") != {"workflow_id": state["workflow_id"], "step_id": step_id}
+            or record.get("iteration") != step.get("iterations", 1)):
+        raise ReviewRefusal("Review owner/iteration mismatch; retry and capture")
+    if not all(key in record for key in ("request", "subject", "review_run_id", "review_subject_digest")):
+        raise CompletionEvaluationError("Malformed retained review capture")
+    return record
+
+
+def _review_input(record: dict[str, Any], policy: str) -> dict[str, Any]:
+    """Identity of the retained review a check read: run, subject and decision bytes.
+
+    Also how much its adoption verified (quotes and the diagnostics count), when retained.
+    """
+    adoption = record.get("adoption")
+    entry: dict[str, Any] = {"kind": "review", "owner": copy.deepcopy(record.get("owner"))}
+    if isinstance(adoption, dict):
+        diagnostics = adoption.get("diagnostics")
+        entry.update(iteration=record.get("iteration"), review_run_id=record.get("review_run_id"),
+                     review_subject_digest=record.get("review_subject_digest"),
+                     decision=adoption.get("decision"), decision_sha256=adoption.get("sha256"),
+                     quotes_verified=adoption.get("quotes_verified"),
+                     diagnostics=len(diagnostics) if isinstance(diagnostics, list) else None)
+    else:
+        entry["review_run_id"] = record.get("review_run_id")
+    entry["policy"] = policy
+    return {key: value for key, value in entry.items() if value is not None}
+
+
+def _review_current(workflow_id: str, step_id: str, policy: str, *, source: str | None = None, observed=None, owner=None) -> tuple[bool, str]:
+    state, step = owner if owner is not None else _review_owner(workflow_id, step_id)
+    try:
+        record = _review_capture_record(state, step, step_id)
+        if observed is not None:
+            observed['checked_input'] = [_review_input(record, policy)]
+            observed['limits'] = ['Review requalification reads transitive subject/report inputs; identity coverage is partial']
+        result = check_adoption(PROJECT_ROOT, record, record.get("adoption"), policy, configured_source=source)
+        return result.permitted, result.message
+    except ReviewRefusal as exc:
+        return False, str(exc)
+    except (ReviewEvaluationError, KeyError) as exc:
+        raise CompletionEvaluationError(f"Review evaluation error: {exc}") from exc
+
+
+def cmd_review(args: argparse.Namespace) -> None:
+    step_id = args.review_capture or args.review_adopt or args.review_check
+    mutate = bool(args.review_capture or args.review_adopt)
+    state, step = _review_owner(args.wf_id, step_id, mutate=mutate)
+    try:
+        if not mutate:
+            if args.review_policy not in POLICIES:
+                raise CompletionEvaluationError("--review-check requires --review-policy")
+            details: dict[str, Any] = {}
+            try:
+                ok, message = _review_current(args.wf_id, step_id, args.review_policy, observed=details, owner=(state, step))
+                outcome = 'passed' if ok else 'failed'
+            except CompletionEvaluationError as exc:
+                ok, message, outcome = False, str(exc), 'unknown'
+            payload = {'retention': 'not_persisted', 'owner': {'workflow_id': args.wf_id, 'step_id': step_id},
+                       'policy': args.review_policy, 'result': outcome, 'reason': message,
+                       'input': details.get('checked_input', [])}
+            if getattr(args, 'fmt', None) == 'json':
+                print(json.dumps(payload))
+            else:
+                print(message + '; retention: not_persisted; receipt=' + json.dumps(payload))
+            if not ok:
+                raise ReviewRefusal(message)
+            return
+        if step.get("status") not in {STATUS_IN_PROGRESS, STATUS_COMPLETE}:
+            raise ReviewRefusal("Review owner must be in_progress or retained complete")
+        if args.review_capture:
+            request = json.load(sys.stdin)
+            normalized, subject, digest = capture_subject(PROJECT_ROOT, request)
+            if step.get("review") is None:
+                if step.get("status") != STATUS_IN_PROGRESS:
+                    raise ReviewRefusal("Initial capture requires in_progress owner; cannot backfill completed dispatch")
+                record = {"schema_version": 1, "owner": {"workflow_id": args.wf_id, "step_id": step_id},
+                          "iteration": step.get("iterations", 1), "review_run_id": uuid4().hex,
+                          "review_subject_digest": digest, "request": normalized, "subject": subject,
+                          "adoption_history": []}
+            else:
+                # Same subject keeps run and iteration; a changed request replaces the old one
+                # and retires the current adoption into history.
+                record = copy.deepcopy(_review_capture_record(state, step, step_id))
+                if record["subject"] != subject or record["review_subject_digest"] != digest:
+                    raise ReviewRefusal("Subject changed; retry before fresh capture")
+                if record["request"] != normalized:
+                    if adoption := record.pop("adoption", None):
+                        record.setdefault("adoption_history", []).append(adoption)
+                    record["request"] = normalized
+            if step.get("review") != record:
+                step["review"] = record
+                save_state(state)
+            envelope = {key: record[key] for key in ("schema_version", "owner", "iteration", "review_run_id", "review_subject_digest")}
+            print(json.dumps(envelope))
+            return
+        if not args.verdict:
+            raise CompletionEvaluationError("--review-adopt requires --verdict")
+        record = _review_capture_record(state, step, step_id)
+        adoption = qualify_decision(PROJECT_ROOT, record, args.verdict)
+        previous = record.get("adoption")
+        if previous == adoption:
+            print(f"Review adoption unchanged: {adoption['decision']} sha256={adoption['sha256']} (identical decision already adopted)")
+            return
+        if previous:
+            record.setdefault("adoption_history", []).append(previous)
+        record["adoption"] = adoption
+        save_state(state)
+        if previous:
+            print(f"Review adoption replaced: {previous.get('decision')} sha256={previous.get('sha256')} moved to adoption_history")
+        print(f"Review adopted: {adoption['decision']} sha256={adoption['sha256']} (current evidence; success policy checked separately); "
+              f"quotes verified: {adoption['quotes_verified']}")
+        for diagnostic in adoption["diagnostics"]:
+            print(f"diagnostic: {diagnostic}")
+    except (ReviewRefusal, ReviewEvaluationError, KeyError) as exc:
+        raise CompletionEvaluationError(f"Review {'refused' if isinstance(exc, ReviewRefusal) else 'evaluation error'}: {exc}") from exc
 
 
 def _ensure_state_dir() -> None:
@@ -841,12 +1100,13 @@ def _pointer_source_field(
 
 def _check_pointer(
     comp: dict[str, Any], state: dict[str, Any], step_state: dict[str, Any],
+    observed=None,
 ) -> tuple[bool, str]:
     """pointer_check Completion-Type — Spec §2.1 Schicht-2.
 
     1. source_file must be resolved before evaluation.
     2. Layout via Skill-Frontmatter (default per_finding).
-    3. validate_evidence_pointers Library-Import:
+    3. Capture report once and call the evidence_pointers content API:
        - schema_version: 0 OR missing → return (True, "legacy, skipped")
        - schema_version: 1 + leeres/missing evidence → return (False, "non-empty...")
        - pro Pointer Mechanik (existence + grep -F + range etc.)
@@ -859,6 +1119,7 @@ def _check_pointer(
        missing, 0 or below the minimum is a valid negative instead of the
        legacy skip.
     """
+    observed = observed if observed is not None else {}
     source_field = _pointer_source_field(comp)
     source_file = comp.get(source_field)
     if not source_file:
@@ -882,43 +1143,50 @@ def _check_pointer(
     if not abs_source.is_file():
         return False, f"pointer_check: file not found: {source_file}"
 
+    if OPTION_FIELDS.intersection(comp):
+        if min_sv is not None and min_sv > 1:
+            return False, f"pointer_check requires schema_version >= {min_sv}; mandatory current schema is 1"
+        owner = comp["review_owner_workflow"]
+        if owner == "self":
+            owner = state.get("workflow_id")
+        if (state.get("workflow") in {"spec_board", "spec-board"} and state.get("parent_workflow_id")
+                and owner != state["parent_workflow_id"]):
+            raise CompletionEvaluationError("Nested spec-board owner conflicts with explicit parent")
+        return _review_current(owner, comp["review_owner_step"], comp["review_policy"], source=str(source_file), observed=observed)
+
     layout = _resolve_evidence_layout(state, step_state)
 
     try:
-        from scripts.validate_evidence_pointers import (
+        from scripts.lib.evidence_pointers import (
             EvidenceParseError as _EvParseErr,
             EvidenceValidationError as _EvValErr,
-            validate_file,
+            validate_content,
         )
     except ImportError as exc:
         raise CompletionEvaluationError(
-            f"validate_evidence_pointers unavailable ({exc})"
+            f"evidence pointer validator unavailable ({exc})"
         ) from exc
 
-    # Legacy-Detection vor validate_file (validator returnt empty messages
-    # bei legacy was wir nicht von "valid mit 0 pointers" unterscheiden
-    # koennen — Engine muss das semantisch erkennen)
     try:
-        from scripts.validate_evidence_pointers import get_schema_version
-        sv = get_schema_version(str(abs_source))
+        content = _capture_check_view(abs_source, observed)
+        result = validate_content(content, layout=layout, repo_root=str(PROJECT_ROOT))
+        sv, exit_code, messages = result.schema_version, result.exit_code, result.messages
+        observed.update(schema_version=sv, layout=layout, limits=["Pointer dependency targets are not a complete atomic input snapshot"])
+    except (_EvParseErr, _EvValErr) as exc:
+        raise CompletionEvaluationError(f"pointer_check evaluation error: {exc}") from exc
     except Exception as exc:  # noqa: BLE001
-        raise CompletionEvaluationError(f"pointer_check schema evaluation error: {exc}") from exc
+        raise CompletionEvaluationError(f"pointer_check internal error: {exc}") from exc
 
+    if exit_code not in (0, 1):
+        raise CompletionEvaluationError(
+            f"pointer_check evaluation failed (exit {exit_code}): {'; '.join(messages)}"
+        )
     if min_sv is not None and (sv is None or sv < min_sv):
         got = "missing" if sv is None else str(sv)
         return False, (
             f"pointer_check fail: schema_version >= {min_sv} required, "
             f"got {got} ({source_file})"
         )
-
-    try:
-        exit_code, messages = validate_file(
-            str(abs_source), layout=layout, repo_root=str(PROJECT_ROOT),
-        )
-    except (_EvParseErr, _EvValErr) as exc:
-        raise CompletionEvaluationError(f"pointer_check evaluation error: {exc}") from exc
-    except Exception as exc:  # noqa: BLE001
-        raise CompletionEvaluationError(f"pointer_check internal error: {exc}") from exc
 
     # separate WARN-Channel von errors. Validator-Library appended
     # WARN-Strings ans messages-Array; engine-Pfad sollte sie NICHT als Teil
@@ -934,6 +1202,7 @@ def _check_pointer(
 
     if exit_code == 0:
         if sv is None or sv == 0:
+            observed["producer"] = "legacy"
             return True, "legacy, skipped (schema_version 0 or missing)"
         return True, f"pointer_check ok: {detail}" if detail else "pointer_check ok"
     if exit_code == 1:
@@ -950,12 +1219,24 @@ def check_completion(comp: dict[str, Any], state: dict[str, Any], step_state: di
 
 
 def _validate_completion_inputs(
-    comp: dict[str, Any], available_outputs: set[str] | None = None,
+    comp: dict[str, Any], available_outputs: set[str] | None = None, *, _path: str = 'completion',
+) -> set[str]:
+    try:
+        return _validate_completion_inputs_impl(comp, available_outputs, _path=_path)
+    except (CompletionEvaluationError, OSError, ValueError, TypeError) as exc:
+        if not hasattr(exc, '_completion_input'):
+            setattr(exc, '_completion_input', {'definition': copy.deepcopy(comp), 'path': _path})
+        raise
+
+
+def _validate_completion_inputs_impl(
+    comp: dict[str, Any], available_outputs: set[str] | None = None, *, _path: str = 'completion',
 ) -> set[str]:
     """Validate external inputs up front; defer only prior producer outputs."""
+    _preflight_completion(comp)
     available = set(available_outputs or ())
     source_field = _pointer_source_field(comp, available)
-    for field in ("path", "command", "pattern", source_field):
+    for field in ("path", "command", "pattern", source_field, "review_owner_workflow", "review_owner_step"):
         val = comp.get(field)
         for item in val if isinstance(val, list) else [val]:
             unresolved = _unresolved_outside(item, available)
@@ -983,19 +1264,172 @@ def _validate_completion_inputs(
         for i, sub in enumerate(checks):
             if not isinstance(sub, dict):
                 raise CompletionEvaluationError(f"compound check [{i}] must be a mapping")
-            available = _validate_completion_inputs(sub, available)
+            available = _validate_completion_inputs(sub, available, _path=_path + "." + str(i))
     elif ctype == "file_created_matching":
         available.add("artifact_path")
     return available
 
 
+def _check_brief(path: str, workflow_id: str, observed=None) -> tuple[bool, str]:
+    """Check one captured brief; local structure does not certify judgment."""
+    import yaml
+
+    class UniqueLoader(yaml.SafeLoader):
+        def construct_mapping(self, node, deep=False):
+            self.flatten_mapping(node)
+            result = {}
+            for key_node, value_node in node.value:
+                key = self.construct_object(key_node, deep=deep)
+                if key in result:
+                    raise ValueError(f"duplicate YAML key: {key}")
+                result[key] = self.construct_object(value_node, deep=deep)
+            return result
+
+    def parse(text):
+        return yaml.load(text, Loader=UniqueLoader)
+
+    def nonblank(value):
+        return isinstance(value, str) and bool(value.strip())
+
+    def require(condition, message):
+        if not condition:
+            raise CompletionEvaluationError(f"brief: {message}")
+
+    require(nonblank(path), "required path is blank")
+    relative = Path(path)
+    require(not relative.is_absolute(), "path must be project-relative")
+    try:
+        target = (PROJECT_ROOT / relative).resolve()
+        require(target.is_relative_to(PROJECT_ROOT.resolve()), "path escapes active project")
+        require(target.is_file(), "path must resolve to a readable regular file")
+        content = _capture_check_view(target, observed if observed is not None else {}, errors="strict")
+        require(nonblank(content), "content is empty")
+        lines = content.splitlines()
+        require(lines[0] == "---", "missing frontmatter contract")
+        end = next((i for i in range(1, len(lines)) if lines[i] == "---"), None)
+        require(end is not None, "unterminated frontmatter")
+        metadata = parse("\n".join(lines[1:end]))
+        require(isinstance(metadata, dict), "frontmatter must be a mapping")
+        contract = metadata.get("brief_contract")
+        obligations = {"implicit_decisions", "mechanism_cells"}
+        require(isinstance(contract, dict) and set(contract) == obligations | {"workflow_id"},
+                "brief_contract requires exactly workflow_id, implicit_decisions and mechanism_cells")
+        require(nonblank(contract["workflow_id"]) and contract["workflow_id"] == workflow_id,
+                "workflow owner does not match selected run")
+        for name in obligations:
+            declaration = contract[name]
+            require(isinstance(declaration, dict) and "status" in declaration
+                    and set(declaration) <= {"status", "reason"}, f"unsupported {name} declaration")
+            require(declaration["status"] in ("applicable", "exempt"), f"{name} applicability is unresolved")
+            if declaration["status"] == "exempt":
+                require(nonblank(declaration.get("reason")), f"{name} exemption requires a reason")
+
+        # Recognize only real section headings, outside Markdown fenced examples.
+        sections = {}
+        current = None
+        fence = None
+        for line in lines[end + 1:]:
+            marker = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+            if fence:
+                if current is not None:
+                    sections[current].append(line)
+                if re.fullmatch(rf" {{0,3}}{re.escape(fence[0])}{{{fence[1]},}}\s*", line):
+                    fence = None
+                continue
+            if marker:
+                fence = (marker[1][0], len(marker[1]))
+            else:
+                heading = re.match(r"^ {0,3}(#{1,6})\s+(.+?)\s*#*\s*$", line)
+                if heading and len(heading[1]) <= 2:
+                    current = None
+                    title = heading[2].removeprefix("§").strip()
+                    name = {"Implicit-Decisions-Surfaced": "implicit_decisions",
+                            "Mechanism-cells": "mechanism_cells"}.get(title)
+                    if len(heading[1]) == 2 and name:
+                        require(name not in sections, f"duplicate {title} section")
+                        current = name
+                        sections[name] = []
+                    continue
+            if current is not None:
+                sections[current].append(line)
+
+        for name in obligations:
+            body = sections.get(name, [])
+            if name in sections:
+                require(any(line.strip() and not re.match(r"^\s*(`{3,}|~{3,})", line) for line in body),
+                        f"empty {name} section")
+            if contract[name]["status"] == "exempt":
+                continue
+            require(name in sections, f"missing {name} section")
+            payloads = []
+            block = None
+            fence = None
+            for line in body:
+                if fence:
+                    if re.fullmatch(rf" {{0,3}}{re.escape(fence[0])}{{{fence[1]},}}\s*", line):
+                        if block is not None:
+                            payloads.append(parse("\n".join(block)))
+                        fence, block = None, None
+                    elif block is not None:
+                        block.append(line)
+                    continue
+                marker = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+                if marker:
+                    fence = (marker[1][0], len(marker[1]))
+                    block = [] if marker[2].strip().lower() in {"yaml", "yml"} else None
+            require(fence is None, f"unterminated fence in {name}")
+            require(len(payloads) == 1, f"{name} requires one unambiguous YAML payload")
+            root = "implicit_decisions_surfaced" if name == "implicit_decisions" else name
+            payload = payloads[0]
+            require(isinstance(payload, dict) and isinstance(payload.get(root), dict), f"missing {root} mapping")
+            values = payload[root]
+            if name == "implicit_decisions":
+                for key in ("schema_and_contract", "error_and_stop", "layer_discipline",
+                            "structural_invariants", "vision_alignment"):
+                    decision = values.get(key)
+                    require(isinstance(decision, dict) and nonblank(decision.get("locked"))
+                            and nonblank(decision.get("value")), f"{key} requires nonblank locked and value")
+            else:
+                require(nonblank(values.get("section")), "mechanism_cells requires section")
+                for key in ("in_scope", "placed", "forbidden_adjacent"):
+                    cells = values.get(key)
+                    require(isinstance(cells, list) and all(nonblank(cell) for cell in cells),
+                            f"mechanism_cells {key} requires a list of nonblank strings")
+                    if key == "in_scope":
+                        require(bool(cells), "mechanism_cells in_scope must not be empty")
+    except (OSError, UnicodeError, ValueError, TypeError, yaml.YAMLError) as exc:
+        raise CompletionEvaluationError(f"brief: invalid required input: {exc}") from exc
+    return True, "brief structure checked; judgment and authorization remain manual"
+
+
+def _mandatory_review_checks(comp: dict[str, Any] | None) -> list[dict[str, Any]]:
+    if comp is None:
+        return []
+    if comp.get("type") == "pointer_check" and OPTION_FIELDS.intersection(comp):
+        return [comp]
+    if comp.get("type") == "compound":
+        return [item for child in comp.get("checks", []) for item in _mandatory_review_checks(child)]
+    return []
+
+
+def _contains_brief_check(comp: dict[str, Any] | None) -> bool:
+    if comp is None:
+        return False
+    return comp.get("type") == "brief_check" or (
+        comp.get("type") == "compound" and any(_contains_brief_check(child) for child in comp["checks"])
+    )
+
+
 def _check_completion(comp: dict[str, Any], state: dict[str, Any], step_state: dict[str, Any]) -> tuple[bool, str]:
+    return _evaluate_completion(comp, state, step_state)
+
+
+def _evaluate_leaf(comp, state, step_state, details):
     """Distinguish failed evaluation from a valid negative completion check."""
-    variables = state.get("variables", {})
-    raw_comp = comp
-    comp = _resolve_completion_vars(comp, variables)
-    _validate_completion_inputs(comp)
     ctype = comp.get("type", "manual")
+
+    if ctype == "brief_check":
+        return _check_brief(comp["path"], state.get("workflow_id", ""), details)
 
     if ctype == "manual":
         return True, "manual: agent-confirmed (not verified)"
@@ -1007,9 +1441,10 @@ def _check_completion(comp: dict[str, Any], state: dict[str, Any], step_state: d
             return False, f"file not found: {target_path}"
         started_at = step_state.get("started_at", state.get("started"))
         if not started_at:
-            return True, "no started_at to compare"
+            raise CompletionEvaluationError("no started_at to compare")
         start_ts = _parse_utc(started_at).timestamp()
         mtime = abs_path.stat().st_mtime
+        details["checked_input"] = [{"kind": "metadata", "path": target_path, "mtime": mtime, "baseline": started_at}]
         if mtime >= start_ts:
             return True, "file modified after step start"
         return False, f"file not modified since step start ({target_path})"
@@ -1020,10 +1455,15 @@ def _check_completion(comp: dict[str, Any], state: dict[str, Any], step_state: d
             patterns = [patterns]
         workflow_start = state.get("started", "")
         start_ts = 0.0 if not workflow_start else _parse_utc(workflow_start).timestamp()
+        details["checked_input"] = [{"kind": "matching", "patterns": patterns, "baseline": workflow_start, "matches": []}]
         for pat in patterns:
             for match_path in _glob_paths_strict(pat):
-                if match_path.exists() and match_path.stat().st_mtime >= start_ts:
+                if not match_path.exists():
+                    continue
+                mtime = match_path.stat().st_mtime
+                if mtime >= start_ts:
                     rel = str(match_path.relative_to(PROJECT_ROOT))
+                    details["checked_input"][0]["matches"].append({"path": rel, "mtime": mtime})
                     state.setdefault("variables", {})["artifact_path"] = rel
                     return True, f"found matching file: {rel}"
         return False, f"no matching files for patterns: {patterns}"
@@ -1033,7 +1473,7 @@ def _check_completion(comp: dict[str, Any], state: dict[str, Any], step_state: d
         abs_path = PROJECT_ROOT / target_path
         if not abs_path.exists():
             return False, f"file not found: {target_path}"
-        content = abs_path.read_text(errors="replace")
+        content = _capture_check_view(abs_path, details)
         pattern = comp.get("pattern", "")
         condition = comp.get("condition", "has_match")
         has = bool(re.search(pattern, content))
@@ -1046,40 +1486,14 @@ def _check_completion(comp: dict[str, Any], state: dict[str, Any], step_state: d
             return True, f"pattern correctly absent from {target_path}"
         return False, f"pattern unexpectedly found in {target_path}"
 
-    if ctype == "exit_code":
-        command = comp.get("command", "")
-        if not isinstance(command, str) or not command.strip():
-            raise CompletionEvaluationError("exit_code requires a non-empty command")
-        try:
-            result = subprocess.run(  # noqa: S602
-                command, shell=True, capture_output=True, timeout=30,
-                cwd=str(PROJECT_ROOT),
-            )
-            if result.returncode == 0:
-                return True, "command succeeded (exit 0)"
-            if result.returncode == 1:
-                return False, "command failed (exit 1)"
-            raise CompletionEvaluationError(f"command evaluation failed (exit {result.returncode})")
-        except subprocess.TimeoutExpired as exc:
-            raise CompletionEvaluationError("command timed out") from exc
-        except Exception as e:  # noqa: BLE001
-            raise CompletionEvaluationError(f"command error: {e}") from e
+    if ctype == "named_predicate":
+        return _named_predicate(comp, state, observed=details)
 
     if ctype == "pointer_check":
-        return _check_pointer(comp, state, step_state)
-
-    if ctype == "compound":
-        # Resolve each child against state after preceding producers execute.
-        checks = raw_comp.get("checks", [])
-        unverified = []
-        for i, sub in enumerate(checks):
-            ok, msg = _check_completion(sub, state, step_state)
-            if not ok:
-                return False, f"compound check [{i}] failed: {msg}"
-            if "not verified" in msg or "legacy, skipped" in msg:
-                unverified.append(msg)
-        detail = f" ({'; '.join(unverified)})" if unverified else ""
-        return True, f"all compound checks passed{detail}"
+        result = _check_pointer(comp, state, step_state, details)
+        if OPTION_FIELDS.intersection(comp) and not result[0]:
+            raise CompletionEvaluationError("Mandatory review adoption refused: " + result[1])
+        return result
 
     raise CompletionEvaluationError(f"unknown completion type: {ctype}")
 
@@ -1180,25 +1594,14 @@ def _evaluate_guard(guard: dict[str, Any], state: dict[str, Any], variables: dic
             return True, f"route '{route}' is active on step '{step_id}'"
         return False, f"route '{route}' not active on step '{step_id}' (selected: {selected})"
 
-    if gtype == "script":
-        command = guard.get("command", "")
-        if not isinstance(command, str) or not command.strip():
-            return None, "script guard requires a non-empty command"
+    if gtype == "named_predicate":
         try:
-            result = subprocess.run(  # noqa: S602
-                command, shell=True, capture_output=True, timeout=30,
-                cwd=str(PROJECT_ROOT),
-            )
-            if result.returncode == 0:
-                return True, "script guard: proceed"
-            if result.returncode == 1:
-                return False, "script guard: not applicable (exit 1)"
-            detail = result.stderr.decode(errors="replace").strip()[:500]
-            return None, f"script guard error (exit {result.returncode}): {detail}"
-        except subprocess.TimeoutExpired:
-            return None, "script guard: timeout"
-        except Exception as e:  # noqa: BLE001
-            return None, f"script guard error: {e}"
+            return _named_predicate(guard, {**state, "variables": variables}, guard=True)
+        except (CompletionEvaluationError, OSError, ValueError, TypeError) as exc:
+            return None, f"named predicate evaluation error: {exc}"
+
+    if gtype == "script":
+        return None, "unsupported script guard: inspection never executes commands"
 
     return None, f"unknown guard type: {gtype}"
 
@@ -1411,6 +1814,7 @@ def create_state(
         "variables": variables,
         "steps": steps_state,
         "force_count": 0,
+        "definition_fingerprint": definition_fingerprint(workflow_def),
     }
 
     save_state(state, is_new=True)
@@ -1419,8 +1823,9 @@ def create_state(
 
 def find_next_step(state: dict[str, Any], workflow_def: dict[str, Any]) -> str | None:
     """Find the next actionable step. Returns step_id or None if all done/paused."""
-    if state.get("paused"):
+    if _progress_refusal(state):
         return None
+    _preflight_workflow(state, workflow_def)
 
     step_ids = _ordered_step_ids(workflow_def)
     steps = state.get("steps", {})
@@ -1440,17 +1845,6 @@ def find_next_step(state: dict[str, Any], workflow_def: dict[str, Any]) -> str |
     # damit `--complete` (cmd_complete) denselben Resolution-State sieht
     # (pre-fix war Resolution NUR hier; `--complete`
     # mit pointer_check + `{spec_name}` blockierte ohne `--force`).
-    if _ensure_state_variables_resolved(state):
-        # Persist immediately so downstream callers and concurrent reads
-        # see the discovered path even if no step gets activated this pass.
-        try:
-            save_state(state)
-        except OSError as exc:
-            print(
-                f"WARNING: save_state failed after lazy variable "
-                f"resolution: {exc}",
-                file=sys.stderr,
-            )
     variables = state.get("variables", {})
 
     # FW-007 auto-complete is restricted to deterministic completion-types
@@ -1462,7 +1856,6 @@ def find_next_step(state: dict[str, Any], workflow_def: dict[str, Any]) -> str |
     # mechanisch valid sind, passiert der Step ohne expliziten manual-step.
     # Aufgenommen ins Set damit die Spec-Zusage tatsaechlich greift.
     _AUTO_COMPLETE_TYPES = {
-        "exit_code",
         "file_content_check",
         "file_created_matching",
         "file_modified_after",
@@ -1503,18 +1896,13 @@ def find_next_step(state: dict[str, Any], workflow_def: dict[str, Any]) -> str |
                     "skipped_reason": f"guard: {reason}",
                     "completed_at": _utcnow(),
                 }
-                try:
-                    save_state(state)
-                except OSError as exc:
-                    print(
-                        f"WARNING: save_state failed after guard-skip "
-                        f"of '{sid}': {exc}",
-                        file=sys.stderr,
-                    )
+                save_state(state)
                 continue
 
         # Active steps (including the first step) still need a valid guard.
         if status == STATUS_IN_PROGRESS:
+            if _ensure_state_variables_resolved(state):
+                save_state(state)
             return sid
 
         # FW-007 (pre-fulfilled idempotency): if a deterministic step's
@@ -1526,40 +1914,32 @@ def find_next_step(state: dict[str, Any], workflow_def: dict[str, Any]) -> str |
         comp = step_def.get("completion")
         if (
             cat == "deterministic"
+            and not step_def.get("evidence_required", False)
             and isinstance(comp, dict)
             and comp.get("type") in _AUTO_COMPLETE_TYPES
         ):
-            # check_completion reads step_state["started_at"] for
-            # file_modified_after; seed it so the check has a baseline.
-            now = _utcnow()
-            if "started_at" not in steps[sid]:
-                steps[sid]["started_at"] = now
+            # Evaluate in memory; only a pass is a transition, saved once with its receipt.
+            proposed = copy.deepcopy(state)
+            checks: list[dict[str, Any]] = []
+            working = proposed['steps'][sid]
+            working.setdefault('started_at', _utcnow())
             try:
-                success, msg = check_completion(comp, state, steps[sid])
-            except Exception as exc:  # noqa: BLE001
-                # Auto-complete is opportunistic — never let an evaluator
-                # crash break the regular activation path.
-                success, msg = False, f"auto-complete eval error: {exc}"
+                _ensure_state_variables_resolved(proposed)
+                success, msg = _evaluate_completion(comp, proposed, working, checks, sid + ':completion')
+            except (CompletionEvaluationError, OSError, ValueError, TypeError, re.error):
+                success = False
             if success:
-                steps[sid]["status"] = STATUS_COMPLETE
-                steps[sid]["completion_method"] = _completion_method(comp, msg)
-                steps[sid]["completed_at"] = _utcnow()
-                steps[sid]["evidence"] = (
-                    f"auto-complete: pre-fulfilled completion-check ({msg})"
-                )
-                try:
-                    save_state(state)
-                except OSError as exc:
-                    print(
-                        f"WARNING: save_state failed after auto-complete "
-                        f"of '{sid}': {exc}",
-                        file=sys.stderr,
-                    )
+                working.update(status=STATUS_COMPLETE, completion_method=_typed_completion_method(checks),
+                               completed_at=_utcnow(), evidence='auto-complete: ' + msg,
+                               receipt=_receipt('auto_complete', working, checks))
+                save_state(proposed)
+                state.clear()
+                state.update(proposed)
+                steps = state['steps']
+                variables = state.get('variables', {})
                 continue
-            # Did not pre-fulfil — drop the speculative started_at so the
-            # real activation below sets a fresh timestamp.
-            if steps[sid].get("started_at") == now:
-                del steps[sid]["started_at"]
+
+        _ensure_state_variables_resolved(state)
 
         # Activate this step
         steps[sid]["status"] = STATUS_IN_PROGRESS
@@ -1590,6 +1970,24 @@ def find_next_step(state: dict[str, Any], workflow_def: dict[str, Any]) -> str |
     return None
 
 
+def _require_invocation_evidence(step: dict[str, Any] | None, evidence: str | None) -> None:
+    if step and step.get("evidence_required", False):
+        if not isinstance(evidence, str) or not evidence.strip():
+            raise CompletionEvaluationError(
+                "Fresh --evidence is required for this completion invocation, including force; "
+                "retained evidence is insufficient"
+            )
+
+
+def _progress_refusal(state: dict[str, Any]) -> str | None:
+    """Pause and abort isolation applies before evaluation or incidental writes."""
+    if state.get("aborted"):
+        return "Workflow is aborted; progression is refused"
+    if state.get("paused"):
+        return "Workflow is paused; resume explicitly before progressing"
+    return None
+
+
 def complete_step(
     state: dict[str, Any],
     workflow_def: dict[str, Any],
@@ -1599,7 +1997,14 @@ def complete_step(
     force: bool = False,
     set_vars: dict[str, str] | None = None,
 ) -> tuple[bool, str]:
-    """Complete a step. Returns (success, message)."""
+    """Complete explicitly; flagged steps require evidence from this invocation."""
+    if refusal := _progress_refusal(state):
+        return False, refusal
+    try:
+        _preflight_workflow(state, workflow_def)
+        _require_invocation_evidence(_get_step_def(workflow_def, step_id), evidence)
+    except (CompletionEvaluationError, GuardEvaluationError) as exc:
+        return False, f"Completion evaluation error: {exc}"
     steps = state.get("steps", {})
     if step_id not in steps:
         return False, f"Step '{step_id}' not found in workflow"
@@ -1624,6 +2029,9 @@ def complete_step(
         if applicable is not True:
             return False, f"Cannot complete step '{step_id}': guard: {reason}. Run --next after resolving it."
 
+    if force and _contains_brief_check(step_def.get("completion", {})):
+        return False, "brief_check refuses force; resolve required input and complete ordinarily"
+
     # Force guardrails: soft warning threshold + hard stop.
     if force:
         force_count = state.get("force_count", 0)
@@ -1634,93 +2042,84 @@ def complete_step(
                 "Fix the completion check or --abort and restart."
             )
 
-    # Set variables
-    if set_vars:
-        state.setdefault("variables", {}).update(set_vars)
-
-    cat = step_def.get("category", "content")
-    if cat == "classification":
-        if not route:
-            return False, f"Classification step '{step_id}' requires --route"
-        routes = step_def.get("routes", {})
-        if route not in routes:
-            valid = ", ".join(sorted(routes.keys()))
-            return False, f"Unknown route '{route}' for step '{step_id}'. Valid: {valid}"
-
-    comp = step_def.get("completion")
-    check_message = ""
-    if comp and isinstance(comp, dict) and not force:
-        try:
-            passed, msg = _check_completion(comp, state, step_state)
-        except (CompletionEvaluationError, OSError, ValueError, TypeError, re.error) as exc:
-            return False, f"Completion evaluation error: {exc}"
-        check_message = msg
-        if not passed:
-            on_fail = step_def.get("on_fail", "block")
-            if on_fail == "block":
-                return False, f"Completion check failed: {msg}"
-            if on_fail == "warn":
-                step_state["status"] = STATUS_WARN_SKIPPED
-                step_state["completed_at"] = _utcnow()
-                step_state["warn_reason"] = msg
-                if evidence:
-                    step_state["evidence"] = evidence
-                save_state(state)
-                return True, f"WARNING: {step_id} failed: {msg}. Continuing."
-            if on_fail == "skip":
-                step_state["status"] = STATUS_SKIPPED
-                step_state["completed_at"] = _utcnow()
-                if evidence:
-                    step_state["evidence"] = evidence
-                save_state(state)
-                return True, f"Skipped: {step_id}"
-            if on_fail == "escalate":
-                step_state["status"] = STATUS_ESCALATED
-                step_state["completed_at"] = _utcnow()
-                if evidence:
-                    step_state["evidence"] = evidence
-                save_state(state)
-                return True, f"ESCALATE: {step_id} failed: {msg}. User action needed."
-
-    force_count_after: int | None = None
-    force_warning = ""
-
-    # Force: increment counter and mark.
-    if force and comp and isinstance(comp, dict):
-        state["force_count"] = state.get("force_count", 0) + 1
-        force_count_after = int(state["force_count"])
-        step_state["force_completed"] = True
-        if force_count_after > FORCE_WARN_THRESHOLD:
-            force_warning = (
-                f" WARNING: high force usage ({force_count_after}/{MAX_FORCE_PER_WORKFLOW}). "
-                "Consider route selection, optional steps, or abort-closeout if this repeats."
-            )
-
-    # Mark complete
-    step_state["status"] = STATUS_COMPLETE
-    method = "forced" if force and comp else _completion_method(comp, check_message)
-    step_state["completion_method"] = method
-    step_state["completed_at"] = _utcnow()
-    if evidence:
-        step_state["evidence"] = evidence
-
-    # Route activation
-    if route:
-        step_state["selected_route"] = route
-        if cat == "classification":
-            _activate_route(state, workflow_def, step_id, route)
-
-    save_state(state)
-
-    # Check if workflow is done
-    _check_workflow_completion(state, workflow_def)
-
-    msg = f"Step '{step_id}' completed: {_format_completion_method(method)}"
-    if force_count_after is not None:
-        msg += f" (forced {force_count_after}/{MAX_FORCE_PER_WORKFLOW})"
-    if force_warning:
-        msg += force_warning
-    return True, msg
+    cat = step_def.get('category', 'content')
+    if cat == 'classification':
+        if not route or route not in step_def.get('routes', {}):
+            return False, f"Classification step '{step_id}' requires a valid --route"
+    if state.get('workflow') in {'spec_board', 'spec-board'} and state.get('parent_workflow_id'):
+        for review in _mandatory_review_checks(step_def.get('completion')):
+            owner = _resolve_vars(review['review_owner_workflow'], {**state.get('variables', {}), **(set_vars or {})})
+            if owner == 'self':
+                owner = state['workflow_id']
+            if not _has_unresolved_vars(owner) and owner != state['parent_workflow_id']:
+                return False, 'Nested spec-board owner conflicts with explicit parent'
+    # Evaluate into a local list; a transition and its receipt are saved once, a refusal saves nothing.
+    proposed = copy.deepcopy(state)
+    ss = proposed['steps'][step_id]
+    checks: list[dict[str, Any]] = []
+    comp = step_def.get('completion') or {'type': 'manual'}
+    forced = force and bool(step_def.get('completion'))
+    try:
+        if set_vars:
+            proposed.setdefault('variables', {}).update(set_vars)
+        _ensure_state_variables_resolved(proposed)
+        def mandatory(node, path='completion'):
+            if node.get('type') == 'compound':
+                for i, child in enumerate(node['checks']):
+                    yield from mandatory(child, path + '.' + str(i))
+            elif OPTION_FIELDS.intersection(node):
+                yield node, path
+        for check, path in mandatory(comp):
+            prechecks: list[dict[str, Any]] = []
+            try:
+                _evaluate_completion(check, proposed, ss, prechecks, step_id + ':' + path)
+            finally:
+                checks.extend({**c, 'precheck': True} for c in prechecks)
+        if forced:
+            _unevaluated(checks, _resolve_completion_vars(comp, proposed.get('variables', {})), step_id + ':completion', 'forced')
+            passed, detail = True, 'permitted force'
+        else:
+            passed, detail = _evaluate_completion(comp, proposed, ss, checks, step_id + ':completion')
+    except (CompletionEvaluationError, OSError, ValueError, TypeError, re.error) as exc:
+        return False, 'Completion evaluation error: ' + str(exc) + _refusal_checks(checks)
+    if not passed:
+        policy = step_def.get('on_fail', 'block')
+        if policy == 'block':
+            return False, 'Completion check failed: ' + detail + _refusal_checks(checks)
+        candidate = copy.deepcopy(state)
+        ss = candidate['steps'][step_id]
+        ss['status'] = {'warn': STATUS_WARN_SKIPPED, 'skip': STATUS_SKIPPED, 'escalate': STATUS_ESCALATED}[policy]
+        ss['completed_at'] = _utcnow()
+        if policy == 'warn':
+            ss['warn_reason'] = detail
+        if evidence:
+            ss['evidence'] = evidence
+        message = {'warn': 'WARNING: ', 'skip': 'Skipped: ', 'escalate': 'ESCALATE: '}[policy] + step_id + ': ' + detail
+    else:
+        method = _typed_completion_method(checks, forced)
+        ss.update(status=STATUS_COMPLETE, completion_method=method, completed_at=_utcnow())
+        if evidence:
+            ss['evidence'] = evidence
+        if forced:
+            proposed['force_count'] = proposed.get('force_count', 0) + 1
+            ss['force_completed'] = True
+        if route:
+            ss['selected_route'] = route
+            if cat == 'classification':
+                _activate_route(proposed, workflow_def, step_id, route)
+        candidate = proposed
+        message = f"Step '{step_id}' completed: {_format_completion_method(method)}"
+        if forced:
+            message += f" (forced {proposed['force_count']}/{MAX_FORCE_PER_WORKFLOW})"
+            if proposed['force_count'] > FORCE_WARN_THRESHOLD:
+                message += ' WARNING: high force usage'
+    ss['receipt'] = _receipt('complete', ss, checks)
+    save_state(candidate)
+    state.clear()
+    state.update(candidate)
+    if state['steps'][step_id]['status'] != STATUS_ESCALATED:
+        _check_workflow_completion(state, workflow_def, propagate_parent=state['steps'][step_id]['status'] == STATUS_COMPLETE)
+    return True, message + '; receipt: ' + _receipt_summary(checks)
 
 
 def _apply_route_skip(
@@ -1770,29 +2169,36 @@ def _activate_route(
     _apply_route_skip(state.get("steps", {}), routes, selected_route)
 
 
-def _check_workflow_completion(state: dict[str, Any], _workflow_def: dict[str, Any]) -> None:
-    """Check if all steps are done. If so, archive state."""
+def _check_workflow_completion(
+    state: dict[str, Any], workflow_def: dict[str, Any], *, propagate_parent: bool = False,
+) -> None:
+    """Archive eligible local closure; retained completion records retry archive only."""
+    if _progress_refusal(state):
+        return
+    _preflight_workflow(state, workflow_def)
     steps = state.get("steps", {})
-    all_done = all(
-        s.get("status") in TERMINAL_STEP_STATUSES
-        for s in steps.values()
-    )
-    if not all_done:
+    if set(steps) != set(_ordered_step_ids(workflow_def)) or any(
+        step.get("status") not in TERMINAL_STEP_STATUSES - {STATUS_ESCALATED}
+        for step in steps.values()
+    ):
         return
 
-    state["completed"] = _utcnow()
-    # `complete_step` advances `current_step` only via `cmd_next`; on the
-    # FINAL step it stays pointed at the just-completed step. Null it here — in
-    # the SAME blob `archive_state` moves below — so the archived record reads
-    # `current_step: None` instead of a stale leftover (e.g. 'commit-deploy').
-    # Cosmetic-only: no enforcement reads `current_step` after completion.
-    state["current_step"] = None
-
-    save_state(state)
-    archive_state(state["workflow_id"], expected_revision=state["revision"])
-
-    # Propagate only after the completed revision has been archived successfully.
     parent_id = state.get("parent_workflow_id")
+    if parent_id and not propagate_parent:
+        raise CompletionEvaluationError(
+            "Local closure unresolved: parent-linked finalization is unsupported for this operation; "
+            "the parent is unchanged. Only the existing ordinary explicit-completion path propagates."
+        )
+
+    needs_save = not state.get("completed") or state.get("current_step") is not None
+    if not state.get("completed"):
+        state["completed"] = _utcnow()
+    state["current_step"] = None
+    if needs_save:
+        save_state(state)
+    archive_state(state["workflow_id"], expected_revision=state.get("revision", 0))
+
+    # Preserve the legacy boundary; newly added closure paths cannot propagate.
     if parent_id:
         _propagate_child_completion(state, parent_id)
 
@@ -1838,6 +2244,9 @@ def skip_step(
     reason: str,
 ) -> tuple[bool, str]:
     """Skip a step. Returns (success, message)."""
+    if refusal := _progress_refusal(state):
+        return False, refusal
+    _preflight_workflow(state, workflow_def)
     steps = state.get("steps", {})
     if step_id not in steps:
         return False, f"Step '{step_id}' not found"
@@ -1845,6 +2254,9 @@ def skip_step(
     step_def = _get_step_def(workflow_def, step_id)
     if not step_def:
         return False, f"Step '{step_id}' not in definition"
+
+    if steps[step_id].get("status") in TERMINAL_STEP_STATUSES:
+        return False, f"Step '{step_id}' already terminal; use --next --id to reconcile closure"
 
     required = step_def.get("required", True)
     if required:
@@ -1863,6 +2275,7 @@ def skip_step(
     steps[step_id]["completed_at"] = _utcnow()
     steps[step_id]["skipped_reason"] = reason
     save_state(state)
+    _check_workflow_completion(state, workflow_def)
     return True, f"Step '{step_id}' skipped: {reason}"
 
 
@@ -1872,21 +2285,15 @@ def retry_step(
     step_id: str,
     reason: str,
 ) -> tuple[bool, str]:
-    """Reset a terminal step back to pending so it can be re-executed.
+    """Reopen an in-progress or terminal step using its existing iteration.
 
-    Item 7 (post-388 dogfooding): re-iteration-block was opaque-zur-Engine.
-    `--retry` makes iteration mechanical-trackable. State-File records
-    iteration-count per step + retry-history (audit-trail).
-
-    Iteration-Cap (Item 13): default 3 per step. Workflow-level override
-    via top-level `iteration_cap: <int>` in workflow.yaml. Beyond cap:
-    --reason MUST contain explicit override-rationale (engine logs but
-    accepts — Buddy-discipline + audit-trail catches abuse).
-
-    Allowed source statuses: any TERMINAL_STEP_STATUSES (complete /
-    skipped / warn_skipped / escalated). Not allowed for STATUS_PENDING
-    (already retryable) or STATUS_IN_PROGRESS (use --complete first).
+    Preserve prior review evidence in retry history; pending steps need no retry.
+    Existing iteration caps and structured override reasons remain unchanged.
     """
+    if refusal := _progress_refusal(state):
+        return False, refusal
+    _require_interpretation(state, workflow_def, reopening_step=step_id)
+    _preflight_workflow(state, workflow_def)
     steps = state.get("steps", {})
     if step_id not in steps:
         return False, f"Step '{step_id}' not found"
@@ -1927,9 +2334,16 @@ def retry_step(
                 f"(Item 13)."
             )
 
+    # Reopened work invalidates a retained completion awaiting archival.
+    state.pop("completed", None)
+
     # Reset state for retry, preserve audit-trail
     retry_history = step_state.get("retry_history", [])
+    prior_review = step_state.pop("review", None)
+    prior_receipt = step_state.pop("receipt", None)
     retry_history.append({
+        **({"review": copy.deepcopy(prior_review)} if prior_review is not None else {}),
+        **({"receipt": copy.deepcopy(prior_receipt)} if prior_receipt is not None else {}),
         "from_status": current_status,
         "reason": reason,
         "when": _utcnow(),
@@ -1988,7 +2402,8 @@ def retry_step(
                     continue
                 child["status"] = STATUS_PENDING
                 for f in ("completed_at", "started_at", "evidence", "warn_reason",
-                          "skipped_reason", "force_completed", "selected_route", "completion_method"):
+                          "skipped_reason", "force_completed", "selected_route", "completion_method",
+                          "receipt"):
                     child.pop(f, None)
 
     # Update current_step pointer
@@ -2006,41 +2421,58 @@ def retry_step(
 # ---------------------------------------------------------------------------
 
 def recover_workflow(state: dict[str, Any], workflow_def: dict[str, Any]) -> list[str]:
-    """Recover applicable mechanical checks, never supply manual confirmation."""
-    recovered: list[str] = []
-    steps = state.get("steps", {})
-
-    for sid, ss in steps.items():
-        if ss.get("status") != STATUS_IN_PROGRESS:
+    if _progress_refusal(state):
+        return []
+    _preflight_workflow(state, workflow_def)
+    selected = []
+    for sid, ss in state.get('steps', {}).items():
+        if ss.get('status') != STATUS_IN_PROGRESS:
             continue
-        step_def = _get_step_def(workflow_def, sid)
-        if not step_def:
+        node = _get_step_def(workflow_def, sid)
+        if not node:
             continue
-        if "guard" in step_def:
-            applicable, reason = evaluate_guard(step_def["guard"], state, state.get("variables", {}))
-            if applicable is None:
-                raise GuardEvaluationError(f"Step '{sid}': {reason}")
-            if applicable is False:
+        if 'guard' in node:
+            applies, reason = evaluate_guard(node['guard'], state, state.get('variables', {}))
+            if applies is None:
+                raise GuardEvaluationError(reason)
+            if not applies:
                 continue
-        comp = step_def.get("completion")
-        if not comp or not isinstance(comp, dict):
+        comp = node.get('completion')
+        if not comp or node.get('evidence_required') or _completion_method(comp) == 'agent-confirmed':
             continue
-        if _completion_method(comp) == "agent-confirmed":
-            continue
+        selected.append((sid, comp))
+    if not selected:
+        _check_workflow_completion(state, workflow_def)
+        return []
+    # Evaluate in memory; earlier recoveries stay promoted when a later step errors. One save.
+    candidate = copy.deepcopy(state)
+    recovered: list[str] = []
+    failure: tuple[str, Exception] | None = None
+    for sid, comp in selected:
+        # Only a successful obligation promotes its proposed control state.
+        proposed = copy.deepcopy(candidate)
+        checks: list[dict[str, Any]] = []
         try:
-            passed, message = _check_completion(comp, state, ss)
-        except (OSError, ValueError, TypeError, re.error) as exc:
-            raise CompletionEvaluationError(f"Step '{sid}': {exc}") from exc
+            passed, detail = _evaluate_completion(comp, proposed, proposed['steps'][sid], checks, sid + ':completion')
+        except (CompletionEvaluationError, OSError, ValueError, TypeError, re.error) as exc:
+            failure = (sid, exc)
+            break
         if passed:
-            method = _completion_method(comp, message)
-            ss["status"] = STATUS_COMPLETE
-            ss["completed_at"] = _utcnow()
-            ss["completion_method"] = method
-            ss["evidence"] = f"recovered: {_format_completion_method(method)}; {message}"
+            method = _typed_completion_method(checks)
+            working = proposed['steps'][sid]
+            working.update(status=STATUS_COMPLETE, completed_at=_utcnow(), completion_method=method,
+                           evidence='recovered: ' + _format_completion_method(method) + '; ' + detail)
+            working['receipt'] = _receipt('recover', working, checks)
+            candidate = proposed
             recovered.append(sid)
-
     if recovered:
-        save_state(state)
+        save_state(candidate)
+        state.clear()
+        state.update(candidate)
+    if failure is not None:
+        failed_sid, error = failure
+        raise CompletionEvaluationError(f"Step '{failed_sid}': {error}") from error
+    _check_workflow_completion(state, workflow_def)
     return recovered
 
 
@@ -2150,6 +2582,7 @@ def _scope_lines(state: dict[str, Any], siblings: list[dict[str, Any]]) -> list[
 
 def fmt_next(state: dict[str, Any], workflow_def: dict[str, Any], brief: bool = False) -> str:
     """Format the --next output."""
+    _preflight_workflow(state, workflow_def)
     step_id = state.get("current_step")
     if not step_id:
         step_id = find_next_step(state, workflow_def)
@@ -2247,6 +2680,8 @@ def _format_completion(comp: dict[str, Any], variables: dict[str, Any]) -> str:
         cond = comp.get("condition", "has_match")
         pat = comp.get("pattern", "")
         return f'file_content_check({path}, {cond}, "{pat}")'
+    if ctype == "brief_check":
+        return f"brief_check({_resolve_vars(comp.get('path', ''), variables)})"
     if ctype == "exit_code":
         return f"exit_code({comp.get('command', '')})"
     if ctype == "compound":
@@ -2290,8 +2725,88 @@ def fmt_status(state: dict[str, Any]) -> str:
         if ss.get("selected_route"):
             extra += f" [route: {ss['selected_route']}]"
         lines.append(f"  {status:15s} {sid}{extra}")
+        receipt = ss.get("receipt")
+        if status in TERMINAL_STEP_STATUSES and isinstance(receipt, dict):
+            lines.append(_format_receipt(receipt, PROJECT_ROOT))
 
+    if "check_observations" in state:
+        block = state["check_observations"]
+        attempts = block.get("attempts") if isinstance(block, dict) else None
+        count = len(attempts) if isinstance(attempts, list) else "unreadable"
+        lines.append(f"Legacy check_observations: {count} attempts retained (not interpreted)")
     return "\n".join(lines)
+
+
+def _format_receipt(receipt: dict[str, Any], root: Path) -> str:
+    """One status line per receipt: each check's result, producer and first input identity.
+
+    A recorded file input whose current bytes under ``root`` differ is marked ``stale``, an absent one ``missing``.
+    """
+    parts = []
+    for check in receipt.get("checks", []):
+        if not isinstance(check, dict):
+            continue
+        part = f"{check.get('check')}={check.get('result')}/{check.get('producer')}"
+        inputs = check.get("input")
+        first = inputs[0] if isinstance(inputs, list) and inputs and isinstance(inputs[0], dict) else {}
+        identity = first.get("identity")
+        digest = identity.get("sha256") if isinstance(identity, dict) else None
+        if first.get("path") and isinstance(digest, str):
+            part += f" {first['path']}@{digest[:12]}"
+        if check.get("partial"):
+            part += " partial"
+        recorded = _recorded_file_input(check)
+        if recorded:
+            part += _file_input_drift(root, *recorded)
+        parts.append(part)
+    return f"      receipt {receipt.get('operation')} {receipt.get('at')}: " + ", ".join(parts)
+
+
+def _recorded_file_input(check: dict[str, Any]) -> tuple[str, str] | None:
+    """A check's first recorded input as (path, sha256) when it is a file identity with a non-empty path."""
+    inputs = check.get("input")
+    first = inputs[0] if isinstance(inputs, list) and inputs and isinstance(inputs[0], dict) else {}
+    identity = first.get("identity")
+    digest = identity.get("sha256") if isinstance(identity, dict) else None
+    path = first.get("path")
+    if first.get("kind") == "file" and isinstance(path, str) and path and isinstance(digest, str):
+        return path, digest
+    return None
+
+
+def _file_input_drift(root: Path, path: str, digest: str) -> str:
+    """Read-only freshness of a recorded file input: '' if the bytes match, else ' stale' or ' missing'.
+
+    ``root`` is the project root the path was recorded against (``_capture_check_view``). Only a regular
+    file is read, in chunks; anything else, or any read error, is ' missing', so a FIFO or device cannot
+    hang or break a status read.
+    """
+    try:
+        target = root / path
+        if not target.is_file():
+            return " missing"
+        with target.open("rb") as handle:
+            current = hashlib.file_digest(handle, "sha256").hexdigest()
+    except (OSError, ValueError):
+        return " missing"
+    return "" if current == digest else " stale"
+
+
+def _stale_inputs(state: dict[str, Any], root: Path) -> list[dict[str, Any]]:
+    """Read-only: the recorded file inputs of terminal steps' receipts that --status marks stale or missing."""
+    entries: list[dict[str, Any]] = []
+    steps = state.get("steps")
+    for sid, step in steps.items() if isinstance(steps, dict) else ():
+        receipt = step.get("receipt") if isinstance(step, dict) else None
+        if not isinstance(receipt, dict) or step.get("status") not in TERMINAL_STEP_STATUSES:
+            continue
+        checks = receipt.get("checks")
+        for check in checks if isinstance(checks, list) else ():
+            recorded = _recorded_file_input(check) if isinstance(check, dict) else None
+            marker = _file_input_drift(root, *recorded).strip() if recorded else ""
+            if marker:
+                entries.append({"step": sid, "check": check.get("check"), "path": recorded[0], "marker": marker})
+    return entries
 
 
 def fmt_list(states: list[dict[str, Any]], available: list[str] | None = None, as_json: bool = False) -> str:
@@ -2427,8 +2942,10 @@ def fmt_boot_context(states: list[dict[str, Any]]) -> str:
             except SchemaError:
                 pass
 
-        # state-file path (if known) — boot.md WORKFLOW-RESUME uses this
-        # to read the inhaltliche Stand without searching docs/<workflow>/
+        # state-file path (if known): Buddy runs --boot-context on demand when
+        # returning to an in-flight workflow (boot itself does not run it; see
+        # framework/workflow-engine-cookbook.md §Boot integration) and reads the
+        # content state from this path without searching docs/<workflow>/
         variables = state.get("variables", {})
         state_file = variables.get("state_file", "")
         state_file_str = f" | state_file: {state_file}" if state_file else ""
@@ -2580,6 +3097,154 @@ def find_active_workflow_for_next(
     return _resolve_unique(pool, None, task_id)
 
 
+# Pure observational checks and creation-bound interpretation.
+
+def _definition_projection(definition: dict[str, Any]) -> dict[str, Any]:
+    """Pure semantic projection shared by creation, import and continuation."""
+    projection = {k: v for k, v in definition.items()
+                  if k not in {"description", "need_phrase", "trigger", "derived_from"}}
+    projection.setdefault("iteration_cap", DEFAULT_ITERATION_CAP)
+    projection.setdefault("routes", {})
+    projection["steps"] = []
+    defaults = {"required": True, "commit_gate": False, "depends_on": [],
+                "on_fail": "block", "skill_ref": "", "context_refs": [], "routes": {}}
+    for step in definition["steps"]:
+        normalized = {k: v for k, v in step.items() if k != "name"}
+        for key, value in defaults.items():
+            normalized.setdefault(key, value)
+        projection["steps"].append(normalized)
+    return projection
+
+
+def definition_fingerprint(definition: dict[str, Any]) -> str:
+    return hashlib.sha256(json.dumps(_definition_projection(definition), sort_keys=True).encode()).hexdigest()
+
+
+_AFFECTED_CHECKS = {"save": {"commit-push"}, "solve": {"refine", "commit-deploy"},
+                    "spec_board": {"task-yaml-update", "push-board", "deploy-board"}}
+
+
+def _require_interpretation(state: dict[str, Any], definition: dict[str, Any], *, reopening_step: str | None = None) -> None:
+    affected = _AFFECTED_CHECKS.get(state.get("workflow"), set())
+    unfinished = any(state.get("steps", {}).get(sid, {}).get("status", STATUS_PENDING)
+                     not in TERMINAL_STEP_STATUSES for sid in affected)
+    if not unfinished and reopening_step not in affected:
+        return
+    if state.get("definition_fingerprint") != definition_fingerprint(definition):
+        raise CompletionEvaluationError(
+            "Affected unfinished checks lack matching creation-bound definition interpretation. "
+            "Preserve the run and its history; reconcile unfinished obligations explicitly before progress. "
+            "The installed definition cannot establish an old run's creation provenance."
+        )
+
+
+def _preflight_workflow(state: dict[str, Any], definition: dict[str, Any]) -> None:
+    """Run before lazy writes and mutations; terminal evidence stays historical."""
+    _require_interpretation(state, definition)
+    for step in definition.get("steps", []):
+        if state.get("steps", {}).get(step["id"], {}).get("status") in TERMINAL_STEP_STATUSES:
+            continue
+        if "evidence_required" in step and type(step["evidence_required"]) is not bool:
+            raise CompletionEvaluationError("evidence_required must be a boolean")
+        if "guard" in step:
+            guard = step["guard"]
+            if not isinstance(guard, dict) or guard.get("type") not in VALID_GUARD_TYPES or guard.get("type") == "script":
+                raise GuardEvaluationError("Unsupported or malformed guard; inspection cannot execute scripts")
+            required_fields = {"file_exists": ("path",), "step_status": ("step_id", "expected"),
+                               "route_active": ("step_id", "route")}.get(guard["type"], ())
+            if any(not isinstance(guard.get(key), str) or not guard[key].strip() for key in required_fields):
+                raise GuardEvaluationError("Malformed guard fields")
+            if guard["type"] == "named_predicate" and (guard.get("name") not in {"council-needed", "task-yaml-ok"} or
+                    isinstance(guard.get("task_id"), bool) or not isinstance(guard.get("task_id"), (str, int))):
+                raise GuardEvaluationError("Malformed named predicate guard")
+        if step.get("completion") is not None:
+            _preflight_completion(step["completion"])
+
+
+def _preflight_completion(comp: Any) -> None:
+    """Structure-only recursive validation, independent of variables/force."""
+    if not isinstance(comp, dict) or "type" not in comp:
+        raise CompletionEvaluationError("Completion must be a mapping with type")
+    ctype = comp["type"]
+    if ctype not in VALID_COMPLETION_TYPES or ctype == "exit_code":
+        raise CompletionEvaluationError(f"Unsupported completion type: {ctype}; inspection never executes commands")
+    if ctype == "compound":
+        checks = comp.get("checks")
+        if not isinstance(checks, list) or not checks:
+            raise CompletionEvaluationError("compound requires nonempty checks")
+        for sub in checks:
+            _preflight_completion(sub)
+    if ctype in {"file_modified_after", "file_content_check", "brief_check"}:
+        if not isinstance(comp.get("path"), str) or not comp["path"].strip():
+            raise CompletionEvaluationError("File completion requires a nonempty path")
+    if ctype == "file_content_check":
+        if not isinstance(comp.get("pattern"), str) or not comp["pattern"]:
+            raise CompletionEvaluationError("File content completion requires a pattern")
+        if comp.get("condition", "has_match") not in {"has_match", "no_match"}:
+            raise CompletionEvaluationError("Invalid file content condition")
+    if ctype == "file_created_matching":
+        patterns = comp.get("pattern")
+        if not isinstance(patterns, (str, list)) or not patterns or (isinstance(patterns, list) and any(not isinstance(v, str) or not v for v in patterns)):
+            raise CompletionEvaluationError("File-created completion requires nonempty patterns")
+    if ctype == "pointer_check":
+        if errors := validate_adoption_options(comp):
+            raise CompletionEvaluationError("; ".join(errors))
+        source = comp.get("source_file", comp.get("source"))
+        if not isinstance(source, str) or not source:
+            raise CompletionEvaluationError("Pointer completion requires source_file")
+        minimum = comp.get("min_schema_version")
+        if minimum is not None and (type(minimum) is not int or minimum < 0):
+            raise CompletionEvaluationError("pointer_check min_schema_version must be a non-negative integer")
+        fallback = comp.get("source_file_fallback")
+        if fallback is not None and (not isinstance(fallback, str) or not fallback.strip()):
+            raise CompletionEvaluationError("Pointer source_file_fallback requires a nonempty string")
+    if ctype == "named_predicate":
+        task = comp.get("task_id")
+        if isinstance(task, bool) or not isinstance(task, (str, int)) or not re.fullmatch(r"(?:[0-9]+|\{[A-Za-z_][A-Za-z0-9_]*\})", str(task)):
+            raise CompletionEvaluationError("named_predicate requires numeric task_id or a variable")
+        if comp.get("name") not in {"council-needed", "task-yaml-ok", "task-status-done"} or not comp.get("task_id"):
+            raise CompletionEvaluationError("Malformed named_predicate")
+
+
+def _named_predicate(node: dict[str, Any], state: dict[str, Any], *, guard: bool = False, observed=None) -> tuple[bool, str]:
+    resolved = _resolve_completion_vars(node, state.get("variables", {}))
+    name = resolved.get("name")
+    allowed = {"council-needed", "task-yaml-ok"}
+    if not guard:
+        allowed.add("task-status-done")
+    if name not in allowed:
+        raise CompletionEvaluationError("Unsupported named predicate")
+    task_id = resolved.get("task_id")
+    if isinstance(task_id, bool) or not str(task_id).isdigit():
+        raise CompletionEvaluationError("named_predicate requires numeric task_id")
+    task_id = int(task_id)
+    if name != "task-status-done":
+        passed = _named_guard_applies(name, task_id)
+    else:
+        import yaml
+        records = []
+        candidates = set(_task_yaml_candidates(task_id))
+        candidates.update(path.parent / "archive" / path.name for path in list(candidates))
+        for path in sorted(candidates):
+            try:
+                data = yaml.safe_load(_capture_check_view(path, observed if observed is not None else {}))
+            except FileNotFoundError:
+                continue
+            except yaml.YAMLError as exc:
+                raise CompletionEvaluationError(f"Malformed task record: {path}") from exc
+            if not isinstance(data, dict) or type(data.get("id")) is not int or data["id"] != task_id or not isinstance(data.get("status"), str):
+                raise CompletionEvaluationError(f"Malformed task identity/status: {path}")
+            records.append(data)
+        if len(records) > 1 and any(item != records[0] for item in records[1:]):
+            raise CompletionEvaluationError("Conflicting active/archive task records")
+        passed = bool(records) and records[0]["status"] == "done"
+    if observed is not None:
+        observed.update(predicate=name, task_id=task_id, predicate_result=passed)
+        if not observed.get('checked_input'):
+            observed['checked_input'] = [{'kind': 'predicate', 'name': name, 'task_id': task_id, 'result': passed}]
+            observed['limits'] = ['Predicate helper dependency identity is partial']
+    return passed, f"named predicate {name}: {'passed' if passed else 'negative'}"
+
 
 def _continuation_definition(state: dict[str, Any]) -> dict[str, Any]:
     """Validate interpretation without evaluating guards or transitioning steps."""
@@ -2609,21 +3274,65 @@ def _continuation_definition(state: dict[str, Any]) -> dict[str, Any]:
             raise ValueError("unknown step status")
         if step.get("route") is not None and step["route"] not in declared[step_id].get("routes", {}):
             raise ValueError("unknown classification route")
-    # Unknown fields remain conservative compatibility boundaries. Only documented
-    # discovery/display metadata is excluded; manual instruction is executable meaning.
-    projection = {k: v for k, v in definition.items()
-                  if k not in {"description", "need_phrase", "trigger", "derived_from"}}
-    projection.setdefault("iteration_cap", DEFAULT_ITERATION_CAP)
-    projection.setdefault("routes", {})
-    projection["steps"] = []
-    defaults = {"required": True, "commit_gate": False, "depends_on": [],
-                "on_fail": "block", "skill_ref": "", "context_refs": [], "routes": {}}
-    for step in definition["steps"]:
-        normalized = {k: v for k, v in step.items() if k != "name"}
-        for key, value in defaults.items():
-            normalized.setdefault(key, value)
-        projection["steps"].append(normalized)
-    return projection
+    return _definition_projection(definition)
+
+
+
+def _maintenance_definition(state: dict[str, Any], *, archived: bool) -> dict[str, Any]:
+    """Observe retained history without authorizing historical execution.
+
+    Validate the carrier before considering terminality. Only acknowledged archived
+    completion or abort can outlive current definition vocabulary. The deterministic
+    history projection is private to maintenance; ordinary continuation stays strict.
+    """
+    if not isinstance(state, dict):
+        raise ValueError("invalid retained state")
+    if type(state.get("schema_version")) not in (str, int) or state["schema_version"] not in ("1", "2", 1, 2):
+        raise ValueError("unsupported state schema")
+    for key in ("workflow_id", "workflow"):
+        if not isinstance(state.get(key), str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", state[key]):
+            raise ValueError("invalid retained state identity")
+    if type(state.get("revision", 0)) is not int or state.get("revision", 0) < 0:
+        raise ValueError("invalid state revision")
+    if not isinstance(state.get("variables"), dict) or not isinstance(state.get("steps"), dict) or not state["steps"]:
+        raise ValueError("invalid state variables or steps")
+    if "paused" in state and type(state["paused"]) is not bool:
+        raise ValueError("invalid paused state")
+    valid = TERMINAL_STEP_STATUSES | {STATUS_PENDING, STATUS_IN_PROGRESS}
+    for step_id, step in state["steps"].items():
+        if not isinstance(step_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", step_id):
+            raise ValueError("invalid retained step identity")
+        if not isinstance(step, dict) or not isinstance(step.get("status"), str) or step["status"] not in valid:
+            raise ValueError("unknown step status")
+        route = step.get("route")
+        if route is not None and (not isinstance(route, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", route)):
+            raise ValueError("invalid retained classification route")
+    current = state.get("current_step")
+    if current is not None and (not isinstance(current, str) or current not in state["steps"]):
+        raise ValueError("unknown current step")
+    route = state.get("selected_route")
+    if route is not None and (not isinstance(route, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", route)):
+        raise ValueError("invalid retained selected route")
+    for marker in ("completed", "aborted"):
+        if marker in state:
+            value = state[marker]
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError("invalid retained lifecycle marker")
+            try:
+                timestamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                if "T" not in value or timestamp.tzinfo is None:
+                    raise ValueError("lifecycle marker requires a timestamp with timezone")
+            except ValueError as exc:
+                raise ValueError("invalid retained lifecycle marker") from exc
+    if "completed" in state and "aborted" in state:
+        raise ValueError("contradictory retained lifecycle markers")
+    completed = "completed" in state and not state.get("paused") and all(
+        step["status"] in TERMINAL_STEP_STATUSES - {STATUS_ESCALATED} for step in state["steps"].values())
+    if archived and ("aborted" in state or completed):
+        # Includes all retained meaning, independent of either generation's loader.
+        # Never returned by the public continuation/export APIs.
+        return {"terminal_history": state}
+    return _continuation_definition(state)
 
 
 def continuation_compatible(workflow: str, observed_fingerprint: str,
@@ -2659,12 +3368,12 @@ def continuation_compatible(workflow: str, observed_fingerprint: str,
     return False
 
 
-def continuation_lifecycle(state: dict[str, Any]) -> dict[str, Any]:
-    """Engine terminal markers own lifecycle, including aborts with pending steps."""
+def continuation_lifecycle(state: dict[str, Any], *, archived: bool = False) -> dict[str, Any]:
+    """Successful closure requires acknowledged archive placement; abort stays distinct."""
     if state.get("aborted"):
         return {"status": "aborted", "terminal": True}
-    if state.get("completed") and all(
-            step["status"] in TERMINAL_STEP_STATUSES for step in state["steps"].values()):
+    if archived and not state.get("paused") and state.get("completed") and all(
+            step["status"] in TERMINAL_STEP_STATUSES - {STATUS_ESCALATED} for step in state["steps"].values()):
         return {"status": "completed", "terminal": True}
     return {"status": "paused" if state.get("paused") else "active", "terminal": False}
 
@@ -2736,7 +3445,9 @@ def export_selected_states(
                 result["states"].append({"workflow_id": wid, "state_file": str(path.relative_to(root)),
                     "revision": state.get("revision", 0), "sha256": hashlib.sha256(raw).hexdigest(),
                     "definition_fingerprint": hashlib.sha256(json.dumps(interpretation, sort_keys=True).encode()).hexdigest(),
-                    "state": state, "lifecycle": continuation_lifecycle(state)})
+                    "state": state, "lifecycle": continuation_lifecycle(state, archived=path.parent == directory / "archive"),
+                    # Read-only freshness against this root, never PROJECT_ROOT; information, not a blocker.
+                    "stale_inputs": _stale_inputs(state, root)})
             except (OSError, ValueError, TypeError, KeyError, SchemaError) as exc:
                 result["blockers"].append({"workflow_id": wid, "reason": str(exc)})
     return result
@@ -2752,13 +3463,16 @@ def main() -> None:
     )
 
     group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--review-capture", metavar="STEP", help="Capture current review subject from JSON stdin; explicit --id required (evidence-pointer protocol §9)")
+    group.add_argument("--review-adopt", metavar="STEP", help="Retain qualified explicit decision; --id and --verdict required")
+    group.add_argument("--review-check", metavar="STEP", help="Read-only exact current review check; --id and --review-policy required")
     group.add_argument("--export-selected", action="store_true", help="Read exact explicitly selected state; JSON request on stdin")
     group.add_argument("--start", metavar="WORKFLOW", help="Start a new workflow")
     group.add_argument("--next", action="store_true", help="Show next step")
     group.add_argument("--complete", metavar="STEP_ID", help="Complete a step")
     group.add_argument("--skip", metavar="STEP_ID", help="Skip a step")
     group.add_argument("--retry", metavar="STEP_ID",
-                        help="Reset a terminal step back to pending (Item 7 — re-iteration-block)")
+                        help="Reopen in-progress or terminal step, preserve review history and increment iteration")
     group.add_argument("--status", action="store_true", help="Show workflow status")
     group.add_argument("--list", action="store_true", dest="list_cmd", help="List workflows")
     group.add_argument("--validate", action="store_true", help="Validate consistency")
@@ -2776,13 +3490,15 @@ def main() -> None:
                         help="Archive stale (long-idle) active workflows")
 
     # Shared options
+    parser.add_argument("--verdict", help="Project-relative retained Buddy decision path for --review-adopt")
+    parser.add_argument("--review-policy", help="evidence | spec_success | code_success for --review-check")
     parser.add_argument("--task", type=str, default=None, help="Task ID")
     parser.add_argument("--id", type=str, default=None, dest="wf_id", help="Workflow ID")
     parser.add_argument("--parent", type=str, default=None, help="Parent workflow ID")
     parser.add_argument("--brief", action="store_true", help="Brief output for hooks")
     parser.add_argument("--route", type=str, default=None, help="Route key for classification")
     parser.add_argument("--evidence", type=str, default=None, help="Evidence text")
-    parser.add_argument("--force", action="store_true", help="Force complete (skip checks)")
+    parser.add_argument("--force", action="store_true", help="Force complete ordinary checks; mandatory review and brief checks cannot be bypassed")
     parser.add_argument("--set", nargs=2, action="append", metavar=("KEY", "VALUE"),
                         default=None, help="Set state variable")
     parser.add_argument("--reason", type=str, default=None, help="Reason for skip/abort")
@@ -2819,7 +3535,9 @@ def main() -> None:
     # AmbiguousWorkflowError — caught here and rendered as a LOUD refusal with
     # a copy-paste --id list + EXIT_AMBIGUOUS, never a silent wrong-instance guess.
     try:
-        if args.export_selected:
+        if args.review_capture or args.review_adopt or args.review_check:
+            cmd_review(args)
+        elif args.export_selected:
             try:
                 request = json.load(sys.stdin)
                 result = export_selected_states(PROJECT_ROOT, request.get("workflow_ids"), request.get("references"))
@@ -2874,6 +3592,9 @@ def main() -> None:
     except StaleStateError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         sys.exit(EXIT_STALE_STATE)
+    except (ValueError, TypeError, OSError, SchemaError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        sys.exit(EXIT_VALIDATION_FAIL)
 
 
 def cmd_start(args: argparse.Namespace) -> None:
@@ -2905,6 +3626,8 @@ def cmd_start(args: argparse.Namespace) -> None:
 
     # Validate even the first step's guard before presenting work to execute.
     next_id = find_next_step(state, workflow_def)
+    if not next_id:
+        _check_workflow_completion(state, workflow_def)
     output = fmt_next(state, workflow_def) if next_id else ""
     if output:
         print(output)
@@ -2932,6 +3655,7 @@ def cmd_next(args: argparse.Namespace) -> None:
 
     next_id = find_next_step(state, workflow_def)
     if not next_id:
+        _check_workflow_completion(state, workflow_def)
         return
     if state.get("current_step") != next_id:
         state["current_step"] = next_id
@@ -2966,19 +3690,10 @@ def cmd_complete(args: argparse.Namespace) -> None:
 
     set_vars = dict(args.set) if args.set else None
 
-    # lazy-resolve spec_name + state_file VOR
-    # complete_step damit pointer_check-Steps mit `{spec_name}` nicht
-    # mit "Unresolved variable(s)" blockieren wenn der Workflow ohne
-    # vorheriges --next/--status auf --complete gestartet wurde.
-    if _ensure_state_variables_resolved(state):
-        try:
-            save_state(state)
-        except OSError as exc:
-            print(
-                f"WARNING: save_state failed after lazy variable "
-                f"resolution: {exc}",
-                file=sys.stderr,
-            )
+    if refusal := _progress_refusal(state):
+        raise CompletionEvaluationError(refusal)
+    _preflight_workflow(state, workflow_def)
+    _require_invocation_evidence(_get_step_def(workflow_def, step_id), args.evidence)
 
     ok, msg = complete_step(
         state, workflow_def, step_id,

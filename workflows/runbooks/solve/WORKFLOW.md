@@ -52,7 +52,11 @@ are engine-internal.
 
 One state file per solve invocation: `docs/solve/YYYY-MM-DD-<slug>.md`
 with YAML frontmatter (`phase`, `status`, `artefacts`). After every
-phase: append `## Phase N — <name>` body section + `git add + commit`.
+phase: append `## Phase N — <name>` body section and persist the result.
+Phase commits follow `framework/process-map.md` section Authorization: commit
+only under an applicable request or standing repository policy. Continue unchanged
+authorized work without routine reapproval; a local phase does not authorize
+push/deployment, and authorized missing publication remains an unresolved obligation.
 
 Phase-status updates (engine-internal): `phase-frame → phase-refine →
 phase-artifact → phase-validate → phase-execute`. The state file
@@ -87,7 +91,7 @@ detection — code / spec / impl-plan / ui-spec / reader-facing-doc);
 `impl_plan_review` / `spec_board(mode=ux)`);
 (c) Chief consolidates; Buddy decides and verifies pivotal source evidence
     per shared Invariant 1, persisting complete inline reports verbatim;
-(d) post-convergence + post-pass checklists per `spec_board` §3, §6;
+(d) post-convergence + post-pass checklists per `spec_board` §3, `spec_board/post-pass.md` §6;
 (e) on NEEDS-WORK: convergence_loop max 3 passes;
 (f) delta-verify on PASS when triggered (≥10 normative lines OR ≥3
 files OR ≥1 MAJOR fixed OR meta-critical change);
@@ -162,3 +166,15 @@ Full CLI + path-routing + extension API (`--guard` / `--handoff-context`) +
 multi-machine constraint + skip-eligible list:
 `framework/workflow-engine-cookbook.md`. Operational invariant:
 `agents/buddy/operational.md` §Workflow engine.
+
+
+### Observational workflow checks
+
+Navigation/recovery never execute commands. Use existing authorized tools for
+actions and observe their actual current outcome. The manual action checkpoints
+require nonblank evidence supplied with the current `--complete --evidence`
+invocation, including force. Missing/failed/timed-out/unknown outcomes stay open
+with the concrete blocker; no-new-commit save still requires current persistence
+observations for applicable project/user roots and required remotes. Completion
+is agent-confirmed, never engine proof of free-text truth or remote correctness.
+See `framework/workflow-engine-cookbook.md` for the retained completion contract.

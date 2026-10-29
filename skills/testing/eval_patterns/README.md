@@ -16,7 +16,11 @@ main-code-agent.
 | Domain | File | Status |
 |--------|------|--------|
 | FastAPI endpoints | `fastapi.md` | active |
-| Postgres / brain queries | `postgres.md` | active |
+| Postgres queries | `postgres.md` | active |
+
+Both are stack-specific examples from one consumer project, a FastAPI service with a
+Postgres database. Use them where your project shares that stack; for another stack,
+add a file for its own domain.
 
 New domains: create on the first task that needs them.
 No upfront design — patterns emerge from real tasks.
@@ -26,13 +30,12 @@ No upfront design — patterns emerge from real tasks.
 L4 / L5 testing stays manual until the harness is in
 place. No attempt to automate L4 / L5 without tracing
 infrastructure — evaluation without observability is
-blind. Pre-harness, behavioural observations of agents
-and workflows are captured in the rolling dogfood feed
-(`docs/dogfood-learnings/forge-feed.md`) rather than as
+blind. Until then, behavioural observations of agents
+and workflows are recorded as notes rather than as
 discrete golden test cases.
 
 Pre-harness manual traces: incident block + transparency
 header are the current tracing proxy. Sufficient as long
 as every agent run is one CC session and Buddy reads the
-return synchronously. At harness build that is replaced
-by Langfuse / Phoenix (ADR OBS-001).
+return synchronously. A tracing harness would replace
+them.

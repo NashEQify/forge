@@ -13,6 +13,10 @@ disable-model-invocation: false
 uses: []
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: convergence-loop
 
 ## Purpose
@@ -69,7 +73,7 @@ real outcomes of the narrowing-lens mechanism.
 
 **Mechanical stop after pass 3 (with one conditional pass-4
 extension — see §Pass-3 termination).** Sub-workflow overrides
-preserved (e.g. `spec-board.yaml` safety valve at pass 5, →
+preserved (e.g. `spec-board-convergence.yaml` safety valve at pass 5, →
 `REFERENCE.md`).
 
 ### Pass-3 termination (and conditional pass-4 extension)
@@ -116,41 +120,41 @@ proportionality triage.
 Scope narrowing (pass 2+) refers to the ANALYSIS scope of the next
 pass, not to the FIX scope.
 
-Before fix pass ≥ 2, the §Simplify-before-patch gate decides whether
-the fix patches routes or replaces the mechanism.
+Before every fix brief from a code review's findings, each finding to be
+fixed gets its cause and answer; before fix pass ≥ 2, the §Simplify-before-patch gate first asks why
+the passes do not converge, then answers each blocking finding by its cause
+(simplification answers a mechanism cause, one of six).
 
 ### Test scope between passes (NON-NEGOTIABLE)
 
-Between passes, MCA fixes findings (per `Fix scope` above). The
-**test scope per fix is narrow, not full-suite** — each finding has
-a known `file:line` documented in the verdict; re-testing modules
-that weren't touched produces zero new signal at 2-3× wallclock
-+ token cost.
-
-| Fix touches | Run |
-|-------------|-----|
-| One module | unit-test file for that module — explicit path, not `tests/` glob |
-| Cross-pass-binding test (RED skeleton) | that specific test file |
-| Public-API / spec-defined contract | + 0-1 integration smoke |
-| L0 (ruff + mypy) | only on touched files |
-
-**ONE full-suite sweep at the END** — after the last pass converges,
-one full repo run confirms no cross-cutting regression. Not per
-fix-phase. Same for pre-deploy and cross-cutting refactors.
+Between passes, MCA fixes findings (per `Fix scope` above). Each fix
+pass runs the **selected set** for its changes, plus the RED skeleton
+of a cross-pass-binding test, and L0 (ruff + mypy) on touched files
+only. A broad run, where one is due at all, comes after the last pass,
+not per fix-phase. Scope and timing: `skills/testing/run-strategy.md` §Test
+selection. Failure attribution below remains binding.
 
 ### Net-new failures from the full-suite sweep
 
-A failure in the end-of-convergence full run but absent from per-fix
-scope MUST be classified before it blocks a commit. Three classes:
-**(a)** real regression the fix introduced — blocks; **(b)**
-test-pollution (`conftest` fixture bleed) — route to the
-fixture-pollution task, no block; **(c)** order-dependent pre-existing
-bug the new ordering exposed — route to a fix-task, no block.
+A new full-suite failure remains an unresolved verification result until
+attributed. Isolation is diagnostic: isolated green cannot rule out an introduced
+order-dependent regression. Compare the same relevant test sequence and environment
+against the pre-change baseline, retain failure output, and reproduce the
+state/order interaction sufficiently to identify whether changed production or
+test code caused it. Fixture pollution or singleton state describes the mechanism,
+not when it was introduced.
 
-The isolation-run is one input, not the verdict: passing-in-isolation
-rules out (a) but not (b)-vs-(c) — both pass isolated. Second step: is
-the bleeding state a test fixture (→b) or a production singleton (→c)?
-Never fold an unclassified net-new failure into a fix-pass.
+A change-introduced regression, including new fixture pollution, blocks completion
+and must be repaired. A failure reproduced unchanged on the relevant baseline may
+be recorded and routed under existing defect policy, with its evidence and limits;
+do not claim it was fixed. Missing baseline, nondeterministic reproduction or changed
+environment leaves attribution unresolved and cannot support "no new regressions."
+Retain the obligation or escalate under existing policy.
+
+For example, B passing alone while A→B fails after the change does not establish
+historical failure. If the baseline passes A→B and the candidate fails it, the
+sequence demonstrates an introduced regression. If both reproduce the same cause,
+that supports a qualified historical attribution; no baseline leaves it unknown.
 
 ### Termination (general)
 
@@ -165,96 +169,21 @@ Never fold an unclassified net-new failure into a fix-pass.
 ESCALATE signals "this needs architect / human judgment, not more
 agent iteration".
 
+Pass counts and the pass-4 extension count per mechanism across review
+owners, workflows and tasks (`simplify-before-patch.md` §Simplify-before-patch gate, Counting). Apply `agents/buddy/delegation.md` §Delegation
+hygiene (cumulative effort) before any extension.
+
 ### Simplify-before-patch gate (before every fix pass ≥ 2, MUST)
 
-Applies to spec boards and code boards alike. Route-by-route fixing of
-one mechanism does not converge: each pass closes the reported route
-and the next pass finds a new route of the same class. Convergence
-comes when the mechanism is simplified or one structural invariant is
-stated. The orchestrator usually knows this when asked; this gate asks.
-
-**Counting.** Fix passes count across the task's whole review history
-of the mechanism: spec-board passes and code-board passes both count.
-A first code-board fix pass on a mechanism that already drew blocking
-findings in a spec pass is fix pass ≥ 2.
-
-**Record (before dispatching the fix pass).** In the build log / task
-state file (a spec-only review: the consolidated file), write:
-
-```
-### Simplify-before-patch check — before fix pass {N}
-- model: present|written-now|n/a — {spec § of the §Mechanism-Lifecycle section, or why no state carrier}
-- same_class: yes|no — {mechanism or guiding rule}; prior {ids} vs new {ids}; cells: {matrix cells the findings sit on}
-- simpler_mechanism: yes|no — {named candidate + the cells / invariant locus it removes + the finding ids}
-- spec_is_problem: yes|no — {clause}
-- decision: patch ({cells changed}; {cells confirmed intact}) | propose-simplification → {caller / PMO / user}
-```
-
-**`model` first (show the whole mechanism before asking for a simpler
-one).** `present` cites the `§Mechanism-Lifecycle` section
-(`skills/_protocols/mechanism-model.md`); `written-now` means the
-retro-model trigger fired (protocol §Trigger: a blocking finding on a
-mechanism without a section) and the orchestrator wrote the bounded
-section before the fix brief; `n/a` names why — no state carrier, or no
-blocking finding on one. The remaining rows are answered **against the
-matrix**: `same_class` locates the prior and new findings in cells (two
-findings in different cells of one carrier are the same class);
-`simpler_mechanism` names the cells or the enforcement locus the
-candidate removes; a `patch` decision names every cell it changes and
-confirms the others intact — a patch that cannot name its cells is not
-yet a fix brief. A simplification that stays local to one side (entry,
-exit or undo) while other cells remain route-based or unspecified is a
-patch, not a simplification; the gate records it as `patch`.
-
-`same_class` compares the new blocking findings (C/H, BLOCKER/MAJOR)
-with those of every earlier pass on the same mechanism or guiding rule
-("never X", "X changes only via Y"), judged from the findings, the cells
-they sit on, and the symbols / rules the previous fix diff touched. Prior
-ids are the evidence; a `no` names the different mechanism. Unsure
-counts as `yes` for `same_class` only. `simpler_mechanism: yes` requires
-a named candidate (mechanism or invariant), the cells it removes and the
-finding ids; `spec_is_problem: yes` requires the clause. Without them
-the answer is `no`, and the `same_class: yes` row below still forces the
-invariant + property generator. Findings on different cells of one
-`§Mechanism-Lifecycle` matrix (or different rows of the
-`skills/spec_board/SKILL.md` §4b derived-state columns) are the same
-class.
-
-**Decision rule.**
-
-| Answers | Decision |
-|---|---|
-| `model: written-now` | Write the section first; re-read every new and prior finding against the matrix before answering the rows below. Cells the matrix shows empty or unspecified are findings of this pass, whether or not a reviewer reported them. |
-| `same_class: yes` AND (`simpler_mechanism: yes` OR `spec_is_problem: yes`) | **Stop route patching.** Propose the simplification to the caller (PMO / user) unprompted: a spec amendment and/or one structural invariant whose checks assert effects, not classifications, plus a property generator whose axes are the matrix axes. The proposal names the cells it removes and shows the **whole updated matrix**, not the changed side. This is a legitimate design fork, not permission-seeking. |
-| `same_class: yes`, both others `no` | Patch, but the fix pass MUST add the effect-asserting invariant + property generator above, the record names why no simpler mechanism exists, and the fix brief carries the `§Mechanism-cells` block (`_protocols/fix-brief-template.md`). |
-| `same_class: yes` in two consecutive checks | **Propose-simplification regardless** of the other answers: the invariant route already failed once. |
-| `same_class: no` | Patch normally (cells named). |
-
-The proposal carries one recommended simplification with its evidence
-(the recurring finding ids and cells), not an option menu. A spec
-simplification runs through the existing amendment path (build workflow
-amendment threshold, spec-drift check) and edits the matrix in the same
-change. Cells placed in another planned task or beyond the MVP travel
-as `blocked_by` edges (`_protocols/mechanism-model.md` §Scope and
-placement); every open `now` cell at blocking severity is closed by the
-simplification or the patch — never carried as a risk or filed as a new
-task (lower severities: §Bind rules, verdict floor). The proposal is a design-fork proposal,
-not permission-seeking; while it waits for an answer it counts as the
-ESCALATE of §Termination for the re-review limit, which counts the
-simplified fix pass like any other. When the caller is the user (no
-PMO session in between), the council-before-user rule of
-`agents/buddy/operational.md` applies first: a light council shapes the
-recommendation when its §1.0 gate fires.
-
-A spec stays changeable while no real data (persisted, non-test) or
-shipped consumer depends on it; a locked status alone is no reason to
-keep patching.
-
-**Two rules read with this gate.** "HIGHs are fixed, not accepted"
-stays: a simplification that removes the class fixes every HIGH of the
-class (each is then closed by re-running its reproduction). Running a
-delegated build to done means finishing the task, not the current
-design.
+When writing a fix brief from a code review's findings, the first fix pass included, and when an implementer's report
+pushes a finding back or marks it unclear: read and follow `skills/convergence_loop/cause-before-answer.md` (the cause
+of each finding before its answer, the ruling on a pushed-back finding, spec gaps a fix reveals, the limits of
+re-deriving). When a re-review leaves findings open at the re-review limit: read and follow
+`skills/convergence_loop/at-the-cap.md` (the class and ruling of each open finding). Before writing the brief for any fix pass ≥ 2 on a mechanism, before approving a
+new review owner or extension on it, and before the pass-4 extension: read and follow
+`skills/convergence_loop/simplify-before-patch.md` (purpose reassessment, counting across the mechanism's whole review
+history, the gap inventory, the Simplify-before-patch record with `model` first, the decision rule and the
+simplification proposal, the two rules read with this gate).
 
 ## State format between passes
 

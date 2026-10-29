@@ -43,15 +43,20 @@ artefacts: []
 
 | After phase | Section | Content | Value |
 |---|---|---|---|
-| **Specify** | `## Root Cause Analysis` | Root-cause hypothesis (proof sentence), evidence, signal-check result, fix scope | **HIGHEST** — 20+ min of analysis work, lost on abort |
+| **Specify** | `## Root Cause Analysis` | Root-cause hypothesis (proof sentence), evidence, working analogue and hypothesis test (`root_cause_fix/SKILL.md` Step 1), signal-check result, fix scope | **HIGHEST** — 20+ min of analysis work, lost on abort |
 | **Prepare** | `## Fix Plan` | Order of changes, affected files, risks | Low for simple fixes, medium for complex ones |
 | **Execute** | `## Fix Details` | What was changed, regression insights | Medium — knowledge_processor exists, state file complements |
-| **Verify** | `## Verify Result` | Review findings, retest result, any rework rounds | Medium — closes the persistence gap |
+| **Verify** | `## Verify Result` | Review findings, retest result, any rework rounds (a rework round is appended when its retest fails, before the restart or the stop: root_cause_fix "Retest fails?") | Medium — closes the persistence gap |
 | **Close** | `## Lessons Learned` | Pattern, signal-check follow-up tasks | Low — kp takes over |
 
 ### Commit rhythm
 
-Commit state-file + frontmatter update at every phase boundary (like solve).
+Persist state-file + frontmatter updates at every phase boundary (like solve).
+Phase commits follow `framework/process-map.md` section Authorization: commit
+only under an applicable request or standing repository policy. Continue unchanged
+authorized actions without routine reapproval. Local fix work grants no push or
+deployment authority; authorized missing publication remains an unresolved
+obligation, not successful publication on local fix closure.
 
 ## State-file handling on prepare collapse
 

@@ -92,8 +92,9 @@ steps:
       (c) refinement notes — summarize chosen approach, rationale,
           open points as a "Phase 2" section in the state file.
     guard:
-      type: script
-      command: "python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --guard council-needed {task_id}"
+      type: "named_predicate"
+      name: "council-needed"
+      task_id: "{task_id}"
     completion:
       type: compound
       checks:
@@ -184,7 +185,7 @@ steps:
       (c) post-convergence check (chief answers: weakest point in
           PASS — what tips it? which finding got the largest
           downweight — rightly so?).
-      (d) post-pass checklist (spec_board §6: tracking table,
+      (d) post-pass checklist (spec_board/post-pass.md §6: tracking table,
           verification equation, merge spot-check, minority re-check,
           piebald budget on skill/runbook reviews).
       (e) on NEEDS-WORK: fix findings → iterate (convergence_loop,
@@ -213,8 +214,13 @@ steps:
     category: deterministic
     instruction: >
       Update state-file frontmatter: phase=execute. Board verdict must
-      be PASS (0C+0H). Commit with "solve(validate): board PASS
-      [Task-{task_id}]". Push + dashboard deploy.
+      be PASS (0C+0H). Apply framework/process-map.md section Authorization:
+      commit with "solve(validate): board PASS [Task-{task_id}]" only under
+      applicable request or standing repository policy; push and dashboard
+      deployment only when authorized for that action and target. Continue
+      unchanged authorized actions without routine reapproval. Local phase
+      advancement grants no publication authority; record omitted publication
+      and retain any authorized missing outcome as an unresolved obligation.
     completion:
       type: file_content_check
       path: "{state_file}"
@@ -297,7 +303,8 @@ steps:
       is set unconditionally on standard route (solve closes its own
       task by definition).
     completion:
-      type: exit_code
-      command: "grep -q 'status: done' docs/tasks/{task_id}.yaml docs/tasks/archive/{task_id}.yaml 2>/dev/null"
+      type: "named_predicate"
+      name: "task-status-done"
+      task_id: "{task_id}"
     commit_gate: true
     on_fail: block

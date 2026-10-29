@@ -20,7 +20,7 @@
 |-------|-------|-------|
 | code-adversary | name: code-adversary description: Code Review Board adversary — smart-but-wrong, race conditions, silent data corruption. | agents/code-adversary.md |
 | code-ai-llm | name: code-ai-llm description: AI / LLM reviewer in the Code Review Board — prompt quality, model selection, token budget, LLM patterns. | agents/code-ai-llm.md |
-| code-api-contract | name: code-api-contract description: API / contract reviewer in the Code Review Board — REST contracts, schema pipeline (Pydantic → OpenAPI → Zod), SSE events, versioning. | agents/code-api-contract.md |
+| code-api-contract | name: code-api-contract description: API / contract reviewer in the Code Review Board — request/response contracts, the schema pipeline from server models to client types (e.g. | agents/code-api-contract.md |
 | code-architect-lens | name: code-architect-lens description: > Preventive Ousterhout deep-modules lens at brief-time. | agents/code-architect-lens.md |
 | code-architect-roots | name: code-architect-roots description: Code Review Board specialist — structural-pattern-purity at the property level. | agents/code-architect-roots.md |
 | code-chief | name: code-chief description: Chief reviewer in the Code Review Board — consolidator-tool that produces a deduplicated, severity-ranked, theme-clustered consolidation document with convergence prediction and a recommended verdict label. | agents/code-chief.md |
@@ -32,7 +32,7 @@
 | code-security | name: code-security description: "Security reviewer in the Code Review Board — auth flows, input validation, secrets, injection. | agents/code-security.md |
 | code-spec-drift | name: code-spec-drift description: Retroactive spec-drift reviewer — checks whether the spec describes the actual code (code = evidence; the spec must catch up to the as-is state). | agents/code-spec-drift.md |
 | code-spec-fit | name: code-spec-fit description: "Spec-fit reviewer in the Code Review Board — checks whether the implementation fulfils the spec (the spec is SoT, the code follows). | agents/code-spec-fit.md |
-| code-verification | name: code-verification description: > Verification specialist for the L1 light-path code-review. | agents/code-verification.md |
+| code-verification | name: code-verification description: > Verification specialist for the code-review light level, the reproduction re-run after a fix pass, and the verification of review findings at their cited location. | agents/code-verification.md |
 
 ## UX Board (3 Agents)
 
@@ -42,13 +42,14 @@
 | board-ux-ia | name: board-ux-ia description: Information-architecture reviewer (UX Board) — navigation, findability, content strategy. | agents/board-ux-ia.md |
 | board-ux-interaction | name: board-ux-interaction description: Interaction-design reviewer (UX Board) — flows, feedback, error states, accessibility, dark theme. | agents/board-ux-interaction.md |
 
-## Other (14 Agents)
+## Other (16 Agents)
 
 | Agent | Rolle | Datei |
 |-------|-------|-------|
 | brief-architect | name: brief-architect description: > Software architect and planning specialist. | agents/brief-architect.md |
 | buddy | name: buddy description: Primary orchestrator and user-facing agent of the forge framework. | agents/buddy.md |
 | buddy-thinking | name: buddy-thinking description: "Buddy with maximum thinking depth — for deep spec interviews, strategic life questions, complex open conversations that don't need a council. | agents/buddy-thinking.md |
+| close-retro | name: close-retro description: > Read-only fresh-context distiller for a workflow's close phase. | agents/close-retro.md |
 | council-adversary | name: council-adversary description: Council adversary — smart-but-wrong DECISION challenges (framing-trap, reversibility-trap, missing-stakeholder, default-bypass). | agents/council-adversary.md |
 | council-chief | name: council-chief description: Chief reviewer in the Architectural Council — consolidator-tool. | agents/council-chief.md |
 | council-member | name: council-member description: Council member for the Architecture Council or the Life-Domain Council — analyses a question from a SINGLE perspective. | agents/council-member.md |
@@ -58,7 +59,8 @@
 | security | name: security description: "Offensive security agent — thinks like an attacker, documents vulnerabilities defensively. | agents/security.md |
 | solution-expert | name: solution-expert description: Technical architecture and solution sparring — framework choice, architecture decisions, trade-off analysis with a required first-principles drill. | agents/solution-expert.md |
 | spec-text-drift-batch | name: spec-text-drift-batch description: > Parallel post-board agent that applies trivial line-level spec- text patches identified by chief verdict's `target: spec_text` entries. | agents/spec-text-drift-batch.md |
+| spec-verification | name: spec-verification description: > Read-only cross-spec consistency verifier — the spec-side mirror of code-verification. | agents/spec-verification.md |
 | test-skeleton-writer | name: test-skeleton-writer description: TDD red phase — writes test skeletons from a test plan. | agents/test-skeleton-writer.md |
 | tester | name: tester description: "Spec-driven test engineer with three modes (design, eval, execution). | agents/tester.md |
 
-*Status: 2026-06-02*
+*Status: 2026-10-29*

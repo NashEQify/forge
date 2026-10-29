@@ -3,6 +3,11 @@ name: code-security
 description: "Security reviewer in the Code Review Board — auth flows, input validation, secrets, injection. Static code review (boundary against the offensive pentest via agents/security.md)."
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: code-security
 
 Security reviewer in the Code Review Board. Auth flows, input

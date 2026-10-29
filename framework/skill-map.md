@@ -75,11 +75,11 @@ Canonical for `consistency_check` §Skill-Map; sub-sections derived from `invoca
 
 ### Direct-Invokable Capabilities (`invocation.primary: user-facing`)
 
-`api_and_interface_design`, `caveman`, `deprecation_and_migration`, `frontend_design_tty`, `improve_codebase_architecture`, `scoping`, `shipping_and_launch`, `show_open_tasks`, `task_creation`, `workflow_router`, `youtube_subtitles`, `zoom_out`
+`api_and_interface_design`, `caveman`, `deprecation_and_migration`, `frontend_design_tty`, `improve_codebase_architecture`, `scoping`, `session_diagnosis`, `shipping_and_launch`, `show_open_tasks`, `task_creation`, `workflow_router`, `youtube_subtitles`, `zoom_out`
 
 ### Workflow-Step / Sub-skill (`workflow-step` | `sub-skill`)
 
-`adversary_test_plan`, `architecture_coherence_review`, `bedrock_drill`, `close_retro`, `code_review_board`, `convergence_loop`, `council`, `cross_spec_consistency_check`, `documentation_and_adrs`, `frame`, `frontend_ui_engineering`, `get_api_docs`, `impl_plan_review`, `knowledge_capture`, `pre_build_spec_audit`, `python_code_quality_enforcement`, `retroactive_spec_update`, `return_summary`, `risk_followup_routing`, `root_cause_fix`, `sectional_deep_review`, `security_and_hardening`, `source_spec_reduce`, `spec_amendment_verification`, `spec_authoring`, `spec_board`, `testing`
+`adversary_test_plan`, `architecture_coherence_review`, `bedrock_drill`, `close_retro`, `code_review_board`, `convergence_loop`, `council`, `cross_spec_consistency_check`, `documentation_and_adrs`, `frame`, `frontend_ui_engineering`, `get_api_docs`, `impl_plan_review`, `knowledge_capture`, `pre_build_spec_audit`, `python_code_quality_enforcement`, `retroactive_spec_update`, `return_summary`, `risk_followup_routing`, `root_cause_fix`, `sectional_deep_review`, `security_and_hardening`, `source_spec_reduce`, `spec_amendment_verification`, `spec_authoring`, `spec_board`, `testing`, `ux_authoring`
 
 ### Service Skills (`disable-model-invocation: true`)
 
@@ -229,3 +229,33 @@ In all three modes the architect is read-only (no Write target in
 `spec_amendment` and `retro_spec_update`; brief mode keeps the
 single brief-output Write exception); the orchestrator integrates
 the prose and does the final write.
+
+---
+
+## Utility exception
+
+**Rule:** users call workflows only (or steps within them). Skills are
+used by workflow steps, not called directly by users. Skills without a
+workflow-step call are orphan candidates.
+
+**Exception:** utility skills (`framework/boot-navigation.md` §Utilities) are called directly by Buddy
+as orchestrator work, not via workflow steps. That is cross-cutting
+infrastructure and by definition not workflow-embedded.
+`task_creation`, `task_status_update`, `consistency_check`,
+`transparency_header`, `return_summary` are not orphans — they are
+utility patterns.
+
+---
+
+## Orphan check
+
+A skill is an orphan when:
+1. It is `type: capability` (not utility/protocol).
+2. It is called in **no** workflow runbook step (grep in
+   `workflows/runbooks/*/WORKFLOW.md`).
+3. It has no documented "intentional exception" (e.g. utility skill
+   called directly by Buddy).
+
+Orphan candidates need content review: what the skill does, whether the
+use case is covered elsewhere, and whether it should be integrated into
+a workflow (content-based check, not regex-based).

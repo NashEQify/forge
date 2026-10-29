@@ -1,14 +1,5 @@
 # CONTEXT.md per-project convention
 
-> **Source:** pattern from `github.com/mattpocock/skills`
-> (formerly `skills/deprecated/ubiquitous-language/SKILL.md` plus
-> `skills/engineering/grill-with-docs/CONTEXT-FORMAT.md`). MIT licence.
->
-> **Adaptation status:** the `ubiquitous_language` skill is
-> self-deprecated by Pocock, **but the pattern lives on** in
-> `grill-with-docs`. Documented as a convention here, not as a separate
-> skill (avoids inflation, was the 366-G.4 decision correction).
-
 **Pattern in one sentence:** one `CONTEXT.md` per repo at the repo
 root with a domain glossary — term / definition / aliases-to-avoid.
 Lazy-create when the first term is resolved.
@@ -16,8 +7,7 @@ Lazy-create when the first term is resolved.
 ## When to apply
 
 **Repo scope:**
-- Repos with their own domain vocabulary (BuddyAI / Huddle / personal /
-  infra).
+- Consumer repositories with their own domain vocabulary.
 - When terms like "Order" / "Customer" / "Brain" / "Context-Assembly"
   are interpreted differently by devs / agents (drift risk).
 - When CLAUDE.md / AGENTS.md hold consensus but domain terminology is
@@ -72,7 +62,7 @@ Lazy-create when the first term is resolved.
 
 ## Multi-context repos: CONTEXT-MAP.md
 
-For repos with multiple distinct sub-contexts (e.g. BuddyAI with brain /
+For repos with multiple distinct sub-contexts (e.g. an application with brain /
 context-assembly / materialization as separate concepts): at repo
 root, a `CONTEXT-MAP.md` pointing to sub-CONTEXT.md files.
 
@@ -120,7 +110,7 @@ and domain expert that makes term boundaries clear.
 
 When a term is resolved during a conversation → update CONTEXT.md
 **inline**. Don't batch. Pattern from `improve_codebase_architecture`
-and `spec_authoring` grilling mode (phase G tier-2 pattern lifts).
+and `spec_authoring` grilling mode.
 
 ## Status for forge itself
 
@@ -128,7 +118,7 @@ The forge repo already has established domain glossaries:
 
 | Concept | SoT |
 |---|---|
-| Skill / workflow / persona / protocol | `framework/skill-anatomy.md` §ontological separation |
+| Skill / workflow / persona / protocol | `framework/skill-anatomy.md` §Ontological split |
 | Capability vs utility (single-class) | `framework/skill-anatomy.md` §D.6 decision |
 | L1 / L2 code review board | `skills/code_review_board/SKILL.md` |
 | Standard / deep spec board | `skills/spec_board/SKILL.md` |
@@ -141,16 +131,20 @@ The forge repo already has established domain glossaries:
 the framework root needed — the existing files are the glossary SoT.
 A CONTEXT.md would be duplication.
 
-**Consequence for consumer repos:** when BuddyAI / Huddle / personal /
-infra have their own domain vocabularies (brain / context-assembly /
-materialization for BuddyAI, LiveKit channel / room / user for
-Huddle, etc.): **lazy-create their own CONTEXT.md there**.
+**Consequence for consumer repositories:** when they have their own
+domain vocabularies (brain / context-assembly / materialization in one
+application, channel / room / user in another): **lazy-create their own
+CONTEXT.md there**.
 
 ## See also
 
 - `skills/spec_authoring/SKILL.md` phase 1 grilling mode — uses the
   CONTEXT.md inline update pattern.
-- `skills/improve_codebase_architecture/SKILL.md` phase 3 — invokes
+- `skills/improve_codebase_architecture/process.md` phase 3 — invokes
   the CONTEXT.md pattern on naming decisions.
 - `skills/documentation_and_adrs/SKILL.md` — ADR format complementary.
 - `framework/skill-anatomy.md` — framework-internal glossary SoT.
+
+## Source
+
+Matt Pocock's skills at `b843cb5` (MIT License, © 2026 Matt Pocock); Forge's register of adopted methods.

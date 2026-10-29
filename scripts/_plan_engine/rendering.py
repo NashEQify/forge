@@ -26,7 +26,7 @@ from _plan_engine.compute import (
     compute_active_milestone_task_chain,
     compute_phase_progress,
 )
-from _plan_engine.loading import _milestone_archived_credit
+from _plan_engine.loading import _milestone_archived_credit, done_task_keys
 
 
 def fmt_boot(tasks, milestones, target, north_star, op_intent, critical_path,
@@ -106,9 +106,12 @@ def fmt_boot(tasks, milestones, target, north_star, op_intent, critical_path,
             blockers = [r for r in m.requires if milestones.get(r) and milestones[r].status != "done"]
             detail = f"  by: {', '.join(str(b) for b in blockers)}"
         elif m.status == "active" and m.gate:
-            failed_gates = [str(g) for g in m.gate if not g.check(tasks)[0]]
+            failed_gates = [str(g) for g, result in m._observed_gates() if not result.allows_progress]
             if failed_gates:
                 detail = f"  (gate: {', '.join(g[:30] for g in failed_gates)})"
+        unevaluated = [g.type for g, result in m._observed_gates() if not result.evaluated]
+        if unevaluated:
+            detail += f"  (UNEVALUATED: {', '.join(unevaluated)})"
         status_sym = {"done": "done", "active": "active", "ready": "ready",
                       "blocked": "BLOCKED", "future": "future"}.get(m.status, m.status)
         lines.append(f"  {status_sym:8s} {m.key:{ms_width}s} {done_count}/{task_count}{detail}")
@@ -162,10 +165,9 @@ def fmt_status(tasks, milestones, aggregate=False):
             lines.append(f"           app_status: {m.app_status_post_milestone}")
         if getattr(m, "parallel_to", []):
             lines.append(f"           parallel_to: {', '.join(m.parallel_to)}")
-        # Pre-Set-Gates mit preliminary-Marker
-        if any(getattr(g, "preliminary", False) for g in m.gate):
-            preliminary_count = sum(1 for g in m.gate if getattr(g, "preliminary", False))
-            lines.append(f"           gates: {preliminary_count} preliminary")
+        unevaluated = [g.type for g, result in m._observed_gates() if not result.evaluated]
+        if unevaluated:
+            lines.append(f"           gates: UNEVALUATED ({', '.join(unevaluated)})")
     # Archived credit on the Total is the SUM of the per-milestone archived
     # credits accumulated above. Each per-milestone line adds its
     # _milestone_archived_credit to BOTH its numerator and denominator, so the
@@ -337,13 +339,12 @@ def fmt_check(milestones, tasks, milestone_key=None):
             continue
         gate_pass = True
         lines.append(f"MILESTONE: {key}  [{m.status.upper()}]")
-        for g in m.gate:
-            ok, detail = g.check(tasks)
-            sym = "✓" if ok else "✗"
-            lines.append(f"  {sym} {g}  ({detail})")
-            if not ok:
+        for g, result in m._observed_gates():
+            sym = "✓" if result.passed else ("?" if not result.evaluated else "✗")
+            lines.append(f"  {sym} {g}  ({result.detail})")
+            if not result.allows_progress:
                 gate_pass = False
-        passed = sum(1 for g in m.gate if g.check(tasks)[0])
+        passed = sum(result.passed for _, result in m._observed_gates())
         lines.append(f"RESULT: {passed}/{len(m.gate)} conditions passed")
         if not gate_pass:
             all_pass = False
@@ -361,7 +362,7 @@ def fmt_after(tasks, milestones, task_id, blocking_scores):
     lines.append("")
 
     # Find directly unblocked tasks
-    done_keys = {tk for tk, tt in tasks.items() if tt.is_done}
+    done_keys = done_task_keys(tasks)  # incl. archived done deps
     simulated_done = done_keys | {task_id}
 
     directly_unblocked = []
@@ -385,10 +386,9 @@ def fmt_after(tasks, milestones, task_id, blocking_scores):
     m = milestones.get(t.milestone)
     if m and m.gate:
         lines.append("MILESTONE IMPACT:")
-        for g in m.gate:
-            ok, detail = g.check(tasks)
-            sym = "✓" if ok else "pending"
-            lines.append(f"  {m.key}: {g} ({sym}: {detail})")
+        for g, result in m._observed_gates():
+            sym = "✓" if result.passed else ("UNEVALUATED" if not result.evaluated else "pending")
+            lines.append(f"  {m.key}: {g} ({sym}: {result.detail})")
     lines.append("")
 
     # Chain effect (blocking score)
@@ -530,10 +530,9 @@ def fmt_dashboard_json(tasks, milestones, target, north_star, op_intent,
     ms_list = []
     for m in milestones.values():
         gate_results = []
-        for g in m.gate:
-            ok, detail = g.check(tasks)
+        for g, result in m._observed_gates():
             gate_results.append({
-                "type": g.type, "spec": str(g), "pass": ok, "detail": detail
+                "type": g.type, "spec": str(g), "pass": result.passed, "detail": result.detail
             })
         milestone_tasks = [tid for tid in m.tasks if tid in tasks]
         done_count = sum(1 for tid in milestone_tasks if tasks[tid].is_terminal)

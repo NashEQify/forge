@@ -1,19 +1,12 @@
 # Performance Checklist
 
-> **Source:** lift from `github.com/addyosmani/agent-skills`
-> (`references/performance-checklist.md`). MIT licence.
->
-> **Adaptation status:** content adopted 1:1. The frontend section is
-> web-specific. The backend section is general, with a stack-specific
-> note below on asyncpg / NATS / token budget.
-
 Quick reference for web application performance. Cross-ref existing
 skills:
 - `skills/code_review_board/SKILL.md` with the `code-review` persona's
   performance axis.
-- `skills/api_and_interface_design/SKILL.md` (schema pipeline,
-  pagination, error semantics).
-- `skills/shipping_and_launch/SKILL.md` pre-launch checklist
+- `skills/api_and_interface_design/patterns.md` (schema pipeline,
+  pagination) and `authoring.md` (error semantics).
+- `skills/shipping_and_launch/pre-launch-checklist.md`
   §performance.
 
 ## Table of Contents
@@ -22,7 +15,7 @@ skills:
 - [TTFB Diagnosis](#ttfb-diagnosis)
 - [Frontend Checklist](#frontend-checklist)
 - [Backend Checklist](#backend-checklist)
-- [BuddyAI / Python-specific note](#buddyai--python-specific-note)
+- [Example: one consumer's Python service stack](#example-one-consumers-python-service-stack)
 - [Measurement Commands](#measurement-commands)
 - [Common Anti-Patterns](#common-anti-patterns)
 
@@ -120,9 +113,10 @@ When TTFB is slow (> 800ms), check each component in DevTools Network waterfall:
 - [ ] Horizontal scaling configured (if needed)
 - [ ] Health check endpoint for load balancer
 
-## BuddyAI / Python-specific note
+## Example: one consumer's Python service stack
 
-Adaptation for our Python / asyncpg / FastAPI / NATS stack:
+An example adaptation from one consumer project, a Python service using asyncpg,
+FastAPI, NATS and LLM calls. Apply the parts that match your stack:
 
 ### asyncpg
 - [ ] Pool configuration: pool_size, max_size, acquire_timeout.
@@ -137,10 +131,10 @@ Adaptation for our Python / asyncpg / FastAPI / NATS stack:
 - [ ] JetStream storage configured (memory vs file per use case).
 - [ ] Reconnect strategy on network drop (resume logic).
 
-### LLM calls (BuddyAI brain / context assembly)
+### LLM calls (context assembly)
 - [ ] Token budget per call documented (cost_estimate).
 - [ ] Greedy-allocation logic correct (no single-category hog).
-- [ ] Model choice appropriate (qwen2:1.5b vs main for sub-tasks).
+- [ ] Model choice appropriate (a small model vs the main model for sub-tasks).
 - [ ] Prompt cache reuse where possible.
 - [ ] Retry with backoff + jitter + max cap.
 
@@ -218,7 +212,11 @@ curl http://localhost:7777/jsz
 ## See also
 
 - `skills/code_review_board/SKILL.md` — `code-review` persona's performance axis.
-- `skills/api_and_interface_design/SKILL.md` — pagination + schema pipeline.
-- `skills/shipping_and_launch/SKILL.md` pre-launch checklist §performance.
+- `skills/api_and_interface_design/patterns.md` — pagination + schema pipeline.
+- `skills/shipping_and_launch/pre-launch-checklist.md` §performance.
 - `references/accessibility-checklist.md` — a11y counterpart.
 - `references/orchestration-patterns.md` — multi-agent orchestration.
+
+## Source
+
+agent-skills at `19e49a0` (MIT License, © 2025 Addy Osmani); Forge's register of adopted methods.

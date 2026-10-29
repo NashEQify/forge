@@ -2,12 +2,16 @@
 description: Workflow runbooks + commands under Cursor
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Workflows
 
 8 active workflows under `workflows/runbooks/<name>/WORKFLOW.md`.
 Routing-table: `framework/process-map.md`.
 
-Resolve its Workflow selection section first. These automatic workflow triggers
+Resolve the workflow selection first (`framework/workflow-selection.md`). These automatic workflow triggers
 apply to `software`; in `on-demand`, use Forge methods on explicit user request.
 
 | Workflow | Trigger |
@@ -57,19 +61,19 @@ Under Cursor, run via terminal-integration. State-file lives under
 
 ## Pre-Commit Hook (mandatory)
 
-6 checks at git-commit time. Even under Cursor, this runs at every
-commit and is the primary quality gate:
-- BLOCK: PLAN-VALIDATE, CG-CONV, SKILL-FM-VALIDATE
-- WARN: TASK-SYNC, OBLIGATIONS, STALE-CLEANUP, PERSIST-GATE, ENGINE-USE,
-  RUNBOOK-DRIFT, AGENT-SKILL-DRIFT, SECRET-SCAN, SOURCE-VERIFICATION,
-  PIEBALD-BUDGET
+Shared Git checks run at applicable commits when installed in that repository.
+The current six check families and their BLOCK/WARN behavior are defined in
+`framework/enforcement-registry.md` and implemented in
+`orchestrators/claude-code/hooks/pre-commit.sh`. Commit-msg owns commit-message
+blocking; coverage depends on applicable inputs and available tools. The hook
+does not prove that Cursor loaded Forge instructions or intercept each write.
 
 Install:
 ```bash
 bash "$FRAMEWORK_DIR/scripts/install-git-hooks.sh"
 ```
 
-(The hook lives under `claude-code/` historically, but it's harness-agnostic
-— pure bash + git, no Claude-Code specifics. Same hook for all adapters.
-The installer wires both `pre-commit` and `commit-msg` and includes a
-self-probe.)
+The shared hook source lives under `claude-code/`; Git invokes it independently
+of the editor where installed. Follow the coordinated installation contract in
+`framework/installation-activation.md`. The per-repository installer wires
+`pre-commit`, `pre-merge-commit` and `commit-msg`; its checks do not establish host parity.

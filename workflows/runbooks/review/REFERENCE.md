@@ -7,7 +7,12 @@ is the checklist — this file is the reference.
 
 **Path:** `docs/review/YYYY-MM-DD-<slug>.md` — one file per review run with
 YAML frontmatter. After each phase: extend the body, update frontmatter `phase`,
-commit. Crash recovery via `ls docs/review/`.
+and persist the result. Phase commits follow `framework/process-map.md` section
+Authorization: commit only under an applicable request or standing repository
+policy. Continue unchanged authorized actions without routine reapproval; local
+review work grants no push/deployment authority. Authorized missing publication
+remains an unresolved obligation, not successful publication on local review closure.
+Crash recovery via `ls docs/review/`.
 
 ### Frontmatter schema
 
@@ -20,9 +25,9 @@ phase: specify | prepare | execute | verify | close
 status: active | paused | done | aborted
 task_ref: NNN | null
 artefacts:
-  - docs/specs/foo.md
-  - docs/reviews/board/foo-consolidated-pass1.md
-  - docs/reviews/board/NNN-spec-verdict.md   # task-less run: foo-verdict.md
+  - docs/specs/<name>.md
+  - docs/reviews/board/<name>-consolidated-pass1.md
+  - docs/reviews/board/<NNN>-spec-verdict.md   # task-less run: <name>-verdict.md
 ---
 ```
 
@@ -38,7 +43,22 @@ artefacts:
 ### workflow_phase updates
 
 At every phase boundary: `task_status_update workflow_phase=<next_phase>` ->
-update frontmatter `phase` in the state file -> commit.
+update frontmatter `phase` in the state file -> persist; commit only when authorized
+under the State file rule above.
+
+## Current evidence and required success
+
+Before mandatory dispatch, load `skills/_protocols/evidence-pointer-schema.md` §9.
+The run's exact board-dispatch owner captures before production and remains the
+owner after dispatch completes while the workflow is live. Pass this identity to
+nested skills. Persist complete attributed returns, write an explicit current
+decision, and adopt it. Dispatch uses evidence policy so NEEDS-WORK can reach repair.
+After relevant fixes: retry that owner, fresh-capture, run the existing applicable
+verification, adopt the resulting decision and return through existing steps.
+Required phase-close checks spec_success BEFORE review-derived task YAML writes;
+optional convergence skip cannot bypass it. Refusal/error leaves requested fields
+unchanged. Result/readiness mapping is public §9.6, not a task-existence predicate.
+Canonical locators must match retained bytes; earlier payloads remain history.
 
 ## Proportionality + upgrade check
 
@@ -59,7 +79,8 @@ file retroactively when the review becomes substantial. Trigger:
 On trigger: `mkdir -p docs/review` -> state file `docs/review/YYYY-MM-DD-milestone-<slug>.md`
 with frontmatter `phase: execute`. Enter prior scope + findings retrospectively in the body.
 No `task_status_update` needed (milestone gate checks have no
-task ref), but commit recommended.
+task ref); a commit is recommended only when authorized under the State file rule
+above. Retain the local state file when no commit is authorized.
 
 ## Authoritative note on drift
 

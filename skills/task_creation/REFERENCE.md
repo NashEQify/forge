@@ -4,11 +4,12 @@ Detail mechanics. The Buddy-facing `SKILL.md` has the 5 steps in short form. Thi
 is the reference for quality checks, optional fields, dependency spike,
 context manifest and workflow templates.
 
-## Duplicate + dependency check (Step 1) — details
+## Duplicate, bundling + dependency check (Step 1) — details
 
-A single scan over `docs/tasks/` with **two** check dimensions.
+A single scan over `docs/tasks/` and the sibling tasks the same request would file, with three check dimensions
+(duplicate + bundling, dependency, split-gap).
 
-### 1a — Duplicate check
+### 1a — Duplicate + bundling check
 
 Check:
 1. **Does a task with the same goal already exist** (semantically, not just title match)?
@@ -19,11 +20,24 @@ Result:
 - **Duplicate found** -> no new task. Reference the existing one, optionally extend with a comment
 - **Sub-problem of an existing task** -> add the problem as a comment/AC into the existing task
 - **Obsolescence-maker** -> set the existing task to `status: superseded`, the new task becomes the successor
-- **No duplicate** -> continue to 1b
+- **No duplicate** -> the bundling check (`SKILL.md` step 1a), then 1b for the tasks that stay separate
+
+Bundling details:
+- **Timing differs** when one part can or must run at a time the other cannot for a reason outside the two parts: it is
+  due now while the other waits for a third result, or it needs a maintenance or install window the other does not.
+  Waiting for the other part's own result is the fold case (a shape-deciding step), not a timing difference.
+- **Stop point:** the shape-deciding part is a `## Workflow` step (`framework/task-format.md`) whose failure criterion
+  is written in the step: when it fails, the task stops and reports before the next step.
+- **After a fold**, run 1b for the task that received the part, in both directions, against the tasks that stay
+  separate: a new part brings dependencies that no `blocked_by` edge carries yet.
 
 ### 1b — Cross-task dependency check
 
-**Scope of the scan:** all tasks with `status: pending` or `status: in_progress`.
+**Scope of the scan:** all tasks with `status: pending` or `status: in_progress` that stay separate
+after the bundling check, checked against the new task or the task that received it.
+
+**Lifecycle symmetry:** this step **builds** the `blocked_by` graph; closure on terminal status (replace on
+superseded/absorbed, remove on wontfix, keep on done) is `task_status_update` Step 4.
 Skip `done`/`superseded`/`wontfix`/`absorbed` (no dependency
 possible).
 
@@ -69,6 +83,11 @@ possible).
 check is substantive — Buddy reads the titles + summaries of pending/in_progress
 tasks and decides with their head, not with grep.
 
+## Claim verification (Step 1.6)
+
+C-VERIFY is an authoring discipline applied by the agent; no hook enforces it, so no doc claims a `BLOCK` for it. The
+safeguard is the C-VERIFY block itself.
+
 ## Triage table (Step 2)
 
 | Criterion | Fix immediately | Create a task |
@@ -102,9 +121,31 @@ If ALL "fix immediately" criteria apply -> fix immediately (Light Plan). Otherwi
 
 ## Dependency-spike check
 
-Does the task introduce a new external dependency with >1 integration point? -> Check whether a spike task (PoC/eval) needs to sit before it as `blocked_by`. The spike validates integration assumptions that are not derivable from documentation (undocumented config behaviour, implicit constraints, API deviations).
+Does the task introduce a new external dependency with >1 integration point? -> It gets a spike (PoC/eval). The spike validates integration assumptions that are not derivable from documentation (undocumented config behaviour, implicit constraints, API deviations) before the build relies on them.
 
-**Not needed** for well-documented, stable libraries (requests, click, pydantic). **Examples:** an eval task -> its integration task ("Cognee eval" -> "Cognee integration", "rlm eval" -> "rlm integration").
+**Where the spike sits:** when it needs its own decision or authorization (its result goes to someone to decide whether to adopt the dependency at all, or it needs a permission the build does not), it is a separate spike task, `blocked_by` ahead of the build ("Cognee eval" -> "Cognee integration" when the eval decides whether Cognee is adopted). Otherwise it is the task's first step, with a stop point before the build: a failed spike stops the task and reports instead of building.
+
+**Not needed** for well-documented, stable libraries (requests, click, pydantic).
+
+## No milestone fits
+
+Surface to the user before continuing: *"No existing milestone fits — propose a new one (key + title + desc) or pick
+the closest existing one?"* (See `docs/plan.yaml` `milestones:` for the schema — new entries follow the existing
+`key + title + desc + phases + requires` shape.) Plan.yaml milestone-writes belong outside this skill; if the user
+approves, Buddy edits `docs/plan.yaml` directly before the skill resumes at step 5.
+
+## Field vocabulary
+
+The canonical task-field set is `framework/task-schema.yaml`; draw field names from it rather than inventing them. A
+`SCHEMA_UNKNOWN_FIELD` WARN is not noise — it means one of three things, each with a defined response:
+- **typo / alias** (e.g. `ac`, `note`) → fix the name.
+- **genuine repo-domain field** (meaningful only in this consumer) → declare it in
+  `<project>/docs/task-schema-extensions.yaml` (`extension_fields:`), never leave it ad-hoc.
+- **genuinely universal new field** → add it to `task-schema.yaml` (+ sync `task-format.md`) as a framework change,
+  not a per-task improvisation.
+
+This is the producer half of the shaping-contract: the schema shapes what gets written; it is not a trailing log of
+whatever was improvised.
 
 ## "Not yet" check
 
@@ -117,7 +158,7 @@ If the required context is clear at task creation: fill `context_manifest` in th
 ```yaml
 context_manifest:
   required:
-    - path: docs/specs/brain-schema.md              # long form with sections
+    - path: docs/specs/<name>.md                    # long form with sections
       sections: ["## Entity-Schema", "## Relations"]
   available:
     - framework/spec-engineering.md
@@ -126,7 +167,8 @@ context_manifest:
 ```
 
 **Rules:**
-- Max 5 required entries. More -> split the task
+- Max 5 required entries. More -> narrow `required` to what the first steps need (the rest goes to `available`), or
+  split only for a step-1a reason (owner, timing, authorization, safety floor)
 - No manifest -> warning in the task output: "No context manifest. Buddy uses manifest inference (degraded)."
 - The manifest can be added later when the context becomes clearer — better late than never
 

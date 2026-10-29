@@ -19,6 +19,10 @@ invocation:
 disable-model-invocation: false
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: api-and-interface-design
 
 ## Purpose
@@ -39,18 +43,7 @@ OpenAPI → Zod) as a concrete pattern.
 
 ## Source
 
-Lifted from `github.com/addyosmani/agent-skills`
-(`skills/api-and-interface-design/SKILL.md`).
-**Adapted** to the Python / FastAPI reality forge consumers
-typically run:
-- TypeScript examples translated to Pydantic + FastAPI.
-- JSON-body validation: Pydantic `extra="forbid"` +
-  `model_validate()`.
-- Error handling: an `AppError` + `ErrorResponse` pair as a
-  uniform error contract.
-- SSE as the streaming counterpart to REST (typed event
-  variants as a discriminated union).
-- Schema pipeline: Pydantic → OpenAPI → Zod (frontend sync).
+agent-skills at `19e49a0` (MIT License, © 2025 Addy Osmani); Forge's register of adopted methods.
 
 ## Standalone
 
@@ -97,381 +90,17 @@ What only this skill delivers:
 
 ## Process
 
-### Phase 1: internalize Hyrum's law (mandatory mindset)
-
-> "With a sufficient number of users of an API, all
-> observable behaviours of your system will be depended on
-> by somebody, regardless of what you promise in the
-> contract."
-
-**Consequence for authoring:**
-- **Be intentional about what you expose.** Every observable
-  behaviour is a potential commitment.
-- **Don't leak implementation details.** When users can
-  observe it, they will depend on it.
-- **Plan for deprecation at design time.** Cross-ref
-  `deprecation_and_migration`.
-- **Tests aren't enough.** Even with perfect contract tests
-  Hyrum's-law reality breaks: "safe" changes break users
-  who consume undocumented behaviour.
-
-### Phase 2: one-version rule
-
-Avoid forcing consumers into a multi-version choice. Diamond
-dependencies arise when different consumers need different
-versions.
-
-**Authoring discipline:** design for a world where only **one
-version** exists at a time. **Extend** instead of **fork**.
-Cross-ref `deprecation_and_migration` for the sunset path on
-incompatibilities.
-
-### Phase 3: contract-first (authoring obligation)
-
-Define the interface BEFORE the implementation. The contract
-IS the spec — implementation follows.
-
-```python
-# Pydantic contract first
-from pydantic import BaseModel, Field
-from datetime import datetime
-
-class CreateTaskInput(BaseModel):
-    """User-supplied input for task creation."""
-    model_config = {"extra": "forbid"}  # MUST: no silent pass-through
-
-    title: str = Field(..., min_length=1, max_length=200)
-    description: str | None = Field(None, max_length=2000)
-
-
-class Task(BaseModel):
-    """Output: server-generated + user-supplied combined."""
-    id: str
-    title: str
-    description: str | None
-    created_at: datetime
-    updated_at: datetime
-    created_by: str  # UserId
-
-
-class ListTasksParams(BaseModel):
-    page: int = Field(1, ge=1)
-    page_size: int = Field(20, ge=1, le=100)
-    sort_by: str = Field("created_at", pattern="^(created_at|updated_at|title)$")
-
-
-class PaginatedResult(BaseModel):
-    data: list[Task]
-    pagination: dict  # page / pageSize / totalItems / totalPages
-```
-
-### Phase 4: consistent error semantics
-
-**One error strategy for every endpoint.** Mixed patterns
-break consumer predictability.
-
-Example pattern (`AppError` + `ErrorResponse`):
-
-```python
-# AppError + ErrorResponse — one form for every error
-class AppError(Exception):
-    """Base app error with code + message + details."""
-    def __init__(self, code: str, message: str, details: dict | None = None,
-                 status_code: int = 500):
-        self.code = code
-        self.message = message
-        self.details = details
-        self.status_code = status_code
-
-
-class ErrorResponse(BaseModel):
-    error: dict  # {code, message, details}
-
-
-# FastAPI error handler — uniform error shape
-@app.exception_handler(AppError)
-async def app_error_handler(request: Request, exc: AppError):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=ErrorResponse(error={
-            "code": exc.code,
-            "message": exc.message,
-            "details": exc.details,
-        }).model_dump(),
-    )
-```
-
-**HTTP-status-code mapping:**
-
-| Code | Meaning |
-|---|---|
-| 400 | Client sent invalid data (before validation) |
-| 401 | Not authenticated |
-| 403 | Authenticated but not authorized |
-| 404 | Resource not found |
-| 409 | Conflict (duplicate, version mismatch) |
-| 422 | Validation failed (semantically invalid) |
-| 500 | Server error (NEVER expose internals) |
-
-**MUST NOT mix patterns:** when some endpoints
-`raise HTTPException`, others `return None`, others
-`return {"error": ...}` → consumers cannot predict. One
-strategy + everywhere.
-
-### Phase 5: validate-at-boundaries
-
-Trust internal code. Validate **at system edges** where
-external input enters:
-
-```python
-# Pydantic validation at the API boundary
-@app.post("/api/tasks", response_model=Task, status_code=201)
-async def create_task(
-    input: CreateTaskInput,  # Pydantic validates AUTOMATICALLY
-    user: User = Depends(resolve_user),  # auth boundary
-) -> Task:
-    # After validation: internal code trusts types
-    return await task_service.create(input, user.id)
-```
-
-**Where validation belongs:**
-- API route handler (user input).
-- Form-submission handler (user input).
-- External-service response parsing (third-party data —
-  **always treat as untrusted**).
-- Environment-variable loading (configuration).
-
-**Where validation does NOT belong:**
-- Between internal functions that share type contracts.
-- In utility functions called by already-validated code.
-- On data that just came out of your own DB (Pydantic models
-  in the brain facade are fine).
-
-> **Third-party API responses are untrusted data.** Validate
-> shape + content before any logic / rendering / decision-
-> making. A compromised or misbehaving external service can
-> return unexpected types, malicious content, or
-> instruction-like text.
-
-### Phase 6: prefer-addition-over-modification
-
-Extend interfaces without breaking existing consumers:
-
-```python
-# Good: add optional fields
-class CreateTaskInput(BaseModel):
-    model_config = {"extra": "forbid"}
-    title: str
-    description: str | None = None
-    priority: Literal["low", "medium", "high"] | None = None  # added later, optional
-    labels: list[str] | None = None  # added later, optional
-
-
-# Bad: change existing field types or remove fields
-class CreateTaskInput(BaseModel):
-    title: str
-    # description: str | None  # REMOVED — breaks existing consumers
-    priority: int  # CHANGED from string — breaks existing consumers
-```
-
-**Removal / change path:** when actually needed → cross-ref
-`deprecation_and_migration` for an orderly sunset.
-
-### Phase 7: predictable naming
-
-| Pattern | Convention | Example |
-|---|---|---|
-| REST endpoints | Plural nouns, no verbs | `GET /api/tasks`, `POST /api/tasks` |
-| Query params | camelCase | `?sortBy=createdAt&pageSize=20` |
-| Response fields | camelCase or snake_case (consistent in the API!) | `{ createdAt, updatedAt }` OR `{ created_at, updated_at }` |
-| Boolean fields | `is_/has_/can_` prefix | `is_complete`, `has_attachments` |
-| Enum values | UPPER_SNAKE | `"IN_PROGRESS"`, `"COMPLETED"` |
-
-**Recommendation for Python-backed APIs:** response fields
-snake_case (Python-consistent); the frontend Zod schema maps
-on receipt. The cardinal rule is to **stay consistent inside
-the API** — pick one form and apply it everywhere.
-
-## REST API patterns
-
-### Resource design
-
-```
-GET    /api/tasks              → list tasks (with query params for filtering)
-POST   /api/tasks              → create task
-GET    /api/tasks/{id}         → get a single task
-PATCH  /api/tasks/{id}         → partial update (only provided fields)
-DELETE /api/tasks/{id}         → idempotent delete
-
-GET    /api/tasks/{id}/comments → list comments for a task (sub-resource)
-POST   /api/tasks/{id}/comments → add a comment
-```
-
-### Pagination
-
-Paginate list endpoints:
-
-```python
-class PaginatedResult(BaseModel, Generic[T]):
-    data: list[T]
-    pagination: PaginationMeta
-
-
-class PaginationMeta(BaseModel):
-    page: int
-    page_size: int
-    total_items: int
-    total_pages: int
-```
-
-### Filtering via query params
-
-```
-GET /api/tasks?status=in_progress&assignee=user123&created_after=2026-01-01
-```
-
-### Partial updates (PATCH)
-
-Accept partial objects — only update what's provided:
-
-```python
-class UpdateTaskInput(BaseModel):
-    """All fields optional for a partial update."""
-    model_config = {"extra": "forbid"}
-    title: str | None = None
-    description: str | None = None
-    priority: Literal["low", "medium", "high"] | None = None
-```
-
-## SSE patterns
-
-Server-Sent-Events follow analogous discipline:
-
-```python
-# Event schema explicit (analogous to a REST response schema)
-class ContentChunk(BaseModel):
-    type: Literal["chunk"]
-    content: str
-    chunk_index: int
-
-
-class DoneEvent(BaseModel):
-    type: Literal["done"]
-    total_chunks: int
-
-
-class ErrorEvent(BaseModel):
-    type: Literal["error"]
-    code: str
-    message: str
-
-
-# The stream as a discriminated union
-StreamEvent = ContentChunk | DoneEvent | ErrorEvent
-```
-
-**SSE obligations:**
-- Each event type explicitly defined (no anonymous dict).
-- ErrorEvent as a discriminated variant (don't raise after
-  a StreamingResponse start — errors past the
-  StreamingResponse boundary belong to SSE, not HTTP).
-- DoneEvent as the terminal sentinel.
-- The client recognizes the event type via the `type` field
-  discriminator.
-
-## Pydantic patterns
-
-### Discriminated unions for variants
-
-```python
-from typing import Literal, Annotated
-from pydantic import BaseModel, Field
-
-# Each variant is explicit
-class PendingStatus(BaseModel):
-    type: Literal["pending"]
-
-
-class InProgressStatus(BaseModel):
-    type: Literal["in_progress"]
-    assignee: str
-    started_at: datetime
-
-
-class CompletedStatus(BaseModel):
-    type: Literal["completed"]
-    completed_at: datetime
-    completed_by: str
-
-
-TaskStatus = Annotated[
-    PendingStatus | InProgressStatus | CompletedStatus,
-    Field(discriminator="type"),
-]
-
-
-# Consumer gets type narrowing via match
-def get_status_label(status: TaskStatus) -> str:
-    match status:
-        case PendingStatus():
-            return "Pending"
-        case InProgressStatus(assignee=name):
-            return f"In progress ({name})"
-        case CompletedStatus(completed_at=ts):
-            return f"Done at {ts}"
-```
-
-### Input / output separation
-
-```python
-# Input: what the caller provides
-class CreateTaskInput(BaseModel):
-    model_config = {"extra": "forbid"}
-    title: str
-    description: str | None = None
-
-
-# Output: what the system returns (incl. server-generated fields)
-class Task(BaseModel):
-    id: str
-    title: str
-    description: str | None
-    created_at: datetime
-    updated_at: datetime
-    created_by: str
-```
-
-### Branded types for IDs (NewType pattern)
-
-```python
-from typing import NewType
-
-TaskId = NewType("TaskId", str)
-UserId = NewType("UserId", str)
-
-# Prevents accidental mismatch
-def get_task(id: TaskId) -> Task: ...
-```
-
-### Schema pipeline (Pydantic → OpenAPI → Zod)
-
-Pydantic models are SoT. Pipeline:
-
-```
-1. Pydantic models (backend SoT)
-   ↓
-2. FastAPI auto-generated OpenAPI schema
-   ↓
-3. zod schema (frontend, via openapi-zod-client or equivalent)
-   ↓
-4. TypeScript types for React code
-```
-
-**Discipline:** when a backend Pydantic model changes →
-regenerate OpenAPI → update Zod schema → frontend code
-changes follow. **Single source of truth is Pydantic.**
-Cross-ref `agents/code-api-contract.md` persona for the
-review obligation across the whole pipeline.
+Before designing a new interface or changing an existing public one, and before writing its contract: read and
+follow `skills/api_and_interface_design/authoring.md` (phases 1–7: Hyrum's law, the one-version rule, contract-first,
+consistent error semantics with the status-code mapping, validate-at-boundaries, prefer addition over modification,
+predictable naming).
+
+## REST, SSE and Pydantic patterns
+
+When defining REST endpoints, an SSE event stream or Pydantic models, and before changing a model that feeds the
+schema pipeline: read and follow `skills/api_and_interface_design/patterns.md` (REST API patterns: resource design,
+pagination, filtering, PATCH; SSE patterns and obligations; Pydantic patterns: discriminated unions, input / output
+separation, branded IDs, schema pipeline Pydantic → OpenAPI → Zod).
 
 ## Red flags
 
@@ -501,7 +130,7 @@ review obligation across the whole pipeline.
 | "PATCH is complicated, let's use PUT" | PUT requires the full object every time. PATCH is what clients actually want. |
 | "We version the API when needed" | Breaking changes without versioning break consumers. Design for extension from the start. |
 | "Nobody uses the undocumented behaviour" | Hyrum's law: if it's observable, somebody depends on it. Treat every public behaviour as a commitment. |
-| "We can just maintain two versions" | Multi-version maintenance multiplies cost and creates diamond dependencies. Cross-ref the one-version rule. |
+| "We can just maintain two versions" | Multi-version maintenance multiplies cost and creates diamond dependencies. Cross-ref the one-version rule (`authoring.md` phase 2). |
 | "Internal APIs don't need contracts" | Internal consumers are also consumers. Contracts prevent coupling and enable parallel work. |
 | "extra=ignore is the default; that's fine" | Silent pass-through. Unknown fields are NOT recognized → drift. **extra=forbid** on public request models. |
 

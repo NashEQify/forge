@@ -2,6 +2,10 @@
 description: Skill discovery + invocation under Cursor
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skills
 
 Skills live under `skills/<name>/SKILL.md` (Anatomy v2). Inventory

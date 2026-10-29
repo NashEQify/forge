@@ -1,26 +1,38 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# pre-commit.sh — Git pre-commit / commit-msg hook for forge consumers.
+# pre-commit.sh — Git pre-commit / pre-merge-commit / commit-msg hook for
+# forge consumers.
 #
 # Canonical location: orchestrators/claude-code/hooks/.
-# Symlink into .git/hooks/pre-commit AND .git/hooks/commit-msg from any
-# consumer repo. Idempotent installer: scripts/install-git-hooks.sh.
+# Symlink into .git/hooks/pre-commit, .git/hooks/pre-merge-commit AND
+# .git/hooks/commit-msg from any consumer repo. Idempotent installer:
+# scripts/install-git-hooks.sh.
 #
-# Post hook-paradigm-shift (capability-first, hooks-minimal): 6 checks.
-# 3 BLOCK + 3 WARN. Universally portable (git is on every harness).
+# Post hook-paradigm-shift (capability-first, hooks-minimal): 5 checks.
+# 3 BLOCK + 2 WARN. Shared Git hook for repositories where installed;
+# runtime prerequisites and actual Git invocation determine coverage.
+# This does not establish equal host loading or enforcement.
 #
-# Checks (ordered):
-#   1. PLAN-VALIDATE        (BLOCK) — plan_engine.py --validate must show 0 errors
+# Each check runs once per commit: pre-commit (git commit) and
+# pre-merge-commit (a merge commit that git merge creates) run checks 1, 3,
+# 4 and 5; commit-msg runs check 2 only, except for a merge commit in an
+# install without the pre-merge-commit hook, where it runs every check.
+#
+# Checks (ordered; 1, 3 and 5 share one captured indexed candidate):
+#   1. PLAN-VALIDATE        (BLOCK) — plan_engine.py --validate on the indexed
+#                                     candidate tree must show 0 errors
 #   2. CG-CONV              (BLOCK) — commit message format matches convention
 #   3. SKILL-FM-VALIDATE    (BLOCK) — SKILL.md YAML/frontmatter subset
 #   4. SECRET-SCAN          (WARN)  — gitleaks wrapper; WARN-only; skipped when
 #                                     gitleaks is not installed.
 #   5. SOURCE-VERIFICATION  (WARN)  — board/council reviews must cite source
-#                                     files (line-numbered evidence pointers).
-#   6. ANTI-PHANTOM         (WARN)  — staged docs must not bind a live
-#                                     enforcement verb to a purged hook-name
-#                                     (enforcement-honesty, ADR-005).
+#                                     files (line-numbered evidence pointers)
+#                                     present in the indexed candidate, and
+#                                     section cross-references in Markdown
+#                                     that the commit touches (citing or
+#                                     cited file changed) resolve in the
+#                                     indexed candidate (WARN).
 #
 # Dropped in the hook paradigm shift (was 8 checks):
 #   TASK-SYNC, OBLIGATIONS, STALE-CLEANUP, PERSIST-GATE, ENGINE-USE,
@@ -29,9 +41,10 @@ set -euo pipefail
 
 FRAMEWORK_ROOT="$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)"
 PLAN_ENGINE="${FRAMEWORK_ROOT}/scripts/plan_engine.py"
-PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+PROJECT_ROOT="$(git --no-replace-objects rev-parse --show-toplevel)"
 cd "$PROJECT_ROOT"
 COMMIT_MSG_HOOK="$(git rev-parse --git-path hooks/commit-msg)"
+PRE_MERGE_HOOK="$(git rev-parse --git-path hooks/pre-merge-commit)"
 
 BLOCK=0
 WARNINGS=()
@@ -50,9 +63,14 @@ indent_head() {
 
 # ---------- Hook-Mode-Detection ----------
 #
-# This script handles BOTH pre-commit and commit-msg hook invocations:
-#   - pre-commit hook: $0 basename = "pre-commit", no args
-#   - commit-msg hook: $0 basename = "commit-msg", $1 = path to commit-msg file
+# This script handles three hook events, selected by the $0 basename:
+#   - pre-commit:       no args; checks 1, 3, 4 and 5
+#   - pre-merge-commit: no args; runs exactly as pre-commit, for the merge
+#                       commit git merge creates (a conflicted merge ends in
+#                       git commit, which fires pre-commit instead)
+#   - commit-msg:       $1 = path to the commit message file; check 2 only,
+#                       then exit (merge-commit fallback: see Check 2)
+# Any other basename runs in pre-commit mode.
 #
 # Root cause: `git commit --amend -m "msg"` doesn't write the new message
 # to .git/COMMIT_EDITMSG before pre-commit fires — pre-commit reads STALE old
@@ -68,31 +86,6 @@ case "$(basename "$0")" in
   commit-msg) HOOK_MODE="commit-msg" ;;
 esac
 
-# ---------- Check 1: PLAN-VALIDATE (BLOCK) ----------
-
-if [ -f "$PLAN_ENGINE" ]; then
-  VALIDATE_OUTPUT=$(python3 "$PLAN_ENGINE" --project-root "$PROJECT_ROOT" --validate 2>&1) || true
-
-  # Accept either "Summary: 0 errors" (with-tasks) or "CLEAN" (empty-state).
-  # Pinned form — earlier `^Summary:.*0 errors|^CLEAN:` was fail-OPEN
-  # because `.*` is greedy and any N-error count containing the
-  # substring `0 errors` (e.g. "Summary: 100 errors found") matched the
-  # pattern. Pinned literal " 0 errors\b" prevents the substring
-  # collision on multi-digit error counts.
-  if echo "$VALIDATE_OUTPUT" | grep -qE '^Summary: 0 errors\b|^CLEAN:'; then
-    echo "pre-commit: PLAN-VALIDATE PASS"
-  else
-    ERROR_COUNT=$(echo "$VALIDATE_OUTPUT" | grep -oP '(\d+) errors' | grep -oP '^\d+' || echo "?")
-    echo "pre-commit: PLAN-VALIDATE BLOCK — ${ERROR_COUNT} error(s) found"
-    echo ""
-    echo "$VALIDATE_OUTPUT" | grep -E '^ERRORS|^  ' || true
-    echo ""
-    BLOCK=1
-  fi
-else
-  echo "pre-commit: PLAN-VALIDATE SKIP — plan_engine.py not found (graceful degradation)"
-fi
-
 # ---------- Check 2: CG-CONV — Commit-Convention Format (BLOCK in commit-msg mode) ----------
 #
 # Regex: type(scope): description [Task-NNN]
@@ -100,10 +93,15 @@ fi
 #        | solve | build | audit | research (workflow-engine commit-types)
 # Scope optional, Task-Ref optional (entfaellt bei save/checkpoint)
 #
-# commit-msg mode receives fresh message path as $1 from git.
-# pre-commit mode may see stale .git/COMMIT_EDITMSG and must never BLOCK on it.
+# commit-msg mode receives fresh message path as $1 from git, runs only this
+# check and exits: checks 1, 3, 4 and 5 already ran for the same commit in
+# pre-commit or pre-merge-commit mode. Fallback: for a merge commit (MERGE_HEAD
+# exists) in an install without the pre-merge-commit hook, it does not exit
+# and runs every check, as such installs always did; a conflicted merge
+# finished by git commit there runs the checks twice.
+# pre-commit mode may see stale .git/COMMIT_EDITMSG and must never BLOCK on it;
+# its part of check 2 follows the indexed block below.
 
-COMMIT_MSG_FILE="${1:-$(git rev-parse --git-path COMMIT_EDITMSG)}"
 CONVENTION_REGEX='^(feat|fix|refactor|review|save|docs|chore|solve|build|audit|research)(\([^)]+\))?: [^ ].+( \[Task-[0-9]+\])?$'
 
 if [ "$HOOK_MODE" = "commit-msg" ]; then
@@ -132,10 +130,133 @@ if [ "$HOOK_MODE" = "commit-msg" ]; then
       BLOCK=1
     fi
   fi
-else
+  if [ ! -e "$(git rev-parse --git-path MERGE_HEAD)" ] || [ -e "$PRE_MERGE_HOOK" ]; then
+    if [ "$BLOCK" -eq 1 ]; then
+      echo ""
+      echo "pre-commit: BLOCKED — fix errors above before committing."
+      exit 1
+    fi
+    exit 0
+  fi
+  # Merge-commit fallback: continue with checks 1, 3, 4 and 5 below.
+fi
+
+# ---------- Checks 1, 3, 5: indexed candidate (one capture) ----------
+#
+# 1. PLAN-VALIDATE (BLOCK): trusted plan_engine.py --validate against the
+#    materialized candidate tree must show 0 errors.
+# 3. SKILL-FM-VALIDATE (BLOCK): staged skills/**/SKILL.md frontmatter.
+# 5. SOURCE-VERIFICATION (WARN): changed candidate reports under
+#    docs/reviews/{board,council,code,architecture,sectional,amendment}/ and
+#    docs/specs/ with schema_version: 1 cite pointers that resolve in the
+#    candidate tree; section cross-references in live Markdown whose citing
+#    or cited file the commit changes resolve in the candidate tree.
+#
+# All three read one captured indexed candidate and share the final
+# currentness comparison before publication. Plan/evidence readers see a
+# private materialized copy of the candidate (scripts/indexed_related.py),
+# never the working tree; output names that copy <candidate>.
+# PLAN-VALIDATE pass/block parse (unchanged, inside the driver): pinned
+# '^Summary: 0 errors\b|^CLEAN:' — a greedy '.*0 errors' would fail open on
+# multi-digit counts such as "Summary: 100 errors".
+
+set +e
+python3 -I - "$FRAMEWORK_ROOT" "$PROJECT_ROOT" <<'INDEXED_PY'
+import contextlib
+import importlib
+import io
+import json
+import sys
+from pathlib import Path
+
+framework = Path(sys.argv[1])
+trusted = framework / 'scripts'
+repo = Path(sys.argv[2])
+sys.path.insert(0, str(trusted))
+skill = related = None
+skill_missing = not (trusted / 'skill_fm_validate.py').is_file()
+driver_missing = not (trusted / 'indexed_standalone.py').is_file()
+related_missing = not (trusted / 'indexed_related.py').is_file()
+plan_present = (trusted / 'plan_engine.py').is_file()
+evidence_present = (trusted / 'validate_evidence_pointers.py').is_file()
+dependency_missing = False
+buffer = io.StringIO()
+try:
+    with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
+        if not skill_missing:
+            skill = importlib.import_module('skill_fm_validate')
+            dependency_missing = skill.yaml is None
+        if driver_missing or related_missing:
+            raise FileNotFoundError('trusted indexed driver missing')
+        driver = importlib.import_module('indexed_standalone')
+        related = importlib.import_module('indexed_related')
+        report = driver.run(repo, skill, related, framework)
+    for line in report.lines:
+        print(line)
+    print('INDEXED-STANDALONE ' + report.record)
+    sys.exit(1 if report.blocking else 0)
+except Exception as exc:
+    # Failed startup must not publish captured incidental content diagnostics.
+    missing = driver_missing or related_missing
+    if skill_missing or missing:
+        status, reason = 'SKIP', 'availability: trusted validator program missing'
+    elif dependency_missing:
+        status, reason = 'SKIP', 'dependency: PyYAML missing'
+    else:
+        status, reason = 'BLOCK', 'input unavailable: shared indexed driver failure'
+    detail = 'input unavailable: ' + str(exc)
+    # A present plan engine cannot be established without the indexed driver.
+    plan_status = 'BLOCK' if plan_present else 'SKIP'
+    evidence_status = 'WARN/input unavailable' if evidence_present else 'SKIP'
+    payload = dict(version=1, mode='indexed', input_available=False, consumer=str(repo),
+                   index=None, git_dir=None, input_identity=None, detail=detail,
+                   skill_status=status, skill_detail=reason, checked_skills=[], skipped_paths=[],
+                   skill_skipped_paths=[], defect_paths=[], definitive=[], worktree_fallback_paths=[],
+                   plan_status=plan_status, plan_detail=detail, evidence_status=evidence_status,
+                   evidence_detail=detail, checked_reports=[], unresolved_links=[], gitlink_paths=[],
+                   related_file_mode='not-evaluated', fully_indexed_related_files=False,
+                   limitations='No related-file or standalone result was established; '
+                   'currentness is not transactional with a later commit.')
+    if plan_present:
+        print('pre-commit: PLAN-VALIDATE BLOCK — ' + detail)
+    else:
+        print('pre-commit: PLAN-VALIDATE SKIP — plan_engine.py not found (graceful degradation)')
+    print('SKILL-FM-VALIDATE ' + status + ' — ' + reason)
+    if evidence_present:
+        print('pre-commit: WARNING — SOURCE-VERIFICATION WARN/input unavailable — ' + detail)
+    print('INDEXED-STANDALONE ' + json.dumps(payload, ensure_ascii=True, sort_keys=True))
+    sys.exit(1 if 'BLOCK' in (status, plan_status) else 0)
+INDEXED_PY
+INDEXED_RET=$?
+set -e
+if [ "$INDEXED_RET" -ne 0 ]; then
+  if [ "$INDEXED_RET" -ne 1 ]; then
+    if [ -f "$PLAN_ENGINE" ]; then
+      echo "pre-commit: PLAN-VALIDATE BLOCK — indexed interpreter input unavailable"
+    else
+      echo "pre-commit: PLAN-VALIDATE SKIP — plan_engine.py not found (graceful degradation)"
+    fi
+    echo "pre-commit: SKILL-FM-VALIDATE BLOCK — indexed interpreter input unavailable"
+    if [ -f "${FRAMEWORK_ROOT}/scripts/validate_evidence_pointers.py" ]; then
+      echo "pre-commit: WARNING — SOURCE-VERIFICATION WARN/input unavailable — indexed interpreter failed"
+    fi
+  fi
+  BLOCK=1
+fi
+
+# ---------- Check 2 in pre-commit mode: no BLOCK ----------
+#
+# commit-msg mode ran check 2 above (and reaches this point only in the
+# merge-commit fallback). Here the message may be stale, so check 2 only
+# reports SKIP and warns when a hook link this contract relies on is missing.
+
+if [ "$HOOK_MODE" != "commit-msg" ]; then
   echo "pre-commit: COMMIT-CONVENTION SKIP (authoritative validation runs in commit-msg hook)"
   if [ ! -e "$COMMIT_MSG_HOOK" ]; then
     WARNINGS+=("COMMIT-CONVENTION: commit-msg hook missing. Install via: bash ${FRAMEWORK_ROOT}/scripts/install-git-hooks.sh ${PROJECT_ROOT}")
+  fi
+  if [ ! -e "$PRE_MERGE_HOOK" ]; then
+    WARNINGS+=("pre-merge-commit hook missing (merge commits fall back to checks in commit-msg). Install via: bash ${FRAMEWORK_ROOT}/scripts/install-git-hooks.sh ${PROJECT_ROOT}")
   fi
 fi
 
@@ -143,22 +264,7 @@ fi
 #
 # Validates staged skills/**/SKILL.md frontmatter (YAML subset).
 # SKIP: consumer repos without skills/, or PyYAML/skip inside script.
-
-SKILL_FM="${FRAMEWORK_ROOT}/scripts/skill_fm_validate.py"
-if [ -f "$SKILL_FM" ] && [ -d "${PROJECT_ROOT}/skills" ]; then
-  set +e
-  FM_OUT=$(python3 "$SKILL_FM" --repo "$PROJECT_ROOT" 2>&1)
-  FM_RET=$?
-  set -e
-  echo "$FM_OUT"
-  # WARN lines from validator are echoed in FM_OUT; BLOCK → non-zero
-  if [ "$FM_RET" -ne 0 ]; then
-    echo "pre-commit: SKILL-FM-VALIDATE BLOCK"
-    BLOCK=1
-  fi
-else
-  echo "pre-commit: SKILL-FM-VALIDATE SKIP — script or skills/ missing"
-fi
+# Evaluated in the indexed candidate block at the Check 1 position.
 
 # ---------- Check 4: SECRET-SCAN (WARN) — gitleaks wrapper ----------
 #
@@ -191,101 +297,11 @@ fi
 
 # ---------- Check 5: SOURCE-VERIFICATION (WARN) ----------
 #
-# Filter: staged files under
-#   - docs/reviews/board/*.md
-#   - docs/reviews/council/**/*.md
-#   - docs/specs/*.md
-#   - docs/reviews/{code,architecture,sectional,amendment}/*.md
-# that carry YAML frontmatter with schema_version: 1.
-#
-# Per file: call scripts/validate_evidence_pointers.py <file>.
-# Legacy (schema_version: 0 or missing) → silent skip via grep filter.
-#
-# Order: placed AFTER SECRET-SCAN — this check reads file contents, which
-# is uncritical post-secret-scan.
-
-VALIDATOR="${FRAMEWORK_ROOT}/scripts/validate_evidence_pointers.py"
-if [ -f "$VALIDATOR" ]; then
-  STAGED_EVIDENCE_FILES=$(git diff --cached --name-only --diff-filter=AM 2>/dev/null \
-    | grep -E '^docs/(reviews/(board|council|code|architecture|sectional|amendment)|specs)/' || true)
-
-  if [ -n "$STAGED_EVIDENCE_FILES" ]; then
-    EVIDENCE_WARNINGS=()
-    FILTERED_FILES=()
-    while IFS= read -r f; do
-      [ -z "$f" ] && continue
-      [ ! -f "$f" ] && continue
-      # Filter is symmetric with the validator's parser: it accepts
-      #   schema_version: 1                  (plain)
-      #   schema_version: "1" / '1'          (quoted)
-      #   schema_version: 1   (trailing ws)  (whitespace)
-      #   schema_version: 1 # comment        (inline comment)
-      # Rejects: 0, 2, 11, 100, kommentierte Zeilen.
-      if grep -qE "^schema_version:[[:space:]]*[\"']?1[\"']?[[:space:]]*(#.*)?$" "$f" 2>/dev/null; then
-        FILTERED_FILES+=("$f")
-      fi
-    done <<< "$STAGED_EVIDENCE_FILES"
-
-    if [ ${#FILTERED_FILES[@]} -gt 0 ]; then
-      set +e
-      VAL_OUT=$(python3 "$VALIDATOR" "${FILTERED_FILES[@]}" --repo-root "$PROJECT_ROOT" 2>&1)
-      VAL_RC=$?
-      set -e
-      if [ "$VAL_RC" -ne 0 ]; then
-        EVIDENCE_WARNINGS+=("SOURCE-VERIFICATION ($VAL_RC fail across ${#FILTERED_FILES[@]} file(s)):"$'\n'"$(indent_head 20 "$VAL_OUT")")
-      fi
-    fi
-
-    if [ ${#EVIDENCE_WARNINGS[@]} -gt 0 ]; then
-      for ew in "${EVIDENCE_WARNINGS[@]}"; do
-        WARNINGS+=("$ew")
-      done
-    fi
-  fi
-fi
-
-# ---------- Check 6: ANTI-PHANTOM (WARN) ----------
-#
-# Enforcement-honesty tripwire: flags staged docs that bind a
-# present-tense enforcement verb to a hook-name with no runnable
-# artifact (purged in the hook paradigm shift, ADR-004). An honest
-# marker — a historical note or an enforcement-class tag — suppresses
-# the warning. WARN-only (advisory, never blocks).
-#
-# Scope is deliberately narrow: only names with NO legitimate live
-# meaning are listed. Names that double as live concepts (the
-# STALE-CLEANUP invariant, the PERSIST-GATE discipline gate, the
-# piebald-budget protocol) are NOT listed here — class-tagging in
-# framework/enforcement-registry.md is the SoT for those. Extend
-# PHANTOM_NAMES only with names that have no runnable artifact at all.
-
-PHANTOM_NAMES='BRIEF-CLAIMS|path-whitelist-guard|frozen-zone-guard'
-LIVE_VERB='BLOCKs|BLOCKS|blocks|guards|re-runs|reruns|enforces|enforced'
-HONEST_MARK='purged|dropped|former|formerly|no longer|removed|historical|was a|used to|phantom|\[DISCIPLINE\]|\[GATE\]|\[WORKFLOW\]|\[STRUCTURAL\]'
-
-# Active-surface only. Forensic/review zones (audit, reviews, build logs,
-# dogfood-learnings, context) legitimately QUOTE phantom claims as
-# evidence — they are append-only records, not docs that mislead a
-# reader about live enforcement. Exclude them.
-STAGED_DOCS=$(git diff --cached --name-only --diff-filter=AM 2>/dev/null \
-  | grep -E '\.md$' \
-  | grep -vE '^(docs/(audit|reviews|build|dogfood-learnings)|context)/' || true)
-if [ -n "$STAGED_DOCS" ]; then
-  PHANTOM_HITS=()
-  while IFS= read -r f; do
-    [ -z "$f" ] && continue
-    [ ! -f "$f" ] && continue
-    while IFS= read -r hit; do
-      [ -z "$hit" ] && continue
-      echo "$hit" | grep -qiE "$HONEST_MARK" && continue
-      PHANTOM_HITS+=("${f}:${hit}")
-    done < <(grep -nE "(${PHANTOM_NAMES}).{0,40}(${LIVE_VERB})|(${LIVE_VERB}).{0,40}(${PHANTOM_NAMES})" "$f" 2>/dev/null)
-  done <<< "$STAGED_DOCS"
-  if [ ${#PHANTOM_HITS[@]} -gt 0 ]; then
-    RENDERED=$(indent_head 10 "$(printf '%s\n' "${PHANTOM_HITS[@]}")")
-    WARNINGS+=("ANTI-PHANTOM: doc(s) state live enforcement for a purged hook-name. Reframe to an honest enforcement-class statement (see framework/enforcement-registry.md) or add a historical marker:"$'\n'"${RENDERED}")
-  fi
-fi
+# Changed candidate reports with schema_version: 1 are validated against
+# the materialized candidate tree in the indexed block at the Check 1
+# position (legacy schema 0 / missing stays a silent skip), and so are the
+# section cross-references in Markdown that the commit touches (citing or
+# cited file changed). WARN-only.
 
 # ---------- Output ----------
 

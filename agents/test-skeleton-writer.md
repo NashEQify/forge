@@ -3,6 +3,11 @@ name: test-skeleton-writer
 description: TDD red phase — writes test skeletons from a test plan. Context-isolated (sees ONLY the spec and the test plan, NO implementation code).
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent (tool-neutral): test-skeleton-writer
 
 TDD red phase: writes test skeletons from a test plan.
@@ -31,6 +36,8 @@ Before any substantive work:
 - **Spec** (path in the call prompt) — for AC context.
 - **test-plan-format.md** (`framework/test-plan-format.md`) —
   schema reference.
+- **Testing discipline** (`skills/testing/SKILL.md`) — the canonical
+  meaningful pre-fix witness rule, including valid passing controls.
 - **Reference oracle** (only when the test plan names one, e.g. a
   `reference.py` or golden corpus) — to check skeleton oracles against
   it (Flow step 8). It is test-side code, not the implementation.
@@ -79,11 +86,12 @@ Without a TC scope: every TC.
    (execution mode) and MCA can choose fixtures or skip:
 
    ```python
-   # INFRA: none           — runs without external services
-   # INFRA: Postgres       — needs Postgres testcontainer / pool
-   # INFRA: NATS           — needs NATS broker
-   # INFRA: Ollama         — needs running LLM endpoint
-   # INFRA: Postgres,NATS  — needs both
+   # INFRA: none                  — runs without external services
+   # INFRA: <service>[,<service>]  — needs each named external service
+   # examples: INFRA: Postgres      (testcontainer / pool)
+   #           INFRA: NATS          (message broker)
+   #           INFRA: Ollama        (a running LLM endpoint)
+   #           INFRA: Postgres,NATS (both)
    ```
 
    Anti-pattern caught: writing `pytest.skip("STUB — needs <X>")`
@@ -96,20 +104,27 @@ Without a TC scope: every TC.
 5. `conftest.py` with shared fixtures (only the ones the preflight
    confirmed as genuinely-needed-new).
 6. Run all tests: `python -m pytest tests/{spec_name}/ -v`.
-7. Verify: ALL tests must FAIL (RED).
-   When a test PASSes: the test is wrong (it tests
-   triviality instead of behaviour).
+7. Apply `skills/testing/SKILL.md` §Meaningful pre-fix witness: verify and
+   report relevant failure witnesses for intended behavior changes. Keep valid
+   passing controls, regressions and already-satisfied behavior; investigate an
+   unexpected pass for supposedly missing behavior. Report skipped/unavailable
+   prerequisites and unrelated errors separately; they are not RED witnesses.
+   Preservation/refactor cases demonstrate the unchanged contract without
+   fabricating a failure.
 8. Reference-oracle check (when the plan names a reference oracle):
    evaluate every record-level RED assertion's expected value against
    the reference and list each disagreement. Do not silently align
    either side; the parent rules which one is wrong before the MCA
-   dispatch (`skills/testing/SKILL.md` §Oracle discipline).
+   dispatch (`skills/testing/test-design.md` §Oracle discipline).
 
 ## Output (back to the parent)
 
 ```
-RED phase done.
-Tests: {N} written, {N} FAIL (RED).
+Pre-fix test assessment done.
+Tests: {N} written.
+Meaningful pre-fix failures: {R; TC IDs, commands and reasons}.
+Passing controls/regressions/already-satisfied behavior: {P; TC IDs and reasons}.
+Skipped/unverified: {S; TC IDs and blockers}. Unexpected errors: {E; details}.
 Reference-oracle disagreements: {none | n/a (no reference) | list TC → expected vs reference}
 Files:
   - tests/{spec_name}/test_{group1}.py

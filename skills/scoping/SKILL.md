@@ -13,6 +13,10 @@ disable-model-invocation: false
 uses: [spec_board, council]
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: scoping
 
 ## Purpose
@@ -53,6 +57,9 @@ scoping) or a different artifact (then `solve` stays).
 | L1 | Architecture spec | Components, data flow, tech decisions, risks + spec tree | Board + user |
 | L2 | Feature spec | Per feature: behaviour, edge cases, acceptance criteria | Board + user |
 | L3 | Implementation spec | Per component: interfaces, state, error handling, contracts | Board, autonomous |
+
+L1's decisions that bind separately built components are written as an initiative architecture spine
+(`skills/_protocols/architecture-spine.md`); L2 and L3 specs inherit it read-only and change it only through L1.
 
 ---
 

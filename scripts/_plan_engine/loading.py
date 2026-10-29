@@ -5,8 +5,8 @@ REPO_ROOT) as the single source of truth. Consumers MUST read them via
 attribute access (``loading.PROJECT_ROOT``), never ``from .loading import
 PROJECT_ROOT`` — the latter captures the value at import time and would not see
 the late ``--project-root`` / dashboard rebind. ``GateCondition`` lives here
-(not in the pure-data core leaf) because its ``.check()`` runs subprocess +
-filesystem IO.
+(not in the pure-data core leaf) because its ``.check()`` observes project
+files. Script gates are unsupported and never execute commands.
 
 Split out of the former monolithic scripts/plan_engine.py.
 """
@@ -14,7 +14,7 @@ Split out of the former monolithic scripts/plan_engine.py.
 from __future__ import annotations
 
 import os
-import subprocess
+import subprocess  # noqa: F401 — retained interception seam for observational regression tests
 from dataclasses import dataclass, field
 from glob import glob
 from pathlib import Path
@@ -22,6 +22,7 @@ from pathlib import Path
 import yaml
 
 from _plan_engine.core import (
+    KNOWN_TASK_STATUSES,
     Milestone,
     Phase,
     PlanResult,
@@ -49,6 +50,84 @@ PLAN_PATH = PROJECT_ROOT / "docs" / "plan.yaml"
 GATE_TYPE_WHITELIST = {"task", "validate", "coverage", "spec_review", "file", "script"}
 
 
+class _TaskMap(dict):
+    """Preserve source roots without tightening the tolerant progress loaders."""
+
+    def __init__(self, roots=None):
+        super().__init__()
+        self._roots = roots or {}
+
+
+def _task_root(tasks: dict, repo: str = "") -> Path:
+    return getattr(tasks, "_roots", {}).get(repo, PROJECT_ROOT)
+
+
+class _GateTaskRecords:
+    """Raw identity/status evidence, scoped to one root and one analysis."""
+
+    def __init__(self, root: Path):
+        self._entries: dict[int, list[tuple[str | None, str]]] = {}
+        tasks_dir = root / "docs" / "tasks"
+        for directory in (tasks_dir, tasks_dir / "archive"):
+            for path in sorted(directory.glob("*.yaml")):
+                if path.name.endswith("-gates.yaml"):
+                    continue
+                prefix = path.stem.split("-", 1)[0]
+                filename_id = int(prefix) if prefix.isdigit() else None
+                try:
+                    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+                except (yaml.YAMLError, OSError, ValueError):
+                    data = None
+                raw_id = data.get("id") if isinstance(data, dict) else None
+                status = data.get("status") if isinstance(data, dict) else None
+                identities = {filename_id} if filename_id is not None else set()
+                # Retain invalid provenance under every identity the tolerant
+                # producer can emit, not just the filename/raw-integer identity.
+                try:
+                    normalized_id = (None if isinstance(raw_id, bool)
+                                     else _coerce_int_or_none(raw_id, "task.id"))
+                except OverflowError:
+                    normalized_id = None  # Non-finite values cannot emit an identity.
+                if normalized_id is not None:
+                    identities.add(normalized_id)
+                valid = (type(raw_id) is int and raw_id == filename_id
+                         and isinstance(status, str) and status in KNOWN_TASK_STATUSES)
+                detail = str(path.relative_to(root))
+                for task_id in identities:
+                    self._entries.setdefault(task_id, []).append(
+                        (status if valid else None, detail))
+
+    def lookup(self, task_id: int) -> tuple[bool, str | None, str]:
+        entries = self._entries.get(task_id, [])
+        if not entries:
+            return False, None, ""
+        if len(entries) != 1:
+            return True, None, "ambiguous task records: " + ", ".join(path for _, path in entries)
+        status, path = entries[0]
+        return True, status, (path if status is not None else f"invalid task record: {path}")
+
+
+def _resolve_task_status(tasks: dict, task_id: int, *, repo: str = "",
+                         records: _GateTaskRecords | None = None) -> tuple[str | None, str]:
+    if type(task_id) is not int:
+        return None, "invalid task id"
+    key = f"{repo}#{task_id:03d}" if repo else task_id
+    task = tasks.get(key)
+    if task is not None and (not isinstance(task, Task) or type(task.id) is not int
+                             or task.id != task_id or task.key != key):
+        return None, f"task {key} key/object identity mismatch"
+    evidence = records if records is not None else _GateTaskRecords(_task_root(tasks, repo))
+    found, status, detail = evidence.lookup(task_id)
+    if found:
+        return status, detail
+    if task is None or isinstance(tasks, _TaskMap):
+        return None, f"task {key} record not found"
+    status = task.status
+    if not isinstance(status, str) or status not in KNOWN_TASK_STATUSES:
+        return None, f"task {key} has invalid status"
+    return status, f"task {key} supplied in memory"
+
+
 @dataclass
 class GateCondition:
     type: str
@@ -57,11 +136,15 @@ class GateCondition:
     want: str = ""
     # additive Felder fuer Pre-Set-Gates pro feature_milestone.
     # ref:         Beschreibungs-/Reference-String (z.B. "plan_engine clean")
-    # preliminary: True -> Gate gibt (True, "preliminary") zurueck (blockiert nicht)
+    # preliminary: observation stays unevaluated; policy permits progress
     # desc:        Menschenlesbare Beschreibung
     ref: str = ""
     preliminary: bool = False
     desc: str = ""
+    _project_root: Path | None = field(default=None, init=False, repr=False, compare=False)
+    _repo: str = field(default="", init=False, repr=False, compare=False)
+    _records: _GateTaskRecords | None = field(default=None, init=False, repr=False, compare=False)
+    _invalid_id: bool = field(default=False, init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         # explicit Type-Coercion fuer preliminary (yaml liefert bool ODER
@@ -97,73 +180,41 @@ class GateCondition:
     def check(self, tasks: dict, milestones: dict | None = None) -> tuple[bool, str]:  # noqa: ARG002
         # Backward-compat: accept (tasks) or (tasks, milestones). milestones-Parameter
         # ist Reserve fuer zukuenftige Cross-Milestone-Gate-Checks.
-        # preliminary-Gates pass (blockieren Status-Compute nicht).
+        if self.type == "script":
+            return False, "unsupported script gate: inspection never executes commands"
         if self.preliminary:
-            return True, "preliminary"
-
+            return False, "UNEVALUATED: preliminary (nonblocking)"
+        if self.type == "manual":
+            return False, "UNEVALUATED: manual informational marker (nonblocking)"
         if self.type == "task":
-            # Archive-Awareness. Archivierte Tasks sind per
-            # archive-Semantik terminal-done (Frozen Zone WORM-Pattern).
-            # Wenn gate `want: done` (default) UND task-id ist archiviert →
-            # pass. Ohne dieses Verhalten wird jeder Milestone mit
-            # archiviertem Gate-Task als ORPHAN klassifiziert.
-            want = self.want or "done"
-            if want == "done":
-                archived_ids = _get_archived_ids_cached()
-                if self.id in archived_ids:
-                    return True, f"task {self.id} archived (terminal-done)"
-            t = tasks.get(self.id)
-            if not t:
-                return False, f"task {self.id} not found"
-            actual = t.status
-            # Default-want: 'done' (post-Greenfield Pre-Set-Gates haben kein 'want',
-            # nur id+desc — Implementation-Task done == gate pass).
-            ok = actual == want
-            return ok, f"want={want} have={actual}"
+            if self._invalid_id:
+                return False, "invalid task gate reference"
+            want = "done" if self.want == "" else self.want
+            if not isinstance(want, str) or want not in KNOWN_TASK_STATUSES:
+                return False, f"invalid requested task status: {want!r}"
+            records = self._records
+            if records is None and self._project_root is not None:
+                records = _GateTaskRecords(self._project_root)
+            actual, detail = _resolve_task_status(tasks, self.id, repo=self._repo, records=records)
+            if actual is None:
+                return False, detail
+            return actual == want, f"want={want} have={actual} ({detail})"
         if self.type == "file":
-            matches = glob(str(PROJECT_ROOT / self.path))
+            root = self._project_root if self._project_root is not None else _task_root(tasks, self._repo)
+            matches = glob(str(root / self.path))
             count = len(matches)
             return count > 0, f"{count} match(es)"
-        if self.type == "script":
-            # Recursion guard: script gates can call plan_engine.py which
-            # evaluates all gates again → infinite process spawning.
-            # Parent sets _PLAN_ENGINE_ACTIVE in child env; nested calls skip.
-            if os.environ.get("_PLAN_ENGINE_ACTIVE"):
-                return False, "skipped (recursion guard)"
-            script_path = PROJECT_ROOT / self.path
-            if not script_path.exists():
-                return False, f"script not found: {self.path}"
-            try:
-                env = os.environ.copy()
-                env["_PLAN_ENGINE_ACTIVE"] = "1"
-                result = subprocess.run(
-                    [str(script_path)], capture_output=True, timeout=30,
-                    cwd=str(PROJECT_ROOT), env=env
-                )
-                return result.returncode == 0, f"exit {result.returncode}"
-            except (OSError, subprocess.SubprocessError) as e:
-                return False, str(e)
-        elif self.type in ("validate", "coverage", "spec_review"):
-            # non-preliminary Pflicht-Gates dieser Types
-            # haben aktuell keine Default-Logik; sie sind nur als preliminary
-            # spezifiziert. Nicht-preliminary => no-op pass mit Hinweis-Detail.
-            return True, f"{self.type}: noop (non-preliminary fallback)"
-        elif self.type == "manual":
-            # `manual` gates are soft markers — they signal human-judgement
-            # bucket-closure rather than an auto-checkable condition. Engine
-            # treats them as pass; the milestone closes when the listed
-            # member-tasks reach done OR a human decides to fold the bucket.
-            return True, "manual: soft marker (human-judgement)"
-        else:
-            # Unknown type: WARN UNKNOWN_GATE_TYPE, return fail
-            # warnings via _emit_warn
-            _emit_warn(f"UNKNOWN_GATE_TYPE: {self.type!r}")
-            return False, f"unknown gate type: {self.type}"
+        if self.type in ("validate", "coverage", "spec_review"):
+            return False, f"UNEVALUATED: unsupported required {self.type} gate"
+        _emit_warn(f"UNKNOWN_GATE_TYPE: {self.type!r}")
+        return False, f"UNEVALUATED: unknown gate type: {self.type}"
 
     def __str__(self) -> str:
         if self.preliminary:
             return f"{self.type}:{self.ref or self.desc} (preliminary)"
         if self.type == "task":
+            if self._invalid_id:
+                return "task:INVALID"
             return f"task:{self.id} = {self.want or 'done'}"
         if self.type == "file":
             return f"file:{self.path}"
@@ -267,29 +318,13 @@ def load_archived_task_ids(project_root: Path) -> set[int]:
     return archived_ids
 
 
-# Module-level Cache fuer archived task IDs, used by
-# GateCondition.check zur Archive-Awareness (archived gate-task = terminal-done).
-# Per-PROJECT_ROOT keyed; der Key ist das Modul-Global PROJECT_ROOT, das nur vom
-# `--project-root` CLI-Override in main() (oder von einem Out-of-Process-Consumer
-# via plan_engine.PROJECT_ROOT-Rebind — generate-dashboard.py macht das pro Repo)
-# umgehaengt wird, daher kein manuelles Invalidate noetig.
+# Archive membership remains available for dependency/inventory consumers;
+# it is never evidence that a task's requested status has been reached.
 _archived_ids_cache: dict[Path, set[int]] = {}
 
 
 def _get_archived_ids_cached() -> set[int]:
-    """Lazy + cached access to archived task IDs for current PROJECT_ROOT.
-
-    Used by GateCondition.check (task-type) so that an archived gate-task
-    (e.g., M0-cross-cutting gate id=417 after M0-Welle-Closeout) is treated
-    as done. Without this, every Milestone whose gate-tasks become archived
-    would misreport as ORPHAN.
-
-    Cache invalidation: implicit per PROJECT_ROOT — the cache key is the
-    module-global PROJECT_ROOT, rebound only by the `--project-root` CLI override
-    in main() (or by an out-of-process consumer rebinding plan_engine.PROJECT_ROOT,
-    as generate-dashboard.py does per repo). plan_engine's own --aggregate path
-    does NOT rebind PROJECT_ROOT in-process.
-    """
+    """Cached archive identity inventory for current PROJECT_ROOT."""
     if PROJECT_ROOT not in _archived_ids_cache:
         try:
             _archived_ids_cache[PROJECT_ROOT] = load_archived_task_ids(PROJECT_ROOT)
@@ -463,7 +498,7 @@ def load_tasks(project_root: Path | None = None, repo_name: str = "") -> dict:
         tasks_dir = project_root
     else:
         tasks_dir = project_root / "docs" / "tasks"
-    tasks: dict = {}
+    tasks: dict = _TaskMap({repo_name: tasks_dir.parent.parent})
     for yaml_path in sorted(tasks_dir.glob("*.yaml")):
         if yaml_path.name.endswith("-gates.yaml"):
             continue
@@ -588,6 +623,48 @@ def _archived_task_status(item: int) -> str | None:
     return getattr(t, "status", "") or ""
 
 
+# Archived-done keys for roots other than the single-repo PROJECT_ROOT (the
+# aggregate per-repo roots, or a single-repo map loaded from an explicit
+# project_root). Keyed (root, repo) because the key format differs: bare int
+# for repo="", "<repo>#<id:03d>" otherwise. The PROJECT_ROOT/"" case reads
+# _get_archived_tasks_cached() directly so the existing cache stays the SoT.
+_archived_done_keys_cache: dict[tuple[Path, str], frozenset] = {}
+
+
+def _archived_done_keys(root: Path, repo: str = "") -> frozenset:
+    """Keys of archived tasks whose archived status is `done` (not merely terminal)."""
+    if root == PROJECT_ROOT and not repo:
+        return frozenset(k for k, t in _get_archived_tasks_cached().items()
+                         if getattr(t, "is_done", False))
+    cache_key = (root, repo)
+    if cache_key not in _archived_done_keys_cache:
+        try:
+            archived = load_archived_tasks(root, repo_name=repo)
+        except (OSError, AttributeError):
+            archived = {}
+        _archived_done_keys_cache[cache_key] = frozenset(
+            k for k, t in archived.items() if getattr(t, "is_done", False))
+    return _archived_done_keys_cache[cache_key]
+
+
+def done_task_keys(tasks: dict) -> set:
+    """Keys that satisfy a `blocked_by` dep: loaded done tasks + archived done tasks.
+
+    The archive holds EVERY terminal status, so only an archived `done` counts;
+    an archived superseded / wontfix / absorbed dep stays unsatisfied (DEAD_DEP
+    reports it). A loaded task wins over an archived one with the same key (the
+    ID_REUSED_FROM_ARCHIVE collision). Archive roots come from the task map's
+    `_roots` (one per repo in aggregate mode, keys namespaced to match the
+    rewritten blocked_by); a plain dict falls back to PROJECT_ROOT, mirroring
+    _task_root.
+    """
+    done = {t.key for t in tasks.values() if t.is_done}
+    roots = getattr(tasks, "_roots", None) or {"": PROJECT_ROOT}
+    for repo, root in roots.items():
+        done.update(k for k in _archived_done_keys(root, repo) if k not in tasks)
+    return done
+
+
 def _milestone_archived_credit(m, tasks: dict, *, aggregate: bool = False,
                                done_only: bool = False) -> int:
     """Extra done/total count for milestone `m` from archived tasks.
@@ -645,29 +722,28 @@ def _build_gate_from_dict(g: dict) -> GateCondition:
         # warnings via _emit_warn
         _emit_warn(f"GATE_TYPE_MISMATCH: gate-entry expected dict, got {type(g).__name__}: {g!r}")
         return GateCondition(type="")
-    # yaml-bool-id explizit reject VOR int()-Coercion
-    # (gleiche Bug-Class wie in load_archived_task_ids, anderer Pfad).
-    raw_id = g.get("id", 0)
+    # Invalid references retain refusal state; the numeric fallback must never
+    # select a real task. Lossless integer/string/integral-float inputs remain supported.
+    raw_id = g.get("id")
     if isinstance(raw_id, bool):
-        _emit_warn(
-            f"GATE_ID_BOOL_REJECTED: gate-entry id={raw_id!r} "
-            "(yaml-bool ist nie valide Task-id) -> 0"
-        )
-        gid = 0
-    elif raw_id is None:
-        gid = 0
+        _emit_warn(f"GATE_ID_BOOL_REJECTED: gate-entry id={raw_id!r} -> invalid reference")
+        coerced = None
+    elif isinstance(raw_id, float) and not raw_id.is_integer():
+        _emit_warn(f"GATE_ID_INVALID: gate-entry id={raw_id!r} is not an integer identity")
+        coerced = None
     else:
         coerced = _coerce_int_or_none(raw_id, "gate.id")
-        gid = coerced if coerced is not None else 0
-    return GateCondition(
+    gate = GateCondition(
         type=g.get("type", "") or "",
         path=_coerce_str(g.get("path"), "path"),
-        id=gid,
+        id=coerced if coerced is not None else 0,
         want=_coerce_str(g.get("want"), "want"),
         ref=_coerce_str(g.get("ref"), "ref"),
         preliminary=g.get("preliminary", False),  # __post_init__ macht Coercion
         desc=_coerce_str(g.get("desc"), "desc"),
     )
+    gate._invalid_id = coerced is None
+    return gate
 
 
 def load_plan(project_root: Path | None = None) -> PlanResult:
@@ -907,6 +983,11 @@ def load_plan(project_root: Path | None = None) -> PlanResult:
         # feature_milestones gewinnt bei Key-Kollision (overwrite).
         milestones[fkey] = m
 
+    # Bind file/task gates to their actual repository before aggregation.
+    for milestone in milestones.values():
+        for gate in milestone.gate:
+            gate._project_root = plan_path.parent.parent
+
     return PlanResult(
         milestones=milestones,
         target=target,
@@ -1039,11 +1120,12 @@ def load_aggregated(projects_arg: str | None = None) -> AggregateResult:
     if not projects:
         return AggregateResult(tasks={}, milestones={})
 
-    result = AggregateResult(tasks={}, milestones={}, projects=projects)
+    result = AggregateResult(tasks=_TaskMap(), milestones={}, projects=projects)
 
     # Phase 1: load each repo individually, namespace keys
     for repo_name, root in projects:
         repo_tasks = load_tasks(project_root=root, repo_name=repo_name)
+        result.tasks._roots[repo_name] = root
         repo_plan = load_plan(project_root=root)
         result.per_repo[repo_name] = repo_plan
 
@@ -1079,6 +1161,8 @@ def load_aggregated(projects_arg: str | None = None) -> AggregateResult:
                     namespaced_requires.append(f"{repo_name}#{int(r):03d}")
                 else:
                     namespaced_requires.append(f"{repo_name}:{r}")
+            for gate in m.gate:
+                gate._repo = repo_name
             new_m = Milestone(
                 key=namespaced_key,
                 title=m.title,

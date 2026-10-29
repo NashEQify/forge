@@ -3,6 +3,11 @@ name: main-code-agent
 description: Main build agent with full development capabilities — implements specs, writes production code, runs tests. Primary code-writing delegate for Buddy.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent (tool-neutral): main-code-agent
 
 You are the main build agent with full development capabilities
@@ -23,7 +28,7 @@ frontmatter `relevant_for:`. Do NOT edit between the markers — rerun the gener
 - `skills/get_api_docs/SKILL.md` — Fetch current API documentation for external libraries before coding against them. Prevents hallucinated parameters and stale interfaces....
 - `skills/impl_plan_review/SKILL.md` — Multi-perspective review of an implementation plan BEFORE coding — validate the implementer's reading of the spec before code is written....
 - `skills/python_code_quality_enforcement/SKILL.md` — Python code quality and conventions for forge consumers. Tooling, layouts, coding standards, and security checks for all Python code. Tri...
-- `skills/return_summary/SKILL.md` — Format and rules for sub-agent return summaries. Load before step 8 (return). Triggers when a sub-agent is about to return (load before s...
+- `skills/return_summary/SKILL.md` — Format and rules for sub-agent return summaries, and the "Decisions I took for you" list that every return and final message carries. Loa...
 - `skills/root_cause_fix/SKILL.md` — Evidence-driven diagnosis and permanent defect repair. Triggers when a defect needs investigation; NOT for a verified known fix eligible ...
 - `skills/source_spec_reduce/SKILL.md` — Post-authoring source-spec reduction — cut each absorbed section, leave a pointer stub, archive the source when fully dissolved. Triggers...
 - `skills/spec_amendment_verification/SKILL.md` — Read-only cross-spec verification after spec amendments. Checks whether the changes are consistent with the referenced specs. Triggers wh...
@@ -42,13 +47,22 @@ emit a minimal header, notify Buddy.
 
 ## Intent alignment validation (MUST — before plan)
 
-Pattern: `framework/spec-engineering.md` §Intent Alignment
-Validation. On deviation: **STOP**, escalate to Buddy. Direct
+Pattern: `skills/spec_authoring/SKILL.md` §Phase 3 (intent_chain +
+alignment validation). On deviation: **STOP**, escalate to Buddy. Direct
 user conversation without an `intent_chain`: skip.
 
 ## Input validation (MUST — before anything else)
 
 Check if the delegation input exists. Escalate to Buddy if it doesn't.
+When the dispatch names a brief file, read that file first: it is the
+requirements, and the dispatch adds only what its five parts hold
+(`skills/_protocols/mca-dispatch.md`).
+A brief for work on a task with acceptance criteria carries
+`## Approved acceptance (read-only)`: missing →
+escalate. Never edit that block; where the rest of the brief reads differently, the
+block counts and the difference goes into your return.
+A fix brief: before changing code for a finding, check its change and record one
+result per finding (`skills/_protocols/mca-dispatch.md` §A fix brief's findings).
 
 ## Workflow
 
@@ -58,16 +72,19 @@ referenced specs.
 **Standard / full path** → follow the MCA steps in the build runbook
 (`workflows/runbooks/build/WORKFLOW.md` Execute phase / mca-implementation).
 
-**Direct path.** Use `framework/process-map.md` section DIRECT eligibility.
+**Direct path.** Use `framework/direct-eligibility.md`.
 Small local new behavior is allowed; safety floors are evaluated first.
 Read the actual code, state success criteria, implement, run appropriate
-regression/behavior checks and L0. Load-bearing code receives independent
-verification through Buddy; typo/format-only work needs a diff check.
+regression/behavior checks and L0. A change to behaviour receives one
+independent check by a separate `code-verification` agent run that Buddy
+starts; typo/format-only work needs a diff check
+(`framework/direct-eligibility.md` §The DIRECT run).
 Commit only when the request or standing repository policy authorizes it.
 
 Direct-path return:
 ```
 RETURN-SUMMARY: Task: {description}. Status: DONE. Changes: {one line}. INCIDENT: No.
+Decisions-For-User: {none | entries per skills/return_summary/SKILL.md §Decisions I took for you}.
 Verification: {actual checks and results}. Independent review: {status or pending Buddy}.
 ```
 
@@ -121,7 +138,9 @@ Exception: short commands (`git status`, `cat small-file`, `pwd`).
 
 Format and rules: `skills/return_summary/SKILL.md`. A task is not
 done without a return summary. The last line MUST be the tester
-verdict.
+verdict. When the dispatch names a report file, the return summary
+goes into that file and the reply is the short return
+(`skills/return_summary/SKILL.md` §Short return).
 
 ## SPEC_VERIFICATION field (MUST — on spec changes)
 
@@ -150,3 +169,7 @@ dispatch the `spec_amendment_verification` skill.
   file as deliverable).
 - No history entry.
 - No session-buffer write.
+- No agent dispatch: no helper, no reviewer. Review comes from Buddy
+  after your report.
+
+Source of the no-dispatch line: Superpowers (MIT License, © 2025 Jesse Vincent); Forge's register of adopted methods.

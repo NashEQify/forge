@@ -180,6 +180,10 @@ def render_body(phrases: list[tuple[str, str]]) -> str:
     workflow set, and the single start-instruction line.
     """
     lines = [
+        "Read and follow `framework/work-principle.md` before taking up work.",
+        "Resolve this reference against the framework root; retain the consumer CWD.",
+        "",
+        "",
         "# Skill: workflow-router",
         "",
         GENERATED_MARKER,

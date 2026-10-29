@@ -205,7 +205,9 @@ consolidated to F-CR (code-review). Axis marker in the finding body
 
 ## Drill+Trace convention
 
-**For L2 Full Board:** code-chief enforces on every raw reviewer:
+**Whenever a Chief consolidates (four or more reviewers):** code-chief
+enforces on every raw reviewer (with three or fewer, Buddy does at §1.3
+triage):
 - `## Reviewer-First-Principles-Drill` (required section)
 - `## Reviewer-Reasoning-Trace` (required section)
 

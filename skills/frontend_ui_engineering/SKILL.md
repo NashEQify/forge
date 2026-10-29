@@ -14,11 +14,15 @@ disable-model-invocation: false
 uses: []
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: frontend-ui-engineering
 
 ## Source
 
-Upstream: [frontend-ui-engineering/SKILL.md](https://github.com/addyosmani/agent-skills/blob/main/skills/frontend-ui-engineering/SKILL.md) (MIT, Copyright Addy Osmani 2025). Content adapted for forge: standard skill format, cross-refs to `spec_board mode=ux` (spec side) and `code_review_board` (code side), connection to `references/accessibility-checklist.md` + `references/performance-checklist.md`. Example snippets remain React/Tailwind-centred — patterns are framework-agnostic, snippets are illustrative.
+agent-skills at `19e49a0` (MIT License, © 2025 Addy Osmani); Forge's register of adopted methods.
 
 ## Purpose
 
@@ -71,346 +75,17 @@ methodology container for the build phase, consumed by boards on both sides.
 
 ## Component architecture
 
-### File structure (colocate)
-
-Component logic, tests, styles and hooks together:
-
-```
-src/components/
-  TaskList/
-    TaskList.tsx          # component implementation
-    TaskList.test.tsx     # tests
-    TaskList.stories.tsx  # Storybook stories (when used)
-    use-task-list.ts      # custom hook (when state is complex)
-    types.ts              # component-specific types (when needed)
-```
-
-**Custom-hook example** (`use-task-list.ts`):
-
-```tsx
-// Encapsulates state + handlers, isolates them from rendering.
-// Component file consumes: const { tasks, toggle, remove } = useTaskList();
-// Test file mocks: jest.mock('./use-task-list'); useTaskList.mockReturnValue({...});
-import { useState, useCallback } from 'react';
-import type { Task } from './types';
-
-export function useTaskList(initial: Task[] = []) {
-  const [tasks, setTasks] = useState<Task[]>(initial);
-
-  const toggle = useCallback((id: string) => {
-    setTasks(ts => ts.map(t => t.id === id ? { ...t, done: !t.done } : t));
-  }, []);
-
-  const remove = useCallback((id: string) => {
-    setTasks(ts => ts.filter(t => t.id !== id));
-  }, []);
-
-  return { tasks, toggle, remove };
-}
-```
-
-Trigger for a custom hook: component > 100 lines with nested state logic, or
-the same state logic duplicated across 2+ components.
-
-### Composition over configuration
-
-```tsx
-// GOOD — composable
-<Card>
-  <CardHeader>
-    <CardTitle>Tasks</CardTitle>
-  </CardHeader>
-  <CardBody>
-    <TaskList tasks={tasks} />
-  </CardBody>
-</Card>
-
-// AVOID — over-configured (every variation = a new prop)
-<Card
-  title="Tasks"
-  headerVariant="large"
-  bodyPadding="md"
-  content={<TaskList tasks={tasks} />}
-/>
-```
-
-### Container vs presentation
-
-```tsx
-// Container — handles data + lifecycle
-export function TaskListContainer() {
-  const { tasks, isLoading, error, refetch } = useTasks();
-  if (isLoading) return <TaskListSkeleton />;
-  if (error) return <ErrorState message="Failed to load tasks" retry={refetch} />;
-  if (tasks.length === 0) return <EmptyState message="No tasks yet" />;
-  return <TaskList tasks={tasks} />;
-}
-
-// Presentation — pure rendering
-export function TaskList({ tasks }: { tasks: Task[] }) {
-  return (
-    <ul role="list" className="divide-y">
-      {tasks.map(task => <TaskItem key={task.id} task={task} />)}
-    </ul>
-  );
-}
-```
-
-Rationale: tests for presentation = snapshot or simple render assert. Tests
-for container = mock data + lifecycle. Mixed = unmockable.
-
-## State management decision tree
-
-**Choose the simplest approach that works:**
-
-```
-Local state (useState)            -> component-specific UI state
-Lifted state                      -> shared between 2-3 sibling components
-Context                           -> theme / auth / locale (read-heavy, write-rare)
-URL state (searchParams)          -> filter / pagination / shareable UI state
-Server state (React Query / SWR)  -> remote data with caching
-Global store (Zustand / Redux)    -> complex client state shared app-wide
-```
-
-**Avoid prop drilling deeper than 3 levels.** When props pass through
-non-consuming components -> use Context or restructure the component tree.
-
-## Design-system adherence
-
-### Avoid the AI aesthetic
-
-AI-generated UI has recognisable patterns. Avoid all of:
-
-| AI default | Why it's a problem | Production quality |
-|---|---|---|
-| Purple/indigo everywhere | Models default to "safe" colours, every app looks the same | The project's actual colour palette |
-| Excessive gradients | Visual noise, clashes with most design systems | Flat or subtle, aligned with the design system |
-| `rounded-2xl` everywhere | Maximum rounding signals "friendly" but ignores hierarchy | Consistent border-radius per component class |
-| Generic hero sections | Template-driven, no relation to actual content / user need | Content-first layouts |
-| Lorem-ipsum-style copy | Placeholder text hides layout problems that real content surfaces | Realistic placeholder content |
-| Oversized padding everywhere | Equally generous padding destroys visual hierarchy | Consistent spacing scale |
-| Stock card grids | Uniform grids ignore information priority | Purpose-driven layouts |
-| Shadow-heavy design | Layered shadows cost render time + compete with content | Subtle / no shadow unless the design system specifies it |
-
-### Spacing scale + typography + colour
-
-Spacing: consistent scale, no arbitrary pixel values:
-
-```css
-/* GOOD — scale (Tailwind or your own 0.25rem steps) */
-padding: 1rem;       /* 16px */
-gap: 0.75rem;        /* 12px */
-
-/* BAD — off-scale */
-padding: 13px;
-margin-top: 2.3rem;
-```
-
-Typography: respect the type hierarchy — `h1 > h2 > h3 > body > small`. Do
-not skip heading levels, do not use heading styles for non-heading content.
-
-Colour: semantic tokens (`text-primary`, `bg-surface`, `border-default`),
-not raw hex. Contrast 4.5:1 for normal text, 3:1 for large text (WCAG AA).
-Colour **never** as the sole indicator (pair with icons / text / patterns).
+When laying out a component's files, splitting container from presentation, choosing where state lives, and when
+applying spacing, typography and colour: read and follow `skills/frontend_ui_engineering/structure.md` (component
+architecture: colocated file structure, composition over configuration, container vs presentation; state
+management decision tree; design-system adherence: avoiding the AI aesthetic, spacing scale, typography and colour).
 
 ## Accessibility (WCAG 2.1 AA)
 
-Cross-ref: `references/accessibility-checklist.md` for detailed mandatory
-checks. Here, the pattern discipline:
-
-### Keyboard navigation
-
-```tsx
-// GOOD — native button, focusable by default
-<button onClick={handleClick}>Click me</button>
-
-// BAD — div as click target, not focusable
-<div onClick={handleClick}>Click me</div>
-
-// OK but ONLY when <button> is genuinely impossible
-<div role="button" tabIndex={0} onClick={handleClick}
-     onKeyDown={e => {
-       if (e.key === 'Enter') handleClick();
-       if (e.key === ' ') e.preventDefault();
-     }}
-     onKeyUp={e => { if (e.key === ' ') handleClick(); }}>
-  Click me
-</div>
-```
-
-### ARIA labels
-
-```tsx
-<button aria-label="Close dialog"><XIcon /></button>
-
-<label htmlFor="email">Email</label>
-<input id="email" type="email" />
-
-<input aria-label="Search tasks" type="search" />
-```
-
-### Focus management
-
-**`<dialog open>` is NOT modal** — no focus trap, no inert background,
-no escape close, no backdrop. A real modal requires
-`dialogElement.showModal()` (DOM API) plus focus restoration on close.
-
-```tsx
-function Dialog({ isOpen, onClose, triggerRef }: DialogProps & { triggerRef: RefObject<HTMLElement> }) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const el = dialogRef.current;
-    if (!el) return;
-    if (isOpen && !el.open) {
-      el.showModal();              // modal: focus trap, inert background, ESC close, backdrop
-    } else if (!isOpen && el.open) {
-      el.close();
-      triggerRef.current?.focus(); // focus restore to the trigger element
-    }
-  }, [isOpen, triggerRef]);
-
-  return (
-    <dialog ref={dialogRef} onClose={onClose}>
-      {/* form method="dialog" -> submit button closes the dialog without JS */}
-      <form method="dialog">
-        <button>Close</button>
-      </form>
-      {/* dialog content */}
-    </dialog>
-  );
-}
-```
-
-**iOS polyfill:** `<dialog>` is natively supported only from iOS 15.4. Older:
-load the `dialog-polyfill` package and call
-`polyfill.registerDialog(dialogRef.current)` once in useEffect.
-
-**Mandatory a11y combination:** `showModal()` (focus trap) + `triggerRef.focus()`
-on close (focus restore) + `<form method="dialog">` (escape/submit close)
-together deliver WCAG-compliant modal semantics. `<dialog open>` alone does
-**not**.
-
-### Empty / loading / error states
-
-Don't show blank screens. Every dynamic list has 4 states: loading, empty,
-error, populated.
-
-```tsx
-function TaskList({ tasks }: { tasks: Task[] }) {
-  if (tasks.length === 0) {
-    // role="status" is correct here because the empty-state region appears
-    // as the result of a data-loading process (initial render with empty
-    // array, or after a filter reset). Screen readers announce the
-    // populated -> empty transition. For a TRULY static empty state
-    // (page renders from the start with an empty list, no loading before):
-    // omit the role and let it be plain content.
-    return (
-      <div role="status" className="text-center py-12">
-        <TasksEmptyIcon className="mx-auto h-12 w-12 text-muted" />
-        <h3 className="mt-2 text-sm font-medium">No tasks</h3>
-        <p className="mt-1 text-sm text-muted">Get started by creating a task.</p>
-        <Button className="mt-4" onClick={onCreateTask}>Create Task</Button>
-      </div>
-    );
-  }
-  return <ul role="list">{/* ... */}</ul>;
-}
-```
-
-## Responsive design
-
-Mobile-first. Test at: 320px, 768px, 1024px, 1440px.
-
-```tsx
-<div className="
-  grid grid-cols-1
-  sm:grid-cols-2
-  lg:grid-cols-3
-  gap-4
-">
-```
-
-## Loading + transitions
-
-Skeleton loading instead of spinners for content (perceived speed):
-
-```tsx
-function TaskListSkeleton() {
-  // ARIA pattern: aria-busy + aria-label on the parent container,
-  // role="status" + aria-live=polite so screen readers announce the
-  // loading transition. The individual skeleton bars carry no ARIA —
-  // they are decorative children under aria-busy=true.
-  return (
-    <div role="status" aria-busy="true" aria-live="polite" aria-label="Loading tasks" className="space-y-3">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="h-12 bg-muted animate-pulse rounded" aria-hidden="true" />
-      ))}
-      <span className="sr-only">Loading tasks</span>
-    </div>
-  );
-}
-```
-
-Optimistic updates for perceived speed on mutations — with error recovery,
-rollback toast + onSettled refresh, plus race-condition protection:
-
-```tsx
-function useToggleTask() {
-  const queryClient = useQueryClient();
-  const { showToast } = useToast();  // your toast system
-
-  return useMutation({
-    mutationFn: toggleTask,
-
-    onMutate: async (taskId) => {
-      // 1. Cancel in-flight refetches so our optimistic update is not
-      //    overwritten by a staler server response
-      await queryClient.cancelQueries({ queryKey: ['tasks'] });
-
-      // 2. Capture previous state for rollback
-      const previous = queryClient.getQueryData<Task[]>(['tasks']);
-
-      // 3. Optimistic update
-      queryClient.setQueryData<Task[]>(['tasks'], (old = []) =>
-        old.map(t => t.id === taskId ? { ...t, done: !t.done } : t)
-      );
-
-      return { previous };
-    },
-
-    onError: (err, _id, ctx) => {
-      // Rollback + toast: a silent rollback confuses the user
-      // ("I clicked but nothing happened").
-      if (ctx?.previous) queryClient.setQueryData(['tasks'], ctx.previous);
-      showToast({ kind: 'error', message: 'Toggle failed', detail: err.message });
-    },
-
-    onSettled: () => {
-      // Race-condition protection: parallel mutations can overwrite one
-      // another. onSettled invalidates the cache after EVERY mutation
-      // (success or error) -> the server is the truth.
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    },
-  });
-}
-```
-
-**Hook contract hint:** `useTasks()` and similar query hooks return
-*either* `tasks: Task[]` (always an array, possibly empty) OR `tasks: Task[]
-| undefined` (undefined before the first fetch). **Standardise per repo** —
-mixing the two creates cherry-pick risk (`tasks?.length` defensive,
-`tasks.length` direct). Recommendation: hook returns `tasks: undefined`
-when `isLoading=true`, `tasks: Task[]` when `isSuccess=true` (even if
-empty). A TypeScript discriminated union makes this explicit.
-
-## Performance
-
-Cross-ref: `references/performance-checklist.md`.
-
-Core pattern: don't load everything up front. Code splitting for routes /
-heavy components. Image optimisation (next/image, srcset, lazy loading).
-Avoid layout shift (CLS) via fixed dimensions on images / skeletons.
+When implementing interaction, focus, dialogs or ARIA, the loading / empty / error / populated states, transitions
+and optimistic updates, responsive layout, and when loading heavy routes, components or images: read and follow
+`skills/frontend_ui_engineering/states-and-a11y.md` (keyboard navigation, ARIA labels, focus management and modal
+dialogs, empty / loading / error states; responsive design; loading and transitions; performance).
 
 ## Red flags
 
@@ -437,7 +112,7 @@ Avoid layout shift (CLS) via fixed dimensions on images / skeletons.
 
 ### INPUT
 
-- **Required:** UI component / page / layout spec or an existing UI diff
+- **Required:** UI component / page / layout spec or an existing UI diff. When the change has a look and an experience contract (`skills/ux_authoring/contracts.md`), they are required input: tokens and component visuals from `look.md`; surfaces, states, component behaviour, wording and the accessibility floor from `experience.md`
 - **Optional:** design-system reference (Storybook / Figma / tokens file), brand colours, spacing scale
 - **Context:** repo component conventions (`src/components/` layout), style system (Tailwind / CSS Modules / styled-components), `references/accessibility-checklist.md`, `references/performance-checklist.md`
 
@@ -454,7 +129,7 @@ Avoid layout shift (CLS) via fixed dimensions on images / skeletons.
 - **No code review** -> `code_review_board` (the frontend diff goes through the board, not this skill)
 - **No a11y audit tool run as a mandatory verify gate** -> dedicated tooling (axe-core, pa11y, Lighthouse) provides that. A dev-time spot check during the build (axe-core devtools extension manually or jest-axe in unit tests) is part of the discipline and referenced in DONE — that is not a full audit, it is a smoke test during implementation.
 - **No performance profiling of an existing app** -> profiler tooling + `references/performance-checklist.md`
-- **No design-system authoring** (token definition, colour-palette selection) -> outside the skill's scope
+- **No design-system authoring** (token definition, colour-palette selection) -> the look contract (`ux_authoring`) or the project's design system
 
 **ENABLES:**
 - Build-workflow verify phase: the frontend diff passes through `code_review_board` with UX specialist personas that use this skill as their methodology anchor
@@ -474,7 +149,7 @@ Avoid layout shift (CLS) via fixed dimensions on images / skeletons.
 ### FAIL
 
 - **Retry:** a11y tool warnings -> component edit, re-test
-- **Escalate:** design-system conflict (spec demands off-scale spacing or a new colour) -> spec_board mode=ux or Council
+- **Escalate:** design-system conflict (spec demands off-scale spacing or a new colour) -> spec_board mode=ux or Council. A contract slot the build needs that is `open` or missing (a state, a label) -> back to `ux_authoring`, which asks the person; the build does not fill it
 - **Abort:** not provided — UI build continues, findings are surfaced
 
 ## Boundary
@@ -499,6 +174,7 @@ Avoid layout shift (CLS) via fixed dimensions on images / skeletons.
 
 | Topic | SoT |
 |-------|-----|
+| UX contracts (look, experience) | `skills/ux_authoring/SKILL.md` |
 | Spec-side UX review | `skills/spec_board/SKILL.md` (mode=ux: 3 UX personas) |
 | Code-side diff review | `skills/code_review_board/SKILL.md` (UX specialists load this skill) |
 | A11y detail checklist | `references/accessibility-checklist.md` |

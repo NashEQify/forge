@@ -15,12 +15,17 @@ import json
 import os
 from pathlib import Path
 import stat
+import subprocess
 import tempfile
 import uuid
 
 LOCK_ROOT = Path(f'/tmp/forge-install-{os.geteuid()}')
 _HELD = contextvars.ContextVar('forge_install_lock', default=None)
 TERMINAL = {'complete', 'rolled_back'}
+# Phases whose operation is still open for its owner to continue. ``applying``
+# is excluded: apply holds the exclusive lock, so a reader only ever observes it
+# after an interrupted writer.
+OPERATION_OPEN = {'prepared', 'validation_pending'}
 
 
 def _safe_parents(path):
@@ -52,6 +57,95 @@ def identity(path):
 def file_identity(data, mode=0o644):
     return {'kind': 'file', 'mode': mode, 'sha256': hashlib.sha256(data).hexdigest(),
             'bytes': base64.b64encode(data).decode('ascii')}
+
+
+def instruction_path(root, path):
+    """True iff a recorded source key is instruction Markdown under ``root``.
+
+    Classification uses only the recorded key and the live identity kind: a
+    symlink, directory or other non-regular entry is never instruction.
+    """
+    path = Path(os.path.abspath(path))
+    if path.suffix != '.md' or not path.is_relative_to(Path(root).resolve()):
+        return False
+    try:
+        return identity(path)['kind'] in {'file', 'absent'}
+    except ValueError:
+        return False
+
+
+_GIT_SELECTION = {'GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR'}
+
+
+def _git_query(root, *args):
+    # ``-C root`` selects the repository; an inherited GIT_DIR (e.g. inside a
+    # hook) must not redirect it. No optional index refresh is ever written.
+    env = {k: v for k, v in os.environ.items() if k not in _GIT_SELECTION}
+    env['GIT_OPTIONAL_LOCKS'] = '0'
+    return subprocess.run(['git', '-C', str(root), *args], env=env, stdin=subprocess.DEVNULL,
+                          capture_output=True, timeout=30)
+
+
+def _first_line(raw):
+    lines = os.fsdecode(raw).strip().splitlines()
+    return lines[0][:200] if lines else 'no detail'
+
+
+def _canonical(path):
+    # Resolve directories only: a recorded source may itself be a symlink.
+    path = Path(os.path.abspath(path))
+    return Path(os.path.realpath(path.parent)) / path.name
+
+
+def uncommitted_sources(root, paths):
+    """Which ``paths`` Git reports as not committed in HEAD: ``(head, uncommitted, reason)``.
+
+    Staged, modified, deleted and untracked paths count; ignored paths and
+    nested repositories or worktrees (not this checkout's sources) never
+    appear. ``uncommitted`` holds sorted ``root``-relative paths (absolute
+    outside ``root``); ``head`` is the HEAD commit or ``None`` before the first
+    commit. Read-only. Git missing, no work tree or a failed query yield
+    ``(None, None, reason)``; never raises.
+    """
+    try:
+        top = _git_query(root, 'rev-parse', '--show-toplevel')
+        if top.returncode:
+            return None, None, 'not a Git work tree: ' + _first_line(top.stderr)
+        toplevel = Path(os.path.realpath(os.fsdecode(top.stdout).strip()))
+        head = _git_query(root, 'rev-parse', '--verify', '-q', 'HEAD')
+        commit = os.fsdecode(head.stdout).strip() if head.returncode == 0 else None
+        status = _git_query(root, 'status', '--porcelain=v1', '-z', '--untracked-files=all',
+                            '--no-renames', '--ignored=no')
+        if status.returncode:
+            return None, None, f'git status failed (exit {status.returncode}): ' + _first_line(status.stderr)
+        listed = set()
+        fields = iter(status.stdout.split(b'\0'))
+        for entry in fields:
+            if len(entry) < 4:
+                continue
+            names = [entry[3:]]
+            if entry[:1] in b'RC' or entry[1:2] in b'RC':
+                names.append(next(fields, b''))  # rename/copy origin (not with --no-renames)
+            for name in filter(None, names):
+                path = toplevel / os.fsdecode(name)
+                # With --untracked-files=all the only directory entry is a
+                # nested repository or worktree: not this checkout's source.
+                if name.endswith(b'/') and os.path.lexists(path / '.git'):
+                    continue
+                listed.add(path)
+        base = Path(os.path.realpath(root))
+        uncommitted = set()
+        for item in paths:
+            path = _canonical(item)
+            if path in listed:
+                uncommitted.add(str(path.relative_to(base)) if path.is_relative_to(base) else str(path))
+        return commit, sorted(uncommitted), None
+    except FileNotFoundError as exc:
+        return None, None, f'git unavailable: {exc}'
+    except subprocess.TimeoutExpired:
+        return None, None, 'git query timed out'
+    except Exception as exc:  # observation only: never fail the caller
+        return None, None, f'{type(exc).__name__}: {exc}'
 
 
 def _fsync_dir(path):
@@ -202,14 +296,56 @@ class Activation:
                 result['journal_transition_pending'] = True
                 return result
             if data['phase'] in TERMINAL:
-                direction = 'before' if data['phase'] == 'rolled_back' else 'after'
-                for inventory in (data['sources'], data['actions']):
-                    for path, item in inventory.items():
-                        if identity(path) != item.get(direction, item['before']):
-                            result['phase'] = 'recovery_required'
-                            result['reason'] = 'source/integration drift without prepared baseline: ' + path
-                            return result
+                blocking, accepted = self.terminal_drift(data)
+                if blocking:
+                    result['phase'] = 'recovery_required'
+                    result['reason'] = 'source/integration drift without prepared baseline: ' + blocking
+                    return result
+                if accepted:
+                    result['instruction_drift'] = sorted(str(Path(p).relative_to(self.root)) for p in accepted)
             return result
+
+    def terminal_drift(self, data, *, integration=True, snapshot=False):
+        """Classify drift of a terminal journal: ``(blocking_path | None, instruction_paths)``.
+
+        Only instruction Markdown in ``sources`` is accepted; any other source
+        and every ``actions`` entry stays blocking. The default compares with
+        the terminal identity (``status``); ``snapshot`` compares with
+        ``before`` or ``after`` like ``_check``. Never used inside an operation.
+        """
+        direction = 'before' if data['phase'] == 'rolled_back' else 'after'
+        accepted = []
+        inventories = [('sources', data['sources'])] + ([('actions', data['actions'])] if integration else [])
+        for name, inventory in inventories:
+            for path, item in inventory.items():
+                current = identity(path)
+                if snapshot:
+                    allowed = [item['before']] + ([item['after']] if 'after' in item else [])
+                else:
+                    allowed = [item.get(direction, item['before'])]
+                if current in allowed:
+                    continue
+                if name == 'sources' and instruction_path(self.root, path):
+                    accepted.append(path)
+                    continue
+                return path, accepted
+        return None, accepted
+
+    def unrecorded_sources(self, data, inventory):
+        """Classify current source-inventory entries absent from a terminal journal.
+
+        Returns ``(blocking_path | None, instruction_paths)``: unrecorded
+        instruction Markdown is accepted; any other new source needs a
+        prepared baseline. Never used inside an operation.
+        """
+        accepted = []
+        for path in sorted(str(Path(p).absolute()) for p in inventory):
+            if path in data['sources']:
+                continue
+            if not instruction_path(self.root, path):
+                return path, accepted
+            accepted.append(path)
+        return None, accepted
 
     def prepare(self, sources, targets, *, consumer_roots=(), closure=()):
         with machine_lock():
@@ -218,7 +354,9 @@ class Activation:
             if previous and previous['phase'] not in TERMINAL:
                 raise ValueError('unfinished maintenance; retry or rollback the existing operation')
             if previous and previous['phase'] == 'complete':
-                self._check(previous, integration=False, source=True)
+                blocking, _ = self.terminal_drift(previous, integration=False, snapshot=True)
+                if blocking:
+                    raise ValueError(f'installation conflict: resource changed after snapshot: {blocking}')
             paths = {str(Path(p).absolute()) for p in sources}
             if previous:
                 paths.update(previous['sources'])
@@ -382,6 +520,7 @@ class Activation:
             self._check(data, integration=True, source=True)
             if compatibility:
                 data['compatibility'] = compatibility(data, rollback=True)
+            data.pop('completion_commit_state', None)  # describes a completion being undone
             data['phase'] = 'applying'
             data['recovery_direction'] = 'before'
             self._save(data)
@@ -420,6 +559,15 @@ class Activation:
             if observed['kind'] != 'file' or not base64.b64decode(observed['bytes']).strip():
                 raise ValueError('fresh-session validation evidence is required')
             data['validation'] = {'path': str(Path(evidence).absolute()), 'sha256': observed['sha256']}
+            # Snapshot at completion: was the installed generation committed?
+            # Observation only; optional key, older journals lack it, no
+            # installer logic reads it, rollback removes it.
+            head, uncommitted, reason = uncommitted_sources(self.root, list(data['sources']))
+            commit_state = {'head': head,
+                            'uncommitted_count_at_completion': None if uncommitted is None else len(uncommitted)}
+            if reason is not None:
+                commit_state['reason'] = reason
+            data['completion_commit_state'] = commit_state
             data['phase'] = 'complete'
             self._save(data)
             return self.status()
@@ -480,7 +628,11 @@ def workflow_compatibility(data, *, rollback=False):
                     engine_owner = importlib.import_module(module)
                 except ImportError as exc:
                     raise ValueError('selected development state requires its engine compatibility owner') from exc
-                validator = inspect.getsource(engine_owner._continuation_definition)
+                # The predecessor lacks the shared pure projection helper. Copy
+                # the validator's existing closure, without changing its policy.
+                validator = (inspect.getsource(engine_owner._definition_projection) + "\n" +
+                             inspect.getsource(engine_owner._continuation_definition) + "\n" +
+                             inspect.getsource(engine_owner._maintenance_definition))
                 harness = """import hashlib,json,sys
 from pathlib import Path
 root, project = map(Path, sys.argv[1:])
@@ -502,7 +654,8 @@ with engine._state_lock():
         state = json.loads(raw)
         if state.get('workflow_id') != wid:
             raise ValueError('workflow identity mismatch')
-        definition = engine._continuation_definition(state)
+        definition = engine._maintenance_definition(
+            state, archived=path.parent == engine.ARCHIVE_DIR)
         result.append({'workflow_id':wid,'state_file':str(path.relative_to(project)),
           'revision':state.get('revision',0),'sha256':hashlib.sha256(raw).hexdigest(),
           'definition_fingerprint':hashlib.sha256(json.dumps(definition,sort_keys=True).encode()).hexdigest(),

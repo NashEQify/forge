@@ -19,10 +19,25 @@ loads the guidance before the dependent action. A link without a trigger
 is insufficient for required behavior. Keep safety/authorization constraints
 needed to choose the action visible before entering conditional detail.
 
+**Host load limit.** Separate from the review signals below: a unit a step reads whole stays within the byte
+budget that `scripts/consistency_check.py --check instruction-units` enforces, and a reference read for one entry
+(a check, a row, a pattern) within its read ceiling. Both come from measured host behaviour (a whole file restored
+after compaction; tool output cut at the first read), not from line counts. When the check fires, split at a real
+step boundary of the text, as this section describes, and give the moved part a read trigger at that step.
+
 Remove duplication or obsolete instructions before adding routing layers.
 Do not compress unique requirements into opaque shorthand or distribute
 one rule across files that must always be read together just to reduce
 the entrypoint's line count.
+
+Assemble context from the current authority, relevant source sections and
+unresolved obligations before dependent work. Reuse same-revision observations
+and accessible original returns; on resume follow the existing compact
+continuation route rather than re-authoring completed history. Preserve required
+freshness, authority and independent-review boundaries. Verify the actual
+downstream consumer’s current input/return contract before choosing an example
+or format; a candidate checker is not evidence that an older active consumer
+accepts it.
 
 ## Review signals
 

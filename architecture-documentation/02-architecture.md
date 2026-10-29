@@ -39,12 +39,19 @@ project does not select software development.
 On-demand work follows local rules and invokes Forge methods when explicitly
 requested. Installing a workflow engine, finding a task file or working in a
 folder containing scripts does not select a software workflow. Selection belongs
-to the [process map](../framework/process-map.md#workflow-selection).
+to [workflow selection](../framework/workflow-selection.md).
 
-The [minimal boot](../agents/buddy/boot-on-demand.md) loads relevant continuity,
-checks pending recovery and resumes the named handoff. The
-[development boot](../agents/buddy/boot.md) adds the selected development context.
-Neither boot silently updates shared framework sources while sessions use them.
+Every session runs its whole start before the first answer, whatever the size of
+the first request. A `full` installation runs the
+[start sequence](../agents/buddy/boot.md): orientation, a check for remote updates,
+workflow selection, and the [framework invariants](../framework/invariants.md), the
+rules that hold in every project. A `daily` installation starts directly with the
+[on-demand start](../agents/buddy/boot-on-demand.md). The selected mode continues in
+its own unit: the on-demand start loads relevant continuity, checks pending recovery
+and resumes the named handoff; the [software start](../agents/buddy/boot-software.md)
+adds the selected development context. When a user scope or host limit blocks a
+step, the first answer opens with what did not load or run, such as an unchecked
+remote. No start silently updates shared framework sources while sessions use them.
 
 ## Knowledge and continuity
 
@@ -96,7 +103,8 @@ Local `.workflow-state/` is gitignored; pushing a handoff does not transport it.
 
 | Layer | Responsibility |
 |---|---|
-| Entry instructions | Stable invariants and the correct boot route |
+| Entry instructions | Who the user is, where the framework lives, and what to load at start |
+| Framework invariants | The rules that hold in every project, read before the first answer in a `full` installation |
 | Operational instructions | Working and delegation rules for the selected capability |
 | Skills, references and protocols | Detail loaded when the current action needs it |
 

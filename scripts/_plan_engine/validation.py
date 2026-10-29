@@ -25,6 +25,7 @@ from _plan_engine.core import (
     ValidationIssue,
 )
 from _plan_engine.loading import (
+    done_task_keys,
     load_archived_task_ids,
 )
 
@@ -58,7 +59,9 @@ def validate(
         # Test-direkt-Aufrufe). PROJECT_ROOT-relativ.
         archived_ids = load_archived_task_ids(loading.PROJECT_ROOT)
     issues = []
+    records_by_root = {}
     task_keys = set(tasks.keys())
+    done_keys = None  # lazy: archive read only when a blocked task exists
 
     # ID_REUSED_FROM_ARCHIVE: an active task id must not also exist in
     # docs/tasks/archive/. Archived IDs are retired, never recycled — a live id
@@ -100,12 +103,25 @@ def validate(
                     continue
                 issues.append(ValidationIssue("BROKEN_DEP", "ERROR", task_id=tid_for_issue,
                                               detail=f"blocked_by {dep} not found"))
-        # DEAD_DEP
-        for dep in t.blocked_by:
+        # A live obligation cannot be discharged by cancellation in the archive.
+        # Terminal task graphs remain historical evidence, not current obligations.
+        for dep in t.blocked_by if not t.is_terminal else []:
             dep_t = tasks.get(dep)
-            if dep_t and dep_t.status in TERMINAL_STATUSES - {"done"}:
+            status = dep_t.status if dep_t else None
+            if dep_t is None and dep in archived_ids:
+                if isinstance(dep, str) and "#" in dep:
+                    repo, raw_id = dep.rsplit("#", 1)
+                    task_id = int(raw_id) if raw_id.isdigit() else None
+                else:
+                    repo, task_id = "", dep
+                root = loading._task_root(tasks, repo)
+                if root not in records_by_root:
+                    records_by_root[root] = loading._GateTaskRecords(root)
+                status, _ = loading._resolve_task_status(
+                    tasks, task_id, repo=repo, records=records_by_root[root])
+            if status in TERMINAL_STATUSES - {"done"}:
                 issues.append(ValidationIssue("DEAD_DEP", "ERROR", task_id=tid_for_issue,
-                                              detail=f"blocked_by {dep} is {dep_t.status}"))
+                                              detail=f"blocked_by {dep} is {status}"))
         # INVALID_STATUS: a status outside the sanctioned enum is silently
         # mis-handled — the pending-keyed critical-path / next-actions logic
         # excludes it, so a rogue/typo'd status (e.g. `open`) drops the task off
@@ -122,7 +138,8 @@ def validate(
                                           detail="pending/in_progress without effort"))
         # STALE_BLOCKED
         if t.status == "blocked":
-            done_keys = {tk for tk, tt in tasks.items() if tt.is_done}
+            if done_keys is None:
+                done_keys = done_task_keys(tasks)  # incl. archived done deps
             if all(d in done_keys for d in t.blocked_by):
                 issues.append(ValidationIssue("STALE_BLOCKED", "WARN", task_id=tid_for_issue,
                                               detail="status=blocked but all deps done"))
@@ -245,7 +262,7 @@ def validate(
             hard_gates = [g for g in m.gate
                           if not g.preliminary and g.type != "manual"]
             if hard_gates:
-                all_gate_pass = all(g.check(tasks)[0] for g in m.gate)
+                all_gate_pass = m._gates_allow_progress
                 non_done = [tid for tid in m.tasks
                             if tid in tasks and not tasks[tid].is_terminal and not tasks[tid].is_done]
                 has_active = any(tasks[tid].status == "in_progress"

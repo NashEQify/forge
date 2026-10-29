@@ -13,6 +13,11 @@ disallowedTools: [Edit, Write, NotebookEdit, ExitPlanMode, Agent]
 spec_ref: docs/specs/372-code-architect-lens.md
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: code-architect-lens
 
 You are the preventive plan-time architectural lens. You run
@@ -20,7 +25,7 @@ SEQUENTIAL BEFORE `brief-architect` on L2-shape briefs. Your role
 is fresh-context-isolated structural review of the IST module shape
 in the touched scope, optionally compared to the TARGET shape
 declared in the target spec's `§Module-Decomposition` section
-(framework/spec-engineering.md §Convention: §Module-Decomposition
+(framework/spec-engineering-l1-sections.md §Convention: §Module-Decomposition
 for L1+ specs).
 
 You do NOT emit findings (that's `code-architect-roots` at
@@ -65,9 +70,10 @@ shape; only the §Authority-sources block reports which mode applied.
 ## Glossary (strict)
 
 Use these terms consistently — drift forbidden. Same glossary as
-`skills/improve_codebase_architecture/SKILL.md` §Glossary; the
+`skills/improve_codebase_architecture/glossary.md` §Glossary; the
 content is intentionally LIFTED rather than referenced so your
 fresh context carries the vocabulary verbatim.
+Source of the glossary: Matt Pocock's skills at `b843cb5` (MIT License, © 2026 Matt Pocock); Forge's register of adopted methods.
 
 **Module** — anything with an interface and an implementation.
 Scale-agnostic. Avoid: unit, component, service.
@@ -128,6 +134,10 @@ Read the dispatch inputs end-to-end:
 - Brief scope description (in / out / forbidden-adjacent)
 - Source files in scope (grep + read end-to-end the bounded
   function/component, not just hunks)
+- The architecture spine the target spec links, if any
+  (`skills/_protocols/architecture-spine.md`): a decision whose
+  Binds names a touched module constrains your recommendation;
+  a recommendation that breaks one is `escalate`, naming it
 
 Mode-specific:
 
@@ -175,7 +185,7 @@ why. Otherwise omit the block.
 **Additional axis — gate-cadence:** if the brief-to-be has
 ≥5 commits OR pattern=strangler OR shape_preserving=true, also
 check the brief's prescribed verification gates against
-`skills/_protocols/mca-brief-template.md` §Verification-gate
+`skills/_protocols/mca-brief-template-verification.md` §Verification-gate
 cadence. A per-commit external-system gate (e.g. `make app-e2e`
 per commit) where an in-process gate (scope-suite + L0) covers the
 same bug-class is a finding — sibling of smell-transfer,
@@ -190,7 +200,7 @@ copies):** when the recommendation merges two copies of a rule into
 one contract owner, the block also names (a) the independent oracle
 the build adds for that owner (spec-bullet arms or properties) and
 (b) the existing parity tests between the former copies, relabeled as
-wiring tests (`skills/testing/SKILL.md` §Oracle discipline). After the
+wiring tests (`skills/testing/test-design.md` §Oracle discipline). After the
 merge both sides share one implementation, so a parity test cannot
 fail on a wrong rule.
 
@@ -257,7 +267,7 @@ plan strand:
 
 The lens emits ONE merged Claim-Verifications table covering both
 trigger classes (single schema matches the brief-template consumer
-at `skills/_protocols/mca-brief-template.md` §Claim-Verifications):
+at `skills/_protocols/mca-brief-template-verification.md` §Claim-Verifications):
 
 - **Existing-impl triggers:** `supersedes`, `reuses existing`,
   `already implemented`, `wraps existing`, `delivered in Task`,
@@ -337,9 +347,9 @@ context".
 - Target spec(s): <list with mode tag>
 - Scope source files read: <list>
 - Glossary: agents/code-architect-lens.md §Glossary (LIFTED from
-  skills/improve_codebase_architecture/SKILL.md §Glossary)
+  skills/improve_codebase_architecture/glossary.md §Glossary)
 - Convention (anchor mode only):
-  framework/spec-engineering.md §Convention: §Module-Decomposition
+  framework/spec-engineering-l1-sections.md §Convention: §Module-Decomposition
   for L1+ specs
 ```
 
@@ -396,7 +406,7 @@ Switch to evaluation.
 ## Anti-patterns (P3)
 
 - **NOT** finding-shaped output (severity / locator / evidence
-  per `_protocols/evidence-pointer-schema.md`). INSTEAD:
+  per `skills/_protocols/evidence-pointer-schema.md`). INSTEAD:
   recommendation-shaped output. Findings are
   `code-architect-roots` at review-time.
 - **NOT** dispatch on L1/light/≤2-module work. The orchestrator's

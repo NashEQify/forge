@@ -68,7 +68,7 @@ never retry prepared text blindly. Exit 2 means invalid scope/access/request; ex
 means pending/blocked recovery. Exit 0 alone is insufficient: inspect returned status.
 
 For multifile changes a durable scoped pending record precedes the first content
-mutation. It records operation identity, baselines, intended changes/sources,
+mutation. It records operation identity, baseline hashes, intended changes/sources,
 proposed results and completed/remaining work. If it cannot be written, nothing is
 published. Atomic single-file replacement needs no separate journal. No-op changes
 do not produce content churn. Report `complete`, `not_persisted`, or
@@ -78,9 +78,20 @@ do not produce content churn. Report `complete`, `not_persisted`, or
 
 Call `recover` in the same scope with relevant extra `paths` if needed. It returns
 `snapshot` (fresh coherent files/token) and `operations` with actual-file
-classifications. Inspect intended changes, original/proposed/current bytes and
-known dependents. A crash can occur after replacement but before progress recording;
-completion flags alone are not authority. Later corrections must survive.
+classifications (`proposed`, `original`, `changed`). For each affected path the
+record keeps the baseline hash and the proposed text; current bytes are on disk,
+and so are the original bytes of paths not yet replaced while they are still
+classified `original`. Original bytes of paths already replaced are not retained, only their hash, which can verify a candidate
+from the owner's own history (Git). Continuity cannot roll those paths back, just
+as after a completed publication. Inspect intended changes, proposed and current
+bytes, available originals and known dependents. A recovery publication replaces
+the record with the baselines of its own snapshot, so a recovery that is itself
+interrupted no longer holds the first operation's original hashes. A crash can
+occur after replacement but before progress recording; completion flags alone are
+not authority. Later corrections must survive. Limit: a failure after the pending
+record that is not an I/O error (for example a path swapped for a symlink by a
+nonparticipating writer) is reported as `not_persisted` (exit 2), although the
+record, and possibly a partial write, exist; `recover` lists the operation.
 
 Reconcile semantics outside the lock. Publish against `snapshot.snapshot_token`,
 include `recovery_operation_id`, and cover the whole affected set with reconciled

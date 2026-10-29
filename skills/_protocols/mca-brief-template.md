@@ -7,14 +7,39 @@ without spec authority. Discipline-as-mechanism: structural
 template fields > LLM persona review.
 
 **Consumed by:** `workflows/runbooks/build/workflow.yaml` step
-`delegation-artefact` (instruction).
+`brief-author` / `brief-signoff`; `brief_check` consumes declared structure.
 `agents/main-code-agent.md` input validation as a required field
 on Full / Standard.
+
+**Brief as a file:** the brief is a file in the work unit's records, and the dispatch names it; the dispatch's parts
+and the report file: `skills/_protocols/mca-dispatch.md`.
 
 **Pre-dispatch check (discipline):**
 Buddy verifies presence + completeness of all 5 classes before
 dispatching the brief: Buddy reads this protocol before drafting
-and self-checks all 5 classes against the dispatch.
+and self-checks all 5 classes against the dispatch, plus the
+§Complexity-Tracking section every brief carries.
+
+For build signoff, Buddy persists and stamps the final artifact, then explicitly
+binds its project-relative path with `--complete brief-author --set brief_path
+<path>` on the selected `--id`. Example additional frontmatter:
+
+```yaml
+brief_contract:
+  workflow_id: "<exact selected workflow_id>"
+  implicit_decisions:
+    status: applicable
+  mechanism_cells:
+    status: exempt
+    reason: "<specific reason the mechanism trigger does not apply>"
+```
+
+The contract requires exactly those three fields; obligation mappings accept only
+`status` and optional `reason`. `unknown`, missing or unsupported declarations
+fail. Exemption requires a nonblank reason. An applicable obligation requires its
+canonical block (below; mechanism cells: `mca-brief-template-decision-classes.md` §4). Unrelated indexing/evidence metadata remains permitted.
+Structural success does not establish decision quality, trigger correctness or
+authorization; Buddy retains those judgments. No evidence schema is repurposed.
 
 ---
 
@@ -34,7 +59,9 @@ may write a one-sentence rationale why it's not enumerated.
 
 Required block in the MCA brief under
 `## Implicit-Decisions-Surfaced`. Format is structured YAML —
-mechanically parseable for the hook check + downstream skills.
+checked by `brief_check` plus downstream skills. Headings may have a leading
+`§`. Normal quoted, literal and folded YAML scalars are supported. Required
+blocks reject duplicate mapping keys or competing payloads.
 
 ```yaml
 implicit_decisions_surfaced:
@@ -95,152 +122,10 @@ the opposite operation).
 
 ## Decision classes — detail
 
-Decision classes are load-bearing downstream: MCA references
-`no-NEEDS-LOCKING` decisions as plan constraints; `code_review_board`
-reviewers check code against decision locks (deviation = finding);
-chief uses them for triage; proportionality gates
-(`code_review_board` §1.0 / `spec_board` §1.0) use the same vocabulary
-(new state-vocab / new SSE type / new public API / schema break).
-
-### 1. schema_and_contract
-
-What shape does the data have, what does the code call it, what does
-it return back. Covers:
-- Data shape produced / consumed (Pydantic model, DDL schema, event
-  payload, NATS subject format).
-- Symbol names that could collide with existing imports (StrEnum
-  values, Pydantic models, Cypher templates, NATS subjects).
-- RETURN-SUMMARY structure (SPEC_VERIFICATION field, INCIDENT block,
-  L0 result, files touched).
-
-### 2. error_and_stop
-
-What does the code do when something is wrong, and when does MCA
-stop and escalate. Covers:
-- Error reactions: exception classes, retry vs fail, poison queue,
-  cleanup transaction, compensation action.
-- STOP+escalate conditions: architecture conflict, spec-authority
-  violation, cross-layer impact > brief scope, > N file changes
-  without anticipation, non-resolvable test failure.
-
-### 3. layer_discipline
-
-Which layer does what (publishing rights, ordering, state
-transitions). Cross-layer calls require explicit authority.
-Module-graph: who-talks-to-whom.
-
-### 4. structural_invariants
-
-Pattern-purity invariants the implementation MUST preserve or
-break-with-rationale. Property-shaped: does the implementation
-preserve the root-property the refactor claims to fix?
-
-**Always required on substantial briefs** (NOT conditional on
-self-assessed `architecture_touch`). `n/a` requires named reason;
-bare `n/a` invalid (forces meta-reflection).
-
-Permitted `locked` values for this class:
-- `"yes — invariant locked: <name>"` — explicit pattern-class
-  invariant the implementation preserves.
-- `"yes — pattern audited (paths considered: <list>)"` — Buddy has
-  surveyed alternative patterns and the locked LD is the root-fix.
-- `"no-NEEDS-LOCKING (Buddy decision: <choice>)"` — Buddy locks in
-  the brief.
-- `"n/a — <why mechanical>"` — mechanical refactor / typo /
-  no-architecture-touch. Reason MUST name what makes it mechanical.
-
-Three pattern classes the invariant should defend against (mirror
-`code-architect-roots` / `board-architect-roots`):
-- **Smell-transfer:** new pattern has identical root-property to old.
-  State the invariant the new pattern preserves.
-- **Cycle-symptom-as-cause:** type erosion (`Any` / `dict`) justified
-  by import-cycle. State why the cycle is necessary OR why the module
-  placement is correct.
-- **State-vocabulary half-coverage:** initial state squeezed into a
-  working state. State the lifecycle vocabulary explicitly.
-
-**Mechanism cells (MUST when the brief touches a state carrier).** When
-the owning spec has a `§Mechanism-Lifecycle` section
-(`_protocols/mechanism-model.md`), `structural_invariants.value` cites
-its invariants by name, and the brief carries a `## Mechanism-cells`
-block before `## Acceptance-Criteria`:
-
-```yaml
-mechanism_cells:
-  section: "<spec> §Mechanism-Lifecycle: <name>"
-  in_scope: ["<state> × <op>", ...]      # each maps to a code site + a test in the plan
-  placed: ["<state> × <op> → task-N | beyond-MVP", ...]  # explicit refusal now; refusal tests only; blocked_by wired
-  forbidden_adjacent: ["<state> × <op>", ...] # cells another task or a later build owns
-```
-
-A cell the MCA finds it cannot honour as written is STOP + spec
-amendment (the matrix is edited in the same change), not a local
-decision; a mid-build ruling that changes a cell without editing the
-matrix is drift of category (g)
-(`_protocols/spec-amendment-discipline.md`). When the build changes a
-state carrier whose spec has no section, the section comes with the spec
-amendment (category (g)) or the retro-model
-(`_protocols/mechanism-model.md` §Trigger) before dispatch; on a legacy
-spec the build does not change, the block is `mechanism_cells: n/a —
-legacy spec, carrier unchanged`.
-
-### 5. vision_alignment
-
-What the active `intent.md` Vision says the touched surface IS, so MCA
-decides the forks the brief leaves OPEN top-down, not local-default —
-the product-vision-root as an INPUT to in-flight decisions. MCA is the
-one decision point where a sub-agent decides scope / defer / build
-without Buddy in the loop, so the Vision-premise must travel IN the
-brief.
-
-Observable, not posture: name what the Vision calls this surface
-(product deliverable / PoC consumer / internal scaffold / out-of-scope)
-and the decision that follows from it. A surface the Vision names as a
-deliverable is a product surface even at zero built consumers — "no
-consumer yet" is not a defer-signal (cross-ref `CLAUDE.md` Inv 9 +
-`code_review_board` value-floor Vision-named-surface carve-out). Uses
-the standard `locked` enum.
-
-**Defer-durability — `revisit-when:` premise tag.** The inverse case:
-when the surface is NOT vision-named and the brief DOES defer on an Inv-9
-"no named consumer" / value-floor-0 rationale, that defer rests on a
-premise that can age — a later review with more surface can re-classify
-the same degrade as a real regression. Tag the defer record with a
-one-line `revisit-when:` premise (e.g.
-`revisit-when: any consumer of <column> appears`) so the premise is
-re-audited, not inherited as settled. The `save` close-step re-lists
-OPEN `revisit-when` premises at the save boundary — the deterministic
-re-surface a bare tag (attention-dependent, no performer) would not get.
-
-**Required when the brief touches a product surface** the Vision names;
-`n/a (<why — internal / mechanical / no product surface>)` otherwise.
-Bare `n/a` invalid.
-
-**Architecture reading-map — point, don't re-derive.** When the touched
-surface spans a subsystem AND the project's `intent.md` names an as-built
-architecture reading-map, the brief MUST point the MCA at it (the project's
-coarse→fine orientation entry + the as-built flow / spec docs it indexes),
-so the MCA arrives oriented instead of re-deriving the architecture from
-`src/`. Per-agent re-derivation is the recurring failure: each delegated
-agent re-greps the same chokepoints, and a change spanning stages silently
-drops a leg / seam. Generic by contract — name the map ONLY if the
-project's `intent.md` declares one; never hard-code a path here (the path
-lives in the consumer's `intent.md`; this template is project-agnostic).
-This is the brief-layer of a deliberate selectivity: the same pointer is
-kept OUT of `dispatch-template.md` and the board scaffolds, whose contract
-is to STRIP context for fresh-read anti-bias review — a map ref there would
-corrupt the isolation. A build brief is the opposite contract (the MCA
-SHOULD arrive oriented).
-
-### 6. other (free-text list)
-
-Task-specific decision classes that don't fit the standard 5.
-Examples: idempotency-guarantee (event-driven systems), retry-policy
-(NATS consumer config), state-machine-transitions (workflow specs),
-ordering-guarantees (concurrent flows). Format: list of mappings with
-`klasse + locked + value`.
-
----
+When filling the `## Implicit-Decisions-Surfaced` block (each class's `locked` and `value`) and when writing the
+`## Mechanism-cells` block: read and follow `skills/_protocols/mca-brief-template-decision-classes.md` (§1
+schema_and_contract, §2 error_and_stop, §3 layer_discipline, §4 structural_invariants with its pattern classes and the
+mechanism-cells block, §5 vision_alignment with defer-durability and the architecture reading-map, §6 other).
 
 ## Anti-patterns
 
@@ -250,9 +135,9 @@ ordering-guarantees (concurrent flows). Format: list of mappings with
 - **DO NOT** mark `structural_invariants: n/a` without a reason.
   **INSTEAD** name what makes the brief mechanical.
 - **DO NOT** drop the section below threshold without rationale.
-  **INSTEAD** write `<!-- Below threshold (1 AC, single-file, no
-  schema): no decision-class enumeration -->` so the hook WARN
-  is explicitly acknowledged.
+  **INSTEAD** declare `implicit_decisions: {status: exempt, reason: "<specific
+  below-threshold reason>"}` under `brief_contract` for build signoff. Trigger
+  criteria remain unchanged.
 - **DO NOT** put the section at the end of the brief as a
   postscript. **INSTEAD** place it before `## Acceptance-Criteria`
   — MCA reads top-down; decision locks belong before the AC list.
@@ -307,194 +192,55 @@ name:
 
 ---
 
-## Test/Verification scope (DoD)
+## Approved acceptance (every brief on a task)
 
-Brief encodes **scope-focused tests**, not full repo suite.
-Full-suite reserved for convergence-end + pre-deploy + cross-cutting
-refactor.
+A brief for work on a task with acceptance criteria carries the read-only block `## Approved acceptance (read-only)`
+first among the sections that map or plan against the acceptance: the task file's acceptance criteria and exclusions
+copied as they stand, and the user's approving words quoted. `## Acceptance-Criteria` maps that block to obligations
+and tests; it does not restate it. When writing the brief, and when reissuing it: read and follow
+`skills/_protocols/approved-acceptance.md` (the block's form, the check before dispatch, change, resume and
+re-brief). A brief past 12,000 bytes (`wc -c`): read and follow
+`framework/spec-engineering-implementation-specs.md` §Convention: one goal per change (the size budget).
 
-Per-fix DoD:
-1. **Unit tests** — explicit paths (`tests/<module>/test_<file>.py`),
-   not a `tests/` glob.
-2. **Cross-pass-binding test** — RED skeleton's test file (where
-   applicable) locks the convergence cluster.
-3. **Integration smoke** — 0-1 test only if public-API contract or
-   spec-defined behaviour touched.
-4. **L0** — `ruff check <touched-files> && mypy <touched-files>` —
-   touched files only.
-5. **Resource-lifecycle audit** (only when the fix introduces a
-   pooled/singleton resource carrying a close/teardown/invalidate
-   path) — the lifecycle test (`skills/testing/SKILL.md`
-   §Execution-faithfulness) must EXECUTE build-once/reuse/close-awaits/
-   rebuild against a fake matching the INSTALLED SDK surface, AND audit
-   whether an autouse reset-fixture masks the singleton (if so, the
-   lifecycle test opts out of the reset). A green suite over a
-   masked singleton proves nothing about teardown.
+## UX contracts (a brief that builds a person-operated surface)
 
-**Convergence-end full-suite:** ONE run at END of convergence-loop
-fixes, before close.
-
-**Bind rule:** MCA RETURN-SUMMARY reports per-fix scope + the
-single convergence-end full-suite. Blanket `pytest tests/` without
-scope breakdown = brief-discipline failure.
+When the spec the brief implements links a look and an experience contract (`skills/ux_authoring/SKILL.md`), the brief
+names both files as required input for the surfaces it builds. An `open` slot the brief needs is answered through
+`ux_authoring` before the dispatch.
 
 ---
 
-## Verification-gate cadence
+## Complexity-Tracking (every brief)
 
-Governs **when** a gate fires — per-commit vs once-at-HEAD. Mandatory
-when brief covers multiple commits (strangler, shape-preserving
-refactor, sequential moves, ≥5 commits). Single-commit briefs:
-implicit (one commit, one gate-set).
+Every brief, at any size, carries a `## Complexity-Tracking` section
+before `## Acceptance-Criteria`: the table of
+`framework/spec-engineering-implementation-specs.md` §Convention: §Complexity-Tracking, with
+the rows of the spec it implements plus every addition the brief itself
+prescribes, or `None.`. The brief tells the implementer that an addition
+the table does not list is dropped, or reported in the return with a
+proposed row (need and simpler alternative); the implementer does not
+keep it on its own judgment.
 
-**Default cadence:**
+**Fixes.** A fix — a defect fix or a review fix pass — adds no public
+surface (an exported symbol, command option, output field, configuration
+key, file format or endpoint) and guards no state the failure did not
+demonstrate, unless a row names why. Demonstrated means shown to occur
+through the real entry point: the reported failure, its reproduction, or
+an executed probe through that entry point. A state that only a
+hand-built fixture reaches is not demonstrated. The fix's own acceptance
+criterion counts as for any change: handling the inputs it names is the
+fix, not a guard. When the smallest fix needs public surface or such a
+guard to meet its criterion, the brief carries the row with that need;
+everything else is dropped.
 
-| Bug-class shape | Per-commit | Once-at-HEAD |
-|---|---|---|
-| In-process (start/stop, dep-order, kwarg, fixture-shape, type-check, lint, scope-suite) | `pytest <scope-suite>` + L0 (`ruff <touched> && mypy <touched>`) | — |
-| Real-container (reverse-stop on SIGTERM, restart, ansible compose-recreate, real-process signals) | — | `make app-e2e` + targeted real-container test |
-| Cross-process / external (Playwright, app-e2e-live, deploy-verify) | — | manual or `make app-e2e-live` post-deploy |
-
-**Rule:** bug-class fully covered by an in-process gate firing per
-commit → the heavy external-system gate belongs ONCE at HEAD, not
-per commit. Per-commit external gates duplicating in-process
-coverage = checklist-tick, no information gain.
-
-**Auto-detection:** `code-architect-lens` axis "over-specified gate
-cadence" flags per-commit external-system gates whose bug-class an
-in-process gate already covers.
-
-**Bind rule:** brief with ≥5 commits MUST name per gate (per-commit
-OR once-at-HEAD) and cite the bug-class shape that justifies the
-cadence. Re-author per-commit gates without a named real-container
-bug-class to once-at-HEAD.
-
-**Reject the unsafe shortcut:** NOT "skip app-e2e entirely on
-strangler refactors". Real-container bug-classes are real; the
-release-valve is cadence (once at HEAD), not coverage.
+Source: BMAD-METHOD (MIT License, © 2025 BMad Code, LLC); Forge's register of adopted methods.
 
 ---
 
-## Claim-Verifications (MUST when trigger formulations present)
+## Test/Verification scope, gate cadence, Claim-Verifications, Reviewer Checkpoints, structural-refactor pre-lock
 
-If any AC, `intent_chain`, or brief section uses one of the trigger
-formulations below, the brief MUST include a `## Claim-Verifications`
-table with one row per claim:
-
-- **Existing-impl triggers:** `supersedes`, `reuses existing`,
-  `already implemented`, `wraps existing`, `delivered in Task`,
-  `existing-code verifications confirm`.
-- **Spec-citation triggers:** `spec requires X`, `AC says Y`,
-  `per <file>.md §Z`, `<file>.md:N`.
-- **Cross-producer dedup/collision/reconcile triggers:** any AC/brief
-  that dedups, collides, or reconciles facts/events from ≥2 producers
-  on a shared key (`reconcile`, `dedup`, `collapse the fork`,
-  `more-specific-wins`, `same (key) different (type)`). The check is
-  NOT "does the key exist?" but "does the key CO-LOCATE what the two
-  producers actually EMIT?" Emit **one row per producer** (≥2 rows):
-  for each, grep the *key-assignment site* — the line where that
-  producer constructs the value that becomes the shared key (grep the
-  key field-name, not a `build_*`/`emit_*` naming convention) — and
-  quote the literal value. Then add a **co-location verdict** line: do
-  the quoted values land under the SAME key? `FALSIFIED` = they do NOT
-  co-locate (the seam is a production no-op). The key is often *derived*
-  (`normalize(name)`, a tuple) — quote the value AFTER the derivation
-  the seam keys on, not the raw emit. A premise inherited from a
-  council/ADR is a claim, not a settled fact.
-
-| Claim | Source-ref | grep command | grep output | Disposition |
-|---|---|---|---|---|
-| <verbatim claim phrase> | `<file:line>` for spec-cite OR `<scope-path>/` for existing-impl | `grep -n "<pattern>" <target>` | <verbatim stdout OR `(no output)`> | `CONFIRMED` / `FALSIFIED` / `SILENT` |
-
-Disposition values:
-
-- `CONFIRMED` — grep evidence supports the claim
-- `FALSIFIED` — zero hits OR hits contradict the claim
-- `SILENT` — target exists but doesn't address the claim
-  (spec-cite only; escalation flag for council / user)
-
-Producer is `code-architect-lens` (fresh-context-isolated reads
-code / spec, runs grep — see lens §Claim-Verifications, single
-merged table). Brief-architect copies the verbatim rows. **Adversary
-re-verifies at L2 dispatch** per `agents/code-adversary.md`
-§Cold-start pre-mission — two-pass author / verifier separation.
-SKILL text remains binding; adversary's L2 re-verification is the
-load-bearing check.
-
-Any `FALSIFIED` row → brief is INCOMPLETE, return to author for AC
-re-scope before MCA dispatch.
-
-### Bind to the resolved seam, not a proxy (verification depth)
-
-A Claim-Verifications row — or any VERIFY / CONFIRM gate that names a seam an
-artifact MUST hit — has to resolve to the *runtime binding the claim rests on*,
-never a name-match or a runtime symptom that a wrong target also satisfies. Two
-recurring proxy-traps; both are the same root (the gate certified a **proxy** of
-the obligation, not the obligation at its **real seam**):
-
-- **Existing-impl / DTO-reuse claims → verify at the construction site.** When a
-  `reuses existing` row asserts a wire / transport / envelope surface reuses an
-  internal or sibling DTO, the grep MUST reach the first-party client / SDK that
-  *constructs* the typed envelope — not merely confirm the field or type exists.
-  Nominal typing (e.g. Pydantic) rejects a structurally-identical sibling
-  instance at construction: field-presence reads GREEN while the constructor is
-  RED. A `reuses existing` row whose grep stops at field-presence is SILENT on
-  the claim, not CONFIRMED.
-- **Test-seam obligations → verify the resolved callee identity.** When a gate
-  mandates a test be (re-)pointed at a named production seam and asserts
-  execution / `0 skipped`, pair that with a callee-identity check: grep the
-  test's *resolved* target and assert it `==` the production caller, not a
-  same-named orphan / twin. `0 skipped` reads GREEN while the test binds dead
-  code that carries the same symbol the skip-guard probes.
-
----
-
-## Reviewer Checkpoints — 4-link Evidence Chain DoD (MANDATORY for L2)
-
-Every claim "C-N closed" / "INV-N satisfied" in MCA RETURN-SUMMARY or
-reviewer verdict MUST carry the 4-link evidence chain:
-
-| Variant | Link 1 | Link 2 | Link 3 | Link 4 |
-|---|---|---|---|---|
-| Signal-routing | Producer site | Boundary translation site | Consumer ACK / NAK / TERM site | Test that fails if boundary re-flattens |
-| Schema / data | Write site | Read site | Constraint site (DDL / model) | Test |
-
-Each link: `file:line` + 1-3 line verbatim code-quote (test variant:
-`test:line` + assertion shape).
-
-Fewer links = claim does NOT qualify as "closed". Chief rejects and
-re-dispatches with the missing link explicit
-(`agents/code-chief.md` + `agents/board-chief.md` §4-link
-enforcement). Value-floor + bundle-laundering rules apply to
-disposition; 4-link is a separate (and prior) gate on whether a
-closure-claim is even valid.
-
-Forces opening the file at each link → prevents single-layer
-verification (helper repaired but signal-exit boundary still broken).
-
----
-
-## Structural-refactor pre-lock checklist
-
-Mandatory when brief mentions any of: `import` / `import cycle` /
-`circular import` / `extract` / `extraction` / `move from X to Y` /
-`relocate` / `unblock typing` / `eliminate Any` /
-`forward reference` / `runtime import` / `TYPE_CHECKING`.
-
-Pre-lock steps (result documented in brief BEFORE locking):
-1. List ALL modules importing the affected module
-   (`grep -rn "from <affected>"`).
-2. List ALL modules the affected module imports (forward direction).
-3. For each (caller, target) pair: check if new design creates a
-   back-edge into a module already mid-init in caller chain.
-4. Baseline collection BEFORE lock: `pytest --collect-only` on every
-   test dir importing the affected module.
-5. Document prior workarounds with rationale (typed `Any`,
-   `TYPE_CHECKING`).
-
-Static traversal: `scripts/import_graph_check.py` (AST-based).
-
-**Bind rule:** brief contains, before `## Acceptance-Criteria`, a
-`## §Import-Graph-Spike` block with steps 1-4 results; the
-`structural_invariants` class cites the spike result in its
-`value:`.
+When writing the brief's test and verification scope (DoD), and before locking a brief that covers several commits,
+uses a claim trigger formulation, is reviewed at L2 or touches imports: read and follow
+`skills/_protocols/mca-brief-template-verification.md` (per-fix DoD and its bind rule; gate cadence; the
+Claim-Verifications table, its triggers and resolved-seam depth; the L2 4-link evidence chain; the import-graph
+pre-lock checklist).

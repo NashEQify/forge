@@ -1,8 +1,11 @@
 # 01 — Overview
 
-Forge is a shared set of agent instructions, skills and supporting tools. It helps
-you keep useful knowledge, reason about uncertain choices, and carry selected
-software work through to verified results in your existing agent application.
+Forge is a guided process: you bring an idea, and Buddy, with Forge's structure,
+takes the work to the result you want, verified and at an effort matched to the
+consequences. Building software and small solutions is the leading case; the same
+structure helps you keep useful knowledge and reason about uncertain choices. Forge
+is a shared set of agent instructions, skills and supporting tools that runs in your
+existing agent application.
 
 You work through **Buddy**, the conversational entry. Describe the goal in ordinary
 language. Your workspace's intent and rules determine the relevant context, working
@@ -14,7 +17,7 @@ style and limits on action.
 |---|---|---|
 | Knowledge and continuity | Current knowledge, usable routes to detail, and a handoff for open work | “Continue this application from the latest draft.” |
 | General reasoning | A clearer problem, examined assumptions or a comparison of viable choices | “Use a Council to compare these approaches.” |
-| Software development | Specifications, implementation, tests, review and tracked continuation | “Build this feature and verify the behavior.” |
+| Software development | A connected path from intent to a verified result: spec, plan, implementation, review, fixes and an evidenced close | “Build this feature and verify the behavior.” |
 
 Knowledge supports both reasoning and development. Reasoning can improve a
 software decision. Each capability can also be used at its own scope: supplied
@@ -64,20 +67,64 @@ is still a proposal until the relevant decision is made.
 
 See [method selection and examples](06-usage-workflows.md#general-reasoning).
 
-## Software development
+## Software development: from intent to verified result
 
-For software work, Forge composes these capabilities with specifications, coding,
-tests, independent review and task/workflow tracking. It can support feature builds,
-defect investigation, research and specification review across sessions.
+For software work, Forge composes these capabilities into a chain of stages. Buddy
+orchestrates it and delegates implementation and review to separate agents. Each
+stage hands a defined output to the next. Conditional stages run only when their
+trigger is present. The [lifecycle stages](../workflows/runbooks/build/lifecycle.md)
+own the list.
+
+| Stage | What Forge does | What is particular |
+|---|---|---|
+| Intent and sizing | Writes down the goal, the acceptance criteria and the authorization, and picks the route from three written facts: open points the user would notice, what cannot be undone, and the footprint | Safety floors are checked before any shortcut; a short path still verifies ([eligibility](../framework/direct-eligibility.md)); one goal per change, a second goal offered as its own task ([sizing facts](../workflows/runbooks/build/lifecycle.md#sizing-facts)) |
+| Spec, UX, architecture | Writes the behaviour the change promises as a spec with one test-matrix row per promise; UX and architecture run on their trigger. UX writes a look and an experience contract from your answers, with journeys of a named person and a check that every need has a screen and every screen a journey ([UX authoring](../skills/ux_authoring/SKILL.md)). Architecture writes a spine: only the decisions separately built units could otherwise choose incompatibly, with the rest named as deferred ([architecture spine](../skills/_protocols/architecture-spine.md)) | The matrix is the test plan before code; the durable spec keeps what tests cannot ([spec carriers](../framework/spec-engineering-implementation-specs.md#convention-spec-carriers)) |
+| Plan | Checks every pair of tasks that share a file or interface before the first dispatch | Conflicts are ruled by the approved acceptance, then the architecture spine, then the spec ([plan conflicts](../skills/_protocols/plan-conflicts.md)) |
+| Dispatch | Hands each implementer a brief file with the approved acceptance verbatim and read-only, on a model named for its role | The implementer reports in a file and returns a short summary; it starts no agents of its own ([dispatch](../skills/_protocols/mca-dispatch.md), [models](../framework/models.md)) |
+| Review | Reviewers read one package of exactly the change under review | Each finding is verified at its location before it is graded; its cause is classified; the implementer may push back ([review package](../skills/code_review_board/review-package.md), [verification](../skills/_protocols/finding-verification.md)) |
+| Fix | Fixes the cause the classification found, in the code, the spec or the mechanism; an intent question goes back to the user | Fix rounds keep their memory and end at a cap with a ruling per open finding; debugging stops after three failed fixes ([cause before answer](../skills/convergence_loop/cause-before-answer.md), [at the cap](../skills/convergence_loop/at-the-cap.md)) |
+| Close | Records the result, moves durable decisions into their owners and closes the task | Each completion claim carries its evidence ([completion claims](../skills/_protocols/evidence-author-claims.md)) |
 
 Effort follows risk and uncertainty. A bounded reversible change can take a short
-path; consequential contracts, security, migrations and live systems retain their
-safeguards. The [process map](../framework/process-map.md) defines selection and
-eligibility, rather than a fixed process for every request.
+complete path; consequential contracts, security, migrations and live systems keep
+their safeguards. On every path the coding agent builds and a separate agent run
+checks a change to behaviour; on the short path the final reply names that check
+([who builds and who checks](04-core-concepts.md#who-builds-and-who-checks)). Decisions an agent takes for the user are listed in its final
+message with their cost and undo. Explicitly selected development state can
+contribute to common save and resume; loading a session checks its exact state and
+does not silently advance work or unpause a workflow.
 
-Explicitly selected development state can contribute to common save and resume.
-Loading a session checks its exact state; it does not silently advance work or
-unpause a workflow. See [development usage](06-usage-workflows.md#software-development).
+The approaches behind these stages are in [core concepts](04-core-concepts.md#how-forge-works);
+the routes are in [development usage](06-usage-workflows.md#software-development).
+
+## Forge and the frameworks it learned from
+
+Forge took everything it found worth stealing from other open agent frameworks,
+openly, under their MIT licenses and with credit, and rewrote or adapted it to answer
+to one set of rules. Each project is known for something of its own:
+
+| Project | Known for | What Forge took, in its own terms |
+|---|---|---|
+| [Superpowers](https://github.com/obra/superpowers) | Subagent-driven development, systematic debugging, verification before completion, writing skills that agents follow | Brief and report files for each implementer, a model per role, the review package, fix rounds with memory and a cap, hypothesis-first debugging, conflict checks across a plan's tasks, the claim-to-evidence table, matching an instruction's form to the failure it prevents |
+| [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills) | A broad library of engineering skills | Skills for documentation and decision records, security, frontend, shipping, migration and API design; a triage checklist; variation lenses for framing a problem; accessibility and performance checklists |
+| [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) | Right-sized agile planning, explicit decisions, review triage | Verifying each finding before grading it, classifying its cause, approved acceptance carried verbatim, a fix that guards only demonstrated states, edge rows as the test plan, when to settle a point and report it |
+| [spec-kit](https://github.com/github/spec-kit) | Spec-driven development: the specification as the source of the code | The complexity-tracking table, and the gap inventory that checks each requirement against the present code |
+| [Matt Pocock's skills](https://github.com/mattpocock/skills) | Small, sharp engineering skills | Zooming out to the module map, deep-module architecture review, the feedback loop as the product of debugging, the decision-record threshold, the one-question-at-a-time design interview |
+
+What Forge adds is that one set of rules: every adopted method answers to the same
+intent, authorization rules, evidence standard and proportional effort, so the methods
+work together instead of as separate rule sets. The intended reader
+is a developer, above all a vibe coder, who wants to keep the complexity of their
+software manageable without learning several frameworks. This is a description, not
+a ranking: each project above stands on its own, and someone who wants exactly one of
+their approaches may be better served by it directly.
+
+Some adoptions are ideas that Forge wrote in its own text. The others keep
+substantial text or a table's structure: the agent-skills and Matt Pocock skills and
+the checklists among them, and several tables and protocol structures from
+Superpowers, BMAD-METHOD and spec-kit. The [register of adopted methods](../framework/adopted-methods.md)
+lists each one, its source, what changed and the Forge file that holds it. The root
+[NOTICE](../NOTICE) carries the projects' license notices.
 
 ## What's in the box
 
@@ -94,7 +141,9 @@ to choose and verify your setup.
 ## Who is it for?
 
 Forge suits recurring work where earlier facts, decisions and unfinished steps
-matter: everyday projects, difficult choices, and software delivery. It is also
+matter: everyday projects, difficult choices, and software delivery. It is written
+for a single developer and welcomes informal "vibe" coding, with the structure above
+keeping the software manageable as it grows. It is also
 useful to maintainers who want shared methods across workspaces while keeping each
 workspace's own content, vocabulary and operational approvals.
 

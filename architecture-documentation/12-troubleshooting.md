@@ -65,11 +65,32 @@ For ambiguous names, use the exact matching name or enter the intended directory
 Check the actual host entry: Codex managed AGENTS block, configured Claude boot,
 OpenCode launcher/configuration, or Cursor project rules. Verify the framework root,
 consumer CWD and selected profile in a fresh session. Access to a directory does
-not prove that its instructions loaded.
+not prove that its instructions loaded. Buddy runs the whole start before its first
+answer, also for a quick question; when a user scope or host limit blocks a step, the
+first answer opens with what did not load or run, such as an unchecked remote. An
+answer with neither a greeting nor that
+notice suggests the start did not run. For a session that already ran, the
+[session diagnosis](../skills/session_diagnosis/SKILL.md) checks its transcript first
+for whether Forge loaded, with the lines that show it.
 
 A generated role's read-only default is not proof of effective sandbox restrictions.
 Inspect runtime permissions and report any mismatch. The
 [host guide](07-tool-integrations.md) separates these mechanisms.
+
+### Git reports a read-only `.git` inside a writable workspace
+
+`cannot open .git/FETCH_HEAD: Read-only file system` during fetch/pull or an
+`index.lock` write failure can come from Codex's protected Git metadata. Normal
+file mode bits and trusted-project configuration do not override that mount.
+For a concrete already-authorized write, use `exec_command` with
+`sandbox_permissions="require_escalated"` when the host offers it; avoid a known
+failing first attempt. Auto-review can handle eligible requests without involving
+the user. A denied or unavailable approval remains a concrete host limit.
+
+Do not change sandbox settings, move `.git`, add writable roots or grant blanket
+Git access as a workaround. Fetch/pull authorization does not imply publication.
+See the [Codex execution contract](../agents/buddy/codex-execution.md). A failed boot
+fetch is reported on stderr; cached ahead/behind values do not prove remote freshness.
 
 ### A software board starts during ordinary work
 
@@ -126,7 +147,7 @@ change pause state. Follow [development continuation](../framework/development-c
 ### A Git hook blocks a commit
 
 Read the named check. Applicable plan errors, commit format and skill frontmatter
-can block. Secret scan, source verification and anti-phantom diagnostics are advisory.
+can block. Secret scan and source verification diagnostics are advisory.
 Correct the responsible source or investigate a reproducible validator defect.
 Do not remove the hook to turn a failing check into a success claim.
 
@@ -140,7 +161,9 @@ activation. See [maintenance](08-development-and-maintenance.md#generators).
 
 Record the exact command, selected profile, host, operation or workflow identity,
 observed output and preserved local changes. Remove secrets and personal content
-before sharing a report. Use [CONTRIBUTING.md](../CONTRIBUTING.md) for a reproducible
-issue, or [SECURITY.md](../SECURITY.md) for a security concern.
+before sharing a report. A session diagnosis report names the failed layer with the
+cited lines; share its shared copy, not the transcript. Use
+[CONTRIBUTING.md](../CONTRIBUTING.md) for a reproducible issue, or
+[SECURITY.md](../SECURITY.md) for a security concern.
 
 Next: [Daily operations](13-operational-handbook.md).

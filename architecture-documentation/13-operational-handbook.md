@@ -15,7 +15,9 @@ project; framework files supply shared methods, while the project's own intent,
 navigation and rules supply its goals and boundaries.
 
 The agent should load the applicable boot context, check relevant pending recovery,
-and read the current handoff before relying on saved state. With configured user
+and read the current handoff before relying on saved state. It does this before its
+first answer even for a quick question; if something did not load or run, such as
+an unchecked remote, that answer opens with it. With configured user
 scope, the short profile provides person-wide context; detailed topics are read
 when relevant. Missing user scope does not prevent project-only work.
 

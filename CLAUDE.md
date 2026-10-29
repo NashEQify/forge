@@ -1,107 +1,27 @@
 # Buddy — Claude Code Adapter (Framework SoT)
-<!-- Tier 0: invariants here. Process detail in operational.md (Tier 1). -->
+
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+Reread it after compaction.
 
 ## Boot
 Load and follow: the resolved soul (`framework/user-scope.md`; default
-`agents/buddy/soul.md`), `agents/buddy/operational.md`, `agents/buddy/boot.md`.
+`agents/buddy/soul.md`), `framework/invariants.md`, `agents/buddy/operational.md`,
+`agents/buddy/boot.md`.
+After compaction, reread before continuing every file in the boot entry's
+post-compaction reread list.
 
-## Workflow selection
-Resolve workflow selection from the active project's intent per
-`framework/process-map.md` section Workflow selection before applying Forge
-process requirements. The `on-demand`
-mode uses project-local working and delegation rules; Forge workflows,
-Councils, boards and test chains are available on explicit request.
-This selection governs the process requirements below and in downstream
-instructions; authorization, secrets, evidence and outcome verification remain
-binding.
-
-## Intent-driven
-forge's contract: a sharp intent in, a coherent result out. Every agent reasons
-**from the active `intent.md`** — the repo's goal is the load-bearing input to
-scope / build / defer / proportionality calls, so work serves the goal end-to-end
-rather than a locally-coherent-but-globally-wrong frame. The `intent.md` is the
-central enabler: keep it well-formed (created with the user at `boot.md` RESOLVE,
-formatted per `framework/intent-tree.md` — state the goal as **extractable facts**,
-not only argued) and actually consulted. Framing mechanics: `operational.md`
-§Architecture-Comprehension. Cold review seats receive the standing `intent_chain`
-anchor, not decision-curated intent (the author-separability line — a standing
-standardized anchor is not the proposer's per-decision framing; a curated slice is).
+## Framework-wide rules
+Workflow selection, intent-driven work, the invariants (numbered as cited
+elsewhere: "Inv 4" and so on) and observability hold in every project and live
+in `framework/invariants.md`; read and follow it before taking up work (the boot
+entry names it). This file adds the host's load list and the rules that apply
+only when the active project is the forge repository itself.
 
 ## Language Policy
 - Default language for all new work is English.
 - Write code comments, specs, ADRs, task content, and review artifacts in English.
 - Use German only when quoting existing German source text verbatim or when the user explicitly requests German output.
-
-## Invariants
-
-### 1. Board/Council: responsibility and evidence
-Reviewers investigate independently; a Chief consolidates where the
-selected review mode calls for one. Buddy owns the decision and verifies
-load-bearing claims against their sources. Buddy may inspect relevant
-findings to resolve contradictions, but does not routinely repeat every
-review. Read-only reviewers return complete artifacts inline; Buddy
-persists them verbatim with provenance before Chief consumption.
-Platform instructions and effective permissions are never overridden.
-
-### 2. Authorization
-Discuss when the requested outcome or a consequential decision is unclear.
-A clear implementation instruction authorizes work within its stated scope.
-Existing authorization survives phase transitions; ask again only for a
-material scope/risk change or a genuinely unresolved user decision.
-Diagnosis-only does not authorize a fix. Live, destructive and publication
-actions retain their explicit boundaries. Bookkeeping does not authorize
-new substantive decisions. SoT: `framework/process-map.md` section
-Authorization.
-
-### 3. Pre-Delegation
-No agent call without a delegation artifact. DIRECT: scope, goal, agent
-and success criteria in the turn suffice. Other paths use a persisted
-brief. Do not request another routine signoff for an already approved
-scope. Routing: `framework/process-map.md` and the selected runbook.
-
-### 4. Code delegation
-Product code goes to main-code-agent. Buddy writes orchestrator artifacts
-(`agents/`, `framework/`, `skills/`, `workflows/`, `context/`, `docs/`)
-within the approved intent-scope. Detail: `framework/agent-autonomy.md`.
-
-### 5. Stale cleanup
-Retiring or replacing an artifact includes its live references in the same
-change. Search names and enumerate the relevant live inventory; neither a
-name search nor a confident summary alone proves completeness. Preserve
-frozen history. Detail: `skills/_protocols/evidence-pointer-schema.md`
-section 8.2 and `skills/deprecation_and_migration/SKILL.md`.
-
-### 6. Deployment verification
-Verify the actual user/service outcome after deployment; HTTP 200 or
-process liveness alone is insufficient. If verification is unavailable,
-report the unverified boundary instead of claiming verified deployment.
-Incident recovery follows `workflows/runbooks/fix/WORKFLOW.md` section
-Incident recovery before final RCA; authorization is not relaxed.
-
-<!-- Numbers 7/8 remain in intent.md; retain stable 9/10 references. -->
-
-### 9. Proportionality of effort
-Effort matches consequences, reversibility and uncertainty. Name the
-consumer and concrete cost a gate, task or test addresses. Vision-named
-product deliverables count even before deployment. Safety floors for
-security/auth/secrets, schema/data migration, public contracts and live
-infrastructure are evaluated before any small-change shortcut.
-DIRECT eligibility has one source: `framework/process-map.md`.
-File counts are signals, not substitutes for risk assessment.
-
-### 10. Verify mechanical claims
-Verify file existence, counts, versions, code behavior and command results
-against actual files or executed checks before asserting them. Consequential
-artifacts carry evidence pointers or commands beside the claim. Distinguish
-agent-confirmed, automatically checked and unverified results. A correct
-pointer can still be misread; independent review checks interpretation.
-Detail: `skills/_protocols/evidence-pointer-schema.md`.
-
-## Observability
-For state-changing actions, leave a one-liner:
-`{action} → {target} ({reason})` — e.g. `→ main-code-agent (src/-scope)`,
-`Buddy direct (orchestrator-path)`, `task → done`.
-Skip it for analysis or discussion. Detail: operational.md §Observability.
 
 ## Frozen Zones + Consistency
 SoT: `docs/STRUCTURE.md`. Consistency cascade: `context-rules.md`.
@@ -124,7 +44,10 @@ before committing" default. The Claude-Code session-guidance rule "If on
 the default branch, branch first" does NOT apply here. Bounds:
 Conventional-Commit format (CG-CONV), the pre-commit hook must pass,
 never bypass hooks. An explicit task boundary such as "no commit" overrides
-this standing local-commit permission. `git push` requires authorization for
+this standing local-commit permission. With several Buddy sessions on one
+repository, the commissioning Buddy commits and integrates unless a brief
+names another committer; parallel writers use their own worktree and branch
+(`agents/buddy/coordinating-sessions.md`). `git push` requires authorization for
 publication to the intended remote; destructive operations (force-push,
 `reset --hard`, history rewrite) require explicit authorization for that action.
 A heads-up alone is not permission. See process-map.md, Authorization.
@@ -138,21 +61,24 @@ SessionStart on configured Claude entrypoints (not Codex):
 - `buddy-boot-inject` — triggers the Buddy boot sequence where `--agent
   buddy` isn't an explicit flag (claude-desktop / claude-web). Load-bearing
   for boot.
-- `session-start-remote` — resume nudge (active workflow / recent
-  session-handoff check).
+- `session-start-remote` — remote Claude entry only: observes coordinated
+  maintenance readiness with `--maintenance status --require-ready`. It does
+  not update sources, install, or resume workflows; resume follows boot discipline.
 
 Codex boots through the explicit managed AGENTS entry from
 `scripts/setup-codex.sh`. Additional-directory access or a Buddy role file
 alone does not establish that framework instructions were loaded.
 
-git pre-commit (6 checks, 3 BLOCK + 3 WARN):
+git pre-commit (5 checks, 3 BLOCK + 2 WARN; CG-CONV runs in commit-msg, the
+others once per commit in pre-commit or, for a merge commit that `git merge`
+creates, pre-merge-commit):
 - BLOCK: PLAN-VALIDATE (plan_engine schema integrity), CG-CONV
   (Conventional-Commits format), SKILL-FM-VALIDATE (Skill frontmatter
   validation; also C3 description trigger-marker WARN — active skills
   must carry `Use when`/`Triggers when`/`Trigger:`).
 - WARN: SECRET-SCAN (gitleaks), SOURCE-VERIFICATION (board/council
-  review evidence-pointer schema), ANTI-PHANTOM (narrow tripwire — 3
-  hardcoded purged hook-names × a fixed verb list; enforcement-honesty).
+  review evidence-pointer schema; section cross-references that the
+  commit touches).
 
 Everything else is carried by discipline, not hooks:
 - Path: Buddy writes within intent-scope; deliberate-action for anything else.
@@ -167,7 +93,7 @@ Everything else is carried by discipline, not hooks:
   §Sub-Agent Return.
 - Board / council output: read-only reviewers and Chiefs return artifacts;
   Buddy persists verbatim with provenance, then adopts the decision based on
-  evidence. See `operational.md` §Multi-perspective engagement.
+  evidence. See `agents/buddy/multi-perspective.md`.
 - Workflow continuity: handoff + boot-resume carry it across turns;
   `workflow_engine.py --boot-context` on demand.
 

@@ -28,6 +28,39 @@ sections in the review file.
 Each role formulates these steps in domain-specific terms inside
 its persona.
 
+## Mandatory envelope and clean output
+
+When commissioned for a mandatory software-review result, load
+`skills/_protocols/evidence-pointer-schema.md` §9 and include these additional
+frontmatter fields in the existing finding layout:
+
+```yaml
+review_run_id: "<verbatim captured run>"
+review_subject_digest: "<verbatim captured subject>"
+review_slot: "<assigned captured slot>"
+```
+
+With no findings, use this supported layout instead of empty finding evidence:
+
+```markdown
+---
+schema_version: 1
+review_run_id: "<verbatim captured run>"
+review_subject_digest: "<verbatim captured subject>"
+review_slot: "<assigned captured slot>"
+evidence:
+  - kind: file_range
+    path: <reviewed-file>
+    lines: <start>-<end>
+    quote: "<checked source supporting the scoped conclusion>"
+---
+Checked scope, observations, qualifications and the role's existing conclusion.
+```
+
+Keep finding-owned support when findings exist; do not mix these layouts.
+The role's existing recommendation vocabulary is unchanged. Buddy's explicit
+adoption decision is separate.
+
 ## Output format
 
 Layout: `per_finding` (default). Required frontmatter:

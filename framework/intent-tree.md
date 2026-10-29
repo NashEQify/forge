@@ -8,7 +8,7 @@ describes the structure, not a concrete intent.
 ```
 intent.md (in folder)              <- vision intent
   -> docs/plan.yaml operational_intent  <- operational intent (build target)
-    -> docs/tasks/NNN.md           <- action intent (per task)
+    -> docs/tasks/<NNN>.md         <- action intent (per task)
       -> agent reasoning           <- action intent (per action, in-head)
 ```
 
@@ -83,7 +83,7 @@ reweightable.
 An optional `Forge workflows: software` or `Forge workflows: on-demand` line
 under `## Context` explicitly selects automatic software processes or
 project-owned working rules. Otherwise select from the intent, as defined in
-`framework/process-map.md` section Workflow selection.
+`framework/workflow-selection.md`.
 
 Every intent.md — root, workspace, objective, external project — uses
 this format:

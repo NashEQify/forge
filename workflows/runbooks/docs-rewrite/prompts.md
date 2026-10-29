@@ -34,10 +34,10 @@ Back every claim with a source file.
 
 ### Entry points (Buddy populates before dispatch)
 
-- **Always:** `intent.md` (vision), `CLAUDE.md` (invariants), `framework/process-map.md` (workflows)
-- **For framework rewrite:** `docs/tasks/273.md` (design decisions),
-  workflow runbooks
-- **For product rewrite:** `docs/architecture/ARCHITECTURE.md`, specs, container atlas
+- **Always:** `intent.md` (vision), `framework/invariants.md` (invariants), `framework/process-map.md` (workflows)
+- **For framework rewrite:** the design decisions of the task that commissioned
+  the rewrite (`docs/tasks/<NNN>.md`), workflow runbooks
+- **For product rewrite:** the product's `<project>/docs/architecture/ARCHITECTURE.md`, specs, container atlas
 - Buddy derives the entry points from `scope` + `reason`. No heuristic —
   from known context.
 

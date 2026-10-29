@@ -3,6 +3,11 @@ name: buddy-thinking
 description: "Buddy with maximum thinking depth — for deep spec interviews, strategic life questions, complex open conversations that don't need a council. Trigger keyword: think!"
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent (tool-neutral): buddy-thinking
 
 Buddy with maximum thinking depth. For deep spec interviews,

@@ -1,85 +1,85 @@
 # Coordinated installation activation
 
 Canonical shared source/update/install/recovery procedure. One release and installer
-serve all profiles and users. This release supports stopped-session maintenance,
-not live switching of mutable framework sources. Ordinary knowledge work still uses
-its existing folder and commands; this procedure is for the maintainer's upgrade.
+serve all profiles and users. Instruction-only changes take the light path below;
+everything else uses stopped-session maintenance, not live switching of mutable
+framework sources. Ordinary knowledge work still uses its existing folder and
+commands; this procedure is for the maintainer's upgrade.
 
-## Before changing source
+## Choosing the path
 
-1. Identify explicitly affected local source checkout, installed host integrations,
-   selected profile/methods and authorized consumer roots. Preserve current user
-   configuration and local edits. Do not discover or operate on unrelated machines.
-2. Establish that affected agent/editor sessions will not read or write the changing
-   source/integration set. Stop them **before** pull or source edits and through
-   install/verification. A standing pull permission is not this evidence. A running
-   agent may load another skill later even if its earlier instructions are cached.
-3. From the currently installed generation prepare a recoverable actual working-tree
-   source/integration baseline through the installer maintenance entry. Git HEAD or
-   old wrappers alone are insufficient. Include local edits, old routes, new closure
-   and exact explicitly selected legacy workflow state compatibility.
-4. Only then perform an authorized source update. No hidden reset, stash, rebase or
-   hand-moving skills. Missing sparse sources may be supplied safely within the normal
-   procedure or produce a recoverable preflight failure before integration changes.
+Classify each change before editing and state the classification in its brief,
+decision or return record. Unclear whether a path is read directly or through an
+installed copy or an engine → resolve the fact (`readlink`, the generator, the
+installer inventory); still unclear → full path.
 
-Boot and remote SessionStart hooks must not independently pull/setup the framework.
-They report the maintenance need and use this procedure. Consumer-only Git updates
-still follow their own authorization and preservation rules.
+**Light path — instruction-only.** Every changed path is Markdown at an existing
+owner that hosts read directly from the framework root: `framework/`, `skills/`,
+`workflows/` runbook text, `agents/` (Claude Code reads it through
+`~/.claude/agents` → `.claude/agents` → `agents/`), the root adapters `CLAUDE.md`
+and `AGENTS.md`, `orchestrators/` rule text, and project docs. Steps: edit in the
+framework root; when skill frontmatter or the skill inventory changes, regenerate
+the derived wrappers (`scripts/generate_skill_wrappers.py`, then `--check`) and
+the generated navigation; run the router check
+(`scripts/generate_workflow_router.py --check`), the consistency check and the read-only
+`scripts/forge_install.py --check` (closure preflight; it also lists stale
+installed copies); commit under the repository's commit rules. No prepare, journal operation, install or
+fresh-session validation. Between operations the installer accepts drift of
+recorded `.md` sources, lists it as `instruction_drift` in `--maintenance
+status`, and the next `prepare` records it as the new baseline. Sessions read
+the change on their next read; a session that already loaded a changed boot or
+always-loaded file keeps the old text, so start a fresh session before relying
+on such a change. Markdown that the closure or an engine reads as data is
+not plain instruction text: the common-delivery directive and skill
+frontmatter fields such as `status`, `invocation` and `evidence_layout` —
+resolve the fact with `--check`; still unclear → full path. A new or changed
+non-Markdown source next to the edit makes it a mixed change; the installer
+then refuses until the full path runs.
+Known limit: host- or editor-written non-Markdown files inside the source
+roots (for example `.claude/settings.local.json` from a project-scoped
+permission, a scheduler lock, editor swap files) count as unrecorded sources
+too, so readiness refuses until the file is removed or a full-path operation
+records it.
 
-## One activation owner
+**Installed copies.** Codex reads role bodies from installed copies
+(`~/.codex/agents/*.toml`, generated from `agents/<role>.md` by
+`scripts/generate_codex_agents.py`) and skill wrappers from `~/.agents/skills`.
+The `daily` profile installs Claude skill and role wrappers as managed copies
+in `~/.claude/skills` and `~/.claude/agents` (the `full` profile links them).
+A light change to a role body or to skill frontmatter reaches those copies only
+through the next install (`--check` lists them); record those hosts as not yet
+activated for it, or use the full path
+when Codex use depends on it.
 
-`scripts/forge_install.py` coordinates `scripts/install_activation.py` with existing
-managed-file ownership checks. All ordinary setup entrypoints participate. Public
-maintenance operations: `--maintenance prepare|status|retry|rollback|validate`, with
-`--operation-id` for the exact prepared operation, explicit `--consumer-root` values
-and `--validation-evidence` for fresh-session verification. Inspect current `--help`
-for request shape; never manufacture validation evidence to close a journal.
+**Full path — everything else.** Scripts, hooks, launchers, host settings and
+integrations, the installer, workflow definitions and compatibility mappings,
+engine-read YAML/JSON, profiles and state formats, and every mixed change, use
+the procedure below. Inside an operation the journal stays strict for every
+recorded source, Markdown included, and rollback restores all of them.
 
-The activation owner serializes overlapping machine-local operations across checkouts
-under one stable effective-UID lock. Protection starts before journal/resource baseline
-reads and spans durable phase updates; retry/rollback revalidate after acquiring it.
-Do not unlink a lock or use an environment flag to bypass it. Journal operation identity
-and lease prevent replacement of unfinished work between maintenance commands.
+## Full-path procedure
 
-Phases: `prepared`, `applying`, `validation_pending`, `complete`, `recovery_required`,
-`rolled_back`. The private installation journal stores the matched source/integration
-baseline and action progress; it is not a consumer knowledge file. `--check` and status
-are read-only observations, not installations or completion evidence. A skipped host
-integration cannot be reported as a completed whole installation.
+Once a change is classified as full path, before stopping sessions or changing source, and through prepare, install,
+validation, retry and rollback: read and follow `framework/installation-activation-full-path.md` (§Before changing
+source (full path), §One activation owner, §Install and verify, §Failure, retry and rollback).
 
-## Install and verify
+## Owned boot blocks
 
-Preflight the complete selected dependency closure, old installed routes, ownership
-and exact legacy state interpretation before changing integration. Preserve daily/full
-presets and optional method selection on repeat installation. Generated wrappers stay
-thin forwards to canonical contracts. Full availability does not select development.
-
-Apply within the established window. Validate actual installed entrypoints, source
-fingerprint, profile, configuration and selected closure. Use a fresh session for the
-installed generation: normal entry, relevant retrieval, capture/save/resume, and exact
-selected development continuation where applicable. For the fresh acceptance session, use `cc --forge-validation-operation <UUID>` or
-`oc --forge-validation-operation <UUID>` with the exact pending operation. This
-checks the fully applied source/integration generation without marking ordinary
-sessions ready. An incorrect ID, partial application or changed source refuses entry.
-Existing sessions are not silently upgraded. Record evidence and concrete limits; mark complete only for verified targets.
-Repeating a completed install must be idempotent and never rewrite consumer content.
-
-## Failure, retry and rollback
-
-On conflict keep integration unchanged. If the preceding source update already changed
-referenced files, unchanged wrappers do not prove the old generation usable: keep
-sessions stopped until repair/retry or matched restoration. Interrupted application
-remains unverified with a durable journal; do not resume a partially applied generation.
-Retry accepts only journal-proven states. Unknown later edits cause conflict, never
-silent overwrite. Rollback selectively restores matched source/integration and retains
-all consumer knowledge and subsequent work. Do not reset a repository.
-
-Legacy save/housekeeping/development identities, step meanings, routes, variables,
-evidence and pending obligations remain valid through compatibility forwarding.
-Validate retained state before activation and rollback, including state created or
-advanced since upgrade. If the target engine cannot interpret it safely, refuse
-activation/resumption until a validated mapping or compatible generation exists.
-Restoring bytes alone is not compatibility. No blanket workflow-state rewrite.
+The installer owns marker-delimited boot blocks (`FORGE-CODEX-BOOT` in `AGENTS.md`,
+`FORGE-CLAUDE-BOOT` in `CLAUDE.md`) through hash state files and byte snapshots in
+the install plan. Continuity publication refuses the home copies under `.codex/` and
+`.claude/` as reserved paths; a project `AGENTS.md` is a shared file that continuity
+may write, and the block hash keeps install authority over the block (an edited
+block refuses the next install). Text before and after a block, including Unicode
+and CRLF line endings, survives create, replace and remove; removal returns the
+outer text (keeping one line break where outer text without a final newline is
+followed by text after the block), and a re-run with unchanged content plans no
+change. Duplicate, reversed or partial markers, an edited owned block, an unowned
+block with the same markers and non-UTF-8 content refuse without writes. A change
+between plan and apply fails the preflight; the installer never retries over it.
+Evidence: `scripts/generate_codex_agents.py` (`plan_block`, `plan_block_removal`),
+`scripts/install_activation.py` (the production apply and its preflight) and
+`tests/capabilities/test_owned_regions.py`.
 
 ## Consumer integration
 

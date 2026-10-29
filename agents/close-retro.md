@@ -12,6 +12,11 @@ disallowedTools: [Edit, Write, NotebookEdit, ExitPlanMode, Agent]
 spec_ref: docs/specs/374-close-retro.md
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: close-retro
 
 You are a read-only fresh-context distiller. At a workflow's close, you read

@@ -29,15 +29,23 @@ Spec at spec_ref locked from ANY source (parent closed, predecessor, manual,
   external) AND no spec amendment in scope AND implementation-only?           → STANDARD-IMPLEMENTATION-ONLY
 Authority-only task (spec / ADR / plan, no code output)?                      → AUTHORITY-ONLY
 All DIRECT criteria in framework/process-map.md satisfied?                   → DIRECT
-At least ONE? (a) >1 subsystem (b) new subsystem (c) new pattern
-  (d) schema change (e) >10 ACs                                              → FULL
-Otherwise                                                                     → STANDARD
+Consequential uncertainty, interacting failure effects or
+  expensive-to-reverse design require the FULL architecture/review package?   → FULL
+Otherwise                                                                    → STANDARD
 ```
+
+Resolve that question from the actual affected consumers, uncertainty and
+consequences. Subsystem, pattern, schema and acceptance-criterion counts prompt
+inspection; none selects FULL by itself. Record the reason in the existing route
+decision, below its three sizing facts. When deciding the route and which conditional
+stages (UX, architecture) the change needs: read and follow `lifecycle.md` (the sizing
+facts, stages, triggers, the gate that carries each). Preserve safety floors and the independently selected review
+requirements of the applicable skills; STANDARD is not permission to omit them.
 
 STANDARD-IMPLEMENTATION-ONLY sits above AUTHORITY-ONLY but below SUB-BUILD: it
 disambiguates "spec locked, parent workflow no longer active" — which would
 otherwise fall through to FULL/STANDARD and hit a Specify gate the engine
-can't skip. Proportionality release-valve at the routing surface (CLAUDE.md
+can't skip. Proportionality release-valve at the routing surface (`framework/invariants.md`
 Inv 9).
 
 **"No spec amendment in scope":** a locked authority (ADR, predecessor spec)
@@ -86,19 +94,19 @@ detail + conditions = the step `instruction:` in `workflow.yaml`.
 |---|------|-------|-------|
 | 1 | interview | Specify | `frame/SKILL.md` (+ cross-spec-consistency-check sub-step) |
 | 2 | spec-write | Specify | `spec_authoring/SKILL.md` (+ source-spec-reduce sub-step) |
-| 3 | board | Specify | **classification** → `--route board-spec` (`spec_board`) or `board-council` (`council`, the ADR-007 spec-board substitute) |
-| 4 | test-design | Prepare | `testing/SKILL.md` (+ `adversary_test_plan` + `test-skeleton-writer` on substantial dispatch) |
+| 3 | board | Specify | **classification** → `--route spec` → `board-spec` (`spec_board`) or `--route council` → `board-council` (`council`, the ADR-007 spec-board substitute) |
+| 4 | test-design | Prepare | `testing/SKILL.md` (+ `adversary_test_plan` + `test-skeleton-writer` on a safety floor) |
 | 5 | architect-lens | Prepare | `agents/code-architect-lens.md` (preventive plan-time module lens; idle below scope-threshold) |
 | 6 | brief-author | Prepare | `agents/brief-architect.md` (single or multi-mode; inline only if DIRECT-eligible) |
-| 7 | brief-signoff | Prepare | confirm coverage by existing authorization; ask only for a new decision (DIRECT skips) |
+| 7 | brief-signoff | Prepare | Check the bound brief's declared structure, then record authorization coverage; ask only for a new decision (DIRECT skips) |
 | 8 | mca-implementation | Execute | `main-code-agent` (Plan → impl_plan_review cond. → Implement → L0) |
 | 9 | code-review-board | Verify | `code_review_board/SKILL.md` (light / L1 / L2 per §1) |
 | 10 | spec-drift-check | Verify | `spec_amendment_verification/SKILL.md` (when diff changes spec-defined behaviour) |
 | 11 | close-bookkeeping | Close | **distill** `close_retro` (FULL / new-pattern-STANDARD; skip-eligible) → **emit** `documentation_and_adrs` + `task_creation` + `knowledge_processor` + `risk_followup_routing` (consume the retro; each skip-eligible) |
-| 12 | commit-deploy | Close | **task status=done via `task_status_update`** (not a raw YAML edit) + git pre-commit hooks |
+| 12 | commit-deploy | Close | **task status=done via `task_status_update`** (not a raw YAML edit); commit/push/deploy under `framework/process-map.md` §Authorization, with installed checks |
 
 `board` is a mid-flow classification: `--complete board --route
-board-spec|board-council`. The amendment path (mid-build mechanism shift,
+spec|council` (selecting `board-spec` or `board-council`, respectively). The amendment path (mid-build mechanism shift,
 class rename, contract retraction on an EXISTING spec): if the substantial
 threshold fires, Buddy dispatches `brief-architect mode=spec_amendment` rather
 than authoring inline; sub-threshold edits stay Buddy-direct.
@@ -109,7 +117,7 @@ than authoring inline; sub-threshold edits stay Buddy-direct.
 - **Prepare** — what do we test, how do we hand off (test-design → delegation)?
 - **Execute** — implement the change (MCA writes code, runs L0).
 - **Verify** — does the code do what the spec said (review → spec-drift)?
-- **Close** — distill→emit bookkeeping + commit (`close_retro` distill → ADR + risk + knowledge → commit).
+- **Close** — distill→emit bookkeeping (`close_retro` → ADR + risk + knowledge); commit/push/deploy only under existing authorization in `framework/process-map.md` §Authorization. Local completion does not prove publication.
 
 ## Conditional sub-flows folded into named gates
 
@@ -117,14 +125,14 @@ Several earlier-version named steps are now sub-steps; the condition is
 mechanical and lives in the parent gate's `instruction:`:
 - **cross-spec-consistency-check** → interview (frame step 4 source-grounding).
 - **source-spec-reduce** → final sub-step of spec-write.
-- **adversary-test-plan + test-skeleton-write** → optional adversary mode of test-design.
+- **adversary-test-plan + test-skeleton-write** → adversary mode of test-design, on a safety floor only (`adversary_test_plan/SKILL.md` §When to call).
 - **close_retro distill + adr-check + risk-followup-routing + knowledge-process** → close-bookkeeping (distill→emit).
 - **spec-amendment-verify + spec-co-evolve-check** → one spec-drift-check.
 
 **Coverage rule (post-build):** reviewers verify the pre-build test plan was
 honored (every planned TC in `tests/` and green); they do NOT re-design
 coverage. Test-coverage findings are `code-spec-fit`'s sole lens on L2 (L1:
-Buddy's AC-coverage checklist item, `code_review_board` §3); imagined
+Buddy's AC-coverage checklist item, `code_review_board/brief-and-team.md` §3); imagined
 edge-case TCs without an AC or known bug-class are out-of-scope.
 
 ## Conditional evaluations the user actually faces
@@ -132,7 +140,7 @@ edge-case TCs without an AC or known bug-class are out-of-scope.
 ≤5 explicit yes/no on a typical standard build:
 1. Path: STANDARD / FULL / SUB-BUILD / AUTHORITY-ONLY / DIRECT?
 2. Spec already exists? (Specify skip vs run)
-3. Adversary test mode? (substantial dispatch?)
+3. Adversary test mode? (safety floor touched?)
 4. Code review L1 vs L2?
 5. ADR write? (decision meets the triple?)
 
@@ -159,3 +167,7 @@ generic `--start / --next / --complete / --skip / --retry` cycle, path routing,
 `on_fail` policy, extension API, and multi-machine constraint are identical
 across runbooks and live in `framework/workflow-engine-cookbook.md`. Operational
 invariant: `agents/buddy/operational.md` §Workflow engine.
+
+Pending old signoff adopts the current explicit brief contract; terminal evidence
+remains historical. See `framework/workflow-engine-review-and-brief.md` section Build
+brief binding and legacy adoption for normalization and retry rules.

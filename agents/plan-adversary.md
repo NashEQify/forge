@@ -3,6 +3,11 @@ name: plan-adversary
 description: Plan-review adversary persona — reviews the plan block + self-review BEFORE execution. Inline or independently dispatched as required by the selected method. Full persona definition in `skills/_protocols/plan-review.md`.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: plan-adversary (stub pointer)
 
 **Status:** this persona is inline by default; a selected method that requires
@@ -33,7 +38,7 @@ truth — this file is a discoverable pointer for supported agent runtimes.
 
 On explicit spawn: the caller invokes `plan-adversary` as an independent
 subagent → the adversary prompt template from
-`skills/_protocols/plan-review.md` §adversary-prompt-template is the
+`skills/_protocols/plan-review.md` §Adversary prompt template is the
 persona behaviour.
 
 ## When inline-persona instead of spawn

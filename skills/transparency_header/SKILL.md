@@ -15,6 +15,10 @@ disable-model-invocation: false
 uses: []
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: transparency-header
 
 Header formats for delegation, execution, and direct action — printed
@@ -48,7 +52,7 @@ Do **not** fire it on pure discussion, questions, analysis, or
 acknowledgements ("ok", a yes/no answer, a greeting): there the prose
 *is* the record, and an empty `Intent: ad-hoc` header is noise that
 dilutes the signal. This is the same frequency as
-`CLAUDE.md §Observability` (action-bound — "skip it for analysis or
+`framework/invariants.md` §Observability (action-bound — "skip it for analysis or
 discussion"): the header is the structured turn-level form of that
 discipline, not a competing every-turn rule.
 
@@ -113,7 +117,7 @@ Examples:
 - Print on action / delegation / decision turns — before the work,
   not after. Pure discussion and acknowledgements: no header.
 - Once per delegation / start / action — not on every intermediate
-  step. The inline `CLAUDE.md §Observability` one-liner
+  step. The inline `framework/invariants.md` §Observability one-liner
   (`{action} → {target} ({reason})`) covers intermediate
   state-changing steps within a turn.
 - Compact — each line as long as needed for clarity. Don't artificially
@@ -121,7 +125,7 @@ Examples:
 - The source file in parentheses shows where the level is defined.
   No fixed format — it should show what is actually active. Examples:
   `intent.md`, `workspaces/insurance/intent.md`,
-  `docs/tasks/042-brain-schema.md`, `direct instruction`.
+  `docs/tasks/<NNN>.md`, `direct instruction`.
 - The intent tree comes from the active context — don't invent it. If
   the tree is broken: STOP instead of printing the header. That is then
   an intent problem, not a transparency problem.
@@ -134,10 +138,10 @@ Examples:
 
 ## Boundary
 
-- No delegation artifact → framework/spec-authoring.md §Delegation-Ready.
-- No intent check → operational.md §Advisory Gate (the header is
+- No delegation artifact → `framework/invariants.md` §3 (Pre-Delegation).
+- No intent check → operational.md §Phase 1: RECEIVE (the header is
   output, not a check).
-- Intermediate state-changing steps → `CLAUDE.md §Observability`
+- Intermediate state-changing steps → `framework/invariants.md` §Observability
   one-liner (`{action} → {target} ({reason})`): same action-bound
   frequency, inline rather than structured. The header is the
   turn-level form; the one-liner is for sub-steps.

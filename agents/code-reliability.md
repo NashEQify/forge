@@ -3,6 +3,11 @@ name: code-reliability
 description: Reliability reviewer in the Code Review Board — observability, failure detection, error recovery.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: code-reliability
 
 Reliability reviewer in the Code Review Board. Observability,

@@ -7,6 +7,9 @@ description: Capture decisions + documentation with the why, alternatives, and t
 
 <!-- generated-by: scripts/generate_skill_wrappers.py (do not hand-edit) -->
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve it against the same framework root as the SoT; retain the consumer CWD.
+
 This is the Claude-Code-discoverable wrapper. The full
 orchestrator-neutral protocol — methodology, contract, modes,
 red flags — lives in the SoT:

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Install the selected Forge capability closure as one recoverable generation.
 
-Ordinary installation composes Codex, Claude and OpenCode host plans. Maintainers
+Ordinary installation composes the chosen Codex, Claude Code and OpenCode host
+plans: --host, else the hosts recorded by the existing installation, else the
+assistants found installed on PATH. Maintainers
 use --maintenance prepare before changing sources, status/retry/rollback after
 interruption, and validate with an exact operation ID and fresh-session evidence.
 --check observes pending changes without writing. Source and integration state
@@ -16,6 +18,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -98,6 +101,8 @@ CC_MARKER = re.compile(
 FORGE_HOOK_DIR = "/orchestrators/claude-code/hooks/"
 CODEX_LABELS = {"tool_label": "Codex", "discovery_label": "Codex"}
 CLAUDE_LABELS = {"tool_label": "Claude Code", "discovery_label": "Claude-Code"}
+# Host choice -> the executable that shows the assistant is installed.
+HOSTS = {"claude-code": "claude", "codex": "codex", "opencode": "opencode"}
 
 
 class ApplyFailure(Exception):
@@ -119,9 +124,40 @@ def load_profile(framework: Path, name: str) -> dict:
         raise ValueError(
             f"{path}: boot_files of {name!r} out of sync with scripts/user_scope.py"
         )
-    if not profile.get("codex_boot"):
-        raise ValueError(f"{path}: profile {name!r} without codex_boot is unsupported")
     return profile
+
+
+def resolve_hosts(chosen: list[str], selection: dict, existing: bool, env) -> tuple[list[str], str]:
+    """The hosts to plan and where the choice came from.
+
+    An installation recorded before host choice existed planned every host and
+    keeps doing so. Detection reads PATH only: a leftover configuration
+    directory is not an installed assistant.
+    """
+    if chosen:
+        names = [name.strip() for value in chosen for name in value.split(",") if name.strip()]
+        if not names:
+            raise ValueError(f"--host needs a value: {'|'.join(HOSTS)}")
+        unknown = sorted(set(names) - set(HOSTS))
+        if unknown:
+            raise ValueError(f"unknown host: {', '.join(unknown)} (choose from {', '.join(HOSTS)})")
+        return [host for host in HOSTS if host in names], "chosen"
+    if "hosts" in selection:
+        recorded = selection["hosts"]
+        if not isinstance(recorded, list) or not recorded or not set(recorded) <= set(HOSTS):
+            raise ValueError(f"invalid recorded hosts: {recorded!r}")
+        return [host for host in HOSTS if host in recorded], "recorded"
+    if existing:
+        return list(HOSTS), "existing installation"
+    found = [host for host, command in HOSTS.items() if shutil.which(command, path=env.get("PATH", ""))]
+    if not found:
+        raise InstallConflict(
+            "no supported assistant found on PATH ("
+            + ", ".join(HOSTS.values())
+            + "); choose one or several with --host "
+            + "|".join(HOSTS)
+        )
+    return found, "detected"
 
 
 def check_required_paths(framework: Path, profile: dict) -> None:
@@ -388,7 +424,15 @@ def prune_empty_skill_dirs(skill_roots: list[Path]) -> None:
 
 
 def source_inventory(framework: Path, closure: list[str]) -> list[Path]:
-    """Actual bytes, including local edits and old routes, not Git HEAD."""
+    """Actual bytes, including local edits and old routes, not Git HEAD.
+
+    Foreign-owned children of the shared `.claude/skills/` root are not Forge
+    source and stay out of the recoverable baseline.
+    """
+    try:
+        from .capability_closure import owned_tree
+    except ImportError:
+        from capability_closure import owned_tree
     paths = set()
     roots = [framework / rel for rel in closure]
     roots += [framework / name for name in ("scripts", "framework", "workflows", "agents", "skills", "orchestrators", ".claude")]
@@ -397,8 +441,29 @@ def source_inventory(framework: Path, closure: list[str]) -> list[Path]:
         if root.is_file() or root.is_symlink():
             paths.add(root)
         elif root.is_dir():
-            paths.update(p for p in root.rglob("*") if (p.is_file() or p.is_symlink()) and "__pycache__" not in p.parts and ".git" not in p.parts)
+            paths.update(p for p in owned_tree(framework, root) if (p.is_file() or p.is_symlink()) and "__pycache__" not in p.parts and ".git" not in p.parts)
     return sorted(paths)
+
+
+def commit_observation(transaction, framework: Path, inventory=None, data=None) -> dict:
+    """Installed sources Git reports as not committed in HEAD (status key).
+
+    Covers the journal's recorded sources and the current source inventory;
+    callers pass what they already loaded. Observation only: never changes
+    phase, reason or readiness; any failure becomes
+    ``uncommitted_sources_unavailable``.
+    """
+    try:
+        recorded = (data if data is not None else transaction._load())["sources"]
+        if inventory is None:
+            inventory = source_inventory(framework, [])
+        paths = sorted(set(recorded) | {str(Path(p).absolute()) for p in inventory})
+        _, uncommitted, reason = install_activation.uncommitted_sources(transaction.root, paths)
+    except Exception as exc:
+        reason = f"{type(exc).__name__}: {exc}"
+    if reason is not None:
+        return {"uncommitted_sources_unavailable": reason}
+    return {"uncommitted_sources": uncommitted}
 
 
 # Exact source bytes from the immediately preceding installed generation. Only
@@ -426,7 +491,7 @@ def framework_git_hooks(framework):
     if hookdir.is_symlink():
         raise ValueError('framework Git hooks directory is a symlink')
     paths = []
-    for name in ('pre-commit', 'commit-msg'):
+    for name in ('pre-commit', 'commit-msg', 'pre-merge-commit'):
         target = hookdir / name
         effective = git('rev-parse', '--path-format=absolute', '--git-path', 'hooks/' + name)
         if effective.returncode or Path(effective.stdout.strip()).resolve() != target.resolve():
@@ -435,12 +500,37 @@ def framework_git_hooks(framework):
     return paths
 
 
-def plan_full_hosts(plan, framework, home, scope, modes, host):
+def existing_installation(selection_raw, home: Path, codex_home: Path, agents_home: Path) -> bool:
+    """Forge entries are on this machine. A rolled-back first install leaves none
+    (its journal remains); one from before the state record has its manifests."""
+    markers = (
+        codex_home / ".forge-codex-boot.json",
+        home / ".claude/.forge-claude-boot.json",
+        home / ".claude/.forge-managed.json",
+        home / ".local/bin/.forge-managed.json",
+        agents_home / "skills/.forge-managed.json",
+    )
+    return selection_raw is not None or any(marker.exists() for marker in markers)
+
+
+def served_hosts(profile: dict) -> set[str]:
+    """Hosts the profile has entries for."""
+    served = {"codex"} if profile.get("codex_boot") else set()
+    if profile.get("claude_boot_block") or profile.get("claude_setup"):
+        served.add("claude-code")
+    if profile.get("claude_setup"):
+        served.add("opencode")
+    return served
+
+
+def plan_full_hosts(plan, framework, home, scope, modes, hosts):
     """Host planning uses read-only Git resolution; mutation belongs to activation."""
+    if isinstance(hosts, str):
+        raise TypeError("hosts is a collection of host names, not a string")
     links = []
     launchers = {}
     for name, adapter, marker in (("cc", "claude-code", "CC"), ("oc", "opencode", "OC")):
-        if host not in {"all", name}:
+        if adapter not in hosts:
             continue
         source = (framework / f"orchestrators/{adapter}/bin/{name}").read_text()
         needle = f'FRAMEWORK_DIR_INSTALLED=""  # SUBSTITUTED-BY-SETUP-{marker}'
@@ -466,7 +556,7 @@ def plan_full_hosts(plan, framework, home, scope, modes, host):
             if digest(normalized) == PREDECESSOR_LAUNCHER_HASHES[name]:
                 legacy_hashes[name] = {digest(current)}
         managed_files(plan, binroot, launchers, legacy=launchers, legacy_hashes=legacy_hashes)
-    if host in {"all", "cc"}:
+    if "claude-code" in hosts:
         hook_source = framework / 'orchestrators/claude-code/hooks/pre-commit.sh'
         for target in framework_git_hooks(framework):
             if not hook_source.is_file():
@@ -507,7 +597,7 @@ def plan_full_hosts(plan, framework, home, scope, modes, host):
                     raise ValueError(f"unowned Claude host directory: {link}")
             else:
                 links.append((link, str(target)))
-    if host in {"all", "oc"}:
+    if "opencode" in hosts:
         template = framework / "orchestrators/opencode/opencode.jsonc.example"
         text = template.read_text().replace("${FRAMEWORK_DIR}", str(framework)).replace("${HOME}", str(home))
         values = {"FORGE_USER_INSTRUCTIONS": [json.dumps(p) + "," for p in [scope.soul, *scope.boot]],
@@ -571,6 +661,8 @@ def prepare_baseline(transaction, framework, home, codex_home, agents_home, cons
 def _main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--profile", choices=PROFILES)
+    parser.add_argument("--host", action="append", default=[], metavar="|".join(HOSTS),
+                        help="assistant to install for; repeat or comma-separate for several")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--user-repo", type=Path)
     parser.add_argument("--skill-link", type=Path, action="append", default=None)
@@ -588,6 +680,8 @@ def _main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
     args = parser.parse_args(argv)
     if args.validation_operation and args.maintenance != "status":
         parser.error("--validation-operation requires --maintenance status")
+    if args.require_ready and args.maintenance != "status":
+        parser.error("--require-ready requires --maintenance status")
     if (args.skill_link or args.force_user_config) and args.user_repo is None:
         parser.error("--skill-link and --force-user-config require --user-repo")
     env = os.environ
@@ -608,6 +702,22 @@ def _main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
             if args.maintenance == "status":
                 result = (transaction.validation_status(args.validation_operation, compatibility=install_activation.workflow_compatibility)
                           if args.validation_operation else transaction.status())
+                inventory = journal = None
+                if not args.validation_operation and result["phase"] in install_activation.TERMINAL:
+                    # Readiness also sees new sources the terminal journal never recorded.
+                    inventory, journal = source_inventory(framework, []), transaction._load()
+                    blocking, accepted = transaction.unrecorded_sources(journal, inventory)
+                    if blocking:
+                        result["phase"] = "recovery_required"
+                        result["reason"] = "unrecorded source without prepared baseline: " + blocking
+                    elif accepted:
+                        result["instruction_drift"] = sorted(set(result.get("instruction_drift", [])) | {
+                            str(Path(p).relative_to(transaction.root)) for p in accepted})
+                if not args.validation_operation and result["phase"] != "unprepared":
+                    # Held-back work: installed but not committed (warning, not a block).
+                    result.update(commit_observation(transaction, framework, inventory, journal))
+                    # After every phase override: is an operation open for its owner?
+                    result["operation_open"] = result["phase"] in install_activation.OPERATION_OPEN
             elif args.maintenance == "retry":
                 result = transaction.retry(compatibility=install_activation.workflow_compatibility)
             elif args.maintenance == "rollback":
@@ -623,6 +733,9 @@ def _main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
             if args.check:
                 raise ValueError("--check cannot prepare maintenance")
             result = prepare_baseline(transaction, framework, home, codex_home, agents_home, args.consumer_root)
+            # A new baseline may stack on an uncommitted generation: warn, never refuse.
+            # The prepared journal already records the current source inventory.
+            result.update(commit_observation(transaction, framework, inventory=()))
             print(json.dumps(result, sort_keys=True))
             return 0
 
@@ -674,9 +787,26 @@ def _main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
         profile = compose_profile(framework, profile, selected_methods)
         closure = validate_closure(framework, profile)
         check_required_paths(framework, profile)
+        existing = existing_installation(selection_raw, home, codex_home, agents_home)
+        hosts, origin = resolve_hosts(args.host, installed_selection, existing, env)
+        print(f"forge install: hosts: {', '.join(hosts)} ({origin})", file=sys.stderr)
+        if not served_hosts(profile) & set(hosts):
+            raise InstallConflict(
+                f"profile {profile_name} has no entry for {', '.join(hosts)}; choose with --host "
+                + "|".join(host for host in HOSTS if host in served_hosts(profile))
+            )
+        dropped = [host for host in installed_selection.get("hosts", list(HOSTS) if existing else []) if host not in hosts]
+        if dropped:
+            print(f"forge install: entries for {', '.join(dropped)} stay in place (no removal)", file=sys.stderr)
+        projects = args.projects if "codex" in hosts else []
+        if args.projects and not projects:
+            print("forge install: project entries are Codex AGENTS.md blocks; skipped without --host codex", file=sys.stderr)
 
         plan = InstallPlan()
-        desired_selection = (json.dumps({"profile": profile_name, "methods": selected_methods}, sort_keys=True) + "\n").encode()
+        selected = {"profile": profile_name, "methods": selected_methods}
+        if origin != "existing installation":
+            selected["hosts"] = hosts
+        desired_selection = (json.dumps(selected, sort_keys=True) + "\n").encode()
         plan.add(selection, desired_selection, expected=read_file(selection))
         if args.user_repo is not None:
             if cfg is None:
@@ -707,7 +837,8 @@ def _main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
         for warning in scope.warnings:
             print(f"forge install: user scope warning: {warning}", file=sys.stderr)
 
-        daily_claude = bool(profile.get("claude_boot_block"))
+        claude_host = "claude-code" in hosts
+        daily_claude = claude_host and bool(profile.get("claude_boot_block"))
         if daily_claude:
             steps = full_claude_surfaces(home)
             if steps:
@@ -717,28 +848,29 @@ def _main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
                 )
 
         links: list[tuple[Path, str]] = []
-        codex = select_skills(framework, profile, CODEX_LABELS)
-        legacy_roles = legacy_skills = legacy_skill_hashes = None
-        if args.migrate_legacy:
-            try:
-                from .codex_legacy import legacy_hashes
-            except ImportError:
-                from codex_legacy import legacy_hashes
-            legacy_roles = legacy_hashes("roles", framework)
-            legacy_skill_hashes = legacy_hashes("skills")
-            legacy_skills = {f"{name}/SKILL.md": content for name, content in build_desired(framework / "skills", **CODEX_LABELS).items()}
-        plan_codex(
-            plan,
-            codex_home,
-            agents_home,
-            framework,
-            skills=codex,
-            scope=scope,
-            profile=profile_name,
-            roles=bool(profile.get("codex_roles")) or profile.get("method_roles", []),
-            legacy_roles=legacy_roles, legacy_skills=legacy_skills, legacy_skill_hashes=legacy_skill_hashes,
-        )
-        links += plan_links(agents_home / "skills", scope.skill_links, set(codex))
+        if "codex" in hosts and profile.get("codex_boot"):
+            codex = select_skills(framework, profile, CODEX_LABELS)
+            legacy_roles = legacy_skills = legacy_skill_hashes = None
+            if args.migrate_legacy:
+                try:
+                    from .codex_legacy import legacy_hashes
+                except ImportError:
+                    from codex_legacy import legacy_hashes
+                legacy_roles = legacy_hashes("roles", framework)
+                legacy_skill_hashes = legacy_hashes("skills")
+                legacy_skills = {f"{name}/SKILL.md": content for name, content in build_desired(framework / "skills", **CODEX_LABELS).items()}
+            plan_codex(
+                plan,
+                codex_home,
+                agents_home,
+                framework,
+                skills=codex,
+                scope=scope,
+                profile=profile_name,
+                roles=bool(profile.get("codex_roles")) or profile.get("method_roles", []),
+                legacy_roles=legacy_roles, legacy_skills=legacy_skills, legacy_skill_hashes=legacy_skill_hashes,
+            )
+            links += plan_links(agents_home / "skills", scope.skill_links, set(codex))
 
         stale_links: list[Path] = []
         claude_pending: list[str] = []
@@ -788,7 +920,7 @@ def _main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
                 body,
                 replace_whole=whole,
             )
-        else:
+        elif claude_host:
             stale_links = plan_daily_claude_removal(plan, claude_root, scope.skill_links)
             # Existing managed daily directories remain hash-owned directories.
             # Upgrade their contents without an unsafe directory-to-link swap.
@@ -801,13 +933,13 @@ def _main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
         modes = {}
         if profile.get("claude_setup"):
             # Host plans share the same preflight, journal and source generation.
-            links += plan_full_hosts(plan, framework, home, scope, modes, "all")
-        if args.projects:
+            links += plan_full_hosts(plan, framework, home, scope, modes, hosts)
+        if projects:
             try:
                 from .generate_codex_agents import plan_boot, plan_hook_cleanup
             except ImportError:
                 from generate_codex_agents import plan_boot, plan_hook_cleanup
-            for project in args.projects:
+            for project in projects:
                 if not project.is_dir():
                     raise ValueError(f"project directory missing: {project}")
                 plan_boot(plan, project, framework, scope=None, profile=profile_name)
@@ -823,12 +955,19 @@ def _main(argv: list[str] | None = None, *, framework: Path = FRAMEWORK) -> int:
 
         source_paths = source_inventory(framework, closure)
         targets = [*plan.files, *(p for p, _ in links), *stale_links]
-        if profile.get("claude_setup"):
+        if profile.get("claude_setup") and claude_host:
             targets.extend(framework_git_hooks(framework))
         state = transaction.status()
         if state["phase"] == "complete" and not pending:
             data = transaction._load()
-            transaction._check(data, integration=True, source=True)
+            # Instruction Markdown drift between operations is accepted; other
+            # source drift and every integration target stay strict.
+            blocking, _ = transaction.terminal_drift(data, snapshot=True)
+            if blocking:
+                raise ValueError(f"installation conflict: resource changed after snapshot: {blocking}")
+            blocking, _ = transaction.unrecorded_sources(data, source_paths)
+            if blocking:
+                raise ValueError(f"unrecorded source without prepared baseline: {blocking}")
             print(json.dumps(state, sort_keys=True))
             return 0
         if state["phase"] in {"unprepared", "complete", "rolled_back"}:

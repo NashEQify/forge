@@ -1,7 +1,8 @@
 # Reviewed workflow compatibility
 
 The exact fingerprint pairs in `workflow-compatibility.yaml` permit only the
-reviewed save and context-housekeeping transition to shared continuity. They are
+reviewed save/context-housekeeping transitions to shared continuity and the
+forward development transitions below. They are
 not a general older-version support promise. Unlisted changes fail closed.
 
 The ordered checkpoints and engine completion, dependency, routing and commit
@@ -35,3 +36,26 @@ matching step count, or shared IDs alone. Any further instruction/gate/dependenc
 completion change creates a new fingerprint and must fail until separately reviewed.
 Cosmetic metadata may normalize only where the engine's contract defines it as such.
 
+
+## Forward build and solve interpretation; mandatory review definition transitions
+
+When a retained build, solve, fix, review or spec-board run is interpreted, installed or rolled back under these
+pairs, and when a change to those definitions is reviewed: read and follow
+`framework/workflow-compatibility-review-gates.md` (§Forward build and solve interpretation, §Mandatory review
+definition transitions).
+
+## Build test-design challenge, fix verification-scope and test-volume transitions
+
+When a retained build or fix run is interpreted, installed or rolled back under these pairs, and when a change to
+those definitions is reviewed: read and follow `framework/workflow-compatibility-test-scope.md` (§Build test-design
+challenge transition, §Fix verification-scope transition, §Test-volume transition).
+
+## Instruction-unit pointer transition
+
+The build, fix, review, spec_board and solve definitions changed only in step `instruction:` text that says where a
+rule is read: it now names the step-loaded unit that holds a section moved out of its core (for example
+`evidence-review-capture.md`, whose header routes to `evidence-review-adoption.md` before any decision, where a
+dispatch step named section 9 of the evidence protocol; `skills/testing/run-strategy.md` for the testing skill's
+former test-selection section). The rules moved verbatim, so no step gained, lost or changed an
+obligation; steps, ids, gates, completion checks and variables are unchanged. The pairs are upgrade-only: a run
+started on the earlier definition continues on the new one, and the reverse is not accepted.

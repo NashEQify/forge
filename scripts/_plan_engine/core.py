@@ -259,6 +259,15 @@ class PhaseProgress:
     remaining_effort: int       # Sum of effort_weight for all non-done tasks
 
 
+@dataclass(frozen=True)
+class _GateObservation:
+    """One analysis result; permission to proceed is distinct from success."""
+    passed: bool
+    detail: str
+    evaluated: bool
+    allows_progress: bool
+
+
 @dataclass
 class Milestone:
     key: str
@@ -270,6 +279,7 @@ class Milestone:
     phases: list[str] = field(default_factory=list)       # from plan.yaml
     # Computed
     status: str = ""
+    gate_results: list[_GateObservation] = field(default_factory=list, init=False, repr=False)
     tasks: list = field(default_factory=list)
     dependents: list[str] = field(default_factory=list)    # inverted requires
     # 13 Optional-Felder direkt typisiert in Dataclass mit Default-Werten.
@@ -289,6 +299,16 @@ class Milestone:
     sysadmin_methodology_import: str = ""        # M1.5-only
     infra_audit: str = ""                 # M1.5-only
     gap_ownership_anchor_task: int | None = None  # M1.5-only
+
+    def _observed_gates(self):
+        for index, gate in enumerate(self.gate):
+            result = (self.gate_results[index] if index < len(self.gate_results)
+                      else _GateObservation(False, "UNEVALUATED: analysis not computed", False, False))
+            yield gate, result
+
+    @property
+    def _gates_allow_progress(self) -> bool:
+        return all(result.allows_progress for _, result in self._observed_gates())
 
     @property
     def is_group(self) -> bool:

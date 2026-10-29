@@ -9,9 +9,32 @@ and [capability contract](framework/capabilities.md).
 
 Search existing issues before opening one. Explain the problem, affected users and
 expected outcome; distinguish observed behavior from an alternative design you prefer.
-For a bug, include sanitized reproduction steps, the Forge revision, installation
-profile/method selection and agent host/version. Include the relevant helper output
-without private knowledge, credentials or raw personal conversations.
+
+For a bug, say which layer failed, because each needs different evidence:
+
+1. **Installation:** the installed files are missing or stale.
+   `python3 scripts/forge_install.py --check` and
+   `python3 scripts/forge_install.py --maintenance status` show the installed state.
+2. **Instruction loading:** the agent host did not load Forge's instructions, or the
+   agent did not follow the boot they ask for. Report how you started the session
+   and whether its first answer followed the boot instructions; that first answer
+   is the evidence. The generator checks under Verification only show whether the
+   source indexes are consistent.
+3. **Session outcome:** the session loaded Forge but did the wrong thing. Report
+   the action you asked for, the expected and the actual result, and sanitized
+   evidence such as the relevant helper output.
+
+Always include the Forge revision, the installation profile and method, the agent
+host and version, and the model if the host reports it. Leave out private
+knowledge, credentials and raw personal conversations; a transcript is never
+required.
+
+To gather this evidence from a session that went wrong, ask the agent to run the
+[session diagnosis](skills/session_diagnosis/SKILL.md) on its transcript, on your own
+machine. Its report checks first whether Forge loaded, names the layer, cites the
+transcript lines behind every finding and asks whether the problem occurs without
+Forge. Share its shared copy, which replaces paths, names and secrets, after reading it;
+never the transcript.
 
 A knowledge-retrieval failure and a development-engine failure need different evidence.
 Only include plan/workflow diagnostics when that capability is involved. For nontrivial
@@ -34,20 +57,26 @@ Use Conventional Commits, such as `docs(usage): clarify standalone Council`.
 Describe the problem, final behavior, relevant checks and limitations in the PR.
 Avoid internal conversation history in reader-facing documentation.
 
+This repository is generated from the maintainers' canonical source. An accepted
+pull request is applied there with your authorship and reaches this repository
+with the next sync. It is not merged here directly, because the next sync would
+overwrite it.
+
 ## Verification
 
-Run checks appropriate to the affected surface. Skill/index changes may require:
+Run checks appropriate to the affected surface. The public checks run from a
+fresh checkout with `python3 -m pytest tests`; [tests/README.md](tests/README.md)
+says what they cover and what they do not. Skill/index changes may require:
 
 ```bash
 python3 scripts/generate_skill_map.py --check
 python3 scripts/generate_workflow_router.py --check
 python3 scripts/generate_skill_wrappers.py --check
+python3 scripts/generate_navigation.py --check
 ```
 
-The navigation generator writes its indexes directly: run
-`python3 scripts/generate_navigation.py` only when regeneration is intended, then
-inspect its diff. It has no check-only mode. Inspect each generator's supported
-interface before use. Update affected generated
+Without `--check`, each generator rewrites its outputs; regenerate only when
+intended, then inspect the diff. Update affected generated
 outputs together with their sources. Check source references, public Markdown links
 and reader journeys for documentation changes. For code, include relevant tests and
 reproduction evidence available in your checkout; do not claim tests you did not run.
@@ -59,8 +88,8 @@ bash scripts/install-git-hooks.sh
 ```
 
 When installed and invoked, they check plan validity, commit conventions and skill
-frontmatter as blocking checks. Secret scanning, source verification and phantom
-claims have warning checks. Tool availability affects coverage; a successful hook
+frontmatter as blocking checks. Secret scanning and source verification are
+warning checks. Tool availability affects coverage; a successful hook
 is not a comprehensive security or behavioral test. Do not bypass a blocking check
 instead of addressing its cause. Additional generator checks are not all enforced
 by the hook; run the relevant ones explicitly.
@@ -69,8 +98,9 @@ by the hook; run the relevant ones explicitly.
 
 Use the [coordinated installation guide](architecture-documentation/05-installation.md).
 The setup shell scripts forward to the common installer; their names do not imply
-separate host-only installations. Stop affected sessions and preserve the current
-generation before changing shared source files. Verify the installed outcome after
+separate host-only installations. Instruction-only Markdown follows the light
+path of the activation contract; for other shared source files stop affected
+sessions and preserve the current generation before changing them. Verify the installed outcome after
 changes, not just the repository diff.
 
 ## Boundaries

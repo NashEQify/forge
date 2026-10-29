@@ -5,7 +5,7 @@ non-trivial actions. SoT for triggers, templates, adversary prompt.
 Addresses session-99 / session-100 gaps: meta-planning ad-hoc
 without proof output, plan-self-review missing before execution
 (smart-but-wrong-in-your-own-plan, instance-vs-class).
-Loaded by: `frame/SKILL.md` step 3 (primary), `spec_board/SKILL.md`
+Loaded by: `frame/flow.md` step 3 (primary), `spec_board/SKILL.md`
 §0.
 
 **Status:** this protocol is **not loaded explicitly** but applied

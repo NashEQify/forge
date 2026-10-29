@@ -34,7 +34,7 @@ not over workflow variants.
 | # | Gate | Skill | Conditional |
 |---|------|-------|-------------|
 | 1 | routing | classification | route: standard / sectional / architecture |
-| 2 | board-dispatch | `spec_board/SKILL.md` (or sectional / architecture per route) | chief consolidates findings; Buddy reads only chief signal |
+| 2 | board-dispatch | `spec_board/SKILL.md` (or sectional / architecture per route) | Chief recommends; Buddy owns the decision and checks pivotal source claims |
 | 3 | convergence-loop | `convergence_loop/SKILL.md` | only on NEEDS-WORK; max 3 passes |
 | 4 | close-bookkeeping | `task_creation/SKILL.md` | risk follow-up: only when verdict has non-empty `remaining_findings:` |
 | 5 | commit | git pre-commit hooks | — |
@@ -63,12 +63,26 @@ above). Pick mid-flow via `--complete routing --route <key>`.
 Chief consolidates findings per pass. At adoption Buddy writes the
 adoption verdict `docs/reviews/board/{task_id}-spec-verdict.md`
 (task-less run: `{spec_name}-verdict.md`; `skills/spec_board/SKILL.md`
-§7); the completion gate checks only it and requires `schema_version: 1`. Buddy reads ONLY
-the chief signal (CLAUDE.md §1).
+§7). Before dispatch, load public `skills/_protocols/evidence-pointer-schema.md`
+§9 and capture this workflow's `board-dispatch` owner. Nested skills receive that
+exact pair, without a competing capture. Preserve full producer returns, write
+Buddy's explicit decision and adopt it. Dispatch completion checks current
+`evidence`, accepting NEEDS-WORK so repair remains reachable. Buddy owns the
+decision and verifies pivotal source claims after reading the relevant sources;
+Chief consolidation is a recommendation.
 
 **3. convergence-loop** — on NEEDS-WORK: fix-loop via `convergence_loop`,
 max 3 passes, rising severity threshold. PASS at 0C+0H. Skip-eligible
-when the first pass was already PASS.
+when the first pass was already PASS. Relevant fixes explicitly retry
+`board-dispatch`, fresh-capture the changed subject before applicable verification,
+adopt the new decision and return through existing steps. A skipped optional
+convergence step never grants success.
+
+**Required phase-close** checks `spec_success` on the retained `board-dispatch`
+owner before task-status writes and completion. On refusal/error leave requested
+review-derived fields unchanged. PASS writes APPROVED; current NEEDS-WORK maps to
+REJECTED for repair and cannot advance readiness. Apply public §9.6 through
+`task_status_update` with the exact owner, including spec_states ready.
 
 **4. close-bookkeeping** — for every verdict file written this run,
 check the top-level YAML block `remaining_findings:`. Non-empty →
@@ -110,7 +124,9 @@ python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --complete <step> --evidence "
 #   >=2 workflows live? add --id <wf> (from --next `ID:`) — engine refuses keyless (exit 5)
 ```
 
-`on_fail` per step: `block` (fix + retry), `warn` (`--complete --force` + reason),
+Mandatory adoption refuses force/failure-policy bypass, even in compound checks;
+public evidence-pointer protocol §9 owns capture/adopt/check and producer duties.
+Ordinary `on_fail` per step: `block` (fix + retry), `warn` (`--complete --force` + reason),
 `skip` (auto `warn_skipped`), `escalate` (pauses, user decision). Cross-session
 resume surfaces active workflows at session start (`--boot-context`).
 

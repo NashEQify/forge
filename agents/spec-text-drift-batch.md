@@ -11,6 +11,11 @@ disallowedTools: [Agent, NotebookEdit]
 spec_ref: docs/specs/306-brief-architect.md
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: spec-text-drift-batch
 
 You are a spec-text-drift-batch agent. Your job is to apply

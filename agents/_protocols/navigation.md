@@ -28,7 +28,7 @@ Boundary against `skills/_protocols/`: those are skill-level mechanics
 | "Base reviewer rules (all boards)?" | `reviewer-base.md` |
 | "Spec Board persona rules?" | `spec-reviewer-protocol.md` |
 | "Code Board persona rules?" | `code-reviewer-protocol.md` |
-| "Code Board extended conventions (pattern lift)?" | `code-reviewer-base-extended.md` |
+| "Code Board extended conventions?" | `code-reviewer-base-extended.md` |
 | "UX Board persona rules?" | `ux-reviewer-protocol.md` |
 | "Reasoning-trace required section (steps 1-3, 5)?" | `reviewer-reasoning-trace.md` |
 | "First-principles drill before review output?" | `first-principles-check.md` |

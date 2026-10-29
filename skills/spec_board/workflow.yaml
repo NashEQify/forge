@@ -21,10 +21,10 @@ steps:
     name: "Tiefenmodus-Klassifikation (Standard vs. Deep)"
     category: classification
     instruction: >
-      Scoped Pre-Check: board_result pass UND Aenderung <=3 Sektionen -> Standard.
+      Scoped Pre-Check: board_result APPROVED (historical pass readable) UND Aenderung <=3 Sektionen -> Standard.
       Sonst 4 Checks (Cross-Layer, Interface, Full Path, Security).
       >=1 JA -> Deep. Alle NEIN -> Standard.
-      Ref: SKILL.md SS1.
+      Ref: depth-and-team.md SS1.
     completion:
       type: manual
     routes:
@@ -59,7 +59,7 @@ steps:
       Deep Final: 2 (Adv + Impl).
       Spezialisten je Inhalt: Schema/API -> code-api-contract, Readability -> board-consumer,
       First-Principles -> board-adversary-2. Auswahl + Begruendung dokumentieren.
-      Ref: SKILL.md SS2 + SS4.6.
+      Ref: depth-and-team.md SS2 + checklist-and-dispatch.md SS4.6.
     completion:
       type: manual
     commit_gate: false
@@ -70,8 +70,15 @@ steps:
     category: deterministic
     instruction: >
       Prompt assemblieren: reviewer-base + spec-reviewer-protocol + Persona + dispatch-template.
-      Agents parallel dispatchen. Jeder Agent NUR die Spec (Context-Isolated).
-      Ref: SKILL.md SS4.7 + SS4.8.
+      Before mandatory dispatch load evidence-review-capture.md (section 9). Standalone:
+      capture this workflow/agent-dispatch while in progress. Nested: use the supplied
+      exact review_owner_workflow_id/review_owner_step_id and existing parent identity;
+      never create a competing capture. Pass these flat variables to readiness.
+      Construct producer envelope only from successful capture stdout plus assigned
+      slot/scope. Preserve complete returns verbatim with actual actor/path/digest.
+      Agents independently review the neutral commissioned scope (Context-Isolated).
+      Matching-file completion below proves transport only, not current qualification.
+      Ref: checklist-and-dispatch.md SS4.7 + SS4.8.
     completion:
       type: file_created_matching
       pattern: "docs/reviews/board/*-pass*.md"
@@ -84,8 +91,10 @@ steps:
     instruction: >
       Chief spawnen mit consolidation-preservation + piebald-budget.
       Analysis-Mode-Gate vor Findings-Klassifikation anwenden.
-      Chief-Signal lesen -> SAVE (NON-NEGOTIABLE).
-      Ref: SKILL.md SS3 + SS4.8.
+      Buddy owns the decision and checks pivotal source claims after complete-source
+      preservation; Chief recommends. Subsequent Chief returns are separate artifacts.
+      SAVE (NON-NEGOTIABLE).
+      Ref: SKILL.md SS3 + checklist-and-dispatch.md SS4.8.
     completion:
       type: file_created_matching
       pattern: "docs/reviews/board/*-consolidated-*.md"
@@ -97,15 +106,18 @@ steps:
     category: content
     instruction: >
       Deep: IMMER nach Chief. Standard: Buddy-Entscheidung (proportional).
-      Mechanik: _protocols/discourse.md.
+      Mechanik: _protocols/discourse.md. Load evidence-review-capture.md (section 9);
+      register contingent discourse/Chief slots through unchanged-subject append-only
+      capture before dispatch. Preserve supplements and subsequent Chief separately;
+      keep exact caller owner. Relevant input changes require retry/fresh capture.
       Ref: SKILL.md SS5.
     guard:
       type: route_active
       step_id: tiefenmodus-check
       route: deep
     completion:
-      type: file_modified_after
-      path: "docs/reviews/board/*-consolidated-*.md"
+      type: file_created_matching
+      pattern: "docs/reviews/board/*-consolidated-*.md"
     commit_gate: false
     required: true
 
@@ -129,7 +141,7 @@ steps:
     name: "Post-Pass Checkliste (NON-NEGOTIABLE)"
     category: content
     instruction: >
-      SKILL.md SS6 Checkliste abarbeiten:
+      post-pass.md SS6 Checkliste abarbeiten:
       - Chief-Consolidated hat Tracking-Tabelle
       - Verifikations-Gleichung stimmt (Raw = Kept + Merged + Related + Removed)
       - Merge-Stichprobe: 2-3 MERGED-Findings pruefen
@@ -145,9 +157,14 @@ steps:
     name: "Findings fixen"
     category: content
     instruction: >
+      Current NEEDS-WORK supports repair. After relevant fixes retry the exact owner
+      and fresh-capture before applicable current verification, with original reports
+      as exact history. Below section 3a trigger Buddy records bounded current
+      verification in a verification slot and an explicit decision. Triggered fixes
+      retain adversary+implementer; final teams remain unchanged.
       NEEDS-WORK: alle Findings fixen (C+H+M+L).
       MCA fixt, Buddy dispatcht + committed.
-      CONVERGED: DONE. Ref: SKILL.md SS4.9.
+      CONVERGED: DONE. Ref: checklist-and-dispatch.md SS4.9.
     completion:
       type: file_modified_after
       path: "{artifact_path}"
@@ -163,7 +180,7 @@ steps:
       Team: 2 Agents Context-Isolated (board-adversary + board-implementer).
       Beide MUESSEN Drill liefern (first-principles-check.md).
       Acceptance: 0 neue BLOCKER + 0 neue MAJOR.
-      Ref: SKILL.md SS3a.
+      Ref: post-pass.md SS3a.
       Buddy-judged (kein Engine-Guard — der Trigger ist eine Bewertung,
       nicht mechanisch berechenbar): Trigger nicht erfuellt → `--skip
       delta-verify`; erfuellt → Mini-Board ausfuehren, dann `--complete`.
@@ -178,33 +195,49 @@ steps:
     name: "Task-YAML board_result + readiness + Commit"
     category: deterministic
     instruction: >
-      Task-YAML board_result + readiness aktualisieren.
-      Nur via task_status_update Skill.
-      Dann: git add + commit (Review-Files + Fixes + Task-YAML).
-      Commit-Guard aus CLAUDE.md durchgehen.
+      Load evidence-review-adoption.md (section 9.4-9.6). Before review-derived writes check
+      supplied review_owner_workflow_id/review_owner_step_id with spec_success.
+      Refusal/error leaves requested fields unchanged. PASS maps to APPROVED;
+      negative evidence supports repair only. Update Task-YAML only via task_status_update
+      with the exact owner. Adoption below qualifies the retained explicit decision;
+      task existence remains a separate transport predicate.
+      Persist the review result; commit only under applicable authorization in
+      framework/process-map.md section Authorization, preserving foreign work
+      and applicable commit checks. Existing authorization remains sufficient;
+      metadata updates do not authorize publication.
     completion:
-      type: exit_code
-      command: "python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --guard task-yaml-ok {task_id}"
+      type: compound
+      checks:
+        - type: pointer_check
+          source_file: "docs/reviews/board/{task_id}-spec-verdict.md"
+          source_file_fallback: "docs/reviews/board/{spec_name}-verdict.md"
+          min_schema_version: 1
+          review_owner_workflow: "{review_owner_workflow_id}"
+          review_owner_step: "{review_owner_step_id}"
+          review_policy: spec_success
+        - type: named_predicate
+          name: task-yaml-ok
+          task_id: "{task_id}"
     commit_gate: true
     required: true
 
   - id: push-board
     name: "Git Push"
     category: deterministic
-    instruction: "git push"
+    instruction: "Apply framework/process-map.md section Authorization. Push to the intended remote only when already authorized for that action and target; unchanged authorization needs no routine reapproval. Otherwise skip this publication-only step with the reason, retain the local review result and report publication as omitted. An authorized missing or failed publication remains an unresolved obligation; do not skip it merely to close the local workflow. Authorized action: git push.\n\nObserve the intended repository, remote ref and current revision after the authorized push; an unrelated historical commit or an exit-zero placeholder is insufficient. Missing, failed, timed-out or unknown outcomes remain incomplete: report the concrete blocker. After observing success with existing authorized tools, complete explicitly with --complete push-board --id <workflow-id> --evidence \"<current observations and retained evidence>\". Evidence must be supplied in this invocation, including force. The engine checks presence only; outcome truth, freshness and completeness remain agent obligations. Completion is agent-confirmed; force remains forced."
+    evidence_required: true
     completion:
-      type: exit_code
-      command: "git push"
+      type: "manual"
     on_fail: escalate
-    required: true
+    required: false
 
   - id: deploy-board
     name: "Dashboard Deploy"
     category: deterministic
-    instruction: "bash $FRAMEWORK_DIR/scripts/deploy-docs.sh"
+    instruction: "Apply framework/process-map.md section Authorization. Deploy to the intended target only when already authorized for that action and target; unchanged authorization needs no routine reapproval. Otherwise skip this publication-only step with the reason, retain the local review result and report publication as omitted. An authorized missing or failed publication remains an unresolved obligation; do not skip it merely to close the local workflow. Authorized action: bash $FRAMEWORK_DIR/scripts/deploy-docs.sh.\n\nObserve the intended release and a meaningful actual service result after the authorized deploy; script exit status alone is insufficient. Missing, failed, timed-out or unknown outcomes remain incomplete: report the concrete blocker. After observing success with existing authorized tools, complete explicitly with --complete deploy-board --id <workflow-id> --evidence \"<current observations and retained evidence>\". Evidence must be supplied in this invocation, including force. The engine checks presence only; outcome truth, freshness and completeness remain agent obligations. Completion is agent-confirmed; force remains forced."
+    evidence_required: true
     completion:
-      type: exit_code
-      command: "bash $FRAMEWORK_DIR/scripts/deploy-docs.sh"
+      type: "manual"
     depends_on: [push-board]
     on_fail: warn
-    required: true
+    required: false

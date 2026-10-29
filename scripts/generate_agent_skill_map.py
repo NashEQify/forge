@@ -4,7 +4,8 @@
 Produces two outputs from frontmatter `relevant_for:` lists in
 `skills/**/SKILL.md`:
 
-1. AUTO-block in each `agents/<name>.md` — gives spawned sub-agents a
+1. Mandatory common-read block in every active role, independent of the optional
+   skill-awareness AUTO-block in each `agents/<name>.md` — gives spawned sub-agents a
    curated, minimal skill-pointer-list. Markers:
        <!-- AGENT-SKILLS-AUTO-START -->
        ...
@@ -49,6 +50,15 @@ except ImportError:
 
 AUTO_START = "<!-- AGENT-SKILLS-AUTO-START -->"
 AUTO_END = "<!-- AGENT-SKILLS-AUTO-END -->"
+COMMON_START = "<!-- AGENT-COMMON-AUTO-START -->"
+COMMON_END = "<!-- AGENT-COMMON-AUTO-END -->"
+COMMON_BLOCK = (
+    COMMON_START + "\n"
+    "Read and follow `framework/work-principle.md` before taking up work.\n"
+    "Resolve this reference against the framework root; retain the consumer CWD.\n"
+    + COMMON_END
+)
+
 AGGREGATE_START = "<!-- AGENT-SKILL-MAP-AUTO-START -->"
 AGGREGATE_END = "<!-- AGENT-SKILL-MAP-AUTO-END -->"
 
@@ -116,17 +126,24 @@ def collect_skills(root: Path) -> list[tuple[str, str, list[str]]]:
 
 
 def known_agents(root: Path) -> set[str]:
-    """Set of agent names by .md filename in agents/ (excluding README, navigation)."""
-    agents_dir = root / "agents"
-    out: set[str] = set()
-    if not agents_dir.is_dir():
-        return out
-    for md in agents_dir.glob("*.md"):
-        stem = md.stem
-        if stem in ("README", "navigation"):
-            continue
-        out.add(stem)
-    return out
+    """Use the existing adapter's validated active canonical role inventory."""
+    try:
+        from .generate_codex_agents import generate_roles
+    except ImportError:
+        from generate_codex_agents import generate_roles
+    return {Path(name).stem for name in generate_roles(root)}
+
+
+def common_role_text(text: str) -> str:
+    """Generate a mandatory read without opting a role into skill awareness."""
+    pattern = re.compile(re.escape(COMMON_START) + r".*?" + re.escape(COMMON_END), re.S)
+    if pattern.search(text):
+        return pattern.sub(COMMON_BLOCK, text)
+    # Role frontmatter has already been validated by generate_roles.
+    end = re.search(r"(?m)^---[ \t]*$", text[4:])
+    assert end is not None
+    boundary = 4 + end.end()
+    return text[:boundary] + "\n\n" + COMMON_BLOCK + text[boundary:]
 
 
 def agents_for_skill(rel_for: list[str], all_agents: set[str]) -> set[str]:
@@ -303,6 +320,14 @@ def main() -> int:
         agent_path = root / "agents" / f"{agent}.md"
         if not agent_path.exists():
             continue
+        original = agent_path.read_text(encoding="utf-8")
+        common = common_role_text(original)
+        if common != original:
+            if args.check:
+                drift_files.append(str(agent_path.relative_to(root)))
+            else:
+                agent_path.write_text(common, encoding="utf-8")
+                written.append(str(agent_path.relative_to(root)))
         block = build_block_for_agent(agent, skills, all_agents)
         if args.check:
             if check_agent_file(agent_path, block):

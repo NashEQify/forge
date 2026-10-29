@@ -47,6 +47,13 @@ steps:
     name: "Board dispatch (per routing) → chief consolidates"
     category: content
     instruction: >
+      Before mandatory review dispatch, load skills/_protocols/evidence-pointer-schema.md
+      section 9. Capture this exact workflow/step before production; pass its owner
+      to nested skills without a competing capture. Use successful capture stdout
+      for run/subject metadata, preserve complete current returns, write and adopt
+      an explicit decision, then check the declared policy before completion or
+      review-derived task writes. Relevant fixes require retry and fresh applicable
+      capture. For code, declare state/report/decision exclusions before capture.
       Dispatch the routed skill (spec_board / sectional_deep_review /
       architecture_coherence_review). Chief consolidates findings into
       the verdict artifact. Buddy owns the decision and checks decisive source
@@ -72,6 +79,9 @@ steps:
       checks:
         - type: pointer_check
           source_file: "docs/reviews/board/{task_id}-spec-verdict.md"
+          review_owner_workflow: self
+          review_owner_step: board-dispatch
+          review_policy: evidence
           source_file_fallback: "docs/reviews/board/{spec_name}-verdict.md"
           min_schema_version: 1
         - type: manual
@@ -89,9 +99,12 @@ steps:
     name: "Convergence loop on NEEDS-WORK (max 3 passes)"
     category: content
     instruction: >
-      On NEEDS-WORK: fix-loop via convergence_loop, max 3 passes, rising
-      severity threshold. PASS at 0C+0H. Skip-eligible if first pass was
-      already PASS.
+      Current NEEDS-WORK completes board-dispatch under evidence policy so repair
+      remains reachable. Apply existing convergence_loop limits/severity rules.
+      After relevant fixes explicitly retry board-dispatch, fresh-capture and run
+      the applicable verification, adopt the new explicit decision and return
+      through the existing steps. Optional skip cannot satisfy required phase-close
+      spec_success. PASS remains subject to existing 0C+0H policy.
     skill_ref: skills/convergence_loop/SKILL.md
     required: false
     completion:
@@ -101,9 +114,23 @@ steps:
   - id: phase-close
     name: "workflow_phase=close (engine-internal)"
     category: deterministic
-    instruction: "task_status_update workflow_phase=close + board_result + readiness in task YAML"
+    instruction: >
+      Before review-derived task YAML writes, load evidence-review-adoption.md (section 9.4-9.6)
+      and check this workflow's retained board-dispatch owner with spec_success.
+      Refusal/error leaves requested board_result/readiness/spec_states unchanged.
+      On success use task_status_update with the exact owner and section 9.6 mapping,
+      then workflow_phase=close. Current negative evidence grants no forward readiness.
     completion:
-      type: manual
+      type: compound
+      checks:
+        - type: pointer_check
+          source_file: "docs/reviews/board/{task_id}-spec-verdict.md"
+          source_file_fallback: "docs/reviews/board/{spec_name}-verdict.md"
+          min_schema_version: 1
+          review_owner_workflow: self
+          review_owner_step: board-dispatch
+          review_policy: spec_success
+        - type: manual
     on_fail: block
 
   - id: close-bookkeeping

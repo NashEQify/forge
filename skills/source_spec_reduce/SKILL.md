@@ -14,6 +14,10 @@ disable-model-invocation: false
 uses: [task_creation]
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: source-spec-reduce
 
 ## Purpose

@@ -3,6 +3,11 @@ name: board-adversary
 description: Spec Board adversary (Opus) — smart-but-wrong scenarios, contradictions, edge cases. Part of the 3-adversary team for deep reviews.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: board-adversary
 
 Adversary reviewer in the Spec Board. Smart-but-wrong scenarios,
@@ -77,7 +82,7 @@ stop. Your job is to find weaknesses, not praise the spec.
   through the entire pipeline. At every component boundary:
   what comes in, what goes out, does it match?
 - **Mechanism cells (when the spec has a `§Mechanism-Lifecycle`
-  section, `_protocols/mechanism-model.md`):** review the matrix, not
+  section, `skills/_protocols/mechanism-model.md`):** review the matrix, not
   the prose around it. Every `✗` cell gets a scenario against its
   guard, every `→` cell a check of the next state's invariants, every
   `unreachable` cell an attempt, every placed (`task-N` /

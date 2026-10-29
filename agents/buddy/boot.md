@@ -1,5 +1,9 @@
 # Buddy — Boot
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 Start sequence and routing. Resolve the workflow selection before process loading.
 
 **Freshness gate first:** after minimal host/path orientation, check the active
@@ -8,134 +12,41 @@ reading intent, project context, plans or session state. Bootstrap instructions
 already injected/read are provisional until this gate completes; after a pull,
 reload the affected instructions from disk before using them.
 
+**The size of the request does not shorten the boot.** Run it before answering,
+also for a quick question, a lookup or a small fix: it gives the answer the
+person's and the project's context, and on-demand is already the short form
+(`boot-on-demand.md`). A user scope or a host limit cuts only the steps it
+blocks, not the instruction reads; a failed read is reported (§Restricted user
+scope).
+
 ## Boot sequence
 
 1. **ORIENT:** `date '+%Y-%m-%d %H:%M %Z'` + `hostname` + `pwd`.
    Don't surface this as a separate bash call — fold the result inline
    into the greeting (GREET). The pwd result is the active CWD for
    the rest of the boot sequence.
-2. **STATUS-CHECK:** run `git-status-check.sh` from the active project's Git root,
-   passing the concrete framework root as `FRAMEWORK_DIR` and setting
-   `GIT_STATUS_CHECK_INCLUDE_FRAMEWORK=1`. This checks both the active
-   project and the framework whose instructions this session uses (deduped
-   when they are the same repo). It fetches and reports ahead/behind status.
-   5-second network timeout. Output: one line per non-clean repo,
-   `<path> [ahead N | behind N | ahead M, behind N]`. Empty = sync.
-   When a user repo is configured (§User scope) and differs from the
-   active project, run the same script from the user repo's root too:
-   user-scope facts are written there, so it must not be stale.
-
-   Buddy parses the output. Ahead-only status remains advisory. A remote update requires the **pull decision** below before
-   RESOLVE, ROUTE, LOAD or RESUME begins. Do not load context in parallel
-   with this gate or while waiting for the answer.
-
-   **Pull decision (behind > 0, including divergence):**
-   - The script can report cached tracking refs after a failed fetch. Before
-     claiming an online update, confirm a successful bounded fetch for the
-     affected repo and re-read its status. If offline or fetch fails, report
-     the unavailable check, label any cached status as such, and continue
-     without a pull or a blocking update question.
-   - If still behind, name the repo and ahead/behind counts and ask:
-     "Remote has N newer commits in <repo>. Shall I run git pull before
-     continuing?" Batch multiple affected repos into one question. Wait for
-     the user's answer before continuing the boot sequence. Silence
-     is not approval. An explicit pull instruction in the current request,
-     or a standing session-start pull permission in the project's rules,
-     already answers this question for the repos it covers.
-   - For framework source changes, use `framework/installation-activation.md`.
-     Stop affected sessions before updating shared sources, preserve a matched
-     source/integration baseline, install and validate before fresh-session use.
-     An active boot never silently pulls/reinstalls the framework. Standing pull
-     permission is not evidence that other sessions stopped. Consumer-only approved
-     fast-forward updates preserve local changes; no reset/stash/rebase/branch switch.
-     Reread changed consumer instructions before use. If update is unavailable,
-     report the concrete limit; do not claim the old session is newly upgraded.
+2. **STATUS-CHECK:** run `git-status-check.sh` from the active project's Git root
+   and resolve its findings, including any pull decision, before step 3: read and
+   follow `agents/buddy/boot-status.md` §Freshness gate (Codex escalation route,
+   invocation, output, pull decision).
 
    Then resolve workflow selection from the active intent per
-   `$FRAMEWORK_DIR/framework/process-map.md` section Workflow selection.
+   `$FRAMEWORK_DIR/framework/workflow-selection.md`.
    The **daily** install profile (named in the entry) always selects
    `on-demand`: it installs no software tooling and starts directly with
    `boot-on-demand.md`.
    **For `on-demand`:** continue with `$FRAMEWORK_DIR/agents/buddy/boot-on-demand.md`
    from its step 3 (steps 1–2 are done) and GREET as it says. Skip the
-   generic steps 4–6 here; a project may explicitly require its own probes.
+   software steps 4–7 (`boot-software.md`); a project may explicitly require its own probes.
    This branch also governs generic boot summaries supplied by adapters.
    **For software:** load `$FRAMEWORK_DIR/agents/buddy/operational.md` before
    development process work; bind the explicit selection through the development
-   continuation adapter.
-4. **ROUTE:** decide context routing (read and write paths for the
-   session). CWD comes from ORIENT.
-   - Run `ls <CWD>/context/` (MUST — filesystem check, don't infer
-     from intent.md).
-     Found → context write path = `<CWD>/context/`.
-     Not found → auto-create `<CWD>/context/` with `history/` +
-     `overview.md`, then write project-local (see Context Routing).
-   - **Project docs:** if RESOLVE found an intent.md, run
-     `ls <CWD>/docs/backlog.md` (MUST).
-     Found → the project has a local docs/ (backlog, tasks, specs)
-     for the session.
-     Not found → no local backlog.
-   The result holds for the entire session. Rules: see "Context
-   routing".
-5. **LOAD:** first follow `framework/continuity.md` for scoped recovery checks
-   and coherent snapshots of required profile/project context. Pending work blocks
-   dependent use until reconciled or explicitly qualified. Then load context. Two categories: always-load (Buddy
-   infrastructure, scope-independent) + intent-load (from the
-   Context field of the active intent.md).
-   - **always-load** (Buddy tier, every session):
-     - **User profile** — `<user_repo>/context/user/profile.md`
-       (§User scope: who the user is, including values and priorities), CWD-independent (who the user is —
-       minimal context). No user scope → nothing to load.
-     - `bash $FRAMEWORK_DIR/scripts/chub-status-check.sh` — presence
-       check for the `chub` CLI (get_api_docs prerequisite). Empty
-       output = installed; non-empty = one advisory line for GREET.
-     - `$FRAMEWORK_DIR/framework/boot-navigation.md` — skill index
-       (25 skills + 10 workflows). Without it, Buddy boots without
-       the skill landscape in mind. Explicit-absolute (consumer-CWD
-       convention).
-   - **intent-load** (project-specific):
-     - Whatever the Context field lists under "Boot". That, and
-       nothing else.
-     - Local backlog: if ROUTE (step 4) found one → load it.
-     - Context field missing in intent.md: derive from Vision +
-       Non-Goals; ask if uncertain.
-   - No intent.md found: only always-load, then create intent.md
-     together.
-6. **RESUME:** load session state.
-   - `session-buffer.md`: `<CWD>/docs/session-buffer.md` (repo-
-     local). PENDING → dispatcher, PROCESSED → remove. Not found →
-     skip.
-   - **Root session:** run
-     `python3 $FRAMEWORK_DIR/scripts/plan_engine.py --boot`. The
-     output gives in-progress tasks, critical path, next actions,
-     milestone status, warnings.
-   - **Selected development continuation:** load the existing handoff through
-     `framework/continuity.md` with pending status, then use
-     `framework/development-continuation.md` to restore explicit bindings without
-     advancing or unpausing. Software intent binds task/plan-only checks even with
-     no workflow IDs. Legacy selected work requires explicit session evidence;
-     ambiguous selection blocks exact continuation, never binds every active run.
-   - **Session handoff:** `<CWD>/context/session-handoff.md`. The
-     handoff carries the discussion context from the last session
-     (open goals/state, leading files and next steps/blockers, with necessary decisions, approvals and failed attempts). Not
-     found → fresh start.
-7. **GREET:** short greeting (style: soul.md).
-
-   **On STATUS-CHECK findings (step 2):** briefly report any pull outcome,
-   ahead-only status or unavailable check not already communicated. The
-   pull decision was resolved before context loading; do not ask again here.
-   Nothing found: don't mention it.
-
-   **On user-scope warnings (§User scope):** one line — no user scope
-   configured, user folder or a boot file missing.
-
-   **On Workflow-Resume findings (step 6):** selected bound workflows/blockers as a
-   one-liner list in GREET (`Active: solve workflow [step:
-   frame-report, state: docs/solve/<slug>.md]`). Nothing found:
-   don't mention it.
+   continuation adapter. Then read and follow
+   `$FRAMEWORK_DIR/agents/buddy/boot-software.md`: steps 4–7 (ROUTE, LOAD,
+   RESUME, GREET).
 
 **Boot ends with the greeting.** From the first user turn on, the selected
-mode's working rules apply. No transition period.
+mode's working rules apply.
 
 ## User scope
 
@@ -145,17 +56,33 @@ fixed convention: `context/user/` with optional `soul.md`, `profile.md`
 (read by the start procedure after the freshness gate), and
 `navigation.md` to the detail files (on demand). The **entry** (session
 hook, launcher, or the installed block in `~/.claude/CLAUDE.md` /
-`~/.codex/AGENTS.md`) names only who and where: the resolved soul, the
-start procedure, the user repo and the install profile. Without an entry,
+`~/.codex/AGENTS.md`) names who and where: the resolved soul, the
+start procedure, the user repo and the install profile. It states the
+§Restricted user scope rule. Where its carrier has room, it also includes
+whole files: the resolved soul and, in the `full` profile, `operational.md`
+(an install-time block includes none: its files change without a reinstall).
+An included file is loaded; it needs no read at boot. Without an entry,
 resolve by reading the machine setting. The soul read in bootstrap is the **resolved**
 soul (default `agents/buddy/soul.md`). Never fall back to another person's
 files.
 
 **Continuous maintenance:** when a user scope is configured, or the
 project's rules require ongoing knowledge maintenance, read
-`$FRAMEWORK_DIR/skills/knowledge_processor/SKILL.md` §Continuous
-maintenance in LOAD (software) or step 3 of `boot-on-demand.md`; its rules
+`$FRAMEWORK_DIR/skills/knowledge_processor/continuous-maintenance.md`
+in LOAD (step 5, `boot-software.md`) or step 3 of `boot-on-demand.md`; its rules
 apply from the first turn.
+
+## Restricted user scope
+
+The framework root is the session's instruction source. Reading it and the
+files the entry names loads instructions; it is not work outside the
+project, so a scope that limits writes, network or installs does not cancel
+the boot. Skip only the steps the scope forbids (the freshness fetch needs
+the network; creating `context/` or other files needs a write) and report
+each as an unavailable check (`boot-status.md` §Freshness gate). A boot
+skipped or cut short for any reason is said first in the first answer
+(`boot-status.md` §Greeting findings): the reply that ends your first turn,
+not a progress note before it.
 
 ## Boot rules
 
@@ -171,15 +98,16 @@ Apply ONLY during steps 1-5.
 ### Parallelization (respect the freshness gate)
 
 1. **Bootstrap:** read the resolved soul (§User scope), `operational.md`
-   (when the injected boot list names it) and `boot.md`, plus the minimum
-   adapter instructions needed to locate the framework and active project. ORIENT may run in parallel. Do not preload intent or context.
+   (when the entry or adapter names it), `boot.md` and, in the full profile,
+   `framework/invariants.md`, unless the entry includes them, plus the minimum
+   to locate the framework and project. ORIENT may run in parallel. Do not preload intent or context.
 2. **Freshness gate:** run STATUS-CHECK (step 2); independent Git checks
    may run in parallel. Resolve any pull question now.
    Context reads, plan/workflow probes and session resume must wait.
 3. **Current-context boot:** after the gate and any required instruction
    reload, perform RESOLVE and select the mode before loading context or
    probing session state. Follow the on-demand branch in step 3 or the software
-   ROUTE → LOAD → RESUME sequence. Batch independent reads and probes within
+   ROUTE → LOAD → RESUME sequence in `boot-software.md`. Batch independent reads and probes within
    that sequence, respecting dependencies. Then GREET.
 
 The early pull question is an allowed interruption before GREET. A round-count
@@ -206,61 +134,15 @@ or CWD-relative (session-specific). User-scope paths resolve through
 | chub-status-check | `$FRAMEWORK_DIR/scripts/chub-status-check.sh` | Software mode, LOAD step (bash call). Empty stdout = chub installed; non-empty = single advisory line surfaced in GREET. |
 | session-handoff | `<CWD>/context/session-handoff.md` | Only when present (repo-local) |
 | project backlog | `<CWD>/docs/backlog.md` | Only when ROUTE found a local backlog |
+| boot-status.md | `agents/buddy/boot-status.md` | Every boot: step 2 (freshness gate) and step 7 (greeting findings) |
+| boot-routing.md | `agents/buddy/boot-routing.md` | Every boot: RESOLVE and ROUTE; again when choosing a write path |
+| boot-software.md | `agents/buddy/boot-software.md` | Software mode: steps 4–7, read at step 3 |
 
 Project-specific context: derive paths from intent.md Context field.
 
 ## Routing
 
-Input: working directory. Output: active intent + mode.
-
-1. Run `ls <CWD>/intent.md` — CWD comes from ORIENT step 1 (MUST —
-   check the filesystem, do NOT infer from the context window).
-2. Found → that's the active intent. Mode comes from the Context
-   field (first sentence). Read with `cat` if not already in context.
-3. Not found → walk up the directory tree (`ls ../intent.md`, etc.).
-   Stop at `/`.
-4. Nothing found → "No intent. New project? Should I create an
-   intent.md?"
-   Format: `framework/intent-tree.md`, section "intent.md format". The
-   intent.md is the load-bearing input for all later intent-driven work
-   (CLAUDE.md §Intent-driven) — state the goal as **extractable facts**, not
-   only argued, so agents can reason from it.
-
-The intent.md you find is the active intent. Everything else derives
-from it. Load the framework's adapter explicitly when the host has not
-already injected it: `AGENTS.md` for Codex/OpenCode, `CLAUDE.md` for Claude
-Code, resolved from the concrete framework root. The daily profile loads no
-framework root adapter: its injected boot entry carries the rules it needs. Additional-directory access
-alone does not prove instruction loading. Keep the consumer's own project
-rules in force; shared framework rules do not replace consumer approvals.
-The resolved user scope (§User scope) always applies, independent of CWD.
-
-## Context routing
-
-Decided once at boot (ROUTE step), holds for the entire session.
-
-### Write paths (context)
-
-- **CWD with `context/`:** project-local (`<CWD>/context/`).
-- **CWD without `context/`:** create `context/` with `history/` and
-  `overview.md`, then write project-local. The intent exists, so the
-  intention is clear — no clarifying round trip.
-- **Always global:** user-scope facts go to the resolved user repo
-  (`<user_repo>/context/user/`, §User scope), regardless of the active
-  path. No user scope → report the fact as unroutable; never guess a path.
-- **Session handoff:** `<CWD>/context/session-handoff.md` (repo-
-  local). Parallel sessions on different hosts don't collide
-  (different repos).
-- **Session buffer:** `<CWD>/docs/session-buffer.md` (repo-local).
-
-### Project docs routing (read paths)
-
-If RESOLVE found an intent.md AND ROUTE found a local backlog:
-
-- `docs/backlog.md` → active backlog for this session
-- `docs/tasks/` → task files for this project
-- `docs/specs/` → spec files for this project
-- References inside the backlog / tasks: project-root-relative
-  (`tasks/020.md`, `specs/020-*.md`)
-- Cross-repo context paths: list them per the `intent.md` Context
-  field; if not specified, treat as project-relative.
+Intent routing (RESOLVE: the active intent.md and its mode) and context routing
+(ROUTE: read and write paths): read and follow `agents/buddy/boot-routing.md` at
+RESOLVE and ROUTE, and whenever you choose where to write context, the session
+handoff or a user-scope fact.

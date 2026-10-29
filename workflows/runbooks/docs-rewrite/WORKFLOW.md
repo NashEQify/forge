@@ -45,7 +45,7 @@ re-frame.
 
 Entry points (Buddy fills these in before dispatch from
 context):
-- Always: intent.md (vision), CLAUDE.md (invariants),
+- Always: intent.md (vision), framework/invariants.md (invariants),
   process-map.md (workflows).
 - Framework rewrite: 273.md (design decisions), workflow runbooks.
 - Product rewrite: ARCHITECTURE.md, specs, container
@@ -237,7 +237,7 @@ Steps:
 | Coherence | Buddy direct (autonomy SoT: `framework/agent-autonomy.md`) |
 | UX review (mode=ux) | skills/spec_board/SKILL.md |
 | Deploy | $FRAMEWORK_DIR/scripts/deploy-docs.sh |
-| Personas | docs/specs/dashboard/dashboard-persona.md (reference format) |
+| Personas | the `personas` input (§Input); default: derived from existing docs / task |
 
 ## Workflow-Engine Integration
 

@@ -12,10 +12,11 @@ list is the enforcement mechanism for "no internal operational
 state in public" — it is not advisory.
 
 What the **public mirror** carries from `docs/`: framework content
-only (`docs/STRUCTURE.md`, `docs/decisions/`, `docs/architecture/`),
+only (`docs/STRUCTURE.md`, `docs/architecture/`),
 plus `docs/tasks/.gitkeep` and a hand-maintained `docs/plan.yaml`
 **north_star stub** (no live milestones/tasks). Everything else
-below is forge_dev-only — excluded by the sync.
+below is forge_dev-only — excluded by the sync, including both
+`docs/specs/` and `docs/decisions/`.
 
 ## Tracked (in forge_dev — the dev SoT)
 
@@ -26,7 +27,7 @@ below is forge_dev-only — excluded by the sync.
 | `docs/tasks/<NNN>.{md,yaml}` | Active tasks | Task spec + YAML metadata | no — excluded |
 | `docs/tasks/archive/<NNN>.{md,yaml}` | Done tasks | Auto-moved by `task_status_update` step 5. WORM (frozen zone). | no — excluded |
 | `docs/tasks/.gitkeep` | Convention marker | keeps the dir + convention visible | yes |
-| `docs/decisions/ADR-<NNN>.md` | ADRs | Architecture decision records — status, context, decision, alternatives, consequences | yes (framework content) |
+| `docs/decisions/ADR-<NNN>.md` | ADRs | Architecture decision records — status, context, decision, alternatives, consequences | no — excluded by release-sync |
 | `docs/architecture/` | Architecture notes | Hand-written architecture reflections (e.g. `build-workflow-structural-gap.md`) | yes (framework content) |
 
 ## Gitignored (local-only, no OSS trace)
@@ -47,6 +48,12 @@ below is forge_dev-only — excluded by the sync.
 | `docs/dogfood-learnings/` | Live session-dogfooding observations (internal forensics) — forge_dev-only, excluded from the public mirror |
 | `docs/discoveries/` | Cross-repo discovery logs |
 | `docs/tasks/<NNN>-{gates,delegation,test-plan}.*` | Per-task audit trail files |
+
+Committed work records keep returns, decisions and reviews. They do not keep raw evidence
+(`skills/_protocols/evidence-author-claims.md` §8.4). Raw evidence committed before that
+rule (logs, junit, archives, patches, snapshots and tree copies) has been removed from the
+working tree, and Git history keeps it. To read a removed file:
+`git show "$(git log --diff-filter=D -1 --format=%h -- <path>)^:<path>"`.
 
 ## Drift aliases (DO NOT use)
 
@@ -73,7 +80,7 @@ warns on new paths outside this table.
 
 ## Override for consumer repos
 
-Consumers (BuddyAI, Huddle, personal, infra) may have
+Consumer repositories may have
 their own `docs/STRUCTURE.md` extending or adapting this
 convention. Skills that write (e.g.
 `documentation_and_adrs` ADR path override) respect a
@@ -87,7 +94,8 @@ the framework default.
   This is enforced, not aspirational: the exclude list
   in `scripts/release-sync.sh` is the mechanism
   (`context/`, `docs/tasks/*.{yaml,md}`,
-  `docs/tasks/archive/`, `docs/plan.yaml`). Public
+  `docs/tasks/archive/`, `docs/plan.yaml`, `docs/specs/`,
+  `docs/decisions/`). Public
   keeps only `docs/tasks/.gitkeep` + a `docs/plan.yaml`
   north_star stub. Topology: §Repo topology above.
 - **Auto-discoverable:** `docs/STRUCTURE.md` is the only

@@ -9,11 +9,6 @@ The governing rule: **Buddy (the orchestrator) drives every multi-persona
 run; personas do not invoke other personas.** Skills are the mandatory
 hops inside a workflow.
 
-> Provenance: the pattern vocabulary was seeded from
-> `github.com/addyosmani/agent-skills` (MIT, © Addy Osmani 2025) and has
-> since been adapted to forge's stack — spec board, code-review board,
-> council, sub-agents.
-
 ---
 
 ## Endorsed patterns
@@ -242,3 +237,7 @@ Premature catalog entries become aspirational documentation that no one follows.
 - `workflows/runbooks/build/WORKFLOW.md` — pattern 4 example.
 - `skills/_protocols/consolidation-preservation.md` — merge discipline.
 - `references/accessibility-checklist.md` + `performance-checklist.md` — other references.
+
+## Source
+
+agent-skills at `19e49a0` (MIT License, © 2025 Addy Osmani); Forge's register of adopted methods.

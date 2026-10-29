@@ -40,7 +40,7 @@ licenses widening the fix; the scope bound + out-of-scope sections below
 stay the hard boundary. Generic by contract — reference the map only if the
 project's `intent.md` declares one; no path is hard-coded here (it lives in
 the consumer's `intent.md`). Same deliberate selectivity as
-`mca-brief-template.md` §5 — and the same reason it is kept OUT of
+`mca-brief-template-decision-classes.md` §5 — and the same reason it is kept OUT of
 `dispatch-template.md` / the board scaffolds: those strip context for
 anti-bias fresh-read review.
 
@@ -54,23 +54,33 @@ Every fix-pass brief in pass N+1 (N ≥ 1), if:
 - Pass N produces a cluster touching >1 file, **OR**
 - Fix scope spans more than one section/module, **OR**
 - The reviewer recommendation itself contains universal quantifiers or hedges
-  (the brief author MUST then **not** copy reviewer phrasing — see AP-4).
+  (the brief author MUST then **not** copy reviewer phrasing — see AP-4 in `fix-brief-template-phrase-check.md`).
 
 Below threshold (single-line, single-file, single-MINOR with pointer block):
-sections optional, brief author writes a one-line rationale why.
+sections optional, brief author writes a one-line rationale why. Section 5 has
+its own trigger, below.
 
 ---
 
 ## Mandatory sections in the fix brief
 
 Three mandatory sections (in addition to the pointer block + authority refs),
-plus a fourth whenever the fix touches a state carrier:
+plus a fourth whenever the fix touches a state carrier, and a fifth in every
+brief written from a code review's findings:
 
 **Workflow scope (instance stamping):** when the fix runs inside a workflow step
 and `workflow_engine.py --next` reports a `NOT-YOURS:` line (≥2 workflows live),
 paste the engine's `SCOPE:` + `NOT-YOURS:` block into the brief verbatim — same
 rule as `mca-brief-template.md` §Workflow scope. Stamps the agent with its own
 file pointers so it does not trip over a sibling workflow's files.
+
+**Approved acceptance:** a fix brief for work on a task recopies the block
+`## Approved acceptance (read-only)` from the task file, not from the earlier
+brief, and runs its check before dispatch
+(`skills/_protocols/approved-acceptance.md` §Change, resume and re-brief).
+
+**Dispatch to the implementer:** the fix brief is a file in the work unit's records, dispatched by path with a report
+file (`skills/_protocols/mca-dispatch.md`); the report holds one result per finding.
 
 ### Section 1: Anti-pattern phrase check
 
@@ -158,115 +168,32 @@ fork for the caller (a plan change), not a fix.
 Below threshold (the fix touches no state carrier): one-liner
 `mechanism_cells: n/a  # no state carrier touched`.
 
----
+### Section 5: Cause per finding (MUST in every brief from a code review's findings)
 
-## Anti-pattern classes (detail)
+One entry per finding this pass fixes and per blocking finding it does not,
+from its verified row; causes, checks and answers:
+`skills/convergence_loop/cause-before-answer.md`.
 
-### AP-1: Universal quantifier
+```yaml
+causes:
+  - id: F-…
+    cause: wrong-finding | intent | spec | mechanism | stuck | code
+    check: "<the check that holds, quoted>"
+    answer: "<rule | ask <caller> | amend <§> → re-derive <unit> or patch | invariant or replacement | fresh implementer <model> | patch | accept-limit>"
+spec_gaps: report under Concerns each outcome this pass decides that no spec item states
+```
 
-**Problem:** "all / clean up / delete all / refactor all references" — the
-brief delegates the scope decision to the reviewer/MCA. Universal phrasing
-permits an expansive reading that goes beyond the pass-N findings.
-
-**Examples:**
-- ❌ "Clean up all references to the deprecated API" → reviewer/MCA touched
-  20 files, 12 of them legitimate.
-- ❌ "Delete all dead code in the module" → MCA killed code that was
-  spec-defined but unused (spec violation through brief vagueness).
-- ❌ "Refactor all the test fixtures" → MCA modified fixtures not mentioned
-  in any pass-N finding.
-
-**Better pattern:**
-- ✅ "Replace 4 references to API X listed in cluster C2-001 (pointer block).
-  Do not touch other API X references; those are legitimate per spec §3.2."
-- ✅ "Delete the 3 specific dead-code blocks identified at file:lines.
-  No other dead-code search."
-- ✅ "Refactor only fixtures used in tests/foo/test_bar.py:23-89 per
-  cluster C2-005."
-
-Heuristic: replace "all / alle / clean up" with a numeric count + pointer.
-
-### AP-2: Hedges
-
-**Problem:** "also / additionally / weitere / further / if needed / ggf." —
-appends unspecified follow-up actions. Hedges are often the brief author's
-attempt to suggest "completeness" without being concrete.
-
-**Examples:**
-- ❌ "Fix the validator regex AND also clean up related tests" → MCA modified
-  unrelated test logic.
-- ❌ "Update the schema, also other consumers if needed" → MCA touched 6
-  consumers, 4 of them unrelated.
-- ❌ "Refactor function X — additionally check call sites" → MCA refactored
-  call-site signatures unannounced.
-
-**Better pattern:**
-- ✅ "Fix the validator regex per C2-004 (line 47). Tests are out-of-scope —
-  the next pass reviewer will catch any test breakage."
-- ✅ "Update the schema. Affected consumers: A.py, B.py (listed). Other
-  consumers out-of-scope per scope_bound."
-- ✅ "Refactor function X signature per C2-002. Call sites: explicit list of
-  3 sites in scope_bound. Do not touch others."
-
-Heuristic: every "also / further / additionally" is a red flag — either list
-concretely or declare out-of-scope.
-
-### AP-3: Optionalities
-
-**Problem:** "if needed / where applicable / as needed / bei Bedarf" — the
-brief delegates the necessity check to the reviewer/MCA. Under "better safe
-than sorry" pressure they will expand.
-
-**Examples:**
-- ❌ "Add type hints where applicable" → MCA touched 30 functions that
-  pragmatically didn't need hints.
-- ❌ "Handle errors as needed" → MCA added try/except cascades where the spec
-  mandates fail-fast.
-- ❌ "Update docstrings if relevant" → MCA touched 15 docstrings out-of-scope.
-
-**Better pattern:**
-- ✅ "Add type hints to the 6 functions listed in C2-003. No other functions."
-- ✅ "Add `except FabricationError` at line 47 only. Other error paths follow
-  spec §4.3 fail-fast — do not touch."
-- ✅ "Update docstrings for 3 functions changed in this fix pass. Other
-  docstrings out-of-scope."
-
-Heuristic: "if-clauses" are a brief deficit. The author has to do the check
-upfront, not delegate it.
-
-### AP-4: Paraphrase instead of reviewer quote
-
-**Problem:** the brief author paraphrases the reviewer recommendation
-instead of **quoting** it. Paraphrase introduces drift — the brief author
-reads the reviewer finding, rewords it, and in doing so loses precision or
-adds the brief author's own interpretation.
-
-Spicy special case: the **reviewer themselves** uses a universal quantifier
-("eliminate all stale references") and the brief author copies the phrasing
-verbatim → AP-1 propagates. The brief author MUST NOT copy reviewer phrasing
-when it is itself loose; instead, narrow-quote and force a scope bound.
-
-**Examples:**
-- ❌ Reviewer: "C2-004: regex `^schema_version:\s*1$` rejects quoted v1 forms
-  (line 47, validate_evidence_pointers.py)" → brief paraphrases: "Fix the
-  schema validator to handle v1 forms" → MCA understood "all v1 forms" and
-  touched parsing logic in 3 unrelated files.
-- ❌ Reviewer: "Eliminate stale references" → brief: "Eliminate stale
-  references" (verbatim copy of loose phrasing) → AP-1 propagated.
-
-**Better pattern:**
-- ✅ Brief quotes the reviewer verbatim with a locator: `> "C2-004: regex
-  ^schema_version:\s*1$ rejects quoted v1 forms (line 47)" — fix this
-  specific regex at line 47, no other validator changes.`
-- ✅ When the reviewer is itself loose, the brief explicitly narrows: `>
-  Reviewer recommends "eliminate all stale references". Narrowed scope per
-  C2-001 pointer block: 4 specific refs at lines X, Y, Z, W. No others.`
-
-Heuristic: reviewer recommendation as a **quote block** (`>`) with the
-cluster ID, brief author's narrow-bind directly underneath. No "in other
-words".
+A finding without an entry is not yet in the brief. A re-derivation also
+carries its §Re-derive part (unit, amended item, KEEP notes).
 
 ---
+
+## Anti-pattern classes (detail) and fill-in checks
+
+When running the Section 1 phrase check and filling Sections 1–3, before dispatch: read and follow
+`skills/_protocols/fix-brief-template-phrase-check.md` (AP-1 universal quantifier, AP-2 hedges, AP-3 optionalities,
+AP-4 paraphrase instead of reviewer quote, each with examples, better pattern and heuristic; the anti-patterns when
+applying the template).
 
 ## Self-correction signal (reviewer/MCA side)
 
@@ -282,7 +209,8 @@ A reviewer/MCA receiving a fix brief with all 3 mandatory sections:
    only addresses those entries if Buddy explicitly amends the brief.
 
 Brief without sections (below threshold): reviewer/MCA works from the pointer
-block precision alone. On ambiguity STOP + escalate, do not expand.
+block precision alone. On ambiguity STOP + escalate (an implementer: an `unclear` row,
+`skills/_protocols/mca-dispatch.md`), do not expand.
 
 ---
 
@@ -296,24 +224,6 @@ block precision alone. On ambiguity STOP + escalate, do not expand.
 - **convergence_loop outer-cycle bound:** if outer cycle 2+ is repeatedly
   triggered by bleed findings, that is a brief-quality signal — the brief
   author improves the phrase check or escalates.
-
----
-
-## Anti-patterns when applying the template
-
-- **DO NOT** select phrase-check "all absent" pro forma without actually
-  reading the brief text against the 4 classes. Mechanical test: take the
-  brief text, mentally grep for "all / alle / clean up / also / further /
-  if-clauses / where-applicable", and for each hit decide absent (not
-  relevant) vs present-justified (with quote + rationale).
-- **DO NOT** fill the scope bound with an unrealistic LOC cap (e.g. "1000
-  lines" for 3 clusters). The LOC cap must derive from cluster magnitude —
-  if the author can't estimate, they over-estimate and the self-correction
-  signal stops working.
-- **DO NOT** leave out-of-scope empty without a bleed check. The bleed check
-  is active: the author iterates over adjacent code/sections and asks "could
-  the reviewer/MCA slip in here?". Empty-with-rationale is fine; empty
-  without check is compliance theatre.
 
 ---
 

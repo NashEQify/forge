@@ -1,13 +1,13 @@
 # Agent Autonomy
 
-Tier-1 refinement of shared invariants 2-4 (CLAUDE.md / AGENTS.md).
+Tier-1 refinement of invariants 2-4 (`framework/invariants.md`).
 
 SoT for the question: "who writes which artifact, with which gate,
 through which routing".
 
 These Forge delegation and review gates apply to software development.
 For `on-demand`, project-local working rules govern delegation and review;
-see `framework/process-map.md` section Workflow selection. Explicitly requested
+see `framework/workflow-selection.md`. Explicitly requested
 Forge methods retain their scoped requirements and all authorization bounds.
 
 ---
@@ -23,7 +23,7 @@ Every write act must answer all three:
 2. **Gate** — does this act require pre-write review or peer consultation?
    Artifact-type specific, encoded in the table below.
 3. **Routing** — who executes the act concretely?
-   Encoded in `agents/buddy/operational.md` §Delegation Routing,
+   Encoded in `agents/buddy/delegation.md` (routing lookup),
    downstream of permission + gate.
 
 The sub-questions are logically orthogonal, but two seam cases exist
@@ -35,7 +35,7 @@ The sub-questions are logically orthogonal, but two seam cases exist
 
 Three documents form one cascade:
 
-**Shared AGENTS.md / CLAUDE.md Invariants 2-4** (Tier-0 anchor)
+**`framework/invariants.md` Invariants 2-4** (Tier-0 anchor)
 -> **framework/agent-autonomy.md** (specific, this file)
 -> **local workflow runbook** (further refinement when workflow mechanics require it)
 
@@ -155,17 +155,14 @@ These are orthogonal concepts; avoid cross-document confusion.
 Autonomy-specific checks:
 1. mirror-check (all sections referencing this file in CLAUDE/AGENTS)
 2. existence-check (this file + expected header + main table)
-3. reference integrity (links in CLAUDE/AGENTS/operational/solve workflow)
-4. cross-reference warning (routing/gate targets vs operational routing table,
-   merger-aware to reduce false positives)
+3. reference integrity (links in CLAUDE/AGENTS/operational/delegation/solve workflow)
 
 ---
 
 ## Consumers of this file
 
 Referenced by:
-- `CLAUDE.md` §Code Delegation
-- `AGENTS.md` §Code Delegation
+- `framework/invariants.md` §Code delegation
 - `agents/buddy/operational.md` self-execution + delegation routing
 - `workflows/runbooks/solve/WORKFLOW.md` phase autonomy
 - `workflows/runbooks/docs-rewrite/WORKFLOW.md`

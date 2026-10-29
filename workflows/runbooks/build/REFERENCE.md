@@ -7,9 +7,9 @@ frontmatter schemas, body sections and the relationship between the three state 
 
 ## State file (Standard/Full only)
 
-**Path:** `docs/build/YYYY-MM-DD-task-NNN-slug.md`
+**Path:** `docs/build/<date>-task-<id>-<slug>.md`
 **Created in:** Specify Step 0
-**Form:** Append-only body, commit per phase
+**Form:** Append-only body, commit per phase when authorized under `framework/process-map.md` §Authorization
 **DIRECT:** No state file — only `workflow_phase` in the task YAML
 
 ### Frontmatter schema
@@ -60,7 +60,7 @@ artefacts: []
 
 ## ADR check
 
-Optional `adr-check` step in the verify phase, after `spec-co-evolve-check`. Triggers
+Sub-step (a) of `close-bookkeeping`, fed by close-retro's §Stale-Decisions. Triggers
 `skills/documentation_and_adrs/SKILL.md` when the ADR-discipline triple is satisfied:
 
 - **Hard-to-reverse** — meaningful cost to switch later
@@ -68,8 +68,7 @@ Optional `adr-check` step in the verify phase, after `spec-co-evolve-check`. Tri
 - **Result-of-real-trade-off** — genuine alternatives with justification
 
 All three required. If any is missing -> one-sentence justification, skip, no ADR. Anti-
-pattern: ADR inflation. `required: false`, `on_fail: warn` — discipline through
-visibility, no block.
+pattern: ADR inflation. One-line skip, no block.
 
 Trigger examples in build: new DB driver, auth strategy, schema shape,
 API shape (REST vs events), heavy dependency with lock-in.

@@ -38,7 +38,6 @@ F-C-CONTENT-MISSING. With zero removals in the fix:
 
 ## Boundary
 
-Detail + boundary table: `docs/specs/interface-contract.md` S-001.
 Overall stance: mechanical removal without a content recheck is
 substance loss. This protocol is the mechanical gate for that — not
-a CLAUDE.md invariant, but anchored here.
+a framework invariant, but anchored here.

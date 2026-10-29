@@ -3,6 +3,11 @@ name: board-implementer
 description: Implementer reviewer in the Spec Board — buildability, missing details, API check. Can I actually build this?
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: board-implementer
 
 Implementer reviewer in the Spec Board. Buildability, missing
@@ -81,7 +86,7 @@ the first line of code in your head. If you can't → finding.
   the caller's call shape is a finding (CRITICAL when the flow's main
   input has no carrier). A producer named in spec prose is not a
   producer; a test fixture is not a producer. "No consumer yet" is
-  never a reason to drop a cell (`_protocols/mechanism-model.md`
+  never a reason to drop a cell (`skills/_protocols/mechanism-model.md`
   §Scope and placement).
 - **Paths and conventions** — do referenced file paths match?
 - **First-run / bootstrap:** what must exist before the first

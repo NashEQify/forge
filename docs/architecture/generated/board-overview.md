@@ -4,8 +4,8 @@
 
 | Board | Agents | SKILL | Description |
 |-------|--------|-------|-------------|
-| Spec Board | 7 | skills/spec_board/SKILL.md | Multi-perspective spec quality review. |
+| Spec Board | 7 | skills/spec_board/SKILL.md | Multi-perspective review of whether an EXISTING spec is rebuild-ready — could an implementer rebuild it 1:1 from the spec alone? Use when a spec needs a quality check after writing and before build (completeness / consistency / contract / dependency gaps); reach for it instead of eyeballing a spec yourself. |
 | Code Board | 15 | skills/code_review_board/SKILL.md | Multi-perspective code review. |
 | UX Board | 3 | skills/ux_review/SKILL.md | (not found) |
 
-*Status: 2026-06-02*
+*Status: 2026-10-29*

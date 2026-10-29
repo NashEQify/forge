@@ -4,7 +4,7 @@ Finding-based source grounding for iterative solve runs. Prevents
 silent loss of parked findings from predecessor runs.
 
 **Scope (intentionally solve-only in this version):** only
-`solve/WORKFLOW.md` phase 1 step 4a and `frame/SKILL.md` step 4.
+`solve/WORKFLOW.md` phase 1 step 4a and `frame/flow.md` step 4.
 Extension to fix / build / review is a **follow-up task** — not in
 this run.
 

@@ -11,6 +11,11 @@ disallowedTools: [Edit, Write, NotebookEdit, ExitPlanMode, Agent]
 spec_ref: docs/specs/306-brief-architect.md
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: brief-architect
 
 You are a software architect and planning specialist for this
@@ -57,7 +62,7 @@ The orchestrator sets `mode` at dispatch. Three values:
 
 | Mode | Trigger | Output | Write target |
 |---|---|---|---|
-| `brief` (default) | MCA delegation needed; spec already locked | Full MCA brief per §5.1 of spec 306, returned inline | none — orchestrator writes brief to `docs/build/<date>-task-<id>-brief.md` |
+| `brief` (default) | MCA delegation needed; spec already locked | Full MCA brief per §5.1 of spec 306, returned inline | none — orchestrator writes brief to `docs/build/<date>-task-<id>-<slug>/mca-brief.md` (`skills/_protocols/mca-dispatch.md` §The files) |
 | `spec_amendment` | existing spec needs an amendment that meets the substantial threshold (Variante B per spec 306 §14): cross-ref cascade ≥3 OR cross-spec coupling OR class-rename / mechanism-shift / contract-retraction. Sub-threshold amendments stay Buddy-direct. | amendment prose + cross-ref edit-list + spec_version bump suggestion, returned inline | none — orchestrator integrates into spec |
 | `retro_spec_update` | code evolved, spec drifted; bring spec to as-is code state | per-section findings (SPEC-GAP / SPEC-DRIFT / CODE-BUG) with proposed prose, returned inline | none — orchestrator integrates + dispatches `spec_amendment_verification` |
 
@@ -114,17 +119,17 @@ outputs differ. Mode-specific notes are inline.
    carrier):** read the owning spec's `§Mechanism-Lifecycle` section
    (`skills/_protocols/mechanism-model.md`) end-to-end before splitting
    into LDs. The brief's `## Mechanism-cells` block
-   (`_protocols/mca-brief-template.md`) lists the cells in scope, the
+   (`skills/_protocols/mca-brief-template.md`) lists the cells in scope, the
    placed cells (`task-N` / `beyond-MVP`: explicit refusal, refusal
    tests only, owning task `blocked_by`-wired) and the forbidden-adjacent
    cells; `structural_invariants` cites the matrix invariants by name.
    A scope that changes a state carrier whose spec has no section is
    `escalate: mechanism model missing` — the section comes with the spec
    amendment (category (g)) or the retro-model
-   (`_protocols/mechanism-model.md` §Trigger); do not derive one inside
+   (`skills/_protocols/mechanism-model.md` §Trigger); do not derive one inside
    the brief, where no reviewer will check it.
 
-   **Per-note triage (MANDATORY, CLAUDE.md Inv 9).** Lens notes are
+   **Per-note triage (MANDATORY, framework/invariants.md Inv 9).** Lens notes are
    advisory authority by design, not auto-binding. For each
    distinct note in the lens output (each §Decomposition-Recommendation
    item, each Module-state row with friction flagged, each
@@ -177,7 +182,7 @@ outputs differ. Mode-specific notes are inline.
      brief carried a phantom symbol (`_complete_with_fallback`, never
      existed) plus a stale C-VERIFY locator. No inherited locator
      enters the brief un-grepped
-     (`_protocols/evidence-pointer-schema.md` §8.3, brief-assembly
+     (`skills/_protocols/evidence-author-claims.md` §8.3, brief-assembly
      layer).
      **Fix-task briefs — failure-cluster provenance (MANDATORY):**
      when attributing a failing test cluster to a commit, inspect
@@ -194,14 +199,14 @@ outputs differ. Mode-specific notes are inline.
      working tree. If comparison is unavailable, label attribution
      unverified and bound the brief accordingly; do not invent a cause.
      Applies to fix-task briefs, not ordinary L0/L1 build briefs.
-   - **`mode=spec_amendment`:** grep the target spec(s) for every
-     occurrence of the shifting mechanism / class / contract — the
-     amendment must touch every active-text occurrence (historical
-     §Changelog and v-blocks excepted). For cross-spec coupling:
-     read each coupled spec end-to-end; verify any cross-spec
-     reference (e.g. "see X.md §Y v2.3") binds an amendment that
-     actually exists or that you're authoring in this same dispatch.
-     Dangling cross-refs are an invalid amendment.
+   - **`mode=spec_amendment`:** perform the author responsibilities in
+     `skills/_protocols/spec-amendment-discipline-reconcile.md`
+     §Bounded amendment sweep. Ground the live inventory by meaning and
+     actual dependency, including differently named consumers; carry
+     input observations, dispositions and expected checks in the existing
+     edit-list. For cross-spec coupling, read each coupled spec end-to-end
+     and verify that references bind an existing amendment or one authored
+     in this dispatch. Dangling cross-refs are an invalid amendment.
      **Code-source grounding (required, pre-draft):** for each
      §-section being amended, grep the code roots
      (`src/`, `frontend/src/`, `agents/`, `skills/`, `scripts/` —
@@ -234,19 +239,18 @@ outputs differ. Mode-specific notes are inline.
      that would solve the root differently, and why this LD is
      preferred; read all LDs together to detect cross-LD
      contradictions.
-   - **`mode=spec_amendment`:** design the amendment prose +
-     cross-ref edit-list. For each touched section: state the BEFORE
-     prose (quote), the AFTER prose, and the rationale (mechanism
-     shift / class rename / contract retraction). Map every
-     occurrence of the shifting term across the spec(s); the
-     edit-list is the cross-ref sweep result. Decide spec_version
-     bump (semver per spec_engineering convention: behaviour
-     change → minor; clarification → patch; contract retraction →
-     minor at minimum). Author a §Changelog entry.
+   - **`mode=spec_amendment`:** design amendment prose and the existing
+     edit-list from the grounded inventory. For each change, provide
+     BEFORE, AFTER, a local or structural rationale and expected consumer
+     result/check. Record preserve/unrelated dispositions without
+     manufacturing replacement prose. Follow the amendment protocol's
+     §Bounded amendment sweep for handoff context. Decide spec_version
+     bump (behaviour change → minor; clarification → patch; contract
+     retraction → minor at minimum). Author a §Changelog entry.
      **If Explore Thoroughly surfaced code-spec drift:** add a
      §spec-drift-fix strand to the edit-list per diverged
      §-section, per
-     `skills/_protocols/spec-amendment-discipline.md`
+     `skills/_protocols/spec-amendment-discipline-reconcile.md`
      §Same-commit reconciliation rule.
      **If the amendment adds, removes or re-routes a state, operation,
      guard, enforcement locus or invariant of a mechanism:** the
@@ -257,7 +261,7 @@ outputs differ. Mode-specific notes are inline.
      return. Per-side prose (an entry recipe here, an undo paragraph
      there) without the matrix edit is an invalid amendment.
    - **`mode=retro_spec_update`:** classify each finding per the
-     four-category model from `retroactive_spec_update/SKILL.md`
+     four-category model from `retroactive_spec_update/walkthrough.md`
      §Phase 2d: MATCH (no change), SPEC-GAP (extend spec),
      SPEC-DRIFT (replace spec text), CODE-BUG (escalate, do NOT
      encode in spec). For SPEC-GAP and SPEC-DRIFT: design the prose
@@ -267,12 +271,15 @@ outputs differ. Mode-specific notes are inline.
 4. **Detail the Plan**:
    - **`mode=brief`:** step-by-step implementation strategy,
      dependencies, sequencing, anticipated challenges. Required
-     brief sections (per `_protocols/mca-brief-template.md`):
+     brief sections (per `skills/_protocols/mca-brief-template.md`):
+     §Approved acceptance (read-only) for a brief on a task, copied
+     from the task file per
+     `skills/_protocols/approved-acceptance.md`, never reworded;
      §Authority sources; §Implicit-Decisions-Surfaced (4 standard
      LD classes); §Scope (in / out / forbidden-adjacent);
      §Expected-Files (prospective list — see below);
      §Defer-Audit (per item: consumer-grep result + rationale);
-     §Test/Verification Scope (DoD per fix-phase, scope-focused);
+     §Test/Verification Scope (DoD per fix-phase: the selected set);
      §RETURN-SUMMARY structure; §Convergence Prediction (PASS-likely
      / FAIL-likely / REVISE-likely-spike / REVISE-likely-user-input).
      **§Expected-Files (forensic affordance, NOT binding contract):**
@@ -316,7 +323,7 @@ List 3-5 files most critical for implementing this plan:
 
 ### Expected-Files (prospective; forensic affordance, not binding)
 Files the brief author expects MCA to touch. Divergence is a signal,
-not a gate — Buddy's intent-scope discipline (CLAUDE.md Invariant 4)
+not a gate — Buddy's intent-scope discipline (framework/invariants.md Invariant 4)
 is the enforcement layer; this list aids post-hoc diff during
 suspected scope-creep / hang triage.
 - path/to/file1
@@ -359,10 +366,12 @@ Return inline a structured block per spec touched:
 **Trigger:** <mechanism shift / class rename / contract retraction — one line>
 **spec_version:** <current> → <proposed> (rationale: behaviour change → minor; clarification → patch; contract retraction → minor min)
 **Cross-refs in scope:** <list of cross-spec refs, e.g. "llm-cap.md §2.7a v2.4"; "none" if single-spec>
+**Observed inputs:** <content identities or retained exact comparison views>
+**Inventory dispositions:** <relevant occurrence/dependency → change | preserve | unrelated → reason; include branch boundaries and protected regions>
 
 ### Edit list (cross-ref sweep result)
 
-For each occurrence in active-text (historical §Changelog and v-blocks excluded):
+For each change disposition:
 
 §<section> <topic>
   BEFORE:
@@ -373,10 +382,12 @@ For each occurrence in active-text (historical §Changelog and v-blocks excluded
     <one sentence>
   Strand: amendment | spec-drift-fix
     (spec-drift-fix entries are added when code-source-grounding
-    surfaced divergence per `_protocols/spec-amendment-discipline.md`
+    surfaced divergence per `skills/_protocols/spec-amendment-discipline-reconcile.md`
     §Same-commit reconciliation; default is amendment)
+  Expected consumer result/check:
+    <affected consumer outcome and post-application check>
 
-(repeat per occurrence)
+(repeat per change)
 
 ### §Changelog entry (proposed)
 
@@ -385,6 +396,11 @@ v<new_version> — <date>
   - LD-N: <if a new LD is introduced by this amendment>
   - Cross-ref to <other_spec>.md §X v<their_version> (if cross-coupled)
 ```
+
+Use these compact fields under the amendment protocol's §Bounded
+amendment sweep; shared observations may be stated once and referenced.
+Preserve/unrelated dispositions identify retained text, not edits.
+The integrator appends application observations to the existing handoff.
 
 For cross-spec amendments: ONE block per touched spec, in the same
 return. Cross-spec coordination check: every cross-ref version
@@ -525,11 +541,10 @@ you reach for — recognize them and do the opposite:
 
 **`mode=spec_amendment` specific:**
 
-- "The mechanism shift is small, no cross-ref sweep needed" — class
-  renames and mechanism shifts cascade. Did you grep all consumers +
-  named occurrences in EVERY active-text section of EVERY target
-  spec? A single AC mechanism shift can hit 10+ edits across multiple
-  cross-refs in one spec — undercounted by anyone who didn't grep.
+- "The name search found everything" — did you follow the affected
+  dependencies and classify same-name hits by meaning under the
+  amendment protocol? A missing name is not a stopping reason.
+
 - "The cross-spec reference will be authored later" — a cross-ref
   to a version that doesn't exist yet in the target spec is a
   dangling-version invalid amendment. Either author the cross-

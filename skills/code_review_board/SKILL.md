@@ -1,8 +1,8 @@
 ---
 name: code-review-board
 description: >
-  Multi-perspective code review. 2 levels: L1 (focused) + L2 (full
-  board).
+  Multi-perspective code review. 2 levels: L1 (focused) + L2 (board for
+  safety triggers, sized by open questions).
   Triggers when a code diff needs multi-perspective review before merge (build verify, fix L1); NOT for PR-level checks (use /review) and NOT for spec review (use spec_board).
 status: active
 verification_tier: 1
@@ -13,13 +13,50 @@ invocation:
 disable-model-invocation: false
 cc_wrapper: true
 modes: [l1, l2]
-uses: [_protocols/discourse, _protocols/context-isolation, _protocols/content-preservation, _protocols/dispatch-template, _protocols/consolidation-preservation, _protocols/evidence-pointer-schema, _protocols/mechanism-model]
+uses: [_protocols/discourse, _protocols/context-isolation, _protocols/content-preservation, _protocols/dispatch-template, _protocols/consolidation-preservation, _protocols/evidence-pointer-schema, _protocols/mechanism-model, _protocols/finding-verification]
 ---
+
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
 
 # Skill: code-review-board
 
 Buddy checklist. Detail: REFERENCE.md. Protocols:
 `agents/_protocols/reviewer-base.md` + `code-reviewer-protocol.md`.
+
+Section numbers are skill-wide: §1 and §6–§10 here, §2–§3 in `brief-and-team.md`, §4–§4a in
+`checklist-and-dispatch.md`, §5–§5a in `verdict.md`, §11 in `review-package.md` (the stubs below say when to read each).
+
+## Same-turn DIRECT check
+
+A check on DIRECT work that closes in its turn runs as `framework/direct-eligibility.md` §The DIRECT run says, and
+nothing else in this skill applies to it: no review brief, package, capture, persisted review or verdict file. Every
+other review follows the sections below.
+
+## Mandatory capture and current decision
+
+Before initiating a software review intended to satisfy a mandatory result,
+readiness or completion boundary (a workflow step, a task's close, or DIRECT
+work that does not close in its turn, `framework/direct-eligibility.md`
+§The DIRECT run), load `skills/_protocols/evidence-pointer-schema.md`
+§9. Resolve one exact owner and capture before dispatch. Declare code subject
+state/output exclusions before enumeration and check that they omit no required
+reviewed inputs. Use persisted-success capture stdout for producer metadata and
+pass each assigned slot, scope/focus and history neutrally. Preserve complete
+returns verbatim with actual actors, paths and raw-byte digests before consumption.
+A canonical verdict path is only a locator; retain prior payloads before replacing
+it. Buddy's explicit current decision selects the current reports of the final
+applicable review and names any history; it answers each adoption diagnostic. Adopt it through `evidence-pointer-schema.md` §9, then check the applicable policy before any
+mandatory result/readiness write or completion. Current negative evidence supports
+repair; it grants no success permission. Identity does not replace substantive
+coverage, source interpretation, severity/risk rules or authorization.
+
+Use family `code`. Capture slots name every planned producer, including light
+`code-verification`; do not invent a Chief at levels where Buddy consolidates.
+A relevant fix retries the owner and receives a fresh scoped capture before the
+existing reproduction verifier and any §4 mechanism reviewers run. Retain original
+findings as exact history; record verification limits in the current explicit decision.
 
 ## 1. Level choice
 
@@ -29,8 +66,9 @@ Safety floors are evaluated first: security/auth/secrets, schema/data
 migration, public or cross-component contract changes and live
 infrastructure exclude `light`. No count or majority can cancel a safety
 floor. Include the actual authorization and impact, not merely LOC.
-Which floor needs the full board is named in §1.1 (L2 triggers); the
-other floor surfaces run L1 with the matching trigger lens (§3).
+Which floor selects L2 is named in §1.1 (L2 triggers), with its roster
+sized in §3; the other floor surfaces run L1 with the matching trigger lens
+(§3).
 
 Below those floors, ALL DIRECT criteria in `framework/process-map.md` plus
 an executed regression/behavior check allow `light` (single independent
@@ -42,9 +80,13 @@ certainty. Pure typo/format-only changes need a diff check, not this board.
 
 ```
 light:   all DIRECT criteria + executed relevant tests (red→green), no
-         safety-floor surface → single code-verification. Also the
-         re-verify after a fix pass (re-runs the reproductions; plus a
-         scoped code-adversary unless the fix is line-local, §4).
+         safety-floor surface → single code-verification: on DIRECT work
+         that closes in its turn, with the record, the implementer's return
+         and the diff in its prompt and an inline return
+         (`framework/direct-eligibility.md` §The DIRECT run); otherwise on
+         the review package (§11). Also the re-verify after a fix pass (re-runs the
+         reproductions; plus a scoped code-adversary unless the fix is
+         line-local, §4).
 L1:      above light, no L2 trigger → core team + Buddy checklist +
          trigger lenses (§3); consolidation per §1.3. DEFAULT for
          bounded engine / contract builds — file count, new module, new
@@ -55,9 +97,10 @@ L2:      only on a named trigger: new public API or wire (external
          package); security / auth / secrets / consent / crypto; real
          migration doubt (stored data must be read or rewritten under the
          new shape, strict read-path decoders included); new subsystem
-         (§1.2); live infrastructure → full board + chief (§3, §4a).
+         (§1.2); live infrastructure → L2 roster per §3 (trigger
+         perspective always; Chief at four or more reviewers, §1.3, §4a).
 Unclear: whether an L2 trigger applies → resolve the fact; still
-         unclear → L2.
+         unclear → L2 for that trigger (its perspective joins the roster).
 ```
 
 ### 1.2 Counting + triggers
@@ -78,478 +121,39 @@ Detail (incl. post-MCA-return trigger consequence): REFERENCE.md.
 
 ### 1.3 Consolidation
 
-With at most three reviewers (L1 core alone), Buddy reads the complete
-reports directly and consolidates: keep/refute triage per §5, reports
+At every level, with at most three reviewers Buddy reads the complete
+reports directly and consolidates (and enforces the drill/trace sections a
+Chief would check): keep/refute triage per §5, reports
 persisted verbatim before reading, verdict at the §7 path. With four or
-more reviewers (L1 plus trigger lenses, every L2), a Chief consolidates
-their persisted returns. Buddy owns the verdict and verifies pivotal
+more reviewers a Chief consolidates their persisted returns. One roster
+covers one reviewed change; splitting a change to stay below this threshold
+is not allowed. Buddy owns the verdict and verifies pivotal
 claims in either case. Reviewer count controls consolidation overhead,
 never safety-floor selection or evidence requirements.
 
-## 2. Review brief (MUST before dispatch)
+## 2.–3. Review brief and team composition
 
-5 steps, each producing output:
+After the level choice and before any reviewer dispatch: read and follow
+`skills/code_review_board/brief-and-team.md` (§2 review brief, MUST before dispatch; §3 team composition, L1
+trigger lenses and L2 sizing).
 
-1. **TOPOLOGY** — `git diff --stat` (file, package, kind, LOC).
-2. **DEPENDENCY TRACE** — who imports? New/changed signatures?
-3. **RISK ASSESSMENT** — concurrent access, error paths, interface
-   breaks, state machines, external deps.
-4. **REQUIREMENTS MAP** — spec_ref ACs + delegation done-criteria.
-   For any AC describing a producer→consumer / cross-process wire
-   (integration / end-to-end), a GREEN wire-proving test is required
-   evidence — a `skip`/`xfail` stub does NOT satisfy it (skipped E2E
-   silently counts as "tests green"). Tripwire: a new
-   `*Consumer`/`*Worker`/producer symbol with no instantiation outside
-   `tests/` (grep the durable/consumer registry + app factory → no
-   hit) = the wire is absent regardless of unit-green. This is the
-   BOARD-stage catch; running the same grep tripwire earlier at the
-   build Verify gate (before the board) is a noted follow-up — until
-   then the board is the earliest net, not the cheapest one.
-   **Faithfulness-evidence (the green suite must exercise the real
-   surface, not a fabricated one):**
-   - **Producer-faithfulness** — for each AC's GREEN test, name the
-     production producer of every hand-passed input or polled state. If
-     that producer is the function-under-test's own caller, require a
-     wired (L3) companion; if it is an async/upstream service, the test
-     must NAME the producer's floor latency and assert the poll budget
-     brackets it (not a fabricated value, not a premature settled-empty).
-   - **Test-hollowing** — when the diff REWRITES an adversarial test's
-     assertions, require a mutation-or-equivalent proof it still goes
-     RED on the original defect-class (vacuity signature: the rewrite
-     feeds input already at the guarded boundary).
-   - **Orphaned-corpus (Verify gate)** — a golden/byte-identity harness
-     imported by no test (grep `tests/*golden*` → no importer, or 0
-     cases under `--collect-only`) asserts coverage it does not provide.
-   Design-side mandate: `skills/testing/SKILL.md`
-   §Execution-faithfulness.
-   **Mechanism cells (when the diff touches a state carrier):** the
-   brief carries the owning spec's `§Mechanism-Lifecycle` matrix
-   (`_protocols/mechanism-model.md`) and marks the cells in scope.
-   Reviewers review cells, not the diff's own framing: an in-scope cell
-   without a guard or a test, a cell the code decides differently from
-   the matrix, a placed (`task-N` / `beyond-MVP`) cell driven by a
-   hand-built fixture, or an operation the matrix omits are findings and
-   name the cell. A blocking finding on a state carrier without a section
-   triggers the retro-model (`_protocols/mechanism-model.md` §Trigger);
-   the board brief of the next pass then carries it.
-5. **TEAM COMPOSITION** — risk → agents + focus points. Includes the
-   **L2-trigger table**: five rows (public API / wire; security / auth /
-   secrets; real migration doubt; new subsystem; live infrastructure),
-   each `yes | no` with an evidence pointer (file:line, grep or spec
-   clause). Copy it into the verdict. A missing row counts as `yes`.
+## 4.–4a. Buddy checklist and L2 dispatch
 
-## 3. Team composition
+When assembling prompts and dispatching reviewers, when running the L2 pre-board frame check, and before a fix pass
+or re-verify: read and follow `skills/code_review_board/checklist-and-dispatch.md` (§4 Buddy checklist, including
+the re-verify table and the simplify-before-patch gate; §4a L2 dispatch with the pre-board frame check).
 
-**L1 core:** `code-adversary` + `code-domain-logic` +
-`code-architect-roots`, one parallel cold-start dispatch (brief per §2,
-cold-start rules per §4a; no separate frame check). **With a spec_ref**
-the `code-domain-logic` brief names two extra focus points that
-`code-spec-fit` covers on L2: AC conformance (every AC implemented;
-types, bounds and error paths match the spec) and test vacuity (does
-the guarding test of each HIGH-risk AC go red on a one-line mutant of
-the guarded branch; record the mutant).
+## 5.–5a. Verdict and re-review
 
-**L1 trigger lenses** (join only on the named trigger, logged in the
-dispatch header):
+When reviewer returns are in and a verdict is consolidated or decided, and before dispatching a multi-reviewer
+re-review: read and follow `skills/code_review_board/verdict.md` (§5 verdict: reality first, then disposition;
+§5a re-review two-phase).
 
-| Lens | Trigger |
-|---|---|
-| `code-review` | the diff touches a hot path, or a path with a latency / throughput AC, that has no measurable perf-budget test |
-| `code-data` | stored shape changes: it settles the migration-needed check (`skills/deprecation_and_migration/SKILL.md`); if its return leaves doubt, re-level to L2 |
-| `code-reliability` | async / lock / worker / event-loop paths |
-| `code-api-contract` | new exported interface consumed by other in-repo components (external API / wire → L2) |
-| `code-security` | any auth / input / secrets touch found after level choice → re-level to L2 |
+## 11. Review package
 
-**L1 Buddy checklist (replaces `code-spec-fit` on L1; written into the
-verdict):** (1) hand-offs — every cross-task / producer→consumer seam
-the ACs name is wired or owned by a named task; (2) spec drift — does
-the diff change spec-defined behavior (→ spec-drift-check gate);
-(3) AC coverage — each AC maps to a green test, with the §2 step 4
-faithfulness rules; a latency AC on a growing log or store has its N
-and 4N slope leg (`skills/testing/SKILL.md` §Oracle discipline). On L1
-this item owns test coverage; conformance and test vacuity sit with
-`code-domain-logic` (above). (4) mechanism cells — when a
-`§Mechanism-Lifecycle` matrix is in scope, every in-scope cell has a
-guard or a test (or a generator that spans it), every placed cell has
-only refusal tests and its owning task is `blocked_by`-wired, and the matrix was edited in the same
-change as any mechanism decision the diff implements.
-
-**L2 (full board):** L1 core + `code-review` + risk specialists from
-the table below, 5-7 reviewers + chief; `code-spec-fit` when a spec_ref
-exists.
-
-| Risk area | Agent |
-|---|---|
-| Auth / input / secrets | code-security |
-| State machine / business logic | code-domain-logic (core) |
-| Infra / worker / NATS / DB | code-reliability |
-| Schema / queries / migrations | code-data |
-| API contracts (REST / SSE) | code-api-contract |
-| LLM / prompt / token budget | code-ai-llm |
-| Code docs + spec readability | code-docs-consumer |
-| Pattern-purity / structural roots | code-architect-roots (core) |
-| Spec exists (spec_ref) | code-spec-fit (conditional; **sole test-coverage owner on L2**) |
-| Retroactive spec drift | code-spec-drift (conditional) |
-
-**Specialist names MUST resolve to real `agents/code-*.md`.**
-Hallucinated labels (`code-async`, `code-concurrency`) fall through
-silently — `ls agents/code-*.md` at dispatch-prep to verify. On a
-non-matching name, substitute by risk-area from the §3 table above
-(infra/worker → `code-reliability`; async/race → `code-adversary` +
-`code-architect-roots`); log the substitution in the dispatch header.
-
-## 4. Buddy checklist
-
-1. Write brief (5 steps).
-2. Decide level (§1) and, on L1, the trigger lenses (§3).
-3. Check L0 from MCA return (ruff 0, mypy 0).
-4. Assemble prompts: `reviewer-base` + `code-reviewer-protocol` +
-   `reviewer-reasoning-trace` + `first-principles-check` + persona;
-   dispatch with brief + diff + L0 + spec.
-   **L2 brief content (per §4a):** persona-prompt + scope + diff +
-   spec links + code paths ONLY. NO prior cycle findings, NO prior
-   chief verdict, NO lens framing as autonomous authority, NO
-   brief-author rationale.
-5. Dispatch.
-   - **L1:** core + trigger lenses, parallel, context-isolated,
-     cold-start. Buddy works the §3 L1 checklist alongside.
-   - **L2:** pre-board frame check + board dispatch per §4a — Buddy
-     runs adversary + architect-roots cold-start
-     first, persists their returns verbatim as the frame-check
-     artifact (`docs/reviews/code/<date>-<task-id|slug>-frame-check.md`,
-     slug fallback when no task), distills the substantive findings
-     (severity-preserving) into the board brief as scope/context
-     content, then dispatches the board (code-review + domain-logic +
-     risk specialists) parallel cold-start.
-6. **L1:** Apply §1.3 to the actual reviewer count (≤ 3: Buddy
-   consolidates, no chief). Buddy owns the verdict and verifies pivotal
-   source claims; inspect individual findings when needed, without
-   routinely redoing the reviews. Write the checklist result into the
-   verdict.
-7. **L2** (and L1 with ≥ 4 reviewers, without the frame-check audit):
-   Chief consolidates (F-C-DRILL-MISSING / F-C-TRACE-MISSING
-   enforced; chain-of-custody audit per `agents/code-chief.md`
-   §CHIEF-1.0 — chief reads frame-check artifact and audits board
-   coverage of its substantive concerns; pre-consolidation gates
-   §CHIEF-1.1, 1.2; reject every claim without ≥1 verbatim
-   `file:line` code-quote) → discourse → Buddy's decision and pivotal-claim
-   verification. Chiefs recommend; they do not take over the decision.
-8. SAVE.
-
-**Fix-pass dispatch (post-FAIL):** scope-focused tests + L0 on touched
-files only, full-suite once at convergence-end. **Re-verify** — three
-cases, decided from the fix diff:
-
-| Fix diff | Re-verify |
-|---|---|
-| **Line-local:** touches only the finding's lines AND adds no guard, branch or rule to a mechanism that drew a HIGH | **light:** one `code-verification` re-runs every fix-now reproduction (red→green) |
-| **Otherwise** (new guard / branch / rule on a HIGH mechanism, or edits beyond the finding's lines, or oracle hunks present) | **light + mechanism-scoped `code-adversary`:** cold-start with the owning spec's `§Mechanism-Lifecycle` matrix and the fix diff; mandate "attack the **mechanism**, with the whole matrix as context, not the fix"; returns a coverage table over the invariants and the matrix rows / columns the fix touches (cell · probe · result); two-phase per §5a |
-| **Mechanism replaced** by the Simplify-before-patch gate | matrix updated first; then `code-adversary` + `code-domain-logic` on the **whole updated matrix** (`code-architect-roots` only if structure changed beyond it), two-phase per §5a |
-
-No chief in any case. Reproductions alone prove only that the reported
-routes are closed; a re-verify scoped to the fix diff finds only the
-next side of the same mechanism (observed three times in a row on one
-build). The adversary's unit is therefore the mechanism: it reads the
-whole matrix, probes the invariants and the rows / columns the fix
-touches, and reports which it reached, which held and which failed —
-that table is the evidence the Simplify-before-patch gate reads. A
-missing section follows the retro-model trigger
-(`_protocols/mechanism-model.md` §Trigger). Detail: REFERENCE.md.
-
-**Oracle edits on a fix pass (MUST):** a change to a differential
-oracle (reference implementation, golden, property) goes in a separate
-hunk citing the ruling it implements and is reviewed by the scoped
-`code-adversary` of the re-verify (oracle hunks always select that case),
-never only by the implementer
-(`skills/testing/SKILL.md` §Oracle discipline). Ruling-driven fix values
-and validators cite the contract-owner spec and are checked against
-every spec that produces or consumes the field
-(`skills/spec_board/SKILL.md` §4b).
-
-**Simplify-before-patch gate (MUST before fix pass ≥ 2, counted across
-the task's spec and code passes on the mechanism):** record the check
-per `skills/convergence_loop/SKILL.md` §Simplify-before-patch gate in
-the build log before briefing the fix — `model` row first (the
-`§Mechanism-Lifecycle` section present or written now), then same class
-/ simpler mechanism / spec at fault answered against the matrix. Same
-class + simpler mechanism or spec at fault → propose the simplification
-to the caller instead of patching routes, showing the whole updated
-matrix. A simplification that removes the class counts as fixing its
-HIGHs. A `patch` names every cell it changes (fix brief
-`§Mechanism-cells`).
-
-**Disposition-respect + guarantee-carrier rigor on the fix-pass (MUST).**
-Two guards, the first unconditional:
-
-1. **Guarantee-carrier rigor (any fix, any disposition — even a mid-fix
-   observation with no prior finding).** Before a fix adds a gate /
-   claim / lock to a path that carries a delivery guarantee (always-emit,
-   at-least-once, exactly-once), it MUST inherit the guarantee's
-   failure-model — an explicit failure / redelivery / timeout (e.g. TTL)
-   trace showing the added mechanism cannot strand the guaranteed item
-   (a claim that out-lives its redelivery budget → silent permanent
-   loss). Identify a carrier by consulting the spec's invariant /
-   guarantee section (e.g. a §"always-publish" clause), NOT by recall.
-   Name the carrier paths + the spec clause in the fix-pass brief prose.
-2. **Disposition-respect (the narrower case).** A finding already
-   dispositioned `accept` / `watch` (contained, non-blocking) defaults
-   to **no new mechanism** on the fix-pass; re-opening it to "harden it
-   while we're here" requires a stated NEW failure mode. "Symmetry
-   between two paths" / "defense-in-depth" is an aesthetic pull, not a
-   correctness argument — the asymmetry is often load-bearing (a
-   deterministic path genuinely needs no claim; only the expensive /
-   uncertain path does).
-
-Root: Inv 9 proportionality + anti-goldplating (hand-wavy "symmetry" /
-"defense-in-depth" re-routes, same family as the Inv-9 "follows
-convention" reject). DIFFERENT root from §Claim-Verifications: that
-verifies whether a *claim* is true; these guard whether a *change*
-should exist at all.
-
-## 4a. L2 dispatch — pre-board frame check + board
-
-The board itself is one cold-start parallel dispatch (no internal
-"layers" the reviewers need to know about). Buddy's pre-board work
-incorporates an adversarial frame-check so the board brief reflects
-substantive scope/parity/spec-citation concerns before reviewers
-read it. The frame-check returns are persisted so chief can audit
-the chain at consolidation.
-
-**Cold-start brief (board reviewers):** persona + scope + diff +
-spec links (locked) + code paths. NO prior cycle findings, NO chief
-verdict, NO lens framing as autonomous authority, NO brief-author
-rationale. Exception: narrow verify-single-fix gates (NOT board
-iterations).
-
-*Lens framing as autonomous authority defined.* Lens-produced
-`## Claim-Verifications` rows (mechanical evidence: `file:line` +
-grep command + grep output + disposition) ARE allowed in the brief
-— the reviewer can independently re-verify each row with one grep.
-What's NOT allowed: lens-produced depth/seam/responsibility-purity
-JUDGMENTS presented as conclusions the reviewer must accept. The
-distinction is mechanical-evidence (allowed) vs persona-judgment
-(blocked).
-
-**Pre-board frame check** (Buddy runs before assembling the board
-brief, cold-start):
-- Adversary — FULL review per `agents/code-adversary.md`
-  §Cold-start pre-mission + persona Check focus. One pass.
-- Architect-roots (when §1.2 trigger fires) — pattern-purity review
-  per `agents/code-architect-roots.md` §Pre-board frame check role.
-
-**Frame-check artifact (chain-of-custody, MANDATORY).** Buddy
-persists both returns verbatim to
-`docs/reviews/code/<date>-<task-id|slug>-frame-check.md` BEFORE
-assembling the board brief. `<slug>` is a Buddy-derived short
-identifier when no task-id exists (e.g. ad-hoc review). The
-artifact is the raw evidence chain — chief reads it at consolidation
-alongside the board reviews per
-`agents/code-chief.md` §Chain-of-custody audit.
-
-**Buddy intermezzo (substantive distillation, brief stays clean).**
-Read both returns. Distill the substantive concerns into the board
-brief as scope clarifications + named open verifications + code-path
-emphasis. The brief contains SUBSTANCE, NOT findings-with-severity
-or other finding-shaped framing. Severity stays in the frame-check
-artifact for chief audit. Adding `[severity:CRITICAL]` or other
-finding-shaped framing into brief content would re-create the
-brief-contagion the cold-start rule prevents (reviewer reads
-against the brief's framing, not against spec → code).
-
-The anti-dilution mechanism is the **chief audit at consolidation**:
-chief reads frame-check artifact AND board reviews, cross-references
-by substance + severity (per `agents/code-chief.md` §CHIEF-1.0 audit),
-surfaces unaddressed artifact concerns at original severity. Reviewers
-receive the enriched brief and do normal persona Check focus on it — no
-"frame-challenge" framing (special framing invites special handling); they
-do NOT read the frame-check artifact (chief-audit surface, not reviewer
-input).
-
-**Board dispatch** (parallel, cold-start): code-review + domain-logic
-+ risk specialists per team composition.
-
-**Code-quote mandate (all reviewers):** every finding AND every
-"verified X" non-finding carries ≥1 verbatim `file:line` quote
-(1-3 lines). Chief rejects claim-without-quote and re-dispatches.
-
-## 5. Verdict
-
-**Reality first, then disposition.** At L2 the chief first applies the
-recall-biased keep/refute triage (KEEP / REFUTED) per
-`agents/code-chief.md` §CHIEF-1 step 3 — REFUTED removes only on
-existing reviewer-surface evidence, never the chief's own re-reading; a
-KEPT finding carries the reviewer's own trigger-certainty verbatim (the
-chief authors no confidence rating). The severity-verdict and
-disposition-triage RULES below are unchanged; they operate on the KEPT
-findings. Recall-bias deliberately keeps that population larger than a
-precision filter would, so more real-but-uncertain findings reach
-disposition (the intended effect) — each then dispositioned normally (a
-narrow latent HIGH still → `accept`). Keep-or-refute is upstream of
-disposition (fix-now / accept / watch / fix-later): triaged once, then
-dispositioned once.
-
-**Before adopting the verdict** Buddy applies the decision-grounding
-C-VERIFY (`agents/buddy/operational.md` §Architecture-Comprehension B):
-for the pivotal code claims the verdict rests on, re-execute any not
-already independently re-executed by a non-asserter lens (a present
-pointer ≠ verified); SILENT rendered loud; FALSIFIED → re-frame, don't
-adopt.
-
-```
-PASS:            0C + 0H
-PASS_WITH_RISKS: 0C + ≤2H (carry-forward MANDATORY), no H or invariant-falsifying finding open on a `now` mechanism cell
-FAIL:            ≥1C or >2H, or an open H or invariant-falsifying finding on a `now` mechanism cell (Mechanism-cell floor below)
-                 → triage → MCA fixes fix-now → re-review (max 2)
-```
-
-**Risk carry-forward** (on PASS_WITH_RISKS / FAIL non-fix-now /
-cherry-pick / ESCALATE-with-open): verdict YAML
-`remaining_findings:` per entry: `id`, `target`, `severity`,
-`locator`, `title`, `rationale_for_carry_over`, `proposed_action`.
-Schema + example: REFERENCE.md.
-
-**7-value `target:` enum:**
-
-- `spec_text` — batch-patched, no task
-- `new_task` — MEDIUM+ only; LOW FORBIDDEN
-- `watch_item` — appended to `context/risk-watch.md`
-- `accept` — DEFAULT non-blocking; MANDATORY standalone LOW
-- `absorb_next` — logged, next file-touch closes
-- `closes_with: <id>` — duplicate / convergence to another fix
-- `re_review: <reviewer>` — scoped specialist re-look
-
-Empty `target:` = validation fail. All same `target:` = missed
-triage anti-pattern. `risk-followup-routing` files new_tasks
-mechanically.
-
-**Proportionality triage (NON-NEGOTIABLE on FAIL):**
-
-| Disposition | Criterion |
-|---|---|
-| **fix-now** | blocks requirement OR reproduces reported defect; every CRITICAL and the safety floors below. MEDIUM/LOW reproducing defect = fix-now. HIGH narrow latent = `accept` unless a safety floor applies |
-| **accept** | non-blocking AND (narrow+backstopped OR latent OR self-introduced narrower than original). DEFAULT non-blocking |
-| **watch** | `accept` + named future trigger |
-| **fix-later** | MEDIUM+ only. Named concrete defect + measurable downstream cost. LOW FORBIDDEN |
-
-**Hard floor LOW:** standalone LOW → `accept`. LOW → `new_task`
-FORBIDDEN. LOW feels important = severity wrong; re-classify MEDIUM
-with named defect, or accept.
-
-**Value-floor `new_task`:** before chief writes `new_task` for any
-finding (HIGH included), inline-rationale answers "what operational
-impact does NOT doing this followup have?":
-- "Nothing breaks" / no named consumer / no measurable cost →
-  re-route `accept`.
-- "Future-edit safety" / "follows convention" without named consumer
-  → re-route `accept` or `watch_item`.
-- Real measurable cost + named consumer + reproducible failure
-  shape → `new_task` justified.
-- **Vision-named-surface carve-out (observable, not posture):** a
-  surface the active `intent.md` Vision names as a product deliverable,
-  or a consumer the Vision / plan names, IS a **named consumer even at
-  zero built instances** — "not built yet" is not "no consumer." Do NOT
-  re-route to `accept` on no-consumer grounds for a Vision-named product
-  surface; on a platform / middleware the consumable surface IS the
-  deliverable and zero-built-consumers is the normal pre-launch state.
-  Decided by reading the Vision (observable), not by judging intent.
-  On a mechanism, "no consumer yet" only places the work in its
-  caller's task (`_protocols/mechanism-model.md` §Scope and placement,
-  rule 4 — the one home of the rule).
-
-`new_task` without operational-impact sentence = validation fail.
-Hard floors override: CRITICAL, security/auth/consent/crypto, schema
-/ public-API contract, full-path tasks stay `fix-now` / `new_task`.
-
-**Mechanism-cell floor (blocking severities only):** a CRITICAL / HIGH
-finding, or one that falsifies a stated invariant, on a `now` cell of a
-`§Mechanism-Lifecycle` matrix is `fix-now` or goes to the
-Simplify-before-patch gate — never `new_task`, `accept`, `watch_item` or
-`absorb_next`. An open live cell at blocking severity makes the verdict
-FAIL (with the gate record), not PASS_WITH_RISKS. MEDIUM / LOW on a live
-cell follow the triage above (standalone LOW → `accept`; `new_task`
-MEDIUM+), with the cell annotated in the matrix (`✗ accepted: <reason>`
-or `→ task-N` plus the `blocked_by` edge). Cells placed in another task
-or beyond the MVP leave as `blocked_by` edges (beyond-MVP: the plan /
-milestone entry), not `remaining_findings` rows. Rule and placement: `_protocols/mechanism-model.md` §Scope and
-placement, §Bind rules — parking an invariant's open blocking routes on
-the next producer's task was the recurring way one mechanism stayed
-defective across tasks.
-
-**Bundling content-split:** bundled items tagged
-`value_class: real-impact | nice-to-have`. Preserve each reviewer's
-provenance when merging duplicate evidence. Agreement can strengthen
-confidence; reviewer count alone changes neither severity nor disposition.
-Apply the same impact criteria to solo and convergent findings.
-
-**Test-coverage findings = `code-spec-fit` sole owner on L2** (L1:
-the §3 checklist's AC-coverage item). Coverage
-findings name (a) concrete failure-mode missing tests catch, (b) why
-existing test surface (integration, indirect, contract-pinning)
-doesn't catch it, (c) smallest test set that closes gap. "Coverage at
-integration level" = valid `accept`.
-
-**Process discipline:** no "leanest fix" for non-fix-now (`accept`
-= closed); self-introduced narrower than original → `accept`; Buddy
-MUST NOT offer paths A/B/C.
-
-**Re-review:** max 2 → ESCALATE. Default = the §4 re-verify table
-(light for line-local fixes, light + scoped adversary otherwise).
-Findings without a reproduction: single-reviewer
-pass-1.5 (scope = `affected_scope`); bundled (>5 clusters/files),
-replaced mechanism or other multi-reviewer re-reviews → §5a two-phase.
-Full table: REFERENCE.md.
-
-## 5a. Re-review two-phase (multi-reviewer re-reviews)
-
-The default re-review is the §4 re-verify table; its scoped adversary
-and replaced-mechanism cases use this section's two-phase. Before the fix pass that precedes a pass-2+ re-review,
-the §4 Simplify-before-patch gate runs; a recurring class is answered by
-a simpler mechanism or invariant, not by another route patch.
-
-Triggers: any re-review with >1 reviewer dispatched
-(multi-reviewer pass-1.5, bundled clusters, pass-2+). Warm-start
-anchoring + brief contagion are precisely the failure modes that
-fire when multiple reviewers share a prior-cycle frame.
-
-Exception (narrow): a re-review with exactly one reviewer dispatched
-AND scope = single named finding AND single cluster (e.g. "verify
-F-CR-007 patched at the cited line") stays single-reviewer pass-1.5,
-no two-phase. All three conditions required — single-reviewer alone
-is not enough (a bundled multi-cluster dispatch with one reviewer
-still inherits cross-cluster prior-frame contagion). The exception
-is scoped by reviewer count + cluster count + single-finding focus.
-Second exception: the reproduction re-run of the §4 re-verify (one
-`code-verification`) is mechanical red→green evidence per finding, so it
-needs no two-phase. The scoped adversary and the replaced-mechanism
-re-verify follow the two-phase, with every subsumed prior finding's
-reproduction re-run in the Phase-2 table.
-
-**Phase 1 — cold-derive (60-70%):** diff + scope + persona + spec
-(locked) + code paths. FORBIDDEN: prior board findings / brief
-rationale / chief verdict / lens framing. Output: findings on
-as-coded state per §4a code-quote; closure-claims carry 4-link chain
-per `_protocols/mca-brief-template.md` §Reviewer Checkpoints.
-
-**Phase 2 — reconcile (30-40%):** prior findings as appendix.
-Output: table — prior finding | addressed? | evidence | correct fix?
-| new shape (smell-transfer +1/+2).
-
-Chief: Phase-1 = primary evidence, Phase-2 = closure-verification.
-`remaining_findings` = Phase-1 minus prior-cycle-confirmed-closed.
-
-**Fix-completeness C-VERIFY (extends verdict-adoption C-VERIFY to the
-fix-pass's OWN claims):** a fix-pass introduces NEW load-bearing claims
-("I closed it on shutdown") the original C-VERIFY never covered. When a
-fix-claim names a third-party teardown / lifecycle API (`close` /
-`aclose` / `shutdown` / `__aexit__`), the claim is NOT "addressed"
-until the **installed** SDK surface is shell-verified (e.g. `python3 -c
-"import openai; print(hasattr(openai.AsyncOpenAI,'close'),
-hasattr(openai.AsyncOpenAI,'aclose'))"`) — not the remembered API.
-Observed: a `_close_client_quietly` resolved only `aclose`, absent on
-the installed openai 2.41.1 → `close()` a silent no-op, the pooled
-transport leaked at every drain. A "wired-but-ineffective" fix passes
-the Phase-2 "addressed?" column until the installed surface is checked
-(`evidence-pointer-schema.md` §8.3, re-review layer).
+Before a change that will be reviewed starts (BASE), before any reviewer dispatch, a re-review after a fix pass
+included, and when persisting a seat's return or writing the verdict: read and follow `skills/code_review_board/review-package.md` (§11 BASE, the package recipe, what each seat
+receives, the fix range, the Range line in the persisted review).
 
 ## 6. Discourse
 
@@ -561,15 +165,15 @@ Agent reviews: `docs/reviews/code/{task-id}-{role}.md`.
 Verdict: `docs/reviews/code/{task-id}-verdict.md` — the **canonical
 engine-facing pointer** (task-id, undated; a `[DISCIPLINE]` write-canonical
 convention, updated in place on re-review). The `[WORKFLOW]` completion gate's
-`pointer_check` blocks `--complete` (→ `--force`) when the canonical file is
-missing, so a deviant dated/suffixed name fails-safe rather than passing
-wrongly. No mechanical rename-to-canonical exists (a fuzzy task-id glob was
+`pointer_check` checks exact retained decision bytes and current owner/subject
+under `code_success`, including with force. Canonical names do not confer identity.
+Preserve earlier selected payloads before replacing this locator. No mechanical rename-to-canonical exists (a fuzzy task-id glob was
 rejected; see `framework/enforcement-registry.md`). On L2 the chief also writes
 `{task-id}-consolidated.md`; the gate keys on the **verdict only**.
 
 ## 8. Contract
 
-**INPUT:** diff (committed/staged), L0 PASS, MCA return summary.
+**INPUT:** the review package (§11), L0 PASS, MCA return summary.
 Optional: spec_ref, delegation file.
 
 **OUTPUT:** verdict, brief, per-agent reviews under `docs/reviews/code/`.
@@ -577,7 +181,8 @@ On FAIL: findings + severity + locators + fix hints.
 
 **DOES NOT:** code fixes, spec review (→ `spec_board`), lint/type (→ L0).
 
-**DONE:** verdict decided, brief written, reviews persisted, L2 chief
+**DONE:** explicit current decision adopted, code_success checked for forward
+readiness, verdict decided, brief written, reviews persisted, L2 chief
 tracking table present, SAVE done.
 
 ## 9. Boundary
@@ -592,8 +197,9 @@ tracking table present, SAVE done.
 - **NOT** dispatch without brief. INSTEAD run 5 steps first.
 - **NOT** L1 on an L2 trigger (public API / wire, security, real
   migration doubt, new subsystem, live infrastructure). INSTEAD when
-  unclear → L2. Equally **NOT** L2 on file count or new state vocabulary
-  alone — that is L1.
+  unclear → L2 for that trigger. Equally **NOT** L2 on file count or new
+  state vocabulary alone — that is L1 — and **NOT** the whole L2 roster by
+  habit: size it per §3.
 - **NOT** route LOW to `new_task` or write cost-justification escape.
   INSTEAD `accept` or re-classify MEDIUM with named defect. Text
   justifications hallucinate; only mechanical rule enforces.

@@ -26,14 +26,15 @@ consumer-repo sessions.
 |--------|-------|----------|------------------|
 | `plan_engine.py` | plan state + critical path + validate + boot output | Buddy boot, task_creation step 5, wakeup | `$FRAMEWORK_DIR/scripts/plan_engine.py` |
 | `workflow_engine.py` | Development workflow state machine; explicit selected runs only. Common save and boot do not enumerate engine state. | Selected development caller through `development_continuation.py` | `$FRAMEWORK_DIR/scripts/workflow_engine.py` |
-| `git-status-check.sh` | parallel git fetch + status-sb for FRAMEWORK_DIR + active CWD. 5s network timeout. Output shows non-clean repos (ahead/behind). Prevents working on stale state in multi-machine workflows. | Buddy boot step 2 STATUS-CHECK | `$FRAMEWORK_DIR/scripts/git-status-check.sh` |
+| `git-status-check.sh` | parallel git fetch + porcelain v1 branch status (untranslated labels) for FRAMEWORK_DIR + active CWD. 5s network timeout. Output shows non-clean repos: ahead/behind, uncommitted entry counts and, for the framework checkout, installed sources not committed in `HEAD` and a non-ready installer phase (from installer status). Prevents working on stale state in multi-machine workflows and leaving held-back work unnoticed. | Buddy boot step 2 STATUS-CHECK | `$FRAMEWORK_DIR/scripts/git-status-check.sh` |
+| `select_tests.py` | static selector: maps changed paths to the pytest files that exercise them, or answers `broad`; read-only, stdlib only | testing skill §Test selection in `skills/testing/run-strategy.md` (implementation, fix, review, verification rounds), run from the project root | `$FRAMEWORK_DIR/scripts/select_tests.py` |
 | `deploy-docs.sh` | mkdocs build + server sync for `docs/` | solve/spec_board/docs-rewrite/fix workflows | `$FRAMEWORK_DIR/scripts/deploy-docs.sh` |
 | `generate-architecture.py` | architecture doc generator | docs-rewrite workflow | `$FRAMEWORK_DIR/scripts/generate-architecture.py` |
 | `generate-control.py` | control-plane doc generator | docs-rewrite workflow | `$FRAMEWORK_DIR/scripts/generate-control.py` |
 | `generate-status.py` | status report generator | manual, reports | `$FRAMEWORK_DIR/scripts/generate-status.py` |
 | `generate_skill_map.py` | regenerates AUTO block in `framework/skill-map.md` from SKILL frontmatter | manual + after skill changes | `$FRAMEWORK_DIR/scripts/generate_skill_map.py` |
 | `generate_navigation.py` | regenerates AUTO block in 8 navigation.md files | manual + after structure changes | `$FRAMEWORK_DIR/scripts/generate_navigation.py` |
-| `skill_fm_validate.py` | pre-commit check 7 SKILL-FM-VALIDATE — frontmatter validator | git pre-commit hook | `$FRAMEWORK_DIR/scripts/skill_fm_validate.py` |
+| `skill_fm_validate.py` | Skill frontmatter validation with supported working-tree CLI behavior and explicitly selected indexed hook evaluation; see `enforcement-registry.md` §Indexed standalone input contract. | git pre-commit hook | `$FRAMEWORK_DIR/scripts/skill_fm_validate.py` |
 | `board-depth.py` | board-pass depth-mode resolver (Quick vs Deep, 4 checks) | spec_board skill | `$FRAMEWORK_DIR/scripts/board-depth.py` |
 | `board-synthesize-input.py` | board-pass input synthesizer — extracts ALL findings from consolidated-passN.md | spec_board / code_review_board skills | `$FRAMEWORK_DIR/scripts/board-synthesize-input.py` |
 | `setup-cc.sh` | Claude Code adapter setup (cc launcher + path whitelist generation) | manual, once | `$FRAMEWORK_DIR/scripts/setup-cc.sh` |
@@ -44,6 +45,8 @@ consumer-repo sessions.
 `$FRAMEWORK_DIR/scripts/lib/` holds helpers (`yaml_loader.py`, etc.).
 Callers always reference `$FRAMEWORK_DIR/scripts/lib/<name>` from
 consumer repos.
+
+Standalone indexed checks share the bounded candidate-data adapter described in `enforcement-registry.md` §Indexed standalone input contract. It supplies captured membership and blob data, without executing candidate code or implying indexed plan/evidence validation.
 
 ## Background
 

@@ -13,6 +13,10 @@ disable-model-invocation: false
 uses: []
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: knowledge-capture
 
 ## Purpose
@@ -75,7 +79,7 @@ path.
 | **SOTA** | Position map, consensus, the project's placement | "Where do we stand vs SOTA?" |
 | **Solve** | RFP result, axioms, problem statement | "Optimal workflow structure analysed" |
 | **Interview** | Insights from conversations, conferences, articles | "Leoplo interview insights" |
-| **Decision** | Architecture decision, trade-off analysis — **required threshold: ADR-discipline triple** (hard-to-reverse + surprising-without-context + result-of-real-trade-off, pattern lift Phase G tier-2 from Pocock grill-with-docs). When only 1-2 are met: don't capture as a decision; consider an inline comment. Cross-ref `documentation_and_adrs` §When-an-ADR. | "ADR: why X instead of Y (triple satisfied)" |
+| **Decision** | Architecture decision, trade-off analysis — **required threshold: ADR-discipline triple** (hard-to-reverse + surprising-without-context + result-of-real-trade-off). When only 1-2 are met: don't capture as a decision; consider an inline comment. Cross-ref `documentation_and_adrs` §When-an-ADR. | "ADR: why X instead of Y (triple satisfied)" |
 | **Factual** | A single observed fact | → not knowledge_capture, → knowledge_processor |
 
 ## Schema — where to write?
@@ -107,7 +111,7 @@ within `research/` (prefix `sota-`, suffix
 - Extend existing files (don't duplicate).
 
 **SOTA files (`sota-*.md`):**
-- Compact but complete. Around 200 lines prompts decomposition review under knowledge_processor; preserve meaningful content.
+- Compact but complete. Restructuring follows knowledge_processor §6 (`history-imports.md`; size is a review signal); preserve meaningful content.
 - Structure: consensus → matrix → position → what to steal /
   avoid.
 - Cross-references to related SOTA files.
@@ -257,7 +261,7 @@ Return summary with:
    internally developed knowledge.
 
 4. **Size review:** context files (`context/`) around 200
-   lines trigger a relevance/decomposition review, never deletion. Use the protected
+   lines are a review signal for knowledge_processor §6 (`history-imports.md`) restructuring, never deletion. Use the protected
    continuity interface for context publication. Research files (`docs/research/`) and solve state
    files (`docs/solve/`) have NO line limit — they may be as
    long as needed.

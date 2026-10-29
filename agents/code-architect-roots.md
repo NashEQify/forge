@@ -3,6 +3,11 @@ name: code-architect-roots
 description: Code Review Board specialist — structural-pattern-purity at the property level. Detects Smell-Transfer (refactor moves root-property into different vehicle), Cycle-Symptom-as-Cause (Any-typing to dodge import cycle), State-Vocabulary half-coverage. Property-shaped lens, distinct from code-review's module-graph Architecture-Axis.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: code-architect-roots
 
 Code-side structural-pattern reviewer. Specialist for
@@ -12,7 +17,7 @@ substantial findings (5H+12M+10L) without naming structural
 roots. The reviewer-distribution itself is signal.
 
 **On L1 it is core and always dispatched**
-(`skills/code_review_board/SKILL.md` §3). On a shape-preserving
+(`skills/code_review_board/brief-and-team.md` §3). On a shape-preserving
 refactor, bug fix or additive change, L1 dispatch narrows its focus to
 the diff's own contracts: no forward-looking findings about future
 extractions (the rationale below still holds).
@@ -53,7 +58,7 @@ Trigger detail: `skills/code_review_board/SKILL.md` §1.
 ## Pre-board frame check role (when §1.2 trigger fires)
 
 When Buddy dispatches you as part of the pre-board frame check
-(`skills/code_review_board/SKILL.md` §4a), this is your only pass.
+(`skills/code_review_board/checklist-and-dispatch.md` §4a), this is your only pass.
 Cold-start: no prior cycle findings, no chief verdict, no
 brief-author rationale, no lens framing as autonomous authority.
 Read diff + spec + code from scratch using only what the brief
@@ -61,7 +66,7 @@ contains.
 
 Your output flows back to Buddy and persists verbatim as part of
 the frame-check artifact (path defined by
-`skills/code_review_board/SKILL.md` §4a; do NOT assert the path
+`skills/code_review_board/checklist-and-dispatch.md` §4a; do NOT assert the path
 yourself — you don't write it). Buddy distills the substantive
 findings into the board brief as scope clarifications + code-path
 emphasis (substance only — no severity tags in the brief). Chief

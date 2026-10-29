@@ -100,15 +100,19 @@ often the best choice under high uncertainty or low impact.
 ## Edge cases
 
 **The problem is actually a bug with a reproduction path:**
--> abort frame, inform user, redispatch to fix workflow. Do not force it through
-  all 8 sub-steps.
+-> If the entire commissioned problem is a defect, route it to the existing Fix
+  discipline rather than all 8 frame sub-steps. If the defect is embedded in
+  broader work, retain parent ownership and use the existing root-cause-fix
+  primitives for diagnosis, a failure witness and outcome verification in the
+  parent work artifact, per SKILL.md's scope. Frame only unresolved solution
+  choices; do not create another subworkflow or repeat authorization.
 
 **The problem is actually a knowledge question:**
 -> redispatch to research workflow. Frame is not the right mechanism.
 
 **The problem is too large for one frame report:**
 -> decompose into sub-problems, one frame block per sub-problem in the same
-  state file. See solve/WORKFLOW.md §body structure "exception on problem decomposition".
+  state file (state-file format: solve/WORKFLOW.md §State file).
 
 **User feedback after the frame report:**
 -> does NOT count as a new frame pass. That is Phase 2 Refine of the solve

@@ -7,7 +7,7 @@ Covers reasoning steps 1 (Intent), 2 (Plan), 3 (Simulate), 5
 
 Loaded by every agent that loads `first-principles-check.md` — the
 two protocols are companions. Chief checks both. See
-`first-principles-check.md` §Loaded-by for the full list (Spec
+the "Loaded by" list in `first-principles-check.md` for the full list (Spec
 Board, Code Board, UX Board). Exception: `board-consumer` stays
 excluded (first-reader role).
 

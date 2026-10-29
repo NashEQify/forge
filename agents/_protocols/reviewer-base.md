@@ -42,12 +42,30 @@ blocks are pointer lists per the schema SoT
 `grep_match`, `dir_listing`, `file_exists`).
 
 Layout (`per_finding` as default | `top_level`) is referenced via
-the skill frontmatter `evidence_layout`. Reviewer outputs use
-`per_finding` (pointer list embedded inside each finding block).
+the skill frontmatter `evidence_layout`. Finding-bearing reviewer outputs use
+`per_finding` (pointer list embedded inside each finding block). Clean reports
+use supported top-level evidence as described below.
 
 Backward compatibility: `schema_version: 0` OR missing = legacy. The
-engine check and the validator silent-skip legacy outputs (return
-pass / exit 0).
+ordinary engine check and default validator silent-skip legacy outputs
+(return pass / exit 0). Legacy reports cannot fill mandatory current slots.
+
+## Mandatory software-review returns
+
+When the dispatch carries a mandatory review envelope, load
+`skills/_protocols/evidence-pointer-schema.md` §9 before producing the return.
+Echo `schema_version: 1`, `review_run_id`, `review_subject_digest` and your
+assigned `review_slot` verbatim from the dispatch in frontmatter. The dispatcher
+obtains generated identity from successful capture stdout; do not invent it.
+Keep the captured scope/focus and historical-context qualifications explicit.
+Relevant reviewed-input writes require a fresh applicable capture, not relabelling
+this return. Hashes identify bytes, not authorship or truthful execution.
+
+Finding-bearing returns use owned per-finding evidence. With no findings, use
+nonempty top-level frontmatter evidence for the checked scope and conclusion.
+Adoption resolves every parseable quote and refuses one that does not hold; form
+problems reach Buddy as diagnostics. Preserve the complete return for caller-owned
+verbatim persistence before downstream consumption.
 
 ## What's working well
 
@@ -117,7 +135,7 @@ working well"). For each file touched by the diff:
 |---|---|---|---|
 | src/foo/bar.py    | 487 | +52 | — |
 | src/foo/baz.py    | 612 | +120 | size-trend |
-| skills/x/SKILL.md | 420 | +8  | size-trend (inspect loading/coherence) |
+| skills/<name>/SKILL.md | 420 | +8  | size-trend (inspect loading/coherence) |
 ```
 
 **Signal column — judgment-driven, soft thresholds as triggers only:**
@@ -143,7 +161,7 @@ latter. Silent omission = "signal not raised" = false negative.
 judgment of cohesion-impact, not LOC alone. Convergent signals
 across reviewers (≥2 reviewers raising `module-size-trend` on the
 same file) get surfaced by chief as a **structural finding-class**
-and routed to `code-architect-roots` re-review (per `code_review_board/SKILL.md` §3 specialist trigger).
+and routed to `code-architect-roots` re-review (per `code_review_board/brief-and-team.md` §3 specialist trigger).
 
 **Why mechanical reporting + judgment severity:** the report itself
 is `wc -l` (cheap, mechanical, ~3s per review). The severity is the

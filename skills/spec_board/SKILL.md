@@ -15,13 +15,24 @@ invocation:
   secondary: [user-facing, sub-skill]
 disable-model-invocation: false
 modes: [standard, deep, ux]
-uses: [_protocols/plan-review, _protocols/discourse, _protocols/context-isolation, _protocols/content-preservation, _protocols/dispatch-template, _protocols/consolidation-preservation, _protocols/piebald-budget, _protocols/skill-guardrails, _protocols/analysis-mode-gate, convergence_loop, _protocols/evidence-pointer-schema, _protocols/mechanism-model]
+uses: [_protocols/plan-review, _protocols/discourse, _protocols/context-isolation, _protocols/content-preservation, _protocols/dispatch-template, _protocols/consolidation-preservation, _protocols/piebald-budget, _protocols/skill-guardrails, _protocols/analysis-mode-gate, convergence_loop, _protocols/evidence-pointer-schema, _protocols/mechanism-model, _protocols/finding-verification]
 ---
+
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
 
 # Skill: spec-board
 
 Buddy checklist. Detail: `REFERENCE.md`. Agent protocols:
 `agents/_protocols/reviewer-base.md` + `spec-reviewer-protocol.md`.
+
+Rebuild-ready means buildable from the spec together with the test matrix or the tests it names: behaviour at
+contract level in the spec, its cases in the matrix or tests (`framework/spec-engineering.md` §Convention: spec
+carriers).
+
+Section numbers are skill-wide: §0, §3, §5 and §7–§10 here, §1–§2 in `depth-and-team.md`, §4–§4b in
+`checklist-and-dispatch.md`, §3a and §6–§6a in `post-pass.md` (the stubs below say when to read each).
 
 ## 0. Plan + review (required without a frame)
 
@@ -29,6 +40,27 @@ Direct board dispatch without prior `frame`: plan block (scope /
 tool / alternatives) + self-review + (non-trivial) `plan-adversary`
 dispatch. With existing frame report: reference, don't re-run.
 Templates + triggers: `_protocols/plan-review.md`.
+
+## Mandatory adoption ownership
+
+Before initiating a software review intended to satisfy a mandatory result,
+readiness or completion boundary, load `skills/_protocols/evidence-pointer-schema.md`
+§9. Resolve one exact owner and capture before dispatch. Declare code subject
+state/output exclusions before enumeration and check that they omit no required
+reviewed inputs. Use persisted-success capture stdout for producer metadata and
+pass each assigned slot, scope/focus and history neutrally. Preserve complete
+returns verbatim with actual actors, paths and raw-byte digests before consumption.
+A canonical verdict path is only a locator; retain prior payloads before replacing
+it. Buddy's explicit current decision selects the current reports of the final
+applicable review and names any history; it answers each adoption diagnostic. Adopt it through `evidence-pointer-schema.md` §9, then check the applicable policy before any
+mandatory result/readiness write or completion. Current negative evidence supports
+repair; it grants no success permission. Identity does not replace substantive
+coverage, source interpretation, severity/risk rules or authorization.
+
+Standalone execution owns `agent-dispatch`; receive a caller-supplied exact owner
+for nested execution and do not create another capture. Pass
+`review_owner_workflow_id` and `review_owner_step_id` into the readiness consumer;
+a separately tracked child retains its existing explicit parent identity.
 
 ## Process — common
 
@@ -38,124 +70,12 @@ Templates + triggers: `_protocols/plan-review.md`.
 4. Close NEEDS-WORK via fix-loop until 0C+0H.
 5. Post-pass checks + task / commit / deploy cleanly closed.
 
-## 1. Depth mode
+## 1.–2. Depth mode and team composition
 
-### 1.0 Proportionality gate (MANDATORY — runs before §1.1)
-
-Default = escalate. Bookkeeping spec edits (amendment-log rows,
-Step-alt examples, lessons-table rows, version bumps) systematically
-fire the cross-layer / interface checks and burn a Deep pass. Gate
-cuts theater. Answer 4:
-
-1. Substantive edit ≤~30 net lines AND ≤2 sections (single change
-   site, not a sweep)?
-2. Mirrors visible sibling pattern in same spec (new amendment-log
-   row alongside existing, new Step-alt alongside existing alts)?
-3. Descriptive, not prescriptive — documents what already landed in
-   code OR clarification / rewording, NOT a new rule / state / contract?
-4. No new state-vocabulary, no new public-API contract, no new SSE
-   event, no new schema field, no new normative rule (cross-spec-impact
-   lens — if neighbour specs need to learn the change, it's contract)?
-
-**3-of-4 yes → standard mode** regardless of §1.1 signals. spec_board
-has no `light` tier; gate authorizes *staying-in-standard*, not
-skipping the board.
-
-**Skip-decision pointer:** the decision to SKIP the board entirely (a
-pre-invocation call, distinct from this gate's standard-vs-Deep depth
-choice) routes through these same Q3/Q4 contract-surface questions,
-authored inline at the decision point per `agents/buddy/operational.md`
-§Multi-perspective engagement (board-skip discipline) — a new contract
-surface there is a hard stop on the skip, regardless of an ADR-lock or a
-passed amendment-verification.
-
-**Override floor (hard escalation regardless of gate):**
-- YES on **security** check (auth / consent / crypto) → ALWAYS Deep.
-- YES on **full-path** (`dev_path: full`) → ALWAYS Deep.
-
-**Pre-gate FAIL (new L1+ specs only) — two required sections:** new
-L1+ spec submitted without either section → **FAIL before §1.0 runs:
-
-1. **§Module-Decomposition missing** → FAIL. Author adds per
-   `framework/spec-engineering.md` §Convention: §Module-Decomposition.
-2. **§Test-Strategy missing** → FAIL. Author adds bug-class catalog
-   per §Convention: §Test-Strategy.
-
-**Pre-gate FAIL (any spec above L0, new or amended) — §Mechanism-Lifecycle:** the
-diff introduces or changes a state carrier (two or more states, two or
-more operations; any derived state; any "X changes only via Y" / "never
-X" invariant; a hold / settlement / undo flow) and the owning spec has no
-`§Mechanism-Lifecycle` section for it, or the section has an empty cell →
-**FAIL before §1.0 runs.** Author adds / completes it per
-`skills/_protocols/mechanism-model.md`. This gate applies to legacy specs
-too once the amendment touches the mechanism (the no-retrofit boundary
-ends at the touch).
-
-**Board review of §Test-Strategy** (when present): every AC ≥1
-bug_class row (no orphan); no duplicate bug_class (semantic dedup);
-each bug_class is a noun phrase (not test-case name). Vague /
-duplicate / orphan = findings (severity per impact).
-
-Legacy specs **silent-skip** both — touch-it-fix-it via
-`_protocols/spec-amendment-discipline.md` categories (d) and (e).
-Cross-layer / interface triggers yield to gate on bookkeeping;
-standard→Deep on ≥1C or ≥3H still applies.
-
-### 1.1 Scoped pre-check + 4 checks
-
-- **Scoped pre-check:** `board_result pass` AND change ≤3 sections
-  → standard (3 agents, no chief discovery). Otherwise → step 1.
-- **Step 1 — 4 checks (≥1 YES → Deep):** cross-layer (consumers
-  in another layer), interface (API / Pydantic / schema), full path
-  (`dev_path: full`), security (auth / consent / crypto).
-- All NO → standard. Standard escalates Deep on ≥1C or ≥3H.
-
-## 2. Team composition
-
-- **Standard:** chief + adversary + implementer + impact +
-  **architect-roots** (CONDITIONAL on §2a).
-- **Deep pass 1:** all 7 (+ Adv-2, Adv-3 Sonnet, Consumer Sonnet)
-  + **architect-roots** (ALWAYS in pass 1).
-- **Deep pass 2+:** 4 (Adv + Adv2 + Impl + Impact).
-- **Deep final:** 2 (Adv + Impl).
-
-Specialists by content: schema/API → `code-api-contract`;
-readability → `board-consumer`; first principles → `board-adversary-2`.
-
-### 2a. Architect-roots trigger
-
-Include `board-architect-roots` when ANY of: spec has ≥6 LDs;
-spec touches a state machine; diff replaces a previously-flagged
-structural pattern.
-
-### 2b. Implementer trigger (producer check)
-
-Include `board-implementer` — in any mode, including a lean
-verification-only pass — on the pass that **adds or changes** a cell
-whose producer is `unbuilt: Task N` or whose placement is `task-N` /
-`beyond-MVP`, or that specifies a flow (settlement, undo, retry,
-supplement, completion) whose caller does not exist in `src/` at HEAD.
-A pass that leaves those cells untouched does not add the seat. Its
-mandate: for each such operation, grep the producer site and confirm
-the placement (planned caller task with `blocked_by` and an explicit
-refusal now, or built now when no caller task is planned) or raise a
-finding; a producer "specified in another task" is not a producer
-(`_protocols/mechanism-model.md` §Scope and placement). The one lens
-that asks "who produces this field" has caught the no-producer
-CRITICALs where it ran and was absent where the flows were built on
-speculation.
-
-### 2c. After a mechanism redesign
-
-When a pass or the Simplify-before-patch gate replaces the mechanism
-(new derived state, new sole exit, new state vocabulary), the next pass
-is a cold seat over the **whole updated matrix** — `board-adversary` +
-`board-implementer` (or `spec-verification`) with the mandate "attack
-every cell", no chief — never an orchestrator-only verification of the
-fix.
-
-**User-review prompt (foundation specs):** "What would none of
-these agents see?" → `## User-Review` in consolidated. Required, no gate.
+When deciding scope and depth mode and assembling the team, before dispatching the board and before each later
+pass's team: read and follow `skills/spec_board/depth-and-team.md` (§1 depth mode: §1.0 proportionality gate with
+the override floor and the pre-gate FAILs, §1.1 scoped pre-check and 4 checks; §2 team composition with the
+architect-roots and implementer triggers and the cold seat after a mechanism redesign).
 
 ## 3. Flow
 
@@ -176,12 +96,8 @@ Chief consolidation: analysis-mode gate
 
 ### 3a. Delta-verify (standard mode, post-fix re-check)
 
-After fix in standard mode: 2-agent re-check on delta scope only.
-Trigger (any): ≥10 normative lines changed; ≥3 files touched; ≥1
-MAJOR fixed; fix touches gate composition / severity / enforcement.
-Team: `board-adversary` + `board-implementer` (both deliver
-first-principles drill; no chief). Acceptance: 0 new BLOCKER + 0 new
-MAJOR. Max 3 iterations → ESCALATE. Detail: REFERENCE.md.
+After every relevant fix in standard mode, before re-checking: read and follow `skills/spec_board/post-pass.md` (§3a
+delta-verify: exact-owner retry and fresh capture, the 2-agent delta re-check trigger, team and acceptance).
 
 ## Process — mode deep
 
@@ -190,149 +106,31 @@ Same flow as above; starts with pass 1 (7) and loops through pass 2+
 
 ## Process — mode ux
 
-UX is not a separate skill. For UI-heavy specs `spec_board` runs in
+UX review is not a separate skill. For UI-heavy specs `spec_board` runs in
 `mode=ux` with UX personas (`board-ux-heuristic`, `board-ux-ia`,
 `board-ux-interaction`) as extended team variant. Functional + UX
-findings in same consolidated.
+findings in same consolidated. When the change has a look and an
+experience contract (`skills/ux_authoring/SKILL.md`), each UX seat's
+prompt names both files with the behaviour spec as the review subject.
 
-## 4. Buddy checklist (dispatch)
+## 4.–4b. Buddy checklist, cross-task ACs and mechanism cells
 
-1. Spec path + output paths.
-2. Operating mode (review or synthesize).
-3. Depth mode: §1.0 first (MANDATORY), then §1.1.
-4. Foundation flag check (→ chief receives DR scorecard).
-5. **Engine context** (conditional): spec references workflow engine
-   → agents receive `$FRAMEWORK_DIR/scripts/workflow_engine.py`,
-   `yaml_loader.py`, existing `workflow.yaml`. Detail: REFERENCE.md.
-6. Read SPEC-MAP; identify neighbour specs for impact.
-7. Agent selection (base + specialists; document rationale).
-8. Assemble prompt: reviewer-base + spec-reviewer-protocol + persona
-   + dispatch-template. Chief additionally: consolidation-preservation
-   + piebald-budget.
-9. Dispatch parallel (context-isolated) → spawn chief → read signal
-   → **decision-grounding C-VERIFY** on the verdict's pivotal code/spec
-   claims (`agents/buddy/operational.md` §Architecture-Comprehension B:
-   re-execute unless independently re-executed; FALSIFIED → re-frame)
-   → SAVE (NON-NEGOTIABLE).
-10. NEEDS-WORK: fix → next pass; CONVERGED: DONE. Before fix pass ≥ 2
-    (counted across the task's passes on the mechanism), record the
-    Simplify-before-patch check (`skills/convergence_loop/SKILL.md`
-    §Simplify-before-patch gate), `model` row first: a mechanism
-    without a `§Mechanism-Lifecycle` section gets one before the fix
-    brief; a recurring class with a simpler mechanism or a faulty spec
-    clause → propose the spec simplification or invariant to the caller
-    instead of patching the next route, and the proposal names the
-    cells it removes. Every fix on a mechanism edits its matrix in the
-    same change.
-
-## 4a. Cross-task AC validation
-
-Trigger patterns (cross-subsystem flow implied):
-"user types ... → ... lands in ..."; "X publishes Y; Z consumes Y"
-(across components); "after deploy, ... is visible / active /
-produced"; "UI displays state X after backend action Y";
-"milestone-level user-promise activation across components".
-
-Per such AC: list subsystems traversed; per subsystem identify
-OWNING task (via `blocked_by` / `blocks` / sibling-task references).
-If owning-task ≠ this task for ANY subsystem → AC cannot close in
-this task alone — finding.
-
-Resolution (board recommends, author / orchestrator chooses):
-(a) **Split** — this task gets owned half; others become separate
-ACs in owning tasks. (b) **Move** — full AC reassigned to whichever
-task owns the LAST subsystem to land. (c) **Conditional (task-YAML ACs only)** — prefix
-"(after `<blocking-task>` ships) ...". Applies to task-YAML ACs
-only. For spec-level ACs in L1+ specs (durable shared surface — specs
-outlive transient task-IDs), use (a) Split or (b) Move — NEVER (c) in
-a spec, to keep forensic task-IDs out of the spec. Spec-level ACs
-needing dependency: use semantic phrasing ("when consumer-side X is
-wired") instead of task-ID prefix.
-
-Unaddressed cross-task AC = NEEDS-WORK blocker. Defense-in-depth pair
-with `agents/buddy/operational.md` §Architecture-Comprehension B
-(post-return).
-
-## 4b. Mechanism cells — the review unit (MUST before PASS)
-
-When a `§Mechanism-Lifecycle` section is in scope
-(`skills/_protocols/mechanism-model.md`), reviewers review **cells, not
-prose**, and the consolidated reports cell coverage:
-
-- **Adversary:** every `→` cell with the next state's invariants
-  re-checked, every `✗` cell with a constructed scenario against its
-  guard, every `unreachable` cell with an attempt to reach it; findings
-  name the cell. A textual contradiction — "X is exempt from Y" inside a
-  section that states "X changes only via Y" — is a cell conflict and a
-  HIGH.
-- **Verification / implementer:** every operation has a grepped
-  producer site or `unbuilt: Task N`; every cell is placed per the plan
-  (`task-N` cells have their owning task `blocked_by`-wired; nothing is
-  left out for lack of a consumer); every cross-spec pointer resolves to
-  the owning section; every invariant names its cells and locus.
-- **No PASS with an empty cell.** A blocking finding on a `now` cell is
-  never `residual`; a blocking route "accepted, routed" to another task
-  is NEEDS-WORK at HIGH. Lower-severity residuals carry the cell
-  annotation (`_protocols/mechanism-model.md` §Bind rules).
-
-**Derived-state invariants (special case).** For an invariant of the
-form "X changes only via Y" (or "X is derived from Z", "never X except
-Y") over state derived from a log or store, the matrix columns MUST
-include **every operation that changes the derivation's inputs after the
-introducing record**, at least: withdraw / retraction; processing or
-meaning successor (replacement, revision); scope move; field edits of a
-replacement (quality / confidence / provenance fields); cross-principal
-acts (another actor touching the same inputs). Each cell carries a guard
-(spec clause that enforces Y on that route) or a stated unreachability
-reason. A cell with neither = NEEDS-WORK at HIGH. A gate that only checks
-what the introducing record carries misses every after-the-fact route;
-recurring findings on one mechanism go to the Simplify-before-patch gate
-(`skills/convergence_loop/SKILL.md`), which usually answers with a
-derived-state rule instead of more guards — and must then update the
-matrix, not add a log entry.
-
-**Fix values and rulings are cross-spec claims.** A reviewer-proposed
-validator / rule, or a Buddy ruling on a cross-task contract, is checked
-against every spec that produces or consumes the field (SPEC-MAP) and
-cites the contract-owner spec, before the spec edit — the citing
-(consuming) spec may have drifted from the owner.
+When assembling prompts and dispatching reviewers, when the spec carries cross-subsystem ACs or a
+`§Mechanism-Lifecycle` section in scope, and before a fix pass: read and follow
+`skills/spec_board/checklist-and-dispatch.md` (§4 Buddy checklist for dispatch, including C-VERIFY and the
+Simplify-before-patch check before fix pass ≥ 2; §4a cross-task AC validation; §4b mechanism cells as the review
+unit, MUST before PASS).
 
 ## 5. Discourse
 
 Deep: ALWAYS after chief. Standard: Buddy decision (proportional).
 Mechanic: `_protocols/discourse.md`.
 
-## 6. Post-pass (NON-NEGOTIABLE)
+## 6.–6a. Post-pass and risk carry-forward
 
-- [ ] Chief consolidated has tracking table.
-- [ ] Verification equation holds (Raw = Kept + Merged + Related + Removed).
-- [ ] Merge spot-check (up to 3 available MERGED findings — same root cause? No merges → not applicable).
-- [ ] Minority re-check (scan REMOVED + low-severity single-agent).
-- [ ] Piebald-budget check on skill / runbook / persona reviews.
-- [ ] §4b cell coverage reported when a `§Mechanism-Lifecycle` section is
-  in scope; no empty cell; no blocking finding on a `now` cell in
-  `residual`; the
-  derived-state columns present for every "only via" invariant.
-- [ ] Downgraded scale / latency finding carries a measured bound at
-  the target scale, or a filed follow-up whose trigger a slope leg
-  (N vs 4N, `skills/testing/SKILL.md` §Oracle discipline) can fire.
-- [ ] All findings fixed (C+H+M+L).
-- [ ] Delta-Verify mini-board if §3a trigger fired — 0 new highs.
-- [ ] Task YAML `board_result` + `readiness` updated.
-- [ ] Persist the result; commit/push/deploy only under the respective
-  authorization in `framework/process-map.md`, not because task YAMLs changed.
-
-## 6a. Risk carry-forward (MANDATORY on user-override / cherry-pick / valve-hit / ESCALATE-accepted)
-
-Verdict file MUST carry unfixed findings forward in top-level YAML
-block `remaining_findings:` listing every unfixed finding with `id`,
-`severity`, `locator`, `title`, `rationale_for_carry_over`,
-`proposed_action`. Workflow step `risk-followup-routing` reads the
-block and files ONE follow-up task per workflow run via `task_creation`.
-Empty/absent block → skip with rationale.
-
-Full schema, example, acceptance scenarios: REFERENCE.md
-§Risk carry-forward.
+After each pass's consolidation, before closing the pass, and when unfixed findings are carried forward: read and
+follow `skills/spec_board/post-pass.md` (§6 post-pass checklist, NON-NEGOTIABLE; §6a risk carry-forward, MANDATORY on
+user-override / cherry-pick / valve-hit / ESCALATE-accepted).
 
 ## 7. Output paths
 
@@ -342,15 +140,19 @@ Consolidated: `docs/reviews/board/{spec-name}-consolidated-pass{N}.md`
 another task already owns the plain namespace). Pass files are history:
 never rewrite their pointers after a spec amendment.
 
-**Adoption verdict (the completion artifact):** at adoption (0C+0H)
+**Adoption verdict (the completion artifact):** for an applicable supported decision
+(including NEEDS-WORK for evidence/repair),
 Buddy writes `docs/reviews/board/{task_id}-spec-verdict.md` (build, and
 review runs with a task); a task-less review run falls back to
-`docs/reviews/board/{spec-name}-verdict.md`. Frontmatter `schema_version: 1`
-(the gate refuses a verdict without it), `adopted_from:` (the consolidated pass
-file), `reviewed_revision:` (commit of the adopted spec) and an evidence
-block holding the verdict's pivotal pointers, re-checked against the
-adopted spec. The workflow `pointer_check` binds to this file only, so a
-legitimate later correction never invalidates review history.
+`docs/reviews/board/{spec-name}-verdict.md`. Frontmatter `schema_version: 1`,
+`adopted_from:` (the consolidated pass file), `reviewed_revision:` (commit of the
+adopted spec) and an evidence block holding the verdict's pivotal pointers. Buddy
+re-checks those pointers against the adopted spec himself (C-VERIFY); adoption
+does not check the decision's own pointers mechanically. Include the §9 run/subject, explicit decision and current_reports slot/path/
+digest/actor references; answer the adoption diagnostics in the decision.
+Adopt before current use; `spec_success` permits only PASS without an unresolved mediator
+audit marker in a captured file. Canonical copies must be
+byte-identical to the retained decision; preserve earlier payloads before replacement.
 
 ## 7a. Review-mode variants
 
@@ -362,7 +164,7 @@ quality dimensions; chief consolidates per dimension. Use after
 
 ## 8. Contract
 
-**INPUT:** spec file (committed), SPEC-MAP read. Optional: frame
+**INPUT:** spec file, SPEC-MAP read; exact mandatory owner when nested. Optional: frame
 report, engine context. Context: protocols (reviewer-base, spec-
 reviewer-protocol, dispatch-template, consolidation-preservation,
 piebald-budget).
@@ -374,9 +176,13 @@ distribution), consolidated findings, tracking table on NEEDS-WORK,
 
 **DOES NOT:** fixes (Buddy/MCA work), code, spec authoring.
 
-**DONE:** verdict 0C+0H every required pass; tracking table complete;
+**DONE:** final applicable current decision adopted and spec_success checked;
+verdict 0C+0H every required pass; tracking table complete;
 merge + minority checks executed; all findings fixed; Delta-Verify
-done if triggered; Task YAML updated; commit + push + deploy as needed.
+done if triggered; Task YAML updated; result persisted. Commit/push/deploy
+follow `framework/process-map.md` §Authorization; retain any authorized
+missing publication as an unresolved obligation. Local completion grants
+no publication authority.
 
 **FAIL handling:** NEEDS-WORK → fix → next pass (max 3 via
 `convergence_loop`). Standard → Deep on ≥1C or ≥3H. After max →
@@ -404,3 +210,15 @@ ESCALATE.
 - **NOT** skip the §Module-Decomposition OR §Test-Strategy pre-gate
   on a NEW L1+ spec by assuming legacy. INSTEAD verify creation-date
   or section-history before silent-skipping.
+
+
+### Observational workflow checks
+
+Navigation/recovery never execute commands. Use existing authorized tools for
+actions and observe their actual current outcome. The manual action checkpoints
+require nonblank evidence supplied with the current `--complete --evidence`
+invocation, including force. Missing/failed/timed-out/unknown outcomes stay open
+with the concrete blocker; no-new-commit save still requires current persistence
+observations for applicable project/user roots and required remotes. Completion
+is agent-confirmed, never engine proof of free-text truth or remote correctness.
+See `framework/workflow-engine-cookbook.md` for the retained completion contract.

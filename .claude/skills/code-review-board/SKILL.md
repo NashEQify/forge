@@ -1,11 +1,14 @@
 ---
 name: code-review-board
-description: 'Multi-perspective code review. 2 levels: L1 (focused) + L2 (full board). Triggers when a code diff needs multi-perspective review before merge (build verify, fix L1); NOT for PR-level checks (use /review) and NOT for spec review (use spec_board).'
+description: 'Multi-perspective code review. 2 levels: L1 (focused) + L2 (board for safety triggers, sized by open questions). Triggers when a code diff needs multi-perspective review before merge (build verify, fix L1); NOT for PR-level checks (use /review) and NOT for spec review (use spec_board).'
 ---
 
 # Skill: code-review-board (Wrapper)
 
 <!-- generated-by: scripts/generate_skill_wrappers.py (do not hand-edit) -->
+
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve it against the same framework root as the SoT; retain the consumer CWD.
 
 This is the Claude-Code-discoverable wrapper. The full
 orchestrator-neutral protocol — methodology, contract, modes,

@@ -33,7 +33,14 @@ not migrated — on resume, Buddy adds the fields inline.
 - Phase 4: board result (consolidated with tracking table)
 - Phase 5: execute result (applied actions, deploy, handoff)
 
-**After every phase:** body extension + frontmatter `phase` update + commit.
+**After every phase:** extend the body, update frontmatter `phase`, and persist
+the result. Phase and final commits follow `framework/process-map.md` section
+Authorization: commit only under an applicable request or standing repository
+policy. Continue already authorized actions for the unchanged scope and target
+without routine reapproval. Local work or a docs change grants no push/deployment
+authority. Retain the validated artefact even when no commit is authorized.
+An authorized failed or missing publication remains an unresolved obligation;
+local solve closure does not satisfy it or establish publication success.
 
 ## Slug convention
 
@@ -77,13 +84,13 @@ Phase 2 Refine, not a new frame.
 ## Phase 5 Execute — variant details
 
 ### Variant 1: Direct (skill/runbook/protocol)
-1. Artefact final-committed (from Phase 4)
+1. Retain the artefact validated in Phase 4; commit only under the authorization rule above
 2. Extend process-map.md (routing + skill taxonomy + composition map + maturity)
 3. Stale cleanup: grep for replaced artefacts, fix all references
-4. If docs/ is affected: deploy via `$FRAMEWORK_DIR/scripts/deploy-docs.sh`
-5. Visual verification (CLAUDE.md §Deployment Verification) or ask the user
+4. Only when deployment is authorized for the intended target: deploy via `$FRAMEWORK_DIR/scripts/deploy-docs.sh`; a docs/ edit alone does not authorize it
+5. After authorized deployment, verify the actual intended outcome visually per `framework/invariants.md` §Deployment verification; if unavailable, request user inspection and retain the unverified boundary
 6. knowledge_processor wrap-up -> history entry
-7. State file `status: done`, final commit
+7. Persist state file `status: done`; final commit only when authorized under the rule above; retain any authorized missing publication separately
 
 ### Variant 2: Handoff Build
 1. Artefact is a spec/plan for feature implementation
@@ -91,7 +98,7 @@ Phase 2 Refine, not a new frame.
 3. solve Phase 5 = document handover + status: done
 4. The build workflow continues independently
 5. knowledge_processor wrap-up in solve close
-6. State file `status: done`, final commit
+6. Persist state file `status: done`; final commit only when authorized under the rule above; retain any authorized missing publication separately
 
 ### Variant 3: Handoff docs-rewrite
 1. Artefact is a docs plan
@@ -102,7 +109,7 @@ Phase 2 Refine, not a new frame.
 1. Artefact is directly executable (e.g. a fix script, a configuration update)
 2. Buddy executes it in the solve Phase 5 step
 3. Verification + knowledge_processor wrap-up
-4. State file `status: done`, final commit
+4. Persist state file `status: done`; final commit only when authorized under the rule above; retain any authorized missing publication separately
 
 ## Status transitions
 
@@ -111,9 +118,9 @@ Phase 2 Refine, not a new frame.
 - `active` -> `aborted`: user abort or unrecoverable failure
 - `paused` -> `active`: resume on a new session (boot finds via `ls docs/solve/`)
 
-## ADR check in Phase 5 Execute
+## ADR check (close-bookkeeping)
 
-Optional `adr-check` step between `apply-artifact` and `knowledge-processor`.
+Sub-step (a) of `close-bookkeeping`, fed by close-retro's §Stale-Decisions.
 Triggers `skills/documentation_and_adrs/SKILL.md` when the ADR-discipline triple
 is satisfied:
 
@@ -126,7 +133,7 @@ than for build. The frame report (Phase 1) has already documented trade-offs,
 Phase 2 Refine has sharpened them, Phase 5 Apply has activated them. If the chosen
 approach satisfies the triple: ADR with cross-reference to the frame report.
 
-`required: false`, `on_fail: warn`. Anti-pattern: ADR inflation.
+One-line skip, no block. Anti-pattern: ADR inflation.
 
 ## Trigger validation (Phase 0 — at intake)
 

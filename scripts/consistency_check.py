@@ -13,6 +13,12 @@ Usage:
   python3 -m scripts.consistency_check --check tier1-drift
   python3 -m scripts.consistency_check --check tier1-drift \\
       --workflows-root <dir>
+  python3 $FRAMEWORK_DIR/scripts/consistency_check.py --check brief-acceptance --brief <path>
+      (run from the project root; compares the brief's approved-acceptance block
+      with docs/tasks/<id>.yaml)
+  python3 $FRAMEWORK_DIR/scripts/consistency_check.py --check spine --spine <path>
+      (run from the project root; checks an architecture spine's form, parent paths
+      resolved from that root)
 """
 
 from __future__ import annotations
@@ -42,6 +48,7 @@ if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
 from _plan_engine.core import ValidationIssue  # noqa: E402
+from user_scope import REREAD_FILES  # noqa: E402
 
 
 def _read_skill_frontmatter(skill_md: Path) -> dict | None:
@@ -351,44 +358,19 @@ def check_enforcement_registry(
 # Autonomy Consistency (framework/agent-autonomy.md SoT)
 # ---------------------------------------------------------------------------
 
-# SoT-Datei der Autonomy-Regeln. Mirror-Check, Existenz-Check, Referenz-
-# Integritaet und Drift-Warnung werden gegen dieses Dokument gefahren.
+# SoT-Datei der Autonomy-Regeln. Mirror-Check, Existenz-Check und Referenz-
+# Integritaet werden gegen dieses Dokument gefahren.
 # Framework-intern → _FRAMEWORK_ROOT.
 AUTONOMY_SOT_PATH = _FRAMEWORK_ROOT / "framework" / "agent-autonomy.md"
 
 # Dateien, in denen der Verweis auf framework/agent-autonomy.md existieren
 # MUSS (Check 3, Referenz-Integritaet). Relativ zu _FRAMEWORK_ROOT.
 AUTONOMY_REFERENCE_FILES = [
-    "CLAUDE.md",
-    "AGENTS.md",
+    "framework/invariants.md",
     "agents/buddy/operational.md",
+    "agents/buddy/delegation.md",
     "workflows/runbooks/solve/WORKFLOW.md",
 ]
-
-
-def _extract_section(text: str, header_pattern: str) -> str | None:
-    """Extrahiere Inhalt einer Markdown-Sektion.
-
-    header_pattern: Regex, der auf den Sektions-Header matched (inkl. ### Prefix).
-    Gibt den Block inkl. Header bis zum naechsten Header gleicher oder
-    hoeherer Ebene (###) zurueck. None wenn nicht gefunden.
-    """
-    import re
-    lines = text.split("\n")
-    start = None
-    for i, line in enumerate(lines):
-        if re.match(header_pattern, line):
-            start = i
-            break
-    if start is None:
-        return None
-    end = len(lines)
-    for j in range(start + 1, len(lines)):
-        # Naechster Header gleicher Ebene (###) oder hoeher (##, #)
-        if lines[j].startswith("### ") or lines[j].startswith("## ") or lines[j].startswith("# "):
-            end = j
-            break
-    return "\n".join(lines[start:end])
 
 
 def _extract_sections_containing(text: str, needle: str) -> dict[str, str]:
@@ -438,213 +420,44 @@ def _extract_sections_containing(text: str, needle: str) -> dict[str, str]:
     return result
 
 
-def _extract_autonomy_table_routing(text: str) -> list[str]:
-    """Extrahiere die Routing-Spalte der Haupttabelle aus agent-autonomy.md.
-
-    Die Tabelle hat Spalten: # | Artefakt-Typ | Pfad-Muster | Permission | Gate | Routing
-    Routing ist Spalte 6 (Index 5). Wir sammeln alle rohen Routing-Zellen.
-    """
-    import re
-    lines = text.split("\n")
-    in_table = False
-    routing_values = []
-    for line in lines:
-        stripped = line.strip()
-        if not stripped.startswith("|"):
-            if in_table:
-                # Tabelle zu Ende
-                break
-            continue
-        # Tabellen-Zeile
-        cells = [c.strip() for c in stripped.strip("|").split("|")]
-        if not in_table:
-            # Header-Zeile? Pruefe auf "Routing" in Zellen
-            if any("Routing" in c for c in cells) and any("Permission" in c for c in cells):
-                in_table = True
-            continue
-        # Separator-Zeile (---|---|...) ueberspringen
-        if all(re.match(r"^-+$", c) for c in cells if c):
-            continue
-        # Daten-Zeile — Routing ist die letzte Spalte (bei 6 Spalten Index 5)
-        if len(cells) >= 6:
-            routing_values.append(cells[5])
-    return routing_values
-
-
-def _extract_autonomy_table_gate_peers(text: str) -> list[str]:
-    """Extrahiere `peer:<agent>` Targets aus der Gate-Spalte der Haupttabelle.
-
-    Hintergrund: Die Gate-Polymorphie in agent-autonomy.md erlaubt
-    Merger-Faelle, bei denen ein Peer-Konsultations-Gate gleichzeitig die
-    Routing-Antwort traegt (z.B. `peer:council`, `peer:solution-expert`).
-    Ein Drift-Check, der nur die Routing-Spalte liest, meldet diese Agenten
-    faelschlich als "in operational.md aber nicht in agent-autonomy.md".
-
-    Diese Funktion scannt die Gate-Spalte (Index 4) und gibt alle Tokens
-    nach einem `peer:`-Prefix zurueck. `review:*` Gates werden bewusst
-    ignoriert (das sind Skill-Gates, keine Agenten).
-    """
-    import re
-    lines = text.split("\n")
-    in_table = False
-    peers: list[str] = []
-    peer_re = re.compile(r"peer:([A-Za-z0-9_-]+)")
-    for line in lines:
-        stripped = line.strip()
-        if not stripped.startswith("|"):
-            if in_table:
-                break
-            continue
-        cells = [c.strip() for c in stripped.strip("|").split("|")]
-        if not in_table:
-            if any("Routing" in c for c in cells) and any("Permission" in c for c in cells):
-                in_table = True
-            continue
-        if all(re.match(r"^-+$", c) for c in cells if c):
-            continue
-        # Daten-Zeile — Gate ist Index 4 (bei 6 Spalten: 0=#, 1=Typ, 2=Pfad,
-        # 3=Permission, 4=Gate, 5=Routing).
-        if len(cells) >= 6:
-            gate_cell = cells[4]
-            for match in peer_re.finditer(gate_cell):
-                peers.append(match.group(1))
-    return peers
-
-
-def _extract_operational_routing_agents(text: str) -> list[str]:
-    """Extrahiere die Agent-Spalte aus der Delegation-Routing-Tabelle in operational.md.
-
-    Die Tabelle hat Spalten: | Thema | Agent |
-    """
-    import re
-    lines = text.split("\n")
-    in_table = False
-    agents = []
-    for line in lines:
-        stripped = line.strip()
-        if not stripped.startswith("|"):
-            if in_table:
-                break
-            continue
-        cells = [c.strip() for c in stripped.strip("|").split("|")]
-        if not in_table:
-            if any("Agent" in c for c in cells) and any("Thema" in c for c in cells):
-                in_table = True
-            continue
-        if all(re.match(r"^-+$", c) for c in cells if c):
-            continue
-        if len(cells) >= 2:
-            agents.append(cells[1])
-    return agents
-
-
 def validate_autonomy_consistency() -> list[ValidationIssue]:
     """Autonomy-Consistency-Checks.
 
     Prueffaelle:
-      Check 1 — Mirror-Check CLAUDE.md §5 ↔ AGENTS.md §5 (ERROR bei Abweichung)
+      Check 1 — single home: framework/invariants.md carries the autonomy anchor,
+                no adapter repeats it (ERROR otherwise)
       Check 2 — Existenz-Check framework/agent-autonomy.md (ERROR bei Fehlern)
       Check 3 — Referenz-Integritaet in Konsumenten-Dateien (ERROR pro fehlendem Verweis)
-      Check 4 — Cross-Reference Drift-Warnung operational.md ↔ agent-autonomy.md (WARN)
     """
     import re
     issues: list[ValidationIssue] = []
 
-    # Check 1: Mirror-Check CLAUDE.md ↔ AGENTS.md
-    # Scope ist nicht mehr die feste Sektion "### 5. Code-Delegation",
-    # sondern alle `###`-Sektionen, die den SoT-Pfad `framework/agent-autonomy.md`
-    # erwaehnen. Matching der korrespondierenden Sektionen erfolgt ueber den
-    # normalisierten Header-Text (Nummer entfernt), damit Nummer-Aenderungen
-    # nicht still den Check umgehen koennen.
-    claude_path = _FRAMEWORK_ROOT / "CLAUDE.md"
-    agents_path = _FRAMEWORK_ROOT / "AGENTS.md"
-
-    if not claude_path.exists():
+    # Check 1: single home of the autonomy anchor. The framework-wide
+    # invariants live once, in framework/invariants.md; its `###` sections that
+    # name the SoT path are the Tier-0 anchor. CLAUDE.md and AGENTS.md keep the
+    # forge repository's own rules and carry no second copy of such a section.
+    unit_path = _FRAMEWORK_ROOT / "framework" / "invariants.md"
+    if not unit_path.exists():
         issues.append(ValidationIssue(
             "AUTONOMY_MIRROR", "ERROR",
-            detail="CLAUDE.md fehlt — Mirror-Check nicht moeglich"))
-    elif not agents_path.exists():
+            detail="framework/invariants.md missing — no Tier-0 autonomy anchor"))
+    elif not _extract_sections_containing(
+            unit_path.read_text(encoding="utf-8"), "framework/agent-autonomy.md"):
         issues.append(ValidationIssue(
             "AUTONOMY_MIRROR", "ERROR",
-            detail="AGENTS.md fehlt — Mirror-Check nicht moeglich"))
-    else:
-        claude_text = claude_path.read_text(encoding="utf-8")
-        agents_text = agents_path.read_text(encoding="utf-8")
-        claude_sections = _extract_sections_containing(
-            claude_text, "framework/agent-autonomy.md")
-        agents_sections = _extract_sections_containing(
-            agents_text, "framework/agent-autonomy.md")
-
-        if not claude_sections:
+            detail=("framework/invariants.md: no '###' section names "
+                    "'framework/agent-autonomy.md' — Tier-0 anchor missing")))
+    for adapter in ("CLAUDE.md", "AGENTS.md"):
+        adapter_path = _FRAMEWORK_ROOT / adapter
+        if not adapter_path.exists():
+            continue
+        copies = _extract_sections_containing(
+            adapter_path.read_text(encoding="utf-8"), "framework/agent-autonomy.md")
+        for title_key in copies:
             issues.append(ValidationIssue(
                 "AUTONOMY_MIRROR", "ERROR",
-                detail=("CLAUDE.md: keine '###'-Sektion gefunden, die "
-                        "'framework/agent-autonomy.md' erwaehnt — Mirror-"
-                        "Anker fehlt")))
-        if not agents_sections:
-            issues.append(ValidationIssue(
-                "AUTONOMY_MIRROR", "ERROR",
-                detail=("AGENTS.md: keine '###'-Sektion gefunden, die "
-                        "'framework/agent-autonomy.md' erwaehnt — Mirror-"
-                        "Anker fehlt")))
-
-        if claude_sections and agents_sections:
-            # Symmetrischer Satz-Vergleich: jeder Title-Key muss in beiden
-            # Dateien existieren.
-            only_in_claude = set(claude_sections) - set(agents_sections)
-            only_in_agents = set(agents_sections) - set(claude_sections)
-            for tk in sorted(only_in_claude):
-                issues.append(ValidationIssue(
-                    "AUTONOMY_MIRROR", "ERROR",
-                    detail=(f"CLAUDE.md hat Sektion '{tk}' (erwaehnt "
-                            f"agent-autonomy.md), die in AGENTS.md fehlt — "
-                            f"Sync noetig")))
-            for tk in sorted(only_in_agents):
-                issues.append(ValidationIssue(
-                    "AUTONOMY_MIRROR", "ERROR",
-                    detail=(f"AGENTS.md hat Sektion '{tk}' (erwaehnt "
-                            f"agent-autonomy.md), die in CLAUDE.md fehlt — "
-                            f"Sync noetig")))
-
-            # Fuer Sektionen die in beiden Dateien existieren: Text-Gleichheit.
-            # Body ohne die erste Zeile (Header) vergleichen, damit eine
-            # unterschiedliche Sektions-Nummer im Header die Sektion nicht
-            # faelschlich als "Mismatch" meldet. Der Title-Key-Match oben
-            # stellt bereits sicher, dass die Header textlich identisch sind
-            # (modulo Nummer-Prefix).
-            common = set(claude_sections) & set(agents_sections)
-            for tk in sorted(common):
-                claude_body = "\n".join(
-                    claude_sections[tk].rstrip().split("\n")[1:])
-                agents_body = "\n".join(
-                    agents_sections[tk].rstrip().split("\n")[1:])
-                if claude_body.rstrip() == agents_body.rstrip():
-                    continue
-                # Diff-Darstellung: erste abweichende Zeile. Zeilennummer
-                # ist sektion-relativ (Header = Zeile 1, erste Body-Zeile = 2).
-                claude_lines = claude_body.rstrip().split("\n")
-                agents_lines = agents_body.rstrip().split("\n")
-                diff_line = None
-                max_len = max(len(claude_lines), len(agents_lines))
-                for i in range(max_len):
-                    cl = claude_lines[i] if i < len(claude_lines) else "<EOF>"
-                    al = agents_lines[i] if i < len(agents_lines) else "<EOF>"
-                    if cl != al:
-                        diff_line = (i + 2, cl, al)
-                        break
-                if diff_line:
-                    ln, cl, al = diff_line
-                    issues.append(ValidationIssue(
-                        "AUTONOMY_MIRROR", "ERROR",
-                        detail=(f"CLAUDE.md Sektion '{tk}' != AGENTS.md "
-                                f"ab Zeile {ln}: CLAUDE='{cl[:60]}' vs "
-                                f"AGENTS='{al[:60]}' — Sync via Edit "
-                                f"beider Dateien noetig")))
-                else:
-                    issues.append(ValidationIssue(
-                        "AUTONOMY_MIRROR", "ERROR",
-                        detail=(f"CLAUDE.md Sektion '{tk}' != AGENTS.md "
-                                f"(Laengenunterschied)")))
+                detail=(f"{adapter}: section '{title_key}' repeats the autonomy "
+                        "anchor that lives in framework/invariants.md — keep one home")))
 
     # Check 2: Existenz-Check framework/agent-autonomy.md
     autonomy_text = ""
@@ -699,127 +512,539 @@ def validate_autonomy_consistency() -> list[ValidationIssue]:
                        "'framework/agent-autonomy.md' gefunden — Konsument "
                        "muss auf SoT verweisen"))
 
-    # Check 4: Cross-Reference Drift-Warnung (operational.md ↔ agent-autonomy.md)
-    # Weicher Check: wenn Agenten in einer Tabelle stehen aber nicht in der
-    # anderen, Warning mit Drift-Hinweis. Kein Blocker (unterschiedlicher Scope
-    # ist legitim moeglich).
-    operational_path = _FRAMEWORK_ROOT / "agents" / "buddy" / "operational.md"
-    if operational_path.exists() and autonomy_text:
-        operational_text = operational_path.read_text(encoding="utf-8")
-        op_section = _extract_section(operational_text, r"^### Delegation-Routing")
-        if op_section is not None:
-            op_agents_raw = _extract_operational_routing_agents(op_section)
-            autonomy_routing_raw = _extract_autonomy_table_routing(autonomy_text)
-            # Merger-Faelle mitzaehlen — Agenten, die in der
-            # Gate-Spalte als `peer:X` auftauchen, sind ebenfalls "bekannt".
-            autonomy_gate_peers = _extract_autonomy_table_gate_peers(autonomy_text)
-
-            # Bekannte Rollen-Tokens. Wenn die normalisierte Form eines davon
-            # als Wort enthaelt, nehmen wir den Token (grobe Matching-Heuristik).
-            known_roles = (
-                "main-code-agent", "solution-expert", "buddy", "security",
-                # council: Merger-Fall (peer:council in Gate-Spalte = Routing,
-                # intentionally NOT in operational.md Delegation-Routing).
-                # review-agent: entfernt (existiert nicht, war Phantom).
-            )
-
-            def _normalize_agent(s: str) -> str:
-                s = s.strip().lower()
-                s = s.replace("`", "").replace("*", "")
-                # Prefix-Strip fuer agent-autonomy.md Routing-Zellen
-                for prefix in ("handoff:", "peer:", "review:"):
-                    if s.startswith(prefix):
-                        s = s[len(prefix):]
-                # Klammer-Suffixe droppen
-                if "(" in s:
-                    s = s.split("(", 1)[0]
-                # Phrase-Tails droppen (" weil ...", " mit ...", " direkt" ...)
-                for sep in (" weil ", " mit ", " via ", " direkt",
-                            " dispatcht", " schreibt"):
-                    if sep in s:
-                        s = s.split(sep, 1)[0]
-                s = s.strip().strip(",;.:")
-                # Wenn ein bekannter Rollen-Token als Wort enthalten ist,
-                # nehmen wir den als normalisierte Form (robuster gegen Prosa).
-                tokens = re.split(r"\s+", s)
-                for role in known_roles:
-                    if role in tokens:
-                        return role
-                return s
-
-            # Agent-Filter: nur Token, die plausibel ein Agent-Name sind
-            # (in known_roles oder hyphen-basiert). Alles andere (z.B.
-            # "mirror", "plan_engine") ist Mechanismus-Beiwerk und wird
-            # als Rauschen verworfen.
-            def _looks_like_agent(token: str) -> bool:
-                if not token:
-                    return False
-                if token in known_roles:
-                    return True
-                # Workflow/Runbook/Skill-Suffixe sind keine Agenten
-                # Zellen wie `handoff:build-workflow oder
-                # fix-workflow` koennen `fix-workflow` als hyphen-Token
-                # produzieren, das faelschlich als Agent durchrutscht.
-                for suffix in ("-workflow", "-runbook", "-skill"):
-                    if token.endswith(suffix):
-                        return False
-                # hyphen-basierte Agent-Namen (z.B. "foo-agent", "bar-expert")
-                return bool(re.match(r"^[a-z]+(-[a-z]+)+$", token))
-
-            op_agents_norm = {
-                _normalize_agent(a) for a in op_agents_raw if a.strip()
-            }
-            op_agents_norm = {a for a in op_agents_norm if _looks_like_agent(a)}
-
-            # Aus agent-autonomy.md nehmen wir nur Zellen ohne Workflow-Handoff
-            # (diese routen per Workflow, nicht an einen Agent), und zerlegen
-            # an "oder"/"/" sowie Kommas fuer multi-agent-Zellen.
-            autonomy_agents_norm = set()
-            for cell in autonomy_routing_raw:
-                cell_l = cell.lower()
-                if "handoff:" in cell_l:
-                    continue
-                parts = re.split(r"\bor\b|\boder\b|/|,", cell, flags=re.IGNORECASE)
-                for p in parts:
-                    norm = _normalize_agent(p)
-                    if norm:
-                        autonomy_agents_norm.add(norm)
-
-            # Gate-Peer-Targets als bekannte Agenten mitfuehren
-            # (Merger-Fall Gate = Routing). Peers durchlaufen dieselbe
-            # Normalisierung wie Routing-Zellen.
-            for peer in autonomy_gate_peers:
-                norm = _normalize_agent(peer)
-                if norm:
-                    autonomy_agents_norm.add(norm)
-
-            autonomy_agents_norm = {
-                a for a in autonomy_agents_norm if _looks_like_agent(a)
-            }
-
-            # Leere Strings aussortieren
-            op_agents_norm.discard("")
-            autonomy_agents_norm.discard("")
-
-            only_in_op = op_agents_norm - autonomy_agents_norm
-            only_in_autonomy = autonomy_agents_norm - op_agents_norm
-
-            if only_in_op:
-                issues.append(ValidationIssue(
-                    "AUTONOMY_DRIFT", "WARN",
-                    detail=(f"operational.md Delegation-Routing listet Agenten, "
-                            f"die in agent-autonomy.md Routing-Spalte fehlen: "
-                            f"{sorted(only_in_op)} — Drift-Risiko, ggf. "
-                            f"agent-autonomy.md erweitern")))
-            if only_in_autonomy:
-                issues.append(ValidationIssue(
-                    "AUTONOMY_DRIFT", "WARN",
-                    detail=(f"agent-autonomy.md Routing-Spalte nennt Agenten, "
-                            f"die in operational.md Delegation-Routing fehlen: "
-                            f"{sorted(only_in_autonomy)} — Drift-Risiko, ggf. "
-                            f"operational.md-Tabelle ergaenzen")))
-
     return issues
+
+
+# ---------------------------------------------------------------------------
+# Instruction-unit size guard
+# ---------------------------------------------------------------------------
+
+# Strictest host budget: Claude Code restores a file after compaction only up to 5,000 tokens
+# (about 13,900 bytes at the measured ratio); 12,000 leaves headroom, far below Codex's 10,000-token tool output.
+INSTRUCTION_UNIT_BUDGET = 12_000
+
+# Codex cuts tool output at 10,000 tokens: 28,000 bytes at the conservative 2.8 B/token; the largest lookup measured
+# 6,503 o200k_base tokens (about 7,350 Codex tokens).
+LOOKUP_READ_CEILING = 28_000
+
+# Framework-relative globs whose files are read as instruction text at a step.
+# Not enumerated: top-level agents/*.md (sub-agent personas, injected by the host as a system prompt) and every
+# workflow.yaml (engine data; the workflow engine prints one step's instruction).
+INSTRUCTION_UNIT_GLOBS = (
+    "agents/buddy/*.md",
+    "agents/_protocols/*.md",
+    "framework/**/*.md",
+    "skills/**/*.md",
+    "workflows/runbooks/**/*.md",
+    "workflows/templates/*.yaml",
+    "orchestrators/*/rules/*.md",
+)
+INSTRUCTION_UNIT_FILES = ("CLAUDE.md", "AGENTS.md")
+
+# Lookup references: read for one entry at the step, so the binding limit is whole arrival at that read.
+LOOKUP_REFERENCES: tuple[tuple[str, str], ...] = (
+    ("framework/adopted-methods.md", "one adopted method's row"),
+    ("framework/enforcement-registry.md", "one rule's row"),
+    ("skills/code_review_board/REFERENCE.md", "one row or schema per question"),
+    ("skills/consistency_check/REFERENCE-drift.md", "one check's detail at that check"),
+    ("skills/consistency_check/REFERENCE.md", "one check's detail at that check"),
+    ("skills/navigation.md", "route index"),
+    ("skills/testing/eval_patterns/fastapi.md", "one stack's patterns"),
+    ("skills/testing/eval_patterns/postgres.md", "one stack's patterns"),
+    ("workflows/templates/spec-board-convergence.yaml", "board mechanics by key"),
+    ("workflows/templates/spec-board.yaml", "board mechanics by key"),
+)
+
+
+def required_units() -> list[str]:
+    """Files that must exist: the reread table of every profile and the forge soul."""
+    units = {rel for files in REREAD_FILES.values() for rel, _ in files}
+    units.add("agents/buddy/soul.md")
+    return sorted(units)
+
+
+def instruction_units(root: Path | None = None) -> list[str]:
+    """Framework-relative paths of every enumerated file that is not a listed lookup, sorted."""
+    root = root or _FRAMEWORK_ROOT
+    lookups = {rel for rel, _ in LOOKUP_REFERENCES}
+    found = {
+        path.relative_to(root).as_posix()
+        for pattern in INSTRUCTION_UNIT_GLOBS
+        for path in root.glob(pattern)
+        if path.is_file()
+    }
+    found.update(rel for rel in INSTRUCTION_UNIT_FILES if (root / rel).is_file())
+    return sorted(found - lookups)
+
+
+def check_instruction_units(root: Path | None = None) -> tuple[int, list[str]]:
+    """Every enumerated unit is at most INSTRUCTION_UNIT_BUDGET bytes, every listed lookup exists and is at most
+    LOOKUP_READ_CEILING bytes, and every required unit exists."""
+    root = root or _FRAMEWORK_ROOT
+    units = instruction_units(root)
+    errors = [f"{rel}: missing" for rel in required_units() if not (root / rel).is_file()]
+    for rel in units:
+        size = (root / rel).stat().st_size
+        if size > INSTRUCTION_UNIT_BUDGET:
+            errors.append(f"{rel}: {size} bytes > {INSTRUCTION_UNIT_BUDGET} (unit)")
+    for rel, _ in LOOKUP_REFERENCES:
+        path = root / rel
+        if not path.is_file():
+            errors.append(f"{rel}: missing")
+            continue
+        size = path.stat().st_size
+        if size > LOOKUP_READ_CEILING:
+            errors.append(f"{rel}: {size} bytes > {LOOKUP_READ_CEILING} (lookup)")
+    if errors:
+        return 1, errors
+    return 0, [
+        f"OK: instruction-units — {len(units)} units within {INSTRUCTION_UNIT_BUDGET} bytes, "
+        f"{len(LOOKUP_REFERENCES)} lookups within {LOOKUP_READ_CEILING} bytes"
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Brief acceptance copy (contract: skills/_protocols/approved-acceptance.md §The check)
+# ---------------------------------------------------------------------------
+
+BRIEF_ACCEPTANCE_TITLE = "Approved acceptance (read-only)"
+BRIEF_ACCEPTANCE_KEYS = ("task", "acceptance_criteria", "out_of_scope", "approved_by")
+_FENCE_OPEN_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
+_HEADING_RE = re.compile(r"^ {0,3}(#{1,6})\s+(.+?)\s*#*\s*$")
+
+
+class _BriefAcceptanceError(Exception):
+    """One reason the brief's copy cannot be established as an exact match."""
+
+
+class _UniqueKeyLoader(yaml.SafeLoader):
+    """SafeLoader that rejects a mapping key given twice or a key that cannot be a mapping key."""
+
+    def construct_mapping(self, node, deep=False):
+        self.flatten_mapping(node)
+        result = {}
+        for key_node, value_node in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            try:
+                hash(key)
+            except TypeError:
+                raise _BriefAcceptanceError(
+                    f"unhashable YAML mapping key {key!r} (line {key_node.start_mark.line + 1})"
+                ) from None
+            if key in result:
+                raise _BriefAcceptanceError(f"duplicate YAML key {key!r} (line {key_node.start_mark.line + 1})")
+            result[key] = self.construct_object(value_node, deep=deep)
+        return result
+
+
+def _load_unique_yaml(text: str, where: str):
+    try:
+        return yaml.load(text, Loader=_UniqueKeyLoader)  # noqa: S506 - SafeLoader subclass
+    except _BriefAcceptanceError as exc:
+        raise _BriefAcceptanceError(f"{where}: {exc}") from None
+    except yaml.YAMLError as exc:
+        detail = " ".join(str(exc).split())
+        raise _BriefAcceptanceError(f"{where}: invalid YAML ({detail})") from None
+    except RecursionError:
+        raise _BriefAcceptanceError(f"{where}: YAML nested too deeply to parse") from None
+
+
+def _fence_closes(line: str, fence: tuple[str, int]) -> bool:
+    return re.fullmatch(rf" {{0,3}}{re.escape(fence[0])}{{{fence[1]},}}\s*", line) is not None
+
+
+def _acceptance_section(lines: list[str]) -> list[tuple[int, str]]:
+    """Body lines (1-based number, text) of the one level-2 acceptance section, headings inside fences ignored."""
+    sections: list[list[tuple[int, str]]] = []
+    current: list[tuple[int, str]] | None = None
+    fence: tuple[str, int] | None = None
+    fence_line = 0
+    for number, line in enumerate(lines, start=1):
+        if fence:
+            if current is not None:
+                current.append((number, line))
+            if _fence_closes(line, fence):
+                fence = None
+            continue
+        marker = _FENCE_OPEN_RE.match(line)
+        if marker:
+            fence = (marker[1][0], len(marker[1]))
+            fence_line = number
+        else:
+            heading = _HEADING_RE.match(line)
+            if heading and len(heading[1]) <= 2:
+                current = None
+                if len(heading[1]) == 2 and heading[2].removeprefix("§").strip() == BRIEF_ACCEPTANCE_TITLE:
+                    current = []
+                    sections.append(current)
+                continue
+        if current is not None:
+            current.append((number, line))
+    if fence:
+        raise _BriefAcceptanceError(f"unterminated code fence opened at line {fence_line}")
+    if not sections:
+        raise _BriefAcceptanceError(f"missing block: no '## {BRIEF_ACCEPTANCE_TITLE}' section")
+    if len(sections) > 1:
+        raise _BriefAcceptanceError(f"{len(sections)} '## {BRIEF_ACCEPTANCE_TITLE}' sections; exactly one allowed")
+    return sections[0]
+
+
+def _acceptance_yaml(body: list[tuple[int, str]]) -> str:
+    """Text of the one yaml/yml fenced block directly in the section body."""
+    payloads: list[list[str]] = []
+    block: list[str] | None = None
+    fence: tuple[str, int] | None = None
+    for _number, line in body:
+        if fence:
+            if _fence_closes(line, fence):
+                if block is not None:
+                    payloads.append(block)
+                fence, block = None, None
+            elif block is not None:
+                block.append(line)
+            continue
+        marker = _FENCE_OPEN_RE.match(line)
+        if marker:
+            fence = (marker[1][0], len(marker[1]))
+            block = [] if marker[2].strip().lower() in {"yaml", "yml"} else None
+    if len(payloads) != 1:
+        raise _BriefAcceptanceError(
+            f"the '{BRIEF_ACCEPTANCE_TITLE}' section needs exactly one ```yaml block, found {len(payloads)}"
+        )
+    return "\n".join(payloads[0])
+
+
+def _string_list(value, where: str) -> list[str]:
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise _BriefAcceptanceError(f"{where} must be a list of strings")
+    return value
+
+
+def _task_id(value, where: str) -> int:
+    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+        return value
+    if isinstance(value, str) and value.isascii() and value.isdigit():
+        return int(value)
+    raise _BriefAcceptanceError(f"{where} must be a task number (got {value!r})")
+
+
+def _read_block(brief: Path) -> dict:
+    try:
+        text = brief.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise _BriefAcceptanceError(f"cannot read brief {brief}: {exc}") from None
+    payload = _load_unique_yaml(_acceptance_yaml(_acceptance_section(text.splitlines())), "block")
+    if not isinstance(payload, dict):
+        raise _BriefAcceptanceError("block: the YAML must be a mapping")
+    keys = set(payload)
+    if keys != set(BRIEF_ACCEPTANCE_KEYS):
+        missing = sorted(set(BRIEF_ACCEPTANCE_KEYS) - keys)
+        unknown = sorted(str(k) for k in keys - set(BRIEF_ACCEPTANCE_KEYS))
+        raise _BriefAcceptanceError(
+            f"block: keys must be exactly {', '.join(BRIEF_ACCEPTANCE_KEYS)} "
+            f"(missing: {missing or 'none'}; unknown: {unknown or 'none'})"
+        )
+    approved_by = payload["approved_by"]
+    if not isinstance(approved_by, str) or not approved_by.strip():
+        raise _BriefAcceptanceError("block: approved_by must be a nonblank string")
+    return {
+        "task": _task_id(payload["task"], "block: task"),
+        "acceptance_criteria": _string_list(payload["acceptance_criteria"], "block: acceptance_criteria"),
+        "out_of_scope": _string_list(payload["out_of_scope"], "block: out_of_scope"),
+    }
+
+
+def _find_task_file(task: int, project_root: Path) -> Path:
+    tasks = project_root / "docs" / "tasks"
+    names = dict.fromkeys((f"{task}.yaml", f"{task:03d}.yaml"))
+    for directory in (tasks, tasks / "archive"):
+        for name in names:
+            candidate = directory / name
+            if candidate.is_file():
+                return candidate
+    raise _BriefAcceptanceError(f"task file not found for task {task} under {tasks} (archive included)")
+
+
+def _list_differences(name: str, task_items: list[str], brief_items: list[str], task_label: str) -> list[str]:
+    out: list[str] = []
+    if len(task_items) != len(brief_items):
+        out.append(f"{name}: {task_label} has {len(task_items)} items, the brief has {len(brief_items)}")
+    for index in range(max(len(task_items), len(brief_items))):
+        in_task = task_items[index] if index < len(task_items) else None
+        in_brief = brief_items[index] if index < len(brief_items) else None
+        if in_task == in_brief:
+            continue
+        if in_brief is None:
+            out.append(f"{name}[{index}] missing from the brief; {task_label}: {in_task!r}")
+        elif in_task is None:
+            out.append(f"{name}[{index}] extra in the brief: {in_brief!r}; {task_label} has no item {index}")
+        else:
+            out.append(f"{name}[{index}] differs; {task_label}: {in_task!r}; brief: {in_brief!r}")
+    return out
+
+
+def check_brief_acceptance(brief: Path, project_root: Path | None = None) -> tuple[int, list[str]]:
+    """The brief's `## Approved acceptance (read-only)` block equals the task file's acceptance_criteria and
+    out_of_scope item by item. The task file is read, never written. Fails closed on any input it cannot read."""
+    project_root = Path.cwd() if project_root is None else project_root
+    brief = Path(brief)
+    prefix = "ERROR brief-acceptance:"
+    try:
+        block = _read_block(brief)
+        task_file = _find_task_file(block["task"], project_root)
+        try:
+            task_text = task_file.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise _BriefAcceptanceError(f"cannot read task file {task_file}: {exc}") from None
+        task_label = (Path("docs/tasks") / task_file.relative_to(project_root / "docs" / "tasks")).as_posix()
+        task_data = _load_unique_yaml(task_text, task_label)
+        if not isinstance(task_data, dict):
+            raise _BriefAcceptanceError(f"{task_label}: not a mapping")
+        if "id" not in task_data or _task_id(task_data["id"], f"{task_label}: id") != block["task"]:
+            raise _BriefAcceptanceError(
+                f"{task_label}: id {task_data.get('id')!r} does not match the block's task {block['task']}"
+            )
+        task_criteria = _string_list(task_data.get("acceptance_criteria"), f"{task_label}: acceptance_criteria")
+        exclusions = task_data.get("out_of_scope")
+        task_exclusions = [] if exclusions is None else _string_list(exclusions, f"{task_label}: out_of_scope")
+    except _BriefAcceptanceError as exc:
+        return 1, [f"{prefix} {brief}: {exc}"]
+
+    errors = _list_differences("acceptance_criteria", task_criteria, block["acceptance_criteria"], task_label)
+    errors += _list_differences("out_of_scope", task_exclusions, block["out_of_scope"], task_label)
+    if errors:
+        return 1, [f"{prefix} {brief}: the block differs from {task_label}"] + [f"{prefix} {e}" for e in errors]
+    return 0, [
+        f"OK: brief-acceptance — {brief} matches {task_label} "
+        f"({len(task_criteria)} criteria, {len(task_exclusions)} exclusions)"
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Architecture spine form (contract: skills/_protocols/architecture-spine.md §Format)
+# ---------------------------------------------------------------------------
+
+SPINE_ALTITUDES = ("initiative", "feature", "unit")
+SPINE_REQUIRED_FIELDS = ("Binds", "Prevents", "Rule", "Settled")
+SPINE_DEFERRED_REASONS = ("one unit", "readable", "no trade-off", "can wait")
+_SPINE_AD_RE = re.compile(r"AD-(\d+)\b")
+_SPINE_FIELD_RE = re.compile(r"^\s*-\s+\*\*([A-Za-z]+):\*\*\s*(.*)$")
+_SPINE_DEFERRED_RE = re.compile(
+    r"^-\s+\S.*?\s+—\s+(" + "|".join(re.escape(r) for r in SPINE_DEFERRED_REASONS) + r"):\s*\S"
+)
+_SPINE_INHERITED_RE = re.compile(r"^AD-(\d+)\s+\(([^()]+)\)$")
+_SPINE_PLACEHOLDER_RE = re.compile(r"(?<![\w-])(?:TBD|TODO|FIXME)(?![\w-])|(?<!\w)<[a-z][^<>]*>")
+
+
+def _spine_lines(text: str) -> list[tuple[int, str]]:
+    """(1-based number, text) of every line outside code fences; an unterminated fence is an error."""
+    out: list[tuple[int, str]] = []
+    fence: tuple[str, int] | None = None
+    fence_line = 0
+    for number, line in enumerate(text.splitlines(), start=1):
+        if fence:
+            if _fence_closes(line, fence):
+                fence = None
+            continue
+        marker = _FENCE_OPEN_RE.match(line)
+        if marker:
+            fence = (marker[1][0], len(marker[1]))
+            fence_line = number
+            continue
+        out.append((number, line))
+    if fence:
+        raise _BriefAcceptanceError(f"unterminated code fence opened at line {fence_line}")
+    return out
+
+
+def _spine_sections(lines: list[tuple[int, str]]) -> tuple[list[tuple[int, str]], dict, list[str]]:
+    """The lines before the first level-2 heading, the body of each level-2 section, and errors."""
+    head: list[tuple[int, str]] = []
+    sections: dict[str, list[tuple[int, str]]] = {}
+    errors: list[str] = []
+    current = head
+    for number, line in lines:
+        heading = _HEADING_RE.match(line)
+        if heading and len(heading[1]) == 2:
+            name = heading[2].strip()
+            if name in sections:
+                errors.append(f"line {number}: second '## {name}' section")
+            current = sections.setdefault(name, [])
+            continue
+        current.append((number, line))
+    return head, sections, errors
+
+
+def _spine_ad_ids(path: Path) -> set[int]:
+    """AD numbers declared as level-3 headings in another spine (fails closed when unreadable)."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise _BriefAcceptanceError(f"cannot read parent spine {path}: {exc}") from None
+    _head, sections, _errors = _spine_sections(_spine_lines(text))
+    ids = set()
+    for _number, line in sections.get("Decisions", []):
+        heading = _HEADING_RE.match(line)
+        if heading and len(heading[1]) == 3:
+            match = _SPINE_AD_RE.match(heading[2])
+            if match:
+                ids.add(int(match[1]))
+    return ids
+
+
+def _spine_decisions(body: list[tuple[int, str]]) -> tuple[int, list[str]]:
+    errors: list[str] = []
+    blocks: list[tuple[int, int, dict[str, str]]] = []
+    for number, line in body:
+        heading = _HEADING_RE.match(line)
+        if heading:
+            match = _SPINE_AD_RE.match(heading[2]) if len(heading[1]) == 3 else None
+            if not match:
+                errors.append(f"line {number}: '{line.strip()}' is not an '### AD-<n> — <decision>' heading")
+                continue
+            blocks.append((number, int(match[1]), {}))
+            continue
+        field = _SPINE_FIELD_RE.match(line)
+        if field and blocks:
+            fields = blocks[-1][2]
+            if field[1] in fields:
+                errors.append(f"line {number}: AD-{blocks[-1][1]} gives {field[1]} twice")
+            fields[field[1]] = field[2].strip()
+        elif line.strip() and not blocks:
+            errors.append(f"line {number}: text in '## Decisions' before the first AD heading")
+    previous = 0
+    for number, ad, fields in blocks:
+        if ad <= previous:
+            errors.append(f"line {number}: AD-{ad} does not ascend (follows AD-{previous}); IDs are never reused")
+        previous = max(previous, ad)
+        for name in SPINE_REQUIRED_FIELDS:
+            if not fields.get(name):
+                errors.append(f"line {number}: AD-{ad} has no nonblank {name}")
+        settled = fields.get("Settled", "")
+        if settled and not re.match(r"proposed\b|(asked|adopted):\s*\S", settled):
+            errors.append(f"line {number}: AD-{ad} Settled must be 'proposed', 'asked: …' or 'adopted: …'")
+    return len(blocks), errors
+
+
+def _spine_deferred(body: list[tuple[int, str]]) -> tuple[int, list[str]]:
+    items: list[tuple[int, str]] = []
+    for number, line in body:
+        if items and line[:1].isspace() and line.strip():
+            items[-1] = (items[-1][0], f"{items[-1][1]} {line.strip()}")
+        elif line.strip():
+            items.append((number, line.strip()))
+    if not items:
+        return 0, ["'## Deferred' has no entry; with nothing left write '- none'"]
+    if [text for _n, text in items] == ["- none"]:
+        return 0, []
+    errors = []
+    for number, text in items:
+        if not _SPINE_DEFERRED_RE.match(text):
+            errors.append(
+                f"line {number}: Deferred entry needs '- <candidate> — <reason>: <detail>' with a reason of "
+                f"{', '.join(SPINE_DEFERRED_REASONS)}: {text!r}"
+            )
+    return len(items), errors
+
+
+def _spine_inherited(body: list[tuple[int, str]], project_root: Path, parent: str) -> tuple[int, list[str]]:
+    errors: list[str] = []
+    rows = 0
+    ids: set[int] | None = None
+    if [line.strip() for _n, line in body if line.strip()] == ["- none"]:
+        return 0, []
+    for number, line in body:
+        text = line.strip()
+        if not text:
+            continue
+        if not text.startswith("|"):
+            errors.append(f"line {number}: '## Inherited' holds only its table")
+            continue
+        cells = [c.strip() for c in text.strip("|").split("|")]
+        if set(text) <= set("|-: ") or cells[0] == "Parent decision":
+            continue
+        rows += 1
+        match = _SPINE_INHERITED_RE.match(cells[0].strip("`"))
+        if not match or len(cells) < 2 or not cells[1]:
+            errors.append(f"line {number}: inherited row needs 'AD-<n> (<parent spine path>) | <binds here>'")
+            continue
+        if match[2].strip("`") != parent:
+            errors.append(f"line {number}: inherited row cites {match[2]}, not the Parent {parent}")
+            continue
+        if ids is None:
+            try:
+                ids = _spine_ad_ids(project_root / parent)
+            except _BriefAcceptanceError as exc:
+                errors.append(f"line {number}: {exc}")
+                ids = set()
+                continue
+        if int(match[1]) not in ids:
+            errors.append(f"line {number}: AD-{match[1]} is not a decision of {match[2]}")
+    if not rows:
+        errors.append("'## Inherited' has no row; write '- none' when no parent decision binds here")
+    return rows, errors
+
+
+def check_spine(spine: Path, project_root: Path | None = None) -> tuple[int, list[str]]:
+    """An architecture spine has the form of skills/_protocols/architecture-spine.md §Format: header lines, the
+    sections, ascending AD IDs with their fields, Deferred reasons, inherited IDs that exist in the parent, no
+    placeholders. Form only; the substance is the architect lenses'. Fails closed on any input it cannot read."""
+    project_root = Path.cwd() if project_root is None else project_root
+    spine = Path(spine)
+    prefix = "ERROR spine:"
+    try:
+        try:
+            text = spine.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise _BriefAcceptanceError(f"cannot read spine: {exc}") from None
+        lines = _spine_lines(text)
+    except _BriefAcceptanceError as exc:
+        return 1, [f"{prefix} {spine}: {exc}"]
+
+    head, sections, errors = _spine_sections(lines)
+    titles = [line for _n, line in head if (h := _HEADING_RE.match(line)) and len(h[1]) == 1]
+    if not titles or not _HEADING_RE.match(titles[0])[2].startswith("Architecture spine"):
+        errors.append("missing title '# Architecture spine — <scope>'")
+    header: dict[str, str] = {}
+    for _number, line in head:
+        match = re.match(r"^(Altitude|Governs|Parent):\s*(.*)$", line.strip())
+        if match:
+            header[match[1]] = match[2].strip()
+    for name in ("Altitude", "Governs", "Parent"):
+        if not header.get(name):
+            errors.append(f"missing header line '{name}: …'")
+    if header.get("Altitude") and header["Altitude"] not in SPINE_ALTITUDES:
+        errors.append(f"Altitude must be one of {', '.join(SPINE_ALTITUDES)} (got {header['Altitude']!r})")
+    parent = header.get("Parent", "")
+    for name in ("Decisions", "Deferred"):
+        if name not in sections:
+            errors.append(f"missing section '## {name}'")
+    for name in sections:
+        if name not in ("Inherited", "Decisions", "Deferred"):
+            errors.append(f"unknown section '## {name}'")
+    inherited = 0
+    if parent and parent != "none":
+        if not (project_root / parent.strip("`")).is_file():
+            errors.append(f"Parent {parent} is not a file under {project_root}")
+        if "Inherited" not in sections:
+            errors.append("missing section '## Inherited' (Parent names a spine)")
+    elif "Inherited" in sections:
+        errors.append("'## Inherited' present but Parent is none")
+    if "Inherited" in sections and parent and parent != "none":
+        inherited, found = _spine_inherited(sections["Inherited"], project_root, parent.strip("`"))
+        errors += found
+    decisions, found = _spine_decisions(sections.get("Decisions", []))
+    errors += found
+    deferred, found = _spine_deferred(sections["Deferred"]) if "Deferred" in sections else (0, [])
+    errors += found
+    for number, line in lines:
+        hit = _SPINE_PLACEHOLDER_RE.search(re.sub(r"`[^`]*`", "", line))
+        if hit:
+            errors.append(f"line {number}: placeholder {hit[0]!r}")
+
+    if errors:
+        return 1, [f"{prefix} {spine}: {e}" for e in errors]
+    return 0, [f"OK: spine — {spine} ({decisions} decisions, {inherited} inherited, {deferred} deferred)"]
 
 
 def _main(argv: list[str] | None = None) -> int:
@@ -828,7 +1053,10 @@ def _main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--check",
-        choices=("tier1-drift", "tier1-multi-workflow-drift", "enforcement-registry"),
+        choices=(
+            "tier1-drift", "tier1-multi-workflow-drift", "enforcement-registry",
+            "instruction-units", "brief-acceptance", "spine",
+        ),
         required=True,
         help="Welcher Check ausgefuehrt werden soll.",
     )
@@ -836,8 +1064,24 @@ def _main(argv: list[str] | None = None) -> int:
         "--workflows-root", default=None,
         help="Override workflows-runbooks-root (default framework workflows/runbooks).",
     )
+    parser.add_argument(
+        "--brief", default=None,
+        help="Brief to check (required for and only used by --check brief-acceptance).",
+    )
+    parser.add_argument(
+        "--spine", default=None,
+        help="Architecture spine to check (required for and only used by --check spine).",
+    )
 
     args = parser.parse_args(argv)
+    if args.check == "brief-acceptance" and not args.brief:
+        parser.error("--check brief-acceptance requires --brief PATH")
+    if args.check != "brief-acceptance" and args.brief:
+        parser.error("--brief is only used by --check brief-acceptance")
+    if args.check == "spine" and not args.spine:
+        parser.error("--check spine requires --spine PATH")
+    if args.check != "spine" and args.spine:
+        parser.error("--spine is only used by --check spine")
 
     workflows_root = Path(args.workflows_root) if args.workflows_root else None
 
@@ -849,6 +1093,12 @@ def _main(argv: list[str] | None = None) -> int:
         )
     elif args.check == "enforcement-registry":
         exit_code, warnings = check_enforcement_registry()
+    elif args.check == "instruction-units":
+        exit_code, warnings = check_instruction_units()
+    elif args.check == "brief-acceptance":
+        exit_code, warnings = check_brief_acceptance(Path(args.brief))
+    elif args.check == "spine":
+        exit_code, warnings = check_spine(Path(args.spine))
     else:
         print(f"ERROR: unknown check {args.check!r}", file=sys.stderr)
         return 2

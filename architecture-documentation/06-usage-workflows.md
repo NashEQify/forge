@@ -75,7 +75,7 @@ Forge workflows: software
 Use `Forge workflows: on-demand` when project-local rules should govern work and
 Forge methods should be invoked as needed. If intent does not establish software
 development, on-demand is the default. Scripts, configuration or old workflow files
-alone do not select development. See [workflow selection](../framework/process-map.md#workflow-selection).
+alone do not select development. See [workflow selection](../framework/workflow-selection.md).
 
 | Desired result | Selected development workflow | Canonical guide |
 |---|---|---|
@@ -92,10 +92,52 @@ destructive or publication actions retain their explicit authorization boundarie
 
 Build chooses a path appropriate to uncertainty and consequences. DIRECT is a
 short, complete lifecycle for eligible bounded reversible work, with verification;
-it is not selected from file count alone. Existing approved specifications can
-support implementation without repeating the specification interview. Exact route
-criteria live in the [process map](../framework/process-map.md#direct-eligibility)
-and Build runbook.
+it is not selected from file count alone. It runs in four steps and, without a task
+record and when the check passes, closes within the same turn:
+Buddy records the goal, scope and checks; the coding agent builds and tests; a
+separate agent run checks the change and re-runs the tests; the reply reports what
+changed, the checks with their results and which run checked it. A one-line change
+to behaviour takes the same steps; a typo- or format-only change gets a diff check
+instead of the separate run. Existing approved
+specifications can support implementation without repeating the specification
+interview. Exact route criteria live in
+[DIRECT eligibility](../framework/direct-eligibility.md) and Build runbook.
+
+### What a build goes through
+
+A build runs the stages in the [overview](01-overview.md#software-development-from-intent-to-verified-result):
+intent and sizing, the spec with its test matrix (a UX design drawn from your answers and
+an architecture spine of the decisions separately built parts must share, each on its trigger), a plan whose tasks are checked against each other, dispatches with a fixed
+contract, review, fixes and an evidenced close. What you see along the way:
+
+- **Before code:** the acceptance criteria you approve travel word for word into
+  every implementer's brief ([approved acceptance](../skills/_protocols/approved-acceptance.md)).
+  When the acceptance admits two readings that would give you different results, and
+  neither the spec nor the code settles which, the question comes back to you;
+  smaller points are settled and listed for you at the end.
+- **During review:** each finding is checked at the location it cites before it is
+  graded. A finding that does not hold is recorded as false, with its evidence,
+  rather than fixed ([finding verification](../skills/_protocols/finding-verification.md)).
+- **During fixes:** each finding gets its cause first. A spec-caused finding changes
+  the spec and the code follows; an intent question comes back to you
+  ([cause before answer](../skills/convergence_loop/cause-before-answer.md)). At the
+  re-review limit, every open finding gets a class and a ruling instead of another
+  round ([at the cap](../skills/convergence_loop/at-the-cap.md)).
+- **For a defect:** Fix compares the broken path with a working one, tests one written
+  hypothesis before changing code, and after three failed fixes looks for the cause
+  outside the code
+  ([root-cause fix](../skills/root_cause_fix/SKILL.md)).
+- **At the end:** the final message lists the claims with their evidence and the
+  decisions taken for you, each with its cost and undo
+  ([completion claims](../skills/_protocols/evidence-author-claims.md),
+  [decisions](../skills/return_summary/SKILL.md#decisions-i-took-for-you)).
+
+Which stages a route runs and which reviewers it calls depend on the change's risk;
+a short path skips the separate spec and signoff cycle but not the verification.
+The route decision shows why: three facts written before the route (the open points
+you would notice, what cannot be undone, the footprint). Open points that need you
+come to you before work starts, and a request with two independent goals is offered
+to you as a split ([sizing facts](../workflows/runbooks/build/lifecycle.md#sizing-facts)).
 
 For an active outage, Fix puts authorized recovery and actual service verification
 before final root-cause repair. “Restored” and “resolved” are distinct outcomes.

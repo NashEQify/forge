@@ -20,27 +20,8 @@ from the **repository root** (not relative to `framework/`).
 
 ### Workflow selection
 
-Use Forge's automatic processes for software development, as established by
-the active project's intent. For other work, use the project's own working
-rules and Forge tools on demand. An optional `Forge workflows: software` or
-`Forge workflows: on-demand` line under `## Context` in `intent.md` makes the
-choice explicit and takes precedence. If the intent does not establish
-software development, use on-demand. A directory name or the presence of
-scripts, configuration or IaC alone does not select software development.
-
-**On demand:** follow the project's instructions, boot/context navigation,
-runbooks and delegation rules. Forge does not automatically start workflows,
-Councils, boards, spec cycles, test chains or workflow-engine bookkeeping.
-Software `DIRECT` / `STANDARD` / `FULL` eligibility does not classify this work.
-
-Councils, reviews, skills and workflows remain available on explicit user
-request. Follow the requested method for that scope; this does not switch the
-project to software mode or start an enclosing workflow. Preserve existing
-workflow records; selecting on-demand neither completes nor resumes them.
-
-This selection governs Forge process and delegation requirements, including
-triggers in adapters and skill discovery. Authorization, secret handling,
-evidence, actual outcome verification and local safeguards remain binding.
+At boot step 2, and whenever the mode of the work is in question: read and follow
+`framework/workflow-selection.md` (software or on-demand).
 The workflow tables and automatic gates below apply to software development;
 the Authorization section applies to both modes.
 
@@ -82,13 +63,22 @@ permission and gate per artifact type.
 **Solve vs. other workflows — entry-point matrix:**
 - **Solve**: the problem is known, but solution shape (feature? spec? code? process?) is unclear. Typical for meta-problems, structural questions, new processes.
 - **Build**: feature is clear (already decided to build), solution lives in code-space.
-- **Fix**: a defect needs investigation. A known cause and defined fix may use Build-DIRECT only if all DIRECT criteria below hold. An active outage or ongoing harm takes Incident recovery first, even when final RCA is incomplete.
+- **Fix**: a defect needs investigation; capacity and hygiene problems are defects. A known cause and defined fix may use Build-DIRECT only if all DIRECT criteria below hold. A fix on any path, DIRECT included, covers the cause class (`skills/root_cause_fix/SKILL.md` Step 3). An active outage or ongoing harm takes Incident recovery first, even when final RCA is incomplete.
 - **Review**: artifact exists and needs validation.
 - **Research**: knowledge gap, answer needs to be found.
 - **Solve (scoping mode)**: large objective to split into spec hierarchy. Done criterion foreseeable, solution shape = spec hierarchy. Uses `skills/scoping/SKILL.md` as capability.
 
 If unclear: derive routing from intent (what is the desired result?).
-Hybrid tasks: choose a primary workflow and embed other workflows as sub-steps.
+Hybrid tasks: choose one primary workflow and apply the relevant existing
+primitives to each work item according to its uncertainty, consequences and
+known solution shape. Frame unresolved solution choices; carry known mechanical
+work directly into the implementation and verification scope without inventing
+alternatives. A defect embedded in broader work retains root-cause
+investigation, a failure witness and outcome verification through the existing
+fix primitives; it does not automatically require another workflow instance.
+Record these obligations in the existing work artifact. Counts of acceptance
+criteria, files or sub-problems are inspection signals, not route decisions.
+Authorization and safety floors continue to apply to every item.
 
 ## Authorization
 
@@ -97,44 +87,84 @@ A clear request to implement a bounded change is sufficient; the brief records
 that authorization rather than asking for the same decision again. Ask when
 the intended result is unclear, a consequential design decision is unresolved,
 or the scope, risk, affected host or data impact materially changes.
-Diagnosis-only and proposal-only requests do not authorize implementation.
-Bookkeeping must not silently change the user's goals or permission boundaries.
+Diagnosis-only and proposal-only requests do not authorize implementation. A
+request that asks for the outcome (fix it, empty it, clean it up) authorizes
+its fix even when it also asks for analysis; a question or a report alone is
+diagnosis. Bookkeeping must not silently change the user's goals or permission
+boundaries. The points the agent settles itself that would cost the user if
+wrong are reported in the final message's decisions list
+(`skills/return_summary/SKILL.md` §Decisions I took for you).
 
-Live changes follow the consumer's host/session approvals; destructive actions
-require their own explicit confirmation. Recovery does not waive these bounds.
-Commit, push and deploy are separate actions: a research or implementation
-request does not itself authorize publication. A standing explicit repository
-commit policy can authorize local commits; push/deploy require authorization
-covering that action and target. No workflow may widen these permissions.
+**Open lists are questions.** A list of open or remaining items put to the
+user holds only what needs the user: a reason to ask named above, a cost,
+possible data loss, or access the agent lacks. Work the agent can do within
+the order is done, not listed. Work that waits on an outside event (an offline
+host, a scheduled run) goes to its tracking owner with its trigger. Failures,
+partial fixes, limits recorded at a budget close and unverified results are
+still reported, as facts rather than questions.
+
+Live changes follow the consumer's host/session approvals. Recovery does not
+waive these bounds. Commit, push and deploy are separate actions: a research
+or implementation request does not itself authorize publication. A standing
+explicit repository commit policy can authorize local commits; push/deploy
+require authorization covering that action and target. No workflow may widen
+these permissions.
+
+**Deletion under a cleanup or fix order.** The user's order to clean up or
+fix, given in the session or quoted in a brief, covers deleting within its
+scope what is provably useless, once the agent has checked why:
+- regenerable caches and images, when what regenerates them still works (the
+  image tag is still pullable, the build context is present);
+- rollback copies of a completed change whose outcome is verified (an outcome
+  check, not process liveness; `framework/invariants.md` Invariant 6), once the diagnosis has
+  cleared that change as unrelated to the problem;
+- dumps or backups superseded by a newer one that passed a restore or
+  integrity check; never the generations the system's own retention keeps;
+- deploy states nothing references (configuration, units, scheduled jobs,
+  scripts, links, infrastructure code);
+- copies at a backup or sync target of paths the backup now excludes;
+- logs and journals beyond the retention the fix sets, once the evidence the
+  diagnosis needs is recorded.
+
+Whatever its category, nothing is provably useless that someone deliberately
+kept beyond its normal retention, or that is the last copy of user files or
+the only one besides the live data, unless the user already gave those files
+up (an exclusion or a retention setting is such a decision). Delete these
+checked items without a further question, and only them: list or dry-run a
+command's targets first; a command that reaches beyond the checked set (a
+volume prune, `git clean -x`, a recursive `find`) is not covered. A mechanism
+the fix installs that deletes or stops backing up (retention, rotation, prune,
+exclusion) passes the same test: its first run's targets are checked like a
+manual deletion, its window outlasts the verification of the changes it cleans
+up after, and ending backup coverage of user files that may have value is a
+question (caches, statistics and a service's duplicates of data the backup
+already holds are not such files). Every other destructive action, including
+any overwrite, restore or migration, needs its own explicit confirmation, in
+particular anything irrecoverable that may have value and anything outside the
+order's scope. The report lists every deletion with its reason and the check
+behind it; what the agent settled itself, such as a kept item or a window it
+chose, goes to the decisions list (`skills/return_summary/SKILL.md`). Platform, harness, host and consumer-project rules that require
+confirmation still apply; this rule never relaxes them.
+
+**Held-back work** is accepted or installed work waiting for its commit,
+merge, push or publication: uncommitted changes, installed sources not in
+`HEAD`, accepted work left in a linked worktree, branch or staging copy, results
+awaiting publication. Only a live owner accounts for it: a running task or
+session, for the paths its brief or changed paths name (an open installer
+operation counts only through the session driving it; one that no running
+session drives is a maintenance need: validate or roll it back); or an entry in
+the handoff's held-back list (task or paths, reason, owner, releasing event)
+whose releasing event is observable — a named authorization lift, a named task
+close or a date — and still pending. Anything else is unaccounted: commit, merge
+or publish it within the authorization, or give it an entry, before new work
+starts. When a boundary lifts, the entries it held are due: reconcile them
+first, clear them, then take up new work. The boot status check and installer
+status show such work; the save runbook carries the list.
 
 ## DIRECT eligibility
 
-Evaluate safety floors first. DIRECT excludes changes to authorization/auth,
-secrets, schema/data migration, public or cross-component contracts, live
-infrastructure, and changes with hidden/racing/unbounded failure effects.
-Size does not cancel a safety floor.
-
-Otherwise DIRECT requires ALL of:
-- A clear authorized outcome and concrete success criteria.
-- A locally bounded, reversible change following an observed existing pattern.
-- No unresolved consequential design decision or new subsystem.
-- Relevant implementation/spec context read and an executable verification
-  appropriate to the changed behavior; a defect's claimed cause is checked.
-
-New local behavior is allowed. A pre-existing spec is not a reason to repeat
-spec authoring; update any affected contract description within scope. File
-and line counts are useful warning signals, never the eligibility decision.
-If a criterion is unknown, gather targeted evidence; if still unresolved,
-use STANDARD/FULL or ask the missing decision, not a ritual authorization.
-
-DIRECT is a short complete lifecycle: outcome + scope + verification plan,
-implement, run the relevant tests, independent verification of load-bearing
-code, and return evidence. Buddy may author the delegation inline; product
-code still goes to main-code-agent. No separate spec/architect/signoff cycle.
-Typo/format-only changes require a diff check, not behavioral tests or a board.
-An authorization boundary and an independent quality check are different gates.
-
----
+Before taking or proposing the DIRECT path, and when a verified known fix is considered for it: read and follow
+`framework/direct-eligibility.md` (the single source for DIRECT eligibility).
 
 ## Milestone execution
 

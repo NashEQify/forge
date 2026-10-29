@@ -9,12 +9,14 @@ Exit codes:
   0 — PASS (warnings may be printed to stdout with prefix SKILL-FM-WARN:)
   1 — BLOCK (invalid YAML, new skill missing required fields, etc.)
 """
+
 from __future__ import annotations
 
 import argparse
 import subprocess
 import sys
 from pathlib import Path
+from dataclasses import dataclass
 
 try:
     import yaml
@@ -115,23 +117,22 @@ def added_skill_paths(root: Path) -> set[str]:
     }
 
 
-def validate_file(path: Path, root: Path, is_new: bool) -> tuple[list[str], list[str]]:
-    """Returns (blocks, warns)."""
+@dataclass(frozen=True)
+class SkillResult:
+    blocks: tuple[str, ...]
+    warnings: tuple[str, ...]
+
+
+def evaluate_skill(path: str, text: str, known_agents: frozenset[str]) -> SkillResult:
+    """Interpret supplied skill content; acquisition and publication belong to callers."""
+    rel = path
     blocks: list[str] = []
     warns: list[str] = []
-
-    rel = path.relative_to(root).as_posix()
-    try:
-        text = path.read_text(encoding="utf-8")
-    except OSError as e:
-        return [f"{rel}: read error {e}"], []
-
     data, err = parse_frontmatter(text)
     if err:
         if "PyYAML not installed" in err:
-            print(f"SKILL-FM-WARN: {rel}: {err}")
-            return [], []
-        return [f"{rel}: {err}"], []
+            return SkillResult((), (f"{rel}: {err}",))
+        return SkillResult((f"{rel}: {err}",), ())
 
     assert data is not None
 
@@ -139,7 +140,7 @@ def validate_file(path: Path, root: Path, is_new: bool) -> tuple[list[str], list
     if name_val is not None and not isinstance(name_val, str):
         blocks.append(f"{rel}: name must be string")
 
-    skill_dir = path.parent.name
+    skill_dir = rel.split("/")[-2]
     if isinstance(name_val, str) and not normalize_name_dir(name_val, skill_dir):
         blocks.append(
             f"{rel}: name '{name_val}' does not match directory '{skill_dir}' "
@@ -218,12 +219,7 @@ def validate_file(path: Path, root: Path, is_new: bool) -> tuple[list[str], list
                 f"{rel}: relevant_for must be a list (got {type(rel_for).__name__})"
             )
         else:
-            agents_dir = root / "agents"
-            known: set[str] = set()
-            if agents_dir.is_dir():
-                for md in agents_dir.glob("*.md"):
-                    if md.stem not in ("README", "navigation"):
-                        known.add(md.stem)
+            known = known_agents
             for entry in rel_for:
                 if not isinstance(entry, str) or not entry.strip():
                     blocks.append(
@@ -239,7 +235,23 @@ def validate_file(path: Path, root: Path, is_new: bool) -> tuple[list[str], list
                         f"(not found in agents/)"
                     )
 
-    return blocks, warns
+    return SkillResult(tuple(blocks), tuple(warns))
+
+
+def validate_file(path: Path, root: Path, is_new: bool) -> tuple[list[str], list[str]]:
+    """Supported working-tree adapter, returning (blocks, warnings)."""
+    rel = path.relative_to(root).as_posix()
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        return [f"{rel}: read error {exc}"], []
+    known = frozenset(
+        md.stem
+        for md in (root / "agents").glob("*.md")
+        if md.stem not in ("README", "navigation")
+    )
+    result = evaluate_skill(rel, text, known)
+    return list(result.blocks), list(result.warnings)
 
 
 def main() -> int:
@@ -252,6 +264,7 @@ def main() -> int:
     )
     args = ap.parse_args()
     root = repo_root(args.repo or Path.cwd())
+    print("SKILL-FM input: working-tree")
     skills_dir = root / "skills"
     if not skills_dir.is_dir():
         print("SKILL-FM-VALIDATE SKIP — skills/ not in this repo")

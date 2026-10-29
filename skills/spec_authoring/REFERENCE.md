@@ -1,6 +1,6 @@
 # Spec-Authoring — Reference
 
-Detail mechanics. Buddy loads SKILL.md for the contract + checklist.
+Detail mechanics. Buddy loads SKILL.md for the contract and `writing.md` for the checklist.
 This file holds long-form detail moved out to keep SKILL attention
 on the rules.
 
@@ -9,8 +9,7 @@ on the rules.
 For complex / controversial / high-stakes specs, an alternative
 interview mode "grilling":
 
-- **One question at a time** (matches the user TRAIT in `profile.md`
-  "max one question per turn").
+- **One question at a time** (grilling mode).
 - **Recommended answer per question** (agent offers its own proposal,
   not just asks).
 - **Walk down the decision tree systematically** — don't jump between
@@ -31,7 +30,7 @@ Standard vs grilling: standard is multi-aspect, high frequency.
 Grilling is single-aspect-deep, recommended-answer-first,
 walk-the-tree systematic.
 
-Cross-ref: `skills/improve_codebase_architecture/SKILL.md` phase 3
+Cross-ref: `skills/improve_codebase_architecture/process.md` phase 3
 for the grilling loop on architecture refactor (same pattern,
 different domain).
 
@@ -71,15 +70,16 @@ capture contract:
 Document answers in the §-section that defines the capture contract.
 
 **Unverified state:** mark the §-section with `[mediator-audit-pending]`.
-The marker MUST be resolved before requesting `spec_board` review;
-the board chief checks for the marker during consolidation and raises
-a finding if present (no mechanical enforcer yet — see
-`docs/tasks/321.{yaml,md}` for the workflow.yaml grep check /
-pre-commit hook follow-up).
+The marker MUST be resolved before requesting `spec_board` review. The
+`spec_success` check refuses final adoption while a captured file holds
+the marker outside fenced code, inline code or a block quote, or a
+near-miss spelling of it (evidence-pointer protocol §9.5). Drafts stay
+writable and can be committed; quote the marker in code to mention it.
 
-**DONE for this audit:** either the 3 questions are answered in the
-§-section AND no `[mediator-audit-pending]` marker remains, OR the
-marker is present AND linked to an open verification task.
+**DONE for this audit:** the 3 questions are answered in the §-section
+and no `[mediator-audit-pending]` marker remains. A draft may keep the
+marker while it links an open verification task; the spec is then not
+final-adoptable.
 
 The mediator forwards what it forwards, not what you assume —
 invisible state stays invisible until production. Recurrence shape:
@@ -126,7 +126,7 @@ Intent alignment:
 - **NOT** lock a structural-refactor decision on visible-edge analysis
   only ("single-cycle focus"). INSTEAD trace transitive import graph
   from every entry-point that touches the affected module (per
-  `_protocols/mca-brief-template.md` §Structural-refactor pre-lock
+  `_protocols/mca-brief-template-verification.md` §Structural-refactor pre-lock
   checklist) BEFORE brief locks the decision. **Because:** a brief
   that examines the obvious cycle and misses an adjacent back-edge
   binds MCA to a broken design — implementation correct per spec,
@@ -153,8 +153,12 @@ rule.
 
 | Anti-pattern | Failure shape | Discipline rule |
 |---|---|---|
-| **Single-cycle-focus misses transitive cycles** | Brief examines a visible import cycle (A ↔ B), locks decision to break it, MCA implements per spec. Post-implementation a *different* test entry-point fails with ImportError because a back-edge elsewhere in the transitive graph was never inspected. The brief's reasoning was correct for the visible cycle, but the visible cycle was not the whole graph. | Pre-lock checklist for any brief mentioning import / cycle / extraction / move-module: walk transitive imports from every entry-point that touches the affected module, run baseline `pytest --collect-only` on those entry-points, document any prior workarounds with rationale. SoT: `_protocols/mca-brief-template.md` §Structural-refactor pre-lock checklist. |
-| **MCA scope-creep on adjacent identical patterns** | Brief locks decision X for field A. MCA implements X for A and "helpfully" applies X to adjacent fields B, C in same file because the pattern looks identical. The brief described the deferral descriptively, not prescriptively. | Briefs MUST forbid adjacent scope-changes by name when migration pattern is reusable. Post-implementation grep: `git diff --name-only` vs brief-named files; anything outside is scope-creep. SoT: `_protocols/mca-brief-template.md` §Anti-patterns + §Structural-refactor pre-lock checklist post-impl grep. |
-| **Full-suite tests per fix-pass instead of scope-focused** | Convergence-loop runs `pytest tests/` after every fix-phase, burning 2-3× wallclock without surfacing new signal. The fix touched a documented `file:line` scope; re-testing untouched modules adds noise, not safety. | Brief DoD encodes scope-focused tests + L0 on touched files. ONE full-suite run at convergence-end + pre-deploy + cross-cutting refactor. Re-review on FAIL = single-reviewer pass-1.5 of the finding cluster, not full-board redo. SoT: `convergence_loop/SKILL.md` §Test scope between passes + `code_review_board/SKILL.md` §5 Re-review composition + `_protocols/mca-brief-template.md` §Test/Verification scope. |
-| **§-section-amendment without code-grounding** | Amendment drafted from session-handoff text disagreeing with current spec text — both sources stale relative to the code. A two-option question generated from the disagreement became a false dichotomy when code-grounding would have surfaced a third state. Adjacent §-sections (e.g. layout diagrams describing the moved component) also carried drift; the amendment cluster grew to absorb those as stale-cleanup strands. | Pre-edit gate: before amending a §-section that describes code-observable state, grep + read the relevant code. If diverged, reconcile in same commit (CLAUDE.md §Stale cleanup invariant). Architect-dispatched amendments inherit the gate via dispatch contract. SoT: `_protocols/spec-amendment-discipline.md` §Pre-edit code-source-grounding gate. |
-| **Implicit mediator pass-through assumption** | Spec captures state at a proxy / aggregator / wrapper-SDK boundary, assumes the mediator forwards upstream state to downstream. The mediator strips / doesn't-compute / doesn't-emit silently. Bug is structurally invisible until production. Concrete recurrence: two adjacent capture contracts (response-cost during streaming + upstream rate-limit headers) sharing one upstream-pass-through assumption — both fixable only by bypassing the mediator at the relevant capture point. | Mediator pass-through audit: 3-question probe (forward-what / compute-vs-pass / timing) on every spec capturing state downstream of proxy / aggregator / broker. Unverified → `[mediator-audit-pending]` marker; resolve before board review (chief checks during consolidation; mechanical pre-lock enforcer is roadmap, not yet implemented). SoT: SKILL.md §Mediator pass-through audit + this REFERENCE §Mediator audit. |
+| **Single-cycle-focus misses transitive cycles** | Brief examines a visible import cycle (A ↔ B), locks decision to break it, MCA implements per spec. Post-implementation a *different* test entry-point fails with ImportError because a back-edge elsewhere in the transitive graph was never inspected. The brief's reasoning was correct for the visible cycle, but the visible cycle was not the whole graph. | Pre-lock checklist for any brief mentioning import / cycle / extraction / move-module: walk transitive imports from every entry-point that touches the affected module, run baseline `pytest --collect-only` on those entry-points, document any prior workarounds with rationale. SoT: `_protocols/mca-brief-template-verification.md` §Structural-refactor pre-lock checklist. |
+| **MCA scope-creep on adjacent identical patterns** | Brief locks decision X for field A. MCA implements X for A and "helpfully" applies X to adjacent fields B, C in same file because the pattern looks identical. The brief described the deferral descriptively, not prescriptively. | Briefs MUST forbid adjacent scope-changes by name when migration pattern is reusable. Post-implementation grep: `git diff --name-only` vs brief-named files; anything outside is scope-creep. SoT: `_protocols/mca-brief-template.md` §Anti-patterns + `_protocols/mca-brief-template-verification.md` §Structural-refactor pre-lock checklist post-impl grep. |
+| **Full-suite tests per fix-pass instead of scope-focused** | Convergence-loop runs `pytest tests/` after every fix-phase, burning 2-3× wallclock without surfacing new signal. The fix touched a documented `file:line` scope; re-testing untouched modules adds noise, not safety. | Brief DoD names the selected set per round + L0 on touched files; a broad run only where `skills/testing/run-strategy.md` §Test selection calls for one. Re-review on FAIL = single-reviewer pass-1.5 of the finding cluster, not full-board redo. SoT: `convergence_loop/SKILL.md` §Test scope between passes + `code_review_board/verdict.md` §5 Re-review composition + `_protocols/mca-brief-template-verification.md` §Test/Verification scope. |
+| **§-section-amendment without code-grounding** | Amendment drafted from session-handoff text disagreeing with current spec text — both sources stale relative to the code. A two-option question generated from the disagreement became a false dichotomy when code-grounding would have surfaced a third state. Adjacent §-sections (e.g. layout diagrams describing the moved component) also carried drift; the amendment cluster grew to absorb those as stale-cleanup strands. | Pre-edit gate: before amending a §-section that describes code-observable state, grep + read the relevant code. If diverged, reconcile in same commit (`framework/invariants.md` §Stale cleanup). Architect-dispatched amendments inherit the gate via dispatch contract. SoT: `_protocols/spec-amendment-discipline.md` §Pre-edit code-source-grounding gate. |
+| **Implicit mediator pass-through assumption** | Spec captures state at a proxy / aggregator / wrapper-SDK boundary, assumes the mediator forwards upstream state to downstream. The mediator strips / doesn't-compute / doesn't-emit silently. Bug is structurally invisible until production. Concrete recurrence: two adjacent capture contracts (response-cost during streaming + upstream rate-limit headers) sharing one upstream-pass-through assumption — both fixable only by bypassing the mediator at the relevant capture point. | Mediator pass-through audit: 3-question probe (forward-what / compute-vs-pass / timing) on every spec capturing state downstream of proxy / aggregator / broker. Unverified → `[mediator-audit-pending]` marker; resolve before board review. The `spec_success` check refuses final adoption while the marker is operative (evidence-pointer protocol §9.5). SoT: `writing.md` §Mediator pass-through audit + this REFERENCE §Mediator audit. |
+
+## Source
+
+Source of the grilling mode: Matt Pocock's skills at `b843cb5` (MIT License, © 2026 Matt Pocock); Forge's register of adopted methods.

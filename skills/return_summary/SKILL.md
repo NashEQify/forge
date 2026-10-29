@@ -1,9 +1,10 @@
 ---
 name: return-summary
 description: >
-  Format and rules for sub-agent return summaries. Load before
-  step 8 (return).
-  Triggers when a sub-agent is about to return (load before step 8); NOT for user-facing output formatting.
+  Format and rules for sub-agent return summaries, and the "Decisions I
+  took for you" list that every return and final message carries. Load
+  before step 8 (return).
+  Triggers when a sub-agent is about to return (load before step 8), and before a session return or the final message of a turn that did work; NOT for other user-facing output formatting.
 status: active
 relevant_for: ["main-code-agent", "tester", "security", "solution-expert"]
 invocation:
@@ -12,6 +13,10 @@ invocation:
 disable-model-invocation: false
 uses: []
 ---
+
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
 
 # Skill: return-summary
 
@@ -35,6 +40,97 @@ signature changed.
 `Discoveries: none` only after an explicit diff. Not as a
 default.
 
+Before returning, apply the agreement comparison in `framework/work-principle.md`
+to the actual commissioned assignment, outputs and evidence. `DONE` means that
+assignment is fulfilled; `PARTIAL` means required assignment work remains;
+`BLOCKED` means a blocker prevents the required continuation. State unmet assignment
+requirements in Changes/Discoveries or accompanying prose, with concrete unchecked
+dependencies or limits and the responsible caller. Preserve relevant unresolved
+parent obligations when summarizing a nested return: local success does not fulfill
+its parent. Completion status does not substitute for tester confirmation.
+
+Each completion claim in a return or final message (tests pass, fixed, complete,
+met, pushed, active) carries the evidence its row in
+`skills/_protocols/evidence-author-claims.md` §8.5 requires, or states what holds instead.
+
+## Original nested tester reports
+
+Before returning, retain each complete nested tester return once at the existing
+work-unit owner (for example, its build or fix evidence directory). Preserve the
+original verbatim with its tester attribution and provenance, including the exact
+commands, results, failed attempts, qualifications and unverified boundaries; a
+synopsis or reproduced verdict does not replace it. Reference an already retained
+original rather than making another copy.
+
+In the parent return, include accessible references to those originals and direct
+subsequent consumers relying on tester evidence (including Buddy adoption, code
+review and close-retro) to open and read the relevant original before using its
+claims. Carry that instruction with the references so it reaches readers through
+the parent return. A path's existence or a reproduced `SIGNED OFF` is not proof of
+the reported outcome: use the original's actual results and qualifications in the
+acceptance or downstream conclusion, and state any relevant original that could
+not be accessed or read as an evidence limit.
+
+If no durable owner is available, forward the complete attributed original inline
+in the parent return and explicitly state its recovery limitations. Keep it before
+the final tester verdict line. This preserves evidence through the existing return;
+it does not change the commissioned assignment's completion scope or permit a
+parent to assign its own tester sign-off.
+
+## Decisions I took for you
+
+This section applies under both workflow selections to every return and to
+the final message of a turn that changed something or delegated work: a
+sub-agent's return summary, a session's return artifact, and Buddy's final
+message to the user. Within an approved scope the agent settles much without
+asking (the process map, §Authorization); the user reads the final
+message, not the records under it, so this list is where they see those
+choices and correct the wrong ones. It holds the points settled since your
+last final message.
+
+**What goes on it.** A point goes on the list when both hold:
+1. **You settled it.** The request, the brief and the rules you followed left
+   it open, and you picked one way: a reading of what the request meant; what
+   to keep, remove or leave undone, including what you kept on your own
+   judgement; a value, default, limit, window or place you chose; a departure
+   from the request, brief or plan. Check: name the way you did not take. Not
+   yours: what the user's words decided, and what a rule decided through a
+   check with a recorded result (command output, a measured value, a named
+   file). Where you judged a rule's predicate yourself ("deliberately kept",
+   "unrelated to the problem"), the point is yours. So is a ruling on a review
+   finding (on an implementer's push-back, or a finding's class at the fix
+   loop's cap) that no such check decided.
+2. **It costs the user if wrong.** Check: write what the user would lose, miss
+   or have to do differently in the result, beyond the edit that redoes the
+   point. A point whose only cost is that edit (a name, a file layout), or that
+   differs only in how you worked (order, tool, search, retries), stays off.
+
+**Form.** One line per entry: what you decided, instead of what; what it costs
+if wrong; the undo as an action (a command, an edit, a setting), or "cannot be
+undone". Choices of one kind with one cost and one undo are one entry. At most
+five entries, highest cost first, so that the list is read; the rest in one
+line that names the record holding them. A point another line of the message
+already reports with its cost and undo is not repeated.
+
+**It asks nothing.** §Authorization decides which points need the user before
+you act; those are questions asked then, not entries afterwards. An item you
+kept because you judged a rule's predicate ("deliberately kept") is an entry
+under Test 1. An item a rule kept through a check with a recorded result
+(`git status` shows changes no remote holds: the last copy of user files) is
+no entry: report it as a fact, or ask about it when the order cannot be
+completed without it.
+
+**Where it goes.**
+- Sub-agent return summary: the `Decisions-For-User:` field, with the entries
+  or `none`.
+- Session return artifact: a section "Decisions I took for you", with the
+  entries or "none".
+- Final message to the user: a section "Decisions I took for you", in the
+  user's language, after the result; no section when there are no entries.
+- Adopting a return: apply both tests to its entries from your side, drop those
+  the user's words decided or your integration changed, merge entries of one
+  kind, and carry the rest into your own list.
+
 ## Format
 
 ```
@@ -50,6 +146,8 @@ RETURN-SUMMARY:
   Spec-Assumption-Diff: executed
   Discoveries:
     - <fact that may concern context / decisions / backlog, one sentence>
+  Decisions-For-User:
+    - <what you decided, instead of what> — if wrong: <cost> — undo: <how>
   Spec-Updates: v<old> → v<new> | none
   SPEC_VERIFICATION: NEEDED | NOT_NEEDED
     Changed: [file list, only on spec changes]
@@ -58,6 +156,33 @@ RETURN-SUMMARY:
 
 Tester: SIGNED OFF (N tests, M new) | NOT SIGNED OFF — <reason>
 ```
+
+## Short return
+
+When the dispatch names a report file (`skills/_protocols/mca-dispatch.md`), write the full return there: the
+RETURN-SUMMARY above with its incident block, then, for a fix brief, the `## Findings received` table
+(`skills/_protocols/mca-dispatch.md` §A fix brief's findings), then the detail a reviewer needs (sites changed, each
+command with its exit status and decisive result lines; raw output stays outside,
+`skills/_protocols/evidence-author-claims.md` §8.4).
+Then reply with these lines, in this order, and nothing else:
+
+```
+Status:   DONE | PARTIAL | BLOCKED
+Commits:  <short hash + subject>, one per commit | none
+Report:   <report file path>
+Tests:    <each command → result, L0 included>, one line
+Concerns: <each difference from the brief, discovery (§Spec-assumption diff), test written but not run, open risk
+          or blocker, one line each> | none
+SPEC_VERIFICATION: NEEDED | NOT_NEEDED   (only when spec files changed; the file list stays in the report)
+Decisions-For-User: <entries per §Decisions I took for you> | none
+INCIDENT: No | Yes — <type>, <action>
+Tester: SIGNED OFF (N tests, M new) | NOT SIGNED OFF — <reason>
+```
+
+- **Status:** a brief requirement not met gives `PARTIAL`, with the requirement and the reason in Concerns. `DONE`
+  means every brief requirement is met; its Concerns hold the rest.
+- On `PARTIAL` or `BLOCKED`, Concerns holds the remaining work or the blocker in full, so that Buddy can act without
+  opening the report.
 
 ## Incident block (MUST always be present — even when no incident)
 
@@ -109,3 +234,7 @@ Applies on non-code tasks too:
 - **NOT** write the return summary before retest closure.
   INSTEAD retest → result → summary. Because: a premature
   summary skews the status.
+
+## Source
+
+Superpowers (MIT License, © 2025 Jesse Vincent) and BMAD-METHOD (MIT License, © 2025 BMad Code, LLC); Forge's register of adopted methods.

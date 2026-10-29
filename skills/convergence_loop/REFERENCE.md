@@ -25,7 +25,7 @@ pass limits, severity labels, or scope-narrowing rules. When it
 does, the sub-workflow values apply; without an override the SKILL
 defaults apply mechanically.
 
-**Example `spec-board.yaml`:** safety valve at 5 passes, severities
+**Example `spec-board-convergence.yaml`:** safety valve at 5 passes, severities
 critical / high / medium / low. Mapping: BLOCKER = critical, MAJOR =
 high, MINOR = medium + low.
 
@@ -101,8 +101,8 @@ diff trail, the per-cycle unresolved findings, and a recommendation
 the next verdict file written by the calling skill (spec_board /
 code_review_board / sectional_deep_review) MUST contain a top-level
 `remaining_findings:` block listing every still-open finding (schema
-in those skills' SKILL.md). The `risk-followup-routing` workflow step
-consumes it and files a single follow-up task. Accept-without-carry-
+in those skills' SKILL.md). The `close-bookkeeping` step of the build, fix and review workflows
+(risk follow-up) consumes it and files a single follow-up task. Accept-without-carry-
 forward is invalid — escalations without a record disappear between
 sessions, the exact failure class this prevents.
 

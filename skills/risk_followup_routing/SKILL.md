@@ -14,6 +14,10 @@ spec_ref: docs/specs/306-brief-architect.md
 uses: [task_creation]
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: risk-followup-routing
 
 ## Purpose
@@ -31,7 +35,7 @@ types).
 - Review workflow analogous gate, after chief verdict.
 
 The chief is responsible for annotating every entry with `target:`
-per the 7-value enum (spec 306 §4.7 + `code_review_board/SKILL.md` §5).
+per the 7-value enum (spec 306 §4.7 + `code_review_board/verdict.md` §5).
 This skill assumes that annotation exists; if any entry has empty
 `target:`, the skill fails with a clear error and surfaces back to
 the chief for re-emit.
@@ -52,12 +56,13 @@ the chief for re-emit.
    - `spec_text`: collect all into a single batch.
    - `new_task`: each entry filed independently.
    - `watch_item`: collect for risk-watch append.
-   - `accept`: collect for chief-verdict-archive log (accepted
-     limitations — distinct from `absorb_next`: no future fix
+   - `accept`: the verdict entry is the record (accepted
+     limitation — distinct from `absorb_next`: no future fix
      implied).
-   - `absorb_next`: collect for chief-verdict-archive log.
+   - `absorb_next`: the verdict entry is the record; the next review
+     brief for a touched file names it (`code_review_board/brief-and-team.md` §2).
    - `closes_with: <id>`: validate referenced finding exists in
-     same verdict; collect for assertion log.
+     same verdict.
    - `re_review: <reviewer>`: collect for re-dispatch.
 3. Dispatch per group:
    - **spec_text batch:** if non-empty, dispatch
@@ -72,14 +77,13 @@ the chief for re-emit.
    - **watch_item:** if `context/risk-watch.md` doesn't exist,
      create from `skills/_protocols/risk-watch-template.md`. Append
      each entry verbatim under `## Entries`.
-   - **accept:** log to `docs/reviews/board/archive/<verdict-id>-accepted.md`
-     (one file per verdict; append within file) as a known
-     accepted limitation. No fix, no task, no trigger.
-   - **absorb_next:** log to `docs/reviews/board/archive/<verdict-id>-absorbed.md`
-     (one file per verdict; append within file). No further action.
+   - **accept:** no file, no fix, no task, no trigger; the verdict
+     entry records the known accepted limitation.
+   - **absorb_next:** no immediate action; the verdict entry stays
+     the record until a later change to that file closes it.
    - **closes_with:** assert the referenced finding exists in the
      same verdict. On miss: FAIL with `closes_with_target_missing`.
-     On hit: log assertion, no further action.
+     On hit: no further action.
    - **re_review:** dispatch the named reviewer with the finding
      cluster as scoped focus. The re-review's verdict appends to
      the existing chief verdict (not a new pass). One-shot — if
@@ -96,8 +100,7 @@ DELIVERS:
   return, when spec_text entries exist).
 - Tasks filed (via task_creation per entry).
 - Risk-watch append (one or more entries).
-- Archive log for accept and absorb_next entries.
-- closes_with assertions logged.
+- accept / absorb_next / closes_with: the verdict entry is the record (no file).
 - Re-review dispatched for re_review entries.
 
 DOES NOT DELIVER:
@@ -110,7 +113,7 @@ ENABLES:
 - Bulk-task-bloat avoidance (vs the legacy `risk-followup-task`
   which filed one task per finding regardless of type).
 - Mechanical traceability (every finding ends up in a known
-  location: applied diff / task / risk-watch / archive log).
+  location: applied diff / task / risk-watch / verdict).
 
 ## Failure modes
 

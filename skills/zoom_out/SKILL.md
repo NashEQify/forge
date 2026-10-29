@@ -17,6 +17,10 @@ invocation:
 disable-model-invocation: true
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: zoom-out
 
 ## Purpose
@@ -28,13 +32,7 @@ after the map.
 
 ## Source
 
-Lifted from `github.com/mattpocock/skills`
-(`skills/engineering/zoom-out/SKILL.md`). The
-Pocock skill is 2 lines ("Go up a layer of abstraction. Give me
-a map of all the relevant modules and callers, using the
-project's domain glossary vocabulary.") — user-only via
-`disable-model-invocation: true`. Same pattern here, with a
-slight extension for domain-glossary hints.
+Matt Pocock's skills at `b843cb5` (MIT License, © 2026 Matt Pocock); Forge's register of adopted methods.
 
 ## Standalone
 

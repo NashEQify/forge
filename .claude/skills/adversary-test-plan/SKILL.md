@@ -1,11 +1,14 @@
 ---
 name: adversary-test-plan
-description: Adversary extension of a test plan BEFORE implementation — a code-adversary adds the edge-case tests the implementer's bias systematically misses (RED tests as a required pre-fix gate). Triggers when a tester design output exists and needs adversarial edge-case coverage (build prepare); NOT for post-implementation review (use code_review_board).
+description: Adversary extension of a test plan BEFORE implementation — a code-adversary adds the edge-case tests the implementer's bias systematically misses (RED tests as a required pre-fix gate). Triggers when the change touches a safety floor (security/auth/secrets, schema/state-format/data migration, public contract, live infrastructure) and a tester design output exists (build prepare); NOT for post-implementation review (use code_review_board).
 ---
 
 # Skill: adversary-test-plan (Wrapper)
 
 <!-- generated-by: scripts/generate_skill_wrappers.py (do not hand-edit) -->
+
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve it against the same framework root as the SoT; retain the consumer CWD.
 
 This is the Claude-Code-discoverable wrapper. The full
 orchestrator-neutral protocol — methodology, contract, modes,

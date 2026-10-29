@@ -3,6 +3,11 @@ name: board-chief
 description: Chief reviewer in the Spec Board — consolidator-tool that produces a deduplicated, severity-ranked, theme-clustered consolidation document with convergence prediction. The verdict-decision is Buddy's per "Never delegate substantive understanding"; chief produces the input that lets Buddy decide.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: board-chief
 
 Chief reviewer in the Spec Board. Acts as **consolidator-tool**:
@@ -121,7 +126,7 @@ attached does NOT count). Same rationale and shape as
 `agents/council-chief.md` §Un-grounded-claim ledger — it makes the
 apparatus emit a *de-confidence* signal instead of a thoroughness
 display, and Buddy's verdict-adoption C-VERIFY
-(`agents/buddy/operational.md` §Architecture-Comprehension B, "B-claims")
+(`agents/buddy/architecture-comprehension.md` §B, "B-claims")
 consumes it directly. An empty ledger is itself a positive, auditable
 claim — every load-bearing claim was independently re-executed.
 
@@ -242,7 +247,7 @@ disposition (CHIEF-1.5).
 Every reviewer claim "section X complete" / "AC-N covered" / "INV-N
 satisfied" that names a behavioural invariant MUST carry the 4-link
 evidence chain (spec-side adaptation of
-`skills/_protocols/mca-brief-template.md` §Reviewer Checkpoints):
+`skills/_protocols/mca-brief-template-verification.md` §Reviewer Checkpoints):
 producer / write-site §; boundary / translation rule §; consumer /
 read-site §; test surface or AC that fails if boundary re-flattens
 (spec § or `test:line` + assertion). Each: §-line + 1-3 line quote.
@@ -312,7 +317,7 @@ Process the discourse output of every agent:
 - **CONNECT:** related findings merged or marked as a group.
 - **SURFACE:** new findings classified and added.
 
-Confidence adjustment per the shared `_protocols/discourse.md` §5
+Confidence adjustment per the shared `skills/_protocols/discourse.md` §5-step flow (Step 5)
 table + Rules (removal/downgrade rests on a reviewer surface, never on
 absence) — board-chief consumes that SoT, it does not duplicate it.
 

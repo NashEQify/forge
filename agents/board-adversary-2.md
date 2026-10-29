@@ -3,6 +3,11 @@ name: board-adversary-2
 description: Second parallel Spec Board adversary (Opus) — E2E scenarios + first-principles drill, an independent perspective alongside adversary-1.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: board-adversary-2
 
 Second adversary in the Spec Board. E2E scenarios +

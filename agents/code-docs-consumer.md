@@ -3,6 +3,11 @@ name: code-docs-consumer
 description: "Documentation / consumer reviewer in cross-board use — code docs (Code Board) plus spec readability (Spec Board). Is this understandable to a reader?"
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: code-docs-consumer
 
 Documentation / consumer reviewer. Cross-board: code docs
@@ -19,7 +24,7 @@ paths — per call **one mode active, not both at once**:
 
 | Mode | Caller | Active check focus | Combined with |
 |---|---|---|---|
-| **code-mode** (default) | Code Review Board L2 (Buddy dispatches) on a public-API module touch | Code documentation: module-level docstrings, public-function docstrings, type hints, inline comments WHY-not-WHAT, stale comments | Other code-* personas in L2 Full Board |
+| **code-mode** (default) | Code Review Board L2 (Buddy dispatches) on a public-API module touch | Code documentation: module-level docstrings, public-function docstrings, type hints, inline comments WHY-not-WHAT, stale comments | Other code-* personas on the L2 roster |
 | **spec-mode** (cross-board) | Spec Board (Buddy dispatches) — alternative to board-consumer when code docs are also in scope | Spec readability (like board-consumer): self-containment, ambiguity, onboarding, document architecture | Other board-* personas in the Spec Board run |
 
 **Important — no double run:** when the Spec Board runs,

@@ -42,20 +42,12 @@ or task-only software work. Ambiguity blocks exact continuation; it is not permi
 to bind everything in `.workflow-state`. The user may continue unrelated ordinary
 work while the domain blocker remains visible in common context.
 
-## Legacy compatibility obligations
+## Checks, envelope and close
 
-Old save and housekeeping definitions keep workflow/step IDs, routes, completion
-checks, variables and evidence interpretation. For `validate-reconciliation`, retain
-its unfinished task-status/plan checks when the legacy session selected development;
-for `workflow-handoff-context`, restore/export exactly the selected authoritative
-runs through this adapter. Missing legacy selection is an explicit blocker, never a
-silent no-op. Existing checked evidence is not reset or reinterpreted by a new label.
-Housekeeping area progress remains readable, while the shared publication journal
-protects actual multi-file mutation.
-
-Installation validates explicitly supplied project runs before activation and before
-rollback, including state created/advanced after upgrade. Incompatible state keeps
-sessions stopped until repair or validated mapping; no blanket state rewrite.
+When the adapter's task or plan checks run, when an export changes the envelope or its owned handoff region, and
+when selected obligations are reconciled or closed: read and follow `framework/development-continuation-close.md`
+(check receipts, legacy compatibility obligations, the owned envelope region, reconcile and close, definition
+compatibility, creation-bound observational checks).
 
 ## Lock ownership
 
@@ -63,58 +55,3 @@ Engine locks protect exact engine state; continuity locks protect handoff public
 Acquire/release engine snapshots before publishing the envelope; do not hold nested
 cross-owner locks. The common layer imports no engine and promises no global
 cross-repository transaction. State references remain authoritative after export.
-
-## Reconcile and close selected obligations
-
-A required task check has the stable identity `task:<numeric task ID>`; a plan
-check has `plan:docs/plan.yaml`. Task archive relocation retains its identity and
-must agree with the authoritative task file's `id`. Task statuses come from the
-plan/task owner. Rebinding adds obligations; changing an existing expectation
-requires explicit `reconcile`, which replaces that identity's expectation while
-retaining every other obligation and records its prior value, reason and evidence.
-It cannot remove an obligation or invent a successful task transition. Run the
-owner's task-status process first, then submit the observed authoritative status:
-
-```json
-{"binding_id":"selected-work","reason":"Task owner completed and archived work",
- "evidence":"docs/tasks/archive/123.yaml",
- "required_checks":[{"kind":"task","path":"docs/tasks/archive/123.yaml",
-                     "expected_status":"done"}]}
-```
-
-Use the same project/handoff CLI arguments with `reconcile`. Failed target checks
-leave the persisted envelope unchanged. Other bindings retain their independent
-status and unfinished work.
-
-Task-only work remains unfinished until explicit `close` with `binding_id`,
-`reason`, and `evidence`. Close revalidates every selected obligation: workflows
-must be terminal according to the engine; tasks must have an owner-recognized
-terminal status. Plan validity alone and an empty selection cannot prove completion.
-Failed close preserves all obligations. A successful close retains a verified
-receipt and becomes historical; later export/restore preserves that receipt without
-reopening completed checks. New work requires a new binding identity.
-
-The engine exports `lifecycle: {status, terminal}` for each selected workflow.
-An authoritative abort is terminal even when untouched steps remain pending or a
-prior pause flag remains set. Abort does not discharge task/plan checks. Archived
-identity must be unique across active and archive storage even after a retained
-reference has relocated. Loading and inspection never change pause or progress.
-
-## Definition compatibility
-
-The engine fingerprints all loaded definition fields conservatively, including
-manual instructions, completion checks, required flags, dependencies, commit gates,
-iteration limits, skill/context references and unknown future fields. Only display
-step names and top-level discovery/provenance metadata (`description`, `need_phrase`,
-`trigger`, `derived_from`) are excluded; engine defaults normalize omitted values.
-Schema and status validation remain independent of definition compatibility.
-
-`continuation_compatible(workflow, observed_fingerprint, current_fingerprint,
-direction=None)` accepts identical fingerprints or an exact reviewed transition in
-`framework/workflow-compatibility.yaml`. Explicit `upgrade`/`rollback` restricts the
-permitted direction; omitted direction infers it from the exact pair. The manifest
-records workflow, prior/current hashes, allowed directions, acceptance and the
-preserved-obligation review pointer. That pointer is review provenance, not a runtime
-requirement to install private review documents. There is no name/step-count bypass.
-The reviewed Task398 save/housekeeping pairs cover only their exact definitions;
-any further instruction or execution change requires another reviewed transition.

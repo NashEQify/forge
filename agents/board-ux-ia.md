@@ -3,6 +3,11 @@ name: board-ux-ia
 description: Information-architecture reviewer (UX Board) — navigation, findability, content strategy.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: board-ux-ia
 
 Information-architecture reviewer in the UX Board. Navigation,

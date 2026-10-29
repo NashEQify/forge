@@ -1,6 +1,7 @@
 # testing — REFERENCE
 
-Detail mechanics. The Buddy-facing `SKILL.md` carries the 6-level
+Detail mechanics. The Buddy-facing `SKILL.md` (with its units `test-design.md`
+and `run-strategy.md`) carries the 6-level
 pyramid, test-case design, coverage matrix, and run strategy.
 This file is reference material for format details, eval
 methodology, and the retest gate.
@@ -28,8 +29,9 @@ def test_crud_roundtrip():
     pytest.skip("SKELETON — implementation pending")
 ```
 
-**INFRA values:** `none`, `Postgres`, `Ollama`, `NATS`, `Neo4j`,
-`Redis`, `Docker`.
+**INFRA values:** `none`, or the external services the test needs
+(§INFRA-Header convention); for example `Postgres`, `Ollama`, `NATS`,
+`Neo4j`, `Redis`, `Docker`.
 
 ## Execution order
 
@@ -74,11 +76,13 @@ regression suite.
 
 ## Test-first detail
 
-Skeletons BEFORE implementation as a delegation-ready artifact.
-`skip("SKELETON")` → assertions (RED) → implement (GREEN) →
-refactor.
-Green right away = finding (the test isn't testing what the spec
-requires).
+Skeletons precede implementation as a delegation-ready artifact. A skipped plan
+placeholder is not an executable failure witness. Apply `skills/testing/SKILL.md`
+§Meaningful pre-fix witness: intended behavior changes need a relevant observed
+failure before the fix and passing required cases afterward. Keep valid green
+controls and regressions; investigate unexpected passes for supposed missing
+behavior rather than automatically rejecting every green test. Preservation/refactor
+work demonstrates the unchanged contract without fabricating a failure.
 
 ## Retest gate (required after every fix)
 
@@ -106,7 +110,7 @@ to lift, when to spin up containers, how to isolate. The principles
 here are project-neutral — project-specific concretions (DSN, image
 tags, port numbers, marker vocabulary, custom fixtures) live in the
 **project-side** `docs/test-conventions/<topic>.md`. Cross-link
-example: a consumer's `docs/test-conventions/postgres-fixtures.md`
+example: a consumer's `<project>/docs/test-conventions/postgres-fixtures.md`
 documenting its concrete DSN, fixture name, and transaction wrapper.
 
 ### Fixture-availability preflight
@@ -151,11 +155,12 @@ comment header on the test (or module) so the tester (execution mode)
 and MCA can choose fixtures or skip without guessing:
 
 ```python
-# INFRA: none           — runs without external services (mock-based)
-# INFRA: Postgres       — needs a Postgres testcontainer / pool fixture
-# INFRA: NATS           — needs a NATS broker
-# INFRA: Ollama         — needs a running LLM endpoint
-# INFRA: Postgres,NATS  — needs both
+# INFRA: none                  — runs without external services (mock-based)
+# INFRA: <service>[,<service>]  — needs each named external service
+# examples: INFRA: Postgres      (a testcontainer / pool fixture)
+#           INFRA: NATS          (a message broker)
+#           INFRA: Ollama        (a running LLM endpoint)
+#           INFRA: Postgres,NATS (both)
 ```
 
 The vocabulary is repo-local — projects extend it in their
@@ -199,10 +204,12 @@ but call it out explicitly and create a follow-up task to converge.
 
 ### Marker-vs-directory selection
 
-**Test selection is marker-driven, not directory-driven.** Verzeichnisse
+**Markers group tests by kind, not by directory.** Directories
 (`tests/<area>/`) are *organization* — they group related tests by
-domain. Selectors (`@pytest.mark.integration`, `.contract`, `.property`,
-`.smoke`, `.e2e`, `.eval`) decide *which* tests a CI step runs.
+domain. Markers (`@pytest.mark.integration`, `.contract`, `.property`,
+`.smoke`, `.e2e`, `.eval`) decide *which kind* of tests a CI step runs.
+Selecting tests by the changed code is the selector's job
+(`run-strategy.md` §Test selection).
 
 Consequence: a test in `tests/brain/` can carry
 `@pytest.mark.integration` and be picked up by

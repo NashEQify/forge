@@ -1,7 +1,9 @@
 # Forge documentation
 
-Forge helps you carry useful context across sessions, reason through difficult
-questions, and deliver software with appropriate verification. These capabilities
+Forge is a guided process: you bring an idea, and Buddy, with Forge's structure,
+takes the work to the result you want. It helps you build software along a connected
+path from intent to an evidenced close, carry useful context across sessions, and
+reason through difficult questions. These capabilities
 share one conversational entry, **Buddy**, while remaining independently useful.
 
 Start with the outcome you want. You do not need to learn the workflow engine to
@@ -12,6 +14,7 @@ maintain knowledge or use a reasoning method.
 | Your goal | Start here | Continue with |
 |---|---|---|
 | Understand what Forge does | [Overview](01-overview.md) | [Human guide](10-human-guide.md) |
+| Understand Forge's approaches | [How Forge works](04-core-concepts.md#how-forge-works) | [Path from intent to result](01-overview.md#software-development-from-intent-to-verified-result) |
 | Use it for recurring everyday work | [Daily handbook](13-operational-handbook.md) | [Knowledge and continuity](06-usage-workflows.md#knowledge-and-continuity) |
 | Clarify a problem or compare options | [Reasoning methods](06-usage-workflows.md#general-reasoning) | [Visual guide](workflow-diagrams.md#general-reasoning) |
 | Build or maintain software | [Software development](06-usage-workflows.md#software-development) | [Development flows](workflow-diagrams.md#software-development) |
@@ -37,10 +40,10 @@ These pages answer different questions; they are not a mandatory reading sequenc
 
 | Page | Question it answers |
 |---|---|
-| [01 — Overview](01-overview.md) | What does Forge help with, and what does it require? |
+| [01 — Overview](01-overview.md) | What does Forge help with, how does a change go from intent to result, and where did its methods come from? |
 | [02 — Architecture](02-architecture.md) | Which component owns each responsibility? |
 | [03 — Repository map](03-repository-map.md) | Where are the implementation and reference files? |
-| [04 — Core concepts](04-core-concepts.md) | What do the main terms mean? |
+| [04 — Core concepts](04-core-concepts.md) | Which approaches shape Forge, and what do the main terms mean? |
 | [05 — Installation](05-installation.md) | How do I install, activate and update safely? |
 | [06 — Usage and workflows](06-usage-workflows.md) | Which capability or method fits this request? |
 | [07 — Tool integrations](07-tool-integrations.md) | What differs between agent hosts? |

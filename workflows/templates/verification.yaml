@@ -7,7 +7,7 @@ steps:
     title: Contract Tests (L3)
     description: >
       API-Schemas and Event-Contracts validieren.
-      Tools: schemathesis (OpenAPI), pydantic Model-Validation,
+      Example tools: schemathesis (OpenAPI), pydantic Model-Validation,
       NATS Event-Schema-Validation.
     trigger: API-Endpoint or Event-Schema geaendert
     exit_criteria: Alle Contracts eingehalten

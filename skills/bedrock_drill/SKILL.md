@@ -18,6 +18,10 @@ modes: [focused, broad, exhaustive]
 uses: [_protocols/analysis-mode-gate]
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: bedrock_drill
 
 A recursive deep-drill tool. Decomposes a problem into assumptions,
@@ -211,5 +215,4 @@ preview accepted (broad / exhaustive).
 | Topic | SoT |
 |-------|-----|
 | Algorithm, scoring, bedrock rules, examples | `REFERENCE.md` |
-| Spec (board-approved) | `docs/specs/recursive-first-principles.md` |
 | frame (complement) | `skills/frame/SKILL.md` |

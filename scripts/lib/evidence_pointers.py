@@ -37,8 +37,10 @@ import argparse
 import re
 import subprocess
 import sys
+from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, overload
 
 try:
     import yaml
@@ -67,6 +69,18 @@ class EvidenceParseError(Exception):
 
 class EvidenceValidationError(Exception):
     """Validation-Failure (invalid pointer)."""
+
+
+class PointerFault(Enum):
+    """Why a pointer did not pass.
+
+    CONTENT: the pointer was well-formed and the cited content did not hold.
+    FORM: the pointer cannot be evaluated as written (missing field, unknown
+    kind, bad regex, path outside the repository, quote over the cap).
+    """
+
+    CONTENT = "content"
+    FORM = "form"
 
 
 # ---------------------------------------------------------------------------
@@ -172,14 +186,49 @@ def _resolve_within_repo(path_str: str, repo_root: str) -> tuple[Path | None, st
 # ---------------------------------------------------------------------------
 
 
+@overload
 def validate_pointer(
     pointer: dict[str, Any],
     repo_root: str,
     _file_cache: dict[str, str] | None = None,
-) -> tuple[bool, str]:
+    *,
+    check_cap: bool = True,
+    with_fault: Literal[False] = False,
+) -> tuple[bool, str]: ...
+
+
+@overload
+def validate_pointer(
+    pointer: dict[str, Any],
+    repo_root: str,
+    _file_cache: dict[str, str] | None = None,
+    *,
+    check_cap: bool = True,
+    with_fault: Literal[True],
+) -> tuple[bool, str, PointerFault | None]: ...
+
+
+def validate_pointer(
+    pointer: dict[str, Any],
+    repo_root: str,
+    _file_cache: dict[str, str] | None = None,
+    *,
+    check_cap: bool = True,
+    with_fault: bool = False,
+) -> tuple[bool, str] | tuple[bool, str, PointerFault | None]:
     """Single-pointer validation.
 
-    Returns (ok, reason). reason ist leer-string bei ok=True.
+    Returns (ok, reason); reason is "" when ok=True. ``with_fault=True``
+    returns (ok, reason, fault): fault is None when ok=True,
+    PointerFault.CONTENT when the pointer was well-formed and the
+    cited content did not hold (file or directory not found, expected file
+    missing, quote no match, lines outside the file, expected_count not met,
+    path not found, file read or grep failed); PointerFault.FORM for every
+    other reason (missing or malformed field, unknown kind, bad regex, path
+    outside the repository, quote over the cap).
+
+    ``check_cap=False`` skips the quote-length cap so a long or multi-line
+    quote is still matched (the review reader resolves every quote).
 
     optional `_file_cache`-Dict reduziert N-fache
     `read_text()`-Calls auf dieselbe target-source. AC-8 verlangt <10%
@@ -187,93 +236,111 @@ def validate_pointer(
     auf grosse source-files (z.B. workflow_engine.py ~70k chars) wuerden
     pre-fix linear in N skalieren.
     """
+    ok, reason, fault = _pointer_verdict(
+        pointer, repo_root, _file_cache, check_cap=check_cap
+    )
+    return (ok, reason, fault) if with_fault else (ok, reason)
+
+
+def _pointer_verdict(
+    pointer: dict[str, Any],
+    repo_root: str,
+    _file_cache: dict[str, str] | None,
+    *,
+    check_cap: bool,
+) -> tuple[bool, str, PointerFault | None]:
+    """validate_pointer with its fault class (see there)."""
+    def form(reason: str) -> tuple[bool, str, PointerFault]:
+        return False, reason, PointerFault.FORM
+
+    def content(reason: str) -> tuple[bool, str, PointerFault]:
+        return False, reason, PointerFault.CONTENT
+
     if not isinstance(pointer, dict):
-        return False, f"pointer is not a mapping: {pointer!r}"
+        return form(f"pointer is not a mapping: {pointer!r}")
 
     kind = pointer.get("kind")
     if kind not in VALID_KINDS:
-        return False, f"unknown kind {kind!r}; valid: {VALID_KINDS}"
+        return form(f"unknown kind {kind!r}; valid: {VALID_KINDS}")
 
     raw_path = pointer.get("path")
     if not raw_path:
-        return False, f"kind={kind} requires 'path' field"
+        return form(f"kind={kind} requires 'path' field")
 
     resolved, err = _resolve_within_repo(str(raw_path), repo_root)
     if resolved is None:
-        return False, err
+        return form(err)
 
     if kind == "file_exists":
         if not resolved.is_file():
-            return False, f"file not found: {raw_path}"
-        return True, ""
+            return content(f"file not found: {raw_path}")
+        return True, "", None
 
     if kind == "dir_listing":
         if not resolved.is_dir():
-            return False, f"directory not found: {raw_path}"
+            return content(f"directory not found: {raw_path}")
         expected_files = pointer.get("expected_files")
         if not isinstance(expected_files, list) or not expected_files:
-            return False, "dir_listing requires non-empty 'expected_files' list"
+            return form("dir_listing requires non-empty 'expected_files' list")
         for ef in expected_files:
             child = resolved / str(ef)
             if not child.exists():
-                return False, f"dir_listing: expected file missing: {ef}"
-        return True, ""
+                return content(f"dir_listing: expected file missing: {ef}")
+        return True, "", None
 
     if kind == "file_range":
         if not resolved.is_file():
-            return False, f"file not found: {raw_path}"
+            return content(f"file not found: {raw_path}")
         lines_spec = pointer.get("lines")
         if not lines_spec:
-            return False, "file_range requires 'lines'"
+            return form("file_range requires 'lines'")
         m = re.match(r"^\s*(\d+)\s*-\s*(\d+)\s*$", str(lines_spec))
         if not m:
-            return False, (
+            return form(
                 f"file_range 'lines' must be '<start>-<end>': {lines_spec!r}"
             )
         start, end = int(m.group(1)), int(m.group(2))
         if start < 1 or end < start:
-            return False, (
+            return form(
                 f"file_range 'lines' invalid range: {start}-{end}"
             )
         # cache-aware read
         cache_key = str(resolved)
         if _file_cache is not None and cache_key in _file_cache:
-            content = _file_cache[cache_key]
+            text = _file_cache[cache_key]
         else:
             try:
-                content = resolved.read_text(encoding="utf-8", errors="replace")
+                text = resolved.read_text(encoding="utf-8", errors="replace")
             except OSError as exc:
-                return False, f"file read failed: {exc}"
+                return content(f"file read failed: {exc}")
             if _file_cache is not None:
-                _file_cache[cache_key] = content
-        total_lines = len(content.splitlines())
+                _file_cache[cache_key] = text
+        total_lines = len(text.splitlines())
         if start > total_lines or end > total_lines:
-            return False, (
+            return content(
                 f"file_range out of range: lines {start}-{end} exceed "
                 f"file linecount {total_lines}"
             )
 
         quote = pointer.get("quote")
         if quote is None:
-            return False, "file_range requires 'quote'"
-        cap_ok, cap_msg = quote_length_cap_ok(str(quote))
-        if not cap_ok:
-            return False, cap_msg
+            return form("file_range requires 'quote'")
+        if check_cap:
+            cap_ok, cap_msg = quote_length_cap_ok(str(quote))
+            if not cap_ok:
+                return form(cap_msg)
 
         # grep -F (fixed-string) Quote-Match — beschraenkt auf den Line-Range
         # [start..end] damit `lines:` ein verbindlicher Anker ist und nicht
         # zur Spec-Affirmation degeneriert (Self-Reference im selben File).
         # Pre-Quote-Cap (max 3 Zeilen) macht das tractable.
-        all_lines = content.splitlines()
+        all_lines = text.splitlines()
         # 1-indexed range [start..end] inclusive
         target_text = "\n".join(all_lines[start - 1:end])
         quote_str = str(quote)
         if quote_str in target_text:
-            return True, ""
-        # Multi-line quote via grep -F --null-data fallback ueber den
-        # Range-Slice (gleiche Semantik, aber subprocess-Backstop wenn die
-        # in-process Substring-Match etwas verfehlt).
-        return False, (
+            return True, "", None
+        return content(
             f"quote no match in {raw_path} lines {start}-{end}: "
             f"{quote_str[:60]!r}"
         )
@@ -281,7 +348,7 @@ def validate_pointer(
     if kind == "grep_match":
         pattern = pointer.get("pattern")
         if pattern is None:
-            return False, "grep_match requires 'pattern'"
+            return form("grep_match requires 'pattern'")
         # file-targets via in-process re.findall —
         # subprocess `grep` cold-start ~5-10ms pro Aufruf, ratio ~10x vs
         # in-process re-Match. dir-recursive bleibt subprocess (rekursive
@@ -291,18 +358,18 @@ def validate_pointer(
             try:
                 cache_key = str(resolved)
                 if _file_cache is not None and cache_key in _file_cache:
-                    content = _file_cache[cache_key]
+                    text = _file_cache[cache_key]
                 else:
-                    content = resolved.read_text(
+                    text = resolved.read_text(
                         encoding="utf-8", errors="replace",
                     )
                     if _file_cache is not None:
-                        _file_cache[cache_key] = content
-                actual = len(re.findall(str(pattern), content, re.MULTILINE))
+                        _file_cache[cache_key] = text
+                actual = len(re.findall(str(pattern), text, re.MULTILINE))
             except re.error as exc:
-                return False, f"invalid regex pattern: {exc}"
+                return form(f"invalid regex pattern: {exc}")
             except OSError as exc:
-                return False, f"file read failed: {exc}"
+                return content(f"file read failed: {exc}")
         elif resolved.is_dir():
             cmd = ["grep", "-rcE", "--", str(pattern), str(resolved)]
             try:
@@ -310,7 +377,7 @@ def validate_pointer(
                     cmd, capture_output=True, text=True, timeout=10,
                 )
             except (OSError, subprocess.TimeoutExpired) as exc:
-                return False, f"grep failed: {exc}"
+                return content(f"grep failed: {exc}")
             actual = 0
             for raw_line in result.stdout.splitlines():
                 line = raw_line.strip()
@@ -328,11 +395,14 @@ def validate_pointer(
                     except ValueError:
                         pass
         else:
-            return False, f"grep_match: path not found: {raw_path}"
-        ok, reason = _eval_expected_count(actual, pointer.get("expected_count"))
-        return ok, reason
+            return content(f"grep_match: path not found: {raw_path}")
+        expr = pointer.get("expected_count")
+        if expr is not None and not isinstance(expr, int) and not _DSL_RE.match(str(expr)):
+            return form(f"invalid expected_count DSL: {expr!r}")
+        ok, reason = _eval_expected_count(actual, expr)
+        return (True, "", None) if ok else content(reason)
 
-    return False, f"unsupported kind: {kind}"
+    return form(f"unsupported kind: {kind}")
 
 
 # ---------------------------------------------------------------------------
@@ -613,46 +683,306 @@ def _detect_repo_root(file_path: Path) -> str | None:
     return None
 
 
-def validate_file(
-    file_path: str,
-    layout: str = "auto",
-    repo_root: str | None = None,
-) -> tuple[int, list[str]]:
-    """Returns (exit_code, error_messages). Exit_code per CLI-Spec.
+@dataclass(frozen=True)
+class ValidationResult:
+    """Schema and validation outcome from one supplied report view."""
 
-    Pre-condition: file_path muss existieren. Bei OSError → exit 2.
+    schema_version: int | None
+    exit_code: int
+    messages: list[str]
 
-    Legacy-Pfad: wenn schema_version: 0 ODER fehlend → exit 0 (silent skip).
 
-    repo_root resolution:
-      1. Explicit caller-provided repo_root (Engine-Library-Import path) wins.
-      2. CLI default: walk up from file_path for .git/ or pyproject.toml.
-      3. Last resort fallback: parent-of-file (preserves pre-fix behaviour
-         for tests that explicitly want CWD-as-repo semantics).
+@dataclass
+class _Finding:
+    identifier: str
+    line: int
+    depth: int
+    pointers: list[dict[str, Any]] = field(default_factory=list)
+
+    @property
+    def location(self) -> str:
+        return f"{self.identifier} (heading line {self.line})"
+
+
+_ATX_RE = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]+|$)(.*)$")
+_IDENTIFIER_RE = re.compile(r"(?:F|UX)-[A-Z][A-Z0-9]*(?:-[A-Z][A-Z0-9]*)*-[0-9]+\b")
+_FINDING_LIKE_RE = re.compile(r"(?:F-|UX-|C[0-9]+-[0-9]+)")
+_FENCE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
+_EVIDENCE_RE = re.compile(r"^([ \t]*)(-[ \t]+)?evidence[ \t]*:(.*)$")
+
+
+#: Reader mode only: an evidence block that exists but was not read as YAML
+#: (a parse failure, or evidence inside a fence that is not ``yaml``/``yml``).
+_UNPARSED = object()
+_YAML_INFO = frozenset({"yaml", "yml"})
+
+
+def _scan_findings(
+    content: str,
+    *,
+    reader: bool = False,
+) -> tuple[list[_Finding], list[tuple[_Finding | None, int, Any]], list[str]]:
+    """Scan body boundaries, owners and examples together; retain every block.
+
+    ``reader`` (``review_evidence`` only) keeps the heading, fence and ownership
+    rules with two differences: a block that fails to parse is reported in
+    ``errors`` and retained as ``_UNPARSED`` while the scan continues, and an
+    ``evidence:`` block inside a ``yaml``/``yml`` fence is a body block of the
+    enclosing finding. Evidence inside any other fence is retained as
+    ``_UNPARSED`` so its finding still counts as carrying an evidence block.
     """
-    p = Path(file_path)
-    if not p.is_file():
-        return EXIT_PARSE_ERROR, [f"file not found: {file_path}"]
+    lines = content.splitlines()
+    frontmatter = _FRONTMATTER_RE.match(content)
+    i = content[: frontmatter.end()].count("\n") + 1 if frontmatter else 0
+    findings: list[_Finding] = []
+    stack: list[_Finding] = []
+    blocks: list[tuple[_Finding | None, int, Any]] = []
+    errors: list[str] = []
+    identifiers: set[str] = set()
+    fence_char = ""
+    fence_length = 0
+    fence_yaml = False
+    while i < len(lines):
+        line = lines[i]
+        fence = _FENCE_RE.match(line)
+        if fence_char:
+            if (
+                fence
+                and fence.group(1)[0] == fence_char
+                and len(fence.group(1)) >= fence_length
+                and not fence.group(2).strip()
+            ):
+                fence_char = ""
+                i += 1
+                continue
+            if not (reader and _EVIDENCE_RE.match(line)):
+                i += 1
+                continue
+            if not fence_yaml:
+                blocks.append((stack[-1] if stack else None, i + 1, _UNPARSED))
+                i += 1
+                continue
+            # A yaml-fenced evidence block is read like a body block below.
+        elif fence:
+            fence_char, fence_length = fence.group(1)[0], len(fence.group(1))
+            info = fence.group(2).split()
+            fence_yaml = reader and bool(info) and info[0].lower() in _YAML_INFO
+            i += 1
+            continue
+        else:
+            heading = _ATX_RE.match(line)
+            if heading:
+                depth = len(heading.group(1))
+                title = heading.group(2).strip()
+                while stack and stack[-1].depth >= depth:
+                    stack.pop()
+                identifier = _IDENTIFIER_RE.match(title)
+                if identifier and 2 <= depth <= 4:
+                    finding = _Finding(identifier.group(), i + 1, depth)
+                    if finding.identifier in identifiers:
+                        errors.append(f"{finding.location}: duplicate finding identifier")
+                    identifiers.add(finding.identifier)
+                    findings.append(finding)
+                    stack.append(finding)
+                elif _FINDING_LIKE_RE.match(title):
+                    errors.append(
+                        f"line {i + 1}: unsupported finding heading {title!r}; use an F/UX identifier at ATX depth 2–4"
+                    )
+                i += 1
+                continue
+        evidence = _EVIDENCE_RE.match(line)
+        if not evidence:
+            i += 1
+            continue
+        owner = stack[-1] if stack else None
+        block_line = i + 1
+        base_indent = len(evidence.group(1)) + (2 if evidence.group(2) else 0)
+        snippet = ["evidence:" + evidence.group(3)]
+        i += 1
+        while i < len(lines):
+            following = lines[i]
+            # Indented '#' lines are YAML comments. Report headings stop at
+            # the indentation boundary below; fenced examples remain separate.
+            if _FENCE_RE.match(following):
+                break
+            if (
+                following.strip()
+                and len(following) - len(following.lstrip(" ")) <= base_indent
+            ):
+                break
+            heading = _ATX_RE.match(following)
+            if heading and _FINDING_LIKE_RE.match(heading.group(2).strip()):
+                errors.append(
+                    f"line {i + 1}: ambiguous finding-like heading {heading.group(2).strip()!r} "
+                    "inside evidence; move the report heading outside the YAML indentation, "
+                    "or rewrite the comment so it does not resemble a finding heading"
+                )
+            snippet.append(following[base_indent:] if following.strip() else "")
+            i += 1
+        location = owner.location if owner else f"line {block_line} (no finding owner)"
+        try:
+            parsed = yaml.safe_load("\n".join(snippet))
+        except yaml.YAMLError as exc:
+            if not reader:
+                raise EvidenceParseError(
+                    f"{location}, evidence line {block_line}: malformed YAML: {exc}"
+                ) from exc
+            parsed = exc
+        except ValueError as exc:  # e.g. an impossible date; strict mode keeps raising
+            if not reader:
+                raise
+            parsed = exc
+        if reader and not (isinstance(parsed, dict) and "evidence" in parsed):
+            detail = f"malformed YAML: {parsed}" if isinstance(parsed, Exception) else "unreadable block"
+            errors.append(f"{location}, evidence line {block_line}: {detail}")
+            blocks.append((owner, block_line, _UNPARSED))
+            continue
+        blocks.append((owner, block_line, parsed["evidence"]))
+    return findings, blocks, errors
 
-    if repo_root:
-        repo = repo_root
-    else:
-        detected = _detect_repo_root(p)
-        repo = detected if detected else str(p.parent.resolve())
 
-    # single-read-pattern.
-    # Pre-fix: get_schema_version liest, validate_file liest, parse_evidence_block
-    # liest noch einmal — 3 Reads mit Race-Window. Wir lesen einmal und reichen
-    # `content` an parse_evidence_block durch.
+@dataclass
+class ReviewEvidence:
+    """What a review report's evidence established at adoption.
+
+    ``failures`` refuse adoption (a well-formed pointer whose cited content did
+    not hold, a form-faulted pointer whose quote is absent from the file it
+    cites, or a recognized finding without any evidence block);
+    ``diagnostics`` are retained for Buddy's decision; ``verified`` counts the
+    pointers that passed, including a form-faulted one whose quote was found.
+    """
+
+    failures: list[str] = field(default_factory=list)
+    diagnostics: list[str] = field(default_factory=list)
+    verified: int = 0
+
+
+def review_evidence(content: str, *, repo_root: str) -> ReviewEvidence:
+    """Resolve every parseable evidence pointer of one review report.
+
+    Never raises for malformed report content: form problems are diagnostics.
+    Quotes are matched without the length cap; behind a form problem, a
+    string quote is matched against the whole cited file.
+    """
+    result = ReviewEvidence()
     try:
-        content = p.read_text(encoding="utf-8", errors="replace")
-    except OSError as exc:
-        return EXIT_PARSE_ERROR, [f"file read failed: {exc}"]
+        fm = _parse_frontmatter(content)
+    except (EvidenceParseError, ValueError) as exc:
+        result.diagnostics.append(f"frontmatter unreadable: {exc}")
+        fm = {}
+    else:
+        sv = fm.get("schema_version")
+        if "schema_version" not in fm:
+            result.diagnostics.append("schema_version missing")
+        elif not ((type(sv) is int and sv == 1) or sv == "1"):
+            result.diagnostics.append(f"unsupported schema_version: {sv!r}")
+
+    pointers: list[tuple[Any, str]] = []
+
+    def collect(value: Any, location: str) -> list[dict[str, Any]]:
+        if not isinstance(value, list):
+            result.diagnostics.append(f"{location}: evidence holds no pointer list")
+            return []
+        entries = []
+        for index, entry in enumerate(value, start=1):
+            if isinstance(entry, dict):
+                entries.append(entry)
+                pointers.append((entry, location))
+            else:
+                result.diagnostics.append(
+                    f"{location}: entry {index} is not a pointer mapping"
+                )
+        return entries
+
+    if "evidence" in fm:
+        collect(fm["evidence"], "frontmatter evidence")
+    findings, blocks, errors = _scan_findings(content, reader=True)
+    result.diagnostics.extend(errors)
+    with_blocks: set[int] = set()
+    for owner, line, value in blocks:
+        if owner is not None:
+            with_blocks.add(id(owner))
+        if value is _UNPARSED:
+            continue
+        location = (
+            f"{owner.location}, evidence line {line}"
+            if owner is not None
+            else f"line {line} (no finding owner)"
+        )
+        entries = collect(value, location)
+        if owner is not None:
+            owner.pointers.extend(entries)
+    for finding in findings:
+        if id(finding) not in with_blocks:
+            result.failures.append(f"{finding.location}: finding has no evidence")
+        elif not finding.pointers:
+            result.diagnostics.append(f"{finding.location}: no parseable evidence")
+    if not findings and not pointers:
+        result.diagnostics.append("no findings or evidence recognized")
+
+    cache: dict[str, str] = {}
+    for pointer, location in pointers:
+        ok, reason, fault = validate_pointer(
+            pointer, repo_root, _file_cache=cache, check_cap=False, with_fault=True
+        )
+        if ok:
+            result.verified += 1
+        elif fault is PointerFault.CONTENT:
+            result.failures.append(f"{location}: {reason}")
+        else:
+            result.diagnostics.append(f"{location}: {reason}")
+            # A form slip must not hide a fabricated quote: match it in the whole cited file.
+            unconfirmed = _quote_in_cited_file(pointer, repo_root, cache)
+            if unconfirmed == "":
+                result.verified += 1
+            elif unconfirmed is not None:
+                result.failures.append(f"{location}: {unconfirmed} (pointer form: {reason})")
+    return result
+
+
+def _quote_in_cited_file(
+    pointer: Any, repo_root: str, cache: dict[str, str]
+) -> str | None:
+    """Whole-file quote check behind a FORM-faulted pointer.
+
+    None when the pointer has no string ``path`` resolving to a regular file
+    inside the repository or no string ``quote`` (nothing to check); "" when
+    the quote occurs in that file's text (exact substring, multi-line
+    allowed); otherwise the content failure.
+    """
+    if not isinstance(pointer, dict):
+        return None
+    raw_path, quote = pointer.get("path"), pointer.get("quote")
+    if not isinstance(raw_path, str) or not raw_path or not isinstance(quote, str):
+        return None
+    resolved, _ = _resolve_within_repo(raw_path, repo_root)
+    if resolved is None or not resolved.is_file():
+        return None
+    key = str(resolved)
+    if key not in cache:
+        try:
+            cache[key] = resolved.read_text(encoding="utf-8", errors="replace")
+        except OSError as exc:
+            return f"file read failed: {exc}"
+    if quote in cache[key]:
+        return ""
+    return f"quote no match in {raw_path} (whole file): {quote[:60]!r}"
+
+
+def validate_content(
+    content: str,
+    *,
+    layout: str = "auto",
+    repo_root: str,
+    strict: bool = False,
+) -> ValidationResult:
+    """Validate supplied report bytes decoded as text, without reading the report."""
     try:
         fm = _parse_frontmatter(content)
     except EvidenceParseError as exc:
-        return EXIT_PARSE_ERROR, [f"parse-error: yaml frontmatter: {exc}"]
-
+        return ValidationResult(
+            None, EXIT_PARSE_ERROR, [f"parse-error: yaml frontmatter: {exc}"]
+        )
     # Validator-Acceptor schmaeler — nur exakt
     # int(1) oder string `"1"`. Pre-fix akzeptierte `isdigit()` (also "01" als
     # sv=1) was Pre-Filter-Strictness-Drift produziert (Filter rejected "01",
@@ -662,10 +992,14 @@ def validate_file(
     sv_raw = fm.get("schema_version")
     if isinstance(sv_raw, bool):
         # bool ist isinstance(int) True in Python — explizit ausschliessen
-        return EXIT_INVALID, [
-            f"unsupported schema_version form: {sv_raw!r} "
-            f"(expect int 1 or string '1', not bool)"
-        ]
+        return ValidationResult(
+            None,
+            EXIT_INVALID,
+            [
+                f"unsupported schema_version form: {sv_raw!r} "
+                f"(expect int 1 or string '1', not bool)"
+            ],
+        )
     if isinstance(sv_raw, int):
         sv = sv_raw
     elif isinstance(sv_raw, str):
@@ -678,96 +1012,148 @@ def validate_file(
             # Filter (pre-commit.sh:498) rejected "01" weil End-Anchor `1` strict.
             # Asymmetrie schmaeler machen statt erweitern: explizit ablehnen
             # damit Author-Signal entsteht ("schreibe `1` statt `01`").
-            return EXIT_INVALID, [
-                f"unsupported schema_version form: {sv_raw!r} "
-                f"(expect int 1 or string '1', got string)"
-            ]
+            return ValidationResult(
+                None,
+                EXIT_INVALID,
+                [
+                    f"unsupported schema_version form: {sv_raw!r} "
+                    f"(expect int 1 or string '1', got string)"
+                ],
+            )
     elif sv_raw is None:
         sv = None
     else:
         # Float (z.B. 1.0), list, dict, etc. — pre-fix silent-skip (sv=None).
         # Author-Signal: explicit reject damit Reviewer sieht dass `1.0` nicht
         # als v1 interpretiert wird (Versionsschema-Drift).
-        return EXIT_INVALID, [
-            f"unsupported schema_version form: {sv_raw!r} "
-            f"(expect int 1 or string '1', got {type(sv_raw).__name__})"
-        ]
+        return ValidationResult(
+            None,
+            EXIT_INVALID,
+            [
+                f"unsupported schema_version form: {sv_raw!r} "
+                f"(expect int 1 or string '1', got {type(sv_raw).__name__})"
+            ],
+        )
 
     if sv is None or sv == 0:
         # Legacy: silent skip
-        return EXIT_VALID, []
+        return (
+            ValidationResult(
+                sv,
+                EXIT_INVALID,
+                ["current schema_version: 1 required (strict validation)"],
+            )
+            if strict
+            else ValidationResult(sv, EXIT_VALID, [])
+        )
 
     if sv != 1:
-        return EXIT_INVALID, [
-            f"unsupported schema_version: {sv} (only 0 + 1 known in v1)"
-        ]
+        return ValidationResult(
+            sv,
+            EXIT_INVALID,
+            [f"unsupported schema_version: {sv} (only 0 + 1 known in v1)"],
+        )
 
-    # schema_version: 1 — full validation. pass pre-loaded
-    # `content` an parse_evidence_block damit kein 2. File-Read passiert
-    # (single-read-pattern Spec §6.5 wirklich erfuellt).
+    if layout not in ("auto", "per_finding", "top_level"):
+        return ValidationResult(sv, EXIT_PARSE_ERROR, [f"unknown layout: {layout}"])
+    selected = (
+        ("top_level" if "evidence" in fm else "per_finding")
+        if layout == "auto"
+        else layout
+    )
     try:
-        pointers = parse_evidence_block(file_path, layout, content=content)
+        findings, blocks, errors = _scan_findings(content)
     except EvidenceParseError as exc:
-        return EXIT_PARSE_ERROR, [f"parse-error: {exc}"]
+        return ValidationResult(sv, EXIT_PARSE_ERROR, [f"parse-error: {exc}"])
 
-    if not pointers:
-        # schema_version: 1 + leeres/missing evidence → invalid
-        return EXIT_INVALID, [
-            "non-empty evidence required for schema_version: 1"
-        ]
+    def checked_list(value: Any, location: str) -> list[dict[str, Any]]:
+        if not isinstance(value, list) or not value:
+            errors.append(
+                f"{location}: non-empty evidence list of pointer mappings required"
+            )
+            return []
+        if any(not isinstance(pointer, dict) for pointer in value):
+            errors.append(f"{location}: evidence entries must all be pointer mappings")
+            return []
+        return value
 
-    # Per-Finding-Counter.
-    # Layout per_finding: pro `### F-<TAG>-<NNN>` Heading erwarten wir
-    # mindestens ein evidence-Block. Pre-fix: Findings ohne evidence-Block
-    # passieren silent (Validator zaehlt Pointer, nicht Findings).
-    # Heuristic-Check: wenn finding-Headings > pointer-blocks gefunden wurden,
-    # liegt mindestens ein Finding ohne evidence-Block vor.
-    detected_layout = layout if layout != "auto" else _detect_layout(content)
-    if detected_layout == "per_finding":
-        finding_count = count_finding_headings(content)
-        # parse_evidence_block produziert pointer-list (jeder Pointer = 1 Eintrag).
-        # Per-Finding-Block-Counter: zaehle distinct evidence-Block-Headers im Body
-        # (das Aequivalent zu Findings die einen Block haben).
-        body = content
-        fm_match = _FRONTMATTER_RE.match(content)
-        if fm_match:
-            body = content[fm_match.end():]
-        block_count = len(re.findall(
-            r"(?m)^[ \t]*(?:-\s+)?evidence\s*:(?:\s|$)", body,
-        ))
-        if finding_count > 0 and block_count < finding_count:
-            return EXIT_INVALID, [
-                f"per_finding evidence-Block-Counter: {finding_count} finding-"
-                f"headings (`### F-...`) gefunden, aber nur {block_count} "
-                f"evidence-Bloecke. Spec §2.1 Schritt 4 verlangt einen "
-                f"evidence-Block PRO Finding."
-            ]
+    owned_pointers: list[tuple[dict[str, Any], str]] = []
+    if selected == "top_level":
+        if findings or blocks:
+            errors.append(
+                "layout conflict: top_level evidence cannot contain finding structure or body evidence"
+            )
+        owned_pointers.extend(
+            (p, "frontmatter evidence")
+            for p in checked_list(fm.get("evidence"), "frontmatter")
+        )
+    else:
+        if "evidence" in fm:
+            errors.append(
+                "layout conflict: per_finding evidence cannot contain frontmatter evidence"
+            )
+        if not findings:
+            errors.append(
+                "per_finding requires supported findings with non-empty evidence"
+            )
+        for owner, line, value in blocks:
+            if owner is None:
+                errors.append(f"line {line}: orphan evidence has no finding owner")
+            else:
+                owner.pointers.extend(
+                    checked_list(value, f"{owner.location}, evidence line {line}")
+                )
+        for finding in findings:
+            if not finding.pointers:
+                errors.append(
+                    f"{finding.location}: non-empty evidence required for this finding"
+                )
+            owned_pointers.extend((p, finding.location) for p in finding.pointers)
+    if errors:
+        return ValidationResult(sv, EXIT_INVALID, errors)
 
-    errors: list[str] = []
-    file_exists_only = True
-    # cache: shared dict across pointers in this file
+    messages: list[str] = []
     file_cache: dict[str, str] = {}
-    for idx, pointer in enumerate(pointers, start=1):
-        if pointer.get("kind") != "file_exists":
-            file_exists_only = False
-        ok, reason = validate_pointer(pointer, repo, _file_cache=file_cache)
-        if not ok:
-            errors.append(f"pointer {idx}: fail — {reason}")
-        else:
-            errors.append(f"pointer {idx}: ok")
-
-    if any("fail" in e for e in errors):
-        return EXIT_INVALID, errors
-
-    # All-pointers-pass: emit Discipline-WARN if file_exists-only
-    if file_exists_only and len(pointers) >= 1:
-        errors.append(
+    failed = False
+    for idx, (pointer, location) in enumerate(owned_pointers, start=1):
+        ok, reason = validate_pointer(pointer, repo_root, _file_cache=file_cache)
+        failed = failed or not ok
+        messages.append(
+            f"pointer {idx}: ok"
+            if ok
+            else f"pointer {idx}: fail — {location}: {reason}"
+        )
+    if failed:
+        return ValidationResult(sv, EXIT_INVALID, messages)
+    if owned_pointers and all(
+        p.get("kind") == "file_exists" for p, _ in owned_pointers
+    ):
+        messages.append(
             "WARN discipline F-I-015: all pointers are kind=file_exists "
             "(trivial). Tier-1-Reviewer should include at least one "
             "non-trivial pointer (file_range or grep_match) per finding."
         )
+    return ValidationResult(sv, EXIT_VALID, messages)
 
-    return EXIT_VALID, errors
+
+def validate_file(
+    file_path: str,
+    layout: str = "auto",
+    repo_root: str | None = None,
+    *,
+    strict: bool = False,
+) -> tuple[int, list[str]]:
+    """Read the report once and preserve the public tuple validation result."""
+    path = Path(file_path)
+    if not path.is_file():
+        return EXIT_PARSE_ERROR, [f"file not found: {file_path}"]
+    repo = repo_root or _detect_repo_root(path) or str(path.parent.resolve())
+    try:
+        content = path.read_text(encoding="utf-8", errors="replace")
+    except OSError as exc:
+        return EXIT_PARSE_ERROR, [f"file read failed: {exc}"]
+    result = validate_content(content, layout=layout, repo_root=repo, strict=strict)
+    return result.exit_code, result.messages
 
 
 # ---------------------------------------------------------------------------
@@ -787,7 +1173,7 @@ def _main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--strict", action="store_true",
-        help="Reserved for future strict-mode (currently no-op).",
+        help="Require current schema_version: 1; reject missing/legacy schema.",
     )
     parser.add_argument(
         "--layout", choices=("per_finding", "top_level", "auto"),
@@ -805,7 +1191,7 @@ def _main(argv: list[str] | None = None) -> int:
     overall_exit = EXIT_VALID
     for file_path in args.files:
         exit_code, messages = validate_file(
-            file_path, layout=args.layout, repo_root=args.repo_root,
+            file_path, layout=args.layout, repo_root=args.repo_root, strict=args.strict,
         )
 
         # In multi-file mode prefix output with the file path so users can

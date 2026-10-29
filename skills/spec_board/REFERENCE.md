@@ -21,7 +21,7 @@ the task state file, not into the agents' review files.
 
 1. **Convergence threshold:** 0C + 0H. HIGHs are never accepted
    risk; a simplification that removes a recurring class fixes its
-   HIGHs (`skills/convergence_loop/SKILL.md` §Simplify-before-patch gate).
+   HIGHs (`skills/convergence_loop/simplify-before-patch.md` §Simplify-before-patch gate).
 2. **Fix scope:** synthesize fixes ALL findings (C+H+M+L), not
    just HIGHs.
 3. **Context isolation:** pass 2+ reviewers receive NO previous
@@ -31,8 +31,7 @@ the task state file, not into the agents' review files.
 
 ## Content preservation on fixes
 
-→ `skills/_protocols/content-preservation.md` (SoT). Also:
-`docs/specs/interface-contract.md` S-001, CLAUDE.md §3b.
+→ `skills/_protocols/content-preservation.md` (SoT).
 
 ## Finding IDs
 
@@ -68,11 +67,23 @@ Deep pass 2+: Opus only.
 ## SoT
 
 Full workflow mechanics:
-`workflows/templates/spec-board.yaml` (v6.0).
+`workflows/templates/spec-board.yaml` (v6.0); convergence loop, process, failure
+modes and propagation in `workflows/templates/spec-board-convergence.yaml`.
+
+## Current consuming attempt
+
+Mandatory result/readiness use follows public evidence-pointer protocol §9.
+Preserve the exact caller owner through every delta/discourse handoff. Retry and
+fresh-capture after relevant fixes; the final applicable team supplies current
+slots, with earlier reports as exact attributed history. Below the §3a trigger,
+Buddy records bounded current verification in a verification slot and an explicit
+current decision; triggering fixes retain the existing two reviewers. Check
+`spec_success` before forward writes; historical `pass` remains readable and new
+PASS writes use `APPROVED`.
 
 ## Delta-Verify (§3a details)
 
-**SoT relationship:** §3a in SKILL.md is **normative** (rule,
+**SoT relationship:** §3a in `post-pass.md` is **normative** (rule,
 trigger, team, acceptance). This section is **additive detail
 mechanics** for the implementation — no contradiction with
 SKILL.md, no own normative rules. On a conflict, SKILL.md wins.
@@ -145,7 +156,7 @@ YAML block:
 remaining_findings:
   - id: F-H-014                                # finding ID
     severity: high                             # critical | high | medium | low
-    locator: docs/specs/foo.md:§3.4 lines 88-104
+    locator: docs/specs/<name>.md:§3.4 lines 88-104
     title: "Pipeline phase 4 lacks fail-fast"
     rationale_for_carry_over: >
       User-override cherry-pick — only blockers fixed in this pass; H/M
@@ -155,12 +166,12 @@ remaining_findings:
       cross-spec impact expected.
   - id: F-M-006
     severity: medium
-    locator: docs/specs/foo.md:§5.1
+    locator: docs/specs/<name>.md:§5.1
     ...
 ```
 
-The workflow steps `risk-followup-routing` (build / review / fix
-workflow.yaml) read this block and file ONE follow-up task per
+The `close-bookkeeping` step of the review workflow
+(`workflow.yaml`, risk follow-up) reads this block and files ONE follow-up task per
 workflow run via `skills/task_creation/SKILL.md`. Empty/absent
 block: workflow step skips with rationale "no remaining findings".
 

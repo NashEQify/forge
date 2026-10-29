@@ -7,7 +7,9 @@ code.**
 
 Specs are not documentation of code — they are the prescription from
 which code is produced. Ideal flow: a bug report leads to a spec diff,
-and code adapts to that spec diff. Drift between spec and code is an
+and code adapts to that spec diff. Where the spec already defines the right
+behaviour, it already holds the fix: a reproducing test pins it, and code
+adapts. Drift between spec and code is an
 alarm, not normal state. Each of the 5 primitives and every convention
 in this document serves this principle. If a rule does not support the
 principle, it does not belong here.
@@ -16,7 +18,7 @@ principle, it does not belong here.
 
 HOW to write specs: primitives, methodology, artifacts, templates.
 For WHEN each step runs in development flow: `workflows/runbooks/build/WORKFLOW.md`
-(per-task flow SoT).
+(per-task flow SoT) and its stages, `workflows/runbooks/build/lifecycle.md`.
 
 Specs do not exist in a vacuum. They derive from the intent tree (see
 `intent.md`): vision intent -> operational intent -> action intent -> spec.
@@ -154,337 +156,49 @@ Superseded by the rigorous §Test-Strategy convention below (see
 bug-class catalog — same intent (levels + AC coverage), enforceable
 shape (named bug classes, no duplicates).
 
-### Convention: interfaces & protocols (optional, recommended for implementation specs)
+### Convention: spec carriers
 
-Implementation specs that define public interfaces SHOULD include an
-"Interfaces & Protocols" section. Not required — but L4 interface catalog
-(`docs/architecture/interfaces.md`) auto-extracts from it.
+When deciding what of a code change belongs in the durable spec, the change spec or the tests (at spec-write and at
+close): read and follow `framework/spec-engineering-implementation-specs.md` (§Convention: spec carriers: what each
+carrier holds, its lifetime, what moves to the durable spec before close).
 
-Contents (as applicable):
-1. **REST API endpoints** — method, path, request/response schema
-2. **NATS subjects** — subject, payload type, transport (JetStream/plain), publisher/consumer
-3. **Python protocols/interfaces** — protocol classes, method signatures
-4. **Config files** — path, format, what they control
+### Convention: one goal per change
 
-Section is a summary — detailed specification stays in each relevant
-spec section. Goal: fast overview of public contracts defined by this spec.
+When the route decision counts two or more deliverables, and when a change spec (a session or implementation brief
+included) passes 12,000 bytes: read and follow
+`framework/spec-engineering-implementation-specs.md` (§Convention: one goal per change: one user-facing goal, split
+and defer, the size budget).
 
-Reference examples: archive/gateway-buddy-worker-impl.md §2 (package
-structure with endpoint comments), harness-core-4.md §3.2/3.3
-(NATS topology tables).
+### Convention: interfaces & protocols; architecture diagram maintenance
 
-### Convention: architecture diagram maintenance
-
-If a spec introduces a **new container** (deployable unit) or a
-**new component** (module inside a container):
-
-1. Update `docs/architecture/workspace.dsl` (C4 model: element + relations + view)
-2. Check/extend affected flow diagrams in `docs/architecture/flows/`
-3. Extend `docs/architecture/module-flow-matrix.md` (new row/column)
-
-The C4 model is single source of truth for system structure.
-New specs that change structure without updating model create drift.
-
-Consumer repos export C4 diagrams to their own deploy target
-(e.g. via Structurizr + MkDocs). Pattern, not central service.
+When authoring an implementation spec that defines public interfaces, or a spec that introduces a new container or
+component: read and follow `framework/spec-engineering-implementation-specs.md` (§Convention: interfaces &
+protocols, §Convention: architecture diagram maintenance).
 
 ### Convention: §Module-Decomposition for L1+ specs
 
-Every **new L1+ spec** (per `skills/scoping/SKILL.md` §Spec hierarchy)
-declares a `§Module-Decomposition` section. The section is the
-design-time anchor for the implementation shape: which modules
-realize the contract, what each module is responsible for, what its
-interface hides, how it relates to siblings inside the same spec.
-
-A spec stays a conceptual unit — one contract, one spec. The
-decomposition is implementation-distribution, not spec-split.
-Multiple modules under one spec is the norm; one spec per output
-file is **not** the pattern. Modules are listed as file paths
-**or** conceptual module names — author's choice per spec.
-Prefer file paths when the files already exist or the spec drives
-existing-file edits; prefer conceptual names when the spec is
-greenfield and the file layout is still in flux.
-
-**L0 specs are exempt.** L0 (intent / vision specs) declare goal +
-scope, not implementation — there is no decomposition to anchor.
-The rule applies from L1 (capability spec) upwards.
-
-#### Vocabulary (strict)
-
-Use the deep-modules glossary from
-`skills/improve_codebase_architecture/SKILL.md` §Glossary —
-**module / interface / implementation / depth / seam / leverage /
-locality**. Vocabulary drift into "service / component / boundary /
-API / signature" in this section breaks the rule's anchor and is a
-finding at review-time.
-
-#### Schema (prose-per-module, 4 components)
-
-```markdown
-## §Module-Decomposition
-
-This spec describes one contract (<one-line contract restatement>),
-distributed across N modules:
-
-### Module: <name-or-path>
-
-- **Responsibility (one sentence):** <single-responsibility statement>.
-- **Interface (what callers see, what the module hides):** <interface-narrowness statement>.
-- **Relation to siblings:** <one sentence per neighbour module — calls go through declared seams; no leaky dependencies>.
-
-### Module: <next>
-
-...
-```
-
-#### Worked example
-
-For the planned code-architect-lens spec (when authored):
-
-```markdown
-## §Module-Decomposition
-
-This spec describes one contract (code-architect-lens — preventive
-Ousterhout deep-modules review pre-brief-architect), distributed
-across three conceptual modules:
-
-### Module: Persona
-
-- **Responsibility:** carry the deep-modules glossary + 3-phase
-  exploration protocol verbatim into a fresh-context agent identity.
-- **Interface:** input — Read tool + repo access; output — structured
-  module-state per touched module (no execution, no Edit). Hides the
-  prompt-assembly mechanics from callers.
-- **Relation to siblings:** consumes Trigger-decision's "should fire"
-  boolean as gate; emits to Output-contract for orchestrator ingestion.
-
-### Module: Trigger-decision
-
-- **Responsibility:** decide whether a brief-architect dispatch crosses
-  the scope-shape threshold (≥3 touched modules OR new subsystem OR
-  effort L|XL).
-- **Interface:** input — brief-architect dispatch params; output —
-  fire-or-skip boolean + one-line rationale. Threshold-rationale is
-  part of the interface (callers need it for observability).
-- **Relation to siblings:** upstream of Persona (gates whether the
-  lens runs at all); independent of Output-contract.
-
-### Module: Output-contract
-
-- **Responsibility:** define the structured output the orchestrator
-  parses (module-state + decomposition-recommendation + sign-off
-  field: lens_clear | lens_with_decomposition | escalate).
-- **Interface:** input — lens-persona returns; output —
-  schema-validated block that brief-architect ingests as plan-input.
-  The schema is the load-bearing surface; the prose is unconstrained.
-- **Relation to siblings:** downstream of Persona; orthogonal to
-  Trigger-decision.
-```
-
-#### Enforcement
-
-- **Design-time gate:** `skills/spec_board/SKILL.md` §1.0 carries a
-  pre-gate FAIL — a new L1+ spec submitted for board review without
-  a §Module-Decomposition section FAILs before the proportionality
-  gate runs.
-- **Review-time conformance:** `agents/code-spec-fit.md` reads the
-  section at code-review-time and judges whether the implemented
-  module split matches the declared split (semantic alignment, not
-  mechanical 1:1 path-match).
-
-#### No-retrofit boundary
-
-The ~300 specs in `docs/specs/` that pre-date this rule stay
-unchanged. The pre-gate FAIL and the code-spec-fit conformance check
-**silent-skip** legacy specs that lack the section. Incremental
-coverage flows through
-`skills/_protocols/spec-amendment-discipline.md` §What counts as
-divergence — category (d): when an amendment to a legacy L1+ spec
-touches module-boundary topics (interface, dependency, layer, seam,
-responsibility-split), the §Module-Decomposition section MUST be
-added in the same commit as a §module-decomposition-add strand.
-
-#### What this convention is NOT
-
-- **NOT** spec-per-output-file. One spec per contract; multiple
-  modules per spec.
-- **NOT** a LOC budget per module. Judgment over mechanics — module
-  size is a code-review judgment per `agents/_protocols/reviewer-base.md`
-  §Cumulative file totals.
-- **NOT** a hook-layer check. No pre-commit enforcement of section
-  presence; spec_board's pre-gate FAIL is the only enforcement.
-- **NOT** a replacement for the implementation-surface bullet list in
-  `skills/spec_authoring/SKILL.md` §Artifact checklist item 5 — the
-  file list is informational and stays; §Module-Decomposition adds
-  the responsibility / interface / relation layer ABOVE it.
+When authoring a new L1+ spec, when an amendment to a legacy L1+ spec touches module-boundary topics, at the
+spec-board pre-gate and at code-spec-fit review: read and follow `framework/spec-engineering-l1-sections.md`
+(§Module-Decomposition: vocabulary, schema, worked example, enforcement, no-retrofit boundary, what it is not).
 
 ### Convention: §Test-Strategy for L1+ specs
 
-Every new L1+ spec declares a `§Test-Strategy` section. It is the
-design-time anchor for the **test contract**: which bug classes the
-spec guards against, which AC each bug class belongs to, which test
-levels verify them, and where the test implementation lives.
-
-A **bug_class** is a noun-phrase naming a class of defect — not a
-single test case, not a stack trace. *"empty-string DB-fallback emits
-malformed catch_up"* is a bug class; *"test_X_returns_None_on_empty_input"*
-is a test case derived from it. The bug class is the contract; the
-test case is the implementation.
-
-**L0 specs are exempt.** L1 (capability spec) upwards must include
-the section.
-
-#### Vocabulary (strict)
-
-- **bug_class:** noun phrase, one per defect class. Free-text;
-  semantic dedup, not ID encoding.
-- **AC ref:** AC-N matching the §Acceptance Criteria section.
-- **levels:** L0 / L1 / L2 / L3 / L4 / L5 per
-  `skills/testing/SKILL.md` 6-level pyramid. Multiple levels allowed
-  on one row (same bug class verified at multiple levels = one row,
-  not multiple).
-- **implementation:** `tests/` path pointer (filled when tests land;
-  empty until then).
-
-#### Schema
-
-```markdown
-## §Test-Strategy
-
-**Levels in scope:** <which test levels apply, e.g. L2 unit + L3 integration>.
-**External dependencies:** <real-vs-mocked policy, e.g. testcontainers Postgres real; LLM mocked>.
-
-**Bug-class catalog** (one row per defect class; no duplicate bug_class):
-
-| bug_class | AC ref | levels | implementation |
-|---|---|---|---|
-| <noun phrase naming defect class> | AC-1 | L2 | tests/path/to/test.py::test_name |
-| <next bug class> | AC-2 | L2, L3 | tests/path |
-```
-
-#### Worked example
-
-For a hypothetical chat-resume-attach spec:
-
-```markdown
-## §Test-Strategy
-
-**Levels in scope:** L2 unit (peer-surface) + L3 integration (route-level).
-**External dependencies:** asyncpg pool real (testcontainers); LLM mocked.
-
-**Bug-class catalog:**
-
-| bug_class | AC ref | levels | implementation |
-|---|---|---|---|
-| empty-string DB-fallback emits malformed catch_up | AC-2 | L2 | tests/chat/test_resume_attach.py::test_from_db_path_empty_partial |
-| GeneratorExit on consumer aclose suppressed silently | AC-4 | L2 | tests/chat/test_resume_attach.py::test_from_live_path_client_disconnect |
-| race on registry detach during route disconnect | AC-5 | L3 | tests/chat/ux_flows/test_abort_state_cleanup.py |
-| graceful-degradation regression on missing in_flight_registry | AC-3 | L2, L3 | tests/chat/test_resume_attach.py + tests/chat/ux_flows/test_abort_state_cleanup.py |
-```
-
-Four bug classes, four AC mappings, all rows with non-empty `bug_class`
-and named `tests/` pointer.
-
-#### Enforcement
-
-- **Design-time gate:** `skills/spec_board/SKILL.md` pre-gate FAIL —
-  a new L1+ spec submitted for board review without a §Test-Strategy
-  section FAILs before the proportionality gate runs (mirrors
-  §Module-Decomposition enforcement).
-- **Spec-board review:** vague / duplicate bug_classes (semantic
-  overlap, "small variation within a bug class") = board finding;
-  missing AC coverage (AC-N has no bug_class row) = board finding.
-- **Review-time conformance:** `agents/code-spec-fit.md` reads the
-  section at code-review-time and verifies every AC has at least one
-  bug_class row, every bug_class has a `tests/` pointer once tests
-  land, and no duplicate bug_class survived. Spec-fit is the
-  sole owner of test-coverage findings per
-  `skills/code_review_board/SKILL.md` §5.
-- **Derivation gate (testing skill):** the test-design phase DERIVES
-  TC names from the bug_class catalog — `testing/SKILL.md` forbids
-  adding bug_classes that are not in the spec. A new bug_class needed
-  during implementation = spec amendment, not a test plan addition.
-
-#### No-retrofit boundary
-
-The ~300 specs in `docs/specs/` that pre-date this rule stay
-unchanged. Pre-gate FAIL and code-spec-fit conformance check
-**silent-skip** legacy specs that lack the section. Incremental
-coverage flows through
-`skills/_protocols/spec-amendment-discipline.md`: when an amendment
-to a legacy L1+ spec touches **AC scope** (new AC, AC boundary shift,
-new behavior, new failure mode), the §Test-Strategy section MUST be
-added in the same commit as a §test-strategy-add strand.
-
-#### What this convention is NOT
-
-- **NOT** a full test plan. TC bodies (names, assertions, fixtures)
-  stay in the task plan as ephemeral derivation; the spec carries
-  the bug_class contract only.
-- **NOT** a sidecar file. In-spec, mirrors the §Module-Decomposition
-  pattern. Sidecar would split a contract across two files (sync drift,
-  discovery overhead).
-- **NOT** a coverage report. The `implementation` column points to
-  `tests/` paths but the spec does not track green/red state — that
-  lives in run-time.
-- **NOT** a replacement for `tests/` as the asserting SoT. The spec
-  declares what bugs are guarded against; `tests/` proves the guard
-  exists; the task plan is the ephemeral build artifact between them.
+When authoring a new L1+ spec, when an amendment to a legacy L1+ spec touches AC scope, at the spec-board pre-gate,
+at test design and at code-spec-fit review: read and follow `framework/spec-engineering-l1-sections.md`
+(§Test-Strategy: bug-class vocabulary, schema, worked example, enforcement, no-retrofit boundary, what it is not).
 
 ### Convention: §Mechanism-Lifecycle for state-bearing specs
 
-A spec (new or amended, any level above L0) that introduces or changes a
-**state carrier** — anything with two or more states and two or more
-operations that change it, including every derived state and every
-"X changes only via Y" / "never X" invariant — declares a
-`§Mechanism-Lifecycle: <name>` section: states per carrier, every
-operation with its producer and consumer, the states × operations
-matrix with every cell filled (`→next | ✗ guard | unreachable(reason)`)
-and placed (`now | task-N | beyond-MVP`), the invariants per carrier
-with the cells that enforce them and their enforcement locus, and the
-placed cells with their owning task. The vision decides what is
-modelled (the whole mechanism, beyond-MVP parts included); the plan
-decides when each cell is built. Schema, trigger, authorship, the scope
-and placement rule and the downstream bind rules:
-`skills/_protocols/mechanism-model.md` (SoT).
+When a spec above L0, new or amended, introduces or changes a state carrier, when a later ruling or a blocking
+finding touches a mechanism, at the spec-board pre-gate, at test design and when a code-board brief carries the
+matrix: read and follow `framework/spec-engineering-mechanism-lifecycle.md` (the section's content, its single
+home, enforcement, no-retrofit boundary, what it is not).
 
-The section is the mechanism's single home; other specs that carry part
-of it point at it. It is written once at authoring and **updated, never
-re-derived**: every later ruling, simplification or mid-build decision on
-the mechanism edits the matrix in the same change as the spec text. The
-unit of spec review, test design, brief, fix brief and re-verify on a
-mechanism is a cell of this table, not a finding and not the last diff.
+### Convention: §Complexity-Tracking for specs and briefs
 
-#### Enforcement
-
-- **Design-time gate:** `skills/spec_board/SKILL.md` §1.0 pre-gate FAIL
-  when the trigger fires and the section is missing; no PASS with an
-  empty cell; a blocking finding on a `now` cell is not `residual`.
-- **Test design:** `skills/testing/SKILL.md` derives the property
-  generator's axes and the oracle from the matrix.
-- **Review-time:** the code-board brief carries the matrix; adversary and
-  domain-logic report uncovered or wrong cells.
-
-#### No-retrofit boundary
-
-Legacy specs stay unchanged until touched. A mechanism is "touched" by an
-amendment that adds a state, operation or invariant
-(`skills/_protocols/spec-amendment-discipline.md` category (g)) **or by a
-blocking finding at any board** — the bounded retro-model of
-`skills/_protocols/mechanism-model.md` §Trigger.
-
-#### What this convention is NOT
-
-- **NOT** a state diagram in prose. The matrix is the artifact; the
-  cells are where the defects live.
-- **NOT** §Module-Decomposition (module shape) or §Test-Strategy (bug
-  classes). It feeds both: cells name the modules' invariants and give
-  the test catalog its axes.
-- **NOT** a sidecar file. In-spec, one home per mechanism.
-- **NOT** required where no state carrier exists; see the trigger in
-  the protocol.
-
----
+When writing a spec that prescribes code or an implementation or fix brief, and when review traces a diff back to
+its rows: read and follow `framework/spec-engineering-implementation-specs.md` (§Complexity-Tracking: the table, its
+kinds, the need rule, where the rows go, project extension).
 
 ## Spec authoring, delegation, task logs
 
@@ -494,8 +208,8 @@ task logs, intent_chain, delegation-ready artifact).
 
 References from `workflows/runbooks/build/WORKFLOW.md` phase Specify/Prepare:
 - Specify step INTERVIEW -> `spec_authoring/SKILL.md` §Phase 1 interview methodology
-- Specify step SPEC -> `spec_authoring/SKILL.md` §Phase 2 spec writing
-- Prepare step DELEGATION -> `spec_authoring/SKILL.md` §Phase 4 delegation-ready
+- Specify step SPEC -> `spec_authoring/writing.md` §Phase 2 spec writing
+- Prepare step DELEGATION -> `spec_authoring/SKILL.md` §Brief authoring
 
 ## Spec-related skills (map)
 

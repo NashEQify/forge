@@ -42,7 +42,7 @@ are engine-internal.
 
 ## State tracking
 
-State file `docs/research/YYYY-MM-DD-slug.md` only on a standalone task.
+State file `docs/research/<date>-<slug>.md` only on a standalone task.
 Sub-workflow persists into the parent state file.
 
 Frontmatter:

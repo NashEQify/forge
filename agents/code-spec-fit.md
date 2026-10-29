@@ -3,6 +3,11 @@ name: code-spec-fit
 description: "Spec-fit reviewer in the Code Review Board — checks whether the implementation fulfils the spec (the spec is SoT, the code follows). Conditional, only active when the task has a spec_ref."
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: code-spec-fit
 
 Spec-fit reviewer in the Code Review Board. Implementation vs
@@ -83,13 +88,13 @@ Protocols: `_protocols/reviewer-base.md`,
 
 ## Check focus
 
-- **AC coverage (sole owner on L2; on L1, where this seat is not
+- **AC coverage (sole owner on L2 when a spec_ref exists; on L1, where this seat is not
   dispatched, the `code-domain-logic` brief carries it per
-  `skills/code_review_board/SKILL.md` §3):** every AC implemented? Types,
+  `skills/code_review_board/brief-and-team.md` §3):** every AC implemented? Types,
   bounds, error paths align?
-- **Test coverage (sole owner on L2; on L1, where this seat is not
+- **Test coverage (sole owner on L2 when a spec_ref exists; on L1, where this seat is not
   dispatched, Buddy's AC-coverage checklist item per
-  `skills/code_review_board/SKILL.md` §3 holds the duty):** every AC has at least one TC
+  `skills/code_review_board/brief-and-team.md` §3 holds the duty):** every AC has at least one TC
   asserting it in `tests/`. Coverage matrix in the task test plan
   matches what `tests/` actually contains. Missing TC for an AC =
   finding (severity per AC importance). Test plan claims a TC
@@ -102,8 +107,8 @@ Protocols: `_protocols/reviewer-base.md`,
 - **Failure modes:** defined by the spec — implemented?
 - **Not yet:** the spec excludes — does the code implement it
   anyway?
-- **Schema consistency:** Pydantic models, DB schema, event
-  types match?
+- **Schema consistency:** schema models (e.g. Pydantic), DB
+  schema, event types match?
 - **Interface contracts:** API signatures match?
 - **§Module-Decomposition conformance (CONDITIONAL — only when
   the spec has the section):** read the §Module-Decomposition
@@ -116,7 +121,7 @@ Protocols: `_protocols/reviewer-base.md`,
   cohesion-impact (smell-transfer / leaky-seam → HIGH; minor
   naming drift → LOW). **Silent-skip** when the §-section is
   absent (legacy spec, no-retrofit per
-  `framework/spec-engineering.md` §Convention: §Module-Decomposition
+  `framework/spec-engineering-l1-sections.md` §Convention: §Module-Decomposition
   for L1+ specs).
 - **§Test-Strategy conformance (CONDITIONAL — only when the spec
   has the section):** read the §Test-Strategy bug-class catalog.

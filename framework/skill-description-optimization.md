@@ -1,10 +1,10 @@
 # Skill-Description Optimization — Methodology
 
-**Tier:** 1 (operational, companion to `skill-anatomy.md` §description)
+**Tier:** 1 (operational, companion to `skill-anatomy-frontmatter.md` §description)
 
 ## Purpose
 
-`skill-anatomy.md` §description is the **rule** (what a good description is). This file is
+`skill-anatomy-frontmatter.md` §description is the **rule** (what a good description is). This file is
 the **method**: how to optimize a skill's `description` for correct `P(invoked)` and how to
 measure it — at single-skill scale today, with corpus discrimination *derived* from
 single-skill runs (see §Corpus scale + §Honest bounds).
@@ -104,7 +104,7 @@ clear, distinct, descriptive name raises `P(invoked)` for the right skill.
 The convention is therefore **fixed, not measured: kebab-case** (Anthropic `name`-field spec —
 lowercase + hyphens; the generated CC wrapper name, the real discovery surface, is
 kebab-normalized regardless) + **descriptive** (gerund / noun-phrase, never vague/generic). See
-`skill-anatomy.md §name`. The earlier "is the name only legibility?" experiment is **dropped**
+`skill-anatomy-frontmatter.md §name`. The earlier "is the name only legibility?" experiment is **dropped**
 (documentation answers it), and a `snake_case` normalization of the source name field buys
 nothing for triggering (the discovery name is kebab by spec) — so it is not worth its blast
 radius.
@@ -129,4 +129,4 @@ radius.
   be substantive.
 - Exempt skills: `invocation.primary` ∈ {workflow-step, hook} or `disable-model-invocation:
   true` are invoked positionally, not by `P(invoked)` — don't pull-optimize them (see
-  `skill-anatomy.md` §description carve-out).
+  `skill-anatomy-frontmatter.md` §description carve-out).

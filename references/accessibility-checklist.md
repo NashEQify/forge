@@ -1,17 +1,7 @@
 # Accessibility Checklist (WCAG 2.1 AA)
 
-> **Source:** lift from `github.com/addyosmani/agent-skills`
-> (`references/accessibility-checklist.md`). MIT licence.
->
-> **Adaptation status:** content adopted 1:1 — the pattern is a web
-> standard and linguistically generic. Cross-refs to
-> `frontend-ui-engineering` now point at the equivalent in our framework
-> (does not yet exist — create on activation as a G.9 tier-4 new domain
-> skill).
-
 Quick reference for WCAG 2.1 AA compliance. Use alongside a frontend
-building skill (`frontend_ui_engineering`, deferred until active
-frontend work — Huddle / Dashboard) OR for code review of UI code via
+building skill (`frontend_ui_engineering`) OR for code review of UI code via
 `code_review_board` mode=ux / `spec_board` mode=ux.
 
 ## Table of Contents
@@ -177,3 +167,7 @@ npx pa11y             # CLI accessibility checker
   former ux_review skill; uses this checklist as a reference.
 - `agents/board-ux-heuristic.md` — persona that applies the checklist.
 - `references/performance-checklist.md` — performance counterpart.
+
+## Source
+
+agent-skills at `19e49a0` (MIT License, © 2025 Addy Osmani); Forge's register of adopted methods.

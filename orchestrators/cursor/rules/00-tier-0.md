@@ -3,20 +3,21 @@ description: Tier-0 invariants for forge — load first
 alwaysApply: true
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Tier 0 — Invariants (forge)
 
-This repo follows the forge methodology. The two Tier-0 anchor
-files are `AGENTS.md` (this repo's root) and `CLAUDE.md` (also at root, for
-Claude Code adapter — applies even outside CC since the invariants are
-orchestrator-agnostic).
+This repo follows the forge methodology. The Tier-0 anchor is
+`framework/invariants.md` (orchestrator-agnostic); `AGENTS.md` and `CLAUDE.md`
+at the root add the forge repository's own rules and the host's load list.
 
-**Read those first.** They define non-negotiable invariants:
+**Read it first.** It defines the non-negotiable invariants; in short:
 
-1. **Board/Council: Buddy = Dispatcher** — when running multi-perspective
-   reviews, the orchestrator (Buddy or you-as-Cursor-agent) does NOT read
-   review files, analyze findings, or write consolidations. Spawn → read
-   chief-signal → save → escalate. Anchoring corrupts multi-perspective.
-
+1. **Board/Council:** reviewers investigate independently; Chiefs consolidate where
+   selected. Buddy owns the decision and checks load-bearing source claims. Inspect
+   relevant findings to resolve contradictions without routinely repeating reviews.
 2. **Default: Discuss, don't implement** — only act on a clear imperative.
    When unclear, ask. Self-triggered changes: always discuss first.
    Context-writes and bookkeeping are exceptions (no gate).

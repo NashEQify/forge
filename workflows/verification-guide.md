@@ -5,6 +5,8 @@ Referenced from `workflows/templates/verification.yaml`.
 
 The tester reads this document when running the Verification Workflow. Each step describes WHAT to do, WHICH tools/commands are needed, and HOW the result is evaluated.
 
+**Applicability:** this guide is a worked example for a service with an HTTP API described by OpenAPI, a Postgres database and a NATS message broker. For another stack, keep the steps and substitute the tools.
+
 **Prerequisite:** Test infrastructure is up (`make test-infra-up`). Cross-project discipline (fixture preflight, lift-vs-rebuild, transaction-rollback isolation, docker-compose conventions): `skills/testing/REFERENCE.md` §Infrastructure. Project-specific fixtures (DSN, image tags, ports, mocks): project-side `docs/test-conventions/`.
 
 ---
@@ -200,7 +202,7 @@ docker compose -f docker-compose.test.yml down -v
 
 ## Step 3: Browser E2E Tests (DEFERRED)
 
-DEFERRED — only when a custom React UI exists. Open WebUI is interim and not under test. When the custom UI is built: create a dedicated Playwright skill, use the `e2e` marker, populate this step.
+Applies only when the project has a browser UI under test. Then create a dedicated Playwright skill, use the `e2e` marker, and fill in this step.
 
 Note in the verification report: `Browser E2E: SKIPPED — no custom UI present.`
 

@@ -7,6 +7,10 @@ invocation:
 disable-model-invocation: false
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: workflow-router
 
 <!-- generated-by: scripts/generate_workflow_router.py (do not hand-edit) -->

@@ -10,7 +10,7 @@ contract (proportionality gate + hard floors + level choice).
 2. L0 static analysis (MCA already ran it; Buddy checks the
    return).
 3. PARALLEL agent reviews (context-isolated).
-4. CHIEF-1 consolidation — dedup, severity ranking,
+4. CHIEF-1 consolidation (L2 with four or more reviewers) — dedup, severity ranking,
    recall-biased keep/refute triage. Consolidation also applies to L1
    with four or more reviewers; canonical routing: `SKILL.md` §1.3.
 5. DISCOURSE (L2 only, optional).
@@ -34,6 +34,8 @@ just because the happy path doesn't exercise it.
 
 ## Agent overview
 
+L2 ✓ marks a roster candidate; the roster is sized per `brief-and-team.md` §3.
+
 | Agent | Focus | L1 | L2 |
 |-------|-------|----|-----|
 | code-review | Correctness + architecture + performance (3 axes) | trigger: hot path / latency-AC path without perf-budget test | ✓ |
@@ -46,7 +48,7 @@ just because the happy path doesn't exercise it.
 | code-ai-llm | Prompt, model, token budget | — | ✓ |
 | code-docs-consumer | Code docs + spec readability | — | ✓ |
 | code-chief | Consolidation, discourse synthesis | 4+ reviewers per §1.3 | ✓ |
-| code-spec-fit | Spec conformance + sole test-coverage owner | — (Buddy checklist, `SKILL.md` §3) | ✓ + spec_ref |
+| code-spec-fit | Spec conformance + test-coverage owner (L2 with spec_ref) | — (Buddy checklist, `brief-and-team.md` §3) | ✓ + spec_ref |
 | code-spec-drift | Retroactive spec drift | — | ✓ + retroactive |
 | code-architect-roots | Pattern-purity (post-build) | ✓ core | ✓ (gated trigger, `SKILL.md` §1.2) |
 
@@ -73,7 +75,7 @@ migration doubt stay at L1, as do shape-preserving extractions.
 
 ## L1 trigger lenses (replaces the former L1+ mid-tier)
 
-L1 adds a specialist only on the named trigger in `SKILL.md` §3
+L1 adds a specialist only on the named trigger in `brief-and-team.md` §3
 (hot path or latency / throughput-AC path without a perf-budget test
 → code-review; stored-shape change → code-data, which settles the
 migration-needed check and re-levels to L2 on doubt; async / lock →
@@ -120,7 +122,7 @@ in Buddy's dispatch list MUST resolve to a real file in
 cause specialist-set drift — the risk-area they were meant to
 cover ships unreviewed. Run `ls agents/code-*.md` at dispatch-prep
 to verify; if a name does not match, substitute from the canonical
-table in SKILL §3 (Infra/worker → `code-reliability`, async/race →
+table in brief-and-team.md §3 (Infra/worker → `code-reliability`, async/race →
 `code-adversary` + `code-architect-roots`). Log substitutions in
 the dispatch transparency-header.
 
@@ -141,28 +143,38 @@ the hybrid migration. The risk areas dependency / architecture and
 hot path / performance are covered by `code-review` — no separate
 specialist dispatch needed.
 
+## Mandatory current fix verification
+
+Use public evidence-pointer protocol §9 with the caller's exact owner. Before
+post-fix verification, retry and fresh scoped-capture the new candidate, with fix
+obligations in focus and earlier findings/decisions as exact history. Capture the
+actual reproduction verifier plus the existing applicable scoped reviewers; no
+extra tier. Persist complete returns before explicit Buddy decision/adoption.
+Current FAIL/PARTIAL can support repair but cannot satisfy code_success. Retain
+prior payloads before canonical replacement; never inherit approval from history.
+
 ## Fix-pass dispatch (post-FAIL detail)
 
 When dispatching MCA after FAIL, the brief MUST explicitly state:
 
-- **Test scope:** scope-focused on touched files
-  (`uv run pytest <scope-files> -x --tb=short`), NOT
-  `uv run pytest tests/`. Per `skills/convergence_loop/SKILL.md`
-  §"Test scope between passes".
+- **Test scope:** the selected set for the fix's changes
+  (`python3 "$FRAMEWORK_DIR/scripts/select_tests.py" <changed paths>` from the
+  project root), NOT
+  `pytest tests/` and not a hand-picked list.
 - **L0 scope:** `ruff check <touched-files>` +
   `mypy <touched-files>` only. NOT the full repo.
-- **Full-suite sweep:** ONCE at convergence-end, not per
-  fix-phase.
+- **Broad run:** only where `skills/testing/run-strategy.md` §Test selection calls
+  for one, never per fix-phase. Both per that section.
 - **Re-review composition:** single reviewer per cluster (see
   Re-review composition below), not full-board redo.
 
 Don't rely on MCA picking the right default — the test-driven
 mindset baked into prompts and skills defaults to full-suite.
-Make scope-focused testing explicit in the brief.
+Name the selected set in the brief.
 
 ## Risk carry-forward — full YAML schema
 
-The `remaining_findings:` block schema (referenced from SKILL §5
+The `remaining_findings:` block schema (referenced from verdict.md §5
 Verdict):
 
 ```yaml
@@ -183,7 +195,7 @@ remaining_findings:
     title: "Example block shows v1 syntax; should be v2"
     proposed_action: "Replace `foo_v1(...)` with `foo_v2(...)` at line 651"
   - id: C2-005
-    target: absorb_next                        # logged, no immediate action
+    target: absorb_next                        # kept in the verdict entry, no immediate action
     severity: low
     locator: tests/foo/test_bar.py:123
     ...
@@ -202,10 +214,10 @@ remaining_findings:
 | `target` | Action | When to use |
 |---|---|---|
 | `spec_text` | batch-patched in same commit by `agents/spec-text-drift-batch.md` (per spec 306 §4.8) — no task | spec wording, example blocks, cross-ref drift, mirror-line inconsistency |
-| `new_task` | `task_creation` skill dispatched per entry | real follow-up work (MEDIUM+ severity only, ≥M effort, new behaviour). **LOW is forbidden — see SKILL §5 hard floor.** |
+| `new_task` | `task_creation` skill dispatched per entry | real follow-up work (MEDIUM+ severity only, ≥M effort, new behaviour). **LOW is forbidden — see verdict.md §5 hard floor.** |
 | `watch_item` | appended to `context/risk-watch.md` per `skills/_protocols/risk-watch-template.md` | forward-looking risk that fires only on a future trigger |
 | `accept` | recorded in the verdict as a known accepted limitation — no fix, no task, no trigger | non-blocking finding that is narrow + backstopped, latent, or introduced by a prior fix-pass in this chain and narrower than the original defect — the DEFAULT disposition for any non-blocking finding, MANDATORY for any standalone LOW |
-| `absorb_next` | logged to chief-verdict-archive only — no immediate action | LOW finding the next code-touch on the same file will trivially close |
+| `absorb_next` | kept in the verdict entry — no immediate action; the next review brief for a touched file names it | LOW finding the next code-touch on the same file will trivially close |
 | `closes_with: <id>` | no action — references another finding's fix | duplicate / convergence — same root, two angles |
 | `re_review: <reviewer>` | dispatch the named reviewer with the finding cluster as scoped focus | chief uncertain, contradiction across reviewers, second specialist look |
 
@@ -214,9 +226,9 @@ output validation (per `skills/risk_followup_routing/SKILL.md`).
 Distribution check: if all entries have the same `target:`,
 chief surfaces as anti-pattern (likely missed triage).
 
-The workflow step `risk-followup-routing` (build / review / fix
-workflow.yaml) reads this block and mechanically files a follow-up
-task via `task_creation` — empty/absent block: skip. A verdict
+The `close-bookkeeping` step of the build, fix and review
+workflows (`workflow.yaml`, risk follow-up sub-step) reads this block
+and files follow-up via `task_creation` — empty/absent block: skip. A verdict
 file without the block on PASS_WITH_RISKS is an invalid verdict
 (chief re-synth mandatory).
 
@@ -250,7 +262,7 @@ user.
 
 ## Re-review limit (foundation override)
 
-Default: **max 2 re-reviews → ESCALATE**. But:
+Default: **max 2 re-reviews**, then `skills/convergence_loop/at-the-cap.md` §At the cap. But:
 
 - **Foundation tasks** (intake-mvp, brain-foundation, brain-schema,
   schema-foundation, harness-runtime-patterns, other tier-1 builds):
@@ -260,7 +272,7 @@ Default: **max 2 re-reviews → ESCALATE**. But:
   to settle — better 4 reviews than permanent architecture drift.
 - **Buddy decision per pass:** if severity does NOT drop from
   pass N to pass N+1 (e.g. the same convergence cluster shows up
-  again) → run the Simplify-before-patch gate (`SKILL.md` §4) and
+  again) → run the Simplify-before-patch gate (`checklist-and-dispatch.md` §4) and
   propose the simplification, or ESCALATE, instead of continuing. The limit override
   applies only on measurable progress.
 - **User-override pattern:** the user may say "re-review more than
@@ -271,7 +283,7 @@ Non-foundation tasks: max 2 re-reviews stays strict.
 
 ## Re-review composition (full table)
 
-Default re-review on FAIL = the **re-verify table** (`SKILL.md` §4): one
+Default re-review on FAIL = the **re-verify table** (`checklist-and-dispatch.md` §4): one
 `code-verification` re-runs every fix-now reproduction, plus a scoped
 `code-adversary` unless the fix is line-local. A judgment
 finding without a runnable reproduction goes to single-reviewer
@@ -317,9 +329,11 @@ class.
 
 ## Extended anti-patterns
 
-- **NOT** FAIL → MCA fix → immediate re-review without a new L0.
-  INSTEAD run L0 (ruff + mypy) after every fix. Because: a fix can
-  break linting; re-review otherwise sees it later.
+- **NOT** FAIL → MCA fix → immediate re-review without current post-fix
+  L0 evidence. INSTEAD establish L0 (ruff + mypy) after every fix by execution
+  or qualified equivalent evidence under `skills/testing/run-strategy.md` §Run strategy.
+  Earlier evidence must cover the actual fix delta; otherwise run the affected
+  checks. Because: a fix can break linting; re-review otherwise sees it later.
 - **NOT** accept a chief signal without a tracking table (L2).
   INSTEAD run the preservation check (consolidation-preservation).
   Because: silent loss happens in the code board too.
@@ -330,6 +344,6 @@ class.
   above). Because: 5 reviewers re-doing unaffected scope
   = risk-theater + 2-3× wallclock / token cost without new signal.
 - **NOT** brief MCA with `pytest tests/` as DoD on fix-pass dispatch.
-  INSTEAD scope-files explicit. Because: re-running untouched modules
-  is signal-noise; test-driven mindset baked into MCA prompts defaults
-  to full-suite — must be overridden in the brief.
+  INSTEAD the selected set for the fix's changes. Because: re-running
+  untouched modules is signal-noise; test-driven mindset baked into MCA
+  prompts defaults to full-suite — must be overridden in the brief.

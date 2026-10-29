@@ -93,7 +93,7 @@ consolidation and Buddy's source checks. Interactive Council uses moderated dial
 
 Development is selected by project intent or explicit invocation. On-demand projects
 retain their own working rules; old task files or installed tooling do not select
-software automatically. [Process map](../framework/process-map.md#workflow-selection).
+software automatically. [Workflow selection](../framework/workflow-selection.md).
 
 ```mermaid
 flowchart TD
@@ -125,7 +125,8 @@ flowchart LR
 ```
 
 Eligible DIRECT work uses a short complete lifecycle rather than every preparation
-gate. Larger or consequential changes retain their selected path's safeguards.
+gate: record, build by the coding agent, check by a separate agent run, report.
+Larger or consequential changes retain their selected path's safeguards.
 The [Build runbook](../workflows/runbooks/build/WORKFLOW.md) and runtime route definition
 own the detailed sequence.
 

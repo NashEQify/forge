@@ -15,6 +15,10 @@ modes: [design, execution]
 uses: [convergence_loop]
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: testing
 
 Methodology and formats for test-case design and execution across
@@ -47,175 +51,104 @@ assertion, do not delete the test.
 Test cases are designed BEFORE implementation. No delegation
 without a test plan.
 
-### Derivation from specs
+### Test design from the change
 
-| Spec element | Test-case type | Level |
-|---|---|---|
-| Every AC | Positive test | L2 / L3 |
-| Every MUST NOT | Negative test | L2 / L3 |
-| Every ESCALATE | Boundary test | L3 / L4 |
-| Edge cases (interview) | Regression test | L2 |
-| Failure modes (constraint architecture) | Smart-but-wrong caught? | L2 / L3 |
-| Process definitions | Simulation of concrete cases | L1 |
-| Verifiable assumptions | Eval test (hypothesis with code) | Eval (3e) |
-| Architecture invariants | Structural test | L0 |
+A test plan covers what the change changes, and nothing else.
 
-### Derivation from §Test-Strategy catalog (L1+ specs only)
+- Each changed behaviour that an AC names gets one test that fails
+  without the change (§Meaningful pre-fix witness).
+- A negative case is added only where the AC or the change spec names
+  a refusal.
+- Unchanged behaviour gets no new test, and there are no speculative
+  edge cases. A real gap surfaces later as a real defect, with its own
+  test.
+- Instruction text is not a test subject: its presence and wording carry
+  themselves, and an existing consistency or installer check covers the
+  rest. An AC met by instruction text alone names that check in the
+  coverage matrix instead of a TC (`run-strategy.md` §Test selection, light path).
+- The adversary test plan and the skeleton writer run only when the
+  change touches a safety floor (`skills/adversary_test_plan/SKILL.md`
+  §When to call).
 
-When spec has §Test-Strategy bug-class catalog (per
-`framework/spec-engineering.md` §Convention: §Test-Strategy for L1+
-specs), the catalog **is the test contract**:
+**How many tests.** The count is fixed before code, as the coverage
+matrix's rows: one row per behaviour the change promises (each AC, and
+each edge row the change spec names: an input class, a limit, a
+refusal), plus an L1+ spec's §Test-Strategy rows and the
+§Mechanism-Lifecycle cells its generator does not reach
+(`test-design.md`), deduplicated by bug class; on an L1+ spec an edge
+row maps to a catalog bug class. A limit the change spec states gets the edge row in
+which that limit alone decides. A row added later enters only through
+the adversary test plan on a safety floor or a review finding about
+behaviour a consumer relies on, and amends the matrix. A row is covered
+only when its test ran and passed in this run (§Meaningful pre-fix
+witness). A bug fix gets one test that reproduces the bug and fails
+before the fix (`workflows/runbooks/fix/WORKFLOW.md`, test-plan step);
+a refactoring adds no tests and keeps
+the existing ones green. Source of the edge-row matrix:
+BMAD-METHOD (MIT License, © 2025 BMad Code, LLC); Forge's register of adopted methods.
 
-- One TC per `bug_class` row (multi-level verification = one row).
-- TC name = `test_<bug_class_slug>`.
-- **New bug_class discovered (incl. adversary mode) → inline append
-  to §Test-Strategy.** Bookkeeping-tier amendment, no spec_board
-  re-spin (per `_protocols/spec-amendment-discipline.md` category f).
-  Single commit at adversary-run end (or folded later).
-- Legacy specs without catalog: derive per upstream table above.
+Each new test, whether from test design, an adversary test plan or a
+review finding, names its consumer in its docstring or plan row: who
+relies on the behaviour it guards. A combination grid justifies each
+axis: an axis stays only where its values change an assertion or the
+code path under test, and combinations that assert nothing new are not
+written. A plan never obliges anyone to keep every cell of a grid ("do
+not omit cells"); dropping a cell that changes nothing is correct. A
+review finding becomes a test when it names behaviour a consumer relies
+on, not as a record of the finding. A test the normal suite cannot
+execute (one that waits for external evidence, a native session or a
+manual run) is not written as a permanent test. Run that acceptance once
+and record its verdict, or write its mechanical part as an ordinary
+test.
 
-### Derivation from §Mechanism-Lifecycle (state carriers)
+### Meaningful pre-fix witness
 
-When the spec has a `§Mechanism-Lifecycle` section
-(`skills/_protocols/mechanism-model.md`), the matrix is the test
-contract for that mechanism, beside the bug-class catalog:
+For an intended behavior change, execute a behavior assertion before implementation
+that fails on the relevant unfixed or unimplemented behavior and identifies the
+intended change. Retain the command, observed failure and reason. Missing fixtures,
+skipped placeholders, unrelated import errors or `assert False` do not establish
+that witness. Unavailable prerequisites remain unverified, not RED.
 
-- **Generator axes = matrix axes.** A property generator over the
-  mechanism produces every state × every operation (including the
-  consumer-side inputs of each derived state), not the shapes the
-  implementer happened to think of. A generator whose axes span a cell
-  **is** that cell's coverage, asserted by the matrix oracle; a
-  generator that cannot produce a cell is a plan gap.
-- **Explicit TCs only where the generator does not reach:** a `→` or
-  `✗` cell outside the generator's axes gets its own TC (next state +
-  invariants, or guard + error); a placed (`task-N` / `beyond-MVP`)
-  cell gets a refusal TC only — no fixture composes the absent caller's
-  call shape; an `unreachable` cell needs its stated reason in the
-  matrix, not a TC.
-- **Oracle from the matrix, not from the code.** The reference oracle
-  (derived-state function, invariant checker) is written as separate
-  arms from the matrix rows and invariants, by someone other than the
-  implementer (§Oracle discipline). A memo-equals-oracle test where both
-  read the same implementation proves nothing about the cells.
-- **Tests in the right world.** A TC for an exemption or a guard runs in
-  the state the matrix names (e.g. "after the demotion exists"), not in a
-  world where the clause trivially holds. A fixture that produces the
-  defect as setup is a finding.
-- Cells and bug classes are complementary: a `✗` cell without a
-  `bug_class` row gets one (category (f) append); a bug class without a
-  cell names which carrier it guards.
+Existing regression tests, positive controls and already-satisfied behavior may
+pass; retain and explain them rather than making them fail. Investigate an
+unexpected pass for supposedly missing behavior: the behavior may already exist or
+the assertion may miss it. After implementation, execute the witness and required
+regression, negative and control cases; all applicable required cases must pass.
+A result claim covers only what executed: acceptance reported as `unexecuted`, or
+skipped for missing execution evidence, is unverified and named as such, never
+counted as passing or "green".
+Pure preservation/refactor work demonstrates its unchanged contract without
+fabricating a missing-behavior failure. This is a testing rule for behavior changes,
+not a test ceremony for ordinary prose or every activity.
 
-### Bug-class dedup (at creation time)
+For example, a new restore assertion can fail pre-fix while an unchanged save
+control already passes. Retain both and verify restore becomes green after the fix.
 
-Before adding TC for a new `bug_class`, check catalog/plan for
-existing coverage. Duplicate or "small variation within a class" →
-do not add. **When in doubt, drop.** Real gaps surface later as
-real defects (real follow-up tasks), not preemptive imagined edges.
+### Derivation, execution-faithfulness and oracle discipline
 
-### Proportionality table (plan-size sanity)
-
-| Trigger | TC count | Plan size |
-|---|---|---|
-| ≤3 ACs, mechanical | 1.5-2× AC | <50 lines |
-| 4-7 ACs, new behavior | 2-3× AC | ~100-200 lines |
-| New subsystem / schema / cross-module | 3-4× AC | 200-400 lines |
-
->400 lines without adversary mode = drift signal (likely duplicate /
-imagined edges).
-
-### Execution-faithfulness (test-design)
-
-**A test artifact is not coverage until a collected test EXECUTES it
-against the real surface.** A green per-module suite is
-necessary-not-sufficient — it proves module contracts, not assembled
-behaviour. General discipline: for each AC's GREEN test, name the
-production producer of every hand-passed input; if that producer is
-the function-under-test's own caller (or an async/upstream service),
-the unit is necessary-not-sufficient — require a wired companion that
-drives the real producer, do not fabricate its output. Three
-design-time triggers:
-
-- **Multi-module pipeline / instrument / orchestrator** — when the
-  public entry point drives a real downstream **producer whose output
-  the unit tests construct by hand** (the trigger is the *producer
-  seam*, not module count — pure-function composition like
-  `format(parse(x))` does not qualify): design ≥1 **wire-proving
-  end-to-end test** (L4) that drives the public entry point through
-  the real dependency (or its sanctioned testcontainer) and asserts
-  the *commissioned outcome* (the headline number / verdict-bearing
-  field) — RED before implementation, alongside the per-module units.
-  Board backstop: `code_review_board` §2 REQUIREMENTS MAP
-  producer/`*Consumer` tripwire (do not duplicate it here — it is the
-  post-code net; this is the design-time net).
-- **Pooled / singleton resource with a teardown path** — a fix that
-  introduces a pooled/singleton resource carrying a
-  close/teardown/invalidate path requires a test that EXECUTES the
-  lifecycle (build-once + reuse + close-awaits + rebuild-on-invalidate)
-  against a fake whose surface matches the **INSTALLED** SDK — plus an
-  audit of whether an autouse reset-fixture masks the singleton (if so,
-  the lifecycle test opts out of the reset). A memoized pure helper
-  (`@lru_cache`, no teardown, no shared mutable state) does NOT qualify.
-- **Golden / byte-identity / snapshot corpus** — a corpus introduced
-  to satisfy a no-behaviour-change (refactor) AC MUST be imported and
-  asserted by a collected pytest test in the SAME change.
-  Captured-but-orphaned is an incomplete AC, not a deferred nicety. A
-  present-but-inert net reads as coverage while guarding nothing.
-
-### Oracle discipline (test-design, MUST when an oracle exists)
-
-A differential test is only as independent as its oracle (reference
-implementation, golden, property, spec-bullet arms).
-
-- **Independence.** The implementing agent does not edit the oracle in
-  the same hunk as the implementation. Oracle edits go in a separate
-  diff hunk, each citing the ruling or spec clause it implements, and
-  are reviewed by someone other than the implementer (adversary or
-  verifier). An oracle that mirrors the code line for line, or is
-  written in the same change as its spec by the same author, hides the
-  gaps it shares with the code: write it from the spec bullets as
-  separate arms.
-- **RED skeletons against the reference.** Before the MCA dispatch, run
-  every record-level RED assertion against the in-repo reference oracle
-  (when one exists) and list each disagreement in the test plan. A
-  skeleton that contradicts the reference is fixed or the reference is
-  ruled wrong — before handoff, not during implementation.
-- **Single-owner decompositions.** When a plan-time lens merges two
-  copies of a rule into one contract owner, add an independent oracle
-  for that owner (spec-bullet arms or properties) and relabel the old
-  parity tests between the former copies as wiring tests: both sides
-  now share one implementation and can no longer disagree.
-- **Latency on a growing log or store.** A latency AC carries a
-  two-size slope leg: measure at N and 4N and assert the growth stays
-  within the stated complexity, not only the absolute budget at one
-  size. One size hides superlinear terms.
-
-### L1 Logic / semantic + Iteration protocol
-
-L1 = simulation, completeness, consistency, DRY check, constraint
-satisfaction (for process / workflow / agent-behaviour specs).
-`tester` (design) defines L1 checks; Buddy runs L1-SIM in
-Specify phase; `main-code-agent` calls `tester` (execution) after
-implementation. Design runs inside `convergence_loop` (pass 1 full
-derivation; passes 2-3 coverage gaps with rising threshold; tester
-self-service gate). Detail: REFERENCE.md.
+In design mode, before deriving test cases from the spec: read and follow `skills/testing/test-design.md`
+(derivation from specs, from a §Test-Strategy catalog and from a §Mechanism-Lifecycle matrix; bug-class dedup;
+execution-faithfulness for producer seams, pooled resources and golden corpora; oracle discipline; L1 logic /
+semantic checks and the iteration protocol).
 
 ## Coverage matrix (MUST output)
 
-ACs without TC = GAP. An empty row = invalid state.
+An AC without a TC, or without the named check that verifies
+instruction text, is a GAP. An empty row is an invalid state.
 
 | Spec element | TC IDs | bug_class | Level | AC quality | Eval status |
 |---|---|---|---|---|---|
 
 **bug_class** (required when spec has §Test-Strategy): noun phrase
 naming the defect class this TC guards against. Must be present in
-the spec catalog (else: spec amendment first, see "Derivation from
+the spec catalog (else: spec amendment first, see `test-design.md` "Derivation from
 §Test-Strategy catalog"). Duplicate bug_class across rows = drop one.
 
 **AC quality** (required): **clear** / **vague** (annotate what's
 missing) / **contradictory** (which contradiction). Vague /
 contradictory → spec review BEFORE execution. No opt-out.
 
-Persistence: section in `docs/tasks/NNN.md`. Update on a spec
+Persistence: section in `docs/tasks/<NNN>.md`. Update on a spec
 change, do not recreate.
 
 ## Contract
@@ -226,7 +159,7 @@ Context: REFERENCE.md.
 
 **OUTPUT:** test plan + coverage matrix (spec element × TC × bug_class
 × level × AC quality × eval status) + AC-quality assessment + run
-strategy. Persisted in `docs/tasks/NNN.md`.
+strategy. Persisted in `docs/tasks/<NNN>.md`.
 
 **DOES NOT:** test execution in design mode (plan only); spec fixes
 (reports vague/contradictory ACs); code skeletons in design mode
@@ -248,22 +181,11 @@ design first. Fields missing → warning.
 
 ## Run strategy
 
-| Trigger | Scope |
-|---------|-------|
-| Commit | L0 |
-| Spec / process | L0 + L1 |
-| Code | L0 + L2 + L3 (affected) |
-| Workflow | L0 + L1 + L4 |
-| Milestone | L0 - L5 |
-| Boot | Entropy audit (L5 light) |
-
-Spec-process integration: `Interview → Spec → Review → TEST
-DESIGN → PRE-IMPL EVAL → Decomposition → Delegation`.
-
-**Shared fixtures are collision surfaces.** Before each gate run, check
-`git status` on shared `tests/**` fixtures (`conftest.py`, fixture
-data). An uncommitted change from a parallel session is resolved before
-the round, not worked around in scratch copies.
+When deciding a test plan's run strategy, before running tests in an implementation round, fix pass, review or
+verification, and before reusing an already executed check as evidence: read and follow
+`skills/testing/run-strategy.md` (run scope per trigger, qualified execution evidence, and §Test selection: the
+single home of the suite-scope rule, with the selector, the light path, when the broad run is due, no rerun after a
+hash-checked transfer, test runs as rounds, shared fixtures).
 
 ## Boundary
 

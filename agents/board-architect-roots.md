@@ -3,6 +3,11 @@ name: board-architect-roots
 description: Spec Board specialist — structural-pattern-purity at LD-lock time. Mirror of code-architect-roots (post-implementation), but pre-implementation. Detects shallow LD defaults, spec-level smell-transfer, under-modeled state-vocabulary in interface contracts. Third-party voice that breaks the circularity when low-controversy defaults bypass Council triggers.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: board-architect-roots
 
 Spec-side structural-pattern reviewer. Specialist for
@@ -15,7 +20,7 @@ Loaded in:
 - **Standard mode:** CONDITIONAL — include when LD count ≥ 6,
   the spec touches a state machine, OR the diff replaces a
   previously-flagged structural pattern. Detail:
-  `skills/spec_board/SKILL.md` §2a.
+  `skills/spec_board/depth-and-team.md` §2a.
 
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/spec-reviewer-protocol.md`,
@@ -133,6 +138,11 @@ structurally sound.
   audit the reason. Mechanical-claim is OK; "no architecture
   touch" with LD-replacement-evidence in the same brief is a
   missed flag — surface as finding.
+- **Linked architecture spine:** the substance checks of
+  `skills/_protocols/architecture-spine.md` §Checks. Each
+  finding names the `AD-<n>` or Deferred entry. A spine's
+  Deferred entries are not workaround language; judge them
+  by the inclusion test.
 - **Distribution-as-signal:** if other reviewers produced N
   findings without pattern-purity dimension on
   architecture-touching specs, surface that asymmetry as

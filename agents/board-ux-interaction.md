@@ -3,6 +3,11 @@ name: board-ux-interaction
 description: Interaction-design reviewer (UX Board) — flows, feedback, error states, accessibility, dark theme.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: board-ux-interaction
 
 Interaction-design reviewer in the UX Board. Flows, feedback,

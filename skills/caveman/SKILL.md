@@ -19,6 +19,10 @@ invocation:
 disable-model-invocation: false
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: caveman
 
 ## Purpose
@@ -29,10 +33,7 @@ gone, technical substance stays.
 
 ## Source
 
-Lifted from `github.com/mattpocock/skills`
-(`skills/productivity/caveman/SKILL.md`).
-Adapted only lightly — the pattern is linguistically generic; no
-consumer-specific adaptation needed.
+Matt Pocock's skills at `b843cb5` (MIT License, © 2026 Matt Pocock); Forge's register of adopted methods.
 
 ## Standalone
 

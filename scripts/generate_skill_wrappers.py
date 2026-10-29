@@ -85,6 +85,9 @@ WRAPPER_BODY_TEMPLATE = """# Skill: {name} (Wrapper)
 
 {marker}
 
+Read and follow `{common_path}` before taking up work.
+Resolve it against the same framework root as the SoT; retain the consumer CWD.
+
 This is the {discovery_label}-discoverable wrapper. The full
 orchestrator-neutral protocol — methodology, contract, modes,
 red flags — lives in the SoT:
@@ -217,7 +220,7 @@ def extract_frontmatter(text: str, src_dir: str = "?") -> dict | None:
 
 
 def kebab_normalize(name: str) -> str:
-    """Harmonize `-`/`_` to kebab (framework/skill-anatomy.md §name)."""
+    """Harmonize `-`/`_` to kebab (framework/skill-anatomy-frontmatter.md §name)."""
     return name.strip().replace("_", "-")
 
 
@@ -370,6 +373,11 @@ def _render(
     body = WRAPPER_BODY_TEMPLATE.format(
         name=name_kebab,
         source_path=source_path,
+        common_path=(
+            str(next(parent for parent in Path(source_path).parents
+                     if parent.name in {"skills", "workflows"}).parent / "framework/work-principle.md")
+            if installed else "framework/work-principle.md"
+        ),
         marker=GENERATED_MARKER,
         tool_label=tool_label,
         discovery_label=discovery_label,

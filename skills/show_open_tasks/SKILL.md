@@ -15,6 +15,10 @@ disable-model-invocation: false
 uses: []
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: show-open-tasks
 
 ## Purpose
@@ -26,7 +30,7 @@ group, **sorted by created date descending (newest first)** within
 each group — no file-by-file hand-reading.
 
 Project-neutral: works in any repo following the
-`docs/tasks/NNN.yaml` convention. Read-only — never edits task
+`docs/tasks/<NNN>.yaml` convention. Read-only — never edits task
 files. Status changes go through `task-status-update`; creation
 through `task-creation`.
 

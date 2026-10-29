@@ -11,6 +11,20 @@ sectional_deep_review, impl_plan_review, council.
   risk).
 - **UX board:** optional (Buddy decides).
 
+## Captured mandatory supplements
+
+For a captured mandatory software review, load
+`skills/_protocols/evidence-pointer-schema.md` §9 before assembling sources.
+Before contingent dispatch, add each discourse and subsequent Chief slot by
+repeating capture on the unchanged subject (§9.2); use already declared output
+exclusions. Keep owner/iteration/run/subject from successful capture stdout; never
+create a competing nested capture. A changed request moves the prior adoption into
+history until a new explicit decision that includes the added returns is adopted. Persist each full supplement separately,
+with captured envelope, actual actor, path and digest; preserve earlier payloads.
+"No discourse points." is supported with nonempty top-level evidence for the
+checked scope. New findings retain their own evidence. Feed complete attributed
+supplements into a separate subsequent Chief return; do not patch prior reports.
+
 ## 5-step flow
 
 **Step 1: Compile** — Buddy collects ALL individual review files

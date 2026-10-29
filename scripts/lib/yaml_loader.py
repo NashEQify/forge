@@ -13,6 +13,7 @@ except ImportError:
     sys.exit(1)
 
 from scripts.lib import FRAMEWORK_ROOT
+from scripts.lib.review_adoption import validate_adoption_options
 
 # ---------------------------------------------------------------------------
 # YAML Discovery
@@ -63,7 +64,7 @@ VALID_CATEGORIES = {"deterministic", "classification", "content", "gate"}
 # it falls through the standard manual-completion path.
 VALID_COMPLETION_TYPES = {
     "file_modified_after", "file_created_matching", "file_content_check",
-    "exit_code", "compound", "manual",
+    "named_predicate", "compound", "manual", "brief_check",
     # Spec 299: pointer_check sub-Check fuer Source-Verifikation.
     # Pflichtfeld: source_file. Validation-Mechanik im Engine-Check
     # (workflow_engine.py check_completion) gegen Schema-SoT
@@ -71,7 +72,7 @@ VALID_COMPLETION_TYPES = {
     "pointer_check",
 }
 VALID_GUARD_TYPES = {
-    "file_exists", "step_status", "route_active", "script", "always_skip",
+    "file_exists", "step_status", "route_active", "named_predicate", "always_skip",
 }
 VALID_ON_FAIL = {"block", "warn", "skip", "escalate"}
 
@@ -91,7 +92,10 @@ def _validate_completion(comp: dict[str, Any], step_id: str) -> list[str]:
         errors.append(f"step '{step_id}': unknown completion type '{ctype}'")
         return errors
 
-    if ctype == "file_modified_after":
+    if ctype == "brief_check":
+        if not isinstance(comp.get("path"), str) or not comp["path"].strip():
+            errors.append(f"step '{step_id}': brief_check requires nonblank string 'path'")
+    elif ctype == "file_modified_after":
         if not comp.get("path"):
             errors.append(f"step '{step_id}': file_modified_after requires 'path'")
     elif ctype == "file_created_matching":
@@ -104,9 +108,9 @@ def _validate_completion(comp: dict[str, Any], step_id: str) -> list[str]:
             errors.append(f"step '{step_id}': file_content_check condition must be 'has_match' or 'no_match'")
         if not comp.get("pattern"):
             errors.append(f"step '{step_id}': file_content_check requires 'pattern'")
-    elif ctype == "exit_code":
-        if not comp.get("command"):
-            errors.append(f"step '{step_id}': exit_code requires 'command'")
+    elif ctype == "named_predicate":
+        if comp.get("name") not in {"council-needed", "task-yaml-ok", "task-status-done"} or not comp.get("task_id"):
+            errors.append(f"step '{step_id}': invalid named_predicate name/task_id")
     elif ctype == "compound":
         checks = comp.get("checks")
         if not checks or not isinstance(checks, list):
@@ -115,6 +119,8 @@ def _validate_completion(comp: dict[str, Any], step_id: str) -> list[str]:
             for i, sub in enumerate(checks):
                 if isinstance(sub, dict):
                     errors.extend(_validate_completion(sub, f"{step_id}.compound[{i}]"))
+                else:
+                    errors.append(f"step '{step_id}': compound child must be a mapping")
             # Spec 299 §2.2 — Reihenfolge-Pflicht: pointer_check
             # MUSS vor manual stehen (Race-Mitigation: File muss existieren
             # bevor manual-complete erlaubt). Reverse-order ist Race-Bug-Konfig.
@@ -131,6 +137,7 @@ def _validate_completion(comp: dict[str, Any], step_id: str) -> list[str]:
                         f"per Spec 299 §2.2). Got manual before pointer_check."
                     )
     elif ctype == "pointer_check":
+        errors.extend(f"step '{step_id}': {message}" for message in validate_adoption_options(comp))
         # Spec 299 §2.1 — pointer_check braucht source_file Pflichtfeld.
         # Top-level pointer_check ist permissiv akzeptiert (Engine-Check
         # check_completion handelt es als auto-complete-on-pass; siehe
@@ -184,8 +191,9 @@ def _validate_guard(guard: dict[str, Any], step_id: str) -> list[str]:
             errors.append(f"step '{step_id}': route_active guard requires 'step_id'")
         if not guard.get("route"):
             errors.append(f"step '{step_id}': route_active guard requires 'route'")
-    elif gtype == "script" and not guard.get("command"):
-        errors.append(f"step '{step_id}': script guard requires 'command'")
+    elif gtype == "named_predicate":
+        if guard.get("name") not in {"council-needed", "task-yaml-ok"} or not guard.get("task_id"):
+            errors.append(f"step '{step_id}': invalid guard named_predicate {guard.get('name')!r}/task_id")
     # always_skip: no extra fields
     return errors
 
@@ -223,6 +231,10 @@ def validate_workflow_schema(data: dict[str, Any]) -> list[str]:
         if sid in step_ids:
             errors.append(f"duplicate step id '{sid}'")
         step_ids.add(sid)
+
+        # Explicit evidence is an invocation requirement, not semantic proof.
+        if "evidence_required" in step and type(step["evidence_required"]) is not bool:
+            errors.append(f"step '{sid}': evidence_required must be a boolean")
 
         # Category validation
         cat = step.get("category")

@@ -15,12 +15,17 @@ disable-model-invocation: false
 uses: [spec_board, convergence_loop, _protocols/evidence-pointer-schema]
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: architecture-coherence-review
 
 ## Purpose
 
-Checks whether 2+ specs that share interfaces (API routes, NATS
-subjects, Pydantic models, schema definitions) are actually
+Checks whether 2+ specs that share interfaces (API routes, message
+channels such as NATS subjects, schema models such as Pydantic
+classes, schema definitions) are actually
 consistent. Single board reviews check specs in isolation —
 coherence reviews check the seams BETWEEN specs.
 
@@ -37,12 +42,38 @@ coherence reviews check the seams BETWEEN specs.
 | Dim | What is checked |
 |-----|-----------------|
 | 1. Signatures | Function / method signatures, return types, parameters |
-| 2. Types | Pydantic models, enums, literal types, type aliases |
+| 2. Types | Schema models (e.g. Pydantic), enums, literal types, type aliases |
 | 3. Schemas | DB DDL, event payloads, JSON schemas |
 | 4. Naming | Same term = same spelling (subjects, endpoints, fields) |
 | 5. Config | Consumer configs, ENV vars, feature flags |
 | 6. Error | Error taxonomies, error codes, fallback behaviour |
 | 7. Lifecycle | State machines, retry policies, timeouts, cleanup |
+
+## Mandatory consuming owner
+
+Before initiating a software review intended to satisfy a mandatory result,
+readiness or completion boundary, load `skills/_protocols/evidence-pointer-schema.md`
+§9. Resolve one exact owner and capture before dispatch. Declare code subject
+state/output exclusions before enumeration and check that they omit no required
+reviewed inputs. Use persisted-success capture stdout for producer metadata and
+pass each assigned slot, scope/focus and history neutrally. Preserve complete
+returns verbatim with actual actors, paths and raw-byte digests before consumption.
+A canonical verdict path is only a locator; retain prior payloads before replacing
+it. Buddy's explicit current decision selects the current reports of the final
+applicable review and names any history; it answers each adoption diagnostic. Adopt it through §9, then check the applicable policy before any
+mandatory result/readiness write or completion. Current negative evidence supports
+repair; it grants no success permission. Identity does not replace substantive
+coverage, source interpretation, severity/risk rules or authorization.
+
+Carry the exact caller owner through advisory and verification handoffs; nested
+spec-board execution must not create another capture. After Phase 4 relevant
+fixes, retry and fresh scoped-capture all affected specs/required inputs before
+Phase 5's existing applicable verification. Put original advisory reports and fix
+obligations in exact history. Where the method permits Buddy mechanical checks,
+record those actual bounded checks in a captured verification report with scope,
+limitations and current evidence. No additional reviewer tier is introduced.
+Phase 5 sources and an explicit current decision, rather than pre-fix advisory
+approval, qualify final completion and spec_success forward writes.
 
 ## Phases
 
@@ -77,7 +108,7 @@ PHASE 4 — FIX
   Fix divergences and gaps — edits in the affected specs.
   Per fix: which spec is SoT? The SoT spec stays; the consumer
   spec is adapted.
-  Ownership: docs/spec-ownership.md (when present).
+  Ownership: <project>/docs/spec-ownership.md (when the project has one).
   Content preservation: → _protocols/content-preservation.md.
 
 PHASE 5 — VERIFY (optional)
@@ -135,6 +166,8 @@ docs/reviews/coherence/
   routing.
 
 ### DONE
+- Current applicable post-fix decision adopted and spec_success checked before
+  mandatory review-derived forward writes, using the exact owner.
 - Extraction matrix complete (every spec × 7 dimensions).
 - Interface contract persisted (CONSISTENT + DIVERGENT + GAP).
 - Advisory board executed on DIVERGENT + GAP.

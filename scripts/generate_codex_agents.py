@@ -31,7 +31,7 @@ try:
         read_file,
         safe_path,
     )
-    from .user_scope import UserScope, boot_text, daily_rules
+    from .user_scope import INVARIANTS_UNIT, WHOLE_BOOT, UserScope, boot_text, daily_rules, reread_line
 except ImportError:
     from managed_install import (
         InstallConflict,
@@ -42,7 +42,7 @@ except ImportError:
         read_file,
         safe_path,
     )
-    from user_scope import UserScope, boot_text, daily_rules
+    from user_scope import INVARIANTS_UNIT, WHOLE_BOOT, UserScope, boot_text, daily_rules, reread_line
 
 
 # These roles execute or author files; the others produce reports.
@@ -83,9 +83,11 @@ def boot_instructions(
             "when no Buddy role was explicitly selected:\n\n"
             + "\n".join(
                 f"- {framework}/agents/buddy/{part}.md"
-                for part in ("soul", "boot")
+                for part in ("codex-execution", "soul", "boot")
             )
-            + "\n\n" + _TAIL
+            + f"\n- {framework}/{INVARIANTS_UNIT}"
+            + "\n" + WHOLE_BOOT
+            + "\n" + reread_line(framework, "full") + "\n\n" + _TAIL
         )
     if scope is None:  # person-neutral text for a non-default profile
         entry = boot_text(UserScope(), Path(framework), profile, neutral=True)
@@ -95,6 +97,7 @@ def boot_instructions(
         "Forge framework root: " + framework + "\n\n"
         "For the primary Buddy session, follow this boot entry before responding,\n"
         "even when no Buddy role was explicitly selected:\n\n"
+        + f"First read {framework}/agents/buddy/codex-execution.md.\n\n"
         + entry + "\n" + _TAIL
         + ("\n" + daily_rules("codex") if profile == "daily" else "")
     )
@@ -133,7 +136,11 @@ def generate_roles(repo: Path, framework_root: Path | None = None) -> dict[str, 
                 "concrete Forge root from the managed AGENTS boot entry. Report\n"
                 "a missing root instead of guessing.\n\n"
             )
-        instructions = root_resolution + (
+        execution_guide = (
+            f"Before executing commands, read {framework}/agents/buddy/codex-execution.md.\n\n"
+            if name in WRITER_ROLES else ""
+        )
+        instructions = root_resolution + execution_guide + (
             f"Canonical role: {framework}/agents/{source.name}\n"
             f"Resolve framework references against {framework}; resolve bare\n"
             f"_protocols/ references against {framework}/agents/. Keep project\n"
@@ -258,6 +265,9 @@ def plan_block_removal(
             after = after[1:]
         if before.endswith("\n\n"):  # separator plan_block added after outer text
             before = before[:-2]
+            # Outer text without a final newline: keep the following line apart.
+            if before and not before.endswith("\n") and after[:1] not in ("", "\n", "\r"):
+                before += "\n"
         remaining = before + after
         plan.add(
             path, remaining.encode() if remaining.strip() else None, expected=original

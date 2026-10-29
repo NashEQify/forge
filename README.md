@@ -1,166 +1,153 @@
-# forge
+# Forge
 
 <img src="assets/vibeforge-logo.png" align="right" width="220" alt="Forge mascot: a furnace working at an anvil" />
 
-**Useful context, better reasoning, coherent delivery — across AI sessions.**
+**Bring an idea. Forge guides the work to the result you want.**
 
-Forge is a shared set of skills, instructions and supporting tools for working
-with AI agents. Its **Knowledge Processor automatically saves relevant new knowledge
-as you work and retrieves saved context when a task needs it**. Forge also helps
-you examine difficult questions and carry software work through to a verified
-result. You keep your existing agent application and working folders.
+Forge is a guided process for building with AI. You describe your idea in plain words.
+**Buddy**, Forge's guide inside your AI coding assistant, asks what matters, writes
+down the goal with you, plans the work, has a coding agent build and test it, gets it
+checked by a separate reviewer, and shows you the result with the tests behind it.
+A small, reversible change can take a short path; a bigger one gets the structure it
+needs.
 
-Three capabilities ship together. Use the parts your work needs.
+Forge is made first for building software and small solutions: a script, a tool, an
+app. The same guidance helps with a decision you need to get right, and when you
+`save`, it keeps what you learned and what is still open, so the next session can pick
+up where you left off.
 
-| Capability | What it helps you do | Example |
-|---|---|---|
-| **Knowledge and continuity** | Automatically save relevant new knowledge during work, retrieve it when needed and resume open work | Continue an application, plan a trip, or maintain infrastructure knowledge without reconstructing every earlier conversation |
-| **General reasoning** | Examine assumptions, compare alternatives and test a decision from independent perspectives | Decide between approaches with a Council, clarify a problem with Frame, or work back to first principles with Bedrock |
-| **Software development** | Turn an intent into specifications, implementation, tests and reviews, with tracked progress | Build a feature across sessions or investigate and repair a defect |
+Forge is for one person building with AI, "vibe coding" included: you say what you
+want, and Forge keeps the work tied to that goal as it grows.
 
-Knowledge work needs no software task system. A reasoning method can use the
-context you provide without a repository. Software workflows compose these
-capabilities when development is selected. Installing more capabilities does not
-turn every conversation into a build.
+## What a run looks like
 
-## What changes in everyday use
+You: *"I want a small tool that sorts my holiday photos into folders by date."*
 
-You describe the work in ordinary language. **Buddy**, Forge's conversational
-entry, uses the active project's intent and rules to choose the appropriate depth.
-A small question can stay a small question; a consequential decision can receive
-more scrutiny.
+1. **Buddy asks what matters.** Which folder? What happens to photos without a date?
+   Move the originals or copy them? Your answers become the goal and the
+   checks that say when it is done. You approve them.
+2. **Buddy sizes the work from written facts:** the open points you would notice,
+   what is hard to undo (moving your photos instead of copying them), and how much the
+   change touches. How many steps the
+   work gets follows from them. Had you asked for a slideshow of the photos as well,
+   Buddy would offer to make that its own task.
+3. **A coding agent builds it** from a written brief that carries your approved checks
+   word for word, and tests the cases you named.
+4. **A separate reviewer checks the change.** Each finding is verified before anything
+   is fixed, and a fix goes at the cause.
+5. **Buddy shows you the result with its evidence:** which tests ran and what they
+   cover, plus any decision it took for you, with what it would cost if wrong and how
+   to undo it.
 
-- **“Use what we already know for this application.”** Relevant topic records and
-  current drafts are read before answering. Personal details stay in your configured
-  user repository; project knowledge stays with its project.
-- **“Compare these options with a Council.”** The method considers distinct
-  perspectives and surfaces assumptions, disagreement and uncertainty. Its output
-  is a proposal or analysis; it does not silently become your decision.
-- **“Implement this feature.”** In a software project, Forge can organize the
-  specification, coding, testing and independent review needed for the change.
-- **“Save.”** Reconcile useful knowledge and the session handoff. An explicit save
-  also requests commit and push to the active project's tracked upstream unless
-  local rules restrict it. Selected development work contributes its tracked state.
+A bigger change gets more stages on the way: a written spec, a design for a screen or
+flow a person uses, drawn from your answers, an architecture when separately built parts must fit together (the few decisions they
+all follow, and what is left open on purpose), a
+plan whose tasks are checked against each other. A small one
+skips what it does not need. Anything that touches security, data or live systems
+always keeps its safeguards.
+[The path, stage by stage](architecture-documentation/01-overview.md#software-development-from-intent-to-verified-result)
 
-**Continuous knowledge maintenance is active by default in configured Buddy
-sessions, including software-development chats.** You do not need to ask the agent
-to remember each useful fact or wait until `save`. The Knowledge Processor compares
-new information with existing records, updates relevant facts, decisions and
-corrections, and retrieves saved context before work that depends on it. Information
-already recorded does not generate another entry.
+## What makes it different
 
-Personal knowledge belongs in your configured user repository; project knowledge
-stays with its project. **A user repository is optional and can have any name.**
-Without one, Forge still maintains project knowledge; it does not create a personal
-workspace or store personal facts in the project as a fallback.
-Local storage rules, permissions and requests such as
-“do not save this” remain binding. This ongoing maintenance does not itself
-authorize commits or pushes.
+- **Your goal leads.** Every agent works from the goal you approved. Buddy helps you
+  sharpen the goal; it never makes one up.
+- **Evidence, not claims.** "Done" comes with what shows it, such as the tests that
+  ran, or Buddy says what actually holds. When a session goes wrong, Buddy can read
+  its transcript and show line by line what happened, starting with whether Forge
+  loaded at all.
+- **A second look.** The agent that builds is not the one that reviews. Buddy checks
+  what the reviewer reports and decides what gets fixed; a question about your goal
+  comes back to you.
+- **You stay in charge.** Looking into a problem does not let Buddy change anything;
+  publishing, live changes and deleting each need your go.
+- **It remembers.** Knowledge and open work stay as files in your own folders, not
+  in a hosted service.
+- **It runs where you already work:** Claude Code, Codex or OpenCode. Forge is plain
+  instruction text plus small helper tools; the tools check specific things, they do
+  not enforce the methods.
 
-A small profile and topic navigation help the agent find relevant detail without
-loading your entire history. Dates, qualifications and source evidence stay where
-needed; the system does not need a transcript of every interaction.
+[How Forge does each of these](architecture-documentation/04-core-concepts.md#how-forge-works)
 
-Continuity is stored in files in your workspaces. “Automatic” describes the agent's
-instructions to maintain and retrieve knowledge during work; execution depends on
-the agent following those instructions and having file access. It is not automatic
-access to past chats or a background memory service.
+## Get started
 
-## Choose your starting point
-
-| You want to… | Read |
-|---|---|
-| Use Forge for everyday work and recurring context | [Daily use](architecture-documentation/13-operational-handbook.md) |
-| Understand the three capabilities and their boundaries | [Overview](architecture-documentation/01-overview.md) |
-| Install Forge or update an existing installation | [Installation](architecture-documentation/05-installation.md) |
-| Use Frame, Bedrock or Council | [Usage and methods](architecture-documentation/06-usage-workflows.md) |
-| Build or maintain software | [Development workflows](architecture-documentation/06-usage-workflows.md#software-development) |
-| Understand or extend the implementation | [Architecture](architecture-documentation/02-architecture.md) · [Maintainer guide](architecture-documentation/08-development-and-maintenance.md) |
-
-## Installation
-
-Forge runs inside an existing agent host. The coordinated installer supports
-Codex, Claude Code and OpenCode integrations; their available features differ.
-Cursor rules are provided separately. See [host support](architecture-documentation/07-tool-integrations.md)
-for the distinction between shipped instructions and verified host behavior.
-
-Clone Forge and choose an installation preset:
+Setup happens in a terminal, the window where you type commands. You need Git,
+Python 3.10 or newer with the PyYAML package, Bash (Linux, macOS, or WSL on Windows),
+and one of the AI coding assistants above; a chat window like ChatGPT is not enough.
 
 ```bash
 git clone https://github.com/NashEQify/forge ~/forge
+python3 ~/forge/scripts/forge_install.py --profile full ~/projects/my-app --check
 ```
 
-- **`daily`** provides knowledge and continuity, save/housekeeping, and Bedrock,
-  without the software tooling. Council and Frame can be added explicitly.
-- **`full`** makes the development tooling and general methods available as well.
+The first command downloads Forge. The second only lists what Forge would add or
+change; replace `~/projects/my-app` with your project folder (for a new idea, create an
+empty one first). What the installer changes on your machine:
 
-For example, preview a daily installation using an **existing** personal workspace:
+- **`full`** (software work) writes Forge's entries for the assistants you pick with
+  `--host claude-code`, `codex` or `opencode`, or else for those it finds installed,
+  and stops if it finds none; later runs keep that choice until you pass `--host`
+  again. They sit in your home folder, so Forge's start entry is
+  active in every session of those assistants, not only in this project. If you
+  already have your own Claude Code hooks or `~/.claude/agents` folder, the installer
+  stops and reports it instead of overwriting them.
+- **`daily`** (knowledge and reasoning, no software tools) writes the start entries
+  for Codex and Claude Code, whichever of them that choice covers, also in your home
+  folder and also active in every session.
 
-```bash
-python3 ~/forge/scripts/forge_install.py \
-  --profile daily --user-repo ~/projects/personal --check
-```
+There is no uninstall command yet. When the list looks right, run the command again
+without `--check`. The installer then asks for one acceptance check, and `cc` and `oc`
+start only after it; the
+[installation guide](architecture-documentation/05-installation.md#verification) walks
+you through it, along with the `daily` profile, a folder for personal knowledge and
+updating an existing installation. After that, start your assistant in the project
+folder: `cc` for Claude Code or `oc` for OpenCode, the launchers the installer puts in
+`~/.local/bin` (the guide says when to type that full path), or open Codex there. Buddy
+greets you. Tell it your idea; it starts by writing the project's goal into a file
+called `intent.md` with you.
 
-Python with PyYAML is required. `--check` reports planned changes or conflicts;
-it does not install anything. Follow the [installation guide](architecture-documentation/05-installation.md)
-for application, activation verification and prerequisites. Existing installations
-must use the coordinated update procedure: preserve the old state, update during
-a maintenance window, install and verify before resuming.
+## Limits
 
-A personal workspace is optional for project-only knowledge and supplied-context
-reasoning. There is one shared implementation, not a separate Forge fork per person
-or kind of project. Profile selection controls what is installed; project intent
-controls how it is used.
+Forge is opinionated and pre-1.0. It gives the model methods and checks; it cannot
+guarantee that a model follows every instruction or judges correctly, and reviewers can
+share a wrong assumption. The full path costs more time and tokens than a quick prompt,
+so use it where the stakes justify it. Even the short path costs more than a bare
+prompt: Buddy first runs its start-up reads and checks, and a one-line fix still goes
+to a coding agent and then to a separate check, so it takes several times as long as
+a bare prompt, often minutes.
 
-## How the parts work together
+## Where Forge's methods come from
 
-**Knowledge and continuity** provide the common capture, retrieval and save rules.
-The Knowledge Processor decides what belongs where and what has changed. Protected
-file operations compare the read baseline before publishing changes and retain
-recovery information for interrupted multi-file updates.
+Forge took everything it found worth stealing from these projects, openly, under their
+MIT licenses and with credit, and rewrote or adapted it (some nearly word for word) to
+answer to one set of rules: your goal, your go-ahead, evidence, and effort matched to
+the stakes. Each project is known for something of its own:
 
-**General reasoning** provides reusable methods. Frame clarifies the problem;
-Bedrock examines its underlying assumptions; Council brings independent perspectives
-to a choice. Methods can return an answer directly. Saving their results is a
-separate, authorized action.
+- [Superpowers](https://github.com/obra/superpowers): subagent-driven development,
+  systematic debugging, verification before completion.
+- [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills): a broad
+  set of engineering skills, from security to shipping.
+- [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD): right-sized agile
+  planning and review triage.
+- [spec-kit](https://github.com/github/spec-kit): the specification as the source of
+  the code.
+- [Matt Pocock's skills](https://github.com/mattpocock/skills): small, sharp skills
+  for architecture, diagnosis and design interviews.
 
-**Software development** adds specifications, tasks, implementation, tests, review
-and release processes. Its workflow engine tracks explicitly selected work; it is
-not a prerequisite for the other capabilities.
+What Forge adds is the one process: the methods work together, from your goal to the
+evidence. This is not a ranking; each of these projects stands on its own. [What Forge took from each](architecture-documentation/01-overview.md#forge-and-the-frameworks-it-learned-from) ·
+[Register of adopted methods](framework/adopted-methods.md) · [NOTICE](NOTICE)
 
-All three share authorization, evidence standards and host integration. Concrete
-storage choices, domain rules and operational approvals remain with the workspace.
-A separate infrastructure repository can keep its own technical knowledge while
-using the same common methods.
+## Read more
 
-[Architecture and ownership](architecture-documentation/02-architecture.md) ·
-[Canonical capability contract](framework/capabilities.md)
+| You want to… | Read |
+|---|---|
+| Use Forge every day and keep context | [Daily use](architecture-documentation/13-operational-handbook.md) |
+| See what Forge is and how its parts fit | [Overview](architecture-documentation/01-overview.md) |
+| Think through a hard decision (the Frame, Bedrock and Council methods) | [Reasoning methods](architecture-documentation/06-usage-workflows.md#general-reasoning) |
+| Build or maintain software | [Software development](architecture-documentation/06-usage-workflows.md#software-development) |
+| Change Forge itself | [Architecture](architecture-documentation/02-architecture.md) · [Maintainer guide](architecture-documentation/08-development-and-maintenance.md) |
 
-## Scope and limits
-
-Forge is opinionated and pre-1.0. It supplies methods and supporting mechanisms,
-not a guarantee that a model will follow every instruction or make correct judgments.
-Independent review can catch mistakes; it can also share mistaken assumptions.
-Host permissions, tool availability and actual instruction loading matter.
-
-Everyday continuity and a multi-agent review have very different costs. A Council
-or review board requires additional model calls, time and tokens. Use that depth
-when the uncertainty and consequences justify it; no measured universal cost or
-quality improvement is claimed.
-
-Forge does not replace your model or agent application, run a hosted knowledge
-service, or make background automations happen from notes alone. Files and imports
-remain subject to your storage and privacy rules. File locks coordinate cooperating
-Forge writers; they cannot protect against every external editor.
-
-## Explore and contribute
-
-The [documentation hub](architecture-documentation/README.md) offers routes for
-users, software builders and maintainers. The [skill map](framework/skill-map.md),
-[role index](agents/navigation.md) and [process map](framework/process-map.md) are
-reference material when you need the implementation details.
-
-Contributions: [CONTRIBUTING.md](CONTRIBUTING.md). Security reporting:
-[SECURITY.md](SECURITY.md). Community guidelines: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
-
+More routes: the [documentation hub](architecture-documentation/README.md).
+Contributions: [CONTRIBUTING.md](CONTRIBUTING.md). Security:
+[SECURITY.md](SECURITY.md). Community: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 [MIT license](LICENSE).

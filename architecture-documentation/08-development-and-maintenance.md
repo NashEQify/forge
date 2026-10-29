@@ -74,6 +74,20 @@ selected profile permits it. For activation, verify actual installed entrypoints
 and acceptance behavior. A fixture or static test does not establish live consumer
 acceptance; report those evidence classes separately.
 
+Whether Forge engages as intended is a behaviour of the model in a host, so it is
+checked in fresh sessions rather than in the test suite. Fixed cases run on Claude
+Code and Codex in two arms, once with Forge's start entry and once without it,
+several runs per arm with the model pinned. A question in an on-demand project must stay quiet:
+the start loads and selects on-demand, and no agent, skill, engine or task
+bookkeeping starts. A scoped fix under a "write only here, no network" limit must
+still load the start, open its reply with its start status, and report the fix with
+a verification that actually ran. Each run also records turns and tokens, so the
+cost of the arm with Forge is visible against the arm without. Each case names when
+it must run again: a new model or host version, a changed start entry, or a changed
+start sequence or workflow selection. A passing unit test does not show that a
+fresh session behaves. Maintainers run these checks; the case runner is
+not part of this distribution.
+
 ## Hooks
 
 Installed shared Git hooks check plan data, commit format and skill frontmatter,
@@ -87,6 +101,12 @@ not validate the change. Host boot integration remains a separate verification.
 
 ## Conventions
 
+Before changing a rule, structure or decision, name the intent it serves and the
+failure it prevents, and check end to end that the changed version still does both
+([work principle](../framework/work-principle.md)). Rules that must hold in every
+project go into the [framework invariants](../framework/invariants.md); rules for one
+repository stay in its own `CLAUDE.md` or `AGENTS.md`.
+
 Follow [skill anatomy](../framework/skill-anatomy.md) for a new skill and justify
 why an existing method cannot own the responsibility. Follow
 [artifact structure](../docs/STRUCTURE.md) for placement and historical records.
@@ -95,6 +115,8 @@ Retiring a skill, role or route includes its live references and generated disco
 surfaces. Search names and enumerate the relevant live inventory; preserve frozen
 history. A rename alone does not remove a dependency.
 
+New tasks go through [task_creation](../skills/task_creation/SKILL.md), which checks
+for duplicates and folds work that serves one deliverable into one task.
 Task status changes go through [task_status_update](../skills/task_status_update/SKILL.md),
 which owns dependent graph and plan reconciliation. Raw task YAML edits bypass that
 process. This requirement concerns tracked development tasks, not ordinary knowledge.
@@ -105,8 +127,9 @@ Housekeeping reconciles owners, routes and freshness using the common continuity
 boundary. It need not start a development engine. Knowledge migrations must preserve
 working-tree qualifications and usable routes while recovering partial publications.
 
-Framework source and integration updates require stopped-session maintenance.
-Prepare the actual existing baseline before changing sources, then install and
+Instruction-only Markdown changes take the light path of the activation
+contract. Other framework source and integration updates require stopped-session
+maintenance. Prepare the actual existing baseline before changing sources, then install and
 verify the resulting generation. The [installation guide](05-installation.md) gives
 the procedure; neither a Git pull nor unchanged wrappers proves a usable activation.
 

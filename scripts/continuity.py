@@ -407,8 +407,11 @@ def publish(scope: ContinuityScope, request: dict) -> dict:
                     op for op in operations if op["operation_id"] != operation_id
                 ]
                 _write_pending(scope, operations)
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             # Actual disk content is authoritative, including a failed fsync after replace.
+            # Once a durable record exists, an I/O or path failure leaves a recoverable operation.
+            if not (durable or isinstance(exc, OSError)):
+                raise
             raise ContinuityError(
                 "publication_interrupted", 4, affected=affected
             ) from exc

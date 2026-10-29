@@ -17,9 +17,9 @@ The consumer workspace remains the active CWD and retains its own rules.
 | OpenCode | Full-profile `oc` launcher and generated configuration | Wrapper and configuration loading need host verification |
 | Cursor | Project rules referring to canonical sources | Rules-based adapter, outside the coordinated host installer |
 
-The shared installer coordinates managed Codex, Claude Code and OpenCode plans.
-All named setup scripts forward to it; `setup-codex.sh` does not mean Codex-only
-installation. [Installation](05-installation.md) contains the commands and activation
+The shared installer coordinates managed Codex, Claude Code and OpenCode plans for
+the assistants chosen with `--host` or found installed. All named setup scripts
+forward to it; `setup-codex.sh` does not mean Codex-only installation. [Installation](05-installation.md) contains the commands and activation
 procedure. This page explains the runtime differences.
 
 ## Claude Code
@@ -40,7 +40,8 @@ files or subagent wrappers were loaded.
 
 Configured Claude SessionStart scripts support boot and remote-session entry.
 They are Claude-specific, not universal hooks for other hosts. Shared source
-updates use stopped-session maintenance; boot must not independently pull and
+updates other than instruction-only Markdown use stopped-session maintenance;
+boot must not independently pull and
 reinstall the framework.
 
 ## OpenCode
@@ -68,6 +69,14 @@ files identify the framework and selected boot. The primary session follows that
 entry even without an explicitly selected Buddy role. Delegated roles follow their
 own canonical role rather than repeating primary-session bookkeeping.
 
+Codex's writable workspace can retain a read-only `.git`, including linked-worktree
+Git directories. For authorized Git writes and the boot fetch helper, the caller
+uses the offered `require_escalated` route directly. Auto-review may approve it
+without a human prompt; no success or automatic approval is guaranteed. Read-only
+queries stay sandboxed where permitted. The [Codex execution contract](../agents/buddy/codex-execution.md)
+keeps tool approval distinct from commit/push authority and records denial handling.
+Forge neither removes this host boundary nor installs blanket Git allow rules.
+
 Generated role defaults distinguish report-only reviewers from writers. A report
 role returns its complete artifact inline; the parent persists it verbatim before
 any downstream consolidation that requires it. Runtime overrides may change the
@@ -87,6 +96,24 @@ Treat these as shipped rules, not evidence of equivalent subagent execution,
 permission enforcement or installer coverage. Verify what the actual Cursor session
 loads and can execute before applying a method that requires independent agents.
 
+## Delegation vehicles
+
+Buddy chooses inline work, an isolated agent or a persistent session
+(`agents/buddy/delegation.md` §Vehicle choice). What each host
+offers differs; treat unverified rows as unknown, not as parity.
+
+| Host | Isolated agent | Persistent user-visible session | Own worktree per writer |
+|---|---|---|---|
+| Claude desktop app | Subagents | Yes. A session started without a worktree shares the commissioning checkout and branch (observed: `git rev-parse --show-toplevel` → the main checkout, branch `main`) | Optional at session start (own worktree and branch) |
+| Claude Code CLI | Subagents | Background sessions per the host documentation; not verified here | Per the host documentation (subagent and background-session isolation); not verified here |
+| Codex, OpenCode | Generated roles | Not verified | Not verified |
+| Cursor | Not verified | Not verified | Host worktree feature; not verified here |
+
+Fallbacks: without a persistent-session vehicle, the coordinating Buddy runs
+the task itself with isolated agents for bounded pieces, or gives the user
+the brief file to open a session manually. Without per-writer worktrees,
+only one writing workstream runs per checkout.
+
 ## Hooks and enforcement
 
 Shared Git hooks run at commit time when installed in the active repository.
@@ -100,7 +127,6 @@ They do not intercept each agent write.
 | Skill frontmatter | Blocks invalid applicable skill metadata |
 | Secret scan | Advisory; scanner availability affects coverage |
 | Source verification | Advisory evidence-pointer checks |
-| Anti-phantom | Advisory checks for stale enforcement claims |
 
 Forge has no `PreToolUse`, `PostToolUse` or `UserPromptSubmit` tool-event hook layer.
 Write-time behavior relies on instructions, protocols and the host's real permissions.

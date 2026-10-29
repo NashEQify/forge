@@ -17,6 +17,14 @@ This is pass {N}, {Standard|Deep|Quick} mode.
 
 ## What MAY go into the dispatch
 
+- Neutral commissioning bounds: the intended user outcome, assignment and edit
+  boundaries, the unresolved question, necessary independent
+  perspective, model/effort rationale, relevant source/revision paths, requested
+  return shape and stopping/escalation condition. These bounds must not reveal
+  expected findings, another reviewer’s judgments or a preferred solution. Use
+  the applicable delta-review protocol for corrective passes rather than
+  importing prior findings into a cold initial review.
+
 - Focus points from the risk assessment (in `code_review_board`
   review brief).
 - Reference-material paths (in `sectional_deep_review` cross-ref
@@ -24,9 +32,20 @@ This is pass {N}, {Standard|Deep|Quick} mode.
 - Scope narrowing (in `sectional_deep_review`: "Sections in scope:
   {list}").
 
+The caller retains integration responsibility. Supply the applicable commissioning
+requirements and relevant unresolved obligations as neutral outcome and assignment
+bounds, so an isolated actor can identify necessary unchecked connections and return
+them without expanding its role or edit authority. Apply the agreement comparison
+in `framework/work-principle.md` to the actual return against those bounds and the
+original parent obligation; retain unmet parent requirements. These bounds must
+preserve review isolation and must not convey expected findings, preferred
+conclusions or prior reviewer judgments.
+
 ## Pre-dispatch check (Buddy, before the agent call)
 
 `Anchoring-free? [Yes — only artifact path + output path + scope]`
+
+`Model: [<model> (<role row>), passed in the call — framework/models.md]`
 
 Buddy checks the assembled dispatch text against the MUST-NOT list
 below. If violated: shorten the text — don't post-rationalize.
@@ -37,6 +56,30 @@ below. If violated: shorten the text — don't post-rationalize.
 - Solution preferences or opinions.
 - Previous findings or results.
 - Hints at known problems or expected findings.
+
+## Captured mandatory software review
+
+Before dispatch intended to satisfy a mandatory result/readiness/completion gate,
+load `skills/_protocols/evidence-pointer-schema.md` §9. Resolve the exact owner
+first: standalone spec-board owns `agent-dispatch`; nested callers supply their
+exact parent owner and retain the existing explicit parent workflow identity.
+Capture before current production. For code capture, declare owner-state and all
+intended report/decision outputs or dedicated prefixes before enumeration; review
+input changes must remain inside the product subject, outside those exclusions.
+
+Consume only successful `--review-capture STEP --id WORKFLOW` stdout as JSON.
+Retain its owner and iteration; pass its `review_run_id` and
+`review_subject_digest` verbatim, plus the assigned captured `review_slot`, role,
+focus and historical references, as neutral commissioning metadata. No private
+state-path parsing, status-text derivation or fabricated success envelope.
+Require reviewer-base/domain or light-verification §9 loading in the assembled
+prompt. The producer echoes the three identity fields with schema version 1.
+
+Before downstream consumption, persist each complete returned payload verbatim,
+frontmatter at byte zero. Record actual returned actor identity, selected path and
+raw-byte SHA-256 in Buddy's selected references. Preserve prior reports before
+canonical replacement. Scope qualifications and dissent are part of the payload;
+a summary is not a replacement. Keep historical context separate from current slots.
 
 ## Output transport
 
@@ -73,6 +116,15 @@ and the final decision are separate from mechanically preserving the payload.
 If a return is incomplete/truncated, obtain the missing payload before claiming
 the artifact exists. Inline output is the standard transport, not a failure.
 
+Preserve each complete original return once at its owner with provenance. Later
+consumers receive the relevant originals or their accessible paths and the
+decision context; do not recreate unchanged reports or substitute a summary for
+required evidence. A host-supported faithful extraction may avoid manual
+re-authoring only when the complete payload and its preservation are verified.
+Otherwise retain the complete inline fallback. Concise requested output must
+still contain every required finding, evidence pointer, qualification and
+meaningful dissent.
+
 ---
 
 ## §Brief-Quality (verbatim adoption from upstream AgentTool prompt)
@@ -103,7 +155,7 @@ paths, line numbers, what specifically to change.
 asserts a code-shape claim the implementer will rely on — "a thin
 wrapper over X", "reuses the existing Y", a cited `file:line` or
 symbol — grep it at HEAD before it enters the prompt
-(`evidence-pointer-schema.md` §8.3, dispatch-authoring layer).
+(`evidence-author-claims.md` §8.3, dispatch-authoring layer).
 Observed: a dispatch's "thin wrapper" claim falsified 3×, plus a cited
 `source_ref` field that never existed. A dispatch claim is an
 asserter-claim; it owes the same one-hop grounding as a brief.
@@ -129,5 +181,8 @@ When multiple agents run in parallel:
 - **Launch in one tool block.** When you launch multiple agents
   for independent work, send them in a single message with multiple
   tool-use content blocks so they run concurrently.
+- **Persistent sessions** return through a return artifact (plus the
+  host's notification where it has one), not a tool result. Don't peek applies to their transcripts too;
+  ownership and integration: `agents/buddy/coordinating-sessions.md`.
 
 SoT: spec 306 §7.2.

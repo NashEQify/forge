@@ -9,7 +9,7 @@ Sources:
     - agents/*.md (Agent Pool)
     - skills/*/SKILL.md (Skill Registry)
     - skills/{spec_board,code_review_board,ux_review}/SKILL.md (Board Overview)
-    - CLAUDE.md (Invariants)
+    - framework/invariants.md (Invariants)
 
 Output:
     - docs/architecture/generated/agent-pool.md
@@ -32,7 +32,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 AGENTS_DIR = ROOT / "agents"
 SKILLS_DIR = ROOT / "skills"
-CLAUDE_MD = ROOT / "CLAUDE.md"
+INVARIANTS_MD = ROOT / "framework" / "invariants.md"
 DEFAULT_OUTPUT_DIR = ROOT / "docs" / "architecture" / "generated"
 
 # Subdirectories to exclude from agent scanning
@@ -363,21 +363,22 @@ def generate_board_overview(agents: list[AgentInfo]) -> str:
 
 
 def generate_invariants() -> str:
-    """Generate invariants.md from CLAUDE.md."""
+    """Generate invariants.md from framework/invariants.md."""
+    source = "framework/invariants.md"
     lines = [
         "# Invariants (auto-generated)",
         "",
-        "> Extracted from CLAUDE.md. Do not edit manually.",
+        f"> Extracted from {source}. Do not edit manually.",
         "",
     ]
 
     try:
-        text = CLAUDE_MD.read_text(encoding="utf-8")
+        text = INVARIANTS_MD.read_text(encoding="utf-8")
     except FileNotFoundError:
-        warnings.warn(f"CLAUDE.md not found: {CLAUDE_MD}", stacklevel=2)
-        lines.append("*CLAUDE.md nicht gefunden.*")
+        warnings.warn(f"{source} not found: {INVARIANTS_MD}", stacklevel=2)
+        lines.append(f"*{source} not found.*")
         lines.append("")
-        lines.append(f"*Status: {TODAY}. Source: CLAUDE.md*")
+        lines.append(f"*Status: {TODAY}. Source: {source}*")
         lines.append("")
         return "\n".join(lines)
 
@@ -405,14 +406,14 @@ def generate_invariants() -> str:
     if invariants:
         lines.extend(invariants)
     else:
-        # Fallback: embed entire CLAUDE.md as code block
-        warnings.warn("No Invariants section found in CLAUDE.md, using fallback", stacklevel=2)
+        # Fallback: embed the whole source file as a code block
+        warnings.warn(f"No Invariants section found in {source}, using fallback", stacklevel=2)
         lines.append("```markdown")
         lines.append(text)
         lines.append("```")
 
     lines.append("")
-    lines.append(f"*Status: {TODAY}. Source: CLAUDE.md*")
+    lines.append(f"*Status: {TODAY}. Source: {source}*")
     lines.append("")
 
     return "\n".join(lines)

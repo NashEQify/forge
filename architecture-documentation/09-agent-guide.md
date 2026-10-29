@@ -8,16 +8,25 @@ authoritative; this page is a reading route, not a replacement protocol.
 
 1. Establish the active consumer CWD and framework root. Resolve project paths
    against the consumer and framework paths against the framework checkout.
-2. Follow the host's primary-session entry and the resolved soul. Delegated roles
-   follow their canonical role instead of repeating Buddy boot and bookkeeping.
-3. Read the project's intent and rules, then resolve workflow selection through
-   the [process map](../framework/process-map.md#workflow-selection).
-4. Use the selected boot's scoped recovery and retrieval procedure before relying
+2. Follow the host's primary-session entry and the resolved soul, then the start
+   your profile names, before the first answer and whatever the request's size; a
+   quick question or lookup does not shorten it. For `full` that is the
+   [start sequence](../agents/buddy/boot.md) and the
+   [framework invariants](../framework/invariants.md), the rules that hold in every
+   project; for `daily` it is the on-demand start. Delegated roles follow their
+   canonical role instead of repeating Buddy boot and bookkeeping.
+3. Check for remote updates and settle any pull question before loading context.
+   Then read the project's intent and rules and resolve
+   [workflow selection](../framework/workflow-selection.md).
+4. Use the selected mode's scoped recovery and retrieval procedure before relying
    on profile, handoff or topic facts. Follow navigation to the current topic.
 
-`daily` always takes [on-demand boot](../agents/buddy/boot-on-demand.md). A full
-install also takes that branch when intent does not select software development.
-Do not inspect plans or start engines merely because their files are present.
+`daily` always takes the [on-demand start](../agents/buddy/boot-on-demand.md). A
+full install also takes that branch when intent does not select software
+development; otherwise the [software start](../agents/buddy/boot-software.md)
+follows. Do not inspect plans or start engines merely because their files are
+present. When a user scope or host limit blocks a start step, skip only that step
+and open the first answer with what did not load or run, such as an unchecked remote.
 
 ## Match the work to its owner
 
@@ -74,7 +83,17 @@ Chief consumption. Verify effective host permissions separately from instruction
 
 When software work is selected, follow [agent autonomy](../framework/agent-autonomy.md)
 and the chosen runbook for who writes which artifacts. Product code goes to the
-implementation role under that discipline; Buddy owns orchestration and decisions.
+implementation role at any size; Buddy owns orchestration and decisions. A change
+to behaviour gets a separate fresh-context check that is never the implementer,
+and the final reply names it ([the DIRECT run](../framework/direct-eligibility.md#the-direct-run)).
+A role the host has no agent type for runs as a general agent told to read its
+role file; a missing agent type is no reason to build or check inline.
+
+Before changing a rule, structure or decision, name the intent it serves and the
+failure it prevents, and check that the changed version still serves both
+([work principle](../framework/work-principle.md)). New tasks go through
+[task creation](../skills/task_creation/SKILL.md), which folds work serving one
+deliverable into one task.
 
 Bind selected runs and task/plan checks through
 [development continuation](../framework/development-continuation.md). Preserve
@@ -98,7 +117,8 @@ the action, target and reason. Preserve other writers' changes. Keep generated
 wrappers and indexes derived from canonical sources, and update live references
 when retiring an artifact.
 
-Framework source updates require coordinated stopped-session maintenance. Do not
+Framework source updates other than instruction-only Markdown require
+coordinated stopped-session maintenance. Do not
 pull shared runtime sources during boot, bypass managed ownership conflicts or
 manufacture validation evidence. Record partial persistence and unverified targets
 accurately rather than returning a complete-success claim.

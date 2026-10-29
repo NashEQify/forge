@@ -15,6 +15,10 @@ disable-model-invocation: false
 uses: [_protocols/discourse, _protocols/context-isolation, _protocols/dispatch-template]
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: impl-plan-review
 
 ## Purpose
@@ -40,7 +44,7 @@ OR a schema change OR cross-module impact? → impl_plan_review.
 Otherwise skip with rationale.
 
 **Bedrock (why this trigger):** facets per
-`agents/buddy/operational.md §Multi-perspective engagement` —
+`agents/buddy/multi-perspective.md` —
 primarily **blind-spot compensation** (MCA's interpretation of spec
 degrees-of-freedom needs reviewer-diversity before code locks it)
 and **complexity mastery** (multi-decision plans exceed solo

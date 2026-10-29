@@ -120,10 +120,10 @@ steps:
     \ not the active project, persist it the same way under its own rules; changes under its\
     \ context/user/ from other sessions count as its own content there. No force-push, reset,\
     \ automatic stash, rebase or branch switch. Conflict, missing access or SSH passphrase prompt\
-    \ \u2192 keep the local save, name the concrete blocker, no unchecked retry loop.\n"
+    \ \u2192 keep the local save, name the concrete blocker, no unchecked retry loop.\n\n\nObserve current content persistence for every applicable project and configured user repository, including required remote persistence. A no-new-commit save still requires current persistence observations. Missing, failed, timed-out or unknown outcomes remain incomplete: report the concrete blocker. After observing success with existing authorized tools, complete explicitly with --complete commit-push --id <workflow-id> --evidence \"<current observations and retained evidence>\". Evidence must be supplied in this invocation, including force. The engine checks presence only; outcome truth, freshness and completeness remain agent obligations. Completion is agent-confirmed; force remains forced."
+  evidence_required: true
   completion:
-    type: exit_code
-    command: git log -1 --oneline
+    type: "manual"
   commit_gate: false
   on_fail: escalate
 - id: verify-report

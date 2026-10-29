@@ -4,8 +4,8 @@
 Walks the import graph statically (via `ast.parse`, never `import`)
 from a starting module and reports any transitive path that reaches a
 target module. Used as a pre-lock check for structural-refactor briefs
-per `skills/_protocols/mca-brief-template.md` §Structural-refactor
-pre-lock checklist.
+per `skills/_protocols/mca-brief-template-verification.md`
+§Structural-refactor pre-lock checklist.
 
 The runtime alternative (`importlib.import_module`) is unsuitable
 because the very cycle we are checking would itself trigger an

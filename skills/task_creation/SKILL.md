@@ -14,6 +14,10 @@ disable-model-invocation: false
 uses: []
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Skill: task-creation
 
 Structured, high-quality task creation. Self-contained tasks with
@@ -32,22 +36,38 @@ Triggers: intake gate ACTIONABLE, root-cause-fix step 4, user
 
 ## The 5 steps
 
-### 1. Duplicate + dependency check (MUST)
+### 1. Duplicate, bundling + dependency check (MUST)
 
-Single scan over `docs/tasks/`, two dimensions:
+Single scan over `docs/tasks/` and the sibling tasks the same
+request would file (a council's or plan's step list):
 
-**(a) Duplicate check** — same goal (semantic, not title match),
-subset of existing, or makes existing obsolete?
+**(a) Duplicate + bundling check** — same goal (semantic, not title
+match), subset of existing, or makes existing obsolete?
 - Duplicate → no new task, reference the existing one.
 - Subset → fold the problem into the existing task as an AC /
   comment.
 - Obsolescence-maker → supersede the existing one (via
   `task_status_update`), the new task is the successor.
-- No duplicate → continue.
+- No duplicate → do the new task and a pending / in_progress or
+  sibling task serve one deliverable? They do when one result decides
+  the other's shape, one is the other's acceptance (a probe, a spike,
+  a cold run), they change the same files, or they need the same
+  install window.
+  - One deliverable, and they differ in owner (who builds, or who
+    decides if the rest happens at all), timing, authorization
+    or safety floor → keep them apart and record that reason in the
+    MD body; (b) and (c) apply between them.
+  - One deliverable otherwise → fold them into one task: a part whose
+    result decides the rest becomes a step whose failure stops the
+    task before the rest, an acceptance part becomes an AC, the
+    parts' order becomes the task's step order, and (b) runs for the
+    receiving task. An existing task takes the new part as steps or
+    ACs. Detail: `REFERENCE.md` §1a.
+  - Not one deliverable → continue.
 
 **(b) Cross-task dependency check (required, not optional)** — for
-every pending / in_progress task, is there a logical dependency in
-**either** direction?
+every pending / in_progress task that stays separate after (a), is
+there a logical dependency in **either** direction?
 
 - New task needs result of existing → new task gets
   `blocked_by: [NNN]`.
@@ -73,9 +93,8 @@ change as the split:
 The same applies when a council or verdict rules a split: the ruling
 names the gate half, its producers / consumers and the fail-closed edge.
 
-**Lifecycle symmetry:** this step **builds** the `blocked_by`
-graph; closure on terminal status (replace on superseded/absorbed,
-remove on wontfix, keep on done) is `task_status_update` Step 4.
+**Lifecycle symmetry:** closure of the `blocked_by` graph is
+`task_status_update` Step 4 (`REFERENCE.md` §1b).
 
 ### 1.5. Value floor (MUST)
 
@@ -110,12 +129,7 @@ dedup/collision/reconcile classes — lives in
 locks a reconcile/dedup premise triggers the cross-producer class
 (verify producer key-assignment co-location, not mere existence).
 `[DISCIPLINE]` — this is an authoring rule applied by the agent, NOT
-a hook. (Historical note: a `BRIEF-CLAIMS` PreToolUse hook was
-described here but never existed as a runnable artifact, and
-PreToolUse hooks were purged in ADR-004; per ADR-005 enforcement-
-honesty, no doc claims a `BLOCK` for a non-existent mechanism. The
-real safeguard is this C-VERIFY discipline + the optional
-pre-commit WARN anti-phantom check.)
+a hook (why: `REFERENCE.md` §Claim verification).
 
 ### 1.7. Critical-path placement (MUST)
 
@@ -143,7 +157,9 @@ not by subject-matter resemblance:
   pairwise guesses alone.
 
 The result feeds §4: `milestone` + `priority` justified against
-path-position, not topic.
+path-position, not topic. Placing the task into an agreed programme ahead of its
+next task is an order change: it needs the user's confirmation
+(`agents/buddy/coordinating-sessions.md` §Programme order).
 
 ### 2. Triage (MUST)
 
@@ -160,7 +176,7 @@ direct user conversation. Format + rules (build + life variants):
 
 ### 4. Write the task file (MUST)
 
-Format: `docs/tasks/NNN.yaml` + `NNN.md`. Schema SoT:
+Format: `docs/tasks/<NNN>.yaml` + `<NNN>.md`. Schema SoT:
 `framework/task-schema.yaml`. Body SoT: `framework/task-format.md`.
 
 **ID selection (MUST):** `NNN` = highest numeric basename across **both**
@@ -178,21 +194,21 @@ tasks are open → MUST carry `effort` (`S|M|L|XL`) and `priority`
 **`milestone`** MUST be a key from `docs/plan.yaml` milestones.
 Pick the milestone that fits the task **inhaltlich** (read the
 content, don't default to the last-used one). If no existing
-milestone fits, **surface to the user before continuing**:
-*"No existing milestone fits — propose a new one (key + title +
-desc) or pick the closest existing one?"* (See `docs/plan.yaml`
-`milestones:` for the schema — new entries follow the existing
-`key + title + desc + phases + requires` shape.) Plan.yaml
-milestone-writes belong outside this skill; if the user approves,
-Buddy edits `docs/plan.yaml` directly before this skill resumes
-at step 5.
+milestone fits, read and follow `REFERENCE.md` §No milestone fits
+before continuing.
 
 **`spec_ref`** required when the task implements an existing spec
 (`null` only when no spec exists).
 
 **Dependency-spike check:** new external dependency with >1
-integration point → place a spike task (PoC / eval) ahead of it as
-`blocked_by`. Detail: `REFERENCE.md`.
+integration point → it gets a spike (PoC / eval). When the spike
+needs its own decision or authorization (the user decides from its
+result if the dependency is adopted at all, or it needs a
+permission the build does not), it is a
+separate spike task, `blocked_by` ahead of the build. Otherwise the
+spike is the task's first step, with a stop point before the build:
+a failed spike stops the task and reports instead of building.
+Detail: `REFERENCE.md`.
 
 **MD content quality** — problem (why understandable?), intent
 (goal not path?), description (self-contained?), priority
@@ -214,28 +230,19 @@ blocked_by refs existing tasks, no cycle, schema conformance).
 blocked_by IDs vs `docs/tasks/`) and re-validate. Repeated FAIL →
 delete the task files; escalate to the user (NNN is reused).
 
-**Field vocabulary (schema-aware — MUST).** The canonical task-field set
-is `framework/task-schema.yaml`; draw field names from it rather than
-inventing them. A `SCHEMA_UNKNOWN_FIELD` WARN is not noise — it means
-one of three things, each with a defined response:
-- **typo / alias** (e.g. `ac`, `note`) → fix the name.
-- **genuine repo-domain field** (meaningful only in this consumer) →
-  declare it in the repo's `docs/task-schema-extensions.yaml`
-  (`extension_fields:`), never leave it ad-hoc.
-- **genuinely universal new field** → add it to `task-schema.yaml`
-  (+ sync `task-format.md`) as a framework change, not a per-task
-  improvisation.
-This is the producer half of the shaping-contract: the schema shapes
-what gets written; it is not a trailing log of whatever was improvised.
+**Field vocabulary (schema-aware — MUST).** Draw field names from
+`framework/task-schema.yaml`. On a `SCHEMA_UNKNOWN_FIELD` WARN, read
+and follow `REFERENCE.md` §Field vocabulary before writing on.
 
 ## Output
 
 ```
 Task creation: [NNN] [title]
 Duplicate check: no duplicate / duplicate of [NNN] / subset of [NNN]
+Bundling: none / folded [NNN|sibling] in / kept apart from [NNN|sibling] — [owner|timing|authorization|safety floor]
 Triage: fix immediately / create task — [rationale]
 milestone: [key from plan.yaml]
-File: docs/tasks/NNN.yaml + NNN.md
+File: docs/tasks/<NNN>.yaml + <NNN>.md
 Validate: plan_engine --validate PASS
 ```
 

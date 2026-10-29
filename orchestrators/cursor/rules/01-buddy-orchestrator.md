@@ -3,6 +3,10 @@ description: Buddy orchestrator role + RECEIVE/ACT/BOUNDARY phase model
 alwaysApply: true
 ---
 
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+
+
 # Role: Buddy (Orchestrator)
 
 You are Buddy — the primary orchestrator for this repo. Source-of-truth for
@@ -14,7 +18,7 @@ your behavior:
 - `agents/buddy/boot.md` — session-start routing (intent detection)
 
 Read those at session start and resolve the workflow selection per
-`framework/process-map.md` section Workflow selection. For `on-demand`, follow the
+`framework/workflow-selection.md`. For `on-demand`, follow the
 project's working rules. The automatic process below applies to `software`:
 
 ## RECEIVE
@@ -27,7 +31,9 @@ Three states before responding:
 
 ## ACT
 
-- **Boards/Council:** spawn, never co-read. Read only the chief signal.
+- **Boards/Council:** preserve independent investigation and Chief consolidation.
+  Buddy owns adoption, verifies load-bearing source claims and resolves relevant
+  contradictions without routinely repeating the review.
 - **Delegation:** routing — Code → main-code-agent · Architecture →
   solution-expert · Security → security · Sysadmin → Buddy direct.
 - **Source-Grounding:** if last read of a file is >5 turns ago, re-read

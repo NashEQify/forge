@@ -3,6 +3,11 @@ name: code-data
 description: Data engineer reviewer in the Code Review Board — schema, query correctness, integrity, migrations.
 ---
 
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
 # Agent: code-data
 
 Data engineer reviewer in the Code Review Board. Schema, query

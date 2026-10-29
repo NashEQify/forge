@@ -46,23 +46,12 @@ ground against the actual code state:
 2. **Read the matching code paths** to determine actual current state.
 3. **Compare** current code state vs the §-section text being amended.
 
-### Same-commit reconciliation rule
+### Bounded amendment sweep, same-commit reconciliation, divergence categories
 
-If code state diverges from the §-section text (see §What counts as
-divergence below), the divergence MUST be reconciled in the SAME
-amendment commit (CLAUDE.md §Stale cleanup invariant) — adding a
-"spec-drift-fix" strand to the amendment cluster, not deferring to a
-separate task. Cross-doc stale references to the same artifact are
-swept by `spec_amendment_verification` post-amendment per §Dispatch
-shape below.
-
-The same single-commit absorption applies to category (d)
-module-boundary topics on L1+ specs via the §module-decomposition-add
-strand — sister mechanism, different trigger.
-
-**The amendment author writes the spec to match the code** — unless
-the build is explicitly changing the code-shape, in which case the
-spec leads.
+After the comparison (step 3), before deciding what the amendment commit reconciles, and for a rename, mechanism or
+contract change or another amendment with coordinated live impact (author, integrator, verifier): read and follow
+`skills/_protocols/spec-amendment-discipline-reconcile.md` (the bounded amendment sweep per role; the same-commit
+reconciliation rule; what counts as divergence, categories (a)–(g), and the strand-scope stop rule).
 
 ### Applies to both paths
 
@@ -95,89 +84,6 @@ Skip the gate when the §-section is **identifier-free**:
 is locked but the AC under amendment is for unbuilt behavior, the
 gate applies to the symbols it names; zero-hit grep is expected.
 
-### What counts as divergence
-
-Three categories, with reconciliation triggers:
-
-- **(a) Named-symbol mismatch** — the §-section names `FooBar` but
-  the code now has `BarFoo`, OR the named class has been removed.
-  → **ALWAYS reconcile** in same commit.
-- **(b) Structural change with semantic load** — signature change,
-  file location moved with implications for consumers, contract shift.
-  → **Reconcile when the §-section claims the structure.** If the
-  §-section is identifier-only ("uses FooBar") without claiming
-  shape, the move alone is not divergence.
-- **(c) Abstraction-level mismatch** — the §-section uses paraphrase
-  ("the cache layer"), the code uses literal names (`RedisCache`).
-  → **NOT divergence.** Paraphrase ↔ literal is intentional
-  abstraction.
-- **(d) Module-boundary topic in an L1+ spec without §Module-Decomposition
-  (touch-it-fix-it for the new-class L1+ discipline)** — when the
-  amendment scope touches module-boundary topics (interface, dependency,
-  layer, seam, responsibility-split) AND the host spec is L1+ AND the
-  host spec does NOT yet have a §Module-Decomposition section, the
-  amendment MUST add the §Module-Decomposition section in the SAME
-  commit (per the schema in `framework/spec-engineering.md`
-  §Convention: §Module-Decomposition for L1+ specs).
-  → **Reconcile in same commit** as a §module-decomposition-add strand.
-  Mirrors the §spec-drift-fix strand semantics from §Same-commit
-  reconciliation rule above. Triggers only on amendment-into-topic;
-  unrelated amendments to legacy L1+ specs (typo, §Changelog, cross-ref
-  bump) do NOT trigger the absorption.
-- **(e) AC-scope amendment in an L1+ spec without §Test-Strategy
-  (touch-it-fix-it for the test-contract discipline)** — when the
-  amendment scope touches **AC scope** (new AC, AC boundary shift, new
-  behavior, new failure mode) AND the host spec is L1+ AND the host
-  spec does NOT yet have a §Test-Strategy section, the amendment MUST
-  add the §Test-Strategy section in the SAME commit (per the schema in
-  `framework/spec-engineering.md` §Convention: §Test-Strategy for L1+
-  specs), with bug-class rows **only for the AC(s) the amendment
-  touches**. Pre-existing ACs without bug_class rows stay uncovered;
-  the §Test-Strategy section is marked `partial: true` (header field)
-  until a future amendment fills more rows or a dedicated migration
-  task lands the full historic retrofit. Catalog grows organically
-  per touch; the first AC-amendment does not carry the whole-spec
-  retrofit weight.
-  → **Reconcile in same commit** as a §test-strategy-add strand.
-  Triggers only on AC-scope amendment; unrelated amendments (typo,
-  §Changelog, cross-ref bump, internal example fix) do NOT trigger.
-
-  **Full-historic-AC migration** (whole-spec retrofit) is a separate
-  future topic — a dedicated migration task / sprint, not the
-  per-amendment author's burden.
-
-- **(f) §Test-Strategy bookkeeping append (adversary-mode discovery)** —
-  when `skills/testing/SKILL.md` test-design surfaces a new
-  `bug_class` (typically via adversary-mode), appending the row to
-  §Test-Strategy is **bookkeeping-tier** (single section append, no
-  contract change). No spec_board re-spin, no §Changelog ceremony
-  per row; one §Changelog line summarising the batch is sufficient.
-  The append happens inline during test-design (commit at end of
-  adversary run or folded into a later commit). Test-design cannot
-  invent bug_classes that are not derivable from an existing AC;
-  if the bug_class belongs to no existing AC, that is category (e)
-  territory (AC scope), not (f).
-
-- **(g) State-carrier amendment without / outside §Mechanism-Lifecycle
-  (touch-it-fix-it for the lifecycle discipline)** — when the amendment
-  adds, removes or re-routes a state, an operation, a guard, an
-  enforcement locus or an invariant of a mechanism (incl. a derived
-  state or an "only via" rule) AND the owning spec has no
-  `§Mechanism-Lifecycle` section for it, the amendment MUST add the
-  section in the SAME commit (schema: `_protocols/mechanism-model.md`),
-  with every cell filled. When the section exists, the amendment MUST
-  edit the affected cells in the SAME commit — a ruling, simplification
-  or user decision recorded only in a build log, verdict or changelog
-  while the matrix stays stale is divergence of this category.
-  → **Reconcile in same commit** as a §mechanism-lifecycle strand.
-  Triggers only on amendment-into-mechanism; wording, cross-ref and
-  §Changelog edits do NOT trigger.
-
-**Strand-scope stop rule:** the spec-drift-fix strand covers the
-§-sections that name the diverged symbol(s). Recursion stops at the
-first §-section that doesn't name the symbol — even if that
-section is conceptually adjacent.
-
 ### Why
 
 Without re-reading the code, the amendment author is biased toward
@@ -204,7 +110,12 @@ human-only; mechanical mirror at the §-section level is not
 implemented (`consistency_check` covers path-reference drift, not
 §-prose drift). Sub-skill expansion possible as a future task.
 
----
+### Section cross-references (commit-time WARN)
+
+When an amendment renames, renumbers or removes a section or adds a citation of another Markdown file's section, and
+when the pre-commit SOURCE-VERIFICATION check warns about one: read and follow
+`skills/_protocols/spec-amendment-discipline-section-citations.md` (same-commit citation updates; supported forms and
+how they resolve; what is reported; what is not checked).
 
 ## Architect-dispatch threshold (spec 306 §14.2 — Variante B)
 
@@ -236,11 +147,16 @@ Buddy dispatches via the `Agent` tool:
 
 The architect returns amendment prose + cross-ref edit-list +
 `spec_version` bump suggestion + §Changelog entry, **inline** (no
-Write target — orchestrator writes per spec 306 §14.4). Buddy
-integrates the prose into the spec file(s), bumps `spec_version`,
-and dispatches `spec_amendment_verification`
-(= `skills/spec_amendment_verification/SKILL.md`) for cross-spec
-coherence.
+Write target — orchestrator writes per spec 306 §14.4). Buddy integrates
+the prose and version/changelog changes, then dispatches
+`spec_amendment_verification`
+(`skills/spec_amendment_verification/SKILL.md`).
+
+Author, integrator and verifier perform their applicable responsibilities
+under `spec-amendment-discipline-reconcile.md` §Bounded amendment sweep, carrying its context in the existing
+edit-list and application observations. Buddy-direct amendments use the
+same discipline where relevant; this does not add a verification trigger
+for a local correction.
 
 ## What stays in `spec_authoring` skill
 
