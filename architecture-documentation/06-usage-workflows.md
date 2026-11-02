@@ -15,10 +15,10 @@ an intent file, repository or task simply to use a reasoning method.
 
 ## Start with an idea
 
-**Start with Solve when you know what you want to improve and the form of the
-solution is open.** Ask Buddy to use Solve and describe the problem in your own words.
+Tell Buddy **“Forge my idea”** when you know what you want to improve and the
+form of the solution is open. This starts the Solve workflow.
 
-> Solve: Our volunteers keep turning up for the wrong shift. How could we help
+> Forge my idea. Our volunteers keep turning up for the wrong shift. How could we help
 > everyone find the current rota?
 
 Buddy asks where the rota changes hands and what the volunteers actually see.

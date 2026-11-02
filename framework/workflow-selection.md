@@ -24,6 +24,9 @@ request. Follow the requested method for that scope; this does not switch the
 project to software mode or start an enclosing workflow. Preserve existing
 workflow records; selecting on-demand neither completes nor resumes them.
 
+When the user asks Buddy to **“Forge my idea”**, follow the
+[Solve runbook](../workflows/runbooks/solve/WORKFLOW.md) for that idea.
+
 This selection governs Forge process and delegation requirements, including
 triggers in adapters and skill discovery. Authorization, secret handling,
 evidence, actual outcome verification and local safeguards remain binding.

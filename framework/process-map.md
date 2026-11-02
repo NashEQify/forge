@@ -29,7 +29,7 @@ the Authorization section applies to both modes.
 
 | I want to... | Workflow | Runbook |
 |-------------|---------|---------|
-| Solve a problem — solution shape still unclear | **Solve** | `workflows/runbooks/solve/WORKFLOW.md` |
+| “Forge my idea” — work out what would solve an open problem | **Solve** | `workflows/runbooks/solve/WORKFLOW.md` |
 | Break down an objective into a spec hierarchy | **Solve** (scoping mode) | `skills/scoping/SKILL.md` |
 | Implement a feature/task | **Build** | `workflows/runbooks/build/WORKFLOW.md` |
 | Write/design a spec | **Build** (Specify) | `workflows/runbooks/build/WORKFLOW.md` |

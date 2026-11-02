@@ -12,7 +12,7 @@ relevant friction → apply the pre-write filter in
 
 ## Trigger / NOT for
 
-**Trigger:** "solve: [problem]", unclear problem with no clear
+**Trigger:** “Forge my idea” followed by the idea or problem, "solve: [problem]", unclear problem with no clear
 workflow allocation, meta-problems (new processes, structural
 questions, methodology decisions).
 

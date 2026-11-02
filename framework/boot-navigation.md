@@ -41,7 +41,7 @@ development-specific catalogue below. Profile availability does not select work.
 
 | Workflow | Runbook | Purpose |
 |---|---|---|
-| **solve** | `workflows/runbooks/solve/WORKFLOW.md` | Problem with open solution shape. Frame -> refine -> artifact -> validate -> execute. |
+| **solve** | `workflows/runbooks/solve/WORKFLOW.md` | “Forge my idea”. Find, validate and apply a solution to an open problem. |
 | **build** | `workflows/runbooks/build/WORKFLOW.md` | Implement feature/task. Direct / Standard / Full paths. |
 | **fix** | `workflows/runbooks/fix/WORKFLOW.md` | Authorized incident recovery first; then investigate and permanently repair defects. |
 | **review** | `workflows/runbooks/review/WORKFLOW.md` | Review/validate spec(s). No code. |

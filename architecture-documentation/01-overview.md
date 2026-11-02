@@ -69,8 +69,9 @@ See [method selection and examples](06-usage-workflows.md#general-reasoning).
 
 ## Software development: from intent to verified result
 
-If you're starting with an idea, use **Solve** to work out what would meet your
-goal and how you could check it. A solution might be a procedure you can try
+If you're starting with an idea, tell Buddy **“Forge my idea”** and describe what
+you want to improve. Buddy helps you work out what would meet your goal and how
+you could check it. A solution might be a procedure you can try
 right away. When you choose software, **Build** takes the agreed feature through
 the stages below. You can enter Build directly with a defined feature.
 [Worked example](06-usage-workflows.md#start-with-an-idea).

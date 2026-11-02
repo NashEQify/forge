@@ -2,31 +2,26 @@
 
 <img src="assets/vibeforge-logo.png" align="right" width="220" alt="Forge mascot: a furnace working at an anvil" />
 
-**Forge helps you turn an idea into a solution you can try.** You work with
-**Buddy** inside your AI coding assistant. Start by saying what you want to
-change and why it matters to you.
+Forge helps you turn an idea into a solution you can try. You work with
+**Buddy** inside your AI coding assistant.
 
-- **Have an idea or a problem? Start with Solve.** Buddy explores possible
-  solutions with you, helps you choose one, and works out how to tell whether
-  it helped. You might end up with a new way of doing something, a script,
-  or an app.
-- **Already know what to build? Go straight to Build.** Give Buddy the feature
-  and the behaviour you expect. Build takes it through implementation and
-  testing. Solve hands off to the same Build workflow when you choose software.
+## Start here — Forge your idea
 
-When you `save`, Buddy records what you decided and what is still open so you
-can pick up the work in the next session.
+Tell Buddy **“Forge my idea”** and describe what you want to change. You can
+start with the problem while the solution is still open.
+
+> Forge my idea. Every time my family asks for photos from a trip, I spend an
+> evening finding them. Can we make that easier?
+
+Buddy asks how you find the photos today and what would make the next request
+easier. A shared album in your existing photo app might be enough. If you
+decide you want a tool that copies photos into dated folders, Buddy can take
+that choice into **Build**. If you already know which feature you want, ask
+for **Build** directly.
 
 ## What a run looks like
 
-*"Every time my family asks for photos from a trip, I spend an evening finding
-them. Can you help?"*
-
-That's a starting point for **Solve**. Buddy asks how you look for photos and
-what would make the next request easier. If a shared album in your existing
-photo app does the job, you can try it on one trip. If you decide you want a
-tool that copies photos into dated folders, you now have a feature for **Build**.
-Here's how building that tool might go.
+Suppose you choose the photo tool. Here's how Buddy helps you build it.
 
 1. **Buddy asks what matters.** Where should the copies go? What happens to a
    photo without a date? Your answers become checks you can try on a few photos,
@@ -66,8 +61,8 @@ always keeps its safeguards.
   or a small tested change gets a lighter check, and the reply says which.
 - **You stay in charge.** Looking into a problem does not let Buddy change anything;
   publishing, live changes and deleting each need your go.
-- **It remembers.** Knowledge and open work stay as files in your own folders, not
-  in a hosted service.
+- **It remembers.** Say `save` and Buddy records decisions and open work in your
+  project files so you can pick up in the next session.
 - **It runs where you already work:** Claude Code, Codex or OpenCode. Forge is plain
   instruction text plus small helper tools; the tools check specific things, they do
   not enforce the methods.
