@@ -1,6 +1,6 @@
 # User scope — who the user is, on every machine
 
-forge serves one person per machine installation. Everything that is about
+forge serves one person per machine installation (`full-ai-integration`). Everything that is about
 that person — their soul (how Buddy works with them), their values and
 profile, the facts about them — lives in **their own user repository**, not
 in the framework. The framework knows only where that repository is; the
@@ -17,13 +17,18 @@ is the SoT for that contract. Consumers: `agents/buddy/boot.md`,
 ```yaml
 version: 1
 user_repo: /absolute/path/to/the/users/repo   # required
-profile: full                                 # full | daily (installer)
+profile: full-ai-integration                  # installer
 skill_links: []                               # optional, installer: external skill dirs
+maintenance: coordinated                      # optional, installer: the developer path
 ```
 
-The installer writes it (`forge_install.py --user-repo PATH`). `user_repo` is
-the only per-person value; `profile` and `skill_links` describe the machine's
-installation, not the person.
+The `full-ai-integration` installer writes it (`forge_install.py --profile
+full-ai-integration --user-repo PATH`; on a terminal it asks once for the folder
+when no setting exists, and `--create-user-repo` creates the folder with
+`context/user/profile.md` and `navigation.md`). `user_repo` is the only
+per-person value; `profile`, `skill_links` and `maintenance` describe the
+machine's installation, not the person. The `project` install never reads,
+asks for or writes this setting: a project session has no user scope.
 
 ## 2. Convention inside the user repo
 
@@ -71,8 +76,8 @@ work and capture a coherent scoped snapshot before dependent reads or mutations.
 Never substitute another person's repository or a remembered path. The
 deterministic implementation is `scripts/user_scope.py` (`--json`, `--soul`,
 `--boot-text`); injectors hand its result to the session. A session-start
-injector also includes the resolved soul and, in the `full` profile,
-`agents/buddy/operational.md` as whole files where the host carrier has room
+injector also includes the resolved soul and `agents/buddy/operational.md`
+as whole files where the host carrier has room
 (`agents/buddy/boot.md` §User scope). An install-time block includes no
 files: the person's files and framework Markdown change without a reinstall. Without an
 injection, an agent resolves the same way by reading the machine setting.
@@ -110,9 +115,11 @@ stay inside `<user_repo>`.
 
 ## 5. Install profiles
 
-`framework/install-profiles.yaml` — `full` (all roles, skills, hooks and
-launchers) and `daily` (knowledge maintenance, save, bedrock drill and the
-boot entry; always `on-demand`, no software tooling, no framework root
-adapter). The profile selects what
-is installed and which boot files are injected; it never changes who the user
-is.
+`framework/install-profiles.yaml` — `project` (Forge in one named project:
+the boot entry, Buddy as the main agent and the roles there; no user scope)
+and `full-ai-integration` (Buddy in every session of the machine with the user
+scope, all roles, skills, hooks and launchers). Both entries name the same
+units (`scripts/user_scope.py` `ENTRY_UNITS`), and the active project's
+intent selects the workflow in both (`framework/workflow-selection.md`). The
+profile selects where Forge is installed and whether a user scope exists; it
+never changes who the user is.

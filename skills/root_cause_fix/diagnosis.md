@@ -104,7 +104,7 @@ cause)**, not a second parallel sequence:
 
 Concretely: not "the test is failing, I'll finish the other
 feature first, then look at it". Errors compound — a bug in
-step 3 makes steps 4-10 wrong. A sharpening of the existing
+step 3 makes steps 4-6 wrong. A sharpening of the existing
 **artifact gate** in `SKILL.md`: stop-the-line is the required reaction
 before the artifact is even discussed.
 
@@ -246,4 +246,4 @@ Ask the user for unavailable domain facts, not routine permission to perform aut
 
 ## Source
 
-Superpowers (MIT License, © 2025 Jesse Vincent), agent-skills at `19e49a0` (MIT License, © 2025 Addy Osmani) and Matt Pocock's skills at `b843cb5` (MIT License, © 2026 Matt Pocock); Forge's register of adopted methods.
+Superpowers (MIT License, © 2025 Jesse Vincent), agent-skills at `eb07f19` (MIT License, © 2025 Addy Osmani) and Matt Pocock's skills at `b843cb5` (MIT License, © 2026 Matt Pocock); Forge's register of adopted methods.

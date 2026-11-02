@@ -7,13 +7,32 @@ the needed capabilities. Installation availability does not choose that mode.
 ## Quickstart
 
 After [installation and activation](05-installation.md), open your working folder
-and make a concrete request:
-
-> Continue the application from the latest draft. Reuse the constraints we already
-> recorded, and identify what still needs my input.
+and tell Buddy what you want to achieve. If work is already underway, ask Buddy to
+pick up from the latest draft and the constraints you agreed on.
 
 For a standalone question, supply the context directly. You do not need to create
 an intent file, repository or task simply to use a reasoning method.
+
+## Start with an idea
+
+**Start with Solve when you know what you want to improve and the form of the
+solution is open.** Ask Buddy to use Solve and describe the problem in your own words.
+
+> Solve: Our volunteers keep turning up for the wrong shift. How could we help
+> everyone find the current rota?
+
+Buddy asks where the rota changes hands and what the volunteers actually see.
+Together you might choose one shared schedule and retire the printouts, or decide
+that a reminder app would help. Solve gives you something you can use and a way
+to check it. For the shared schedule, that might mean trying the new procedure
+for a week and checking whether volunteers found their shifts.
+
+**Use Build when you've chosen a software feature.** “Add a shift reminder to
+our existing app and test what happens when a shift changes” can go straight to
+Build. Solve can hand that same work to Build if you reach the decision together.
+Build scales its implementation and checks to the work, whether you enter it
+directly or through Solve. [Solve runbook](../workflows/runbooks/solve/WORKFLOW.md)
+and [Build runbook](../workflows/runbooks/build/WORKFLOW.md).
 
 ## Knowledge and continuity
 
@@ -79,11 +98,11 @@ alone do not select development. See [workflow selection](../framework/workflow-
 
 | Desired result | Selected development workflow | Canonical guide |
 |---|---|---|
+| Find a workable solution when its form is open | Solve | [Solve runbook](../workflows/runbooks/solve/WORKFLOW.md) |
 | Implement a defined feature | Build | [Build runbook](../workflows/runbooks/build/WORKFLOW.md) |
 | Investigate and repair a defect | Fix | [Fix runbook](../workflows/runbooks/fix/WORKFLOW.md) |
 | Validate an existing specification | Review | [Review runbook](../workflows/runbooks/review/WORKFLOW.md) |
 | Close a knowledge gap or evaluate an approach | Research | [Research runbook](../workflows/runbooks/research/WORKFLOW.md) |
-| Resolve an open problem shape | Solve | [Solve runbook](../workflows/runbooks/solve/WORKFLOW.md) |
 | Rewrite documentation for its readers | Docs-Rewrite | [Docs-Rewrite runbook](../workflows/runbooks/docs-rewrite/WORKFLOW.md) |
 
 “Implement this feature” authorizes work within its clear scope. “Investigate why
@@ -91,14 +110,18 @@ this fails” authorizes diagnosis; it does not by itself authorize a fix. New l
 destructive or publication actions retain their explicit authorization boundaries.
 
 Build chooses a path appropriate to uncertainty and consequences. DIRECT is a
-short, complete lifecycle for eligible bounded reversible work, with verification;
-it is not selected from file count alone. It runs in four steps and, without a task
-record and when the check passes, closes within the same turn:
-Buddy records the goal, scope and checks; the coding agent builds and tests; a
-separate agent run checks the change and re-runs the tests; the reply reports what
-changed, the checks with their results and which run checked it. A one-line change
-to behaviour takes the same steps; a typo- or format-only change gets a diff check
-instead of the separate run. Existing approved
+short, complete lifecycle for eligible bounded reversible work; it is not selected
+from file count alone. It runs in four steps and, without a task record and when the
+check passes, closes within the same turn: Buddy records the goal, the path, scope and
+checks; the change is built; it is checked; the reply reports what changed, the checks
+with their results, the path and who checked. Buddy chooses the path per change:
+quick (a change that alters no behaviour, or a trivially reversible one its test
+shows: Buddy makes it and runs the test), checked (a tested local change: the coding
+agent builds, Buddy reads the diff and reruns the tests) or reviewed (remaining
+uncertainty or a wider effect: the coding agent builds and a separate agent run
+checks and re-runs the tests). Your word sets the path either way; what each path
+costs on Claude Code and Codex, against a bare session, is in the
+[README](../README.md#what-it-costs-and-how-you-choose). Existing approved
 specifications can support implementation without repeating the specification
 interview. Exact route criteria live in
 [DIRECT eligibility](../framework/direct-eligibility.md) and Build runbook.
@@ -133,7 +156,8 @@ contract, review, fixes and an evidenced close. What you see along the way:
   [decisions](../skills/return_summary/SKILL.md#decisions-i-took-for-you)).
 
 Which stages a route runs and which reviewers it calls depend on the change's risk;
-a short path skips the separate spec and signoff cycle but not the verification.
+a short path skips the separate spec and signoff cycle, keeps the check its path
+names (quick, checked, reviewed), and the reply says what did not run.
 The route decision shows why: three facts written before the route (the open points
 you would notice, what cannot be undone, the footprint). Open points that need you
 come to you before work starts, and a request with two independent goals is offered

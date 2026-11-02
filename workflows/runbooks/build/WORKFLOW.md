@@ -78,7 +78,7 @@ selected non-DIRECT path, skip an eligible gate via
 
 | Path | Optimizes for | Failure-mode prevented |
 |------|---------------|------------------------|
-| **DIRECT** | complete verification for clear bounded reversible changes | unnecessary spec/brief/signoff cycles; safety floors still exclude high-risk changes |
+| **DIRECT** | the check its chosen path names (quick, checked, reviewed) for clear bounded reversible changes | unnecessary spec/brief/signoff cycles; safety floors still exclude high-risk changes |
 | **STANDARD** | normal quality bar, bounded ceremony (1 architect, 1 signoff, L1) | mid-size feature shipped without spec/test discipline |
 | **FULL** | high-stakes, expensive-to-undo (3 architects, multi-mode brief, L2) | locking a load-bearing decision on a single perspective |
 | **SUB-BUILD** | MCA-pass nested in an in-flight parent that owns the spec | re-authoring spec / re-closing task at sub-level |

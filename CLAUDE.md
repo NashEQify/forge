@@ -31,8 +31,10 @@ Format and types are enforced by the `pre-commit` hook (CG-CONV). On
 `save`: ALWAYS go through `workflows/runbooks/save/WORKFLOW.md`, no
 shortcuts.
 
-Before any commit, Buddy must **PERSIST** → operational.md §Post-Action
-Obligations (Context · History · Backlog).
+Before a commit, Buddy applies operational.md §Post-Action Obligations: what
+the commit changed decides what is persisted (context when something was
+learned, history at a task closeout, backlog on a status change); a commit that
+only records a step persists nothing more.
 
 **No branching ceremony** (applies when the active project is the forge
 repository itself; consumer repos follow their own commit rules).
@@ -58,15 +60,18 @@ Shared git hooks and host-specific boot integration. Presence of a script
 does not prove that a host invokes it.
 
 SessionStart on configured Claude entrypoints (not Codex):
+- `forge-refresh` — runs first: `forge_install.py --refresh` brings the
+  installed entries up to the checkout's commit after a `git pull`. It never
+  fails a start.
 - `buddy-boot-inject` — triggers the Buddy boot sequence where `--agent
-  buddy` isn't an explicit flag (claude-desktop / claude-web). Load-bearing
-  for boot.
+  buddy` isn't an explicit flag (claude-desktop / claude-web; in a project
+  install's settings, every entrypoint). Load-bearing for boot.
 - `session-start-remote` — remote Claude entry only: observes coordinated
   maintenance readiness with `--maintenance status --require-ready`. It does
   not update sources, install, or resume workflows; resume follows boot discipline.
 
 Codex boots through the explicit managed AGENTS entry from
-`scripts/setup-codex.sh`. Additional-directory access or a Buddy role file
+`scripts/forge_install.py`. Additional-directory access or a Buddy role file
 alone does not establish that framework instructions were loaded.
 
 git pre-commit (5 checks, 3 BLOCK + 2 WARN; CG-CONV runs in commit-msg, the

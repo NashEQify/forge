@@ -9,9 +9,10 @@ them all.
 A **capability** is an independently usable responsibility: knowledge and
 continuity, general reasoning, or software development.
 
-An installation **profile** controls availability. `daily` supplies common
-continuity and Bedrock, with optional Council and Frame. `full` also supplies
-software tooling. Neither preset defines the purpose of the current conversation.
+An installation **profile** controls placement. `project` puts Forge into one
+named folder; `full-ai-integration` puts it into every session of the machine,
+with a personal context folder (the user scope). Both supply the same capabilities.
+Neither profile defines the purpose of the current conversation.
 
 A **workflow selection** comes from project intent or explicit development
 invocation. On-demand projects use their own working rules and explicitly requested
@@ -127,16 +128,31 @@ to examine, not proof.
 ### Who builds and who checks
 
 In software work, product code goes to the coding agent at any size; "it is only
-one line" is no exception. A change to behaviour is then checked by a separate,
-fresh agent run that is never the one that built it; on the full paths that is the
-review board. On the short path it is four steps: record the goal, scope and checks;
-build; check; report. Without a task record and when the check passes, they close
-within one turn. The checking run gets the record, the builder's report and the
-diff, and re-runs the reproduction and the tests itself. The final reply says what
-the change now does, which checks ran with their results, and names the agent run
-that checked it. A check Buddy or
-the builder ran is reported as their own, never as independent; when no separate
-run can be started, the reply says the change has no independent check. A role the
+one line" is no exception, except on the quick path below. On the full paths the
+review board checks a change. On the short path Buddy chooses per change how much
+check it gets, from what a defect would cost, how easily the change is undone and
+how sure the record is:
+
+- **quick:** the change alters no behaviour (a typo, formatting, wording), or it is a
+  trivially reversible local change its existing test shows directly. Buddy makes it
+  himself and runs the test; nothing else checks it.
+- **checked:** a local behaviour change along an existing pattern that an executable
+  test covers. The coding agent builds it; Buddy reads the diff and reruns the tests.
+- **reviewed:** uncertainty remains, or the effect reaches beyond the changed unit.
+  The coding agent builds it, and a separate, fresh agent run that never built it
+  gets the record, the builder's report and the diff and re-runs the reproduction
+  and the tests itself.
+
+In doubt between two paths Buddy asks in one sentence; when you told him to run the
+work through, he takes the heavier one and says so. Your word ("quick", "reviewed")
+or a standing preference in your profile sets the path; none of this lifts a safety
+floor. Every short path has four steps: record the goal, path, scope and checks; build;
+check; report. Without a task record and when the check passes, they close within
+one turn. The final reply says what the change now does, which checks ran with their
+results, the path and who changed the code, and on reviewed the agent run that
+checked it. A check Buddy or the builder ran is reported as their own, never as
+independent; when no separate run can be started for reviewed, the reply says the
+change has no independent check. A role the
 host has no agent type for runs as a general agent told to read its role file first.
 [The DIRECT run](../framework/direct-eligibility.md#the-direct-run) ·
 [Invariants](../framework/invariants.md#4-code-delegation)
@@ -152,7 +168,7 @@ make specific mechanical checks where they are invoked; they do not make the met
 enforced. [Instruction form](../skills/_protocols/instruction-form.md)
 
 The rules that hold in every project, whatever its workflow, sit in one short unit
-that a `full` installation reads before the first answer: workflow selection, the
+that every installation reads before the first answer: workflow selection, the
 goal as the input to every decision, review responsibility, authorization,
 delegation, cleanup of retired artifacts, deployment verification, proportional
 effort, checked claims, and a one-line record of each state-changing action. The rules of one repository

@@ -32,9 +32,8 @@ storage policies, operational approvals or domain meaning.
 ## Buddy as Orchestrator
 
 Buddy is the conversational entry. It reads the active workspace's intent and
-rules before choosing how to work. The `daily` installation always uses the
-minimal on-demand start. A `full` installation also takes that path when the
-project does not select software development.
+rules before choosing how to work. Every installation takes the minimal on-demand
+start when the project does not select software development.
 
 On-demand work follows local rules and invokes Forge methods when explicitly
 requested. Installing a workflow engine, finding a task file or working in a
@@ -42,16 +41,15 @@ folder containing scripts does not select a software workflow. Selection belongs
 to [workflow selection](../framework/workflow-selection.md).
 
 Every session runs its whole start before the first answer, whatever the size of
-the first request. A `full` installation runs the
+the first request. Every installation runs the
 [start sequence](../agents/buddy/boot.md): orientation, a check for remote updates,
 workflow selection, and the [framework invariants](../framework/invariants.md), the
-rules that hold in every project. A `daily` installation starts directly with the
-[on-demand start](../agents/buddy/boot-on-demand.md). The selected mode continues in
-its own unit: the on-demand start loads relevant continuity, checks pending recovery
+rules that hold in every project. The selected mode continues in
+its own unit: the [on-demand start](../agents/buddy/boot-on-demand.md) loads relevant continuity, checks pending recovery
 and resumes the named handoff; the [software start](../agents/buddy/boot-software.md)
 adds the selected development context. When a user scope or host limit blocks a
-step, the first answer opens with what did not load or run, such as an unchecked
-remote. No start silently updates shared framework sources while sessions use them.
+step, the orientation line notes it in a word, such as `remote unchecked`; only an
+instruction file that could not be read opens the first answer with a notice. No start silently updates shared framework sources while sessions use them.
 
 ## Knowledge and continuity
 
@@ -104,7 +102,7 @@ Local `.workflow-state/` is gitignored; pushing a handoff does not transport it.
 | Layer | Responsibility |
 |---|---|
 | Entry instructions | Who the user is, where the framework lives, and what to load at start |
-| Framework invariants | The rules that hold in every project, read before the first answer in a `full` installation |
+| Framework invariants | The rules that hold in every project, read before the first answer in every installation |
 | Operational instructions | Working and delegation rules for the selected capability |
 | Skills, references and protocols | Detail loaded when the current action needs it |
 

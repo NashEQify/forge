@@ -48,7 +48,7 @@ if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
 from _plan_engine.core import ValidationIssue  # noqa: E402
-from user_scope import REREAD_FILES  # noqa: E402
+from user_scope import ENTRY_UNITS  # noqa: E402
 
 
 def _read_skill_frontmatter(skill_md: Path) -> dict | None:
@@ -557,8 +557,8 @@ LOOKUP_REFERENCES: tuple[tuple[str, str], ...] = (
 
 
 def required_units() -> list[str]:
-    """Files that must exist: the reread table of every profile and the forge soul."""
-    units = {rel for files in REREAD_FILES.values() for rel, _ in files}
+    """Files that must exist: the boot entry list and the forge soul."""
+    units = {unit.path for unit in ENTRY_UNITS}
     units.add("agents/buddy/soul.md")
     return sorted(units)
 

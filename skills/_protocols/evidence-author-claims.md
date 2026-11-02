@@ -2,8 +2,8 @@
 
 Step-loaded unit of `skills/_protocols/evidence-pointer-schema.md`. Read it before writing an artifact a downstream
 consumer will trust as authority for code behaviour: a positive mechanical claim, a completeness or absence claim,
-or a committed record that keeps evidence. Read §8.5 where a completion claim is made: a return, a final message, a
-task close. It applies to the author, in every mode. Section numbers are protocol-wide: §1–§5 in `evidence-pointer-schema.md`, §6–§7 in
+or a committed record that keeps evidence. Read §8.5 for a return, task close or a completion
+claim whose reporting step does not specify its evidence. It applies to the author, in every mode. Section numbers are protocol-wide: §1–§5 in `evidence-pointer-schema.md`, §6–§7 in
 `evidence-pointer-integrations.md`, §8 in `evidence-author-claims.md`, §9–§9.3 in `evidence-review-capture.md`, §9.4–§9.6
 in `evidence-review-adoption.md`.
 
@@ -151,7 +151,7 @@ separate list. Without that evidence, write what holds instead of the claim: "no
 | Tasks consistent with each other | The `## Conflicts between tasks` table (`skills/_protocols/plan-conflicts.md` §The table) | Each task's own review |
 | Nothing else changed, all removed | The inventory shown (§8.2) | A name search with zero hits |
 | Committed, pushed | The commit hash; for a push, the state after it: `git status -sb` showing `...origin/<branch>` with no ahead count | The push command without its result; "will be pushed" in a record written before the push |
-| Active (installed, deployed) | Instruction text: committed at the path hosts read, and `scripts/forge_install.py --check` rc 0, or the copies it lists named as behind. An install: the installer's validation `complete` after a fresh session read the change. A service: the user or service outcome after deployment (`framework/invariants.md` Invariant 6) | An install command's exit status; HTTP 200; a live process |
+| Active (installed, deployed) | Instruction text: committed at the path hosts read, and the installer's check rc 0 (`scripts/forge_install.py --check <project>` for a project install, `--profile full-ai-integration --check` for the machine installation), or the copies it lists named as behind. An install: that check rc 0 after it; on the coordinated maintenance path, the installer's validation `complete` after a fresh session read the change. A service: the user or service outcome after deployment (`framework/invariants.md` Invariant 6) | An install command's exit status; HTTP 200; a live process |
 
 ---
 

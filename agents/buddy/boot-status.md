@@ -6,14 +6,14 @@ boot.md's boot sequence (steps 4–7 in `boot-software.md`).
 
 ## Freshness gate
 
-Run `git-status-check.sh` from the active project's Git root.
+Run the boot probe from the active project's working directory, as its own
+call: `bash <framework>/scripts/git-status-check.sh --boot`.
 Codex callers first follow `agents/buddy/codex-execution.md`: the helper
 performs a Git write and needs the offered escalation route when `.git` is
 protected, even though its purpose is a status check.
-Pass the concrete framework root as `FRAMEWORK_DIR` and set
-`GIT_STATUS_CHECK_INCLUDE_FRAMEWORK=1`. This checks both the active
-project and the framework whose instructions this session uses (deduped
-when they are the same repo). It fetches and reports ahead/behind status.
+The probe finds the framework root itself and checks the active project, the
+framework whose instructions this session uses and the configured user repo
+(deduped by canonical root). It fetches and reports ahead/behind status.
 5-second network timeout. Failed fetches produce a per-repository diagnostic
 on stderr; treat the associated ahead/behind values as cached. Output on
 stdout: one line per non-clean repo, `<path>` followed by the groups that
@@ -31,15 +31,22 @@ main checkout. Empty stdout with empty stderr means no cached divergence and
 no uncommitted work in the checked working trees; linked worktrees and
 staging copies are outside them (`git worktree list` names the linked ones).
 Only a successful fetch establishes remote freshness.
+The probe also prints its first line `orient: <date time zone> <host> <CWD>`
+(ORIENT) and, after the status lines, one `key: value` line per boot fact:
+`intent`, `mode-line`, `context-dir`, `backlog`, `handoff`, `session-buffer`,
+`pending-project`, `pending-personal`, `plan`, `tasks-in-progress`, `binding`
+and `chub`. These are file facts for ROUTE, the mode choice and the
+continuing-work trigger; after a pull, run the probe again. `unknown` means a
+fact could not be determined (stderr says why): check that file directly
+before relying on it. Under a target with uncommitted entries, an
+`entries:` line names their paths (the first five) for §Greeting findings.
 When the user's scope forbids network use or writes outside the project, do
-not run the helper (it fetches and writes Git metadata): report remote freshness as not checked, with the
-scope as the reason, ask no pull question and continue the boot
-(`boot.md` §Restricted user scope).
-When the configured user repo's canonical Git root differs from both the
-active project and framework roots, run the script once more from that
-user root with `GIT_STATUS_CHECK_INCLUDE_FRAMEWORK=0`. This checks the
-user scope without fetching the framework a second time. Compare canonical
-roots so path aliases do not cause duplicate checks.
+not fetch (it writes Git metadata): run `git-status-check.sh --boot --no-network`,
+which prints `freshness: not checked (no network)` and each root's read-only
+status entries; mark `remote unchecked` in the orientation line, ask no pull
+question and continue the boot
+(`boot.md` §Restricted user scope). Its uncommitted entries are held-back work
+under §Greeting findings.
 
 Buddy parses the output. Ahead-only status remains advisory. A remote update requires the **pull decision** below before
 RESOLVE, ROUTE, LOAD or RESUME begins. Do not load context in parallel
@@ -48,8 +55,8 @@ with this gate or while waiting for the answer.
 **Pull decision (behind > 0, including divergence):**
 - The script can report cached tracking refs after a failed fetch. Before
   claiming an online update, confirm a successful bounded fetch for the
-  affected repo and re-read its status. If offline or fetch fails, report
-  the unavailable check, label any cached status as such, and continue
+  affected repo and re-read its status. If offline or fetch fails, mark
+  `remote unchecked` in the orientation line, label any cached status as such, and continue
   without a pull or a blocking update question.
 - If still behind, name the repo and ahead/behind counts and ask:
   "Remote has N newer commits in <repo>. Shall I run git pull before
@@ -70,21 +77,29 @@ with this gate or while waiting for the answer.
 
 ## Greeting findings
 
-**On a skipped or cut-short boot (first):** when a boot step or file was
-skipped, declined, blocked or cut — by a user scope, a host limit or a
-failed read — the first answer starts with that: what did not load and which
-checks are unavailable. The first answer is the reply that ends your first
-turn; a progress note before it does not count, because some hosts deliver
-only that reply. The user must never assume Forge is fully active when it is
-not.
+Every finding below goes in the first answer: the reply that ends your first
+turn. A progress note before it does not count, because some hosts deliver
+only that reply.
 
-**On STATUS-CHECK findings (step 2):** briefly report any pull outcome,
-ahead-only status or unavailable check not already in an earlier turn's
-reply. The
+**On an instruction unit that did not load (first):** when a boot instruction
+unit could not be read (a failed or blocked read), Forge is not fully active
+and the user must not rely on rules that did not load. The first answer then
+opens with one sentence naming what did not load, before the orientation line
+and the answer; a brevity request shapes only what follows it. A skipped check
+(freshness without network, no remote, a step the scope forbids) and a
+user-scope file that does not exist are not this notice.
+
+**On STATUS-CHECK findings (step 2):** briefly report any pull outcome or
+ahead-only status not already in an earlier turn's reply. An unavailable check
+is at most one word in the orientation line (`remote unchecked`); the normal
+compact start is not commented. The
 pull decision was resolved before context loading; do not ask again here.
 Nothing found: don't mention it.
 
-**On held-back work (step 2):** attribute the uncommitted entries,
+**On held-back work (step 2):** report every uncommitted entry the freshness
+step found as state that existed before this session: repository, the path of
+each entry (more than five: the first five), and the count, also when this
+session later changed the same file. Then attribute the uncommitted entries,
 installed-not-committed sources and the framework's linked worktrees to
 live owners as `framework/process-map.md` §Authorization defines them;
 `forge_install.py --maintenance status` lists the source paths. What live
@@ -99,6 +114,11 @@ unavailable installer status is loud; next step: inspect
 is a parallel writer's worktree inside the framework tree). More than about
 20 entries in one repo (intent: more than one in-flight task's working set)
 is a cue to look closely, not a verdict.
+
+**On pending recovery:** the probe's `pending-project: present` or
+`pending-personal: present`, or personal pending operations from the profile
+snapshot: report it; before dependent work, recover in that scope through
+`framework/continuity.md` §Recovery without stale replay.
 
 **On user-scope warnings (boot.md §User scope):** one line — no user scope
 configured, user folder or a boot file missing.

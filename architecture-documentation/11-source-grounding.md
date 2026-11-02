@@ -14,7 +14,7 @@ owner without relying on copied line counts or an old inventory snapshot.
 | Installation availability versus workflow selection | [Workflow selection](../framework/workflow-selection.md) |
 | Authorization survives phase changes without expanding scope | [Process map: authorization](../framework/process-map.md#authorization) |
 | Proportional development process and DIRECT eligibility | [DIRECT eligibility](../framework/direct-eligibility.md) |
-| The coding agent builds at any size; a separate run checks and the reply names it | [Operational rules](../agents/buddy/operational.md#phase-1-receive), [the DIRECT run](../framework/direct-eligibility.md#the-direct-run), [code delegation](../framework/invariants.md#4-code-delegation) |
+| The coding agent builds at any size except the quick path, where Buddy does; the check follows the path Buddy chose per change, and the reply names it | [Operational rules](../agents/buddy/operational.md#phase-1-receive), [the DIRECT run](../framework/direct-eligibility.md#the-direct-run), [code delegation](../framework/invariants.md#4-code-delegation) |
 | Who writes each development artifact | [Agent autonomy](../framework/agent-autonomy.md) |
 | Duplicate check and one task per deliverable | [Task creation](../skills/task_creation/SKILL.md) |
 
@@ -28,7 +28,7 @@ owner without relying on copied line counts or an old inventory snapshot.
 | Interrupted publication and stale-baseline recovery | [Continuity: recovery](../framework/continuity.md#recovery-without-stale-replay) |
 | Common save and publication authorization | [Save runbook](../workflows/runbooks/save/WORKFLOW.md) |
 | Context ownership and navigation upkeep | [Housekeeping runbook](../workflows/runbooks/context_housekeeping/WORKFLOW.md) |
-| The start every session runs, whatever the request's size | [Start sequence](../agents/buddy/boot.md) (`full`), [on-demand start](../agents/buddy/boot-on-demand.md) (`daily`), [freshness check and greeting](../agents/buddy/boot-status.md) |
+| The start every session runs, whatever the request's size | [Start sequence](../agents/buddy/boot.md), [on-demand start](../agents/buddy/boot-on-demand.md), [freshness check and greeting](../agents/buddy/boot-status.md) |
 | Minimal boot and ordinary resume | [On-demand start](../agents/buddy/boot-on-demand.md) |
 | Development context at start | [Software start](../agents/buddy/boot-software.md) |
 
@@ -71,8 +71,10 @@ synchronizes its files; inspect that consumer's rules before making a transport 
 
 | Claim or question | Authority |
 |---|---|
-| Daily/full selection and optional-method closure | [Profiles](../framework/install-profiles.yaml), [closure helper](../scripts/capability_closure.py) |
+| The `project` and `full-ai-integration` profiles and their closure | [Profiles](../framework/install-profiles.yaml), [closure helper](../scripts/capability_closure.py) |
+| The entry units both profiles name | [User-scope resolver](../scripts/user_scope.py) (`ENTRY_UNITS`) |
 | Current CLI and managed host plans | [Shared installer](../scripts/forge_install.py), its `--help` output |
+| The project install and its removal | [Project installer](../scripts/project_install.py) |
 | Setup aliases use the shared coordinator | [setup-cc](../scripts/setup-cc.sh), [setup-codex](../scripts/setup-codex.sh), [setup-oc](../scripts/setup-oc.sh) |
 | Baseline, activation, retry and rollback | [Activation contract](../framework/installation-activation.md), [implementation](../scripts/install_activation.py) |
 | Codex roles and boot entries | [Codex generator](../scripts/generate_codex_agents.py) |

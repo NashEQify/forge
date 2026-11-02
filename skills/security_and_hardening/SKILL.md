@@ -22,7 +22,7 @@ Resolve this reference against the framework root; retain the consumer CWD.
 
 ## Source
 
-agent-skills at `19e49a0` (MIT License, © 2025 Addy Osmani); Forge's register of adopted methods.
+agent-skills at `eb07f19` (MIT License, © 2025 Addy Osmani); Forge's register of adopted methods.
 
 ## Purpose
 

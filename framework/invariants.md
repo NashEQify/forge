@@ -1,6 +1,6 @@
 # Framework invariants
 
-Tier 0: the rules that hold in every project. Every full-profile boot reads this file before the first answer (the
+Tier 0: the rules that hold in every project. Every boot reads this file before the first answer (the
 boot entry names it); process detail is in `agents/buddy/operational.md` (Tier 1). Rules that apply only to the forge
 repository itself (its commit policy, hooks, frozen zones, language policy, host constraints) stay in its
 `CLAUDE.md` and `AGENTS.md`.
@@ -62,9 +62,12 @@ brief. Do not request another routine signoff for an already approved
 scope. Routing: `framework/process-map.md` and the selected runbook.
 
 ### 4. Code delegation
-Product code goes to main-code-agent. A role not installed as an agent type
+Product code goes to main-code-agent. One exception: on the quick path for a
+DIRECT-eligible change (`framework/direct-eligibility.md` §Choosing the path),
+Buddy changes the product code himself, also when he chose that path, and the
+result says so. A role not installed as an agent type
 runs as a general agent run told to read its role file (`agents/<role>.md`
-under the framework root); a missing agent type is no reason to build inline. Buddy writes orchestrator artifacts
+under the framework root); outside the quick path, a missing agent type is no reason to build inline. Buddy writes orchestrator artifacts
 (`agents/`, `framework/`, `skills/`, `workflows/`, `context/`, `docs/`)
 within the approved intent-scope. Detail: `framework/agent-autonomy.md`.
 

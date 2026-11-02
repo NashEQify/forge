@@ -5,6 +5,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/forge-refresh.sh",
+            "timeout": 60
+          },
+          {
+            "type": "command",
             "command": "bash __FRAMEWORK_DIR__/orchestrators/claude-code/hooks/session-start-remote.sh",
             "timeout": 60
           },

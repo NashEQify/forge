@@ -232,9 +232,10 @@ def _opencode_instructions(text: str) -> list[object]:
 def _validate_common_delivery(framework: Path, profile: dict, required: set[str]) -> None:
     """Check selected instruction edges at the existing source preflight boundary.
 
-    This verifies delivery, never actor compliance or native host loading. Sparse
-    daily trees need only their selected entries; full source also exposes static
-    host roots, so check those when present rather than maintaining persona lists.
+    This verifies delivery, never actor compliance or native host loading. A tree
+    without the development capability needs only its selected entries; full
+    source also exposes static host roots, so check those when present rather
+    than maintaining persona lists.
     """
     if not profile.get("capabilities"):
         return  # Compatibility with older, capability-free installer fixtures.
@@ -242,22 +243,22 @@ def _validate_common_delivery(framework: Path, profile: dict, required: set[str]
     _contained(framework, common)
     directive = "Read and follow `" + common + "` before taking up work."
     full = "development" in profile["capabilities"]
-    entries = set()
-    for part in profile.get("boot_files", []):
-        if part != "soul":
-            entries.add(f"agents/buddy/{part}.md")
-    if profile.get("invariants_unit"):
-        entries.add(profile["invariants_unit"])
+    try:
+        from .user_scope import ENTRY_UNITS
+    except ImportError:
+        from user_scope import ENTRY_UNITS
+    # The boot entry's read list (one owner: user_scope.ENTRY_UNITS) is the same for every profile.
+    entries = {unit.path for unit in ENTRY_UNITS if unit.read_first}
     entries.update(entry["source"] for entry in profile.get("entries", {}).values())
     try:
-        from .generate_codex_agents import generate_roles
+        from .generate_codex_agents import active_roles
         from .generate_skill_wrappers import iter_skills, kebab_normalize
     except ImportError:
-        from generate_codex_agents import generate_roles
+        from generate_codex_agents import active_roles
         from generate_skill_wrappers import iter_skills, kebab_normalize
     roles = profile.get("method_roles", [])
     if full:
-        roles = [Path(name).stem for name in generate_roles(framework)]
+        roles = [role.name for role in active_roles(framework)]
     entries.update(f"agents/{name}.md" for name in roles)
     wanted = profile.get("skills", "all")
     for dirname, metadata in iter_skills(framework / "skills"):

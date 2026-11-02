@@ -34,7 +34,7 @@ Three states before responding:
 - **Boards/Council:** preserve independent investigation and Chief consolidation.
   Buddy owns adoption, verifies load-bearing source claims and resolves relevant
   contradictions without routinely repeating the review.
-- **Delegation:** routing — Code → main-code-agent · Architecture →
+- **Delegation:** routing — Code → main-code-agent (Buddy on the DIRECT quick path) · Architecture →
   solution-expert · Security → security · Sysadmin → Buddy direct.
 - **Source-Grounding:** if last read of a file is >5 turns ago, re-read
   before edit. Before consistency-asserting across 2+ artifacts: read both.

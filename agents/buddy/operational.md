@@ -21,19 +21,22 @@ New input arrives. Three mental states, then respond:
 - **Incident:** an active outage or ongoing harm → `workflows/runbooks/fix/WORKFLOW.md`
   section Incident recovery first; final RCA does not block authorized recovery.
 - **Defect:** expectation differs from reality without ongoing harm → investigate
-  with `root_cause_fix/SKILL.md`, or use the verified-known-fix DIRECT path in
-  `framework/process-map.md`. Not every defect is an incident.
-  Product code goes to main-code-agent and a separate agent run checks a
-  change to behaviour, whatever its size; "it is only one line" is no exception: the short form is
-  §The DIRECT run of `framework/direct-eligibility.md`, not inline work.
+  with `root_cause_fix/SKILL.md`. A defined fix with a verified cause must still
+  cover its cause class (that skill, Step 3) and meet DIRECT eligibility for the
+  short path.
 - **Substantial:** the user wants to do/change/build/decide something
   → clarify intent fit + sequencing before proposing. New objective →
-  Impact Preview.
+  Impact Preview. Taking up a task: `plan_engine.py --boot`.
 - **Trivial:** confirmation, status question, greeting → just answer.
 
-Apply `framework/process-map.md` section Authorization before acting. A
-proposal-only or diagnosis-only request remains discussion; an approved
-implementation scope does not need renewed routine permission at every phase.
+Before choosing DIRECT for a product-code change, read `framework/direct-eligibility.md`.
+Its criteria determine eligibility. Its four steps set who builds, who checks and what the
+reply reports on the quick, checked or reviewed path (Invariant 9).
+
+Use the request and Invariant 2 to establish authorization. Before a destructive,
+live or publication action, when the request leaves the action or its target in
+doubt, or when a permission boundary changes, resolve it through
+`framework/process-map.md` §Authorization.
 
 ---
 
@@ -41,31 +44,27 @@ implementation scope does not need renewed routine permission at every phase.
 
 ### Multi-perspective engagement
 
-When choosing a review, board or council, before skipping a board, before trusting a
-code change, before writing a fix brief or moving a blocking finding to another task,
-before a fix pass ≥ 2 or proposing a simpler mechanism, before an MCA dispatch on a
-brief that replaces an existing pattern, before escalating a decision to the user, and
-before adopting a bounded return: read and follow `agents/buddy/multi-perspective.md`
-(council-before-user-escalation, the five facets, board, council and code-review-board
-surfaces, board-skip discipline, read-only review transport, the agreement comparison).
+Read `agents/buddy/multi-perspective.md` when choosing a board, reviewer or
+council, considering waiving a required review, or assessing returned work.
+Read it before a fix brief, moving a blocking finding, a second or later fix pass, a
+simpler mechanism proposal, an MCA dispatch on a brief that replaces an existing pattern,
+or escalating a decision to the user.
 
 ### Architecture-Comprehension
 
-On a scope, defer, build or proportionality framing (your own included), before a brief,
-board dispatch, spec amendment, handoff or framing claim that spans components, before
-adding new transport, persistent state or migration machinery to bounded work, after an
-agent returns, and before adopting a chief-consolidated verdict: read and follow
-`agents/buddy/architecture-comprehension.md`
-(§0 vision-root, §A pre-dispatch, §B post-return, §B-claims decision-grounding C-VERIFY).
+Read `agents/buddy/architecture-comprehension.md` when proposing which outcomes to include,
+defer or drop, comparing structural approaches, or
+preparing a brief, board dispatch, spec amendment, handoff or decision that
+spans components. Read it before adding transport, state or migration machinery
+to bounded work and when adopting an agent return or consolidated verdict.
 
 ### Delegation
 
-Before deciding between inline work, an agent or a session, before any agent call, before
-commissioning any further round of a task (fix pass, added review, extension, extra test
-run), and when a required skill is not invocable through the host's skill tool: read
-and follow `agents/buddy/delegation.md`
-(routing lookup, permission depth per `framework/agent-autonomy.md`, delegation hygiene with
-cumulative effort, vehicle choice, the two MCA questions, skill-invocation fallback).
+Read `agents/buddy/delegation.md` when the selected step leaves its executor
+undecided, before dispatching another actor or commissioning a further round
+(fix pass, review, extension or test run), and when the host cannot invoke a
+required skill. It covers vehicle choice, the permission depth in
+`framework/agent-autonomy.md`, the brief and the cost of another round.
 
 ### Coordinating sessions and writers
 
@@ -150,12 +149,10 @@ Mechanical, not a per-turn gate:
   (pre-edit code-source-grounding gate + architect-dispatch threshold);
   sub-threshold amendments stay Buddy-direct, the gate still applies.
   Theory + 5 primitives: `framework/spec-engineering.md`.
-- **Transparency header:** on action / delegation / decision turns,
-  pure discussion exempt → `transparency_header/SKILL.md`. Why-at-
-  trigger: the header is the user's cross-session thread-tracking, not
-  Buddy's task — a reader-serving step is the first thing to drop under
-  load, so the why rides with the rule here rather than living only in
-  the SKILL. Same action-bound frequency as §Observability.
+- **Transparency header:** on a turn that changes state or settles a decision directly, show
+  `→ DIRECT | Task: <action> | Intent: <why>`. When dispatching or starting
+  a task record, read `skills/transparency_header/SKILL.md` for the header
+  identifying its executor and scope. The user follows several sessions at once.
 
 ### Workflow engine (required for non-trivial workflows)
 
@@ -198,11 +195,13 @@ After state-changing actions:
 
 ### Final message and returns
 
-Before the final message of a turn that changed something or delegated work,
-and before writing a return:
-read and follow `skills/return_summary/SKILL.md` §Decisions I took for you (the
-points you settled for the user, each with its cost if wrong and its undo) and,
-for each completion claim, `skills/_protocols/evidence-author-claims.md` §8.5.
+Before writing or adopting a return, read `skills/return_summary/SKILL.md`.
+For a final reply, read its §Decisions I took for you when you settled a choice
+the request and rules left open and a wrong choice would cost the user beyond
+redoing the edit. Give its cost and undo.
+A completion claim carries the evidence its reporting step specifies. For
+returns, task close or a claim whose proof the step does not specify, read
+`skills/_protocols/evidence-author-claims.md` §8.5 before reporting it.
 
 ### Persist Gate
 

@@ -113,6 +113,10 @@ class LegacyTaskService:
     def get_task(self, task_id: int) -> OldTask:
         task = self._new.find_by_id(str(task_id))
         return self._to_old_format(task)
+
+    # Translate the new shape back into what old consumers expect
+    def _to_old_format(self, task: Task) -> OldTask:
+        return OldTask(id=int(task.id), title=task.title, done=task.status == "done")
 ```
 
 #### Feature-flag migration
@@ -124,5 +128,5 @@ Consumers switch from old to new via a flag, one at a time.
 def get_task_service(user_id: str) -> TaskService:
     if feature_flags.is_enabled("new-task-service", user_id=user_id):
         return NewTaskService()
-    return LegacyTaskService()
+    return OldTaskService()
 ```

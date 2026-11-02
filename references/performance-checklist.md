@@ -153,7 +153,7 @@ FastAPI, NATS and LLM calls. Apply the parts that match your stack:
 
 ```bash
 # Lighthouse CLI
-npx lighthouse https://localhost:3000 --output json --output-path ./report.json
+npx lighthouse http://localhost:3000 --output json --output-path ./report.json
 
 # Bundle analysis
 npx webpack-bundle-analyzer stats.json
@@ -162,16 +162,19 @@ npx vite-bundle-visualizer
 
 # Check bundle size
 npx bundlesize
+```
 
-# Web Vitals in code
+```javascript
+// Web Vitals in code
 import { onLCP, onINP, onCLS } from 'web-vitals';
 onLCP(console.log);
 onINP(console.log);
 onCLS(console.log);
 
-# INP with interaction-level detail (attribution build)
-import { onINP } from 'web-vitals/attribution';
-onINP(({ value, attribution }) => {
+// INP with interaction-level detail (attribution build). The attribution build
+// exports the same names, so alias it when both builds share a module.
+import { onINP as onINPWithAttribution } from 'web-vitals/attribution';
+onINPWithAttribution(({ value, attribution }) => {
   const { interactionTarget, inputDelay, processingDuration, presentationDelay } = attribution;
   console.log({ value, interactionTarget, inputDelay, processingDuration, presentationDelay });
 });
@@ -219,4 +222,4 @@ curl http://localhost:7777/jsz
 
 ## Source
 
-agent-skills at `19e49a0` (MIT License, © 2025 Addy Osmani); Forge's register of adopted methods.
+agent-skills at `eb07f19` (MIT License, © 2025 Addy Osmani); Forge's register of adopted methods.

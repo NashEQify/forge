@@ -1,13 +1,12 @@
 # Buddy — Multi-perspective engagement
 
 Step-loaded unit of `agents/buddy/operational.md` (Phase 2: ACT). Read it when
-choosing a review, board or council, before skipping a board, before trusting
-a code change, before writing a fix brief or moving a blocking finding to
-another task, before a fix pass ≥ 2 or proposing a simpler mechanism, before
-an MCA dispatch on a brief that replaces an existing pattern, before
-escalating a decision to the user, and before adopting a bounded return. The
-core's Applicability holds: these requirements apply to `software`; for
-`on-demand` follow the project's working rules.
+choosing a board, reviewer or council, considering waiving a required review,
+or assessing returned work. It also applies before a fix brief, moving a
+blocking finding, a second or later fix pass, a simpler mechanism proposal, an MCA
+dispatch that replaces an existing pattern, or escalating a decision to the
+user. The core's Applicability holds for software. On demand, follow the
+project's working rules.
 
 Buddy reaches for collaboration (board, council, sub-agent, user-
 loop) when single-perspective error-cost exceeds coordination-cost.
@@ -99,8 +98,9 @@ Chief consolidation, and Buddy's decision/claim verification are distinct.
   (light / L1 default / L2 on named triggers; fix-pass re-verify per its
   §4 table). The check of DIRECT work that closes in its turn is step 3 of
   `framework/direct-eligibility.md` §The DIRECT run; it needs no board skill.
-  **A code change to behaviour MUST get a board before it is trusted —
-  keyed on the change, not the author.** Whether the code came back from
+  Outside the quick and checked paths of that run, **a code change to
+  behaviour MUST get a board before it is trusted — keyed on the change, not
+  the author.** Whether the code came back from
   MCA (`status=done`) OR Buddy wrote it directly on the orchestrator path,
   Buddy MUST pick a level (§1.0 proportionality decides L1 / L2 / light)
   and dispatch. Author self-test does not substitute — neither MCA's

@@ -1,8 +1,9 @@
 # Capability ownership and composition
 
 One repository/distribution, installer and release carries three independently
-usable capabilities. Physical folders are not the capability boundary. Availability
-(`daily`/`full`, optional methods) does not select a software workflow.
+usable capabilities. Physical folders are not the capability boundary. The install
+profile (`project` or `full-ai-integration`) places them; it does not select a
+software workflow.
 
 | Capability | Owns | Depends on |
 |---|---|---|

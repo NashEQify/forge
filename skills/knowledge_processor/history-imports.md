@@ -6,7 +6,13 @@ sources, or restructuring owners; writes still follow `write.md`.
 ### 6. History, imports and maintenance
 
 History preserves decisions, obligations, meaningful trajectories and unresolved
-conflicts; no new entry per correction/save or agent self-chronicle. Explicit domain
+conflicts; no new entry per correction/save or agent self-chronicle. A code
+change without a task writes no history entry for the change itself: its diff,
+commit message and reply carry it; it writes one only for what passes the test. The
+test for an entry is whether a later session would need it
+after it leaves the handoff and could not get it from the diff, the commit message
+or the task: a decision with its reason, a rejected approach, a finding about the
+system. Explicit domain
 audit/closeout obligations remain effective. Handoff contains goal/current state,
 leading file, next step/blocker per open topic plus necessary decisions, approvals,
 failed attempts and job status; no nine-heading template required.

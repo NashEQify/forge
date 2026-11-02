@@ -88,7 +88,7 @@ Don't show blank screens. Every dynamic list has 4 states: loading, empty,
 error, populated.
 
 ```tsx
-function TaskList({ tasks }: { tasks: Task[] }) {
+function TaskList({ tasks, onCreateTask }: { tasks: Task[]; onCreateTask: () => void }) {
   if (tasks.length === 0) {
     // role="status" is correct here because the empty-state region appears
     // as the result of a data-loading process (initial render with empty

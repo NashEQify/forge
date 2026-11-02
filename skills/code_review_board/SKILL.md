@@ -74,7 +74,8 @@ Below those floors, ALL DIRECT criteria in `framework/process-map.md` plus
 an executed regression/behavior check allow `light` (single independent
 `code-verification`). New local behavior is allowed when bounded and verified.
 Otherwise use the level table; resolve missing facts rather than inventing
-certainty. Pure typo/format-only changes need a diff check, not this board.
+certainty. Pure typo/format-only changes need a diff check on the reviewed path (none on quick),
+not this board.
 
 ### 1.1 Level-choice table
 

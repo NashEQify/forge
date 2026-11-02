@@ -6,11 +6,9 @@
 #
 # FRAMEWORK_DIR resolution priority (analog to cc):
 #   1. env var (override, e.g. testing alternate checkout)
-#   2. install-time substitution (FRAMEWORK_DIR_INSTALLED below — set by
-#      setup-oc.sh when this file is copied to ~/.local/bin/oc)
-#   3. autodetect from $0 location (works only when run from source tree;
-#      $0/../../../ resolves to /home for the installed copy — that's why
-#      install-time substitution exists)
+#   2. autodetect from $0 location: the checkout this file lives in. The
+#      installed ~/.local/bin/oc is a fixed stub that execs this file in the
+#      checkout (scripts/forge_install.py), so a `git pull` there reaches it
 #
 # Usage:
 #   oc                # OpenCode with framework config
@@ -18,19 +16,13 @@
 
 set -euo pipefail
 
-# Install-time substitution marker. Empty value = source-tree run; setup-oc.sh
-# overwrites this line when it installs oc to ~/.local/bin/. Do not edit by
-# hand — change it via setup-oc.sh re-run.
-FRAMEWORK_DIR_INSTALLED=""  # SUBSTITUTED-BY-SETUP-OC
-
 if [ -z "${FRAMEWORK_DIR:-}" ]; then
-  if [ -n "$FRAMEWORK_DIR_INSTALLED" ]; then
-    FRAMEWORK_DIR="$FRAMEWORK_DIR_INSTALLED"
-  else
-    FRAMEWORK_DIR="$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)"
-  fi
+  FRAMEWORK_DIR="$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)"
 fi
 export FRAMEWORK_DIR
+# Bring the installed entries up to the checkout's commit before the start
+# (`git pull` is the update), as cc does; its result never stops a start.
+python3 -B "$FRAMEWORK_DIR/scripts/forge_install.py" --refresh < /dev/null > /dev/null || true
 VALIDATION_ARGS=()
 if [ "${1:-}" = "--forge-validation-operation" ]; then
   if [ -z "${2:-}" ]; then
@@ -48,10 +40,10 @@ fi
 OC_CONFIG_DIR="$FRAMEWORK_DIR/orchestrators/opencode/.opencode"
 OC_CONFIG="$HOME/.config/forge/opencode.jsonc"
 
-# Verify config exists. If not, hint at setup-oc.sh.
+# Verify config exists. If not, name the machine install for OpenCode.
 if [ ! -f "$OC_CONFIG" ]; then
   echo "oc: ERROR — $OC_CONFIG not found." >&2
-  echo "    Run: bash $FRAMEWORK_DIR/scripts/setup-oc.sh" >&2
+  echo "    Run: python3 $FRAMEWORK_DIR/scripts/forge_install.py --profile full-ai-integration --host opencode" >&2
   exit 1
 fi
 

@@ -1,6 +1,6 @@
 # Boot Navigation — Workflow + Skill Index
 
-**Purpose:** compact index for Buddy boot. Prevents orphan blindness
+**Purpose:** compact index for routing. Prevents orphan blindness
 (skills that are "invisible" in workflows because Buddy doesn't have
 the full landscape in mind).
 

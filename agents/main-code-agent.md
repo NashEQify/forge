@@ -75,9 +75,9 @@ referenced specs.
 **Direct path.** Use `framework/direct-eligibility.md`.
 Small local new behavior is allowed; safety floors are evaluated first.
 Read the actual code, state success criteria, implement, run appropriate
-regression/behavior checks and L0. A change to behaviour receives one
-independent check by a separate `code-verification` agent run that Buddy
-starts; typo/format-only work needs a diff check
+regression/behavior checks and L0. The path Buddy chose sets the check: on
+reviewed, a separate `code-verification` agent run that Buddy starts; on
+checked, Buddy's own reading of the diff and rerun of the tests
 (`framework/direct-eligibility.md` §The DIRECT run).
 Commit only when the request or standing repository policy authorizes it.
 

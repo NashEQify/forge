@@ -26,7 +26,8 @@ at the root add the forge repository's own rules and the host's load list.
    a Plan-Block (scope, tool/agent, alternatives, expected artifacts) or
    a Gate-File. Routing: `framework/process-map.md`.
 
-4. **Code-Delegation** — production code → main-code-agent. Orchestrator
+4. **Code-Delegation** — production code → main-code-agent, except the quick
+   path of DIRECT work (`framework/invariants.md` §4). Orchestrator
    work (agents/, framework/, scripts/, context/, docs/) → write directly.
 
 5. **Stale-Cleanup** — when archiving/replacing/deprecating an artifact,

@@ -1,10 +1,20 @@
 # Coordinated installation activation
 
 Canonical shared source/update/install/recovery procedure. One release and installer
-serve all profiles and users. Instruction-only changes take the light path below;
-everything else uses stopped-session maintenance, not live switching of mutable
-framework sources. Ordinary knowledge work still uses its existing folder and
-commands; this procedure is for the maintainer's upgrade.
+serve all profiles and users.
+
+**Which machines this procedure governs.** On the user path, `git pull` in the
+checkout is the update: each session start runs `forge_install.py --refresh`,
+which brings the installed entries to the checkout's commit. On a
+`full-ai-integration` machine an install refuses, a refresh skips and readiness
+fails while tracked non-Markdown sources have uncommitted changes. The project install (`project`) always takes the user path, and so does a
+`full-ai-integration` installation by default, including one made with an earlier
+version. The procedure below governs a
+machine whose setting records `maintenance: coordinated` (opt-in with
+`--coordinated`, for changing Forge's own sources) and a checkout without a Git
+commit. There, instruction-only changes take the light path below; everything else
+uses stopped-session maintenance, not live switching of mutable framework sources.
+Ordinary knowledge work still uses its existing folder and commands.
 
 ## Choosing the path
 
@@ -22,7 +32,7 @@ framework root; when skill frontmatter or the skill inventory changes, regenerat
 the derived wrappers (`scripts/generate_skill_wrappers.py`, then `--check`) and
 the generated navigation; run the router check
 (`scripts/generate_workflow_router.py --check`), the consistency check and the read-only
-`scripts/forge_install.py --check` (closure preflight; it also lists stale
+`scripts/forge_install.py --profile full-ai-integration --check` (closure preflight; it also lists stale
 installed copies); commit under the repository's commit rules. No prepare, journal operation, install or
 fresh-session validation. Between operations the installer accepts drift of
 recorded `.md` sources, lists it as `instruction_drift` in `--maintenance
@@ -44,8 +54,9 @@ records it.
 **Installed copies.** Codex reads role bodies from installed copies
 (`~/.codex/agents/*.toml`, generated from `agents/<role>.md` by
 `scripts/generate_codex_agents.py`) and skill wrappers from `~/.agents/skills`.
-The `daily` profile installs Claude skill and role wrappers as managed copies
-in `~/.claude/skills` and `~/.claude/agents` (the `full` profile links them).
+The `full-ai-integration` profile links Claude's `~/.claude/skills` and
+`~/.claude/agents` to the checkout; a project install's role wrappers in
+`<project>/.claude/agents/` copy each role's name, description and tool limits.
 A light change to a role body or to skill frontmatter reaches those copies only
 through the next install (`--check` lists them); record those hosts as not yet
 activated for it, or use the full path
@@ -65,9 +76,10 @@ source (full path), §One activation owner, §Install and verify, §Failure, ret
 
 ## Owned boot blocks
 
-The installer owns marker-delimited boot blocks (`FORGE-CODEX-BOOT` in `AGENTS.md`,
-`FORGE-CLAUDE-BOOT` in `CLAUDE.md`) through hash state files and byte snapshots in
-the install plan. Continuity publication refuses the home copies under `.codex/` and
+The installer owns marker-delimited boot blocks (`FORGE-CODEX-BOOT` in `AGENTS.md`
+and in a project's `AGENTS.override.md`; a `FORGE-CLAUDE-BOOT` block in
+`~/.claude/CLAUDE.md` from an older installation is only removed) through hash state
+files and byte snapshots in the install plan. Continuity publication refuses the home copies under `.codex/` and
 `.claude/` as reserved paths; a project `AGENTS.md` is a shared file that continuity
 may write, and the block hash keeps install authority over the block (an edited
 block refuses the next install). Text before and after a block, including Unicode
@@ -77,7 +89,8 @@ followed by text after the block), and a re-run with unchanged content plans no
 change. Duplicate, reversed or partial markers, an edited owned block, an unowned
 block with the same markers and non-UTF-8 content refuse without writes. A change
 between plan and apply fails the preflight; the installer never retries over it.
-Evidence: `scripts/generate_codex_agents.py` (`plan_block`, `plan_block_removal`),
+Evidence: `scripts/managed_install.py` (`plan_block`, `plan_block_removal`,
+`plan_text_block`),
 `scripts/install_activation.py` (the production apply and its preflight) and
 `tests/capabilities/test_owned_regions.py`.
 

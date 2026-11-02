@@ -69,11 +69,14 @@ See [method selection and examples](06-usage-workflows.md#general-reasoning).
 
 ## Software development: from intent to verified result
 
-For software work, Forge composes these capabilities into a chain of stages. Buddy
-orchestrates it and delegates implementation and review to separate agents. Each
-stage hands a defined output to the next. Conditional stages run only when their
-trigger is present. The [lifecycle stages](../workflows/runbooks/build/lifecycle.md)
-own the list.
+If you're starting with an idea, use **Solve** to work out what would meet your
+goal and how you could check it. A solution might be a procedure you can try
+right away. When you choose software, **Build** takes the agreed feature through
+the stages below. You can enter Build directly with a defined feature.
+[Worked example](06-usage-workflows.md#start-with-an-idea).
+
+Buddy chooses the stages the change needs. Each stage hands a defined output
+to the next. [Build lifecycle](../workflows/runbooks/build/lifecycle.md).
 
 | Stage | What Forge does | What is particular |
 |---|---|---|
@@ -87,9 +90,13 @@ own the list.
 
 Effort follows risk and uncertainty. A bounded reversible change can take a short
 complete path; consequential contracts, security, migrations and live systems keep
-their safeguards. On every path the coding agent builds and a separate agent run
-checks a change to behaviour; on the short path the final reply names that check
-([who builds and who checks](04-core-concepts.md#who-builds-and-who-checks)). Decisions an agent takes for the user are listed in its final
+their safeguards. On the short path Buddy chooses per change how much check it gets:
+a change that alters no behaviour, or a trivially reversible one its existing test
+shows, he makes himself (quick); a tested local change goes to the coding agent and
+Buddy checks the diff and tests (checked); and a change with
+remaining uncertainty or a wider effect is checked by a separate agent run (reviewed).
+The final reply names the path and what did not run, and your word ("quick",
+"reviewed") sets it ([who builds and who checks](04-core-concepts.md#who-builds-and-who-checks)). Decisions an agent takes for the user are listed in its final
 message with their cost and undo. Explicitly selected development state can
 contribute to common save and resume; loading a session checks its exact state and
 does not silently advance work or unpause a workflow.
@@ -128,10 +135,12 @@ lists each one, its source, what changed and the Forge file that holds it. The r
 
 ## What's in the box
 
-Forge ships one distribution with composable installation presets. `daily` provides
-knowledge maintenance, save, housekeeping and Bedrock without software tooling;
-Council and Frame are optional additions. `full` makes development tooling and the
-general methods available. Availability does not select a software workflow.
+Forge ships one distribution with two installation profiles. `project`, the
+default, puts Forge into one named folder and changes nothing outside it.
+`full-ai-integration` puts Buddy into every session of the machine and adds a
+personal context folder, so knowledge and open work carry across projects. Both
+make the same methods available: knowledge maintenance, save, the reasoning methods
+and the development tooling. Availability does not select a software workflow.
 
 The installer coordinates supported host integrations. Actual capabilities and
 instruction loading differ by host; Cursor's rules-based integration is distinct.

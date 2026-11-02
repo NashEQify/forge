@@ -19,6 +19,11 @@ import subprocess
 import tempfile
 import uuid
 
+try:
+    from .managed_install import merge_owned_part, owned_part
+except ImportError:
+    from managed_install import merge_owned_part, owned_part
+
 LOCK_ROOT = Path(f'/tmp/forge-install-{os.geteuid()}')
 _HELD = contextvars.ContextVar('forge_install_lock', default=None)
 TERMINAL = {'complete', 'rolled_back'}
@@ -97,15 +102,16 @@ def _canonical(path):
     return Path(os.path.realpath(path.parent)) / path.name
 
 
-def uncommitted_sources(root, paths):
+def uncommitted_sources(root, paths, *, tracked_only=False):
     """Which ``paths`` Git reports as not committed in HEAD: ``(head, uncommitted, reason)``.
 
-    Staged, modified, deleted and untracked paths count; ignored paths and
-    nested repositories or worktrees (not this checkout's sources) never
-    appear. ``uncommitted`` holds sorted ``root``-relative paths (absolute
-    outside ``root``); ``head`` is the HEAD commit or ``None`` before the first
-    commit. Read-only. Git missing, no work tree or a failed query yield
-    ``(None, None, reason)``; never raises.
+    Staged, modified, deleted and untracked paths count (``tracked_only``:
+    untracked paths do not); ignored paths and nested repositories or
+    worktrees (not this checkout's sources) never appear. ``uncommitted``
+    holds sorted ``root``-relative paths (absolute outside ``root``); ``head``
+    is the HEAD commit or ``None`` before the first commit. Read-only. Git
+    missing, no work tree or a failed query yield ``(None, None, reason)``;
+    never raises.
     """
     try:
         top = _git_query(root, 'rev-parse', '--show-toplevel')
@@ -114,7 +120,8 @@ def uncommitted_sources(root, paths):
         toplevel = Path(os.path.realpath(os.fsdecode(top.stdout).strip()))
         head = _git_query(root, 'rev-parse', '--verify', '-q', 'HEAD')
         commit = os.fsdecode(head.stdout).strip() if head.returncode == 0 else None
-        status = _git_query(root, 'status', '--porcelain=v1', '-z', '--untracked-files=all',
+        untracked = '--untracked-files=no' if tracked_only else '--untracked-files=all'
+        status = _git_query(root, 'status', '--porcelain=v1', '-z', untracked,
                             '--no-renames', '--ignored=no')
         if status.returncode:
             return None, None, f'git status failed (exit {status.returncode}): ' + _first_line(status.stderr)
@@ -186,8 +193,18 @@ def _write_json(path, data):
     replace_identity(path, file_identity((json.dumps(data, sort_keys=True, indent=2) + '\n').encode(), 0o600))
 
 
+def _private_lock_root(root):
+    """The lock directory is this user's alone: a directory, owned, mode 0700 (else ValueError). Checked
+    before the lease in it is read or the lock in it is taken."""
+    info = root.lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) != 0o700:
+        raise ValueError(f'installation lock directory must be private, owned, mode 0700: {root}')
+
+
 @contextmanager
-def machine_lock(*, shared=False):
+def machine_lock(*, shared=False, blocking=True):
+    """The machine's installation lock. ``blocking=False`` raises BlockingIOError when another process
+    holds it (a session-start refresh must not wait)."""
     held = _HELD.get()
     if held is not None and held[2] == os.getpid():
         if held[1] and not shared:
@@ -204,9 +221,7 @@ def machine_lock(*, shared=False):
             root.mkdir(mode=0o700)
         except FileExistsError:
             pass
-    info = root.lstat()
-    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) != 0o700:
-        raise ValueError(f'installation lock directory must be private, owned, mode 0700: {root}')
+    _private_lock_root(root)
     path = root / 'mutation.lock'
     flags = os.O_RDWR | os.O_NOFOLLOW
     if not shared:
@@ -222,7 +237,7 @@ def machine_lock(*, shared=False):
         info = os.fstat(fd)
         if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) != 0o600:
             raise ValueError('unsafe installation lock file')
-        fcntl.flock(fd, fcntl.LOCK_SH if shared else fcntl.LOCK_EX)
+        fcntl.flock(fd, (fcntl.LOCK_SH if shared else fcntl.LOCK_EX) | (0 if blocking else fcntl.LOCK_NB))
         token = _HELD.set((fd, shared, os.getpid()))
         try:
             yield fd
@@ -247,14 +262,291 @@ def _read_json(path):
     return json.loads(base64.b64decode(raw['bytes']))
 
 
+class SnapshotAuthority:
+    """The byte snapshot of every installed source is the authority (the coordinated path).
+
+    Between operations only instruction Markdown may drift; every other source must keep its recorded
+    bytes, and every integration target its recorded identity (a shared target its Forge part). An
+    operation ends in ``validation_pending`` and needs fresh-session evidence. This adapter adds no key: a
+    journal without ``source_authority`` reads as snapshot on a coordinated machine.
+    """
+
+    name = 'snapshot'
+    end_phase = 'validation_pending'
+    records_bytes = True
+    drift_prefix = 'source/integration drift without prepared baseline: '
+    unrecorded_prefix = 'unrecorded source without prepared baseline: '
+
+    def record(self, activation, data, head=None):
+        """Keys this authority adds to a new journal: none."""
+
+    def behind(self, activation, data, head=None):
+        """A snapshot journal does not follow a commit."""
+        return False
+
+    def check_terminal(self, activation, previous):
+        """Before a new prepare: may the terminal ``previous`` journal be continued?"""
+        if previous['phase'] == 'complete':
+            blocking, _ = self.terminal_drift(activation, previous, integration=False, snapshot=True)
+            if blocking:
+                raise ValueError(f'installation conflict: resource changed after snapshot: {blocking}')
+
+    def check_baseline(self, activation, paths):
+        """Before a new prepare: may ``paths`` be recorded as the new baseline? Any bytes may."""
+
+    def check_sources(self, activation, data):
+        """Inside an operation: every recorded source still holds its before or after bytes."""
+        for path, item in data['sources'].items():
+            allowed = [item['before']] + ([item['after']] if 'after' in item else [])
+            if identity(path) not in allowed:
+                raise ValueError(f'installation conflict: resource changed after snapshot: {path}')
+
+    def install_drift(self, activation, data, inventory):
+        """An install with nothing pending on a complete journal: the refusal message, or None."""
+        blocking, _ = self.terminal_drift(activation, data, snapshot=True)
+        if blocking:
+            return f'installation conflict: resource changed after snapshot: {blocking}'
+        blocking, _ = self.unrecorded_sources(activation, data, inventory)
+        if blocking:
+            return f'unrecorded source without prepared baseline: {blocking}'
+        return None
+
+    def terminal_drift(self, activation, data, *, integration=True, snapshot=False):
+        direction = 'before' if data['phase'] == 'rolled_back' else 'after'
+        accepted = []
+        inventories = [('sources', data['sources'])] + ([('actions', data['actions'])] if integration else [])
+        for name, inventory in inventories:
+            for path, item in inventory.items():
+                current = identity(path)
+                if snapshot:
+                    allowed = [item['before']] + ([item['after']] if 'after' in item else [])
+                else:
+                    allowed = [item.get(direction, item['before'])]
+                if current in allowed or (name == 'actions' and target_unchanged(path, current, allowed)):
+                    continue
+                if name == 'sources' and instruction_path(activation.root, path):
+                    accepted.append(path)
+                    continue
+                return path, accepted
+        return None, accepted
+
+    def unrecorded_sources(self, activation, data, inventory):
+        accepted = []
+        for path in sorted(str(Path(p).absolute()) for p in inventory):
+            if path in data['sources']:
+                continue
+            if not instruction_path(activation.root, path):
+                return path, accepted
+            accepted.append(path)
+        return None, accepted
+
+    def drift(self, activation, data):
+        """A terminal journal's readiness: ``(reason | None, instruction_paths)``."""
+        blocking, accepted = self.terminal_drift(activation, data)
+        return (self.drift_prefix + blocking if blocking else None), accepted
+
+    def unrecorded(self, activation, data, inventory):
+        """Sources the terminal journal never recorded: ``(reason | None, instruction_paths)``."""
+        blocking, accepted = self.unrecorded_sources(activation, data, inventory)
+        return (self.unrecorded_prefix + blocking if blocking else None), accepted
+
+    def open_reason(self, activation, data, *, interrupted):
+        """A prepared or interrupted operation is the developer's to continue: no reason of its own."""
+        return None, False
+
+
+def source_head(root):
+    """The checkout's HEAD commit, or None (no Git work tree, no commit yet, Git missing). Read-only."""
+    try:
+        result = _git_query(root, 'rev-parse', '--verify', '-q', 'HEAD')
+    except (OSError, subprocess.SubprocessError):
+        return None
+    head = os.fsdecode(result.stdout).strip()
+    return head if result.returncode == 0 and head else None
+
+
+def _content(value):
+    """A recorded or live identity's file bytes; None when absent."""
+    return None if value['kind'] == 'absent' else base64.b64decode(value.get('bytes', ''))
+
+
+def target_unchanged(path, current, allowed, *, absent_ok=False):
+    """Whether the integration target ``path`` (live identity ``current``) still is one of ``allowed``.
+
+    A target another writer shares (managed_install.owned_part: ~/.claude/settings.json, the Forge block of
+    an AGENTS.md or CLAUDE.md, the machine setting) is compared by the part Forge owns, so a host's or the
+    user's write outside it never counts. Every other target keeps its whole identity (kind, mode, bytes).
+    Used between operations and inside them (_check: retry and rollback merge Forge's part into the current
+    file). ``absent_ok``: a shared target whose Forge part is gone (no block, no owned key, no file) is not
+    installed rather than changed; the next write adds the part again.
+    """
+    if current in allowed:
+        return True
+    if absent_ok and current['kind'] == 'absent' and Path(path).name == '.forge-codex-boot.json' \
+            and not os.path.lexists(Path(path).with_name('AGENTS.md')):
+        return True  # the block's state with its AGENTS.md gone: the entry is gone (a project folder deleted)
+    if current['kind'] == 'link':
+        return False
+    owned = owned_part(Path(path), _content(current))
+    if owned is not None and absent_ok and owned == owned_part(Path(path), None):
+        return True
+    return owned is not None and any(
+        item['kind'] != 'link' and owned_part(Path(path), _content(item)) == owned for item in allowed)
+
+
+def absent_parts(data, served=None):
+    """Shared targets whose recorded Forge part is gone now: not installed, so the next refresh writes them.
+    ``served``: only these paths count (the targets the recorded selection still renders)."""
+    direction = 'before' if data['phase'] == 'rolled_back' else 'after'
+    found = []
+    for path, item in data['actions'].items():
+        if served is not None and path not in served:
+            continue
+        none = owned_part(Path(path), None)
+        wanted = item.get(direction, item['before'])
+        if none is not None and wanted['kind'] != 'link' and owned_part(Path(path), _content(wanted)) != none:
+            current = identity(path)
+            if current['kind'] != 'link' and owned_part(Path(path), _content(current)) == none:
+                found.append(path)
+    return found
+
+
+def _byte_journal(data):
+    """The journal records source bytes: every journal except a commit one (a journal without the key was
+    written by a snapshot operation or before the key existed, and keeps its bytes)."""
+    return data.get('source_authority') != 'commit'
+
+
+def _action_drift(data, *, snapshot):
+    direction = 'before' if data['phase'] == 'rolled_back' else 'after'
+    for path, item in data['actions'].items():
+        if snapshot:
+            allowed = [item['before']] + ([item['after']] if 'after' in item else [])
+        else:
+            allowed = [item.get(direction, item['before'])]
+        if not target_unchanged(path, identity(path), allowed, absent_ok=True):
+            return path
+    return None
+
+
+class CommitAuthority:
+    """The checkout's Git commit is the authority (the user path: ``git pull`` is the update).
+
+    A commit counts as a released state: committed source changes never block, and an operation ends
+    ``complete`` without a validation session. Git alone judges the sources, in every check (status, the
+    check before a prepare, apply, retry, rollback): tracked non-Markdown sources that differ from HEAD (the
+    half-applied case) block; untracked files and instruction Markdown do not. The journal records the
+    source paths, ``source_authority: commit`` and the ``source_commit`` it was prepared from, no source
+    bytes. Integration targets keep their recorded identity (a shared target its Forge part).
+    """
+
+    name = 'commit'
+    end_phase = 'complete'
+    records_bytes = False
+    DIRTY = 'uncommitted source change: {}; commit or discard it (a developer checkout: --coordinated)'
+    CHANGED = 'a Forge entry was changed outside Forge: {} (the Forge part of it); restore it'
+    UNAVAILABLE = 'source commit unavailable: {}'
+    PREPARED = 'an installation operation is prepared from committed sources; the next start completes it'
+    INTERRUPTED = 'an installation operation was interrupted; the next start completes it'
+
+    def record(self, activation, data, head=None):
+        data['source_authority'] = self.name
+        data['source_commit'] = head if head is not None else source_head(activation.root)
+
+    def behind(self, activation, data, head=None):
+        """The checkout's HEAD is not the commit the journal was prepared from (a journal without
+        ``source_commit`` always is)."""
+        return (head if head is not None else source_head(activation.root)) != data.get('source_commit')
+
+    def dirty(self, activation, paths):
+        """``(path, reason)``: the first tracked non-Markdown path among ``paths`` that differs from HEAD,
+        or why that cannot be known; ``(None, None)`` when the sources are committed."""
+        head, uncommitted, reason = uncommitted_sources(activation.root, list(paths), tracked_only=True)
+        if reason is not None:
+            return None, reason
+        if head is None:
+            return None, 'the source checkout has no commit'
+        for relative in uncommitted:
+            if Path(relative).suffix != '.md':
+                path = Path(relative)
+                return str(path if path.is_absolute() else activation.root / path), None
+        return None, None
+
+    def source_reason(self, activation, paths):
+        """Why ``paths`` cannot count as a released state, or None when Git holds them committed."""
+        path, reason = self.dirty(activation, paths)
+        if reason is not None:
+            return self.UNAVAILABLE.format(reason)
+        return self.DIRTY.format(path) if path else None
+
+    def check_terminal(self, activation, previous):
+        """Committed changes never block; the new baseline is checked by its own authority."""
+
+    def check_baseline(self, activation, paths):
+        refusal = self.source_reason(activation, paths)
+        if refusal:
+            raise ValueError(refusal)
+
+    def check_sources(self, activation, data):
+        """Inside an operation (apply, retry, rollback, validate): Git judges the recorded sources, also
+        after further pulls; recorded bytes, if any, are not compared."""
+        self.check_baseline(activation, data['sources'])
+
+    def install_drift(self, activation, data, inventory):
+        paths = set(data['sources']) | {str(Path(p).absolute()) for p in inventory}
+        refusal = self.source_reason(activation, sorted(paths))
+        if refusal:
+            return refusal
+        changed = _action_drift(data, snapshot=True)
+        return self.CHANGED.format(changed) if changed else None
+
+    def drift(self, activation, data):
+        reason = self.source_reason(activation, data['sources'])
+        if reason is None:
+            changed = _action_drift(data, snapshot=False)
+            reason = self.CHANGED.format(changed) if changed else None
+        return reason, []
+
+    def unrecorded(self, activation, data, inventory):
+        new = sorted({str(Path(p).absolute()) for p in inventory} - set(data['sources']))
+        return (self.source_reason(activation, new) if new else None), []
+
+    def open_reason(self, activation, data, *, interrupted):
+        """A prepared or interrupted operation on committed sources: ``(reason, True)``, the next start (the
+        refresh) completes it; on dirty sources the dirt, which it cannot complete."""
+        reason = self.source_reason(activation, data['sources'])
+        if reason:
+            return reason, False
+        return (self.INTERRUPTED if interrupted else self.PREPARED), True
+
+
+SNAPSHOT = SnapshotAuthority()
+COMMIT = CommitAuthority()
+AUTHORITIES = {SNAPSHOT.name: SNAPSHOT, COMMIT.name: COMMIT}
+
+
 class Activation:
-    def __init__(self, source_root, journal=None):
+    def __init__(self, source_root, journal=None, default_authority=None):
         self.root = Path(source_root).resolve()
         self.journal = _safe_parents(journal or journal_path())
+        # The authority of a journal without ``source_authority`` and of a prepare that names none:
+        # forge_install passes the machine setting's choice (commit unless maintenance: coordinated); an
+        # Activation never reads the setting itself.
+        self.default_authority = default_authority or SNAPSHOT
+
+    def authority_of(self, data):
+        """The source authority of ``data``: recorded, else the default (also for no journal)."""
+        name = data.get('source_authority') if data else None
+        if name is None:
+            return self.default_authority
+        if name not in AUTHORITIES:
+            raise ValueError(f'unknown installation source authority: {name!r}')
+        return AUTHORITIES[name]
 
     def _load(self):
         data = _read_json(self.journal)
         if LOCK_ROOT.exists():
+            _private_lock_root(_safe_parents(LOCK_ROOT))  # before the lease in it is read
             lease = _read_json(LOCK_ROOT / 'active.json')
             if lease and lease.get('journal') == str(self.journal) and lease.get('snapshot'):
                 # The stable lease is the write-ahead record for interrupted
@@ -290,77 +582,70 @@ class Activation:
             result['compatibility'] = [{'project_root': entry['project_root'], 'runs': [
                 {key: value for key, value in state.items() if key != 'state'} for state in entry['states']
             ]} for entry in data.get('compatibility', [])]
+            authority = self.authority_of(data)
             lease = _read_json(LOCK_ROOT / 'active.json')
             if lease and lease.get('journal') == str(self.journal) and lease.get('snapshot'):
                 result['phase'] = 'recovery_required'
                 result['journal_transition_pending'] = True
+                self._open_reason(result, authority, data, interrupted=True)
                 return result
             if data['phase'] in TERMINAL:
-                blocking, accepted = self.terminal_drift(data)
-                if blocking:
+                reason, accepted = authority.drift(self, data)
+                if reason:
                     result['phase'] = 'recovery_required'
-                    result['reason'] = 'source/integration drift without prepared baseline: ' + blocking
+                    result['reason'] = reason
                     return result
                 if accepted:
                     result['instruction_drift'] = sorted(str(Path(p).relative_to(self.root)) for p in accepted)
+            elif data['phase'] in {'prepared', 'applying', 'recovery_required'}:
+                self._open_reason(result, authority, data, interrupted=data['phase'] != 'prepared')
             return result
 
-    def terminal_drift(self, data, *, integration=True, snapshot=False):
-        """Classify drift of a terminal journal: ``(blocking_path | None, instruction_paths)``.
+    def _open_reason(self, result, authority, data, *, interrupted):
+        """Status of an open operation: the reason, and whether the next start completes it
+        (``next_start_completes``: the refresh and the implicit install continue it instead of refusing)."""
+        reason, completes = authority.open_reason(self, data, interrupted=interrupted)
+        changed = self._changed_action(data) if completes else None
+        if changed:  # the next start would refuse it: name the file and the Forge part
+            reason, completes = COMMIT.CHANGED.format(changed), False
+        if reason:
+            result['reason'] = reason
+        if completes:
+            result['next_start_completes'] = True
 
-        Only instruction Markdown in ``sources`` is accepted; any other source
-        and every ``actions`` entry stays blocking. The default compares with
-        the terminal identity (``status``); ``snapshot`` compares with
-        ``before`` or ``after`` like ``_check``. Never used inside an operation.
+    def drift(self, data):
+        """Readiness of a terminal journal by its authority: ``(reason | None, instruction_paths)``.
+
+        Snapshot: only instruction Markdown in ``sources`` is accepted; any other source and every
+        ``actions`` entry (a shared target by its Forge part) stays blocking. Commit: Git judges the
+        sources, the actions as under snapshot. Never used inside an operation.
         """
-        direction = 'before' if data['phase'] == 'rolled_back' else 'after'
-        accepted = []
-        inventories = [('sources', data['sources'])] + ([('actions', data['actions'])] if integration else [])
-        for name, inventory in inventories:
-            for path, item in inventory.items():
-                current = identity(path)
-                if snapshot:
-                    allowed = [item['before']] + ([item['after']] if 'after' in item else [])
-                else:
-                    allowed = [item.get(direction, item['before'])]
-                if current in allowed:
-                    continue
-                if name == 'sources' and instruction_path(self.root, path):
-                    accepted.append(path)
-                    continue
-                return path, accepted
-        return None, accepted
+        return self.authority_of(data).drift(self, data)
 
-    def unrecorded_sources(self, data, inventory):
-        """Classify current source-inventory entries absent from a terminal journal.
-
-        Returns ``(blocking_path | None, instruction_paths)``: unrecorded
-        instruction Markdown is accepted; any other new source needs a
-        prepared baseline. Never used inside an operation.
+    def unrecorded(self, data, inventory):
+        """Current source-inventory entries absent from a terminal journal: ``(reason | None,
+        instruction_paths)`` by the journal's authority. Snapshot: unrecorded instruction Markdown is
+        accepted, any other new source needs a prepared baseline; commit: only an uncommitted one blocks.
+        Never used inside an operation.
         """
-        accepted = []
-        for path in sorted(str(Path(p).absolute()) for p in inventory):
-            if path in data['sources']:
-                continue
-            if not instruction_path(self.root, path):
-                return path, accepted
-            accepted.append(path)
-        return None, accepted
+        return self.authority_of(data).unrecorded(self, data, inventory)
 
-    def prepare(self, sources, targets, *, consumer_roots=(), closure=()):
+    def prepare(self, sources, targets, *, authority=None, consumer_roots=(), closure=(), source_commit=None):
+        """Open a new operation under ``authority`` (the default authority when None), recorded once here;
+        ``source_commit``: the HEAD the caller planned from (read here when None)."""
+        authority = authority or self.default_authority
         with machine_lock():
             previous = self._load()
             self._lease(previous)
             if previous and previous['phase'] not in TERMINAL:
                 raise ValueError('unfinished maintenance; retry or rollback the existing operation')
-            if previous and previous['phase'] == 'complete':
-                blocking, _ = self.terminal_drift(previous, integration=False, snapshot=True)
-                if blocking:
-                    raise ValueError(f'installation conflict: resource changed after snapshot: {blocking}')
+            if previous:
+                self.authority_of(previous).check_terminal(self, previous)
             paths = {str(Path(p).absolute()) for p in sources}
             if previous:
                 paths.update(previous['sources'])
-            source_values = {p: {'before': identity(p)} for p in sorted(paths)}
+            authority.check_baseline(self, sorted(paths))
+            source_values = {p: ({'before': identity(p)} if authority.records_bytes else {}) for p in sorted(paths)}
             integrations = {str(Path(p).absolute()) for p in targets}
             if previous:
                 for name, item in previous['actions'].items():
@@ -374,6 +659,7 @@ class Activation:
                     'phase': 'prepared', 'closure': list(closure), 'consumer_roots': [str(Path(p).resolve()) for p in consumer_roots],
                     'sources': source_values, 'actions': {p: {'before': identity(p)} for p in sorted(integrations)},
                     'completed': [], 'compatibility': []}
+            authority.record(self, data, source_commit)
             self._save(data)
             return self.status()
 
@@ -382,7 +668,7 @@ class Activation:
 
         A failed closure check can then restore the matched prepared baseline.
         Calling this again cannot adopt subsequent edits to an already sealed
-        candidate generation.
+        candidate generation. Under commit, Git judges the candidate instead.
         """
         with machine_lock():
             data = self._load()
@@ -393,21 +679,36 @@ class Activation:
                 self._check(data, integration=True, source=True)
                 return
             for path in source_paths:
-                data['sources'].setdefault(str(Path(path).absolute()), {'before': {'kind': 'absent'}})
-            for path, item in data['sources'].items():
-                item['after'] = identity(path)
+                data['sources'].setdefault(str(Path(path).absolute()),
+                                           {'before': {'kind': 'absent'}} if _byte_journal(data) else {})
+            if self.authority_of(data) is COMMIT:
+                COMMIT.check_sources(self, data)
+            if _byte_journal(data):
+                for path, item in data['sources'].items():
+                    item['after'] = identity(path)
             data['sources_sealed'] = True
             self._save(data)
 
     def _check(self, data, *, integration, source):
-        for inventory in ([data['sources']] if source else []) + ([data['actions']] if integration else []):
-            for path, item in inventory.items():
-                current = identity(path)
-                allowed = [item['before']]
-                if 'after' in item:
-                    allowed.append(item['after'])
-                if current not in allowed:
-                    raise ValueError(f'installation conflict: resource changed after snapshot: {path}')
+        """Inside an operation: sources by the journal's authority, integration targets by target_unchanged
+        (whole, or a shared target's Forge part)."""
+        if source:
+            self.authority_of(data).check_sources(self, data)
+        changed = self._changed_action(data) if integration else None
+        if changed:
+            raise ValueError(f'installation conflict: resource changed after snapshot: {changed}')
+
+    @staticmethod
+    def _changed_action(data):
+        for path, item in data['actions'].items():
+            allowed = [item['before']] + ([item['after']] if 'after' in item else [])
+            if not target_unchanged(path, identity(path), allowed, absent_ok=True):
+                return path
+        return None
+
+    def _compatibility(self, data, compatibility, *, rollback):
+        """Rollback restores source bytes only under snapshot; under commit the sources stay at HEAD."""
+        return compatibility(data, rollback=rollback and self.authority_of(data) is SNAPSHOT)
 
     def apply(self, plan, links=(), *, source_paths=(), modes=None, compatibility=None, closure=None):
         with machine_lock():
@@ -424,10 +725,13 @@ class Activation:
             for path in source_paths:
                 key = str(Path(path).absolute())
                 if key not in data['sources']:
-                    data['sources'][key] = {'before': {'kind': 'absent'}}
+                    data['sources'][key] = {'before': {'kind': 'absent'}} if _byte_journal(data) else {}
+            snapshot = self.authority_of(data) is SNAPSHOT
             for path, item in data['sources'].items():
+                if 'before' not in item:
+                    continue  # a commit journal records no source bytes
                 current = identity(path)
-                if data.get('sources_sealed') and current != item.get('after', current):
+                if snapshot and data.get('sources_sealed') and current != item.get('after', current):
                     raise ValueError(f'candidate sources changed after preflight: {path}')
                 item['after'] = current
             for path, (old, new) in plan.files.items():
@@ -463,11 +767,21 @@ class Activation:
         direction = 'before' if rollback else 'after'
         try:
             self._check(data, integration=True, source=True)
-            inventories = [data['sources'], data['actions']] if rollback else [data['actions']]
+            # Under commit the sources are Git's: a rollback restores the integration targets only.
+            sources = rollback and self.authority_of(data) is SNAPSHOT
+            inventories = [data['sources'], data['actions']] if sources else [data['actions']]
             for inventory in inventories:
                 for path, item in inventory.items():
-                    wanted = item.get(direction, item['before'])
-                    if identity(path) != wanted:
+                    wanted, current = item.get(direction, item['before']), identity(path)
+                    shared = inventory is data['actions'] and owned_part(Path(path), None) is not None
+                    recorded = current in (item['before'], item.get('after'))  # no host write: the plan's bytes
+                    if shared and not recorded and current['kind'] == 'file' and wanted['kind'] != 'link':
+                        # A shared target: Forge's part goes into the current file; the host's bytes stay.
+                        if not target_unchanged(path, current, [wanted]):
+                            merged = merge_owned_part(Path(path), _content(current), _content(wanted))
+                            replace_identity(Path(path), {'kind': 'absent'} if merged is None
+                                             else file_identity(merged, current['mode']))
+                    elif current != wanted:
                         replace_identity(Path(path), wanted)
                     data['completed'].append(path)
             if not rollback:
@@ -485,7 +799,7 @@ class Activation:
                                 parent.rmdir()
                             except (FileNotFoundError, OSError):
                                 break
-            data['phase'] = 'rolled_back' if rollback else 'validation_pending'
+            data['phase'] = 'rolled_back' if rollback else self.authority_of(data).end_phase
             self._save(data)
         except BaseException:
             data['phase'] = 'recovery_required'
@@ -507,7 +821,7 @@ class Activation:
                 raise ValueError('no interrupted installation to retry')
             rollback = data.get('recovery_direction') == 'before'
             if compatibility:
-                data['compatibility'] = compatibility(data, rollback=rollback)
+                data['compatibility'] = self._compatibility(data, compatibility, rollback=rollback)
             self._run(data, rollback=rollback)
             return self.status()
 
@@ -519,7 +833,7 @@ class Activation:
                 raise ValueError('no installation to roll back')
             self._check(data, integration=True, source=True)
             if compatibility:
-                data['compatibility'] = compatibility(data, rollback=True)
+                data['compatibility'] = self._compatibility(data, compatibility, rollback=True)
             data.pop('completion_commit_state', None)  # describes a completion being undone
             data['phase'] = 'applying'
             data['recovery_direction'] = 'before'
@@ -535,14 +849,21 @@ class Activation:
             status = self.status()
             if not data or status['phase'] != 'validation_pending' or operation_id != data['operation_id']:
                 raise ValueError('validation session requires the exact pending operation ID')
-            for inventory in (data['sources'], data['actions']):
-                for path, item in inventory.items():
-                    if identity(path) != item['after']:
-                        raise ValueError(f'activation incomplete: {path}')
+            self._installed(data)
             if compatibility:
                 compatibility(data, rollback=False)
             status['validation_session'] = True
             return status
+
+    @staticmethod
+    def _installed(data):
+        """Every recorded identity is in place (a commit journal's sources have none)."""
+        for name, inventory in (('sources', data['sources']), ('actions', data['actions'])):
+            for path, item in inventory.items():
+                current = identity(path)
+                if 'after' in item and current != item['after'] and not (
+                        name == 'actions' and target_unchanged(path, current, [item['after']])):
+                    raise ValueError(f'activation incomplete: {path}')
 
     def validate(self, operation_id, evidence):
         with machine_lock():
@@ -551,10 +872,7 @@ class Activation:
             if not data or data['phase'] != 'validation_pending' or operation_id != data['operation_id']:
                 raise ValueError('validation requires the exact pending operation ID')
             self._check(data, integration=True, source=True)
-            for inventory in (data['sources'], data['actions']):
-                for path, item in inventory.items():
-                    if identity(path) != item['after']:
-                        raise ValueError(f'activation incomplete: {path}')
+            self._installed(data)
             observed = identity(evidence)
             if observed['kind'] != 'file' or not base64.b64decode(observed['bytes']).strip():
                 raise ValueError('fresh-session validation evidence is required')

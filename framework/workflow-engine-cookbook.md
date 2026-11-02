@@ -167,9 +167,10 @@ When in doubt: read `--status` or check `--next`.
 
 ## Boot integration
 
-Boot runs `plan_engine.py --boot` and, for explicit development bindings, the
-read-only `restore` (`framework/development-continuation.md`); it does not run
-`--boot-context`.
+Boot runs neither `plan_engine.py --boot` nor `--boot-context`: `plan_engine.py
+--boot` runs when a task is taken up (`agents/buddy/operational.md` §Phase 1,
+`skills/task_status_update/SKILL.md` Step 1b), and the read-only `restore` runs before selected work progresses
+(`framework/development-continuation.md`).
 Buddy reads workflow state on demand via `--next` /
 `--status` / `--boot-context` when relevant, rather than every turn. Session-handoff
 carries continuity across sessions; the engine state-file is read when

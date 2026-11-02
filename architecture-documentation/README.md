@@ -23,7 +23,8 @@ maintain knowledge or use a reasoning method.
 
 ## First use
 
-1. [Install and verify the selected profile](05-installation.md) in your agent host.
+1. [Install Forge](05-installation.md) into your project (the default `project`
+   profile), or for every session of your machine (`full-ai-integration`).
 2. Open your working folder. Its intent and rules establish the goal and boundaries.
 3. Describe the result you want, the relevant context and any limits on action.
 4. Review the result and its evidence. Use `save` when you want session persistence
@@ -57,8 +58,8 @@ These pages answer different questions; they are not a mandatory reading sequenc
 
 ## Quick entry points
 
-- **Existing user updating:** follow [coordinated installation](05-installation.md).
-  A source update and successful installer exit do not alone prove activation.
+- **Existing user updating:** run `git pull` in the Forge checkout; the next session
+  start refreshes the installed entries ([updating](05-installation.md#updating)).
 - **Context is missing or stale:** start with the [daily handbook](13-operational-handbook.md#retrieve-and-correct-context),
   then [troubleshooting](12-troubleshooting.md) if retrieval or recovery is blocked.
 - **A decision needs more scrutiny:** compare [Frame, Bedrock and Council](06-usage-workflows.md#general-reasoning).

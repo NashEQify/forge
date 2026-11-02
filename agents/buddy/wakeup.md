@@ -5,7 +5,7 @@ Trigger: user says `wakeup`.
 
 ## What wakeup does
 
-Boot loaded the minimum (plan_engine --boot + profile).
+Boot loaded the minimum (the profile and the session handoff).
 Wakeup expands to a full overview:
 
 1. **Deepen plan state:** run

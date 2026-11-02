@@ -1,6 +1,6 @@
 ---
 name: tester
-description: "Spec-driven test engineer with three modes (design, eval, execution). Methodology + infrastructure discipline in skills/testing (SKILL.md + REFERENCE.md §Infrastructure)."
+description: "Spec-driven test engineer with three working modes (design, eval, execution). Methodology + infrastructure discipline in skills/testing (SKILL.md + REFERENCE.md §Infrastructure)."
 ---
 
 <!-- AGENT-COMMON-AUTO-START -->

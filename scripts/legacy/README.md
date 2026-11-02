@@ -25,7 +25,9 @@ The installer validates the mandatory `skills/` input before any managed
 planning, including role, skill, boot and hook cleanup. A missing source
 directory is not an intentional empty inventory.
 
-Use `bash scripts/setup-codex.sh --check` for a write-free launcher check.
+Use `bash scripts/setup-codex.sh --profile full-ai-integration --host codex --check`
+for a write-free check of the Codex entries (add `--user-repo PATH` when no machine
+setting names a user repository).
 It passes Python `-B`; directly invoked generators disable bytecode before
 project imports. For suppression that also covers Python's own startup
 imports, invoke direct entry points with `python3 -B` as well. Checks never

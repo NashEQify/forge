@@ -66,8 +66,8 @@ inside the framework tree enters the source inventory and makes readiness refuse
 ## Install and verify
 
 Preflight the complete selected dependency closure, old installed routes, ownership
-and exact legacy state interpretation before changing integration. Preserve daily/full
-presets and optional method selection on repeat installation. Generated wrappers stay
+and exact legacy state interpretation before changing integration. Preserve the recorded
+profile, hosts and method selection on repeat installation. Generated wrappers stay
 thin forwards to canonical contracts. Full availability does not select development.
 
 Apply within the established window. Validate actual installed entrypoints, source

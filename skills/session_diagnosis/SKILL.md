@@ -62,8 +62,8 @@ The skill reports; it does not repair. A defect the report shows goes to `root_c
 3. **Load check, per transcript file, before any dimension.** Three evidence points:
    - the boot entry reached the session (the hook's record, or the adapter's instructions in context);
    - the files the entry names were read, or the entry included them;
-   - the first answer (in a headless run, its only answer): a greeting with the boot findings, or the disclosure of
-     a skipped or cut-short boot (`agents/buddy/boot-status.md` §Greeting findings). A disclosure that does not
+   - the first answer (in a headless run, its only answer): a greeting with the boot findings, or the notice that
+     an instruction unit did not load (`agents/buddy/boot-status.md` §Greeting findings). A notice that does not
      open the first answer is its own finding, with its position.
 
    After a compaction or a resume, check also whether the files the boot names for a reread were read again.
@@ -75,7 +75,8 @@ The skill reports; it does not repair. A defect the report shows goes to `root_c
      line, a rule), quote that text beside it with its `path:line` (project or framework root): whether the text misled
      is the maintainers' call. From that point on, the dimensions describe the host model without Forge's process.
    - `not reached`: installation or instruction loading, on the host's side. The installer's read-only check
-     (`python3 scripts/forge_install.py --check` in the framework root, or the user's output of it) tells them
+     (`python3 scripts/forge_install.py --check <project>` for a project install, `--profile full-ai-integration
+     --check` for the machine installation, in the framework root, or the user's output of it) tells them
      apart; without it, write "installation or host delivery, not separated".
    - `unknown`: no layer. Name the missing evidence.
 4. **Dimensions.** Run the seven dimensions of `dimensions.md` §Dimensions. Up to 300 KB of transcripts in all, read

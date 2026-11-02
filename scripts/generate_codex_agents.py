@@ -15,6 +15,7 @@ import os
 import re
 import shlex
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 sys.dont_write_bytecode = True
@@ -25,24 +26,30 @@ try:
     from .managed_install import (
         InstallConflict,
         InstallPlan,
-        digest,
+        check_legacy_text,
         json_bytes,
         managed_files,
+        plan_block,
         read_file,
         safe_path,
     )
-    from .user_scope import INVARIANTS_UNIT, WHOLE_BOOT, UserScope, boot_text, daily_rules, reread_line
+    from .user_scope import (
+        INVARIANTS_UNIT, MACHINE_PROFILE, WHOLE_BOOT, UserScope, boot_text, reread_line, round_one_line,
+    )
 except ImportError:
     from managed_install import (
         InstallConflict,
         InstallPlan,
-        digest,
+        check_legacy_text,
         json_bytes,
         managed_files,
+        plan_block,
         read_file,
         safe_path,
     )
-    from user_scope import INVARIANTS_UNIT, WHOLE_BOOT, UserScope, boot_text, daily_rules, reread_line
+    from user_scope import (
+        INVARIANTS_UNIT, MACHINE_PROFILE, WHOLE_BOOT, UserScope, boot_text, reread_line, round_one_line,
+    )
 
 
 # These roles execute or author files; the others produce reports.
@@ -57,9 +64,6 @@ WRITER_ROLES = {
 }
 START = "<!-- FORGE-CODEX-BOOT:START -->"
 END = "<!-- FORGE-CODEX-BOOT:END -->"
-# Person-specific legacy text outside a managed block (an old per-person soul
-# block or the retired session-resume entry) is never edited by forge.
-LEGACY_TEXT = re.compile(r"<!--\s*[\w.-]*-SOUL:START|session-resume")
 
 
 _TAIL = (
@@ -71,15 +75,32 @@ _TAIL = (
 )
 
 
+def refresh_line(framework: str, target: str) -> str:
+    """The installed entry's own refresh, as the first call of the Codex boot (AC-13: `git pull` in the
+    checkout is the update). target "" refreshes the machine installation, "." the project."""
+    command = f"python3 -B {shlex.quote(framework + '/scripts/forge_install.py')} --refresh" + (f" {target}" if target else "")
+    return (
+        f"First call, on its own and before the boot reads: run `{command}`. It brings the installed\n"
+        "Forge entries up to the checkout's commit; its result does not change the boot.\n\n"
+    )
+
+
 def boot_instructions(
-    framework: str, scope: UserScope | None = None, *, profile: str = "full"
+    framework: str, scope: UserScope | None = None, *, profile: str = MACHINE_PROFILE,
+    refresh: str | None = None,
 ) -> str:
     """Codex boot entry. scope=None stays person-neutral (roles, project blocks);
-    only home-level blocks receive a scope (framework/user-scope.md)."""
-    if scope is None and profile == "full":
+    only home-level blocks receive a scope (framework/user-scope.md), and only
+    they name the profile. refresh names the installed entry's refresh call
+    (refresh_line): "" in the home block, "." in a project install's override
+    block; None (roles, positional project blocks) adds none."""
+    head = "Forge framework root: " + framework + "\n\n"
+    if refresh is not None:
+        head += refresh_line(framework, refresh)
+    if scope is None:
         return (
-            "Forge framework root: " + framework + "\n\n"
-            "For the primary Buddy session, read these files before responding, even\n"
+            head
+            + "For the primary Buddy session, read these files before responding, even\n"
             "when no Buddy role was explicitly selected:\n\n"
             + "\n".join(
                 f"- {framework}/agents/buddy/{part}.md"
@@ -87,26 +108,39 @@ def boot_instructions(
             )
             + f"\n- {framework}/{INVARIANTS_UNIT}"
             + "\n" + WHOLE_BOOT
-            + "\n" + reread_line(framework, "full") + "\n\n" + _TAIL
+            + "\n" + reread_line(framework)
+            + "\n" + round_one_line(framework) + "\n\n" + _TAIL
         )
-    if scope is None:  # person-neutral text for a non-default profile
-        entry = boot_text(UserScope(), Path(framework), profile, neutral=True)
-    else:
-        entry = boot_text(scope, Path(framework), profile, install_time=True)
+    entry = boot_text(scope, Path(framework), profile, install_time=True)
     return (
-        "Forge framework root: " + framework + "\n\n"
-        "For the primary Buddy session, follow this boot entry before responding,\n"
+        head
+        + "For the primary Buddy session, follow this boot entry before responding,\n"
         "even when no Buddy role was explicitly selected:\n\n"
         + f"First read {framework}/agents/buddy/codex-execution.md.\n\n"
-        + entry + "\n" + _TAIL
-        + ("\n" + daily_rules("codex") if profile == "daily" else "")
+        + entry + round_one_line(framework) + "\n\n" + _TAIL
     )
 
 
-def generate_roles(repo: Path, framework_root: Path | None = None) -> dict[str, str]:
-    desired = {}
+@dataclass(frozen=True)
+class Role:
+    """One active neutral role: its frontmatter and the text after it."""
+
+    name: str
+    description: str
+    source: Path
+    metadata: dict
+    body: str
+
+
+def active_roles(repo: Path) -> list[Role]:
+    """The role inventory: every active neutral role under `repo`/agents, by file name.
+
+    Navigation documents (no frontmatter) and archived, deprecated or inactive
+    roles are not roles. One owner for the Codex TOML renderer, the project
+    install's Claude role wrappers and the capability closure.
+    """
+    roles = []
     seen = set()
-    framework = str(framework_root.resolve()) if framework_root else "<FRAMEWORK_ROOT>"
     for source in sorted((repo / "agents").glob("*.md")):
         text = source.read_text(encoding="utf-8")
         if not text.startswith("---\n"):
@@ -127,6 +161,17 @@ def generate_roles(repo: Path, framework_root: Path | None = None) -> dict[str, 
         if name in seen:
             raise ValueError(f"duplicate role name: {name}")
         seen.add(name)
+        roles.append(Role(name, description, source, metadata, sections[2]))
+    if not roles:
+        raise ValueError(f"no active neutral roles in {repo / 'agents'}")
+    return roles
+
+
+def generate_roles(repo: Path, framework_root: Path | None = None) -> dict[str, str]:
+    desired = {}
+    framework = str(framework_root.resolve()) if framework_root else "<FRAMEWORK_ROOT>"
+    for role in active_roles(repo):
+        name, description, source = role.name, role.description, role.source
         root_resolution = ""
         if framework_root is None:
             root_resolution = (
@@ -144,7 +189,7 @@ def generate_roles(repo: Path, framework_root: Path | None = None) -> dict[str, 
             f"Canonical role: {framework}/agents/{source.name}\n"
             f"Resolve framework references against {framework}; resolve bare\n"
             f"_protocols/ references against {framework}/agents/. Keep project\n"
-            "paths relative to the active consumer CWD.\n\n" + sections[2].lstrip("\n")
+            "paths relative to the active consumer CWD.\n\n" + role.body.lstrip("\n")
         )
         settings = {"name": name, "description": " ".join(description.split())}
         if name == "buddy":
@@ -172,121 +217,7 @@ def generate_roles(repo: Path, framework_root: Path | None = None) -> dict[str, 
             )
             + "\n"
         )
-    if not desired:
-        raise ValueError(f"no active neutral roles in {repo / 'agents'}")
     return desired
-
-
-def plan_block(
-    plan: InstallPlan,
-    path: Path,
-    state_path: Path,
-    start: str,
-    end: str,
-    body: str,
-    *,
-    replace_whole: bool = False,
-) -> None:
-    """Own exactly one marker-delimited block in `path`; text outside it is kept.
-
-    replace_whole: the caller proved the entire current file is owned (legacy
-    whole-file ownership); the new content is the block only.
-    """
-    path = safe_path(path)
-    original = read_file(path)
-    text = original.decode() if original is not None else ""
-    raw_state = read_file(state_path)
-    old_hash = None
-    if raw_state is not None:
-        try:
-            state = json.loads(raw_state)
-            if set(state) != {"version", "sha256"} or state["version"] != 1:
-                raise ValueError("unsupported boot state")
-            old_hash = state["sha256"]
-            if not isinstance(old_hash, str) or not re.fullmatch(
-                r"[a-f0-9]{64}", old_hash
-            ):
-                raise ValueError("invalid boot hash")
-        except (ValueError, TypeError) as exc:
-            raise InstallConflict(f"invalid boot ownership: {state_path}") from exc
-    block = start + "\n" + body + end
-    if replace_whole:
-        updated = block + "\n"
-    elif start in text or end in text:
-        if (
-            text.count(start) != 1
-            or text.count(end) != 1
-            or text.index(start) > text.index(end)
-        ):
-            raise InstallConflict(f"malformed managed boot block: {path}")
-        first, last = text.index(start), text.index(end) + len(end)
-        current = text[first:last]
-        if current != block and digest(current.encode()) != old_hash:
-            raise InstallConflict(f"modified or unowned boot block: {path}")
-        updated = text[:first] + block + text[last:]
-    else:
-        if old_hash is not None and original is not None:
-            raise InstallConflict(f"managed boot block removed: {path}")
-        updated = text + ("\n\n" if text else "") + block + "\n"
-    plan.add(path, updated.encode(), expected=original)
-    plan.add(
-        state_path,
-        json_bytes({"version": 1, "sha256": digest(block.encode())}),
-        expected=raw_state,
-    )
-
-
-def plan_block_removal(
-    plan: InstallPlan, path: Path, state_path: Path, start: str, end: str
-) -> None:
-    """Remove a hash-owned block (and its state); delete the file if nothing else remains."""
-    path = safe_path(path)
-    raw_state = read_file(state_path)
-    if raw_state is None:
-        return
-    try:
-        old_hash = json.loads(raw_state)["sha256"]
-    except (ValueError, TypeError, KeyError) as exc:
-        raise InstallConflict(f"invalid boot ownership: {state_path}") from exc
-    original = read_file(path)
-    text = original.decode() if original is not None else ""
-    if start in text or end in text:
-        if (
-            text.count(start) != 1
-            or text.count(end) != 1
-            or text.index(start) > text.index(end)
-        ):
-            raise InstallConflict(f"malformed managed boot block: {path}")
-        first, last = text.index(start), text.index(end) + len(end)
-        if digest(text[first:last].encode()) != old_hash:
-            raise InstallConflict(f"modified or unowned boot block: {path}")
-        before, after = text[:first], text[last:]
-        if after.startswith("\n"):
-            after = after[1:]
-        if before.endswith("\n\n"):  # separator plan_block added after outer text
-            before = before[:-2]
-            # Outer text without a final newline: keep the following line apart.
-            if before and not before.endswith("\n") and after[:1] not in ("", "\n", "\r"):
-                before += "\n"
-        remaining = before + after
-        plan.add(
-            path, remaining.encode() if remaining.strip() else None, expected=original
-        )
-    plan.add(state_path, None, expected=raw_state)
-
-
-def check_legacy_text(path: Path, start: str, end: str) -> None:
-    """Refuse when person-specific legacy text sits outside the managed block;
-    the rollout removes it by hand first."""
-    raw = read_file(path)
-    if raw is None:
-        return
-    text = raw.decode("utf-8", errors="replace")
-    outside = text
-    if start in text and end in text and text.index(start) < text.index(end):
-        outside = text[: text.index(start)] + text[text.index(end) + len(end):]
-    if LEGACY_TEXT.search(outside):
-        raise InstallConflict(f"legacy text outside managed block: {path}")
 
 
 def plan_boot(
@@ -295,17 +226,19 @@ def plan_boot(
     framework: Path,
     *,
     scope: UserScope | None = None,
-    profile: str = "full",
+    profile: str = MACHINE_PROFILE,
+    filename: str = "AGENTS.md",
+    refresh: str | None = None,
 ) -> None:
-    """Codex wrapper: `<root>/AGENTS.md` block. Pass a scope only for ~/.codex."""
-    path = safe_path(root) / "AGENTS.md"
+    """Codex wrapper: `<root>/<filename>` block. Pass a scope only for ~/.codex."""
+    path = safe_path(root) / filename
     plan_block(
         plan,
         path,
         path.with_name(".forge-codex-boot.json"),
         START,
         END,
-        boot_instructions(str(framework), scope, profile=profile),
+        boot_instructions(str(framework), scope, profile=profile, refresh=refresh),
     )
 
 
@@ -317,7 +250,7 @@ def plan_codex(
     *,
     skills: dict[str, str],
     scope: UserScope | None,
-    profile: str = "full",
+    profile: str = MACHINE_PROFILE,
     roles: bool | list[str] = True,
     legacy_roles: dict[str, set[str]] | None = None,
     legacy_skills: dict[str, str] | None = None,
@@ -350,7 +283,7 @@ def plan_codex(
     )
     check_legacy_text(codex_home / "AGENTS.md", START, END)
     # Only the home-level block is person-specific; project blocks stay neutral.
-    plan_boot(plan, codex_home, framework, scope=scope, profile=profile)
+    plan_boot(plan, codex_home, framework, scope=scope, profile=profile, refresh="")
     if roles:
         plan_hook_cleanup(plan, codex_home, framework)
 
@@ -438,7 +371,8 @@ def main(argv: list[str] | None = None) -> int:
                 from . import forge_install
             except ImportError:
                 import forge_install
-            forwarded = (["--check"] if args.check else []) + (["--migrate-legacy"] if args.migrate_legacy else [])
+            forwarded = ["--profile", MACHINE_PROFILE] + (["--check"] if args.check else [])
+            forwarded += ["--migrate-legacy"] if args.migrate_legacy else []
             forwarded.extend(str(project) for project in args.projects)
             previous = {key: os.environ.get(key) for key in ("CODEX_HOME", "AGENTS_HOME")}
             try:

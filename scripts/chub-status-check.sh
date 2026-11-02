@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# chub-status-check.sh — boot-time presence check for the chub CLI.
+# chub-status-check.sh — presence check for the chub CLI.
 #
-# Used by boot.md STATUS-CHECK step in parallel with git-status-check.sh.
-# Emits a single advisory line if chub is missing; emits nothing when
-# present. Output is parsed by Buddy and surfaced in GREET when non-empty.
+# Called by the boot probe (git-status-check.sh --boot), which prints its
+# output as the `chub:` fact line (`chub: installed` when the output is empty).
+# It is not a boot step of its own. Emits a single advisory line if chub is
+# missing; emits nothing when present.
 #
 # Usage:
-#   bash $FRAMEWORK_DIR/scripts/chub-status-check.sh
+#   bash $FRAMEWORK_DIR/scripts/chub-status-check.sh   (normally via the probe)
 #
 # Output format:
 #   non-empty line  → chub missing, install hint

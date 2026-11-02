@@ -6,8 +6,10 @@ workflow. Keep working in your own project or knowledge folder.
 
 1. Read the [overview](../architecture-documentation/01-overview.md) to choose the
    capability you need.
-2. Follow [installation](../architecture-documentation/05-installation.md) for the
-   shared installer, daily/full presets, optional methods and activation checks.
+2. Follow [installation](../architecture-documentation/05-installation.md): the
+   `project` install puts Forge into one folder (the default);
+   `full-ai-integration` puts Buddy into every session of the machine, with a
+   personal context folder.
 3. Open a fresh agent session in your workspace and verify that its project rules,
    configured user scope and relevant context are actually loaded.
 4. Describe the work. For ordinary use start with the
@@ -20,9 +22,9 @@ handoff and follows the project's commit/push rules. It does not require a softw
 plan. Optional personal context stays in its configured owner; project knowledge
 can be used independently.
 
-For an existing installation, use the coordinated maintenance procedure before
-updating shared sources. A pull alone is not a completed upgrade. Recovery and
-verification: [installation activation](installation-activation.md).
+To update, run `git pull` in the Forge checkout; the next session start brings
+the installed entries up to it. A machine on the coordinated maintenance path
+(for changing Forge itself) follows [installation activation](installation-activation.md).
 
 This page is a reader entry. Canonical selection rules are in
 [process-map.md](process-map.md); capability ownership is in

@@ -3,8 +3,9 @@
 Source of truth for Buddy's execution permissions.
 Adapters translate these categories into orchestrator-specific formats.
 
-Changes here → update the CC adapter (`orchestrators/claude-code/settings.json.template`,
-re-applied to `~/.claude/settings.json` via `setup-cc.sh`) and the OC adapter.
+Changes here → update the OC adapter. Claude Code has no installed adapter for these
+rules: the installer writes only the `hooks` key of `~/.claude/settings.json`, and its
+permission rules are the user's or the host's.
 
 ## Principle
 
@@ -94,5 +95,5 @@ only reads. `ls` is reading — no clarifying question, no approval.
 
 | Orchestrator | File | Format |
 |---|---|---|
-| CC | `~/.claude/settings.json` (user-global; provisioned by `setup-cc.sh` from `orchestrators/claude-code/settings.json.template`) | `permissions.allow: ["Bash(cmd:*)"]` |
+| CC | `~/.claude/settings.json` (user-global; set by the user or the host, not by the installer) | `permissions.allow: ["Bash(cmd:*)"]` |
 | OC | `orchestrators/opencode/.opencode/agent/buddy.md` | `permission.bash: {"cmd*": allow}` |

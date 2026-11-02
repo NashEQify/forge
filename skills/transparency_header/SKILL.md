@@ -1,11 +1,9 @@
 ---
 name: transparency-header
 description: >
-  Header formats for delegation, execution, and direct action — the
-  user's at-a-glance scan of what was done and why across parallel
-  sessions. Triggers when a turn delegates, executes, or takes a
-  state-changing / decision-bearing direct action; pure discussion and
-  acknowledgements are exempt (the prose is the record).
+  Prepare a header for a delegation or task start that identifies the actor, scope
+  and intent. The direct-action line in Buddy's operational rules lets the
+  user track a local action in the same conversation.
 status: active
 relevant_for: ["*"]
 invocation:

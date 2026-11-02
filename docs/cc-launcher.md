@@ -1,6 +1,6 @@
 # `cc` Launcher — Setup & Reference
 
-Detail companion to the [installation guide](../architecture-documentation/05-installation.md) for the `cc` launcher (optional convenience).
+Detail companion to the [installation guide](../architecture-documentation/05-installation.md) for the `cc` launcher of the `full-ai-integration` installation. A `project` install needs no launcher: start `claude` in the project.
 
 ## Prerequisites
 
@@ -11,21 +11,22 @@ Detail companion to the [installation guide](../architecture-documentation/05-in
 | **bash + jq** | hook scripts + payload parsing |
 | **Python 3.10+ + PyYAML** | `workflow_engine.py`, `plan_engine.py`, generators |
 
-## What `setup-cc.sh` does
+## What the installation sets up
 
-`setup-cc.sh` forwards to the coordinated installer. Follow
-[`framework/installation-activation.md`](../framework/installation-activation.md)
-for source changes, installation ownership and fresh-session verification.
-
-Full setup plans the `cc` launcher at `~/.local/bin/cc`, Claude role/skill
-links and configured SessionStart integration from the settings template.
+`python3 ~/forge/scripts/forge_install.py --profile full-ai-integration` (or
+`setup-cc.sh` with the same arguments, which forwards to it) plans the `cc`
+launcher at `~/.local/bin/cc`, Claude role/skill links and the SessionStart
+integration from the settings template. The installed `cc` is a fixed stub that
+runs the launcher in the checkout, so a `git pull` there reaches it. At each start
+`cc` first runs `forge_install.py --refresh`, which brings the installed entries
+up to the checkout's commit, then checks the installation's readiness.
 The boot injector applies to configured desktop/web entrypoints; the remote
-script observes coordinated maintenance readiness and does not resume workflows
+script observes maintenance readiness and does not resume workflows
 or update/install the framework. The terminal launcher supplies its own boot
 injection. Existing unowned integration conflicts must be resolved through the
 installer, not overwritten manually.
 
-Full Claude setup also wires `pre-commit`, `pre-merge-commit` and `commit-msg` in the selected
+The Claude setup also wires `pre-commit`, `pre-merge-commit` and `commit-msg` in the selected
 framework repository. The current six check families and availability limits
 are recorded in [`framework/enforcement-registry.md`](../framework/enforcement-registry.md).
 Installation/file checks establish managed integration, not proof of actual
@@ -39,9 +40,8 @@ bash $FRAMEWORK_DIR/scripts/install-git-hooks.sh
 ```
 
 Modes: `--check` (probe only, no writes), `--uninstall` (remove
-symlinks). Worktree-safe. Full reference:
-[`architecture-documentation/05-installation.md`](../architecture-documentation/05-installation.md)
-§Pre-commit hook.
+symlinks). Worktree-safe. Full reference: the header of
+`scripts/install-git-hooks.sh`.
 
 ## How `cc` resolves scope
 
@@ -91,14 +91,15 @@ you can also write it by hand if you prefer.
   Buddy will offer to create one. Or hand-write per
   [`framework/intent-tree.md`](../framework/intent-tree.md).
 - `framework_dir resolution failed` → set explicitly:
-  `export FRAMEWORK_DIR=$HOME/projects/forge`
-- agents-Symlink warnings → re-run `bash scripts/setup-cc.sh`
-  (idempotent)
+  `export FRAMEWORK_DIR=$HOME/forge`
+- agents-Symlink warnings → re-run the `full-ai-integration` install
+  (`python3 ~/forge/scripts/forge_install.py --profile full-ai-integration`,
+  idempotent)
 - pre-commit blocks → see
   [`architecture-documentation/12-troubleshooting.md`](../architecture-documentation/12-troubleshooting.md)
 
 ## Full installation reference
 
-For multi-machine, OpenCode adapter, per-repo pre-commit hook, and
-other adapter-level setup:
+For the OpenCode adapter, the per-repo pre-commit hook and other
+adapter-level setup:
 [`architecture-documentation/05-installation.md`](../architecture-documentation/05-installation.md).

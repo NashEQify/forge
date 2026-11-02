@@ -63,6 +63,10 @@ source path (Step 5 uses it).
 
 Off-plan starts and held-back work never pass silently. Before Step 2:
 
+0. **Plan state (`in_progress`).** Where `docs/plan.yaml` exists, run
+   `python3 $FRAMEWORK_DIR/scripts/plan_engine.py --boot` (in-progress tasks,
+   critical path, next actions, warnings) before the start.
+
 1. **Programme order (`in_progress`).** While the project has an active
    agreed programme (it names its agreement), compare the start with the
    agreement's next task and with the programme tasks at `in_progress`. Any

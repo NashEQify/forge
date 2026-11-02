@@ -1,11 +1,10 @@
 # Buddy — Delegation
 
-Step-loaded unit of `agents/buddy/operational.md` (Phase 2: ACT). Read it
-before deciding between inline work, an agent or a session, before any agent
-call, before commissioning any further round of a task, and when a required
-skill is not invocable through the host's skill tool. The core's Applicability
-holds: these requirements apply to `software`; for `on-demand` follow the
-project's working rules.
+Step-loaded unit of `agents/buddy/operational.md` (Phase 2: ACT). Read it when
+the selected step leaves its executor undecided, before dispatching another
+actor or commissioning a further round, and when the host cannot invoke a
+required skill. The core's Applicability holds for software. On demand, follow
+the project's working rules.
 
 Routing lookup:
 
@@ -87,7 +86,7 @@ Line counts and one aggregate sample do not establish savings.
 **Vehicle choice.** Each piece of work gets one vehicle:
 - **Inline** — the default: Buddy holds the context, the result is needed
   for this turn, and no independent perspective is required. Never for
-  product code, whatever its size (Inv 4).
+  product code, whatever its size, except the quick path (Inv 4).
 - **Isolated agent** — a bounded question, a code piece (main-code-agent,
   Inv 4) or an independent perspective a review floor requires, whose result
   Buddy needs before its next decision.
@@ -105,8 +104,8 @@ vehicles and fallbacks: `architecture-documentation/07-tool-integrations.md`
 Before every MCA delegation, ask two questions in order:
 
 *"which delegation form is proportional?"* (per framework/invariants.md Inv 9). Inv 4
-holds at any size, so the question is never whether Buddy writes the code
-but how the work reaches main-code-agent: DIRECT-eligible work goes with the
+holds at any size outside its quick-path exception, so the question is
+how the work reaches main-code-agent: DIRECT-eligible work goes with the
 record written in the turn (`framework/direct-eligibility.md` §The DIRECT
 run), other work with a brief file. Judgment across five axes, not a numeric
 threshold:

@@ -37,8 +37,8 @@ consumer-repo sessions.
 | `skill_fm_validate.py` | Skill frontmatter validation with supported working-tree CLI behavior and explicitly selected indexed hook evaluation; see `enforcement-registry.md` §Indexed standalone input contract. | git pre-commit hook | `$FRAMEWORK_DIR/scripts/skill_fm_validate.py` |
 | `board-depth.py` | board-pass depth-mode resolver (Quick vs Deep, 4 checks) | spec_board skill | `$FRAMEWORK_DIR/scripts/board-depth.py` |
 | `board-synthesize-input.py` | board-pass input synthesizer — extracts ALL findings from consolidated-passN.md | spec_board / code_review_board skills | `$FRAMEWORK_DIR/scripts/board-synthesize-input.py` |
-| `setup-cc.sh` | Claude Code adapter setup (cc launcher + path whitelist generation) | manual, once | `$FRAMEWORK_DIR/scripts/setup-cc.sh` |
-| `setup-oc.sh` | OpenCode adapter setup (generate opencode.jsonc from .example) | manual, once | `$FRAMEWORK_DIR/scripts/setup-oc.sh` |
+| `setup-cc.sh` | compatibility entry: forwards its arguments to `forge_install.py` | manual | `$FRAMEWORK_DIR/scripts/setup-cc.sh` |
+| `setup-oc.sh` | compatibility entry: forwards its arguments to `forge_install.py` | manual | `$FRAMEWORK_DIR/scripts/setup-oc.sh` |
 
 ## Library
 
@@ -63,5 +63,7 @@ a script call in a skill/workflow without the `$FRAMEWORK_DIR` prefix:
 |---|---|---|
 | `continuity.py` | Scoped coherent snapshots and protected semantic publication/recovery | [Continuity](continuity.md) |
 | `development_continuation.py` | Explicit development bindings exported into common handoffs | [Development continuation](development-continuation.md) |
+| `forge_install.py` | The installer: `project` (the default) into one named project, `full-ai-integration` for every session of the machine; `--check`, `--remove PROJECT`, and `--refresh [PROJECT]`, which session starts run after a `git pull` | [Installation](../architecture-documentation/05-installation.md) |
+| `project_install.py` | The project install's plan, check, removal and refusals, inside the named project only | [Installation](../architecture-documentation/05-installation.md) |
 | `install_activation.py` | Installation mutation exclusion and durable recovery | [Installation activation](installation-activation.md) |
-| `forge_install.py --maintenance …` | Public prepare/status/retry/rollback/validate entry | [Installation activation](installation-activation.md) |
+| `forge_install.py --maintenance …` | Public prepare/status/retry/rollback/validate entry of the machine installation | [Installation activation](installation-activation.md) |

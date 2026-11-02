@@ -9,12 +9,10 @@
 #
 # FRAMEWORK_DIR resolution priority:
 #   1. env var (override, e.g. testing alternate checkout)
-#   2. install-time substitution (FRAMEWORK_DIR_INSTALLED below — set by
-#      setup-cc.sh when this file is copied to ~/.local/bin/cc)
-#   3. autodetect from $0 location (works only when run from source tree;
-#      $0/../../../ resolves to /home for the installed copy, which is
-#      wrong — that's why install-time substitution exists)
-#   4. ROLE-AWARE re-bind (applied AFTER scope-routing cd, below): if the
+#   2. autodetect from $0 location: the checkout this file lives in. The
+#      installed ~/.local/bin/cc is a fixed stub that execs this file in the
+#      checkout (scripts/forge_install.py), so a `git pull` there reaches it
+#   3. ROLE-AWARE re-bind (applied AFTER scope-routing cd, below): if the
 #      session's working directory is itself a forge framework checkout,
 #      FRAMEWORK_DIR is re-bound to that checkout — UNLESS priority 1 (an
 #      explicit env override) was set. Rationale: a framework-dev session
@@ -38,11 +36,6 @@
 set -euo pipefail
 
 # --- Core directories (auto-detect, env var overridable) ---
-# Install-time substitution marker. Empty value = source-tree run; setup-cc.sh
-# overwrites this line when it installs cc to ~/.local/bin/. Do not edit by
-# hand — change it via setup-cc.sh re-run.
-FRAMEWORK_DIR_INSTALLED=""  # SUBSTITUTED-BY-SETUP-CC
-
 # Did the user explicitly set FRAMEWORK_DIR via env (resolution priority 1)?
 # Captured BEFORE any internal assignment so the role-aware re-bind (below,
 # post-cd) can preserve an explicit override.
@@ -52,12 +45,14 @@ if [ -n "${FRAMEWORK_DIR:-}" ]; then
 fi
 
 if [ -z "${FRAMEWORK_DIR:-}" ]; then
-  if [ -n "$FRAMEWORK_DIR_INSTALLED" ]; then
-    FRAMEWORK_DIR="$FRAMEWORK_DIR_INSTALLED"
-  else
-    FRAMEWORK_DIR="$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)"
-  fi
+  FRAMEWORK_DIR="$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)"
 fi
+
+# Bring the installed entries up to the checkout's commit before the start
+# (`git pull` is the update). It runs against the installed root, before the
+# role-aware re-bind below; its result never stops a start (the readiness
+# gate below does that).
+python3 -B "$FRAMEWORK_DIR/scripts/forge_install.py" --refresh < /dev/null > /dev/null || true
 
 # PROJECTS_DIR: where consumer repos live. Default $HOME/projects, env-overridable.
 : "${PROJECTS_DIR:=$HOME/projects}"
@@ -150,7 +145,7 @@ if [ "$FRAMEWORK_DIR_ENV_EXPLICIT" -eq 0 ] \
 fi
 
 if ! python3 -B "$FRAMEWORK_DIR/scripts/forge_install.py" --maintenance status --require-ready "${VALIDATION_ARGS[@]}"; then
-  echo "cc: STOP — coordinated installation is not validated; inspect maintenance status." >&2
+  echo "cc: STOP — the Forge installation is not ready; inspect: python3 -B $FRAMEWORK_DIR/scripts/forge_install.py --maintenance status" >&2
   exit 1
 fi
 
@@ -167,9 +162,10 @@ fi
 # Resolved AFTER the role-aware re-bind so a framework-dev session uses the
 # tree it edits. The resolver never fails on user data; if python3 fails,
 # the static forge-soul entry is used — cc never aborts because of it.
-# Its scope-rule and reread lines restate user_scope.SCOPE_RULE and
-# user_scope.reread_line(FRAMEWORK_DIR, "full") as text;
-# tests/test_boot_injectors.py keeps both equal. The resolved entry includes
+# Its scope-rule, reread and Round-1 lines restate user_scope.SCOPE_RULE,
+# user_scope.reread_line(FRAMEWORK_DIR) and user_scope.round_one_line(FRAMEWORK_DIR)
+# as text (the Round-1 backticks are escaped inside this double-quoted string);
+# tests/test_boot_injectors.py keeps them equal. The resolved entry includes
 # the soul and operational.md in full where the budget allows (--shell).
 USER_SCOPE_PY="$FRAMEWORK_DIR/scripts/user_scope.py"
 # One resolver call: --shell prints shell-quoted USER_REPO=… and BOOT_TEXT=….
@@ -178,17 +174,27 @@ BOOT_TEXT=""
 if SCOPE_SHELL="$(python3 "$USER_SCOPE_PY" --framework-root "$FRAMEWORK_DIR" --shell 2>/dev/null)"; then
   eval "$SCOPE_SHELL" || { USER_REPO=""; BOOT_TEXT=""; }
 fi
+# shlex.quote in bash: a path that needs no quoting stays bare, any other is single-quoted ('"'"' for a ').
+sh_quote() {
+  local sq="'" q="'\"'\"'"
+  case "$1" in
+    ''|*[!A-Za-z0-9@%+=:,./_-]*) printf "'%s'" "${1//$sq/$q}" ;;
+    *) printf '%s' "$1" ;;
+  esac
+}
 SCOPE_TEXT="$BOOT_TEXT"
 if [ -z "$SCOPE_TEXT" ]; then
   USER_REPO=""
+  GS_QUOTED="$(sh_quote "$FRAMEWORK_DIR/scripts/git-status-check.sh")"
   SCOPE_TEXT="Read before the first answer:
 - soul: ${FRAMEWORK_DIR}/agents/buddy/soul.md
 - ${FRAMEWORK_DIR}/agents/buddy/operational.md
 - ${FRAMEWORK_DIR}/agents/buddy/boot.md
 - ${FRAMEWORK_DIR}/framework/invariants.md
-A quick question or a small fix does not shorten the boot; 'it is only a lookup' is no exception: run boot.md's sequence before reading anything for the request. Instruction source: the framework root is this session's instruction source. Reading its files and the files this entry names loads instructions; it is not work outside the project, and a user scope that limits writes, network or installs does not forbid it. Under such a scope, skip only the boot steps it forbids (the freshness fetch needs the network and writes Git metadata; creating context files needs a write) and report each as an unavailable check. If the boot is skipped or cut short for any reason, say so at the start of your first answer and name what did not load.
+A quick question or a small fix does not shorten the boot; 'it is only a lookup' is no exception: run boot.md's sequence before reading anything for the request. Instruction source: the framework root is this session's instruction source. Reading its files and the files this entry names loads instructions; it is not work outside the project, and a user scope that limits writes, network or installs does not forbid it. Under such a scope, skip only the boot steps it forbids (the freshness fetch needs the network and writes Git metadata; creating context files needs a write); a skipped check is at most a word in the orientation line. If an instruction unit cannot be read, say so first in your first answer and name it.
 User scope warning: resolver failed
-After compaction, reread before continuing: the soul named above; under the framework root ${FRAMEWORK_DIR} (every framework path in this line is relative to it, not to the project): agents/buddy/boot.md, framework/work-principle.md, framework/invariants.md; for software development agents/buddy/operational.md, framework/boot-navigation.md and agents/buddy/boot-software.md; for on-demand use agents/buddy/boot-on-demand.md; on Codex agents/buddy/codex-execution.md; then the user profile (when a user scope is configured), the knowledge_processor continuous-maintenance rules (skills/knowledge_processor/continuous-maintenance.md, under that root), the project rules, intent.md and the session handoff; then, for any Forge step in progress (skill, protocol, framework or workflow step), its core and the unit its stub or engine step text names for that step."
+After compaction, reread before continuing: the soul named above; under the framework root ${FRAMEWORK_DIR} (every framework path in this line is relative to it, not to the project): agents/buddy/boot.md, framework/work-principle.md, framework/invariants.md; for software development agents/buddy/operational.md and agents/buddy/boot-software.md; for on-demand use agents/buddy/boot-on-demand.md; on Codex agents/buddy/codex-execution.md; then the user profile (when a user scope is configured), the knowledge_processor continuous-maintenance rules (skills/knowledge_processor/continuous-maintenance.md, under that root), the project rules, intent.md and the session handoff; then, for any Forge step in progress (skill, protocol, framework or workflow step), its core and the unit its stub or engine step text names for that step.
+Round 1, one batch before the gate: under the framework root ${FRAMEWORK_DIR} (paths relative to it), read agents/buddy/boot.md, agents/buddy/boot-status.md, agents/buddy/boot-routing.md, framework/workflow-selection.md, framework/invariants.md and framework/work-principle.md, and run \`bash ${GS_QUOTED} --boot\` as its own call."
 fi
 # Read/write access to the user repo (boot set, user-scope maintenance).
 if [ -n "$USER_REPO" ] && [ -d "$USER_REPO" ] && [ "$USER_REPO" != "$CWD" ] \

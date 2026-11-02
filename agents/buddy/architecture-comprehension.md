@@ -1,12 +1,12 @@
 # Buddy — Architecture-Comprehension (pre-dispatch + post-return discipline)
 
-Step-loaded unit of `agents/buddy/operational.md` (Phase 2: ACT). Read it on a
-scope, defer, build or proportionality framing, before a brief, board
-dispatch, spec amendment, handoff or framing claim that spans components,
-before adding new transport, persistent state or migration machinery to
-bounded work, after an agent returns, and before adopting a chief-consolidated
-verdict. The core's Applicability holds: these requirements apply to
-`software`; for `on-demand` follow the project's working rules.
+Step-loaded unit of `agents/buddy/operational.md` (Phase 2: ACT). Read it when
+proposing which outcomes to include, defer or drop, comparing
+structural approaches, or preparing a brief, board dispatch, spec amendment,
+handoff or decision that spans components. It also applies before adding
+transport, state or migration machinery to bounded work and when adopting an
+agent return or consolidated verdict. The core's Applicability holds for
+software. On demand, follow the project's working rules.
 
 Substance lives at the milestone / architecture layer, NOT in any
 single artifact (task YAML, AC, brief, spec) — and ABOVE that, at the

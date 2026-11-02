@@ -125,7 +125,9 @@ flowchart LR
 ```
 
 Eligible DIRECT work uses a short complete lifecycle rather than every preparation
-gate: record, build by the coding agent, check by a separate agent run, report.
+gate: record, build, check, report, with the check chosen per change (quick: Buddy
+makes and tests it; checked: the coding agent builds, Buddy checks the diff and
+tests; reviewed: the coding agent builds and a separate agent run checks).
 Larger or consequential changes retain their selected path's safeguards.
 The [Build runbook](../workflows/runbooks/build/WORKFLOW.md) and runtime route definition
 own the detailed sequence.

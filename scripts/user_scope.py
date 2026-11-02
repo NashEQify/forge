@@ -11,9 +11,11 @@ Code hook (`--hook-json`), `cc` (`--boot-text`, `--json`), the Codex/CC home
 boot blocks (`boot_text(..., install_time=True)`), forge_install.py and
 setup-oc.sh.
 
-CLI: user_scope.py [--framework-root P] [--profile full|daily]
+CLI: user_scope.py [--framework-root P] [--profile project|full-ai-integration | --project]
                    (--json | --soul | --boot-text | --hook-json | --shell)
 --shell prints USER_REPO=… and BOOT_TEXT=… as shell-quoted assignments (cc).
+--project renders the project install's entry: no user scope, the machine
+setting is not read (the project hook passes it).
 Exit 0 whenever a scope (possibly empty) was produced; exit 2 on internal error.
 """
 
@@ -27,20 +29,60 @@ import stat
 import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Callable, Mapping
+from typing import Callable, Mapping, NamedTuple
 
 sys.dont_write_bytecode = True
 
-PROFILES = ("full", "daily")
-# Framework boot files per install profile (mirrors boot_files in
-# framework/install-profiles.yaml; a test keeps both in sync).
-PROFILE_BOOT_FILES = {"full": ("soul", "boot"), "daily": ("soul", "boot-on-demand")}
-# The framework-wide invariants (framework-relative): every boot of these profiles reads them before the first
-# answer, in every project. A host loads no framework file in a consumer project by itself, so the entry names it.
-# The daily profile's on-demand start carries its own rules (agents/buddy/boot-on-demand.md).
+# The two installations (framework/install-profiles.yaml holds where each is placed and what it composes):
+# project: Forge in one named project only, no user scope; full-ai-integration: Buddy in every session of the
+# machine, with the user scope.
+PROJECT_PROFILE = "project"
+MACHINE_PROFILE = "full-ai-integration"
+PROFILES = (PROJECT_PROFILE, MACHINE_PROFILE)
+# Retired profile names an existing installation may still record (selection.json, user.yaml), with the profile
+# each moved to. Read only through normalize_profile().
+_RETIRED_PROFILES = {"full": MACHINE_PROFILE, "daily": MACHINE_PROFILE}
+
+
+def normalize_profile(name: object) -> str | None:
+    """The profile `name` stands for: a profile name as is, a retired name as the profile it moved to
+    (full, daily -> full-ai-integration), anything else None. The one owner of the alias rule: every read of a
+    recorded or given profile name goes through here."""
+    if not isinstance(name, str):
+        return None
+    if name in PROFILES:
+        return name
+    return _RETIRED_PROFILES.get(name)
+
+
+class EntryUnit(NamedTuple):
+    """One framework unit a boot entry names (framework-relative)."""
+
+    path: str
+    qualifier: str | None  # None: always; else the reread qualifier that limits when it is read
+    read_first: bool = False  # also in the entry's read list before the first answer
+
+
 INVARIANTS_UNIT = "framework/invariants.md"
-INVARIANTS_PROFILES = ("full",)
-KNOWN_KEYS = {"version", "user_repo", "profile", "skill_links"}
+# The one boot entry list, the same for both profiles (Task467 design note §3, AC-1c): the soul named first, then
+# boot.md, framework/work-principle.md and framework/invariants.md; operational.md (software) and
+# boot-on-demand.md (on-demand) only after workflow selection, as reread qualifiers. Why both profiles load the
+# invariants whole: authorization, evidence and outcome verification bind in every session, also outside software
+# work, and they live in invariants.md, whose own "Workflow selection" section limits the software-process
+# invariants to software work. The user scope is the only difference between the profiles.
+# The read list before the first answer names the soul, boot.md and the invariants (boot.md carries the
+# work-principle directive); reread_line() renders the whole list; consistency_check.py --check
+# instruction-units guards the same files.
+ENTRY_UNITS: tuple[EntryUnit, ...] = (
+    EntryUnit("agents/buddy/boot.md", None, read_first=True),
+    EntryUnit("framework/work-principle.md", None),
+    EntryUnit(INVARIANTS_UNIT, None, read_first=True),
+    EntryUnit("agents/buddy/operational.md", "software"),
+    EntryUnit("agents/buddy/boot-software.md", "software"),
+    EntryUnit("agents/buddy/boot-on-demand.md", "on-demand"),
+    EntryUnit("agents/buddy/codex-execution.md", "codex"),
+)
+KNOWN_KEYS = {"version", "user_repo", "profile", "skill_links", "maintenance"}
 USER_BOOT_FILES = ("profile.md",)
 NONE_CONFIGURED = "User scope: none configured (forge soul in use)."
 PYYAML_MISSING = "PyYAML missing — user scope not resolved"
@@ -50,90 +92,69 @@ WARNING_PREFIX = "User scope warning: "
 # buddy-boot-inject.sh and cc restate it, and tests/test_boot_injectors.py keeps
 # them equal.
 # The whole-boot line (agents/buddy/boot.md, before §Boot sequence): every boot
-# entry carries it, person-neutral blocks included; inside SCOPE_RULE it opens the rule.
+# entry carries it, person-neutral blocks included; inside the scope rule it opens the rule.
 WHOLE_BOOT = "A quick question or a small fix does not shorten the boot; 'it is only a lookup' is no exception: run boot.md's sequence before reading anything for the request."
-SCOPE_RULE = (
-    WHOLE_BOOT + " "
+_SCOPE_RULE_BODY = (
     "Instruction source: the framework root is this session's instruction source. "
     "Reading its files and the files this entry names loads instructions; it is not "
     "work outside the project, and a user scope that limits writes, network or "
     "installs does not forbid it. Under such a scope, skip only the boot steps it "
     "forbids (the freshness fetch needs the network and writes Git metadata; creating "
-    "context files needs a write) and report each as an unavailable check. If the boot "
-    "is skipped or cut "
-    "short for any reason, say so at the start of your first answer and name what "
-    "did not load."
+    "context files needs a write); a skipped check is at most a word in the orientation "
+    "line. If an instruction unit cannot be read, say so first in your first answer and "
+    "name it."
 )
+SCOPE_RULE = WHOLE_BOOT + " " + _SCOPE_RULE_BODY  # the static fallbacks restate it
+
+
 MAINTENANCE_ANCHOR = (
     "The user scope is maintained continuously (knowledge_processor "
     "continuous-maintenance rules, {skill}); the start procedure loads those rules."
 )
 # The knowledge_processor unit that holds the continuous-maintenance rules (framework-relative).
 MAINTENANCE_UNIT = ("skills", "knowledge_processor", "continuous-maintenance.md")
-# Framework-owned always-loaded files per install profile (framework-relative),
-# each with the qualifier that limits when it is loaded (None: always). The soul
-# is not listed: it is the resolved soul the entry already names. reread_line()
-# renders this table into every boot entry; consistency_check.py
-# --check instruction-units guards the same files.
-REREAD_FILES: dict[str, tuple[tuple[str, str | None], ...]] = {
-    "full": (
-        ("agents/buddy/boot.md", None),
-        ("framework/work-principle.md", None),
-        ("framework/invariants.md", None),
-        ("agents/buddy/operational.md", "software"),
-        ("framework/boot-navigation.md", "software"),
-        ("agents/buddy/boot-software.md", "software"),
-        ("agents/buddy/boot-on-demand.md", "on-demand"),
-        ("agents/buddy/codex-execution.md", "codex"),
-    ),
-    "daily": (
-        ("agents/buddy/boot-on-demand.md", None),
-        ("framework/work-principle.md", None),
-        ("agents/buddy/codex-execution.md", "codex"),
-    ),
-}
 _REREAD_QUALIFIERS = {
     "software": "for software development",
     "on-demand": "for on-demand use",
     "codex": "on Codex",
 }
-_REREAD_PROJECT = {
-    "full": "the project rules, intent.md and the session handoff",
-    "daily": "the project rules, intent.md and the session handoff",
-}
+_REREAD_PROJECT = "the project rules, intent.md and the session handoff"
 _REREAD_STEP = (
     "; then, for any Forge step in progress (skill, protocol, framework or workflow step), "
     "its core and the unit its stub or engine step text names for that step"
 )
-DAILY_OPERATIONAL = "load development instructions only for explicitly selected software development"
-_RULES_COMMON = (
-    "This install is on-demand: no automatic boards,\n"
-    "role delegation, plan/workflow engine or development test chains. Installed\n"
-    "skills may be used when they fit; other Forge methods only on explicit\n"
-    "request. The active project stays the CWD.\n"
-)
-_PROJECT_RULES = {
-    "claude": (
-        "Project rules: the project's CLAUDE.md, else its AGENTS.md (Claude Code does\n"
-        "not load AGENTS.md by itself). "
-    ),
-    "codex": "Project rules: the project's AGENTS.md. ",
-}
-
-
-def daily_rules(runtime: str) -> str:
-    """Generic on-demand install rules (S9) for the daily home blocks."""
-    if runtime not in _PROJECT_RULES:
-        raise ValueError(f"unknown runtime: {runtime}")
-    return _PROJECT_RULES[runtime] + _RULES_COMMON
 
 
 def _and_join(items: list[str]) -> str:
     return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
 
 
-def reread_line(framework_root: Path | str, profile: str) -> str:
-    """The post-compaction reread line for a profile, naming the framework root once.
+# The boot's first tool round (agents/buddy/boot.md): one batch of reads plus the boot probe as its own call,
+# before the freshness gate. Framework-relative; round_one_line() names their root first.
+# Rendered into the hook tail (hook_tail), the Codex boot block (generate_codex_agents.boot_instructions) and,
+# through boot_text(round_one=True), cc's entry (--shell); the static fallbacks of the hook and cc restate the line.
+ROUND_ONE = (
+    "agents/buddy/boot.md",
+    "agents/buddy/boot-status.md",
+    "agents/buddy/boot-routing.md",
+    "framework/workflow-selection.md",
+    INVARIANTS_UNIT,
+    "framework/work-principle.md",
+)
+
+
+def round_one_line(framework_root: Path | str) -> str:
+    """The Round-1 line of an entry: the root named before the framework-relative reads (as the reread
+    line names it) and again in the probe call."""
+    return (
+        f"Round 1, one batch before the gate: under the framework root {framework_root} (paths relative to it), "
+        "read " + _and_join(list(ROUND_ONE))
+        + f", and run `bash {shlex.quote(f'{framework_root}/scripts/git-status-check.sh')} --boot` as its own call."
+    )
+
+
+def reread_line(framework_root: Path | str) -> str:
+    """The post-compaction reread line, naming the framework root once.
 
     framework_root is named as given (callers pass an absolute root, or a
     placeholder such as <FRAMEWORK_ROOT> for portable role templates).
@@ -141,22 +162,20 @@ def reread_line(framework_root: Path | str, profile: str) -> str:
     follow; they are relative to it, never to the project (the CWD). Naming it
     once keeps the entry within the hook budget on long framework paths.
     """
-    if profile not in PROFILES:
-        raise ValueError(f"unknown profile: {profile}")
     groups: dict[str | None, list[str]] = {}
-    for rel, qualifier in REREAD_FILES[profile]:
-        groups.setdefault(qualifier, []).append(rel)
+    for unit in ENTRY_UNITS:
+        groups.setdefault(unit.qualifier, []).append(unit.path)
     parts = [", ".join(groups.pop(None, []))]
-    parts += [f"{_REREAD_QUALIFIERS[q]} {_and_join(files)}" for q, files in groups.items()]
-    unit = "/".join(MAINTENANCE_UNIT)
+    parts += [f"{_REREAD_QUALIFIERS[q]} {_and_join(files)}" for q, files in groups.items() if q is not None]
+    maintenance = "/".join(MAINTENANCE_UNIT)
     return (
         "After compaction, reread before continuing: "
         + "the soul named above; "
         + f"under the framework root {framework_root} (every framework path in this line is "
         "relative to it, not to the project): " + "; ".join(p for p in parts if p)
         + "; then the user profile (when a user scope is configured), the "
-        f"knowledge_processor continuous-maintenance rules ({unit}, under that root), "
-        + _REREAD_PROJECT[profile] + _REREAD_STEP + "."
+        f"knowledge_processor continuous-maintenance rules ({maintenance}, under that root), "
+        + _REREAD_PROJECT + _REREAD_STEP + "."
     )
 
 
@@ -248,7 +267,7 @@ def _include(
 
 # Warnings about a missing boot file depend on the current file set; baked
 # (install-time) text omits them: the start procedure reads the profile.
-_MISSING_BOOT_FILE = "boot file missing, skipped: "
+_MISSING_BOOT_FILE = "boot file missing: "
 
 
 @dataclass
@@ -257,7 +276,7 @@ class UserScope:
     config_path: str | None = None
     user_repo: str | None = None
     user_dir: str | None = None
-    profile: str = "full"
+    profile: str = MACHINE_PROFILE
     soul: str = ""
     soul_source: str = "forge"
     boot: list[str] = field(default_factory=list)
@@ -334,8 +353,8 @@ def load_config(path: Path) -> tuple[dict | None, list[str]]:
 def unusable_setting(env: Mapping[str, str] = os.environ) -> str | None:
     """Warning when a machine setting exists but cannot be used, else None.
 
-    Installers refuse on it instead of defaulting to the full profile; a
-    missing setting is not unusable (no user scope, profile full).
+    Installers refuse on it instead of defaulting; a missing setting is not
+    unusable (no user scope).
     """
     path = config_path(env)
     if path is None or _kind(path) == "missing":
@@ -368,10 +387,11 @@ def from_config(
     for key in sorted(set(map(str, data)) - KNOWN_KEYS):
         warn(f"unknown key ignored: {key}")
 
-    profile = data.get("profile", "full")
-    if profile not in PROFILES:
-        warn(f"profile must be full or daily, using full: {profile!r}")
-        profile = "full"
+    recorded = data.get("profile", MACHINE_PROFILE)
+    profile = normalize_profile(recorded)
+    if profile is None:
+        warn(f"profile must be {' or '.join(PROFILES)}, using {MACHINE_PROFILE}: {recorded!r}")
+        profile = MACHINE_PROFILE
     scope.profile = profile
 
     links = data.get("skill_links", []) or []
@@ -455,7 +475,7 @@ def resolve(framework_root: Path, *, env: Mapping[str, str] = os.environ) -> Use
     return from_config(framework_root, data, config=path, warnings=warnings)
 
 
-def _unresolved_text(scope: UserScope, framework: Path) -> str:
+def _unresolved_text(scope: UserScope, framework: Path, round_one: bool = False) -> str:
     """PyYAML missing: the setting exists but was not read — state no false facts."""
     buddy = framework / "agents" / "buddy"
     config = scope.config_path or "the machine setting"
@@ -470,33 +490,37 @@ def _unresolved_text(scope: UserScope, framework: Path) -> str:
         "framework/user-scope.md",
     ]
     lines += [WARNING_PREFIX + w for w in scope.warnings if w != PYYAML_MISSING]
-    lines.append(reread_line(framework, scope.profile))
+    lines.append(reread_line(framework))
+    if round_one:
+        lines.append(round_one_line(framework))
     return "\n".join(lines) + "\n"
 
 
 def boot_text(
     scope: UserScope, framework_root: Path, profile: str | None = None, *,
     install_time: bool = False, neutral: bool = False, include: Inclusion | None = None,
+    round_one: bool = False,
 ) -> str:
     """Person-specific boot lines.
 
+    profile names the installation in the entry's first line (default: the
+    scope's); both profiles render the same entry list (ENTRY_UNITS).
     install_time=True renders text baked into a home-level block: the soul
     is named conditionally so adding or removing soul.md needs no re-install;
-    the start procedure reads the profile itself. neutral=True renders only the profile's framework
+    the start procedure reads the profile itself. neutral=True renders only the framework
     boot files (no user-scope section, no scope rule) for person-neutral blocks.
     include: the carrier's whole-file inclusion policy (None: include nothing).
-    Candidates in priority order: the resolved soul, then in the full profile
+    Candidates in priority order: the resolved soul, then
     agents/buddy/operational.md. Install-time text includes nothing, whatever
     the policy: a baked copy would go stale on the next light-path edit.
-    The full profile's read list ends with the framework-wide invariants (INVARIANTS_UNIT).
+    round_one=True adds the Round-1 line after the reread line (carriers without a hook tail).
     """
     framework = Path(os.path.abspath(framework_root))
     if profile is None and not neutral and PYYAML_MISSING in scope.warnings:
-        return _unresolved_text(scope, framework)
+        return _unresolved_text(scope, framework, round_one)
     profile = profile or scope.profile
     if profile not in PROFILES:
         raise ValueError(f"unknown profile: {profile}")
-    buddy = framework / "agents" / "buddy"
     if install_time and scope.configured:
         soul = (
             f"{scope.user_dir}/soul.md if it exists, else {forge_soul(framework)}"
@@ -506,20 +530,14 @@ def boot_text(
     else:  # the forge soul of the framework this text is rendered for
         soul = str(forge_soul(framework))
     lines = [f"Install profile: {profile}", "Read before the first answer:"]
-    soul_at: int | None = None
-    for part in PROFILE_BOOT_FILES[profile]:
-        if part == "soul":
-            soul_at = len(lines)
-            lines.append(f"- soul: {soul}")
-        else:
-            lines.append(f"- {buddy / (part + '.md')}")
-    if profile in INVARIANTS_PROFILES:
-        lines.append(f"- {framework / INVARIANTS_UNIT}")
-    if profile == "daily":
-        lines.append(f"This install is on-demand: {DAILY_OPERATIONAL}.")
+    soul_at = len(lines)
+    lines.append(f"- soul: {soul}")
+    lines += [f"- {framework / unit.path}" for unit in ENTRY_UNITS if unit.read_first]
     if neutral:
         lines.append(WHOLE_BOOT)
-        lines.append(reread_line(framework, profile))
+        lines.append(reread_line(framework))
+        if round_one:
+            lines.append(round_one_line(framework))
         return "\n".join(lines) + "\n"
     lines.append(SCOPE_RULE)
     if scope.configured:
@@ -540,12 +558,12 @@ def boot_text(
         if install_time and warning.startswith(_MISSING_BOOT_FILE):
             continue
         lines.append(WARNING_PREFIX + warning)
-    lines.append(reread_line(framework, profile))
+    lines.append(reread_line(framework))
+    if round_one:
+        lines.append(round_one_line(framework))
     if include is None or install_time:
         return "\n".join(lines) + "\n"
-    candidates = [soul]
-    if profile == "full":
-        candidates.append(str(buddy / "operational.md"))
+    candidates = [soul, str(framework / "agents" / "buddy" / "operational.md")]
     return _include(lines, soul_at, soul, candidates, include)
 
 
@@ -559,7 +577,8 @@ def hook_tail(framework: str) -> str:
         "greeting. Resolve any "
         "remote-update decision before loading intent or context. Do not run "
         "plan/workflow probes or load the full skill index ahead of workflow selection. "
-        "For on-demand use, follow the project's local boot and working rules.\n\n"
+        "For on-demand use, follow the project's local boot and working rules.\n"
+        + round_one_line(framework) + "\n\n"
         "Keep the consumer CWD active. The project's CLAUDE.md and local authorization rules apply. "
         f"FRAMEWORK_DIR={framework}."
     )
@@ -602,13 +621,25 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--framework-root", type=Path, default=Path(__file__).resolve().parents[1]
     )
-    parser.add_argument("--profile", choices=PROFILES)
+    parser.add_argument("--profile", metavar="|".join(PROFILES))
+    parser.add_argument("--project", action="store_true",
+                        help="the project install's entry: no user scope; the machine setting is not read")
     mode = parser.add_mutually_exclusive_group(required=True)
     for flag in ("--json", "--soul", "--boot-text", "--hook-json", "--shell"):
         mode.add_argument(flag, action="store_true")
     args = parser.parse_args(argv)
+    if args.profile is not None:
+        profile = normalize_profile(args.profile)
+        if profile is None:
+            parser.error(f"--profile must be one of {', '.join(PROFILES)}: {args.profile!r}")
+        args.profile = profile
+    if args.project:
+        if args.profile not in (None, PROJECT_PROFILE):
+            parser.error("--project renders the project profile")
+        args.profile = PROJECT_PROFILE
     try:
-        scope = resolve(args.framework_root)
+        # The project install never reads a user scope: no machine setting, no warning about one.
+        scope = from_config(args.framework_root, None) if args.project else resolve(args.framework_root)
         if args.profile:
             scope.profile = args.profile
         if args.json:
@@ -620,6 +651,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.shell:
             text = boot_text(
                 scope, args.framework_root, args.profile, include=SHELL_INCLUSION,
+                round_one=True,
             ).rstrip("\n")
             out = (
                 f"USER_REPO={shlex.quote(scope.user_repo or '')}\n"

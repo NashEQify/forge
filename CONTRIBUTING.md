@@ -13,8 +13,10 @@ expected outcome; distinguish observed behavior from an alternative design you p
 For a bug, say which layer failed, because each needs different evidence:
 
 1. **Installation:** the installed files are missing or stale.
-   `python3 scripts/forge_install.py --check` and
-   `python3 scripts/forge_install.py --maintenance status` show the installed state.
+   `python3 scripts/forge_install.py --check <project>` shows the state of a project
+   install; `python3 scripts/forge_install.py --profile full-ai-integration --check`
+   and `python3 scripts/forge_install.py --maintenance status` show the state of the
+   machine installation.
 2. **Instruction loading:** the agent host did not load Forge's instructions, or the
    agent did not follow the boot they ask for. Report how you started the session
    and whether its first answer followed the boot instructions; that first answer

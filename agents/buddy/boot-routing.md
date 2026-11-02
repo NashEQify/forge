@@ -8,13 +8,12 @@ context, the session handoff or a user-scope fact.
 
 Input: working directory. Output: active intent + mode.
 
-1. Run `ls <CWD>/intent.md` — CWD comes from ORIENT step 1 (MUST —
-   check the filesystem, do NOT infer from the context window).
-2. Found → that's the active intent. Mode comes from the Context
+1. The boot probe's `intent:` line names the nearest `intent.md`,
+   walking up from the CWD to `/` (a filesystem check; do NOT infer from
+   the context window).
+2. A path → that's the active intent. Mode comes from the Context
    field (first sentence). Read with `cat` if not already in context.
-3. Not found → walk up the directory tree (`ls ../intent.md`, etc.).
-   Stop at `/`.
-4. Nothing found → "No intent. New project? Should I create an
+3. `none` → "No intent. New project? Should I create an
    intent.md?"
    Format: `framework/intent-tree.md`, section "intent.md format". The
    intent.md is the load-bearing input for all later intent-driven work
@@ -23,11 +22,10 @@ Input: working directory. Output: active intent + mode.
 
 The intent.md you find is the active intent. Everything else derives
 from it. The framework-wide invariants are `framework/invariants.md` under the
-concrete framework root: the full profile's boot entry names it, and a session
+concrete framework root: every boot entry names it, and a session
 reads it before the first answer in every project. The framework root's own
 `CLAUDE.md` / `AGENTS.md` hold only the forge repository's rules and the host's
-load list; they apply when the active project is that repository. The daily
-profile's boot entry carries the rules it needs. Additional-directory access
+load list; they apply when the active project is that repository. Additional-directory access
 alone does not prove instruction loading. Keep the consumer's own project
 rules in force; shared framework rules do not replace consumer approvals.
 The resolved user scope (boot.md §User scope) always applies, independent of CWD.
@@ -38,10 +36,13 @@ Decided once at boot (ROUTE step), holds for the entire session.
 
 ### Write paths (context)
 
+Writes to the session handoff and other context files publish through
+`framework/continuity.md`.
+
 - **CWD with `context/`:** project-local (`<CWD>/context/`).
-- **CWD without `context/`:** create `context/` with `history/` and
-  `overview.md`, then write project-local. The intent exists, so the
-  intention is clear — no clarifying round trip.
+- **CWD without `context/`:** at the first write there (not at boot), create
+  `context/` with `history/` and `overview.md`, then write project-local. The
+  intent exists, so the intention is clear — no clarifying round trip.
 - **Always global:** user-scope facts go to the resolved user repo
   (`<user_repo>/context/user/`, boot.md §User scope), regardless of the active
   path. No user scope → report the fact as unroutable; never guess a path.

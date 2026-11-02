@@ -45,10 +45,9 @@ carries no methodology — the SoT is `skills/<dir>/SKILL.md`.
   preserved verbatim, so discovery (which is token-level) is
   unaffected. This is by design — the contract is token-level
   preservation, not literal-formatting preservation.
-- **Distribution:** wrappers are committed and reach the public OSS
-  mirror via `scripts/release-sync.sh`, which ships only generated
-  wrappers from `.claude/skills/`; host-installed skills there stay
-  private. Hand-edits are reverted on the next generator run and
+- **Distribution:** the public release includes the committed, generated
+  wrappers from `.claude/skills/`. Skills installed there by the host
+  stay local. Hand-edits are reverted on the next generator run and
   flagged by `consistency_check`.
 
 ---

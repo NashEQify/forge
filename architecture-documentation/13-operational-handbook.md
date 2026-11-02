@@ -16,8 +16,9 @@ navigation and rules supply its goals and boundaries.
 
 The agent should load the applicable boot context, check relevant pending recovery,
 and read the current handoff before relying on saved state. It does this before its
-first answer even for a quick question; if something did not load or run, such as
-an unchecked remote, that answer opens with it. With configured user
+first answer even for a quick question. A blocked check is one word in the
+orientation line, such as `remote unchecked`; only an instruction file that could
+not be read opens that answer with a notice. With configured user
 scope, the short profile provides person-wide context; detailed topics are read
 when relevant. Missing user scope does not prevent project-only work.
 
@@ -122,9 +123,10 @@ It uses the same knowledge lifecycle, preserves useful qualifications and histor
 and does not delete information simply for age or low mention frequency. It creates
 no background schedule by itself.
 
-Framework upgrades use coordinated maintenance with affected sessions stopped
-before the source changes. Installation can remain `validation_pending` until a
-fresh session supplies real verification. Follow [installation](05-installation.md)
-for preparation, validation and recovery instead of updating live integrations.
+To update Forge, run `git pull` in the Forge checkout; the next session start
+brings the installed entries up to it. A machine on the coordinated maintenance
+path (for changing Forge itself) stops affected sessions before the source changes,
+and its installation can remain `validation_pending` until a fresh session supplies
+real verification. Follow [installation](05-installation.md#updating) for both.
 
 [Human guide](10-human-guide.md) · [Usage](06-usage-workflows.md) · [Documentation hub](README.md)

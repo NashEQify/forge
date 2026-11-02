@@ -106,7 +106,7 @@ for reference only.
 | Category | Who edits | Who must review | On conflict |
 |---|---|---|---|
 | **Orchestrator-text** (`agents/`, `framework/`, `skills/`, `workflows/`, `references/`, `context/`, `docs/`) | Buddy directly | spec_board on substantive changes; none on wording/typo | run `plan_engine --validate`; on disagreement, escalate to user |
-| **Consumer code** (`src/`, `scripts/` consumer-side, `tests/`) | main-code-agent (NOT Buddy) | code_review_board post-write | MCA iterates; spec change ⇒ escalate to Buddy |
+| **Consumer code** (`src/`, `scripts/` consumer-side, `tests/`) | main-code-agent (NOT Buddy, except the quick path of Invariant 4) | code_review_board post-write; on DIRECT, the check its path names | MCA iterates; spec change ⇒ escalate to Buddy |
 | **Spec** (`docs/specs/*.md`) | Buddy via build-workflow Specify | spec_board pre-write (Standard or Deep) | convergence_loop max 3 → user escalation |
 | **ADR** (`docs/decisions/`, `decisions.md`) | Buddy | council on architecture decisions; none on small docs | council decision binds |
 | **Config / hooks** (`pyproject.toml`, `package.json`, `orchestrators/claude-code/settings.json.template`, `orchestrators/**/hooks/`, `scripts/hooks/`) | Buddy or main-code-agent depending on scope | code_review_board on semantic change | revert; reopen with explicit user gate |

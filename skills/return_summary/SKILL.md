@@ -1,10 +1,10 @@
 ---
 name: return-summary
 description: >
-  Format and rules for sub-agent return summaries, and the "Decisions I
-  took for you" list that every return and final message carries. Load
-  before step 8 (return).
-  Triggers when a sub-agent is about to return (load before step 8), and before a session return or the final message of a turn that did work; NOT for other user-facing output formatting.
+  Format for preparing or adopting a sub-agent or session return. In a final
+  reply, use the decisions list when the agent settled a choice left open by
+  the request and rules and a wrong choice would cost the user beyond redoing
+  the edit.
 status: active
 relevant_for: ["main-code-agent", "tester", "security", "solution-expert"]
 invocation:

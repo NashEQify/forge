@@ -80,8 +80,7 @@ Code and Codex in two arms, once with Forge's start entry and once without it,
 several runs per arm with the model pinned. A question in an on-demand project must stay quiet:
 the start loads and selects on-demand, and no agent, skill, engine or task
 bookkeeping starts. A scoped fix under a "write only here, no network" limit must
-still load the start, open its reply with its start status, and report the fix with
-a verification that actually ran. Each run also records turns and tokens, so the
+still load the start and report the fix with a verification that actually ran. Each run also records turns and tokens, so the
 cost of the arm with Forge is visible against the arm without. Each case names when
 it must run again: a new model or host version, a changed start entry, or a changed
 start sequence or workflow selection. A passing unit test does not show that a
@@ -127,11 +126,14 @@ Housekeeping reconciles owners, routes and freshness using the common continuity
 boundary. It need not start a development engine. Knowledge migrations must preserve
 working-tree qualifications and usable routes while recovering partial publications.
 
-Instruction-only Markdown changes take the light path of the activation
-contract. Other framework source and integration updates require stopped-session
+For someone who uses Forge, `git pull` in the checkout is the update: the next
+session start refreshes the installed entries. Changing Forge's own sources on the
+machine you work on takes the coordinated maintenance path (`--coordinated`):
+instruction-only Markdown changes take the light path of the activation contract,
+and other framework source and integration updates require stopped-session
 maintenance. Prepare the actual existing baseline before changing sources, then install and
 verify the resulting generation. The [installation guide](05-installation.md) gives
-the procedure; neither a Git pull nor unchanged wrappers proves a usable activation.
+the procedure; on that path neither a Git pull nor unchanged wrappers proves a usable activation.
 
 ## Contribution notes
 

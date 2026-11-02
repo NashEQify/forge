@@ -96,4 +96,4 @@ standalone dependency or a requirement to create engine state.
 
 ## Source
 
-Source of the variation lenses: agent-skills at `19e49a0` (MIT License, © 2025 Addy Osmani); Forge's register of adopted methods.
+Source of the variation lenses: agent-skills at `eb07f19` (MIT License, © 2025 Addy Osmani); Forge's register of adopted methods.

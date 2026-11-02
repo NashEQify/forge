@@ -12,6 +12,9 @@ project recovery, without resolving or reading another person's pending facts.
 --scope <project|personal> --project-root <verified-project>` accepts JSON on stdin
 and emits versioned JSON. Keep private payloads out of arguments and foreign files.
 Personal scope uses the existing machine user configuration, never an invented root.
+The helper resolves that configuration itself (`FORGE_USER_CONFIG` when set): for a
+continuity call, do not open the setting to find the root; use the `scope` the helper
+returns.
 Project paths are relative to the project root; personal paths are relative to the
 resolved personal content root. Resolve the helper's returned scope before writing.
 

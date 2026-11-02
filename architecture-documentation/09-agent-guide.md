@@ -8,25 +8,25 @@ authoritative; this page is a reading route, not a replacement protocol.
 
 1. Establish the active consumer CWD and framework root. Resolve project paths
    against the consumer and framework paths against the framework checkout.
-2. Follow the host's primary-session entry and the resolved soul, then the start
-   your profile names, before the first answer and whatever the request's size; a
-   quick question or lookup does not shorten it. For `full` that is the
+2. Follow the host's primary-session entry and the resolved soul, then the
    [start sequence](../agents/buddy/boot.md) and the
    [framework invariants](../framework/invariants.md), the rules that hold in every
-   project; for `daily` it is the on-demand start. Delegated roles follow their
-   canonical role instead of repeating Buddy boot and bookkeeping.
+   project, before the first answer and whatever the request's size; a quick
+   question or lookup does not shorten it. Both install profiles name the same
+   start. Delegated roles follow their canonical role instead of repeating Buddy
+   boot and bookkeeping.
 3. Check for remote updates and settle any pull question before loading context.
    Then read the project's intent and rules and resolve
    [workflow selection](../framework/workflow-selection.md).
 4. Use the selected mode's scoped recovery and retrieval procedure before relying
    on profile, handoff or topic facts. Follow navigation to the current topic.
 
-`daily` always takes the [on-demand start](../agents/buddy/boot-on-demand.md). A
-full install also takes that branch when intent does not select software
-development; otherwise the [software start](../agents/buddy/boot-software.md)
-follows. Do not inspect plans or start engines merely because their files are
-present. When a user scope or host limit blocks a start step, skip only that step
-and open the first answer with what did not load or run, such as an unchecked remote.
+The start takes the [on-demand start](../agents/buddy/boot-on-demand.md) when
+intent does not select software development; otherwise the
+[software start](../agents/buddy/boot-software.md) follows. Do not inspect plans or start engines merely because their files are
+present. When a user scope or host limit blocks a start step, skip only that step;
+the orientation line notes it in a word, such as `remote unchecked`. Only an
+instruction file that could not be read opens the first answer with a notice.
 
 ## Match the work to its owner
 
@@ -83,9 +83,11 @@ Chief consumption. Verify effective host permissions separately from instruction
 
 When software work is selected, follow [agent autonomy](../framework/agent-autonomy.md)
 and the chosen runbook for who writes which artifacts. Product code goes to the
-implementation role at any size; Buddy owns orchestration and decisions. A change
-to behaviour gets a separate fresh-context check that is never the implementer,
-and the final reply names it ([the DIRECT run](../framework/direct-eligibility.md#the-direct-run)).
+implementation role at any size, except on the quick path, where Buddy changes it
+himself; Buddy owns orchestration and decisions. On the reviewed path a change to
+behaviour gets a separate fresh-context check that is never the implementer; on
+checked Buddy checks the diff and tests himself; the final reply names the path and
+what did not run ([the DIRECT run](../framework/direct-eligibility.md#the-direct-run)).
 A role the host has no agent type for runs as a general agent told to read its
 role file; a missing agent type is no reason to build or check inline.
 

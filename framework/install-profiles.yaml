@@ -1,12 +1,34 @@
 # Capability composition and required source closure. Optional selection is installer-owned.
 version: 1
 profiles:
-  full:
-    description: 'Everything: all roles, skills, hooks and launchers for software development and on-demand
-      work.'
+  # placement: where the installation lives. project: one named project only (its .claude/ and
+  # AGENTS.override.md, nothing in HOME); machine: every session of the machine (HOME surfaces).
+  # The boot entry list is the same for both and lives in scripts/user_scope.py (ENTRY_UNITS).
+  project:
+    description: 'The app-building discipline in one named project only: Buddy as the main agent and the
+      roles there, the boot entry from this checkout, no user scope. Nothing outside the project changes.'
+    placement: project
+    required_paths: &id002
+    - agents
+    - framework
+    - scripts
+    - skills
+    - workflows
+    - orchestrators
+    - .claude
+    capabilities: &id003
+    - continuity
+    - bedrock
+    - council
+    - frame
+    - development
+  full-ai-integration:
+    description: 'Buddy in every session of the machine, with knowledge and continuity across projects
+      (the user scope), all roles, skills, hooks and launchers, the project discipline included.'
+    placement: machine
     codex_roles: true
     skills: all
-    entries: &id001
+    entries:
       save:
         source: workflows/runbooks/save/WORKFLOW.md
         description: Persist common knowledge and session handoff. Use when the user requests save or
@@ -15,45 +37,8 @@ profiles:
         source: workflows/runbooks/context_housekeeping/WORKFLOW.md
         description: Review and reconcile context ownership, routes and freshness using common continuity.
           Use when the user requests context housekeeping.
-    codex_boot: true
-    claude_boot_block: false
-    claude_setup: scripts/setup-cc.sh
-    boot_files:
-    - soul
-    - boot
-    invariants_unit: framework/invariants.md
-    required_paths:
-    - agents
-    - framework
-    - scripts
-    - skills
-    - workflows
-    - orchestrators
-    - .claude
-    capabilities:
-    - continuity
-    - bedrock
-    - council
-    - frame
-    - development
-  daily:
-    description: 'Everyday knowledge work with on-demand Forge methods: knowledge maintenance, save, bedrock
-      drill and the boot entry. No software tooling, roles, hooks or launchers.'
-    codex_roles: false
-    skills:
-    - knowledge-processor
-    - bedrock-drill
-    entries: *id001
-    codex_boot: true
-    claude_boot_block: true
-    claude_setup: null
-    boot_files:
-    - soul
-    - boot-on-demand
-    required_paths: []
-    capabilities:
-    - continuity
-    - bedrock
+    required_paths: *id002
+    capabilities: *id003
 capability_sets:
   continuity:
     skills:
@@ -61,6 +46,7 @@ capability_sets:
     required_paths:
     - agents/buddy/soul.md
     - agents/buddy/boot-on-demand.md
+    - agents/buddy/boot-status.md
     - agents/buddy/codex-execution.md
     - framework/continuity.md
     - framework/user-scope.md
@@ -161,6 +147,7 @@ installation_required_paths:
 - framework/work-principle.md
 - framework/install-profiles.yaml
 - scripts/forge_install.py
+- scripts/project_install.py
 - scripts/install_activation.py
 - scripts/managed_install.py
 - scripts/capability_closure.py

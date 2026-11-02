@@ -73,7 +73,7 @@ building skill (`frontend_ui_engineering`) OR for code review of UI code via
 
 ```html
 <!-- Explicit label association -->
-<label htmlFor="email">Email address</label>
+<label for="email">Email address</label>
 <input id="email" type="email" required />
 
 <!-- Implicit wrapping -->
@@ -106,7 +106,7 @@ building skill (`frontend_ui_engineering`) OR for code review of UI code via
 </dialog>
 
 <!-- Loading states -->
-<div aria-busy="true" aria-label="Loading tasks">
+<div role="status" aria-busy="true" aria-label="Loading tasks">
   <Spinner />
 </div>
 ```
@@ -117,7 +117,7 @@ building skill (`frontend_ui_engineering`) OR for code review of UI code via
 <ul role="list" aria-label="Tasks">
   <li>
     <input type="checkbox" id="task-1" aria-label="Complete: Buy groceries" />
-    <label htmlFor="task-1">Buy groceries</label>
+    <label for="task-1">Buy groceries</label>
   </li>
 </ul>
 ```
@@ -126,7 +126,7 @@ building skill (`frontend_ui_engineering`) OR for code review of UI code via
 
 ```bash
 # Automated audit
-npx axe-core          # Programmatic accessibility testing
+npx --package=@axe-core/cli axe http://localhost:3000   # Programmatic accessibility testing
 npx pa11y             # CLI accessibility checker
 
 # In browser
@@ -170,4 +170,4 @@ npx pa11y             # CLI accessibility checker
 
 ## Source
 
-agent-skills at `19e49a0` (MIT License, © 2025 Addy Osmani); Forge's register of adopted methods.
+agent-skills at `eb07f19` (MIT License, © 2025 Addy Osmani); Forge's register of adopted methods.

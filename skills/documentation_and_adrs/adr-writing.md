@@ -36,7 +36,7 @@ ADRs in `docs/decisions/` with an incrementing number (prefix
 # ADR-001: Use PostgreSQL for primary database
 
 ## Status
-Accepted | Superseded by ADR-XXX | Deprecated
+Proposed | Accepted | Superseded by ADR-XXX | Deprecated
 
 ## Date
 YYYY-MM-DD

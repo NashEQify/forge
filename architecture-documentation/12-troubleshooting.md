@@ -18,7 +18,9 @@ Exit 1 means changes are planned; exit 2 indicates a reported conflict or error.
 Read the paths and error text before applying. A preview is read-only and does
 not complete installation.
 Use the shared installer's current `--help`; old host-specific setup flags may no
-longer exist because all setup aliases now forward to the coordinator.
+longer exist because all setup aliases now forward to the coordinator. Without
+`--profile`, the installer installs into one named project and needs that folder
+as its argument; a machine-wide check needs `--profile full-ai-integration`.
 
 ### Managed file, directory or symlink conflict
 
@@ -30,9 +32,26 @@ Do not delete host directories, replace symlinks by hand or remove ownership
 manifests as a general workaround. `--migrate-legacy` recognizes only specific
 byte-identical legacy content; it is not a force-overwrite option.
 
+### The project install refuses
+
+The message names the reason, and nothing was written. The
+[installation guide](05-installation.md#install-into-one-project-project) lists
+each case. A machine with the `full-ai-integration` installation needs no project
+install: Buddy already runs in every session there.
+
+### The installed entries did not follow a `git pull`
+
+The session start's refresh skips with one line when it may not run. Run
+`python3 ~/forge/scripts/forge_install.py --refresh` (machine) or `--refresh
+<project>` by hand and read that line. On the machine installation, uncommitted
+changes to tracked non-Markdown files in the checkout stop it until they are
+committed or discarded; a machine on the coordinated maintenance path never
+refreshes and follows [updating on that path](05-installation.md#updating-on-this-path).
+
 ### Installation says `validation_pending`
 
-Application finished but fresh acceptance has not. Keep ordinary sessions stopped.
+This happens on the coordinated maintenance path. Application finished but fresh
+acceptance has not. Keep ordinary sessions stopped.
 Inspect `--maintenance status`, use the exact operation ID for a controlled
 acceptance session, and record the checks actually performed. Submit that evidence
 only after the installed generation works for the claimed targets.
@@ -66,10 +85,10 @@ Check the actual host entry: Codex managed AGENTS block, configured Claude boot,
 OpenCode launcher/configuration, or Cursor project rules. Verify the framework root,
 consumer CWD and selected profile in a fresh session. Access to a directory does
 not prove that its instructions loaded. Buddy runs the whole start before its first
-answer, also for a quick question; when a user scope or host limit blocks a step, the
-first answer opens with what did not load or run, such as an unchecked remote. An
-answer with neither a greeting nor that
-notice suggests the start did not run. For a session that already ran, the
+answer, also for a quick question, and its first answer opens with the orientation
+line (time, host, CWD; a blocked check is one word in it, such as `remote
+unchecked`). An instruction file that could not be read is named first, before that
+line. An answer without the orientation line suggests the start did not run. For a session that already ran, the
 [session diagnosis](../skills/session_diagnosis/SKILL.md) checks its transcript first
 for whether Forge loaded, with the lines that show it.
 
@@ -94,8 +113,8 @@ fetch is reported on stderr; cached ahead/behind values do not prove remote fres
 
 ### A software board starts during ordinary work
 
-Check the workspace's intent and workflow selection. `full` makes tools available;
-it does not select development. On-demand work follows local rules and explicitly
+Check the workspace's intent and workflow selection. The installation makes tools
+available; it does not select development. On-demand work follows local rules and explicitly
 requested methods. Correct the selection at its source rather than deleting useful
 skills from the installation.
 

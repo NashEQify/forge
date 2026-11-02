@@ -1,7 +1,7 @@
 # Context mechanics and loading
 
 Knowledge and continuity, general reasoning, and software development are separate
-capabilities in one distribution. Availability is not selection; full installations
+capabilities in one distribution. Availability is not selection; every installation
 can use on-demand context without activating software bookkeeping.
 
 ## Owners and reads

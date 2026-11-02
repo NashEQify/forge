@@ -96,8 +96,8 @@ should report which happened. Ordinary maintenance alone does not authorize a pu
 
 State the intended mode and boundary: “Use the project's normal working rules” or
 “Use Council for this decision only.” On-demand work does not automatically require
-software tasks, specification cycles, boards or workflow-engine records. Installing
-`full` does not change that rule.
+software tasks, specification cycles, boards or workflow-engine records. The install
+profile does not change that rule.
 
 For software work, lighter paths remain conditional on the actual risks. Changing
 a security boundary, data schema or live system can justify safeguards even when
