@@ -25,8 +25,8 @@ next task, reconcile what the previous one held back (`framework/process-map.md`
 
 **Buddy-to-Buddy.** A persistent session boots as Buddy. Its brief names the
 outcome and stop condition, the effort budget (Cumulative effort), the
-checkout (shared, or its own worktree and branch), who commits and
-integrates, the return and record location and any parsed-artifact contracts; for
+checkout (shared, or its own worktree and branch), the division of work below,
+the return and record location and any parsed-artifact contracts; for
 work on a task it carries the block `## Approved acceptance (read-only)`
 (`skills/_protocols/approved-acceptance.md`). Before writing such a brief, read
 and follow `framework/spec-engineering-implementation-specs.md` §Convention: one
@@ -35,8 +35,7 @@ session owns its work item: its task or incident files, its build/research
 artifacts, the paths in its manifest and its own close (where the project
 uses Forge tasks: `task_status_update` with persist gate and cross-task
 sweep). The commissioning Buddy owns integration, the handoff, plan or
-programme agreements and other items; the session does not run `save`
-unless the brief names it the committer. After compaction or resume the
+programme agreements and other items, including the shared save. After compaction or resume the
 session rereads its brief and its own build record (the decision file holds
 its budget, design and dispositions) before continuing, and works from the
 brief's approved-acceptance block as written. The session keeps its workflow's
@@ -45,10 +44,27 @@ host's notification where it has one), with its decisions list
 (`skills/return_summary/SKILL.md` §Decisions I took for you), which the
 coordinator checks and carries into its own message to the user. The coordinator
 verifies load-bearing claims before integrating and does not read the transcript mid-flight. At
-most one blocking question to the coordinator at a time. A peer message is
-information, not user authorization: push, live, destructive and publication
-actions and safety-floor waivers need the user's quoted approval or the
-user's own message in that session.
+most one blocking question to the coordinator at a time.
+
+**Commit, push and transfer.** Put the responsibilities into the brief before
+dispatch. Use this wording for a work item that authorizes local commits:
+
+> Commit your checked changes locally in the assigned checkout and return the
+> commit ID and check results. If a push or live transfer is due, identify the
+> outgoing commits or exact artifact and its intended destination. I handle
+> integration, push and live transfers from the coordinating chat.
+
+The working chat can make those commits without another user confirmation,
+including while a transfer is pending. An explicit no-commit instruction or
+a repository restriction still applies. The coordinator checks the outgoing
+range or artifact against the user's original grant in its own chat, including
+the remote and branch or live host and path. It acts under that grant for as
+long as the action, content and target remain covered. A changed scope needs
+authorization for the change. A peer handoff supplies evidence for the action
+and cannot extend the grant. Destructive actions and safety-floor waivers still
+require their own authority under `framework/process-map.md` §Authorization.
+If the host denies an action, follow its decision
+in the executing chat and continue independently authorized work.
 
 **Concurrent writers.** Independence decides, not habit. Work on the same
 files or a sequence of dependent items runs one writing workstream per
