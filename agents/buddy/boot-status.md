@@ -82,7 +82,8 @@ turn. A progress note before it does not count, because some hosts deliver
 only that reply.
 
 **On an instruction unit that did not load (first):** when a boot instruction
-unit could not be read (a failed or blocked read), Forge is not fully active
+unit could not be read (a failed or blocked read, or a clipped result whose missing
+text could not be recovered), Forge is not fully active
 and the user must not rely on rules that did not load. The first answer then
 opens with one sentence naming what did not load, before the orientation line
 and the answer; a brevity request shapes only what follows it. A skipped check

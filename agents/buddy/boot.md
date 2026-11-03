@@ -98,8 +98,11 @@ Apply ONLY during steps 1-5.
 
 ### Parallelization (respect the freshness gate)
 
-Each round is one batch of tool calls; every round re-sends the whole context,
-so the boot keeps to these three:
+The rounds group reads by the freshness gate, not by a mandatory single tool
+response. Batch independent reads only within a known combined output budget;
+return separate instruction results when that budget is unknown or too small.
+Follow `framework/work-principle.md`'s delivery and recovery check before advancing
+to a step that needs those instructions. Keep the boot's logical rounds:
 
 1. **Round 1, instructions and checks, before the gate:** read the resolved
    soul (§User scope) and the units the entry names, unless it includes them,
@@ -123,7 +126,8 @@ so the boot keeps to these three:
    read trigger. Then GREET.
 
 The early pull question is an allowed interruption before GREET. A round-count
-optimization never permits loading stale context ahead of the freshness gate.
+optimization permits neither stale context ahead of the freshness gate nor clipped
+instruction text to be counted as loaded.
 
 **Probe isolation (MUST).** Result-bearing probes (`workflow_engine
 --boot-context`, `plan_engine --boot`, STATUS-CHECK) = own Bash call,

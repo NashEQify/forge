@@ -25,6 +25,12 @@ budget that `scripts/consistency_check.py --check instruction-units` enforces, a
 after compaction; tool output cut at the first read), not from line counts. When the check fires, split at a real
 step boundary of the text, as this section describes, and give the moved part a read trigger at that step.
 
+This authoring check does not prove runtime delivery. Apply the instruction-loading
+contract in `framework/work-principle.md`: account for the sum of returned outputs
+and every enclosing tool limit, verify the requested text in the model-visible
+result, and recover missing units/ranges before dependent work. Passing the per-file
+byte check does not make a clipped batch complete.
+
 Remove duplication or obsolete instructions before adding routing layers.
 Do not compress unique requirements into opaque shorthand or distribute
 one rule across files that must always be read together just to reduce

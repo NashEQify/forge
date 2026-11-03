@@ -4,6 +4,17 @@ Codex host adaptation for Buddy and delegated writers. Apply this before invokin
 commands, including the boot freshness helper. Consumer authorization and the
 host's effective permissions remain separate requirements.
 
+## Instruction output
+
+Follow `framework/work-principle.md`'s instruction-loading contract before using a
+read result. On Codex, `exec_command.max_output_tokens` and an enclosing
+`functions.exec` response budget are separate limits: complete inner command results
+can still be clipped in the outer response. Keep instruction text out of responses
+that also dump task context, tool logs or search results. Size independent reads
+against their combined returned output, or return them separately. Check the actual
+outer result for every requested unit/range and recover omissions before dependent
+work; exit code 0 and raw command telemetry are not loading receipts.
+
 ## Git reads and writes
 
 In Codex `workspace-write`, a writable project may still have a read-only `.git`.
