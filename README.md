@@ -5,6 +5,8 @@
 Forge helps you turn an idea into a solution you can try. You work with
 **Buddy** inside your AI coding assistant.
 
+<br clear="right" />
+
 ## Start here — Forge your idea
 
 Tell Buddy **“Forge my idea”** and describe what you want to change. You can

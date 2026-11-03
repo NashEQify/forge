@@ -8,7 +8,7 @@ returns, structural changes or selected domain closeout. No engine is needed.
 
 Identify useful discrete claims, including failures, limitations and open work.
 Separate source statement, observation, proposal and marked inference. Apply the
-future-use test; ordinary formatting need not create knowledge. Person references
+admission check in `../write.md` §2, including for continuation checkpoints. Person references
 alone do not establish relationships or justify new entities. Route private person
 facts through user-signal, keeping project activity at its own owner.
 

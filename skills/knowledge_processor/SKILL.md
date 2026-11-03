@@ -20,6 +20,10 @@ Resolve this reference against the framework root; retain the consumer CWD.
 
 # Knowledge Processor
 
+**Ground rule:** Preserve knowledge about the subject and what is needed to continue
+open work. Do not turn the conversation or work process into a factual chronicle.
+Admission details: [write.md §2](write.md#2-admit-scope-and-compare).
+
 Canonical semantic lifecycle for knowledge and continuity. Modes specialize this
 contract; boot, save and housekeeping invoke it. No database, hook, background
 worker, automatic import or development engine is implied.

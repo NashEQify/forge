@@ -9,8 +9,10 @@ maintenance causes, and again after compaction, read `retrieve.md` for the basel
 
 Configuring user scope authorizes its maintenance; project rules authorize project
 maintenance. Honor explicit limits including “do not save”. Reconcile useful new
-facts, decisions, corrections and changed state in the same response cycle, before
-final output. A task-specific instruction remains with that task/topic. Checkpoint
+facts, decisions, corrections and changed state admitted by `write.md` §2 in the same
+response cycle, before final output. Apply that admission check before preparing a
+topic update or continuation checkpoint; it also governs handoff, history and FACTS.
+A task-specific instruction remains with that task/topic. Checkpoint
 substantive results before a topic switch; keep goal, next step, blockers and leading
 files in the existing handoff. Preserve the applicable agreement, authorized changes
 and unresolved requirements there or at their existing topic/task owner. New leading
@@ -32,7 +34,7 @@ interpretations, retained erroneous claims, events) are not copies; leave them.
 
 FACTS line while continuous maintenance applies:
 `FACTS: keine | {Fakt} → {Ziel} [geschrieben|deferred:{Grund}]`.
-Report only actual writes. Private deferred payloads never enter another repo's
+Report only actual writes of admitted knowledge or continuation state. Private deferred payloads never enter another repo's
 handoff. A blocked write is **not persisted**; state target and reason in the
 conversation, retry only with available source and authorized writable owner.
 Project deferrals may stay in that project's handoff. Conversation-only retention
