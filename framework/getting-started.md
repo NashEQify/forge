@@ -1,8 +1,7 @@
 # Getting started with Forge
 
-Forge brings knowledge and continuity, general reasoning, and software development
-into one installation. You can use the first two without selecting a software
-workflow. Keep working in your own project or knowledge folder.
+Forge is a discipline for software development with AI coding agents. Its continuity
+and reasoning methods also work without selecting a software workflow. Keep working in your own project or knowledge folder.
 
 1. Read the [overview](../architecture-documentation/01-overview.md) to choose the
    capability you need.

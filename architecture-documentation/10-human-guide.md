@@ -1,7 +1,8 @@
 # 10 — Human guide
 
-Forge helps an agent carry context and apply useful methods while you retain the
-goal, values and consequential choices. You should be able to ask for a result
+Forge gives an AI coding agent a discipline for software development: it keeps the
+project's context and applies the methods a change needs, while you retain the goal,
+values and consequential choices. You should be able to ask for a result
 without coordinating every internal step.
 
 The most useful input is a clear desired outcome with its constraints. You do not

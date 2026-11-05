@@ -119,9 +119,7 @@ quick (a change that alters no behaviour, or a trivially reversible one its test
 shows: Buddy makes it and runs the test), checked (a tested local change: the coding
 agent builds, Buddy reads the diff and reruns the tests) or reviewed (remaining
 uncertainty or a wider effect: the coding agent builds and a separate agent run
-checks and re-runs the tests). Your word sets the path either way; what each path
-costs on Claude Code and Codex, against a bare session, is in the
-[README](../README.md#what-it-costs-and-how-you-choose). Existing approved
+checks and re-runs the tests). Your word sets the path either way. Existing approved
 specifications can support implementation without repeating the specification
 interview. Exact route criteria live in
 [DIRECT eligibility](../framework/direct-eligibility.md) and Build runbook.

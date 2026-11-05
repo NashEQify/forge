@@ -1,13 +1,14 @@
 # Forge documentation
 
-Forge is a guided process: you bring an idea, and Buddy, with Forge's structure,
-takes the work to the result you want. It helps you build software along a connected
-path from intent to an evidenced close, carry useful context across sessions, and
-reason through difficult questions. These capabilities
-share one conversational entry, **Buddy**, while remaining independently useful.
+Forge is a discipline for software development with AI coding agents: skills, roles
+and workflows for the craft and for the workflow control around it. It takes a change
+along a connected path from intent to an evidenced close, keeps the project's context
+so work resumes across sessions, and offers reasoning methods for the decisions on the
+way. You work through one conversational entry, **Buddy**; single skills and methods
+remain usable on their own.
 
-Start with the outcome you want. You do not need to learn the workflow engine to
-maintain knowledge or use a reasoning method.
+Start with the outcome you want. You do not need to learn the workflow engine to use
+a single skill or a reasoning method.
 
 ## Choose a route
 

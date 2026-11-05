@@ -1,8 +1,9 @@
 # Contributing to Forge
 
-Forge is an opinionated, maintainer-led project. Contributions should improve
-knowledge and continuity, general reasoning, software development, or the shared
-integration these capabilities need. Start with the [overview](architecture-documentation/01-overview.md)
+Forge is an opinionated, maintainer-led project: a discipline for software development
+with AI coding agents. Contributions should improve its craft (the engineering
+practices), its workflow control, the continuity and reasoning methods that serve
+them, or the shared integration these need. Start with the [overview](architecture-documentation/01-overview.md)
 and [capability contract](framework/capabilities.md).
 
 ## Reports and proposals

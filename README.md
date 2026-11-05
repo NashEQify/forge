@@ -1,226 +1,196 @@
 # Forge
 
-<img src="assets/vibeforge-logo.png" align="right" width="220" alt="Forge mascot: a furnace working at an anvil" />
+Forge is a discipline for software development with AI coding agents (Claude Code
+and Codex). It is a collection of skills, roles and workflows in two areas:
 
-Forge helps you turn an idea into a solution you can try. You work with
-**Buddy** inside your AI coding assistant.
+- **Craft:** the engineering practices themselves: specifications, test design,
+  implementation briefs, code review with verified findings, root-cause fixing,
+  architecture, security, UX and documentation.
+- **Workflow control:** the steering around the craft: sizing a change, scoping,
+  briefs that carry the approved acceptance criteria word for word, delegation to a
+  coding agent and to separate reviewers, evidence before "done", and continuing a
+  change across sessions.
 
-### Start here — Forge your idea
+It is written for developers who use Claude Code or Codex for real software work,
+above all a single developer on changes too complex to hold in one session. Forge is
+plain instruction text that the agent reads, plus small helper scripts that check
+specific things (task and plan files, workflow state). The instructions carry the
+method; the scripts do not enforce it.
 
-<hr>
+## What is in it
 
-Tell Buddy **“Forge my idea”** and describe what you want to change. You can
-start with the problem while the solution is still open.
+- **Buddy**, the role you talk to: in a project with Forge it replaces the assistant's
+  default agent. It sizes the request, runs the matching workflow,
+  hands code to a coding agent and review to separate agents, and reports what the
+  evidence shows.
+- **Workflows:** `build` (intent → spec → plan → implementation → review → fix →
+  close), `fix` (root cause first), `review`, `research`, `solve` (for a problem whose
+  solution is still open), `docs-rewrite` and `save` (record decisions and open work
+  for the next session). [Runbooks](workflows/runbooks/navigation.md)
+- **Skills**, among them spec authoring and the spec board, test design, adversarial
+  test plans, the code review board, root-cause fixing, architecture review, API
+  design, security hardening, UX authoring, frontend engineering, migration,
+  shipping, and documentation with decision records. [Skill map](framework/skill-map.md)
+- **Roles** for the agents a workflow dispatches: the coding agent, the tester, spec
+  and code reviewers (adversary, security, data, API contract, reliability and others),
+  and a chief that consolidates a board's findings. [Roles](agents/README.md)
+- **Reasoning methods** for decisions inside development, also usable alone: Frame
+  (open the problem before choosing), Bedrock (drill assumptions to first principles)
+  and Council (several isolated perspectives on one decision).
 
-> Forge my idea. Every time my family asks for photos from a trip, I spend an
-> evening finding them. Can we make that easier?
+You can use the whole workflow or a single part of it: ask Buddy for a spec board on
+your spec, a code review of your branch or a Council on a design choice, and only that
+runs.
 
-Buddy asks how you find the photos today and what would make the next request
-easier. A shared album in your existing photo app might be enough. If you
-decide you want a tool that copies photos into dated folders, Buddy can take
-that choice into **Build**. If you already know which feature you want, ask
-for **Build** directly.
+**Discipline in proportion.** The full workflow is for complex changes. A small change
+gets a short path: Buddy picks it from what a mistake would cost, how
+easily it is undone and how sure it is, and the reply says who built the change and
+who checked it. Changes that touch authorization, secrets, data migrations, public
+contracts or live systems never take the short path.
+[Choosing the path](framework/direct-eligibility.md#choosing-the-path)
 
-## What a run looks like
+## Where it comes from
 
-Suppose you choose the photo tool. Here's how Buddy helps you build it.
+Forge integrates methods from these projects, under their licenses and with credit:
 
-1. **Buddy asks what matters.** Where should the copies go? What happens to a
-   photo without a date? Your answers become checks you can try on a few photos,
-   including one that confirms the originals stayed untouched. You approve them.
-2. **Buddy sizes the work from written facts:** the open points you would notice,
-   what is hard to undo (moving your photos instead of copying them), and how much the
-   change touches. How many steps the
-   work gets follows from them. Had you asked for a slideshow of the photos as well,
-   Buddy would offer to make that its own task.
-3. **A coding agent builds it** from a written brief that carries your approved checks
-   word for word, and tests the cases you named.
-4. **A separate reviewer checks the change.** Each finding is verified before anything
-   is fixed, and a fix goes at the cause.
-5. **Buddy shows you the result with its evidence:** which tests ran and what they
-   cover, plus any decision it took for you, with what it would cost if wrong and how
-   to undo it.
+- [Superpowers](https://github.com/obra/superpowers) (Jesse Vincent): subagent-driven
+  development, systematic debugging, verification before completion.
+- [agent-skills](https://github.com/addyosmani/agent-skills) (Addy Osmani): engineering
+  skills from security to shipping.
+- [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD): right-sized planning,
+  approved acceptance carried verbatim, review triage.
+- [spec-kit](https://github.com/github/spec-kit) (GitHub): the specification as the
+  source of the code.
+- [skills](https://github.com/mattpocock/skills) (Matt Pocock): small engineering
+  skills for architecture, diagnosis and design interviews.
 
-A bigger change gets more stages on the way: a written spec, a design for a screen or
-flow a person uses, drawn from your answers, an architecture when separately built parts must fit together (the few decisions they
-all follow, and what is left open on purpose), a
-plan whose tasks are checked against each other. A small one
-skips what it does not need. Anything that touches security, data or live systems
-always keeps its safeguards.
-[The path, stage by stage](architecture-documentation/01-overview.md#software-development-from-intent-to-verified-result)
+Forge rewrote or adapted them, some nearly word for word, so that they follow one set
+of rules: the approved goal, the user's go-ahead for consequential steps, evidence
+before "done", and effort matched to the stakes.
+[What came from where](framework/adopted-methods.md) · [NOTICE](NOTICE)
 
-## What makes it different
+## Install and remove
 
-- **Your goal leads.** Every agent works from the goal you approved. Buddy helps you
-  sharpen the goal; it never makes one up.
-- **Evidence, not claims.** "Done" comes with what shows it, such as the tests that
-  ran, or Buddy says what actually holds. When a session goes wrong, Buddy can read
-  its transcript and show line by line what happened, starting with whether Forge
-  loaded at all.
-- **A second look where it matters.** On a change with real uncertainty, the agent
-  that builds is not the one that reviews. Buddy checks what the reviewer reports and
-  decides what gets fixed; a question about your goal comes back to you. A wording fix
-  or a small tested change gets a lighter check, and the reply says which.
-- **You stay in charge.** Looking into a problem does not let Buddy change anything;
-  publishing, live changes and deleting each need your go.
-- **It remembers.** Say `save` and Buddy records decisions and open work in your
-  project files so you can pick up in the next session.
-- **It runs where you already work:** Claude Code, Codex or OpenCode. Forge is plain
-  instruction text plus small helper tools; the tools check specific things, they do
-  not enforce the methods.
-
-[How Forge does each of these](architecture-documentation/04-core-concepts.md#how-forge-works)
-
-## Get started
-
-Setup happens in a terminal, the window where you type commands. You need Git,
-Python 3.10 or newer with the PyYAML package, Bash (Linux, macOS, or WSL on Windows),
-and Claude Code or Codex; a chat window like ChatGPT is not enough.
+You need Git, Bash (Linux, macOS, or WSL on Windows), Claude Code or Codex, and
+Python 3.10 or newer with PyYAML (`python3 -m pip install pyyaml`). The session-start
+hooks call plain `python3`, so PyYAML must be available to that interpreter, not only
+inside a virtual environment.
 
 ```bash
 git clone https://github.com/NashEQify/forge ~/forge
-mkdir -p ~/my-app
-python3 ~/forge/scripts/forge_install.py --check ~/my-app
-python3 ~/forge/scripts/forge_install.py ~/my-app
+python3 ~/forge/scripts/forge_install.py --check ~/my-app   # lists what it would write, writes nothing
+python3 ~/forge/scripts/forge_install.py ~/my-app           # installs into that project
 ```
 
-The first command downloads Forge into `~/forge`. The second creates a folder for your
-project; `~/my-app` is an example name, and an existing folder works as well. The
-project does not have to be software: notes for a decision or a piece of writing work
-the same way. The third command lists the files Forge would write there and writes
-nothing. The fourth installs Forge into that folder. Then start your assistant there:
+This installs Forge into one project folder (`~/my-app` is an example) and changes
+nothing outside it. It writes Buddy's settings and one short role entry per agent
+under `.claude/`, the Codex entry `AGENTS.override.md`, and a record of what it wrote.
+In a Git project these paths go into `.git/info/exclude`, so they are never committed.
+The entries point at the checkout, so keep `~/forge` where it is. Without `--host
+claude-code` or `--host codex`, it sets up whichever of `claude` and `codex` is on your
+`PATH`.
+
+The installer writes nothing and names the reason when it would collide with
+something: the folder is a subfolder of a Git repository (install at its top level),
+your settings already set another agent, Git already tracks a path it would write,
+an `AGENTS.override.md` of your own exists, or the machine has the profile below.
+
+Then start your assistant in that folder:
 
 ```bash
-cd ~/my-app
-claude
+cd ~/my-app && claude    # or: codex
 ```
 
-Use `codex` instead of `claude` for Codex, or open a Claude Code session in that
-folder in the Claude desktop app. Claude Code asks once whether you trust the folder;
-Forge's settings apply after you say yes. Buddy greets you. Tell it your idea; it
-starts by writing the project's goal into a file called `intent.md` with you.
+Claude Code asks once whether you trust the folder; Forge's settings apply after you
+say yes. Buddy's first reply opens with a line naming the machine, the time and the
+folder; if the assistant answers without it, Forge did not load. On the first start
+Buddy writes the project's goal into `intent.md` with you; every later step works from
+it.
 
-There are two ways to install Forge:
+Host limits: a Claude Code session in the cloud works from the committed files only,
+so it starts without Forge. On Codex, start at the project's top level (a start in a
+subfolder loads Forge but skips its update); the entry tells Codex to read your own
+`AGENTS.md` as the project rules, and a role can be missing by name in a fresh Codex
+home, in which case Buddy runs a general agent with that role's instructions.
 
-- **`project`** (the default, the commands above): Forge in this one folder.
-  *What changes:* only files inside that folder: Buddy's settings and role entries
-  in `.claude/`, `AGENTS.override.md` for Codex, and a record of what it wrote. In a
-  Git project these paths are listed in `.git/info/exclude`, so Git never commits
-  them. Nothing in your home folder or in other projects changes. *Removal:*
-  `python3 ~/forge/scripts/forge_install.py --remove ~/my-app` removes what it wrote;
-  if you changed one of those files since, it stops, names the file and removes nothing.
-- **`full-ai-integration`** (the big installation): Buddy in every session of your
-  assistants on this machine, with a folder of your own for personal context, so
-  what Buddy learns about you and your open work carry across projects. Preview it
-  (`~/forge-context` is an example name for that folder; the installer creates it):
+**Remove:**
 
-  ```bash
-  python3 ~/forge/scripts/forge_install.py --profile full-ai-integration \
-    --user-repo ~/forge-context --create-user-repo --check
-  ```
+```bash
+python3 ~/forge/scripts/forge_install.py --remove ~/my-app
+```
 
-  *What changes:* entries in your home folder: Claude Code's start hooks in
-  `~/.claude/settings.json`, links in `~/.claude/skills` and `~/.claude/agents`,
-  Codex's block in `~/.codex/AGENTS.md` and its roles and skills, the `cc` and `oc`
-  launchers in `~/.local/bin`, and the machine setting `~/.config/forge/user.yaml`;
-  in the Forge checkout it links Forge's Git hooks. In the terminal you then start
-  Claude Code with `cc` instead of `claude`. OpenCode works only with this
-  installation. *Removal:* `python3 ~/forge/scripts/forge_install.py --profile
-  full-ai-integration --remove` takes out what it wrote and keeps your own settings,
-  your context folder and your projects' own text; add `--check` to see the list first.
+It deletes what the install wrote. If you changed one of those files since, it stops,
+names the file and deletes nothing.
 
-Choose one per machine: the project install refuses on a machine that has the big
-installation, because Buddy already runs there in every session. The
-[installation guide](architecture-documentation/05-installation.md) has the details.
+**Update:** `git -C ~/forge pull`. The next session start brings the installed entries
+up to the new version.
 
-To update Forge, run `git -C ~/forge pull`. That is the whole update, also for an
-installation made with an earlier version: the next session start brings the installed
-entries up to the new version. If you changed files in the checkout yourself, commit
-or discard them first; the start names them.
+**Buddy in every session (optional).** A second profile, `full-ai-integration`, starts
+Buddy in every session on the machine and keeps a folder of personal context (who you
+are, how you work, open topics) that carries across projects. It writes into your home
+folder, and it is the only route for OpenCode. Preview it with `--profile
+full-ai-integration --user-repo ~/forge-context --create-user-repo --check`; remove it
+with `--profile full-ai-integration --remove`.
 
-## What it costs, and how you choose
+The [installation guide](architecture-documentation/05-installation.md) lists every
+path both profiles write, the cases where the installer refuses, and how removal treats
+files you changed.
 
-At startup Buddy reads your goal, the project context and the rules that apply
-throughout the work. It loads detailed instructions when a step needs them.
-For example, a wording fix can stay with Buddy. When a change needs independent
-review, Buddy loads the review instructions before choosing a reviewer.
+## A run on real code
 
-These October measurements on a small Python project predate the change to
-how Buddy loads instructions. Each case ran five times with Claude Opus 5.5
-and GPT-6 Astra.
+A change to a long-running server process with an existing suite of about 1,100
+tests: its main loop had slowed down and its memory grew every day. The fix needed a
+rework of the loop and a migration of live data. Forge sized it for the full workflow.
+What happened:
 
-| Request | Claude Code with Forge | without | Codex with Forge | without |
-|---|---|---|---|---|
-| A quick question about the code | 14–27 s | 4–8 s | 29–43 s | 7–10 s |
-| A one-line fix, quick path | 39–43 s | 17–32 s | 2–2.5 min | 40–44 s |
-| The same fix, reviewed path | 2–3 min | 16–49 s | 4–5 min | 35–63 s |
+- **Spec review before code.** The first pass of the spec board (six reviewer agents
+  reading the spec, each from its own angle, plus one that consolidates) found two
+  critical and ten high issues, among them when written data becomes visible and how
+  the service stays up until delivery. The spec was rebuilt, and an urgent fix was
+  split off as a first delivery of its own.
+- **The urgent fix.** Three reviewers checked it. Three planned parts turned out
+  unreachable after the first one and were dropped instead of patched. It was tried on
+  a copy of the live data first, then went live with a 4.5-minute outage; the loop's
+  cycle went from 280–376 s to 52–71 s.
+- **The rework.** Before the brief, an architecture check found three statements in
+  the spec that did not match the code. After implementation, a code review board of
+  six reviewers found three high-severity defects; two of them would only have shown
+  up live, after a rollback. The migration was proven on a copy of the live data
+  before the cutover.
+- **What did not go well.** An owner's decision to drop a feature was not carried
+  through the spec, so its leftovers drew three review findings later. The plan allowed
+  two fix passes; a third was needed. Test skeletons written before the code had
+  oracles that were never checked, and eleven tests failed for test reasons. Each of
+  these became a proposed change to Forge's workflow text.
+- **Cost**, counted from the session transcripts up to the third fix pass: about seven
+  hours of build work, 45 agent runs and about 13 million tokens.
 
-A question gets no choice and no warning: the start-up is all it costs. For a code
-change Buddy picks one of three paths from what a mistake would cost, how easily it is
-undone and how sure he is:
-
-- **quick:** a change that alters no behaviour, or a trivially reversible one its
-  existing test shows. Buddy makes it himself and runs the test; nothing else checks it.
-- **checked:** a small behaviour change an existing test covers. The coding agent
-  builds it; Buddy reads the change and reruns the tests himself.
-- **reviewed:** anything with remaining uncertainty or a wider effect. The coding
-  agent builds it and a separate agent run checks it.
-
-When he is unsure between two, he asks you in one sentence. You can always decide:
-say "quick" or "reviewed" in your request, or write a standing preference into your
-profile (`context/user/profile.md`). Security, data, contracts and live systems keep
-their safeguards whatever you say. The reply should tell you who made the change
-and who checked it. [Choosing the path](framework/direct-eligibility.md#choosing-the-path)
+A one-line fix takes the short path instead: Buddy or the coding agent makes it, the
+tests run, and the reply says who checked it.
 
 ## Limits
 
-Forge is opinionated and pre-1.0. It gives the model methods and checks; it cannot
-guarantee that a model follows every instruction or judges correctly, and reviewers can
-share a wrong assumption. Buddy spends time reading the project at startup.
-In the October measurements above, even the quick path took longer than a bare
-prompt. Independent review adds time and is worth asking for when a mistake
-would be hard to catch or undo.
-
-The project install reaches sessions that run on your machine. A Claude Code session
-in the cloud works from the repository's committed files, so it starts without Forge.
-Start Codex in the project root to refresh the installation. In a local CLI test,
-Codex loaded the root's `AGENTS.override.md` even from a subfolder, but the
-refresh looked in that subfolder and skipped the update.
-
-## Where Forge's methods come from
-
-Forge took everything it found worth stealing from these projects, openly, under their
-MIT licenses and with credit, and rewrote or adapted it (some nearly word for word) to
-answer to one set of rules: your goal, your go-ahead, evidence, and effort matched to
-the stakes. Each project is known for something of its own:
-
-- [Superpowers](https://github.com/obra/superpowers): subagent-driven development,
-  systematic debugging, verification before completion.
-- [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills): a broad
-  set of engineering skills, from security to shipping.
-- [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD): right-sized agile
-  planning and review triage.
-- [spec-kit](https://github.com/github/spec-kit): the specification as the source of
-  the code.
-- [Matt Pocock's skills](https://github.com/mattpocock/skills): small, sharp skills
-  for architecture, diagnosis and design interviews.
-
-What Forge adds is the one process: the methods work together, from your goal to the
-evidence. This is not a ranking; each of these projects stands on its own. [What Forge took from each](architecture-documentation/01-overview.md#forge-and-the-frameworks-it-learned-from) ·
-[Register of adopted methods](framework/adopted-methods.md) · [NOTICE](NOTICE)
+- Forge gives the model methods and checks. It cannot guarantee that a model follows
+  every instruction or judges correctly, and reviewers can share a wrong assumption.
+- It costs time. Buddy reads the project's goal and context at the start of every
+  session, so even a quick question takes longer than a bare prompt. Independent review
+  adds more; it is worth it where a mistake would be hard to catch or undo.
+- Hosts differ in what they load and allow. The installer checks what it can; whether a
+  fresh session actually loaded Forge is something to verify, not to assume.
+- One `intent.md` per repository. Forge is pre-1.0: file layouts and commands can still
+  change between versions.
 
 ## Read more
 
 | You want to… | Read |
 |---|---|
-| Work out what to make from an idea | [Start with an idea](architecture-documentation/06-usage-workflows.md#start-with-an-idea) |
-| Use Forge every day and keep context | [Daily use](architecture-documentation/13-operational-handbook.md) |
-| See what Forge is and how its parts fit | [Overview](architecture-documentation/01-overview.md) |
-| Think through a hard decision (the Frame, Bedrock and Council methods) | [Reasoning methods](architecture-documentation/06-usage-workflows.md#general-reasoning) |
-| Build or maintain software | [Software development](architecture-documentation/06-usage-workflows.md#software-development) |
+| See how the parts fit | [Overview](architecture-documentation/01-overview.md) |
+| Build or fix software with Forge | [Software development](architecture-documentation/06-usage-workflows.md#software-development) |
+| Use the reasoning methods | [Reasoning methods](architecture-documentation/06-usage-workflows.md#general-reasoning) |
+| Work with Forge day to day | [Daily use](architecture-documentation/13-operational-handbook.md) |
+| Check host support | [Host integrations](architecture-documentation/07-tool-integrations.md) |
 | Change Forge itself | [Architecture](architecture-documentation/02-architecture.md) · [Maintainer guide](architecture-documentation/08-development-and-maintenance.md) |
 
-More routes: the [documentation hub](architecture-documentation/README.md).
-Contributions: [CONTRIBUTING.md](CONTRIBUTING.md). Security:
-[SECURITY.md](SECURITY.md). Community: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
-[MIT license](LICENSE).
+All pages: the [documentation hub](architecture-documentation/README.md).
+Contributions: [CONTRIBUTING.md](CONTRIBUTING.md). Security: [SECURITY.md](SECURITY.md).
+Community: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). [MIT license](LICENSE).

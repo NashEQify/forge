@@ -1,28 +1,30 @@
 # 01 — Overview
 
-Forge is a guided process: you bring an idea, and Buddy, with Forge's structure,
-takes the work to the result you want, verified and at an effort matched to the
-consequences. Building software and small solutions is the leading case; the same
-structure helps you keep useful knowledge and reason about uncertain choices. Forge
-is a shared set of agent instructions, skills and supporting tools that runs in your
-existing agent application.
+Forge is a discipline for software development with AI coding agents. It is a
+collection of skills, roles and workflows for the craft (specs, test design, briefs,
+verified review, root-cause fixing, architecture, security, UX, documentation) and for
+the workflow control around it (sizing, scoping, delegation to a coding agent and
+separate reviewers, evidence before "done", continuation across sessions). Forge is
+agent instruction text plus supporting tools, and runs in the agent application you
+already use.
 
 You work through **Buddy**, the conversational entry. Describe the goal in ordinary
 language. Your workspace's intent and rules determine the relevant context, working
 style and limits on action.
 
-## Three capabilities
+## What Forge covers
 
-| Capability | Result | Typical request |
+| Area | Result | Typical request |
 |---|---|---|
-| Knowledge and continuity | Current knowledge, usable routes to detail, and a handoff for open work | “Continue this application from the latest draft.” |
-| General reasoning | A clearer problem, examined assumptions or a comparison of viable choices | “Use a Council to compare these approaches.” |
 | Software development | A connected path from intent to a verified result: spec, plan, implementation, review, fixes and an evidenced close | “Build this feature and verify the behavior.” |
+| Continuity | The project's intent, context and session handoff, so a change that spans sessions resumes where it stopped | “Continue the open task from where we stopped.” |
+| Reasoning methods | A clearer problem, examined assumptions or a comparison of viable choices, for decisions inside development | “Use a Council to compare these approaches.” |
 
-Knowledge supports both reasoning and development. Reasoning can improve a
-software decision. Each capability can also be used at its own scope: supplied
-context is sufficient for a standalone method, and project knowledge needs no
-software task system.
+Continuity serves the development work; the reasoning methods serve its decisions.
+Each can also be used at its own scope: supplied context is sufficient for a
+standalone method, and project context needs no software task system. A personal
+extension (a user repository with your profile, Buddy in every session of the
+machine) builds on this and is optional.
 
 The [capability contract](../framework/capabilities.md) defines their ownership.
 
@@ -69,11 +71,9 @@ See [method selection and examples](06-usage-workflows.md#general-reasoning).
 
 ## Software development: from intent to verified result
 
-If you're starting with an idea, tell Buddy **“Forge my idea”** and describe what
-you want to improve. Buddy helps you work out what would meet your goal and how
-you could check it. A solution might be a procedure you can try
-right away. When you choose software, **Build** takes the agreed feature through
-the stages below. You can enter Build directly with a defined feature.
+**Build** takes a defined change through the stages below. When the solution is
+still open, the Solve workflow (tell Buddy **“Forge my idea”**) works out what would
+meet the goal and how to check it, and can hand the chosen change to Build.
 [Worked example](06-usage-workflows.md#start-with-an-idea).
 
 Buddy chooses the stages the change needs. Each stage hands a defined output
@@ -107,9 +107,9 @@ the routes are in [development usage](06-usage-workflows.md#software-development
 
 ## Forge and the frameworks it learned from
 
-Forge took everything it found worth stealing from other open agent frameworks,
-openly, under their MIT licenses and with credit, and rewrote or adapted it to answer
-to one set of rules. Each project is known for something of its own:
+Forge integrates methods from other open agent frameworks, under their MIT licenses
+and with credit, and rewrote or adapted them to follow one set of rules. Each project
+is known for something of its own:
 
 | Project | Known for | What Forge took, in its own terms |
 |---|---|---|
@@ -121,9 +121,7 @@ to one set of rules. Each project is known for something of its own:
 
 What Forge adds is that one set of rules: every adopted method answers to the same
 intent, authorization rules, evidence standard and proportional effort, so the methods
-work together instead of as separate rule sets. The intended reader
-is a developer, above all a vibe coder, who wants to keep the complexity of their
-software manageable without learning several frameworks. This is a description, not
+work together instead of as separate rule sets. This is a description, not
 a ranking: each project above stands on its own, and someone who wants exactly one of
 their approaches may be better served by it directly.
 
@@ -150,12 +148,12 @@ to choose and verify your setup.
 
 ## Who is it for?
 
-Forge suits recurring work where earlier facts, decisions and unfinished steps
-matter: everyday projects, difficult choices, and software delivery. It is written
-for a single developer and welcomes informal "vibe" coding, with the structure above
-keeping the software manageable as it grows. It is also
-useful to maintainers who want shared methods across workspaces while keeping each
-workspace's own content, vocabulary and operational approvals.
+Forge is written for developers who use Claude Code or Codex for agent-driven
+software work, above all a single developer on changes too complex to hold in one
+session. Single skills, boards and the reasoning methods are useful on their own;
+the full workflow earns its weight on complex changes. Maintainers who want shared
+methods across workspaces keep each workspace's own content, vocabulary and
+operational approvals.
 
 The trade-off is discipline and overhead. A small context update is inexpensive
 compared with a multi-agent Council or review board. More perspectives can expose
