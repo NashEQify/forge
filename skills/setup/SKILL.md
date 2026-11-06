@@ -39,7 +39,9 @@ the allow rules present. Decide from it; do not read or parse the host files you
 
 Unless the request already says it, ask one question: Buddy **in this project only** (one line in the project's
 `AGENTS.md`, which teammates get when it is committed) or **in every session** (a setting in the user's home; Buddy
-then also starts in folders without the line). Say what each means in one sentence.
+then also starts in folders without the line). Say what each means in one sentence. The question ends your turn:
+make no setup write in it; §3 runs on the user's answer. Do not pick the scope for the user, also not the one that
+changes less in their home: the choice is theirs.
 
 For every session, also settle where personal context lives (who the user is, how they work, open topics, carried
 across projects). If the status names a folder, offer to keep it. Otherwise propose `~/forge-context` and ask whether
@@ -64,6 +66,10 @@ it would not overwrite (for example a settings file that is not valid JSON); rep
 proceed, without editing that file yourself.
 
 After `project`, the activation line is a change in the project's `AGENTS.md`: tell the user, and offer to commit it.
+
+Removal is exactly `S remove` and the host's uninstall commands. Every other file stays as it is, also one that
+mentions Forge (host caches, older lines in an `AGENTS.md`, Forge checkouts, other settings): name such files to the
+user if you came across them, and delete or edit one only when the user asks for that file.
 
 ## 4. The check
 

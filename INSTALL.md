@@ -61,7 +61,8 @@ Buddy on for every session", "remove Forge").
 ## Remove
 
 Read `<root>/skills/setup/SKILL.md` and run its removal (`forge_setup.py remove`) first, while the plugin's folder
-still exists, then:
+still exists, then the host commands below. Removal is these commands only; other files stay as they are, as the
+setup skill says.
 
 ```bash
 claude plugin uninstall forge@forge --scope user
