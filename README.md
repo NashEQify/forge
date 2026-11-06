@@ -1,7 +1,11 @@
 # Forge
 
 Forge is a discipline for software development with AI coding agents (Claude Code
-and Codex). It is a collection of skills, roles and workflows in two areas:
+and Codex). It helps single developers in particular build complex software with an
+agent: you start from an idea as in vibe coding, and the result gets the quality that
+specs, tests and review give.
+
+It is a collection of skills, roles and workflows in two areas:
 
 - **Craft:** the engineering practices themselves: specifications, test design,
   implementation briefs, code review with verified findings, root-cause fixing,
@@ -11,11 +15,10 @@ and Codex). It is a collection of skills, roles and workflows in two areas:
   coding agent and to separate reviewers, evidence before "done", and continuing a
   change across sessions.
 
-It is written for developers who use Claude Code or Codex for real software work,
-above all a single developer on changes too complex to hold in one session. Forge is
-plain instruction text that the agent reads, plus small helper scripts that check
-specific things (task and plan files, workflow state). The instructions carry the
-method; the scripts do not enforce it.
+It is written for developers who use Claude Code or Codex for real software work.
+Forge is plain instruction text that the agent reads, plus small helper scripts that
+check specific things (task and plan files, workflow state). The instructions carry
+the method; the scripts do not enforce it.
 
 ## What is in it
 
@@ -51,7 +54,15 @@ contracts or live systems never take the short path.
 
 ## Where it comes from
 
-Forge integrates methods from these projects, under their licenses and with credit:
+The idea, the concept and how the parts work together are Forge's own: Buddy as the
+one role you talk to, the workflow control around the craft, the project goal every
+step works from, and the hand-over between skills, roles and workflows under one set
+of rules (the approved goal, your go-ahead for consequential steps, evidence before
+"done", effort matched to the stakes).
+
+For the individual practices, Forge took the best of what these projects published
+and built it into that design, some of it word for word, under their licenses and
+with credit:
 
 - [Superpowers](https://github.com/obra/superpowers) (Jesse Vincent): subagent-driven
   development, systematic debugging, verification before completion.
@@ -64,9 +75,6 @@ Forge integrates methods from these projects, under their licenses and with cred
 - [skills](https://github.com/mattpocock/skills) (Matt Pocock): small engineering
   skills for architecture, diagnosis and design interviews.
 
-Forge rewrote or adapted them, some nearly word for word, so that they follow one set
-of rules: the approved goal, the user's go-ahead for consequential steps, evidence
-before "done", and effort matched to the stakes.
 [What came from where](framework/adopted-methods.md) · [NOTICE](NOTICE)
 
 ## Install and remove

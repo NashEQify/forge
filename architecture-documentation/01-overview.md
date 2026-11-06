@@ -107,9 +107,10 @@ the routes are in [development usage](06-usage-workflows.md#software-development
 
 ## Forge and the frameworks it learned from
 
-Forge integrates methods from other open agent frameworks, under their MIT licenses
-and with credit, and rewrote or adapted them to follow one set of rules. Each project
-is known for something of its own:
+The idea, the concept and how the parts work together are Forge's own. For the
+individual practices, Forge took the best of what other open agent frameworks
+published and built it into that design, under their MIT licenses and with credit.
+Each project is known for something of its own:
 
 | Project | Known for | What Forge took, in its own terms |
 |---|---|---|
@@ -119,9 +120,10 @@ is known for something of its own:
 | [spec-kit](https://github.com/github/spec-kit) | Spec-driven development: the specification as the source of the code | The complexity-tracking table, and the gap inventory that checks each requirement against the present code |
 | [Matt Pocock's skills](https://github.com/mattpocock/skills) | Small, sharp engineering skills | Zooming out to the module map, deep-module architecture review, the feedback loop as the product of debugging, the decision-record threshold, the one-question-at-a-time design interview |
 
-What Forge adds is that one set of rules: every adopted method answers to the same
-intent, authorization rules, evidence standard and proportional effort, so the methods
-work together instead of as separate rule sets. This is a description, not
+Forge's design holds them together: every adopted method answers to the same
+intent, authorization rules, evidence standard and proportional effort, and hands its
+result to the next step, so the methods work as one process instead of as separate
+rule sets. This is a description, not
 a ranking: each project above stands on its own, and someone who wants exactly one of
 their approaches may be better served by it directly.
 
