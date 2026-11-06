@@ -24,8 +24,8 @@ a single skill or a reasoning method.
 
 ## First use
 
-1. [Install Forge](05-installation.md) into your project (the default `project`
-   profile), or for every session of your machine (`full-ai-integration`).
+1. [Add the Forge plugin](05-installation.md), then switch Buddy on in your project
+   (one line in `AGENTS.md`) or for every session of your machine (one user setting).
 2. Open your working folder. Its intent and rules establish the goal and boundaries.
 3. Describe the result you want, the relevant context and any limits on action.
 4. Review the result and its evidence. Use `save` when you want session persistence

@@ -382,9 +382,6 @@ def target_unchanged(path, current, allowed, *, absent_ok=False):
     """
     if current in allowed:
         return True
-    if absent_ok and current['kind'] == 'absent' and Path(path).name == '.forge-codex-boot.json' \
-            and not os.path.lexists(Path(path).with_name('AGENTS.md')):
-        return True  # the block's state with its AGENTS.md gone: the entry is gone (a project folder deleted)
     if current['kind'] == 'link':
         return False
     owned = owned_part(Path(path), _content(current))

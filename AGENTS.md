@@ -33,11 +33,10 @@ Format and types are enforced by the `pre-commit` hook (CG-CONV).
 
 Forge's shared git hooks run when installed in the active repository:
 `pre-commit.sh` (pre-commit, pre-merge-commit and commit-msg; PLAN-VALIDATE / CG-CONV /
-SKILL-FM-VALIDATE BLOCK; SECRET-SCAN / SOURCE-VERIFICATION WARN). The two
-SessionStart scripts are Claude-specific and conditional, not universal Codex
-boot hooks. Codex uses the managed AGENTS entry installed by
-`scripts/forge_install.py` (`~/.codex/AGENTS.md`, or a project's `AGENTS.override.md`);
-its loading must be checked in a fresh session. The framework runs no tool-event hooks
+SKILL-FM-VALIDATE BLOCK; SECRET-SCAN / SOURCE-VERIFICATION WARN). The
+plugin's SessionStart hook is Claude-specific and conditional, not a universal Codex
+boot hook. Codex boots through the plugin's `forge:boot` skill, asked for by the
+activation line in `AGENTS.md`; its loading must be checked in a fresh session. The framework runs no tool-event hooks
 (PreToolUse / PostToolUse / UserPromptSubmit); write-time discipline is
 protocol-anchored via protocols + operational.md.
 

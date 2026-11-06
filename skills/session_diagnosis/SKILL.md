@@ -75,8 +75,8 @@ The skill reports; it does not repair. A defect the report shows goes to `root_c
      line, a rule), quote that text beside it with its `path:line` (project or framework root): whether the text misled
      is the maintainers' call. From that point on, the dimensions describe the host model without Forge's process.
    - `not reached`: installation or instruction loading, on the host's side. The installer's read-only check
-     (`python3 scripts/forge_install.py --check <project>` for a project install, `--profile full-ai-integration
-     --check` for the machine installation, in the framework root, or the user's output of it) tells them
+     (the host's plugin check for the plugin; `python3 scripts/forge_install.py --profile full-ai-integration
+     --host opencode --check` or `--maintenance status` for an OpenCode installation, in the framework root, or the user's output of it) tells them
      apart; without it, write "installation or host delivery, not separated".
    - `unknown`: no layer. Name the missing evidence.
 4. **Dimensions.** Run the seven dimensions of `dimensions.md` §Dimensions. Up to 300 KB of transcripts in all, read

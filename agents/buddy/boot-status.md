@@ -107,7 +107,7 @@ each entry (more than five: the first five), and the count, also when this
 session later changed the same file. Then attribute the uncommitted entries,
 installed-not-committed sources and the framework's linked worktrees to
 live owners as `framework/process-map.md` §Authorization defines them;
-`forge_install.py --maintenance status` lists the source paths. What live
+`forge_install.py --maintenance status` (an OpenCode installation) lists the source paths. What live
 owners account for is normal with parallel sessions: one plain line.
 Untracked host-owned entries under `.claude/skills/` (not Forge wrappers)
 are not Forge work: a note. Anything else is held back: report it loudly —
@@ -115,7 +115,7 @@ repo, counts, next step — and investigate before taking up new work. An
 `[installer: …]` group without `operation open` (for example
 `recovery_required`), an open operation no running session drives, or an
 unavailable installer status is loud; next step: inspect
-`forge_install.py --maintenance status` (a reason under `.claude/worktrees/`
+`forge_install.py --maintenance status` (the installer status applies to an OpenCode installation) (a reason under `.claude/worktrees/`
 is a parallel writer's worktree inside the framework tree). More than about
 20 entries in one repo (intent: more than one in-flight task's working set)
 is a cue to look closely, not a verdict.

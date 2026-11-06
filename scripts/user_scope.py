@@ -7,13 +7,12 @@ fixed convention `context/user/{soul,profile,navigation}.md` applies.
 
 The resolver never raises on user data: every defect degrades to "no user
 scope" (forge soul) or a skipped file, with a warning. Consumers: the Claude
-Code hook (`--hook-json`), `cc` (`--boot-text`, `--json`), the Codex/CC home
-boot blocks (`boot_text(..., install_time=True)`), forge_install.py and
-setup-oc.sh.
+Code plugin hook (`--hook-json`, `--plugin`), the boot skill (`--boot-entry`),
+forge_install.py and setup-oc.sh (OpenCode).
 
 CLI: user_scope.py [--framework-root P] [--profile project|full-ai-integration | --project | --plugin]
                    (--json | --soul | --boot-text | --hook-json | --shell | --boot-entry)
---shell prints USER_REPO=… and BOOT_TEXT=… as shell-quoted assignments (cc).
+--shell prints USER_REPO=… and BOOT_TEXT=… as shell-quoted assignments (oc).
 --project renders the project install's entry: no user scope, the machine
 setting is not read (the project hook passes it).
 --plugin (with --hook-json) renders the plugin hook's entry: it reads the

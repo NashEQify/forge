@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
-"""Generate Codex roles from neutral agents/*.md; install only managed surfaces.
+"""Generate Codex roles from neutral agents/*.md (the repository's .codex/agents).
 
-Use --output-root /tmp/roles for portable templates. Add --framework-root for
-concrete installed paths. setup-codex.sh invokes --install for home/project setup.
---check is read-only. --migrate-legacy adopts only exact known legacy files;
-modified or unknown legacy content is a conflict requiring manual review.
+Use --output-root DIR for the generated files. Add --framework-root for concrete
+installed paths. --check is read-only and reports drift. Nothing is installed
+into a home or project from here: Codex takes Forge as a plugin.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
-import shlex
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -23,30 +20,12 @@ sys.dont_write_bytecode = True
 import yaml  # noqa: E402 - disable bytecode before third-party/project imports
 
 try:
-    from .managed_install import (
-        InstallConflict,
-        InstallPlan,
-        check_legacy_text,
-        json_bytes,
-        managed_files,
-        plan_block,
-        read_file,
-        safe_path,
-    )
+    from .managed_install import InstallPlan, managed_files
     from .user_scope import (
         INVARIANTS_UNIT, MACHINE_PROFILE, WHOLE_BOOT, UserScope, boot_text, reread_line, round_one_line,
     )
 except ImportError:
-    from managed_install import (
-        InstallConflict,
-        InstallPlan,
-        check_legacy_text,
-        json_bytes,
-        managed_files,
-        plan_block,
-        read_file,
-        safe_path,
-    )
+    from managed_install import InstallPlan, managed_files
     from user_scope import (
         INVARIANTS_UNIT, MACHINE_PROFILE, WHOLE_BOOT, UserScope, boot_text, reread_line, round_one_line,
     )
@@ -62,6 +41,7 @@ WRITER_ROLES = {
     "spec-text-drift-batch",
     "security",
 }
+# Markers of the Codex AGENTS.md boot block the retired installer wrote (managed_install.SHARED_BLOCKS).
 START = "<!-- FORGE-CODEX-BOOT:START -->"
 END = "<!-- FORGE-CODEX-BOOT:END -->"
 
@@ -75,28 +55,12 @@ _TAIL = (
 )
 
 
-def refresh_line(framework: str, target: str) -> str:
-    """The installed entry's own refresh, as the first call of the Codex boot (AC-13: `git pull` in the
-    checkout is the update). target "" refreshes the machine installation, "." the project."""
-    command = f"python3 -B {shlex.quote(framework + '/scripts/forge_install.py')} --refresh" + (f" {target}" if target else "")
-    return (
-        f"First call, on its own and before the boot reads: run `{command}`. It brings the installed\n"
-        "Forge entries up to the checkout's commit; its result does not change the boot.\n\n"
-    )
-
-
 def boot_instructions(
     framework: str, scope: UserScope | None = None, *, profile: str = MACHINE_PROFILE,
-    refresh: str | None = None,
 ) -> str:
-    """Codex boot entry. scope=None stays person-neutral (roles, project blocks);
-    only home-level blocks receive a scope (framework/user-scope.md), and only
-    they name the profile. refresh names the installed entry's refresh call
-    (refresh_line): "" in the home block, "." in a project install's override
-    block; None (roles, positional project blocks) adds none."""
+    """Codex boot entry. scope=None stays person-neutral (the generated roles);
+    a scope (framework/user-scope.md) names the profile (the Codex eval arm)."""
     head = "Forge framework root: " + framework + "\n\n"
-    if refresh is not None:
-        head += refresh_line(framework, refresh)
     if scope is None:
         return (
             head
@@ -220,180 +184,21 @@ def generate_roles(repo: Path, framework_root: Path | None = None) -> dict[str, 
     return desired
 
 
-def plan_boot(
-    plan: InstallPlan,
-    root: Path,
-    framework: Path,
-    *,
-    scope: UserScope | None = None,
-    profile: str = MACHINE_PROFILE,
-    filename: str = "AGENTS.md",
-    refresh: str | None = None,
-) -> None:
-    """Codex wrapper: `<root>/<filename>` block. Pass a scope only for ~/.codex."""
-    path = safe_path(root) / filename
-    plan_block(
-        plan,
-        path,
-        path.with_name(".forge-codex-boot.json"),
-        START,
-        END,
-        boot_instructions(str(framework), scope, profile=profile, refresh=refresh),
-    )
-
-
-def plan_codex(
-    plan: InstallPlan,
-    codex_home: Path,
-    agents_home: Path,
-    framework: Path,
-    *,
-    skills: dict[str, str],
-    scope: UserScope | None,
-    profile: str = MACHINE_PROFILE,
-    roles: bool | list[str] = True,
-    legacy_roles: dict[str, set[str]] | None = None,
-    legacy_skills: dict[str, str] | None = None,
-    legacy_skill_hashes: dict[str, set[str]] | None = None,
-) -> None:
-    """The one planner for the Codex home surfaces (setup-codex.sh, forge_install.py).
-
-    roles=False removes previously owned roles instead of installing them.
-    `skills` maps kebab name -> wrapper content.
-    """
-    agents = codex_home / "agents"
-    if roles:
-        desired_roles = generate_roles(framework, framework)
-        if isinstance(roles, list):
-            missing = set(roles) - {Path(name).stem for name in desired_roles}
-            if missing:
-                raise ValueError(f"selected method roles unavailable: {sorted(missing)}")
-            desired_roles = {name: text for name, text in desired_roles.items() if Path(name).stem in roles}
-        managed_files(
-            plan, agents, desired_roles, legacy_hashes=legacy_roles
-        )
-    elif read_file(agents / ".forge-managed.json") is not None:
-        managed_files(plan, agents, {})
-    managed_files(
-        plan,
-        agents_home / "skills",
-        {f"{name}/SKILL.md": content for name, content in skills.items()},
-        legacy=legacy_skills,
-        legacy_hashes=legacy_skill_hashes,
-    )
-    check_legacy_text(codex_home / "AGENTS.md", START, END)
-    # Only the home-level block is person-specific; project blocks stay neutral.
-    plan_boot(plan, codex_home, framework, scope=scope, profile=profile, refresh="")
-    if roles:
-        plan_hook_cleanup(plan, codex_home, framework)
-
-
-def obsolete_hook(hook: object, framework: Path) -> bool:
-    if not isinstance(hook, dict) or hook.get("type") != "command":
-        return False
-    command = hook.get("command")
-    if not isinstance(command, str):
-        return False
-    for script in ("session-start-remote.sh", "buddy-boot-inject.sh"):
-        legacy = "bash ${CLAUDE_PROJECT_DIR}/orchestrators/claude-code/hooks/" + script
-        if command == legacy:
-            return True
-        target = str(framework / "orchestrators/claude-code/hooks" / script)
-        # The former installer emitted unquoted paths, including spaces.
-        if command == f"bash {target}":
-            return True
-        try:
-            if shlex.split(command) == ["bash", target]:
-                return True
-        except ValueError:
-            return False
-    return False
-
-
-def plan_hook_cleanup(plan: InstallPlan, root: Path, framework: Path) -> None:
-    path = safe_path(root) / "hooks.json"
-    original = read_file(path)
-    if original is None:
-        return
-    data = json.loads(original)
-    if not isinstance(data, dict) or not isinstance(data.get("hooks", {}), dict):
-        raise InstallConflict(f"invalid hooks structure: {path}")
-    changed = False
-    for event, groups in data.get("hooks", {}).items():
-        if not isinstance(groups, list):
-            raise InstallConflict(f"invalid hook event: {path}: {event}")
-        remaining = []
-        for group in groups:
-            if not isinstance(group, dict) or not isinstance(group.get("hooks"), list):
-                raise InstallConflict(f"invalid hook group: {path}: {event}")
-            hooks = group["hooks"]
-            filtered = [hook for hook in hooks if not obsolete_hook(hook, framework)]
-            if filtered != hooks:
-                changed = True
-                group["hooks"] = filtered
-            remaining.append(group)
-        data["hooks"][event] = remaining
-    if changed:
-        plan.add(path, json_bytes(data), expected=original)
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--repo", type=Path, default=Path(__file__).resolve().parents[1]
     )
-    parser.add_argument("--output-root", type=Path)
+    parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--framework-root", type=Path)
-    parser.add_argument("--install", action="store_true")
     parser.add_argument("--check", action="store_true")
-    parser.add_argument("--migrate-legacy", action="store_true")
-    parser.add_argument(
-        "--codex-home",
-        type=Path,
-        default=Path(os.environ.get("CODEX_HOME", "~/.codex")),
-    )
-    parser.add_argument(
-        "--agents-home",
-        type=Path,
-        default=Path(os.environ.get("AGENTS_HOME", "~/.agents")),
-    )
-    parser.add_argument("projects", type=Path, nargs="*")
     args = parser.parse_args(argv)
     repo = args.repo.resolve()
     plan = InstallPlan()
     try:
-        if args.install:
-            if args.output_root or args.framework_root:
-                raise ValueError("--install derives framework paths from --repo")
-            # Every host installation uses the coordinated activation boundary.
-            # This legacy entry preserves argument spelling and exit-code family.
-            try:
-                from . import forge_install
-            except ImportError:
-                import forge_install
-            forwarded = ["--profile", MACHINE_PROFILE] + (["--check"] if args.check else [])
-            forwarded += ["--migrate-legacy"] if args.migrate_legacy else []
-            forwarded.extend(str(project) for project in args.projects)
-            previous = {key: os.environ.get(key) for key in ("CODEX_HOME", "AGENTS_HOME")}
-            try:
-                os.environ["CODEX_HOME"] = str(safe_path(args.codex_home))
-                os.environ["AGENTS_HOME"] = str(safe_path(args.agents_home))
-                return int(forge_install.main(forwarded, framework=repo) != 0)
-            finally:
-                for key, value in previous.items():
-                    if value is None:
-                        os.environ.pop(key, None)
-                    else:
-                        os.environ[key] = value
-
-        else:
-            if args.output_root is None or args.projects:
-                raise ValueError(
-                    "generation requires --output-root and accepts no projects"
-                )
-            managed_files(
-                plan, args.output_root, generate_roles(repo, args.framework_root)
-            )
+        managed_files(
+            plan, args.output_root, generate_roles(repo, args.framework_root)
+        )
         changes = plan.changes()
         if not args.check:
             plan.apply()

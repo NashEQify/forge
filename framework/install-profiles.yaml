@@ -1,32 +1,14 @@
 # Capability composition and required source closure. Optional selection is installer-owned.
 version: 1
 profiles:
-  # placement: where the installation lives. project: one named project only (its .claude/ and
-  # AGENTS.override.md, nothing in HOME); machine: every session of the machine (HOME surfaces).
-  # The boot entry list is the same for both and lives in scripts/user_scope.py (ENTRY_UNITS).
-  project:
-    description: 'The app-building discipline in one named project only: Buddy as the main agent and the
-      roles there, the boot entry from this checkout, no user scope. Nothing outside the project changes.'
-    placement: project
-    required_paths: &id002
-    - agents
-    - framework
-    - scripts
-    - skills
-    - workflows
-    - orchestrators
-    - .claude
-    capabilities: &id003
-    - continuity
-    - bedrock
-    - council
-    - frame
-    - development
+  # placement: where the installation lives. machine: every OpenCode session of the machine (HOME
+  # surfaces). Claude Code and Codex take Forge as a plugin and have no profile here.
+  # The boot entry list lives in scripts/user_scope.py (ENTRY_UNITS).
   full-ai-integration:
-    description: 'Buddy in every session of the machine, with knowledge and continuity across projects
-      (the user scope), all roles, skills, hooks and launchers, the project discipline included.'
+    description: 'Buddy in every OpenCode session of the machine, with knowledge and continuity across
+      projects (the user scope), the oc launcher and the OpenCode configuration, the project discipline
+      included.'
     placement: machine
-    codex_roles: true
     skills: all
     entries:
       save:
@@ -37,8 +19,20 @@ profiles:
         source: workflows/runbooks/context_housekeeping/WORKFLOW.md
         description: Review and reconcile context ownership, routes and freshness using common continuity.
           Use when the user requests context housekeeping.
-    required_paths: *id002
-    capabilities: *id003
+    required_paths:
+    - agents
+    - framework
+    - scripts
+    - skills
+    - workflows
+    - orchestrators
+    - .claude
+    capabilities:
+    - continuity
+    - bedrock
+    - council
+    - frame
+    - development
 capability_sets:
   continuity:
     skills:
@@ -147,14 +141,11 @@ installation_required_paths:
 - framework/work-principle.md
 - framework/install-profiles.yaml
 - scripts/forge_install.py
-- scripts/project_install.py
 - scripts/install_activation.py
 - scripts/managed_install.py
 - scripts/capability_closure.py
 - scripts/generate_codex_agents.py
 - scripts/generate_skill_wrappers.py
-- scripts/setup-codex.sh
-- scripts/setup-cc.sh
 - scripts/setup-oc.sh
 reference_classification:
   historical_prefixes:

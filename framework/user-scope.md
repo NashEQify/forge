@@ -1,6 +1,6 @@
 # User scope — who the user is, on every machine
 
-forge serves one person per machine installation (`full-ai-integration`). Everything that is about
+forge serves one person per machine (the plugin's user switch or the OpenCode `full-ai-integration` installation). Everything that is about
 that person — their soul (how Buddy works with them), their values and
 profile, the facts about them — lives in **their own user repository**, not
 in the framework. The framework knows only where that repository is; the
@@ -17,19 +17,19 @@ is the SoT for that contract. Consumers: `agents/buddy/boot.md`,
 ```yaml
 version: 1
 user_repo: /absolute/path/to/the/users/repo   # required
-profile: full-ai-integration                  # installer
+profile: full-ai-integration                  # OpenCode installer
 skill_links: []                               # optional, installer: external skill dirs
 maintenance: coordinated                      # optional, installer: the developer path
 buddy: every-session                          # optional, plugin on Claude Code: Buddy in every session
 ```
 
-The `full-ai-integration` installer writes it (`forge_install.py --profile
-full-ai-integration --user-repo PATH`; on a terminal it asks once for the folder
+The OpenCode installer writes it (`forge_install.py --profile
+full-ai-integration --host opencode --user-repo PATH`; on a terminal it asks once for the folder
 when no setting exists, and `--create-user-repo` creates the folder with
 `context/user/profile.md` and `navigation.md`). `user_repo` is the only
 per-person value; `profile`, `skill_links` and `maintenance` describe the
-machine's installation, not the person. The `project` install never reads,
-asks for or writes this setting: a project session has no user scope.
+machine's installation, not the person. Without `user.yaml` (a plugin session under a
+project's activation line only), a project session has no user scope.
 
 The plugin (§5) reads this setting at session start; whenever Buddy starts,
 under the project's activation line as under the user switch, it resolves the
@@ -134,18 +134,15 @@ stay inside `<user_repo>`.
 
 ## 5. Install profiles
 
-`framework/install-profiles.yaml` — `project` (Forge in one named project:
-the boot entry, Buddy as the main agent and the roles there; no user scope)
-and `full-ai-integration` (Buddy in every session of the machine with the user
-scope, all roles, skills, hooks and launchers). Both entries name the same
-units (`scripts/user_scope.py` `ENTRY_UNITS`), and the active project's
-intent selects the workflow in both (`framework/workflow-selection.md`). The
-profile selects where Forge is installed and whether a user scope exists; it
-never changes who the user is.
+`framework/install-profiles.yaml` — `full-ai-integration`, the machine
+installation for OpenCode (Buddy in every session of the machine with the user
+scope, all roles, skills, hooks and launchers). The active project's intent
+selects the workflow (`framework/workflow-selection.md`). The profile selects
+where Forge is installed and whether a user scope exists; it never changes who
+the user is.
 
-The plugin is the third way Forge is placed, beside the two installer
-profiles: the host's plugin manager (Claude Code, Codex) installs this
-repository's plugin (`.claude-plugin/`), and Buddy starts under the
-activation line or the user switch (§1). Its entry names the profile
+The plugin is how Forge is placed on Claude Code and Codex: the host's plugin
+manager installs this repository's plugin (`.claude-plugin/`), and Buddy starts
+under the activation line or the user switch (§1). Its entry names the profile
 `plugin`, which is no `user.yaml` profile; on Claude Code the plugin's
 SessionStart hook carries it, on Codex the `forge:boot` skill prints it.

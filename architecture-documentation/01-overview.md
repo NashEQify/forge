@@ -136,10 +136,10 @@ lists each one, its source, what changed and the Forge file that holds it. The r
 
 ## What's in the box
 
-Forge ships one distribution with two installation profiles. `project`, the
-default, puts Forge into one named folder and changes nothing outside it.
-`full-ai-integration` puts Buddy into every session of the machine and adds a
-personal context folder, so knowledge and open work carry across projects. Both
+Forge ships as one plugin for Claude Code and Codex. One committed line in a
+project's `AGENTS.md` starts Buddy in that project and changes nothing outside it;
+one user setting starts Buddy in every session of the machine and adds a personal
+context folder, so knowledge and open work carry across projects. Both
 make the same methods available: knowledge maintenance, save, the reasoning methods
 and the development tooling. Availability does not select a software workflow.
 

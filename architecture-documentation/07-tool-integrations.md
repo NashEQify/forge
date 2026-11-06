@@ -12,40 +12,28 @@ The consumer workspace remains the active CWD and retains its own rules.
 
 | Host | Main entry mechanism | Integration boundary |
 |---|---|---|
-| Codex | Managed AGENTS boot blocks (a project's `AGENTS.override.md`; on the machine installation `~/.codex/AGENTS.md`), generated roles and skill wrappers | Fresh-session loading, discovery and effective permissions need verification |
-| Claude Code | Project settings and role wrappers (`project`); configured SessionStart, discovery links and the `cc` launcher (`full-ai-integration`) | Hooks depend on configured entrypoints; host access rules still apply |
-| OpenCode | `oc` launcher and generated configuration (`full-ai-integration` only) | Wrapper and configuration loading need host verification |
-| Cursor | Project rules referring to canonical sources | Rules-based adapter, outside the coordinated host installer |
+| Codex | The plugin's `forge:boot` skill, asked for by the `AGENTS.md` activation line | Boot and `save` checked from the public marketplace; fresh-session loading, discovery and effective permissions still need verification per machine |
+| Claude Code | The plugin: listed skills and roles, and a SessionStart hook that boots Buddy where the activation line or the user switch asks | Checked on Claude Code 2.1.302 (CLI); hooks depend on the entrypoint; host access rules still apply |
+| OpenCode | `oc` launcher and generated configuration (the installer, `full-ai-integration` only) | Wrapper and configuration loading need host verification |
+| Cursor | Project rules referring to canonical sources | Rules-based adapter, outside the plugin and the installer |
 
-The shared installer coordinates managed Codex, Claude Code and OpenCode plans for
-the assistants chosen with `--host` or found installed. All named setup scripts
-forward to it; `setup-codex.sh` does not mean Codex-only installation. [Installation](05-installation.md) contains the commands and activation
-procedure. This page explains the runtime differences.
+The plugin serves Claude Code and Codex; the installer now serves OpenCode only.
+[Installation](05-installation.md) contains the commands and the activation lines. This
+page explains the runtime differences.
 
 ## Claude Code
 
-Canonical personas have Claude wrappers under `.claude/agents/`. Skill wrappers
-provide discovery and forward to the real skill. A project install writes role
-wrappers and `.claude/settings.local.json` (Buddy as the main agent and the
-SessionStart hooks) into the project only. The `full-ai-integration` installation
-prepares managed user-level discovery, settings and a launcher.
-Do not assume every supported generation uses identical symlink layouts.
+The plugin lists its skills and the six read-only roles the host can enforce; every
+other role and skill is reached by path from the framework tree and runs as a general
+agent reading its role file. The plugin's SessionStart hook runs on start, resume and
+compaction and boots Buddy only where the project's `AGENTS.md` carries the activation
+line or the user switch is on; it yields to a leftover machine or project entry so
+Buddy boots once. It is Claude-specific, not a hook for other hosts.
 
-The `cc` launcher resolves a framework root and retains the consumer CWD unless a
-scope is supplied. `framework` and `forge` select the framework checkout; other
-names resolve under `PROJECTS_DIR` and require `intent.md`. `FRAMEWORK_DIR` and
-`PROJECTS_DIR` can be configured. `CC_DEBUG=1` prints the resolved invocation.
-
-The launcher provides file context and Buddy entry. File access and role discovery
-are separate concerns. A path being readable does not prove that its instruction
-files or subagent wrappers were loaded.
-
-Configured Claude SessionStart scripts support the refresh, boot and remote-session
-entry. They are Claude-specific, not universal hooks for other hosts. The refresh
-brings installed entries up to the checkout's commit after a `git pull`; it never
-pulls. On the coordinated maintenance path, shared source updates other than
-instruction-only Markdown use stopped-session maintenance; boot must not
-independently pull and reinstall the framework.
+File access and role discovery are separate concerns. A path being readable does not
+prove that its instruction files or subagent wrappers were loaded, and a plugin user
+needs two `Read` allow rules (plugin root, user repository) to avoid a prompt on every
+boot read.
 
 ## OpenCode
 
@@ -63,17 +51,12 @@ Do not infer host parity from shared Markdown or from the existence of the launc
 
 ## Codex
 
-The installer generates roles from neutral `agents/*.md` definitions and installs
-skill discovery wrappers. Default destinations are `~/.codex/agents/` and
-`~/.agents/skills/`; supported environment overrides are described in installation.
-
-Managed boot blocks in the Codex home AGENTS file and supplied consumer AGENTS
-files identify the framework and selected boot. A project install writes only the
-block, into the project's `AGENTS.override.md`, which names the project's
-`AGENTS.md` as the project rules; it installs no Codex roles or skill wrappers.
-That Codex reads the override file and runs the block's refresh line first is not
-yet verified on Codex. The primary session follows that
-entry even without an explicitly selected Buddy role. Delegated roles follow their
+The plugin carries the skills, including `forge:boot`, and no roles; roles run as
+general agents reading their role file. The activation line in the project's
+`AGENTS.md` (or in `~/.codex/AGENTS.md` for every session) asks Codex to run the boot
+skill. Codex copies a local plugin into its cache, so an edit in a checkout needs a
+refresh there. The primary session follows the boot entry even without an explicitly
+selected Buddy role. Delegated roles follow their
 own canonical role rather than repeating primary-session bookkeeping.
 
 Codex's writable workspace can retain a read-only `.git`, including linked-worktree

@@ -55,10 +55,8 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 
 try:
-    from .codex_legacy import legacy_hashes
     from .managed_install import InstallPlan, managed_files
 except ImportError:
-    from codex_legacy import legacy_hashes
     from managed_install import InstallPlan, managed_files
 
 try:
@@ -653,10 +651,7 @@ def main(argv: list[str] | None = None) -> int:
             plan = InstallPlan()
             managed_files(plan, output_root,
                           {f"{name}/SKILL.md": content for name, content in desired.items()},
-                          legacy=legacy,
-                          legacy_hashes=(legacy_hashes("skills")
-                                         if args.migrate_legacy and args.tool_label == "Codex"
-                                         else None))
+                          legacy=legacy)
             changes = plan.changes()
             if not args.check:
                 plan.apply()

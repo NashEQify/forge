@@ -71,14 +71,14 @@ synchronizes its files; inspect that consumer's rules before making a transport 
 
 | Claim or question | Authority |
 |---|---|
-| The `project` and `full-ai-integration` profiles and their closure | [Profiles](../framework/install-profiles.yaml), [closure helper](../scripts/capability_closure.py) |
-| The entry units both profiles name | [User-scope resolver](../scripts/user_scope.py) (`ENTRY_UNITS`) |
-| Current CLI and managed host plans | [Shared installer](../scripts/forge_install.py), its `--help` output |
-| The project install and its removal | [Project installer](../scripts/project_install.py) |
-| Setup aliases use the shared coordinator | [setup-cc](../scripts/setup-cc.sh), [setup-codex](../scripts/setup-codex.sh), [setup-oc](../scripts/setup-oc.sh) |
+| The `full-ai-integration` profile (OpenCode) and its closure | [Profiles](../framework/install-profiles.yaml), [closure helper](../scripts/capability_closure.py) |
+| The entry units the boot names | [User-scope resolver](../scripts/user_scope.py) (`ENTRY_UNITS`) |
+| Current CLI and the OpenCode host plan | [Installer](../scripts/forge_install.py), its `--help` output |
+| The plugin package, its hook and its release check | [Manifest](../.claude-plugin/plugin.json), [hook](../orchestrators/claude-code/plugin-hooks.json), [release check](../scripts/plugin_release_check.py) |
+| The OpenCode setup alias uses the coordinator | [setup-oc](../scripts/setup-oc.sh) |
 | Baseline, activation, retry and rollback | [Activation contract](../framework/installation-activation.md), [implementation](../scripts/install_activation.py) |
 | Codex roles and boot entries | [Codex generator](../scripts/generate_codex_agents.py) |
-| Claude launcher and OpenCode launcher | [cc](../orchestrators/claude-code/bin/cc), [oc](../orchestrators/opencode/bin/oc) |
+| OpenCode launcher | [oc](../orchestrators/opencode/bin/oc) |
 | Cursor rules-based support | [Cursor adapter](../orchestrators/cursor/README.md) |
 | Commit-time checks and advisory limits | [Git hook](../orchestrators/claude-code/hooks/pre-commit.sh) |
 | Mechanical versus protocol enforcement | [Enforcement registry](../framework/enforcement-registry.md) |

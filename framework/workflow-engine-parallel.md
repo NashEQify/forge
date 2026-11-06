@@ -6,7 +6,7 @@ state.
 
 ## Parallel workflows (instance resolution + agent scope)
 
-`.workflow-state/` is per-checkout, so two `cc` sessions (or a build + a fix) on
+`.workflow-state/` is per-checkout, so two Buddy sessions (or a build + a fix) on
 the same repo share it. The engine is instance-aware so a parallel workflow's
 files never bleed into the wrong place:
 

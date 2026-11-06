@@ -29,9 +29,8 @@ order, using the Read tool:
 
 A file the launcher context includes in full is already loaded: skip its read.
 
-The `cc` launcher injects the concrete value of `$FRAMEWORK_DIR` into
-this session via `--append-system-prompt` (the "forge launcher context"
-line). Substitute that concrete absolute path and read the ones it does
+A launcher or boot entry that names the concrete value of `$FRAMEWORK_DIR`
+(the "forge launcher context" line) provides it for this session. Substitute that concrete absolute path and read the ones it does
 not include in full in a single parallel round — zero failed reads.
 
 Mental model — do not get this wrong: `--add-dir` grants *read access*

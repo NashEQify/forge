@@ -9,10 +9,10 @@ them all.
 A **capability** is an independently usable responsibility: knowledge and
 continuity, general reasoning, or software development.
 
-An installation **profile** controls placement. `project` puts Forge into one
-named folder; `full-ai-integration` puts it into every session of the machine,
-with a personal context folder (the user scope). Both supply the same capabilities.
-Neither profile defines the purpose of the current conversation.
+Where Forge is active is a switch, not an installation: one line in a project's
+`AGENTS.md` starts Buddy in that project, and a user setting starts it in every
+session of the machine, with a personal context folder (the user scope). Both supply
+the same capabilities. Neither defines the purpose of the current conversation.
 
 A **workflow selection** comes from project intent or explicit development
 invocation. On-demand projects use their own working rules and explicitly requested

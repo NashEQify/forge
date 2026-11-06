@@ -1,27 +1,21 @@
 #!/usr/bin/env bash
 # buddy-boot-inject.sh — SessionStart hook that injects Buddy's boot entry.
 #
-# Machine mode (no argument; the full-ai-integration installation's
-# ~/.claude/settings.json): non-terminal entrypoints only. The terminal cc
-# launcher injects buddy-boot via --agent buddy + --append-system-prompt
-# FRAMEWORK_INJECT; claude-desktop / claude-web run plain `claude` without
-# those flags, so this hook recreates the inject as SessionStart
-# additionalContext for them.
-#
-# Project mode (--project; a project install's .claude/settings.local.json):
-# every entrypoint, no user scope (the machine setting is not read). One Buddy
-# per session: it emits nothing when the machine-wide hook is configured in
-# ~/.claude/settings.json (a machine installation made after the project one).
-#
 # Plugin mode (--plugin; the Forge plugin's orchestrators/claude-code/
 # plugin-hooks.json): Claude Code only (CLAUDE_CODE_ENTRYPOINT set; Codex runs
 # plugin hooks too and boots through the activation line instead), every
-# entrypoint, yielding to the machine-wide hook like project mode. It passes the
-# SessionStart payload to the resolver, which prints nothing unless Buddy is
-# active: the project's AGENTS.md carries the activation line, or the user
-# switch is on (framework/user-scope.md §1). If python3 fails, the activation
-# line alone is checked here (the user switch is not read) and the static entry
-# is emitted only when it is found.
+# entrypoint. It yields to a leftover hook entry of an older install (a
+# ~/.claude/settings.json or project settings file that names this script): one
+# Buddy per session. It passes the SessionStart payload to the resolver, which
+# prints nothing unless Buddy is active: the project's AGENTS.md carries the
+# activation line, or the user switch is on (framework/user-scope.md §1). If
+# python3 fails, the activation line alone is checked here (the user switch is
+# not read) and the static entry is emitted only when it is found.
+#
+# Machine mode (no argument): non-terminal entrypoints only (claude-desktop /
+# claude-web), the machine-scope entry as SessionStart additionalContext. The
+# eval harnesses (scripts/eval_engagement.py, eval_engagement_direct.py) run it
+# this way; no installer wires it into a settings file any more.
 #
 # Self-resolves FRAMEWORK_DIR via own location, so it works even when
 # CLAUDE_PROJECT_DIR is unset (which is the default in claude-desktop).
@@ -41,21 +35,13 @@ if [ "${1:-}" = "--plugin" ]; then
     cat > /dev/null 2>&1 || true
     exit 0
   fi
-  # Yield to the machine-wide hook: one Buddy per session.
-  if [ -n "${HOME:-}" ] && grep -qs 'buddy-boot-inject\.sh' "$HOME/.claude/settings.json"; then
-    cat > /dev/null 2>&1 || true
-    exit 0
-  fi
-elif [ "${1:-}" = "--project" ]; then
-  SCOPE_ARGS=(--project)
-  # Yield to the machine-wide hook: one Buddy per session.
+  # Yield to a leftover machine-wide hook entry: one Buddy per session.
   if [ -n "${HOME:-}" ] && grep -qs 'buddy-boot-inject\.sh' "$HOME/.claude/settings.json"; then
     cat > /dev/null 2>&1 || true
     exit 0
   fi
 else
-  # Gate: only non-terminal entrypoints. cc-terminal already boots via
-  # --agent buddy; firing this would double-inject.
+  # Gate: only non-terminal entrypoints; a terminal session boots through the plugin.
   case "${CLAUDE_CODE_ENTRYPOINT:-}" in
     claude-desktop|claude-web) ;;
     *) exit 0 ;;
@@ -129,7 +115,7 @@ if command -v timeout >/dev/null 2>&1; then
   RESOLVER=(timeout -k 0.5 1.5 "${RESOLVER[@]}")
 fi
 if [ "$MODE" = "plugin" ]; then
-  # Yield to a project install's hook (the project's .claude/settings.json or
+  # Yield to a leftover project hook entry (the project's .claude/settings.json or
   # settings.local.json configures this script): one Buddy per session.
   if project="$(plugin_project_dir)" \
     && grep -qs 'buddy-boot-inject\.sh' "$project/.claude/settings.json" "$project/.claude/settings.local.json"; then

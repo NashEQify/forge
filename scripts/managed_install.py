@@ -570,11 +570,13 @@ def plan_json_fragment_removal(
 # check, scripts/install_activation.py). A file another writer also edits (the host, the user) is compared by
 # Forge's part only; every other file keeps whole-file identity (owned_part returns None for it).
 
-# ~/.claude/settings.json: the top-level keys the machine install sets from settings.json.template.
+# No installer writes the next two any more (Claude Code and Codex take Forge as a plugin). They stay so an
+# installation journal from before the retirement still compares those targets by Forge's part.
+# ~/.claude/settings.json: the top-level keys the retired machine install set (its hooks).
 CLAUDE_SETTINGS_KEYS = ("hooks",)
-# The marker-delimited text blocks Forge writes into an instruction file a user also edits: the Codex boot
-# block (generate_codex_agents.START/END) in ~/.codex/AGENTS.md and a consumer project's AGENTS.md, and the
-# Claude boot block (forge_install.CLAUDE_START/END) of a daily installation's ~/.claude/CLAUDE.md.
+# The marker-delimited text blocks the retired installers wrote into an instruction file a user also edits: the
+# Codex boot block (generate_codex_agents.START/END) in ~/.codex/AGENTS.md and a consumer project's AGENTS.md,
+# and the Claude boot block of ~/.claude/CLAUDE.md.
 SHARED_BLOCKS = {
     "AGENTS.md": ("<!-- FORGE-CODEX-BOOT:START -->", "<!-- FORGE-CODEX-BOOT:END -->"),
     "CLAUDE.md": ("<!-- FORGE-CLAUDE-BOOT:START -->", "<!-- FORGE-CLAUDE-BOOT:END -->"),

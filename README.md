@@ -79,70 +79,54 @@ with credit:
 
 ## Install and remove
 
-You need Git, Bash (Linux, macOS, or WSL on Windows), Claude Code or Codex, and
-Python 3.10 or newer with PyYAML (`python3 -m pip install pyyaml`). The session-start
-hooks call plain `python3`, so PyYAML must be available to that interpreter, not only
-inside a virtual environment.
+You need Claude Code or Codex, Git, Bash (Linux, macOS, or WSL on Windows) and Python
+3.10 or newer with PyYAML (`python3 -m pip install pyyaml`). The boot hook calls plain
+`python3`, so PyYAML must be available to that interpreter, not only inside a virtual
+environment.
+
+Forge is one plugin for both hosts. Add it from the Forge repository:
 
 ```bash
-git clone https://github.com/NashEQify/forge ~/forge
-python3 ~/forge/scripts/forge_install.py --check ~/my-app   # lists what it would write, writes nothing
-python3 ~/forge/scripts/forge_install.py ~/my-app           # installs into that project
+claude plugin marketplace add NashEQify/forge
+claude plugin install forge@forge --scope user
 ```
 
-This installs Forge into one project folder (`~/my-app` is an example) and changes
-nothing outside it. It writes Buddy's settings and one short role entry per agent
-under `.claude/`, the Codex entry `AGENTS.override.md`, and a record of what it wrote.
-In a Git project these paths go into `.git/info/exclude`, so they are never committed.
-The entries point at the checkout, so keep `~/forge` where it is. Without `--host
-claude-code` or `--host codex`, it sets up whichever of `claude` and `codex` is on your
-`PATH`.
+On Codex the commands are `codex plugin marketplace add NashEQify/forge` and `codex
+plugin add forge@forge`. The plugin adds eleven skills and six read-only roles; it does
+not start Buddy by itself.
 
-The installer writes nothing and names the reason when it would collide with
-something: the folder is a subfolder of a Git repository (install at its top level),
-your settings already set another agent, Git already tracks a path it would write,
-an `AGENTS.override.md` of your own exists, or the machine has the profile below.
+**Buddy in one project.** Commit this line in the project's `AGENTS.md`:
 
-Then start your assistant in that folder:
-
-```bash
-cd ~/my-app && claude    # or: codex
+```text
+Forge: start Buddy. Before the first answer, run the forge:boot skill and follow the boot entry it returns.
 ```
 
-Claude Code asks once whether you trust the folder; Forge's settings apply after you
-say yes. Buddy's first reply opens with a line naming the machine, the time and the
-folder; if the assistant answers without it, Forge did not load. On the first start
-Buddy writes the project's goal into `intent.md` with you; every later step works from
-it.
+Start your assistant in that folder. Buddy's first reply opens with a line naming the
+machine, the time and the folder; if the assistant answers without it, Forge did not
+load. On the first start Buddy writes the project's goal into `intent.md` with you;
+every later step works from it. A teammate who clones the project gets the same
+behaviour once they add the plugin.
 
-Host limits: a Claude Code session in the cloud works from the committed files only,
-so it starts without Forge. On Codex, start at the project's top level (a start in a
-subfolder loads Forge but skips its update); the entry tells Codex to read your own
-`AGENTS.md` as the project rules, and a role can be missing by name in a fresh Codex
-home, in which case Buddy runs a general agent with that role's instructions.
+**Buddy in every session (optional).** On Claude Code, set `buddy: every-session` in
+`~/.config/forge/user.yaml`, which also names a folder of personal context (who you are,
+how you work, open topics) that carries across projects. On Codex, add the same
+activation line as above to `~/.codex/AGENTS.md`; the personal-context folder is still
+named in `user.yaml`.
 
-**Remove:**
+**Remove:** `claude plugin uninstall forge@forge --scope user` and `claude plugin
+marketplace remove forge` (on Codex `codex plugin remove forge@forge` and `codex plugin
+marketplace remove forge`), then delete the `AGENTS.md` line (and the line in `~/.codex/AGENTS.md`) and the `buddy:` setting.
 
-```bash
-python3 ~/forge/scripts/forge_install.py --remove ~/my-app
-```
+Checked so far: Claude Code on two machines, one with a local checkout as the
+marketplace (boot, roles, resume, knowledge maintenance, removal) and one with the public
+marketplace; Codex with the public marketplace (boot, user scope, knowledge maintenance).
+An update to a newer version is not checked yet. A Claude Code session in the
+cloud works from committed files only, and plugin users need two `Read` allow rules to
+avoid a prompt on every boot. OpenCode has no plugin; it installs through
+`scripts/forge_install.py --profile full-ai-integration --host opencode`.
 
-It deletes what the install wrote. If you changed one of those files since, it stops,
-names the file and deletes nothing.
-
-**Update:** `git -C ~/forge pull`. The next session start brings the installed entries
-up to the new version.
-
-**Buddy in every session (optional).** A second profile, `full-ai-integration`, starts
-Buddy in every session on the machine and keeps a folder of personal context (who you
-are, how you work, open topics) that carries across projects. It writes into your home
-folder, and it is the only route for OpenCode. Preview it with `--profile
-full-ai-integration --user-repo ~/forge-context --create-user-repo --check`; remove it
-with `--profile full-ai-integration --remove`.
-
-The [installation guide](architecture-documentation/05-installation.md) lists every
-path both profiles write, the cases where the installer refuses, and how removal treats
-files you changed.
+The [installation guide](architecture-documentation/05-installation.md) has the details,
+the allow rules and the OpenCode route.
 
 ## A run on real code
 

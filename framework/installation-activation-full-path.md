@@ -21,7 +21,7 @@ rollback.
    hand-moving skills. Missing sparse sources may be supplied safely within the normal
    procedure or produce a recoverable preflight failure before integration changes.
 
-Boot and remote SessionStart hooks must not independently pull/setup the framework.
+Boot hooks must not independently pull/setup the framework.
 They report the maintenance need and use this procedure. Consumer-only Git updates
 still follow their own authorization and preservation rules.
 
@@ -73,7 +73,7 @@ thin forwards to canonical contracts. Full availability does not select developm
 Apply within the established window. Validate actual installed entrypoints, source
 fingerprint, profile, configuration and selected closure. Use a fresh session for the
 installed generation: normal entry, relevant retrieval, capture/save/resume, and exact
-selected development continuation where applicable. For the fresh acceptance session, use `cc --forge-validation-operation <UUID>` or
+selected development continuation where applicable. For the fresh acceptance session, use
 `oc --forge-validation-operation <UUID>` with the exact pending operation. This
 checks the fully applied source/integration generation without marking ordinary
 sessions ready. An incorrect ID, partial application or changed source refuses entry.

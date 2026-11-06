@@ -1,14 +1,15 @@
 # Coordinated installation activation
 
-Canonical shared source/update/install/recovery procedure. One release and installer
-serve all profiles and users.
+Canonical shared source/update/install/recovery procedure of the OpenCode machine
+installation (`full-ai-integration`, host `opencode`). Claude Code and Codex take
+Forge through the plugin and its own update, not through this installer.
 
 **Which machines this procedure governs.** On the user path, `git pull` in the
-checkout is the update: each session start runs `forge_install.py --refresh`,
+checkout is the update: each `oc` start runs `forge_install.py --refresh`,
 which brings the installed entries to the checkout's commit. On a
 `full-ai-integration` machine an install refuses, a refresh skips and readiness
-fails while tracked non-Markdown sources have uncommitted changes. The project install (`project`) always takes the user path, and so does a
-`full-ai-integration` installation by default, including one made with an earlier
+fails while tracked non-Markdown sources have uncommitted changes. A
+`full-ai-integration` installation takes the user path by default, including one made with an earlier
 version. The procedure below governs a
 machine whose setting records `maintenance: coordinated` (opt-in with
 `--coordinated`, for changing Forge's own sources) and a checkout without a Git
@@ -25,14 +26,14 @@ installer inventory); still unclear → full path.
 
 **Light path — instruction-only.** Every changed path is Markdown at an existing
 owner that hosts read directly from the framework root: `framework/`, `skills/`,
-`workflows/` runbook text, `agents/` (Claude Code reads it through
-`~/.claude/agents` → `.claude/agents` → `agents/`), the root adapters `CLAUDE.md`
+`workflows/` runbook text, `agents/` (the plugin and the OpenCode installation
+read it from the checkout), the root adapters `CLAUDE.md`
 and `AGENTS.md`, `orchestrators/` rule text, and project docs. Steps: edit in the
 framework root; when skill frontmatter or the skill inventory changes, regenerate
 the derived wrappers (`scripts/generate_skill_wrappers.py`, then `--check`) and
 the generated navigation; run the router check
 (`scripts/generate_workflow_router.py --check`), the consistency check and the read-only
-`scripts/forge_install.py --profile full-ai-integration --check` (closure preflight; it also lists stale
+`scripts/forge_install.py --profile full-ai-integration --host opencode --check` (closure preflight; it also lists stale
 installed copies); commit under the repository's commit rules. No prepare, journal operation, install or
 fresh-session validation. Between operations the installer accepts drift of
 recorded `.md` sources, lists it as `instruction_drift` in `--maintenance
@@ -51,16 +52,13 @@ permission, a scheduler lock, editor swap files) count as unrecorded sources
 too, so readiness refuses until the file is removed or a full-path operation
 records it.
 
-**Installed copies.** Codex reads role bodies from installed copies
-(`~/.codex/agents/*.toml`, generated from `agents/<role>.md` by
-`scripts/generate_codex_agents.py`) and skill wrappers from `~/.agents/skills`.
-The `full-ai-integration` profile links Claude's `~/.claude/skills` and
-`~/.claude/agents` to the checkout; a project install's role wrappers in
-`<project>/.claude/agents/` copy each role's name, description and tool limits.
-A light change to a role body or to skill frontmatter reaches those copies only
-through the next install (`--check` lists them); record those hosts as not yet
-activated for it, or use the full path
-when Codex use depends on it.
+**Installed copies.** The plugin reads the checkout it was installed from; a
+change reaches a plugin session through the plugin's own update. The OpenCode
+installation (`full-ai-integration`, host `opencode`) links skills and roles to
+the checkout; a light change to a role body or to skill frontmatter reaches
+installed copies only through the next install (`--check` lists them); record
+that host as not yet activated for it, or use the full path when OpenCode use
+depends on it.
 
 **Full path — everything else.** Scripts, hooks, launchers, host settings and
 integrations, the installer, workflow definitions and compatibility mappings,
@@ -76,12 +74,12 @@ source (full path), §One activation owner, §Install and verify, §Failure, ret
 
 ## Owned boot blocks
 
-The installer owns marker-delimited boot blocks (`FORGE-CODEX-BOOT` in `AGENTS.md`
-and in a project's `AGENTS.override.md`; a `FORGE-CLAUDE-BOOT` block in
-`~/.claude/CLAUDE.md` from an older installation is only removed) through hash state
+The installer owns marker-delimited blocks (older installations left a
+`FORGE-CODEX-BOOT` block in `AGENTS.md` / `AGENTS.override.md` and a
+`FORGE-CLAUDE-BOOT` block in `~/.claude/CLAUDE.md`; they are only removed) through hash state
 files and byte snapshots in the install plan. Continuity publication refuses the home copies under `.codex/` and
 `.claude/` as reserved paths; a project `AGENTS.md` is a shared file that continuity
-may write, and the block hash keeps install authority over the block (an edited
+may write, and the block hash keeps install authority over a block (an edited
 block refuses the next install). Text before and after a block, including Unicode
 and CRLF line endings, survives create, replace and remove; removal returns the
 outer text (keeping one line break where outer text without a final newline is

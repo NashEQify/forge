@@ -6,9 +6,10 @@ and reasoning methods also work without selecting a software workflow. Keep work
 1. Read the [overview](../architecture-documentation/01-overview.md) to choose the
    capability you need.
 2. Follow [installation](../architecture-documentation/05-installation.md): the
-   `project` install puts Forge into one folder (the default);
-   `full-ai-integration` puts Buddy into every session of the machine, with a
-   personal context folder.
+   plugin (Claude Code, Codex) starts Buddy in a project whose `AGENTS.md` carries
+   the activation line, or in every session with the user switch; the OpenCode
+   `full-ai-integration` installation puts Buddy into every session of the
+   machine, with a personal context folder.
 3. Open a fresh agent session in your workspace and verify that its project rules,
    configured user scope and relevant context are actually loaded.
 4. Describe the work. For ordinary use start with the

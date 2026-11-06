@@ -58,8 +58,8 @@ on Claude Code and the `forge:boot` skill on Codex) names who and where: the res
 start procedure, the user repo and the install profile. It states the
 §Restricted user scope rule. Where its carrier has room, it also includes
 whole files: the resolved soul and `operational.md` (an install-time block
-includes none: its files change without a reinstall). A `project` install
-has no user scope: its entry names Forge's soul.
+includes none: its files change without a reinstall). A plugin session under a project's
+activation line without `user.yaml` has no user scope: its entry names Forge's soul.
 An included file is loaded; it needs no read at boot. Without an entry,
 resolve by reading the machine setting. The soul read in bootstrap is the **resolved**
 soul (default `agents/buddy/soul.md`). Never fall back to another person's

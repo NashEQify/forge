@@ -1,9 +1,9 @@
 # Capability ownership and composition
 
-One repository/distribution, installer and release carries three independently
-usable capabilities. Physical folders are not the capability boundary. The install
-profile (`project` or `full-ai-integration`) places them; it does not select a
-software workflow.
+One repository/distribution, plugin and release carries three independently
+usable capabilities. Physical folders are not the capability boundary. The plugin
+(Claude Code, Codex) or the OpenCode machine installer (`full-ai-integration`)
+places them; neither selects a software workflow.
 
 | Capability | Owns | Depends on |
 |---|---|---|

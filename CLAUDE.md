@@ -59,19 +59,14 @@ A heads-up alone is not permission. See process-map.md, Authorization.
 Shared git hooks and host-specific boot integration. Presence of a script
 does not prove that a host invokes it.
 
-SessionStart on configured Claude entrypoints (not Codex):
-- `forge-refresh` — runs first: `forge_install.py --refresh` brings the
-  installed entries up to the checkout's commit after a `git pull`. It never
-  fails a start.
-- `buddy-boot-inject` — triggers the Buddy boot sequence where `--agent
-  buddy` isn't an explicit flag (claude-desktop / claude-web; in a project
-  install's settings, every entrypoint). Load-bearing for boot.
-- `session-start-remote` — remote Claude entry only: observes coordinated
-  maintenance readiness with `--maintenance status --require-ready`. It does
-  not update sources, install, or resume workflows; resume follows boot discipline.
+SessionStart on Claude Code, from the plugin (`orchestrators/claude-code/plugin-hooks.json`):
+- `buddy-boot-inject --plugin` — triggers the Buddy boot sequence where the
+  project's `AGENTS.md` carries the activation line or the user switch
+  (`buddy: every-session` in `~/.config/forge/user.yaml`) is on; it yields to a
+  leftover machine or project entry so Buddy boots once. Load-bearing for boot.
 
-Codex boots through the explicit managed AGENTS entry from
-`scripts/forge_install.py`. Additional-directory access or a Buddy role file
+Codex boots through the plugin's `forge:boot` skill, asked for by the same
+activation line in `AGENTS.md`. Additional-directory access or a Buddy role file
 alone does not establish that framework instructions were loaded.
 
 git pre-commit (5 checks, 3 BLOCK + 2 WARN; CG-CONV runs in commit-msg, the
@@ -103,4 +98,4 @@ Everything else is carried by discipline, not hooks:
   `workflow_engine.py --boot-context` on demand.
 
 <!-- Source of truth for what's wired:
-orchestrators/claude-code/settings.json.template. -->
+orchestrators/claude-code/plugin-hooks.json. -->

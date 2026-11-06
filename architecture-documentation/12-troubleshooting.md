@@ -17,10 +17,9 @@ change the environment of every desktop host. Follow [installation prerequisites
 Exit 1 means changes are planned; exit 2 indicates a reported conflict or error.
 Read the paths and error text before applying. A preview is read-only and does
 not complete installation.
-Use the shared installer's current `--help`; old host-specific setup flags may no
-longer exist because all setup aliases now forward to the coordinator. Without
-`--profile`, the installer installs into one named project and needs that folder
-as its argument; a machine-wide check needs `--profile full-ai-integration`.
+This applies to the OpenCode installer: use its current `--help`. It takes
+`--profile full-ai-integration --host opencode`; the `project` profile and the hosts
+`claude-code` and `codex` are retired and refused with a message naming the plugin.
 
 ### Managed file, directory or symlink conflict
 
@@ -32,18 +31,21 @@ Do not delete host directories, replace symlinks by hand or remove ownership
 manifests as a general workaround. `--migrate-legacy` recognizes only specific
 byte-identical legacy content; it is not a force-overwrite option.
 
-### The project install refuses
+### The plugin did not load or Buddy did not start
 
-The message names the reason, and nothing was written. The
-[installation guide](05-installation.md#install-into-one-project-project) lists
-each case. A machine with the `full-ai-integration` installation needs no project
-install: Buddy already runs in every session there.
+Check `claude plugin list` (or `codex plugin list`, with input from `/dev/null`) for
+`forge@forge`. Buddy starts only where the project's `AGENTS.md` carries the activation
+line, or the user switch is on (Claude Code: `buddy: every-session` in
+`~/.config/forge/user.yaml`; Codex: the line in `~/.codex/AGENTS.md`); without either
+the plugin only lists its skills. If `env.FRAMEWORK_DIR` is set in
+`~/.claude/settings.json`, the boot's status probe reads that checkout instead of the
+plugin root. A prompt on every boot read means the two `Read` allow rules are missing
+([installation](05-installation.md#switch-buddy-on)).
 
-### The installed entries did not follow a `git pull`
+### The OpenCode entries did not follow a `git pull`
 
 The session start's refresh skips with one line when it may not run. Run
-`python3 ~/forge/scripts/forge_install.py --refresh` (machine) or `--refresh
-<project>` by hand and read that line. On the machine installation, uncommitted
+`python3 ~/forge/scripts/forge_install.py --refresh` by hand and read that line. On the machine installation, uncommitted
 changes to tracked non-Markdown files in the checkout stop it until they are
 committed or discarded; a machine on the coordinated maintenance path never
 refreshes and follows [updating on that path](05-installation.md#updating-on-this-path).
@@ -72,16 +74,9 @@ reconstruct an old generation from wrappers alone. Use
 
 ## Host entry problems
 
-### `cc` cannot resolve a project scope
-
-Named scopes resolve under `PROJECTS_DIR` and require `intent.md`; `framework` and
-`forge` are built-in scopes. Check the intended directory and configuration.
-Running from the consumer directory without a scope preserves that CWD.
-For ambiguous names, use the exact matching name or enter the intended directory.
-
 ### Buddy did not load the intended instructions
 
-Check the actual host entry: Codex managed AGENTS block, configured Claude boot,
+Check the actual host entry: the plugin's activation line or user switch,
 OpenCode launcher/configuration, or Cursor project rules. Verify the framework root,
 consumer CWD and selected profile in a fresh session. Access to a directory does
 not prove that its instructions loaded. Buddy runs the whole start before its first
