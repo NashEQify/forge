@@ -89,7 +89,8 @@ It follows [INSTALL.md](INSTALL.md): adds the plugin on the hosts it finds, asks
 Buddy should run in this project only or in every session (and, for every session, where
 your personal context lives), writes the settings itself and checks that a fresh session
 starts Buddy. Later, `forge:setup` changes the scope or removes Forge ("switch Buddy on
-for every session", "remove Forge").
+for every session", "remove Forge"). Checked with Claude Code as the agent (it installed
+for both hosts); Codex as the agent receiving this request is not checked yet.
 
 You need Claude Code or Codex, Git, Bash (Linux, macOS, or WSL on Windows) and Python
 3.10 or newer with PyYAML (`python3 -m pip install pyyaml`). The boot hook calls plain

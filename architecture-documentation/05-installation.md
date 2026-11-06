@@ -14,6 +14,11 @@ checks that a fresh session opens with Buddy's orientation line. Nobody edits a 
 `forge:setup` skill changes the scope later or removes Forge, and the plugin's other skills offer it once when they
 run where Buddy is off.
 
+What the live proof showed: Claude Code as the agent, on a machine with Forge taken off, installed the plugin for
+Claude Code and Codex from that one request, asked the scope question, set up each scope, changed it back, made the
+offer once, and removed Forge again through the agent, with fresh sessions checked after each step. Not shown: Codex
+as the agent receiving the request, a fresh Codex session after the setup, the desktop apps, and macOS or WSL.
+
 The rest of this page is the reference: what the agent runs, and how to do it by hand.
 
 ## The plugin
