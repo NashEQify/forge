@@ -54,9 +54,13 @@ regular files and explicit authority inputs; a missing file is an error. `slots`
 producer with roles `reviewer|chief|verification|discourse`. `history` lists earlier reports or decisions given
 as context, as exact `{path, sha256}` pairs. A code-family request adds
 `"code_diff":{"base":"<full commit>","roots":["."],"exclude_files":[],"exclude_prefixes":[".workflow-state","docs/reviews"]}`:
-the subject is the baseline-to-worktree candidate under the roots (committed, staged, unstaged and
-non-ignored untracked changes, deletions as absent endpoints). Exclusions are literal project-relative paths
-for declared output and state carriers; a reviewed input under an exclusion is refused.
+the subject is the baseline-to-worktree candidate under the roots (committed, staged, unstaged and non-ignored
+untracked changes, deletions as absent endpoints). Exclusions are literal project-relative paths for declared output
+and state carriers; a reviewed input under an exclusion is refused. `exclude_files` names single files. Each
+`exclude_prefixes` entry names an existing directory and matches whole path components: it covers the files below
+that directory, not a sibling whose name only starts with the same letters; capture refuses a prefix that names no
+existing directory, such as a file-name stem, before any dispatch. Create a declared output directory, such as
+`docs/reviews`, before the capture.
 
 The subject holds each file's raw-byte sha256 and Git mode and, for code, every changed path's before and after
 endpoint. `review_subject_digest` is the SHA-256 of
@@ -67,7 +71,8 @@ Repeating a capture on the same subject keeps the run and the iteration. An iden
 changed request (for example an added slot) replaces it and moves any adoption into `adoption_history`, because
 the earlier decision does not cover the new request. A changed subject is refused: run `--retry STEP --id WORKFLOW --reason …`, which
 reopens the owner, moves the old record into retry history and advances the iteration, then capture again
-before the applicable review. Do not list as reviewed input a file that the close itself rewrites (the task
+before the applicable review. A correction before any producer ran keeps the iteration: its reason starts with
+`capture-correction:` (`framework/workflow-engine-cookbook.md` §Iteration cap and review rounds). Do not list as reviewed input a file that the close itself rewrites (the task
 YAML); the close-time check would report the subject noncurrent.
 
 ### 9.3 Reports

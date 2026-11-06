@@ -46,7 +46,7 @@ ESCALATE. Self-service runs entirely inside the agent, no hand-off.
 next-pass reviewer/MCA MUST follow `_protocols/fix-brief-template.md`
 whenever pass N reports ≥1 MAJOR/HIGH, a cluster touching >1 file, or
 a loose-phrased recommendation. Mandatory sections: phrase-check,
-scope-bound (files + LOC cap + trigger-stop), explicit out-of-scope.
+scope-bound (files + stop limit for product code and tests), explicit out-of-scope.
 The risk is loose phrasing, not missing line numbers — pointer
 precision without phrase discipline produces overcorrection.
 

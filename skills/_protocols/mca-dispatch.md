@@ -2,9 +2,10 @@
 
 Read it before every main-code-agent dispatch with a brief: every dispatch except DIRECT work that closes in its turn
 (`framework/direct-eligibility.md` §The DIRECT run), which carries its record in the prompt. Read it also before
-adopting such a dispatch's return, and, as the implementer, before changing code for a fix brief. It decides where the brief and the report live, what the
-dispatch prompt holds, which implementer takes a fix pass, how it answers each finding of a fix brief and what the
-return holds. The consumers
+adopting such a dispatch's return, and, as the implementer, before the first change (§The size limit),
+before changing code for a fix brief and before the return. It decides where the brief and the report live, what the
+dispatch prompt holds, which implementer takes a fix pass, how it answers each finding of a fix brief, when the
+implementer stops on size and what the return holds. The consumers
 are the implementer, who works from the brief file, and Buddy and the review seat, who work from the report. The cost
 it prevents: a brief that exists only as a prompt, so no reviewer, fix brief or resume can open it; a dispatch that
 repeats the brief; and a return whose full detail fills Buddy's context although the review seat reads it anyway.
@@ -77,33 +78,42 @@ pass of its own.
 
 ## A fix brief's findings
 
-A fix brief carries, per finding, its verified row (`skills/_protocols/finding-verification.md`: the outcome occurs at
-the reviewed bytes) and its cause entry (`skills/_protocols/fix-brief-template.md` §Section 5). The implementer does
-not check the row again. It checks the change the brief asks for, since a real outcome can still be given a wrong
-change. Per finding, before making its change:
+As the implementer, before changing code for a fix brief: read and follow
+`skills/_protocols/mca-dispatch-fix-findings.md` (per finding: check the briefed change, then one `applied`,
+`pushed back` or `unclear` row under `## Findings received`).
 
-1. Name the row's outcome and the one change the brief asks for. When the brief names no change for the finding, or
-   two, the result is `unclear`.
-2. Read what the lines that change touches guarantee: their callers, the tests that pin them, the rule or spec item
-   the brief cites. Check that the change removes the outcome by the row's route and that each guarantee still holds.
-3. Record one result per finding of the brief's Section 5 that this pass fixes, none merged or skipped, in the report
-   file under `## Findings received`:
+## The size limit
+
+The brief states a product-code limit and a test limit (`skills/_protocols/mca-brief-template.md` §Stop limit; in a
+fix brief, `scope_bound.stop_limit`). After each commit, and after each test run when the brief forbids commits (new
+files first marked with `git add -N`), the implementer runs `git diff --stat BASE -- <the brief's product paths>`, with
+BASE from the dispatch file's first line, and takes the changed lines (insertions plus deletions) from its last line.
+When they reach the product-code limit, the implementer stops: no further change, the report with that diffstat and
+the remaining work, and the short return `PARTIAL` with the Concerns line
+`product-code limit reached: <n> of <limit> lines`. The test limit stops nothing; a test diff above it is the Concerns
+line `test limit exceeded: <n> of <limit> lines`. A brief without limits gets the Concerns line
+`no stop limit in the brief`, and nothing is measured.
+
+## Tests still failing at the return
+
+The implementer changes no test the skeleton return lists (its assertions or its fixtures) at any point of the
+dispatch. When a test the brief requires to pass still fails at the return, the report has one row per failing TC under
+`## Still-failing tests`:
 
 ```markdown
-| Finding | Result | Evidence | Instead / question |
+| TC | Failing assertion | Class | Why this class |
 |---|---|---|---|
-| <id> | applied / pushed back / unclear | <applied: the test or command on the changed code that shows the outcome gone (a read only for a change to text no test runs); pushed back: path:lines or command output showing that the brief's change leaves the outcome or breaks a named guarantee> | <pushed back: `nothing`, or the change made instead, the check that shows the outcome gone and its undo; unclear: the question and what each reading would change; applied: `—`> |
+| <id> | <file:line, expected and actual as the run printed them> | product / oracle / fixture | <the brief or spec item, or the observed setup fact, that decides it> |
 ```
 
-- **applied:** the brief's change is made, and Evidence names its check. A change that differs from the brief's is
-  not `applied`.
-- **pushed back:** the brief's change is not made. A change is made instead only inside the brief's scope bound and
-  out-of-scope list, with its check and undo; otherwise Instead reads `nothing`.
-- **unclear:** no change is made for the finding.
+- **product:** the code does not do what the brief or spec item the TC tests requires.
+- **oracle:** the code does what that item requires, and the expected value or the assertion contradicts the item or
+  another test the brief requires.
+- **fixture:** the setup (data, patches, clock, host, the test's own instrumentation) does not reach the TC's
+  precondition, or itself produces the effect the TC measures.
 
-Each finding gets its own result; a `pushed back` or `unclear` row does not stop the others. Each such row makes the
-short return's Status `PARTIAL` and is one Concerns line: `<id> pushed back: <evidence>` or `<id> unclear:
-<question>`.
+Each row is one Concerns line `<TC> <class>: <assertion>`, and the Status is `PARTIAL`. Buddy routes the rows before
+any ruling (`mca-dispatch.md` §The return, step 2).
 
 ## The return
 
@@ -117,7 +127,14 @@ the report under `## Re-dispatch <n>`. Buddy then:
    `BLOCKED`: Concerns holds the remaining work or the blocker), on each Concerns line (a discovery goes to
    `knowledge_processor`, a test written but not run is run before adoption), on a `SPEC_VERIFICATION: NEEDED`
    line, and on each `pushed back` or `unclear` row under `## Findings received`, which gets a ruling before step 3
-   (`skills/convergence_loop/cause-before-answer.md` §Ruling on a pushed-back finding);
+   (`skills/convergence_loop/cause-before-answer.md` §Ruling on a pushed-back finding), and on each
+   `## Still-failing tests` row before any ruling on it:
+   - an oracle or fixture row on a test the skeleton return lists goes back to the skeleton writer with the row and
+     the spec item it cites (`agents/test-skeleton-writer.md` §Repair of a failing test);
+   - an oracle or fixture row on a test the skeleton return does not list gets Buddy's ruling;
+   - a product row, a row the repair returns as `stands`, and a `repaired` test that still fails are the
+     implementer's open work for a re-dispatch;
+   - a row the repair returns as `spec conflict` gets Buddy's ruling;
 3. builds the review package (`skills/code_review_board/review-package.md`) and hands it, the brief path and the
    report path to the review owner; `skills/code_review_board/SKILL.md` decides which seat receives which input. A
    fix brief is written from the report and the review, not from the short return.

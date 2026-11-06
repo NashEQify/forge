@@ -109,6 +109,13 @@ intended change. Retain the command, observed failure and reason. Missing fixtur
 skipped placeholders, unrelated import errors or `assert False` do not establish
 that witness. Unavailable prerequisites remain unverified, not RED.
 
+A RED whose only failure is that the interface under test does not exist yet (an
+import, attribute or name error, or a missing key, for the module, function or field
+the change adds) shows that the behaviour is missing; it does not test the
+assertion's expected value or the fixture. The skeleton return lists each such TC as
+`oracle unverified`, with the missing interface, apart from the REDs that reached an
+assertion.
+
 Existing regression tests, positive controls and already-satisfied behavior may
 pass; retain and explain them rather than making them fail. Investigate an
 unexpected pass for supposedly missing behavior: the behavior may already exist or

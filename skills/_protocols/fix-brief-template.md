@@ -100,22 +100,19 @@ when the brief author legitimately needs a universal quantifier (e.g. the
 reviewer finding genuinely is "all X in the file"), quote + rationale make
 the exception explicit so it doesn't normalize silently.
 
-### Section 2: Scope bound (reference + LOC cap)
+### Section 2: Scope bound (reference + stop limit)
 
 Self-correction signal for the reviewer/MCA. Brief explicitly contains:
 
 ```yaml
 scope_bound:
   files:        ["<file1:section>", "<file2:lines-X-Y>"]   # concrete locators
-  loc_cap:      "<N> lines changed total expected"          # +/-30% acceptable
-  loc_rationale: "<why N — based on which clusters/findings>"
-  trigger_stop: "if LOC > <1.5N>: STOP + escalate to Buddy"
+  stop_limit:   {product_paths: [<glob>], product_lines: <N>, test_paths: [<glob>], test_lines: <M>}  # mca-brief-template.md §Stop limit
+  loc_rationale: "<why N and M — based on which clusters/findings>"
 ```
 
-The LOC cap is a plausibility gate, not a hard limit. If the reviewer/MCA
-needs more than 1.5x cap, that signals either bad scope estimation by the
-author OR overcorrection in flight. Both cases want a user decision, not
-silent expansion.
+Reaching the product limit (measured per commit, `mca-dispatch.md` §The size limit) signals bad scope estimation or
+overcorrection in flight; both want Buddy's decision, not silent expansion.
 
 ### Section 3: Explicit out-of-scope (bleed risk)
 
@@ -202,9 +199,9 @@ A reviewer/MCA receiving a fix brief with all 3 mandatory sections:
 1. **Read the phrase check:** if `present-justified` is declared, the
    reviewer/MCA knows the brief author deliberately quantified loosely —
    don't push interpretation further.
-2. **Respect the scope bound:** the file list is a hard bound. The LOC cap
-   is a plausibility bound — if exceeded, STOP + escalate, do not silently
-   expand.
+2. **Respect the scope bound:** the file list is a hard bound. The product-code
+   limit is the stop: measured after each commit, and at it STOP + escalate
+   (`mca-dispatch.md` §The size limit); do not silently expand.
 3. **Honour out-of-scope:** explicit out-of-scope is HARD. The reviewer/MCA
    only addresses those entries if Buddy explicitly amends the brief.
 
@@ -235,7 +232,7 @@ Mitigation:
 1. **Phrase-check `present-justified` without quote** = invalid. The quote
    block is mandatory so the author cannot normalize the exception silently.
 2. **Scope bound without LOC rationale** = invalid. `loc_rationale` forces
-   the author to explain why N — no magic numbers.
+   the author to explain why N and M — no magic numbers.
 3. **Out-of-scope without `why_close`** = invalid. The author has to name
    the bleed mechanism — otherwise the entry is not declaratively
    verifiable.

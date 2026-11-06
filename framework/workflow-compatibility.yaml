@@ -122,3 +122,17 @@ mappings:
   - upgrade
   review_status: accepted
   preserved_obligations: framework/workflow-compatibility.md
+- workflow: build
+  prior: 8c7b03b9cec0b66762b5c0d022c39c2d836885ed39d8116764139bb1652d604e
+  current: a640d947bea6cb8b09068b7d90e6051a17d2263b69d6021adc15f5d09e72b494
+  allowed_directions:
+  - upgrade
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility.md
+- workflow: build
+  prior: a640d947bea6cb8b09068b7d90e6051a17d2263b69d6021adc15f5d09e72b494
+  current: ec0d9ab05460add3ed994348767f3ddbf10899f701884fa446619cbac28f08b2
+  allowed_directions:
+  - upgrade
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility.md

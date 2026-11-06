@@ -46,7 +46,8 @@ Before any substantive work:
 
 - Existing implementation code under `src/`.
 - MCA's notes, plans, checkpoints.
-- Output of other agents.
+- Output of other agents. The repair rows of §Repair of a failing test are your input there: a test result, not a
+  note.
 
 ## TC scope (optional, for incremental implementation)
 
@@ -109,6 +110,8 @@ Without a TC scope: every TC.
    passing controls, regressions and already-satisfied behavior; investigate an
    unexpected pass for supposedly missing behavior. Report skipped/unavailable
    prerequisites and unrelated errors separately; they are not RED witnesses.
+   A RED whose only failure is the missing interface under test goes under
+   `Oracle unverified`, not under meaningful failures.
    Preservation/refactor cases demonstrate the unchanged contract without
    fabricating a failure.
 8. Reference-oracle check (when the plan names a reference oracle):
@@ -123,14 +126,32 @@ Without a TC scope: every TC.
 Pre-fix test assessment done.
 Tests: {N} written.
 Meaningful pre-fix failures: {R; TC IDs, commands and reasons}.
+Oracle unverified: {U; TC IDs whose only failure is the missing interface under test, and that interface}.
 Passing controls/regressions/already-satisfied behavior: {P; TC IDs and reasons}.
 Skipped/unverified: {S; TC IDs and blockers}. Unexpected errors: {E; details}.
 Reference-oracle disagreements: {none | n/a (no reference) | list TC → expected vs reference}
-Files:
+Files (new and rewritten; for a rewritten file, the tests in it you changed):
   - tests/{spec_name}/test_{group1}.py
   - tests/{spec_name}/test_{group2}.py
   - tests/{spec_name}/conftest.py
 ```
+
+## Repair of a failing test
+
+Input: rows of an implementer's `## Still-failing tests` table classed `oracle` or `fixture`
+(`skills/_protocols/mca-dispatch.md` §Tests still failing at the return), each with the spec item the TC tests.
+Context isolation still holds: read the rows, the spec, the test plan and the tests, not the implementation. A setup
+fact a row states (a clock source, a host check) is a run observation you may use; you do not open the code to
+confirm it.
+
+Per row, check the TC's assertion and fixture against that item alone:
+
+- **The item supports the row:** change the oracle or the fixture so the TC tests the item, run the TC, and report
+  `repaired: <what changed>; <passes | fails: assertion>`.
+- **The item supports the test as written:** change nothing; report `stands: <the item's sentence>`.
+- **Two items the TC depends on contradict each other:** change nothing; report `spec conflict: <both items>`.
+
+Return one line per TC in that form.
 
 ## Infra constraints
 

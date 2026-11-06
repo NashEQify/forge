@@ -42,7 +42,8 @@ footprint: <paths changed, estimated>; new: <what another unit will call, read o
 - **Intent gaps** are the points that pass the two tests of `skills/return_summary/SKILL.md` §Decisions I took for
   you, applied before the work. A request that conflicts with a standing rule leaves its point open. Mark a point
   `asked` when `framework/process-map.md` §Authorization names a reason to ask; a `settled` point goes on the
-  decisions list.
+  decisions list. When the measurement shows stored data, a history or a capability unused, whether to keep it is an
+  `asked` point: its scope is the owner's decision, and a technical default does not settle it.
 - **Irreversibles** has two parts: the safety floors the change touches (`framework/direct-eligibility.md`), listed
   whatever their undo, and what the change's own undo cannot take back.
 

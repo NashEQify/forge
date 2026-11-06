@@ -10,9 +10,9 @@
     "board-ux-heuristic.toml": "3118fb8e425ab2aef5bcbe16d61622877068f93d5bac252b588b645ed70631b9",
     "board-ux-ia.toml": "b9fc320dbce2ee8c49ba03cd570acdee76e1856dd2ecbff51159f5f7ad78f9cf",
     "board-ux-interaction.toml": "716491cd47fd8c3b4dc2f644b29cabc11acbf435b0a1826f3e8dc40cebb9e84f",
-    "brief-architect.toml": "54e92610eaa460e519cd765d4927ca2648560df3b4933951395e3160b41960ba",
+    "brief-architect.toml": "95f29af900d4e5f3ca7b2a4a5fd35f547bc082cfac877f9a6144d5e5a7ab31ff",
     "buddy-thinking.toml": "7d7d5d4109776f9d2e5615fcd89531868c9af86e74fb25ce1abc295c57527c48",
-    "buddy.toml": "40c0675214403043aec4c460970f92ec4e9da0df8fd479e794b89cc152771258",
+    "buddy.toml": "ba3154f23f0c9ceecf57ff4a7af6cb7765d3f96f06dcdccbda7fb41acdca2cac",
     "close-retro.toml": "70d537b1cc61c635b4c85d050e2574e759219d23e0aeec226c4b7996eeaab1d7",
     "code-adversary.toml": "eae9a32fa7bd3fd2b3fef4da3b0739b43644580c042ed1e16c555feea3e1de18",
     "code-ai-llm.toml": "532b97e6a8b22b23ccdb400d8f13078571694d9525a84b89668c23c779cb3676",
@@ -32,14 +32,14 @@
     "council-adversary.toml": "d205b87be598e5e96d4741e383d4ee5da96c75a265ad43bd6b686d18ec4143e4",
     "council-chief.toml": "e536be100c4836c9682aa0c15d827be97f15af774ccccf463e758376b59df84d",
     "council-member.toml": "ad2d44e4710789191f4d905d376bbd400cfd0dfa601a76b9a1e07825ee07fe6f",
-    "main-code-agent.toml": "46c0034b614001097b226ff0aadfa4c76fbabde7dab0b2c7ced82c6ef4922fb4",
+    "main-code-agent.toml": "48ecdb950afbf53d59d15f0c718162a237893f3c6fe906cd2cdf45ac903b7361",
     "plan-adversary.toml": "6e27fa724e933cfffd97b560be96b0bac87c3fef6ff386e9202ba7837834bd84",
     "security.toml": "f93c2ee87309e7aa31ddcbc5170636d929918a763cf550a86075fac60d6dd8a8",
     "solution-expert.toml": "5675036b26d6880a91c601d23eb3018648abcacc84c077f7768a7388d76cc3c6",
     "spec-text-drift-batch.toml": "9eeb83cfd10695d70cb3fe8b2032f9420f2cf55b214286a446546ce27c2fe352",
     "spec-verification.toml": "abbadb0099f0143e2272813544775ecc2e1975c64c7193409a125189eb798a80",
-    "test-skeleton-writer.toml": "661439a7bbc25b2409b05a3dd805dd63f39847374c788e0265504674c4967d2f",
-    "tester.toml": "3f214b06df81cb3f3526b3f067dcf48092b6e9f86ebfac74152949975c7dff16"
+    "test-skeleton-writer.toml": "b8c171382789e52de93c51cedf66849585ea0f22dbdcfb294fa39e926ed10d54",
+    "tester.toml": "111d1397af6d6bd021cbc75d116538ebf4d67fc1f484a911c8881cdce1bd3af5"
   },
   "version": 1
 }

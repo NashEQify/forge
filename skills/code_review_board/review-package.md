@@ -16,6 +16,10 @@ covered; and fix-pass bytes that are committed with no review range.
 
 ### BASE
 
+The package and the review capture cover one checkout. From the build workflow's Prepare phase on, the spec and the
+code of one delivery are written on one branch in one checkout; a spec edited in another worktree would have to be
+merged in before the review can start.
+
 Before the change starts, record `BASE: <sha>` from `git rev-parse HEAD` in the checkout where the change is made: as
 the first line of the dispatch file (`skills/_protocols/mca-dispatch.md` §The dispatch) when main-code-agent
 implements, otherwise at the top of the work unit's record, with the full sha. In a checkout other writers share, the
@@ -100,6 +104,19 @@ findings under verification and the fix package's diff; Buddy sorts what the sea
   no fix pass of this loop. When the loop ends, a deferred item with a ruling recorded on the same location and claim
   keeps it; the others are verified and dispositioned once under §5, its rule on pre-existing defects included. One that
   §5 makes fix-now goes to the caller with the verdict as a scope decision, not into another round.
+
+### Persisting a seat's return
+
+When Buddy persists a seat's return, before the Chief or Buddy's consolidation reads it:
+
+1. In the root of the package's checkout, run
+   `python3 "$FRAMEWORK_DIR/scripts/validate_evidence_pointers.py" --strict --repo-root . <return file>` (without
+   `--strict` when the review has no capture under `skills/_protocols/evidence-review-capture.md` §9).
+2. Exit 0: the return is ready for consolidation.
+3. Any other exit: send the seat back with the validator's output verbatim and the instruction to correct only what
+   it names. Persist the corrected return verbatim beside the first, as the slot's current return, and run step 1 on it. A seat that cannot answer
+   is replaced by a fresh cold-start seat in the same slot: adoption needs a passing return for every captured slot
+   (`skills/_protocols/evidence-review-adoption.md` §9.4).
 
 ### The record
 

@@ -136,6 +136,11 @@ steps:
 
       Deep-mode trigger (all 4 must hold): foundation spec, cross-layer impact,
       new subsystem, schema change. On hit → bedrock_drill via frame deep mode.
+
+      An owner answer that retires a capability (drops a feature, a history or
+      stored data): the spec written or amended from it carries the retirement
+      inventory of skills/_protocols/spec-amendment-discipline.md §Retiring a
+      capability.
     skill_ref: skills/frame/SKILL.md
     completion:
       type: manual
@@ -293,7 +298,8 @@ steps:
       pre-fix failure witnesses for intended behavior changes under
       skills/testing/SKILL.md section Meaningful pre-fix witness. Retain valid
       passing controls and regressions; unavailable prerequisites are unverified,
-      not RED. MCA brief includes "all ADV-TC-* MUST pass post-implementation".
+      not RED. A RED that only shows the interface under test is missing is
+      listed in the skeleton return as `oracle unverified`. MCA brief includes "all ADV-TC-* MUST pass post-implementation".
 
       Oracle discipline (testing/SKILL.md): RED skeleton disagreements with
       a named reference oracle are ruled before MCA dispatch; latency ACs on

@@ -82,7 +82,12 @@ has uncommitted changes there); their merge targets do not overlap; and the
 user's working mode allows parallel work. A parallel start of programme tasks
 also needs the confirmation in §Programme order. Cut worktrees outside the
 framework tree: inside it the installer counts their files as unrecorded
-sources and readiness refuses. Otherwise run them in sequence. Each workstream
+sources and readiness refuses. A host that cuts session worktrees inside the
+checkout by default (the Claude desktop app uses `.claude/worktrees/`) gets
+the worktree path from the coordinator, cut beforehand. Otherwise run them in sequence. The spec and the code of one delivery
+are one workstream: from the build workflow's Prepare phase on they live
+on one branch in one checkout, because its review package and capture
+cover one checkout (`skills/code_review_board/review-package.md` §BASE). Each workstream
 commits on its branch, including its close. Inside
 a workstream writers stay sequential; parallel agents only for read-only or
 independent work on different files.
@@ -90,7 +95,10 @@ independent work on different files.
 Integration follows the repository's rules — a pull request and its review
 where the repository uses them, otherwise a merge by the coordinator — one
 branch at a time, with the repository's checks on the branch and on the
-merged result, activation where the change needs it, and push where
+merged result, activation where the change needs it (on a coordinated
+machine, a merge that changes a non-Markdown installed source is a full-path
+activation: prepare before the merge, `framework/installation-activation.md`
+§Choosing the path), and push where
 authorized; then the worktree and branch are removed. Commits in a shared
 checkout go by path (`git commit -- <paths>` or explicit path staging), never
 blanket staging or another owner's staged entries. Before pushing the base

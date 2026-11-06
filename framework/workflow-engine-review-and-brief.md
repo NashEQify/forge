@@ -40,7 +40,9 @@ writes then preserve the subject while a relevant sibling addition invalidates i
 Required reviewed inputs cannot hide under exclusions. Relevant changes require
 existing `--retry STEP --id WORKFLOW --reason ...`, then fresh capture before the
 applicable scoped/full verification. Retry reopens in-progress or terminal work,
-retains prior review in existing retry history and advances existing iteration.
+retains prior review in existing retry history and advances existing iteration; a
+capture correction before any producer ran keeps it (`framework/workflow-engine-cookbook.md`
+§Iteration cap and review rounds).
 Historical reports are not relabelled current or rerun as current evidence.
 
 Mandatory pointer completion adds all three fields together:

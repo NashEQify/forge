@@ -27,7 +27,8 @@ with the class; one that goes to the caller is carried as the verdict's ESCALATE
 mechanism cell placed in another task leaves as that cell's `blocked_by` edge instead (§5 Mechanism-cell floor). None
 leaves without one of the two. A ruling Buddy took here or on a push-back goes on the list of decisions taken for the
 user when that list's two tests hold (`skills/return_summary/SKILL.md` §Decisions I took for you); the verdict holds
-the rest.
+the rest. A workflow-engine retry of the code board step past the engine's iteration cap names this verdict
+(`at-the-cap: <verdict path>`; `framework/workflow-engine-cookbook.md` §Iteration cap and review rounds).
 
 ## Source
 

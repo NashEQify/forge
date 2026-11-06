@@ -88,10 +88,20 @@ schema_version: 1
 - suggested_fix: {concrete suggestion — inline diff if possible}
 ```
 
+The return file starts with the `---` line of its frontmatter; the
+fences around the examples above only display them.
+
 Pointer requirement: every `evidence:` block is a YAML list with at
 least one pointer mapping (4 valid `kind` values: `file_range`,
 `grep_match`, `dir_listing`, `file_exists`). A finding WITHOUT a
 pointer is not a finding — engine check + validator block.
+
+Evidence location: every pointer resolves in the review package's
+checkout, at the bytes under review (`path` relative to its root,
+`quote` as it stands there). Code from another branch, commit or a
+scratch copy goes into the description as `<ref>:<path>:<line>` with
+the quoted text; the finding's `evidence:` cites the checkout's side of
+the claim (the reviewed line it concerns).
 
 At the end: **overall verdict** (PASS / PASS_WITH_RISKS / FAIL) with
 a one-sentence rationale.

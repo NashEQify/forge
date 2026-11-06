@@ -151,7 +151,13 @@ distinction is mechanical-evidence (allowed) vs persona-judgment
 **Pre-board frame check** (Buddy runs before assembling the board
 brief, cold-start):
 - Adversary — FULL review per `agents/code-adversary.md`
-  §Cold-start pre-mission + persona Check focus. One pass.
+  §Cold-start pre-mission + persona Check focus. One pass. When the
+  owning spec has a `§Mechanism-Lifecycle` section, its brief also
+  carries that matrix and the mandate of the §4 re-verify table:
+  attack the **mechanism**, with the whole matrix as context, not only
+  the routes the diff adds; return the coverage table over the
+  invariants and the matrix rows / columns the diff touches (cell ·
+  probe · result). Same seat, same level.
 - Architect-roots (when §1.2 trigger fires) — pattern-purity review
   per `agents/code-architect-roots.md` §Pre-board frame check role.
 
@@ -183,8 +189,10 @@ receive the enriched brief and do normal persona Check focus on it — no
 do NOT read the frame-check artifact (chief-audit surface, not reviewer
 input).
 
-**Board dispatch** (parallel, cold-start): code-review + domain-logic
-+ risk specialists per team composition.
+**Board dispatch** (parallel, cold-start): the rest of the sized §3
+L2 roster, without the frame-check seats: the coverage owner, each
+fired trigger's perspective and the candidates the brief's open
+questions select.
 
 **Code-quote mandate (all reviewers):** every finding AND every
 "verified X" non-finding carries ≥1 verbatim `file:line` quote

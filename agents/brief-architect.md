@@ -279,6 +279,7 @@ outputs differ. Mode-specific notes are inline.
      LD classes); §Scope (in / out / forbidden-adjacent);
      §Expected-Files (prospective list — see below);
      §Defer-Audit (per item: consumer-grep result + rationale);
+     §Stop limit (product code and tests, separately);
      §Test/Verification Scope (DoD per fix-phase: the selected set);
      §RETURN-SUMMARY structure; §Convergence Prediction (PASS-likely
      / FAIL-likely / REVISE-likely-spike / REVISE-likely-user-input).

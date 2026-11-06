@@ -24,7 +24,7 @@ while WF_HAS_PENDING; do
   # For classification steps (mid-flow): --complete --route <key>
   # For skip-eligible: --skip <step-id> [--id <wf>] --reason "<why>"
   # For re-iteration (step has to run again): --retry <step-id> [--id <wf>] --reason "<why>"
-  # Iteration cap defaults to 3, override via --reason "override: <rationale>"
+  # Iteration cap defaults to 3; what it counts and how to cross it: §Iteration cap and review rounds
 done
 
 # Status / recovery / debug:
@@ -35,6 +35,21 @@ python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --abort <wf-id> --reason "..."
 python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --reap [--max-age-hours N] [--dry-run]
 #   --reap archives long-idle stale workflows (default > 168h / 7d; paused never reaped)
 ```
+
+## Iteration cap and review rounds
+
+The engine cap (default 3, or the workflow's `iteration_cap`) counts a step's runs: the first and each counted
+`--retry`. A retry before any producer of the step ran in this iteration (a corrected review capture) is no round:
+its reason starts with `capture-correction:`, the iteration stays, the entry says `counted: false`. The engine cannot
+see dispatch; the claim is Buddy's, refused when the step is not `in_progress` or its review record holds an adopted
+decision (current or in history).
+
+The cap is a backstop. On the code board the skill's limit ends the loop: two re-reviews per mechanism
+(`skills/code_review_board/verdict.md` §5), then the rulings of `skills/convergence_loop/at-the-cap.md`. A retry
+there at the cap names that verdict, `at-the-cap: <project-relative path>`, holding a non-empty `remaining_findings`
+list; free text is refused, and the path and SHA-256 are recorded. Other steps cross the cap with
+`override: <rationale>` (or `override-rationale:`); the spec board's pass limit stays the skill's (`skills/convergence_loop/SKILL.md`
+§Pass-3 termination).
 
 ## Review capture and brief binding
 

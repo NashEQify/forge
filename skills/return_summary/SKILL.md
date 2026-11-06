@@ -161,7 +161,8 @@ Tester: SIGNED OFF (N tests, M new) | NOT SIGNED OFF — <reason>
 
 When the dispatch names a report file (`skills/_protocols/mca-dispatch.md`), write the full return there: the
 RETURN-SUMMARY above with its incident block, then, for a fix brief, the `## Findings received` table
-(`skills/_protocols/mca-dispatch.md` §A fix brief's findings), then the detail a reviewer needs (sites changed, each
+(`skills/_protocols/mca-dispatch.md` §A fix brief's findings), then, when a required test still fails, the
+`## Still-failing tests` table (§Tests still failing at the return), then the detail a reviewer needs (sites changed, each
 command with its exit status and decisive result lines; raw output stays outside,
 `skills/_protocols/evidence-author-claims.md` §8.4).
 Then reply with these lines, in this order, and nothing else:

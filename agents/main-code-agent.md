@@ -62,7 +62,9 @@ A brief for work on a task with acceptance criteria carries
 escalate. Never edit that block; where the rest of the brief reads differently, the
 block counts and the difference goes into your return.
 A fix brief: before changing code for a finding, check its change and record one
-result per finding (`skills/_protocols/mca-dispatch.md` §A fix brief's findings).
+result per finding (`skills/_protocols/mca-dispatch-fix-findings.md`).
+A brief file: before the first change, read and follow `skills/_protocols/mca-dispatch.md`
+§The size limit; before the return, §Tests still failing at the return.
 
 ## Workflow
 

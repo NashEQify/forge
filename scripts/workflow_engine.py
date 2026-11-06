@@ -72,9 +72,10 @@ from scripts.lib.yaml_loader import (  # noqa: E402
 )
 
 
+from scripts.lib.evidence_pointers import _FENCE_RE  # noqa: E402
 from scripts.lib.review_adoption import (  # noqa: E402
     OPTION_FIELDS, POLICIES, ReviewEvaluationError, ReviewRefusal,
-    capture_subject, check_adoption, qualify_decision, validate_adoption_options,
+    capture_subject, check_adoption, check_exclusion_prefixes, qualify_decision, validate_adoption_options,
 )
 
 
@@ -156,9 +157,16 @@ TERMINAL_STEP_STATUSES = {
 FORCE_WARN_THRESHOLD = 2
 MAX_FORCE_PER_WORKFLOW = 10
 
-# Default iteration-cap per step (Item 7 + Item 13). Override via workflow.yaml
-# top-level `iteration_cap: <int>` OR --retry --reason "override-rationale".
+# Default iteration-cap per step (Item 7 + Item 13); workflow.yaml top-level
+# `iteration_cap: <int>` changes it. The cap counts review rounds: every --retry
+# counts except a `capture-correction:` retry before any producer output was
+# adopted. Crossing it takes `override:` / `override-rationale:`; on the code
+# board step it takes `at-the-cap: <verdict path>` instead, a record with a
+# non-empty `remaining_findings` list (skills/convergence_loop/at-the-cap.md).
 DEFAULT_ITERATION_CAP = 3
+CODE_REVIEW_BOARD_SKILL = "skills/code_review_board/SKILL.md"
+_CAPTURE_CORRECTION_RE = re.compile(r"^capture-correction:\s*\S", re.IGNORECASE)
+_AT_THE_CAP_RE = re.compile(r"at-the-cap:\s*(\S+)", re.IGNORECASE)
 
 
 # ---------------------------------------------------------------------------
@@ -431,6 +439,8 @@ def cmd_review(args: argparse.Namespace) -> None:
         if args.review_capture:
             request = json.load(sys.stdin)
             normalized, subject, digest = capture_subject(PROJECT_ROOT, request)
+            # Capture only, before any state is written: an exclusion prefix must name a directory.
+            check_exclusion_prefixes(PROJECT_ROOT, request)
             if step.get("review") is None:
                 if step.get("status") != STATUS_IN_PROGRESS:
                     raise ReviewRefusal("Initial capture requires in_progress owner; cannot backfill completed dispatch")
@@ -2279,6 +2289,70 @@ def skip_step(
     return True, f"Step '{step_id}' skipped: {reason}"
 
 
+def _capture_correction_refusal(step_state: dict[str, Any], current_status: str) -> str | None:
+    """Why the record contradicts a capture-correction claim; None when it does not.
+
+    The engine cannot observe dispatch: the claim is Buddy's, refused where the
+    step is not in_progress or its review record holds adopted producer output.
+    """
+    if current_status != STATUS_IN_PROGRESS:
+        return f"the step is {current_status}, not in_progress"
+    record = step_state.get("review")
+    if isinstance(record, dict) and ("adoption" in record or record.get("adoption_history")):
+        return "its review record holds an adopted decision over producer reports"
+    return None
+
+
+def _at_the_cap_record(reason: str) -> tuple[dict[str, str] | None, str]:
+    """Qualify the `at-the-cap: <path>` ruling record a code-board crossing names.
+
+    Returns ({path, sha256}, "") or (None, failed condition).
+    """
+    import yaml
+
+    match = _AT_THE_CAP_RE.search(reason)
+    if not match:
+        return None, "no at-the-cap reference"
+    written = match.group(1)
+    root = PROJECT_ROOT.resolve()
+    target = (root / written).resolve()
+    if Path(written).is_absolute() or not target.is_relative_to(root):
+        return None, f"path outside the project: {written}"
+    if not target.is_file():
+        return None, f"missing file: {written}"
+    data = target.read_bytes()
+    lines = data.decode("utf-8", errors="replace").splitlines()
+    blocks: list[str] = []
+    if lines and lines[0].strip() == "---":
+        end = next((i for i in range(1, len(lines)) if lines[i].strip() == "---"), None)
+        if end is not None:
+            blocks.append("\n".join(lines[1:end]))
+    fence: tuple[str, bool] | None = None  # (opening marker, is yaml) while inside a fence
+    body: list[str] = []
+    for line in lines:
+        match = _FENCE_RE.match(line)
+        if fence is None:
+            if match:
+                info = match.group(2).split()
+                fence, body = (match.group(1), bool(info) and info[0].lower() in {"yaml", "yml"}), []
+        elif (match and match.group(1)[0] == fence[0][0] and len(match.group(1)) >= len(fence[0])
+              and not match.group(2).strip()):
+            if fence[1]:
+                blocks.append("\n".join(body))
+            fence = None
+        else:
+            body.append(line)
+    for block in blocks:
+        try:
+            parsed = yaml.safe_load(block)
+        except yaml.YAMLError:
+            continue
+        findings = parsed.get("remaining_findings") if isinstance(parsed, dict) else None
+        if isinstance(findings, list) and findings:
+            return {"path": written, "sha256": hashlib.sha256(data).hexdigest()}, ""
+    return None, f"no non-empty remaining_findings in {written}"
+
+
 def retry_step(
     state: dict[str, Any],
     workflow_def: dict[str, Any],
@@ -2288,7 +2362,10 @@ def retry_step(
     """Reopen an in-progress or terminal step using its existing iteration.
 
     Preserve prior review evidence in retry history; pending steps need no retry.
-    Existing iteration caps and structured override reasons remain unchanged.
+    The cap counts review rounds: a `capture-correction:` retry (no producer
+    output adopted yet) keeps the iteration and skips the cap. A counted retry
+    at the cap needs a structured override; on the code board step, the
+    at-the-cap ruling record instead of free text.
     """
     if refusal := _progress_refusal(state):
         return False, refusal
@@ -2313,7 +2390,28 @@ def retry_step(
     # Iteration-cap check (workflow-level override allowed)
     iteration_cap = workflow_def.get("iteration_cap", DEFAULT_ITERATION_CAP)
     iterations = step_state.get("iterations", 1)  # 1 = initial run
-    if iterations >= iteration_cap:
+    counted = not _CAPTURE_CORRECTION_RE.match(reason.strip())
+    at_the_cap: dict[str, str] | None = None
+    step_def = _get_step_def(workflow_def, step_id)
+    if not counted:
+        if refusal := _capture_correction_refusal(step_state, current_status):
+            return False, (
+                f"Step '{step_id}' retry refused as capture correction: {refusal}. "
+                f"A counted retry is needed instead."
+            )
+    elif iterations >= iteration_cap and step_def and step_def.get("skill_ref") == CODE_REVIEW_BOARD_SKILL:
+        # Code board: the skill's per-mechanism limit ends the loop; crossing
+        # the engine cap names the at-the-cap ruling record, not free text.
+        at_the_cap, failed = _at_the_cap_record(reason)
+        if at_the_cap is None:
+            return False, (
+                f"Step '{step_id}' has iterated {iterations}/{iteration_cap} "
+                f"times (cap reached). On the code board step, crossing the cap "
+                f"requires the ruling record of skills/convergence_loop/at-the-cap.md: "
+                f"--reason must contain 'at-the-cap: <project-relative verdict path>' "
+                f"naming a file with a non-empty remaining_findings list. Failed: {failed}."
+            )
+    elif iterations >= iteration_cap:
         # Override allowed via structured reason ("override:" or
         # "override-rationale:" prefix) — log but accept. Audit-trail in
         # retry_history catches abuse. Loose substring "override" rejected
@@ -2348,11 +2446,13 @@ def retry_step(
         "reason": reason,
         "when": _utcnow(),
         "iteration_before": iterations,
+        "counted": counted,
+        **({"at_the_cap": at_the_cap} if at_the_cap is not None else {}),
     })
 
     step_state["status"] = STATUS_IN_PROGRESS
     step_state["started_at"] = _utcnow()
-    step_state["iterations"] = iterations + 1
+    step_state["iterations"] = iterations + 1 if counted else iterations
     step_state["retry_history"] = retry_history
     # Capture the prior route selection BEFORE clearing it — the classification
     # re-pristine below needs it.
@@ -2380,7 +2480,6 @@ def retry_step(
     # workflow.yaml nests a classification inside a route (all are leaf), so
     # this is latent, not live; a nested classification would need this reset
     # made recursive (or a validate_runbook_consistency rule forbidding nesting).
-    step_def = _get_step_def(workflow_def, step_id)
     if step_def and step_def.get("category") == "classification":
         routes = {
             k: set(v) for k, v in (step_def.get("routes") or {}).items()
@@ -2410,9 +2509,11 @@ def retry_step(
     state["current_step"] = step_id
 
     save_state(state)
+    iteration_note = (f"Iteration {iterations + 1}/{iteration_cap}" if counted
+                      else f"Iteration {iterations}/{iteration_cap} (not counted: capture correction)")
     return True, (
-        f"Step '{step_id}' reset to in_progress. Iteration {iterations + 1}/"
-        f"{iteration_cap}. Reason: {reason}. Re-execute + --complete when done."
+        f"Step '{step_id}' reset to in_progress. {iteration_note}. "
+        f"Reason: {reason}. Re-execute + --complete when done."
     )
 
 

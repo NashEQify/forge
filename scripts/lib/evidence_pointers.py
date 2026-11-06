@@ -969,6 +969,22 @@ def _quote_in_cited_file(
     return f"quote no match in {raw_path} (whole file): {quote[:60]!r}"
 
 
+FENCED_FRONTMATTER_MESSAGE = (
+    "frontmatter is inside a code fence: start the file with the --- line, "
+    "without a fence around the block"
+)
+
+
+def _frontmatter_in_fence(content: str) -> bool:
+    """True when the first nonblank line opens a code fence and the next is ``---``."""
+    lines = [line.strip() for line in content.splitlines() if line.strip()]
+    return (
+        len(lines) >= 2
+        and lines[0].startswith(("```", "~~~"))
+        and lines[1] == "---"
+    )
+
+
 def validate_content(
     content: str,
     *,
@@ -1037,6 +1053,8 @@ def validate_content(
 
     if sv is None or sv == 0:
         # Legacy: silent skip
+        if strict and sv is None and _frontmatter_in_fence(content):
+            return ValidationResult(sv, EXIT_INVALID, [FENCED_FRONTMATTER_MESSAGE])
         return (
             ValidationResult(
                 sv,

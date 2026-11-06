@@ -202,6 +202,12 @@ and tests; it does not restate it. When writing the brief, and when reissuing it
 re-brief). A brief past 12,000 bytes (`wc -c`): read and follow
 `framework/spec-engineering-implementation-specs.md` §Convention: one goal per change (the size budget).
 
+## Stop limit (every brief)
+
+A `## Stop limit` section, lines changed since BASE: the implementer stops at the product limit
+(`mca-dispatch.md` §The size limit); the test limit is reported:
+`stop_limit: {product_paths: [..], product_lines: N, test_paths: [..], test_lines: M}`
+
 ## UX contracts (a brief that builds a person-operated surface)
 
 When the spec the brief implements links a look and an experience contract (`skills/ux_authoring/SKILL.md`), the brief

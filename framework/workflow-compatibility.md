@@ -59,3 +59,20 @@ dispatch step named section 9 of the evidence protocol; `skills/testing/run-stra
 former test-selection section). The rules moved verbatim, so no step gained, lost or changed an
 obligation; steps, ids, gates, completion checks and variables are unchanged. The pairs are upgrade-only: a run
 started on the earlier definition continues on the new one, and the reverse is not accepted.
+
+## Skeleton-return marking transition
+
+The build definition changed only in the test-design step's `instruction:` text: one sentence now says that a RED
+which only shows the interface under test is missing is listed in the skeleton return as `oracle unverified`
+(`skills/testing/SKILL.md` §Meaningful pre-fix witness). It adds a marking to the skeleton writer's return;
+when test design runs and whether the skeleton writer runs are unchanged, and so are steps, ids, gates, completion
+checks and variables. The pair is upgrade-only: a run started on the earlier definition continues on the new one, and
+the reverse is not accepted.
+
+## Retirement-inventory pointer transition
+
+The build definition changed only in the interview step's `instruction:` text: one paragraph now says that an owner
+answer retiring a capability is carried into the spec with the retirement inventory of
+`skills/_protocols/spec-amendment-discipline.md` §Retiring a capability. It adds a part to the spec record
+that step leads to; steps, ids, gates, completion checks and variables are unchanged. The pair is upgrade-only: a run
+started on the earlier definition continues on the new one, and the reverse is not accepted.

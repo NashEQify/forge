@@ -118,8 +118,8 @@ words".
   brief text, mentally grep for "all / alle / clean up / also / further /
   if-clauses / where-applicable", and for each hit decide absent (not
   relevant) vs present-justified (with quote + rationale).
-- **DO NOT** fill the scope bound with an unrealistic LOC cap (e.g. "1000
-  lines" for 3 clusters). The LOC cap must derive from cluster magnitude —
+- **DO NOT** fill the scope bound with an unrealistic stop limit (e.g. "1000
+  lines" for 3 clusters). Both limits must derive from cluster magnitude —
   if the author can't estimate, they over-estimate and the self-correction
   signal stops working.
 - **DO NOT** leave out-of-scope empty without a bleed check. The bleed check

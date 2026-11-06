@@ -111,6 +111,8 @@ def _paths(value: Any, *, roots: bool = False) -> list[str]:
 
 
 def _under(path: str, prefix: str) -> bool:
+    # A prefix is a directory path, matched by whole path components: "docs/rev"
+    # does not cover "docs/reviews/x.md".
     return prefix == "." or path == prefix or path.startswith(prefix + "/")
 
 
@@ -200,6 +202,29 @@ def _history(root: Path, value: Any) -> list[dict[str, str]]:
     return sorted(refs, key=lambda item: item["path"])
 
 
+def check_exclusion_prefixes(project_root: Path, request: Any) -> None:
+    """Refuse a code-family exclusion prefix that names no existing directory.
+
+    Capture-time only: adoption and the current check judge a stored capture by
+    subject identity and never call this. Requests that are not code-family or
+    whose shape is malformed are left to ``capture_subject``, which the engine
+    calls first.
+    """
+    if not isinstance(request, dict) or request.get("family") != "code":
+        return
+    code = request.get("code_diff")
+    if not isinstance(code, dict):
+        return
+    root = project_root.resolve()
+    for prefix in _paths(code.get("exclude_prefixes")):
+        _require(
+            _target(root, prefix).is_dir(),
+            f"exclusion prefix names no existing directory: {prefix!r} "
+            "(prefixes match whole path components; name a directory, "
+            "or list single files under exclude_files)",
+        )
+
+
 def capture_subject(
     project_root: Path, request: dict[str, Any]
 ) -> tuple[dict[str, Any], dict[str, Any], str]:
@@ -275,6 +300,7 @@ def capture_subject(
 
         def selected_raw(raw: bytes) -> bool:
             def under_raw(prefix: str) -> bool:
+                # Same rule as _under: a directory path, whole components only.
                 encoded = prefix.encode("utf-8")
                 return prefix == "." or raw == encoded or raw.startswith(encoded + b"/")
 
