@@ -56,6 +56,15 @@ taken, or `absorbed` / `still open`.
    name the cell. A blocking finding on a state carrier without a section
    triggers the retro-model (`_protocols/mechanism-model.md` §Trigger);
    the board brief of the next pass then carries it.
+   **Added tests (relevance).** Every test the diff adds traces to a
+   behaviour the change changes (an AC or a changed code path) and guards
+   a purpose a consumer relies on, not the text or presence of an
+   artifact (`skills/testing/lean-suite.md` §Each test earns its place).
+   A test that traces to no changed behaviour, or guards only an
+   artifact's text or presence, is a finding that names the test
+   (`file:line`) and the missing trace; its fix is a deletion. The brief
+   hands this check to the L1 checklist (§3 item 3) and on L2 to the
+   coverage owner as a focus point.
    **Additions (the reverse trace).** Map the diff back as well: every
    added layer, abstraction, dependency, configuration option, guard or
    public surface traces to a spec item, an AC, the brief or a
@@ -110,7 +119,7 @@ verdict):** (1) hand-offs — every cross-task / producer→consumer seam
 the ACs name is wired or owned by a named task; (2) spec drift — does
 the diff change spec-defined behavior (→ spec-drift-check gate);
 (3) AC coverage — each AC maps to a green test, with the §2 step 4
-faithfulness rules; a latency AC on a growing log or store has its N
+faithfulness rules, and each added test passes §2's relevance check; a latency AC on a growing log or store has its N
 and 4N slope leg (`skills/testing/test-design.md` §Oracle discipline). On L1
 this item owns test coverage; conformance and test vacuity sit with
 `code-domain-logic` (above). (4) mechanism cells — when a

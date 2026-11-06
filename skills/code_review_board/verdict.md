@@ -36,8 +36,8 @@ adopt.
 
 ```
 PASS:            0C + 0H
-PASS_WITH_RISKS: 0C + ≤2H (carry-forward MANDATORY), no H or invariant-falsifying finding open on a `now` mechanism cell
-FAIL:            ≥1C or >2H, or an open H or invariant-falsifying finding on a `now` mechanism cell (Mechanism-cell floor below)
+PASS_WITH_RISKS: 0C + ≤2H (carry-forward MANDATORY), no open finding the Mechanism-cell floor blocks
+FAIL:            ≥1C or >2H, or an open finding the Mechanism-cell floor below blocks
                  → triage → MCA fixes fix-now → re-review (max 2)
 ```
 
@@ -115,13 +115,13 @@ Hard floors override: CRITICAL, security/auth/consent/crypto, schema
 / public-API contract, full-path tasks stay `fix-now` / `new_task`.
 
 **Mechanism-cell floor (blocking severities only):** a CRITICAL / HIGH
-finding, or one that falsifies a stated invariant, on a `now` cell of a
+finding, or one that falsifies a stated invariant dangerously
+(`_protocols/finding-verification.md` step 4), on a `now` cell of a
 `§Mechanism-Lifecycle` matrix is `fix-now` or goes to the
 Simplify-before-patch gate — never `new_task`, `accept`, `watch_item` or
 `absorb_next`. An open live cell at blocking severity makes the verdict
 FAIL (with the gate record), not PASS_WITH_RISKS. MEDIUM / LOW on a live
-cell follow the triage above (standalone LOW → `accept`; `new_task`
-MEDIUM+), with the cell annotated in the matrix (`✗ accepted: <reason>`
+cell follow the triage above, with the cell annotated in the matrix (`✗ accepted: <reason>`
 or `→ task-N` plus the `blocked_by` edge). Cells placed in another task
 or beyond the MVP leave as `blocked_by` edges (beyond-MVP: the plan /
 milestone entry), not `remaining_findings` rows. Rule and placement: `_protocols/mechanism-model.md` §Scope and

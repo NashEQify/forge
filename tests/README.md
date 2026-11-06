@@ -1,10 +1,12 @@
 # Public checks
 
 These tests run from a fresh checkout of the public repository, with no credentials, private files or network
-access. They need Linux or macOS, Python 3, pytest and PyYAML:
+access. They need Linux or macOS, Python 3, pytest, pytest-xdist and PyYAML:
 
-    python3 -m pip install pytest pyyaml
+    python3 -m pip install pytest pytest-xdist pyyaml
     python3 -m pytest tests
+
+`pytest.ini` runs them in parallel; `-n 0` runs them serially.
 
 | Test | What it checks |
 |---|---|

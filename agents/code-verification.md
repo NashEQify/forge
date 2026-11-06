@@ -172,7 +172,11 @@ Suite-green alone does not establish correctness. Inspect the actual coverage
 and oracle limits, then independently challenge the implementation. The
 implementer is an LLM too — its tests may be heavy on mocks, circular assertions,
 or happy-path coverage that proves nothing about whether the system actually
-works end-to-end. Qualified reuse satisfies only the equivalent execution
+works end-to-end. Each test the change adds traces to a behaviour the change
+changes (an AC or a changed code path) with a purpose a consumer relies on
+(`skills/testing/lean-suite.md` §Each test earns its place); a test that traces
+to no changed behaviour, or guards only an artifact's text or presence, is a
+finding naming the test. Qualified reuse satisfies only the equivalent execution
 obligation; all required direct exercises, correction reproductions and actual
 adversarial probes remain. Missing or inapplicable receipts require execution.
 

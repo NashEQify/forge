@@ -53,6 +53,13 @@ graded too low being parked.
      `false`.
    - **`maybe-false`:** the reads leave it open. The evidence names the check that would settle it and the grade the
      claim would take if true. Where the reads decide the question, the verdict is one of the others.
+4. For a graded finding that falsifies a stated invariant, say which way the deviation goes; the verdict floor on
+   mechanism cells applies only to the dangerous one (`skills/code_review_board/verdict.md` §5):
+   - **`dangerous`:** the outcome is the one the invariant exists to prevent: a wrong, lost, leaked or unsafe value
+     or state reaches a consumer, or a refusal the invariant requires does not happen.
+   - **`cautious`:** the code errs toward the side the invariant protects and the only cost is waste or delay: it
+     counts a reservation twice for one step, refuses or waits longer than needed, reports a conservative bound.
+   - Where the reads show neither, it is `dangerous`.
 
 ## The row
 
@@ -62,7 +69,7 @@ gets one row per claim (`F-07a`, `F-07b`), each with its own verdict. No row is 
 ```markdown
 | Finding | Location (at the reviewed bytes) | Claimed | Verdict | Evidence |
 |---|---|---|---|---|
-| <id> | <path:lines, or the host path a claim rests on> | <reviewer's or chief's grade> | <verdict> | <one line: the read or output that settled it and the harm; for maybe-false, the settling check and the grade if true> |
+| <id> | <path:lines, or the host path a claim rests on> | <reviewer's or chief's grade> | <verdict> | <one line: the read or output that settled it and the harm; for maybe-false, the settling check and the grade if true; for a falsified invariant, dangerous or cautious> |
 ```
 
 It is persisted in the directory of the board's persisted reviews as

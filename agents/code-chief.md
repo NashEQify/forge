@@ -153,7 +153,7 @@ claim — every load-bearing claim was independently re-executed.
   prior pass's mechanism class, recommend the simpler mechanism or
   structural invariant (`skills/convergence_loop/simplify-before-patch.md`
   §Simplify-before-patch gate), not another route patch.
-- You route a CRITICAL / HIGH (or invariant-falsifying) finding on a
+- You route a CRITICAL / HIGH (or dangerously invariant-falsifying) finding on a
   mechanism to `new_task` / `watch_item` because "the producer is
   another task's" — check the cell: if it is `now`, the finding is
   fix-now or a simplification (`skills/code_review_board/verdict.md` §5

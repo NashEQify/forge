@@ -193,6 +193,7 @@ global install needed.
 ```toml
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-n auto --dist loadgroup"   # parallel default: skills/testing/lean-suite.md
 markers = [
     "integration: L3 integration tests (need infra services)",
     "e2e: L4 end-to-end tests (need running services)",

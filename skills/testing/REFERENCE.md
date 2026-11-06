@@ -16,7 +16,7 @@ ref), input, expectation, verification.
 Derived from: <spec ref> | Level coverage: L0, L1, L2
 
 ### TC-001: <description>
-- Level: L2 (unit) | Type: positive (AC-1)
+- Level: L2 (unit) | Type: positive (AC-1) | Covers: <what only it covers>
 - Input: <concrete> | Expectation: <concrete> | Verification: <how>
 ```
 
@@ -278,6 +278,7 @@ project*. Convention:
   postgres-fixtures.md      — DSN, pool fixture, transaction wrapper
   nats-fixtures.md          — broker URL, subscription cleanup
   mock-conventions.md       — Ollama / external API mock patterns
+  full-gate.md              — the full gate (who runs it, when) and its list
   README.md                 — index + cross-link back to forge §Infrastructure
 ```
 

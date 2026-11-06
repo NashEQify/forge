@@ -1,7 +1,7 @@
 # Code review board — review package
 
 Step-loaded unit of `skills/code_review_board/SKILL.md`. Read it before a change that a board review will review starts (to
-record BASE; a same-turn DIRECT check is not one: `SKILL.md` §Same-turn DIRECT check), before dispatching any review seat on it, a re-review after a fix pass included, and when persisting a
+record BASE; a same-turn DIRECT check is not one: `SKILL.md` §Same-turn DIRECT check), before dispatching any review seat on it, a re-review after a fix pass included, before a fix after a review in which every seat passed, and when persisting a
 seat's return or writing the verdict (the Range line). Section numbers are skill-wide: §1 and §6–§10 in `SKILL.md`,
 §2–§3 in `brief-and-team.md`, §4–§4a in `checklist-and-dispatch.md`, §5–§5a in `verdict.md`, §11 in
 `review-package.md`.
@@ -91,7 +91,8 @@ the checkout's own index.
 
 ### What a re-review decides
 
-Every fix pass ends with a re-review of its fix range, at the depth the §4 re-verify table selects. It covers the
+Every fix pass ends with a re-review of its fix range, at the depth the §4 re-verify table selects, except a small
+fix after a passing review (below). It covers the
 findings under verification and the fix package's diff; Buddy sorts what the seats report:
 - **A finding under verification** is addressed when its outcome no longer occurs at the fix package's HEAD, shown by
   its reproduction or by the read at its location; otherwise it stays open.
@@ -104,6 +105,17 @@ findings under verification and the fix package's diff; Buddy sorts what the sea
   no fix pass of this loop. When the loop ends, a deferred item with a ruling recorded on the same location and claim
   keeps it; the others are verified and dispositioned once under §5, its rule on pre-existing defects included. One that
   §5 makes fix-now goes to the caller with the verdict as a scope decision, not into another round.
+
+### Small fix after a passing review
+
+Decide this before the §4 re-verify table. When every seat of the last review returned PASS or PASS_WITH_RISKS and
+none of the findings left over is CRITICAL, HIGH or a dangerous invariant falsification
+(`skills/_protocols/finding-verification.md` step 4), a fix of those findings, `fix-now` ones included, is evidenced by
+the tests that failed before it, run until they are green, plus L0 on the touched files. It gets no re-verify, no new
+review round and no broad run. Where no test failed before it (a wording, comment or log fix), the L0 checks are its
+evidence; no test is written only to record it. Record the run (command, red before, green after) in the review decision under `## After the review`. The §4
+re-verify table applies instead when the fix is not line-local (the §4 table's line-local row), changes a test's expected
+value or an oracle, or touches a safety floor (§1).
 
 ### Persisting a seat's return
 

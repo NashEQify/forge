@@ -102,6 +102,16 @@ manual run) is not written as a permanent test. Run that acceptance once
 and record its verdict, or write its mechanical part as an ordinary
 test.
 
+### Lean, parallel suites
+
+Each test covers one distinct behaviour or risk, every test runs in
+parallel with every other, and after a change only the tests it touches
+run. When designing a test plan (each TC names what it alone covers),
+writing a test, retiring a mechanism that has tests, or setting up a
+project's test runner: read and follow `skills/testing/lean-suite.md`
+(the design rules the plan is checked against, parallel safety,
+change-scoped runs, the full gate and its list).
+
 ### Meaningful pre-fix witness
 
 For an intended behavior change, execute a behavior assertion before implementation

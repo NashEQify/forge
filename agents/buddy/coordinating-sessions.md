@@ -95,7 +95,8 @@ independent work on different files.
 Integration follows the repository's rules — a pull request and its review
 where the repository uses them, otherwise a merge by the coordinator — one
 branch at a time, with the repository's checks on the branch and on the
-merged result, activation where the change needs it (on a coordinated
+merged result (the project's full gate where it names the merger as its runner:
+`skills/testing/lean-suite.md` §Change-scoped runs and the full gate), activation where the change needs it (on a coordinated
 machine, a merge that changes a non-Markdown installed source is a full-path
 activation: prepare before the merge, `framework/installation-activation.md`
 §Choosing the path), and push where

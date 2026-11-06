@@ -292,6 +292,7 @@ Not full L1 / L2 redo.
 
 | Re-review type | Composition | When |
 |----------------|-------------|------|
+| None: small fix after a passing review | The tests that failed before the fix, run until green, plus L0 on the touched files; no reviewer, no broad run | Every seat of the last review passed, no finding left over is CRITICAL, HIGH or a dangerous invariant falsification, and the fix is line-local, changes no expected value or oracle and touches no safety floor (`review-package.md` §Small fix after a passing review) |
 | Light re-verify | One `code-verification` re-running every fix-now reproduction (red→green) | Line-local fix: only the finding's lines, no new guard / branch / rule on a mechanism that drew a HIGH, no oracle hunk |
 | Light + mechanism-scoped adversary (default otherwise) | The light re-verify plus `code-adversary` cold-start with the owning spec's `§Mechanism-Lifecycle` matrix and the fix diff, mandate "attack the mechanism, with the whole matrix as context, not the fix", returning a coverage table over the invariants and the matrix rows / columns the fix touches (cell · probe · result), two-phase | Any other fix pass (new guard / branch / rule on a HIGH mechanism, edits beyond the finding's lines, oracle hunks). A missing section follows the retro-model trigger (`_protocols/mechanism-model.md` §Trigger) |
 | Fix verification (no reproduction) | Single reviewer per cluster, scope = the finding's `affected_scope` | Judgment findings without a runnable reproduction |

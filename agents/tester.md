@@ -126,7 +126,9 @@ matrix.
 
 1. Read the spec completely.
 2. Derive test cases (→ SKILL.md §Test design from the change).
-3. Classify (→ SKILL.md §Pyramide).
+3. Classify (→ SKILL.md §Pyramide), and give each TC what it alone covers;
+   check the plan against the design rules before any test is written (→
+   `skills/testing/lean-suite.md` §Each test earns its place).
 4. Run L1: simulation, completeness, consistency, DRY,
    constraint satisfaction (→ SKILL.md §L1).
 5. Build the coverage matrix (→
@@ -234,7 +236,9 @@ from design).
 2. Test plan as a basis or derive TCs (→ SKILL.md §Test Case
    Design).
 3. Set `test_plan_spec_ref` to the current `spec_version`.
-4. Write tests (only tests, never production code).
+4. Write tests (only tests, never production code), each parallel-safe; a
+   TC whose Covers names a real expensive dependency goes on the full-gate
+   list with that reason (→ `skills/testing/lean-suite.md`).
 5. Run the new tests and the selected set for the changed files
    (`skills/testing/run-strategy.md` §Test selection); a broad run only
    where that section calls for one, never per tester run.

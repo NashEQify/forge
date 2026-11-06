@@ -59,13 +59,19 @@ paths and scripts run by name. A test that only copies the framework tree is not
 for a code change unless it also exercises the changed module, as the installer tests do for
 installer code. A code path no test exercises directly answers `broad`.
 
-**No blanket broad run per task.** The broad suite runs only when the selector returns
-`broad` (shared test infrastructure, a path no test maps, a cross-cutting entry) or when the
-change touches a safety floor (`skills/adversary_test_plan/SKILL.md` §When to call). It then
-runs once, after the last change to the code under test and before the task closes; the task
-owner runs it. A small code change after that run, such as a fix pass, runs only the tests
+**No whole-suite run per change.** The whole suite runs at the project's full gate
+(`lean-suite.md` §Change-scoped runs and the full gate). It is due for a change only when the
+selector returns `broad` (shared test infrastructure, a path no test maps, a cross-cutting
+entry) or when the change touches a safety floor (`skills/adversary_test_plan/SKILL.md` §When
+to call). That due run is the broad run: once, after the last change to the code under test
+and before the merge, by the full gate's runner (without a named runner, the role that merges). A small code change after that run, such as a fix pass, runs only the tests
 that exercise the changed module directly. The broad run stands when no other code changed
-after it.
+after it. A small fix after a review in which every seat passed runs only the tests that
+failed before it, until green (`skills/code_review_board/review-package.md` §Small fix after a
+passing review).
+
+**Every run is parallel** (`lean-suite.md`). A selected-set run, which names test paths, runs
+the tests on the project's full-gate list that it picks (`lean-suite.md` §pytest shape).
 
 **No rerun after a hash-checked transfer.** When the tested bytes reach their target
 unchanged and each path is hash-checked, the broad suite is not run again: activation

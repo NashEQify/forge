@@ -62,6 +62,8 @@ Status: `pending` -> `covered` -> `pass` | `fail` | `skipped`
 - **Level:** L2 | L3 | L4 | L5
 - **Type:** Positive | Negative | Degradation | Boundary | Regression
 - **Source:** AC-{N} | FM-{N}
+- **Covers:** {the behaviour or risk only this TC covers}; add `full gate: {the real expensive dependency it needs}`
+  when it cannot run on a cheap fixture (`skills/testing/lean-suite.md` §Each test earns its place)
 - **Setup:**
   - {DB/service}: {declarative — WHAT must exist, not HOW}
 - **Input:** `{function call with concrete parameters}`
