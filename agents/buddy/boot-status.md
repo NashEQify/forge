@@ -8,6 +8,10 @@ boot.md's boot sequence (steps 4–7 in `boot-software.md`).
 
 Run the boot probe from the active project's working directory, as its own
 call: `bash <framework>/scripts/git-status-check.sh --boot`.
+When the entry carries the line `Framework: plugin snapshot <name>; no
+freshness check for it`, the framework is the plugin's copy, not a checkout:
+that line replaces the framework's freshness result (no pull question for
+it); the probe still checks the project and the user repo.
 Codex callers first follow `agents/buddy/codex-execution.md`: the helper
 performs a Git write and needs the offered escalation route when `.git` is
 protected, even though its purpose is a status check.

@@ -130,6 +130,19 @@ add_target() {
   done
   TARGETS+=("$root")
 }
+# The framework is a Git target only when it is itself a checkout's root: a
+# plugin's copy inside another repository (a Git-tracked HOME) is not that
+# repository's framework.
+framework_git_root() {
+  local root
+  root=$(git_root "$FRAMEWORK_DIR") || return 1
+  [ "$root" = "$FRAMEWORK_DIR" ] || return 1
+  printf '%s\n' "$root"
+}
+add_framework_target() {
+  framework_git_root >/dev/null && add_target "$FRAMEWORK_DIR"
+  return 0
+}
 
 # Boot probe: the configured user repo, resolved the way user_scope.py --json
 # reports it. USER_SCOPE_STATE: configured | none | unknown.
@@ -186,11 +199,11 @@ if [ "$BOOT" = "1" ]; then
   resolve_user_scope
   # The framework is always a target; the user repo when its root is distinct.
   if [ "$CWD" = "$FRAMEWORK_DIR" ] || [[ "$CWD" == "$FRAMEWORK_DIR"/* ]]; then
-    add_target "$FRAMEWORK_DIR"
+    add_framework_target
     add_target "$CWD"
   else
     add_target "$CWD"
-    add_target "$FRAMEWORK_DIR"
+    add_framework_target
   fi
   if [ -n "$USER_REPO" ]; then
     if git_root "$USER_REPO" >/dev/null; then
@@ -201,19 +214,45 @@ if [ "$BOOT" = "1" ]; then
     fi
   fi
 elif [ "$CWD" = "$FRAMEWORK_DIR" ] || [[ "$CWD" == "$FRAMEWORK_DIR"/* ]]; then
-  add_target "$FRAMEWORK_DIR"
+  add_framework_target
   add_target "$CWD"
 else
   add_target "$CWD"
   if [ "${GIT_STATUS_CHECK_INCLUDE_FRAMEWORK:-0}" = "1" ]; then
-    add_target "$FRAMEWORK_DIR"
+    add_framework_target
   fi
 fi
 
 # Installed-vs-HEAD comparison: only the framework's own Git root, only when
 # its installer exists (sparse checkouts without it stay silent).
-FRAMEWORK_ROOT=$(git_root "$FRAMEWORK_DIR") || FRAMEWORK_ROOT=""
+FRAMEWORK_ROOT=$(framework_git_root) || FRAMEWORK_ROOT=""
 INSTALLER="$FRAMEWORK_DIR/scripts/forge_install.py"
+
+# Repository-local config that runs commands is neutralized on every target
+# other than the framework checkout and the configured user repo (in practice
+# the CWD project, whose .git/config the session did not choose): fsmonitor
+# for status and fetch; for fetch also the ssh command and upload-pack program come from the
+# global/system value or the default, and the ext:: transport is refused.
+USER_ROOT=""
+[ -n "$USER_REPO" ] && USER_ROOT=$(git_root "$USER_REPO" 2>/dev/null || true)
+global_config() {  # <key> <default>: the global value, else the system value, else the default
+  local value
+  value=$(git config --global --includes --get "$1" 2>/dev/null) \
+    || value=$(git config --system --includes --get "$1" 2>/dev/null) \
+    || value=$2
+  printf '%s' "$value"
+}
+STATUS_HARDENING=(-c core.fsmonitor=false)
+FETCH_HARDENING=(-c core.fsmonitor=false -c protocol.ext.allow=never)
+# The first remote.origin.uploadpack Git reads wins (the repository's before -c),
+# so the program is passed as fetch's own option.
+FETCH_UPLOAD_PACK="--upload-pack=$(global_config remote.origin.uploadpack git-upload-pack)"
+if [ -z "${GIT_SSH_COMMAND:-}" ]; then  # GIT_SSH_COMMAND outranks any config
+  FETCH_HARDENING+=(-c "core.sshCommand=$(global_config core.sshCommand "${GIT_SSH:-ssh}")")
+fi
+untrusted_target() {
+  [ "$1" != "$FRAMEWORK_ROOT" ] && { [ -z "$USER_ROOT" ] || [ "$1" != "$USER_ROOT" ]; }
+}
 
 # Counts porcelain entries into the groups (line 1). In --boot mode a second
 # line names the first five entry paths as Git prints them (F-6).
@@ -434,9 +473,11 @@ fi || {
     echo "git-status-check: cannot create temporary directory; fetch and installer status skipped, status from cached refs" >&2
   fi
   for repo in "${TARGETS[@]}"; do
-    status_command=(git -C "$repo" status --porcelain=v1 --branch --untracked-files=normal)
+    harden=()
+    untrusted_target "$repo" && harden=("${STATUS_HARDENING[@]}")
+    status_command=(git -C "$repo" ${harden[@]+"${harden[@]}"} status --porcelain=v1 --branch --untracked-files=normal)
     if [ "$NO_NETWORK" = "1" ]; then
-      status_command=(git --no-optional-locks -C "$repo" status --porcelain --untracked-files=normal)
+      status_command=(git --no-optional-locks -C "$repo" ${harden[@]+"${harden[@]}"} status --porcelain --untracked-files=normal)
     fi
     if status=$(GIT_OPTIONAL_LOCKS=0 "${status_command[@]}" 2>/dev/null); then
       summary=$(porcelain_summary "$status" "$((1 - NO_NETWORK))")
@@ -466,9 +507,15 @@ for index in "${!TARGETS[@]}"; do
       install_pid=$!
     fi
     # Fetch with strict timeout — never block boot on network
+    fetch_harden=()
+    fetch_options=()
+    if untrusted_target "$repo"; then
+      fetch_harden=("${FETCH_HARDENING[@]}")
+      fetch_options=("$FETCH_UPLOAD_PACK")
+    fi
     if [ "$NO_NETWORK" = "1" ]; then
       :
-    elif timeout 5 git -C "$repo" fetch --quiet origin 2>"$TMPDIR_BOOT/$index.fetch"; then
+    elif timeout 5 git -C "$repo" ${fetch_harden[@]+"${fetch_harden[@]}"} fetch --quiet ${fetch_options[@]+"${fetch_options[@]}"} origin 2>"$TMPDIR_BOOT/$index.fetch"; then
       :
     else
       fetch_exit=$?
@@ -486,9 +533,11 @@ for index in "${!TARGETS[@]}"; do
     # The explicit untracked mode keeps user config (status.showUntrackedFiles)
     # from hiding entries.
     # --boot --no-network: plain porcelain, no branch header (no ahead/behind).
-    status_command=(git -C "$repo" status --porcelain=v1 --branch --untracked-files=normal)
+    harden=()
+    untrusted_target "$repo" && harden=("${STATUS_HARDENING[@]}")
+    status_command=(git -C "$repo" ${harden[@]+"${harden[@]}"} status --porcelain=v1 --branch --untracked-files=normal)
     if [ "$NO_NETWORK" = "1" ]; then
-      status_command=(git --no-optional-locks -C "$repo" status --porcelain --untracked-files=normal)
+      status_command=(git --no-optional-locks -C "$repo" ${harden[@]+"${harden[@]}"} status --porcelain --untracked-files=normal)
     fi
     if status=$(GIT_OPTIONAL_LOCKS=0 "${status_command[@]}" 2>"$TMPDIR_BOOT/$index.status"); then
       summary=$(porcelain_summary "$status" "$((1 - NO_NETWORK))")

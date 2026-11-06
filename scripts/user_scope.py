@@ -11,11 +11,16 @@ Code hook (`--hook-json`), `cc` (`--boot-text`, `--json`), the Codex/CC home
 boot blocks (`boot_text(..., install_time=True)`), forge_install.py and
 setup-oc.sh.
 
-CLI: user_scope.py [--framework-root P] [--profile project|full-ai-integration | --project]
-                   (--json | --soul | --boot-text | --hook-json | --shell)
+CLI: user_scope.py [--framework-root P] [--profile project|full-ai-integration | --project | --plugin]
+                   (--json | --soul | --boot-text | --hook-json | --shell | --boot-entry)
 --shell prints USER_REPO=… and BOOT_TEXT=… as shell-quoted assignments (cc).
 --project renders the project install's entry: no user scope, the machine
 setting is not read (the project hook passes it).
+--plugin (with --hook-json) renders the plugin hook's entry: it reads the
+SessionStart payload from stdin and prints nothing unless Buddy is active
+(the project's activation line or the user switch, is_active()).
+--boot-entry prints the plugin entry as plain text (the boot skill; no
+activation check).
 Exit 0 whenever a scope (possibly empty) was produced; exit 2 on internal error.
 """
 
@@ -24,6 +29,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shlex
 import stat
 import sys
@@ -42,6 +48,9 @@ PROFILES = (PROJECT_PROFILE, MACHINE_PROFILE)
 # Retired profile names an existing installation may still record (selection.json, user.yaml), with the profile
 # each moved to. Read only through normalize_profile().
 _RETIRED_PROFILES = {"full": MACHINE_PROFILE, "daily": MACHINE_PROFILE}
+# The plugin is a third way Forge is placed (the host's plugin manager, not the installer). It is a render value
+# of the entry's profile line only, never a user.yaml profile: normalize_profile() keeps rejecting it.
+PLUGIN_RENDER = "plugin"
 
 
 def normalize_profile(name: object) -> str | None:
@@ -82,7 +91,23 @@ ENTRY_UNITS: tuple[EntryUnit, ...] = (
     EntryUnit("agents/buddy/boot-on-demand.md", "on-demand"),
     EntryUnit("agents/buddy/codex-execution.md", "codex"),
 )
-KNOWN_KEYS = {"version", "user_repo", "profile", "skill_links", "maintenance"}
+KNOWN_KEYS = {"version", "user_repo", "profile", "skill_links", "maintenance", "buddy"}
+# The user switch (user.yaml key `buddy`): this value starts Buddy in every session of a plugin install.
+BUDDY_KEY = "buddy"
+BUDDY_EVERY_SESSION = "every-session"
+# The project activation line (one line of the project's AGENTS.md, stripped of surrounding whitespace). The
+# plugin hook's bash fallback restates it; tests/test_plugin.py keeps the two equal.
+ACTIVATION_LINE = (
+    "Forge: start Buddy. Before the first answer, run the forge:boot skill and follow the boot entry it returns."
+)
+ACTIVATION_FILE = "AGENTS.md"
+ACTIVATION_MAX_BYTES = 1 << 20  # at most 1 MiB of AGENTS.md is read
+# Byte-wise strip set, the C locale's [[:space:]] (the bash fallback matches with LC_ALL=C grep).
+_LINE_SPACE = b" \t\r\n\v\f"
+SNAPSHOT_LINE = (
+    "Framework: plugin snapshot {name}; no freshness check for it "
+    "(updates come through the host's plugin update)."
+)
 USER_BOOT_FILES = ("profile.md",)
 NONE_CONFIGURED = "User scope: none configured (forge soul in use)."
 PYYAML_MISSING = "PyYAML missing — user scope not resolved"
@@ -386,6 +411,8 @@ def from_config(
     warn = scope.warnings.append
     for key in sorted(set(map(str, data)) - KNOWN_KEYS):
         warn(f"unknown key ignored: {key}")
+    if BUDDY_KEY in data and data[BUDDY_KEY] != BUDDY_EVERY_SESSION:
+        warn(f"{BUDDY_KEY} must be {BUDDY_EVERY_SESSION}, Buddy switch off: {data[BUDDY_KEY]!r}")
 
     recorded = data.get("profile", MACHINE_PROFILE)
     profile = normalize_profile(recorded)
@@ -468,11 +495,98 @@ def from_config(
 
 def resolve(framework_root: Path, *, env: Mapping[str, str] = os.environ) -> UserScope:
     """Resolve machine setting → convention → effective scope. Never raises on user data."""
+    return _resolve_with_setting(framework_root, env)[0]
+
+
+def _resolve_with_setting(
+    framework_root: Path, env: Mapping[str, str],
+) -> tuple[UserScope, dict | None]:
+    """resolve(), plus the loaded machine setting (None when there is no usable one)."""
     path = config_path(env)
     if path is None:
-        return from_config(framework_root, None, warnings=["HOME not set — no machine setting"])
+        return from_config(framework_root, None, warnings=["HOME not set — no machine setting"]), None
     data, warnings = load_config(path)
-    return from_config(framework_root, data, config=path, warnings=warnings)
+    return from_config(framework_root, data, config=path, warnings=warnings), data
+
+
+def switch_on(data: Mapping | None) -> bool:
+    """The user switch: user.yaml `buddy: every-session`. Any other value is off (from_config warns)."""
+    return data is not None and data.get(BUDDY_KEY) == BUDDY_EVERY_SESSION
+
+
+_RAW_SWITCH = re.compile(rb"^buddy:[ \t]*every-session[ \t]*(#.*)?$", re.M)
+
+
+def raw_switch_on(config: str | Path | None) -> bool:
+    """The user switch read without a YAML parser (PyYAML missing): one line `buddy: every-session`, an optional
+    comment after it; nothing else of the file is parsed. Unreadable or not a regular file: off."""
+    if config is None or _kind(Path(config)) != "file":
+        return False
+    try:
+        with open(config, "rb") as handle:
+            text = handle.read(ACTIVATION_MAX_BYTES)
+    except OSError:
+        return False
+    return any(_RAW_SWITCH.match(line.rstrip(b"\r")) for line in text.split(b"\n"))
+
+
+def project_dir(payload: object, env: Mapping[str, str] = os.environ) -> Path:
+    """The session's project directory: the SessionStart payload's `cwd`, else CLAUDE_PROJECT_DIR, else the
+    process CWD. Canonical (symlinks resolved), as the bash fallback's `pwd -P`."""
+    cwd = payload.get("cwd") if isinstance(payload, dict) else None
+    for candidate in (cwd, env.get("CLAUDE_PROJECT_DIR")):
+        if isinstance(candidate, str) and candidate:
+            return Path(os.path.realpath(candidate))
+    try:
+        return Path(os.path.realpath(os.getcwd()))
+    except OSError:
+        return Path(os.sep)
+
+
+def _activation_dirs(start: Path) -> list[Path]:
+    """start and its ancestors up to the nearest one holding a `.git` entry; without one, start alone."""
+    walked = []
+    current = Path(start)
+    while True:
+        walked.append(current)
+        if os.path.exists(current / ".git"):
+            return walked
+        if current.parent == current:
+            return [Path(start)]
+        current = current.parent
+
+
+def has_activation_line(path: Path) -> bool:
+    """True when the regular file `path` holds ACTIVATION_LINE as one line (surrounding whitespace stripped).
+    Reads at most ACTIVATION_MAX_BYTES; any read error counts as absent. Byte-wise, as the bash fallback."""
+    if _kind(path) != "file":
+        return False
+    try:
+        with open(path, "rb") as handle:
+            data = handle.read(ACTIVATION_MAX_BYTES)
+    except OSError:
+        return False
+    wanted = ACTIVATION_LINE.encode("utf-8")
+    return any(line.strip(_LINE_SPACE) == wanted for line in data.split(b"\n"))
+
+
+def activation_found(start: Path) -> bool:
+    """The project's activation line: in AGENTS.md of start or an ancestor up to the nearest Git root.
+    A start that is not an existing directory has none (the bash fallback cannot enter it either)."""
+    if _kind(Path(start)) != "dir":
+        return False
+    return any(has_activation_line(d / ACTIVATION_FILE) for d in _activation_dirs(start))
+
+
+def is_active(payload: object, data: Mapping | None, env: Mapping[str, str] = os.environ) -> bool:
+    """Buddy starts in a plugin session when the project carries the activation line or the switch is on."""
+    return switch_on(data) or activation_found(project_dir(payload, env))
+
+
+def is_snapshot(framework_root: Path) -> bool:
+    """True when the framework root itself holds no `.git` entry (a plugin's cache copy), even inside another
+    repository (a Git-tracked HOME): that repository is not the framework's checkout."""
+    return not os.path.exists(Path(os.path.abspath(framework_root)) / ".git")
 
 
 def _unresolved_text(scope: UserScope, framework: Path, round_one: bool = False) -> str:
@@ -519,7 +633,7 @@ def boot_text(
     if profile is None and not neutral and PYYAML_MISSING in scope.warnings:
         return _unresolved_text(scope, framework, round_one)
     profile = profile or scope.profile
-    if profile not in PROFILES:
+    if profile not in PROFILES and profile != PLUGIN_RENDER:
         raise ValueError(f"unknown profile: {profile}")
     if install_time and scope.configured:
         soul = (
@@ -529,7 +643,10 @@ def boot_text(
         soul = scope.soul
     else:  # the forge soul of the framework this text is rendered for
         soul = str(forge_soul(framework))
-    lines = [f"Install profile: {profile}", "Read before the first answer:"]
+    lines = [f"Install profile: {profile}"]
+    if profile == PLUGIN_RENDER and is_snapshot(framework):
+        lines.append(SNAPSHOT_LINE.format(name=framework.name))
+    lines.append("Read before the first answer:")
     soul_at = len(lines)
     lines.append(f"- soul: {soul}")
     lines += [f"- {framework / unit.path}" for unit in ENTRY_UNITS if unit.read_first]
@@ -601,10 +718,10 @@ def fits_hook(context: str) -> bool:
     )
 
 
-def hook_json(scope: UserScope, framework_root: Path) -> str:
+def hook_json(scope: UserScope, framework_root: Path, profile: str | None = None) -> str:
     framework = os.path.abspath(framework_root)
     policy = Inclusion(entry_fits=lambda entry: fits_hook(hook_context(entry, framework)))
-    context = hook_context(boot_text(scope, framework_root, include=policy), framework)
+    context = hook_context(boot_text(scope, framework_root, profile, include=policy), framework)
     return json.dumps(
         {
             "hookSpecificOutput": {
@@ -616,6 +733,22 @@ def hook_json(scope: UserScope, framework_root: Path) -> str:
     )
 
 
+def plugin_boot_entry(scope: UserScope, framework_root: Path) -> str:
+    """The plugin entry as plain text (--boot-entry, the boot skill): the hook's context, Round-1 line in
+    its tail, the soul and operational core included while the shell budget allows."""
+    framework = os.path.abspath(framework_root)
+    entry = boot_text(scope, framework_root, PLUGIN_RENDER, include=SHELL_INCLUSION, round_one=False)
+    return hook_context(entry, framework)
+
+
+def _stdin_payload() -> object:
+    """The SessionStart payload on stdin; anything unreadable or not JSON reads as no payload."""
+    try:
+        return json.loads(sys.stdin.read() or "null")
+    except (OSError, UnicodeError, ValueError):
+        return None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
@@ -624,10 +757,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--profile", metavar="|".join(PROFILES))
     parser.add_argument("--project", action="store_true",
                         help="the project install's entry: no user scope; the machine setting is not read")
+    parser.add_argument("--plugin", action="store_true",
+                        help="with --hook-json: the plugin hook's entry, only when Buddy is active (payload on stdin)")
     mode = parser.add_mutually_exclusive_group(required=True)
-    for flag in ("--json", "--soul", "--boot-text", "--hook-json", "--shell"):
+    for flag in ("--json", "--soul", "--boot-text", "--hook-json", "--shell", "--boot-entry"):
         mode.add_argument(flag, action="store_true")
     args = parser.parse_args(argv)
+    if args.plugin and not args.hook_json:
+        parser.error("--plugin renders the plugin hook's entry; use it with --hook-json")
+    if (args.plugin or args.boot_entry) and (args.project or args.profile is not None):
+        parser.error("the plugin entry takes neither --project nor --profile")
     if args.profile is not None:
         profile = normalize_profile(args.profile)
         if profile is None:
@@ -639,6 +778,21 @@ def main(argv: list[str] | None = None) -> int:
         args.profile = PROJECT_PROFILE
     try:
         # The project install never reads a user scope: no machine setting, no warning about one.
+        if args.plugin or args.boot_entry:
+            # The plugin resolves the user scope whenever user.yaml configures one (line or switch alike).
+            scope, data = _resolve_with_setting(args.framework_root, os.environ)
+            if args.boot_entry:
+                out = plugin_boot_entry(scope, args.framework_root).rstrip("\n")
+            else:
+                payload = _stdin_payload()
+                # Without PyYAML the setting is unread; the switch alone is read by its strict line, and a boot it
+                # starts names the unresolved setting (the entry for a missing PyYAML).
+                unread_switch = data is None and PYYAML_MISSING in scope.warnings and raw_switch_on(scope.config_path)
+                if not unread_switch and not is_active(payload, data):
+                    return 0  # not active: the hook stays silent
+                out = hook_json(scope, args.framework_root, None if unread_switch else PLUGIN_RENDER)
+            sys.stdout.write(out + "\n")
+            return 0
         scope = from_config(args.framework_root, None) if args.project else resolve(args.framework_root)
         if args.profile:
             scope.profile = args.profile

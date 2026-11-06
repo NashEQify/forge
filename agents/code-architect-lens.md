@@ -57,13 +57,14 @@ parameterized:
 
 | Mode | Trigger | Input shape |
 |---|---|---|
-| `anchor` | Target spec contains `## §Module-Decomposition` heading | Declared TARGET modules + responsibilities + interface-narrowness; you compare IST against TARGET |
+| `anchor` | Target spec contains a `Module-Decomposition` heading (`## §Module-Decomposition`, `## §10 §Module-Decomposition`, `## §7 Module-Decomposition`) | Declared TARGET modules + responsibilities + interface-narrowness; you compare IST against TARGET |
 | `heuristik` | Target spec lacks the section (legacy / L0 / pre-373) | No TARGET anchor; you run Ousterhout deep-modules heuristik against IST alone |
 
 Detection step (first action after reading the dispatch): grep the
-target spec (extended regex) for `^## (§[0-9]+ )?§Module-Decomposition`
-— the heading carries a §-number prefix (`## §10 §Module-Decomposition`),
-so the optional `§N ` group is required to match it. Present → `anchor`
+target spec (extended regex) for `^## (§[0-9]+ )?§?Module-Decomposition`
+— the heading may carry a §-number prefix (`## §10 §Module-Decomposition`),
+and the `§` before the word is optional (`## §7 Module-Decomposition`), so
+both optional parts are needed to match every shape. Present → `anchor`
 mode. Absent → `heuristik` mode. Both modes return the same output
 shape; only the §Authority-sources block reports which mode applied.
 
@@ -287,6 +288,15 @@ at `skills/_protocols/mca-brief-template-verification.md` §Claim-Verifications)
   The key is often *derived* (`normalize(name)`, a tuple) — quote the
   value AFTER the derivation the seam keys on, not the raw emit. A
   premise inherited from a council/ADR is a claim, not a settled fact.
+- **Key-and-value triggers:** one identifier that the brief or the code
+  uses both as a lookup or compare key and as a stamped, stored or routed
+  value (`stamp`, `route`, `look up by`, `compare to the configured`).
+  Emit **one row per consume-site**: every line that reads or writes the
+  value, keys and values alike, with the literal form that site uses
+  after its derivation (`split(":")[0]`, `bare()`, tag-stripped). Then add
+  a **same-form verdict** line: one form at every site, or the sites
+  grouped by form, with what each mismatch does (a compare that can never
+  match; a key too coarse to see a change the value carries).
 - **Importer/caller-count triggers:** any "N callers / importers /
   usages" count (depth/leverage analysis, deletion-test, or a brief's
   "used by N sites"). Grep `import` statements

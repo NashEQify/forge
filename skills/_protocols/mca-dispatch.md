@@ -144,7 +144,9 @@ the report under `## Re-dispatch <n>`. Buddy then:
 - **Review:** comes from Buddy after the report, at the depth `skills/code_review_board/SKILL.md` selects by risk.
   The implementer starts no agents (`agents/main-code-agent.md` §What the coder does NOT do).
 - **Commits:** the implementer commits only where the request or the repository's standing policy allows it
-  (`agents/main-code-agent.md` §Workflow); the brief says which applies.
+  (`agents/main-code-agent.md` §Workflow); the brief says which applies. A brief that has the implementer commit
+  carries `commit: {message: "<type>(<scope>): <subject>", types_from: "<path:line of the commit-message hook's type
+  list> | no hook"}`; the type is one from that list, read there before the brief is written.
 - **Authorization:** `framework/process-map.md` §Authorization.
 
 ## Source

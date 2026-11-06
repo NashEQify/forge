@@ -52,8 +52,9 @@ SoT: `$FRAMEWORK_DIR/framework/user-scope.md`. The machine setting
 fixed convention: `context/user/` with optional `soul.md`, `profile.md`
 (read by the start procedure after the freshness gate), and
 `navigation.md` to the detail files (on demand). The **entry** (session
-hook, launcher, or the installed block in `~/.codex/AGENTS.md` / a
-project's `AGENTS.override.md`) names who and where: the resolved soul, the
+hook, launcher, the installed block in `~/.codex/AGENTS.md` / a
+project's `AGENTS.override.md`, or under the plugin its SessionStart hook
+on Claude Code and the `forge:boot` skill on Codex) names who and where: the resolved soul, the
 start procedure, the user repo and the install profile. It states the
 §Restricted user scope rule. Where its carrier has room, it also includes
 whole files: the resolved soul and `operational.md` (an install-time block

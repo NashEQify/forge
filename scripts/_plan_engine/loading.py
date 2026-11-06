@@ -665,6 +665,28 @@ def done_task_keys(tasks: dict) -> set:
     return done
 
 
+def archived_task(tasks: dict, key):
+    """The archived Task for `key`, or None — for lookups that name one task.
+
+    load_tasks reads the live tree only, so a task moved to docs/tasks/archive/
+    at close is absent from the map (`--after 14` after archiving reported
+    "Task 14 not found"). Archive roots and key format follow done_task_keys:
+    the task map's `_roots`, PROJECT_ROOT for a plain dict.
+    """
+    roots = getattr(tasks, "_roots", None) or {"": PROJECT_ROOT}
+    for repo, root in roots.items():
+        if root == PROJECT_ROOT and not repo:
+            archived = _get_archived_tasks_cached()
+        else:
+            try:
+                archived = load_archived_tasks(root, repo_name=repo)
+            except (OSError, AttributeError):
+                archived = {}
+        if key in archived:
+            return archived[key]
+    return None
+
+
 def _milestone_archived_credit(m, tasks: dict, *, aggregate: bool = False,
                                done_only: bool = False) -> int:
     """Extra done/total count for milestone `m` from archived tasks.

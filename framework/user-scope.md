@@ -20,6 +20,7 @@ user_repo: /absolute/path/to/the/users/repo   # required
 profile: full-ai-integration                  # installer
 skill_links: []                               # optional, installer: external skill dirs
 maintenance: coordinated                      # optional, installer: the developer path
+buddy: every-session                          # optional, plugin on Claude Code: Buddy in every session
 ```
 
 The `full-ai-integration` installer writes it (`forge_install.py --profile
@@ -29,6 +30,24 @@ when no setting exists, and `--create-user-repo` creates the folder with
 per-person value; `profile`, `skill_links` and `maintenance` describe the
 machine's installation, not the person. The `project` install never reads,
 asks for or writes this setting: a project session has no user scope.
+
+The plugin (§5) reads this setting at session start; whenever Buddy starts,
+under the project's activation line as under the user switch, it resolves the
+user scope from it when one is configured. `buddy` is the user switch on Claude
+Code, read by the plugin's boot hook: the value `every-session` starts Buddy in
+every session; any other value is a warning and leaves the switch off. Codex
+runs no boot hook; there the user switch is the activation line in
+`~/.codex/AGENTS.md`. Without the switch, Buddy starts only in a project whose
+`AGENTS.md` (in the project directory or a parent up to the Git root) carries
+this line on its own:
+
+```
+Forge: start Buddy. Before the first answer, run the forge:boot skill and follow the boot entry it returns.
+```
+
+Elsewhere the plugin's boot hook stays silent and its listed skills stay
+usable. The rule lives in `scripts/user_scope.py` (`ACTIVATION_LINE`,
+`is_active`).
 
 ## 2. Convention inside the user repo
 
@@ -123,3 +142,10 @@ units (`scripts/user_scope.py` `ENTRY_UNITS`), and the active project's
 intent selects the workflow in both (`framework/workflow-selection.md`). The
 profile selects where Forge is installed and whether a user scope exists; it
 never changes who the user is.
+
+The plugin is the third way Forge is placed, beside the two installer
+profiles: the host's plugin manager (Claude Code, Codex) installs this
+repository's plugin (`.claude-plugin/`), and Buddy starts under the
+activation line or the user switch (§1). Its entry names the profile
+`plugin`, which is no `user.yaml` profile; on Claude Code the plugin's
+SessionStart hook carries it, on Codex the `forge:boot` skill prints it.

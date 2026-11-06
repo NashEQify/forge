@@ -13,6 +13,16 @@
 # per session: it emits nothing when the machine-wide hook is configured in
 # ~/.claude/settings.json (a machine installation made after the project one).
 #
+# Plugin mode (--plugin; the Forge plugin's orchestrators/claude-code/
+# plugin-hooks.json): Claude Code only (CLAUDE_CODE_ENTRYPOINT set; Codex runs
+# plugin hooks too and boots through the activation line instead), every
+# entrypoint, yielding to the machine-wide hook like project mode. It passes the
+# SessionStart payload to the resolver, which prints nothing unless Buddy is
+# active: the project's AGENTS.md carries the activation line, or the user
+# switch is on (framework/user-scope.md §1). If python3 fails, the activation
+# line alone is checked here (the user switch is not read) and the static entry
+# is emitted only when it is found.
+#
 # Self-resolves FRAMEWORK_DIR via own location, so it works even when
 # CLAUDE_PROJECT_DIR is unset (which is the default in claude-desktop).
 # No marker gate — fires every SessionStart; a marker check would be
@@ -22,7 +32,21 @@
 set -euo pipefail
 
 SCOPE_ARGS=()
-if [ "${1:-}" = "--project" ]; then
+MODE=machine
+if [ "${1:-}" = "--plugin" ]; then
+  MODE=plugin
+  SCOPE_ARGS=(--plugin)
+  # Host guard: Claude Code sets CLAUDE_CODE_ENTRYPOINT; Codex does not.
+  if [ -z "${CLAUDE_CODE_ENTRYPOINT:-}" ]; then
+    cat > /dev/null 2>&1 || true
+    exit 0
+  fi
+  # Yield to the machine-wide hook: one Buddy per session.
+  if [ -n "${HOME:-}" ] && grep -qs 'buddy-boot-inject\.sh' "$HOME/.claude/settings.json"; then
+    cat > /dev/null 2>&1 || true
+    exit 0
+  fi
+elif [ "${1:-}" = "--project" ]; then
   SCOPE_ARGS=(--project)
   # Yield to the machine-wide hook: one Buddy per session.
   if [ -n "${HOME:-}" ] && grep -qs 'buddy-boot-inject\.sh' "$HOME/.claude/settings.json"; then
@@ -46,9 +70,54 @@ if [ -z "$FRAMEWORK_DIR" ] || [ ! -d "$FRAMEWORK_DIR/agents/buddy" ]; then
   exit 0
 fi
 
-# Consume stdin (SessionStart JSON payload — we don't need it but CC
-# expects the hook to drain it).
-cat > /dev/null 2>&1 || true
+# Consume stdin (SessionStart JSON payload). Plugin mode keeps it for the
+# resolver (its cwd names the project); the other modes only drain it.
+PAYLOAD=""
+if [ "$MODE" = "plugin" ]; then
+  PAYLOAD="$(cat 2>/dev/null || true)"
+else
+  cat > /dev/null 2>&1 || true
+fi
+
+# The activation line, as user_scope.ACTIVATION_LINE (tests/test_plugin.py keeps
+# them equal), and its match for the plugin fallback: the project directory
+# (payload cwd, else CLAUDE_PROJECT_DIR, else the CWD) and its ancestors up to
+# the nearest one with a .git entry (without one, the directory alone); in each,
+# AGENTS.md as a regular readable file, first 1 MiB, one line equal to it with
+# surrounding whitespace stripped.
+ACTIVATION_LINE='Forge: start Buddy. Before the first answer, run the forge:boot skill and follow the boot entry it returns.'
+plugin_project_dir() {
+  local dir=""
+  dir="$(printf '%s' "$PAYLOAD" | LC_ALL=C sed -n 's/.*"cwd"[[:space:]]*:[[:space:]]*"\([^"\\]*\)".*/\1/p')"
+  dir="${dir%%$'\n'*}"
+  [ -n "$dir" ] || dir="${CLAUDE_PROJECT_DIR:-}"
+  [ -n "$dir" ] || dir="$PWD"
+  dir="$(cd -- "$dir" 2>/dev/null && pwd -P)" || return 1
+  [ -n "$dir" ] || return 1
+  printf '%s\n' "$dir"
+}
+activation_found() {
+  local dir="" pattern d
+  dir="$(plugin_project_dir)" || return 1
+  pattern="^[[:space:]]*$(printf '%s' "$ACTIVATION_LINE" | LC_ALL=C sed 's/[][\.*^$/]/\\&/g')[[:space:]]*\$"
+  local dirs=() git_root=""
+  d="$dir"
+  while :; do
+    dirs+=("$d")
+    if [ -e "$d/.git" ]; then git_root="$d"; break; fi
+    [ "$d" = "/" ] && break
+    d="$(dirname -- "$d")"
+  done
+  [ -n "$git_root" ] || dirs=("$dir")
+  for d in "${dirs[@]}"; do
+    local f="${d%/}/AGENTS.md"
+    # Process substitution, not a pipe: under pipefail a SIGPIPE in head would hide grep's match.
+    if [ -f "$f" ] && [ -r "$f" ] && LC_ALL=C grep -aqE -- "$pattern" < <(head -c 1048576 -- "$f" 2>/dev/null); then
+      return 0
+    fi
+  done
+  return 1
+}
 
 # Resolved boot entry: soul + user scope per framework/user-scope.md,
 # rendered as complete JSON by the resolver (json.dumps). The resolver never
@@ -59,7 +128,20 @@ RESOLVER=(python3 "$FRAMEWORK_DIR/scripts/user_scope.py" --framework-root "$FRAM
 if command -v timeout >/dev/null 2>&1; then
   RESOLVER=(timeout -k 0.5 1.5 "${RESOLVER[@]}")
 fi
-if out="$("${RESOLVER[@]}" 2>/dev/null)" && [ -n "$out" ]; then
+if [ "$MODE" = "plugin" ]; then
+  # Yield to a project install's hook (the project's .claude/settings.json or
+  # settings.local.json configures this script): one Buddy per session.
+  if project="$(plugin_project_dir)" \
+    && grep -qs 'buddy-boot-inject\.sh' "$project/.claude/settings.json" "$project/.claude/settings.local.json"; then
+    exit 0
+  fi
+  # Exit 0 with no output: Buddy is not active in this session — stay silent.
+  if out="$(printf '%s' "$PAYLOAD" | "${RESOLVER[@]}" 2>/dev/null)"; then
+    [ -n "$out" ] && printf '%s\n' "$out"
+    exit 0
+  fi
+  activation_found || exit 0
+elif out="$("${RESOLVER[@]}" 2>/dev/null)" && [ -n "$out" ]; then
   printf '%s\n' "$out"
   exit 0
 fi

@@ -1,0 +1,17 @@
+{
+  "description": "Forge: start Buddy at session start where the project's AGENTS.md carries the activation line or the user switch is on.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/orchestrators/claude-code/hooks/buddy-boot-inject.sh\" --plugin",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}

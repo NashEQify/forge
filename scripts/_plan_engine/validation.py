@@ -643,7 +643,8 @@ def validate_task_schema_conformance(
     """Schema-driven conformance pass over raw task YAML dicts.
 
     - project_root: repo root (or its docs/tasks dir). None → PROJECT_ROOT.
-    - single_id: when set, only docs/tasks/<id>.yaml is checked (no
+    - single_id: when set, only the task file(s) whose int(basename) is that
+      id are checked — `14.yaml` or `014.yaml`, live before archive/ (no
       milestone / cycle / cross-repo — pure schema check).
     - schema_path: override for the schema SoT (self-test injection).
 
@@ -756,14 +757,19 @@ def validate_task_schema_conformance(
         # docs/tasks/archive/<id>.yaml. In single-id mode, fall back to
         # the archive when the primary path is absent — an archived task
         # is terminal (only id+status enforced), NOT a 'file not found'
-        # ERROR.
+        # ERROR. A file matches by logical id (int(basename)), so a
+        # zero-padded `014.yaml` resolves `--validate 14`; every match is
+        # kept so the duplicate-id check below still flags `14.yaml` +
+        # `014.yaml` instead of silently picking one.
         primary = tasks_dir / f"{single_id}.yaml"
-        archived = tasks_dir / "archive" / f"{single_id}.yaml"
-        if primary.exists():
-            candidates = [primary]
-        elif archived.exists():
-            candidates = [archived]
-        else:
+        candidates = []
+        for directory in (tasks_dir, tasks_dir / "archive"):
+            candidates = sorted(
+                p for p in directory.glob("*.yaml")
+                if name_re.match(p.stem) and int(p.stem) == single_id)
+            if candidates:
+                break
+        if not candidates:
             issues.append(ValidationIssue(
                 "SCHEMA_FILE", "ERROR", task_id=single_id,
                 detail=f"task file not found: {primary}"))
@@ -774,20 +780,20 @@ def validate_task_schema_conformance(
     # zero-pad duplicate-logical-id collision. `327.yaml` and
     # `0327.yaml` both map to int(basename)=327 — pre-fix BOTH were
     # silently validated as task 327. Detect as a duplicate-id ERROR
-    # (calibration-independent structural defect).
-    if single_id is None:
-        by_logical: dict[int, list[str]] = {}
-        for p in candidates:
-            bn = p.stem
-            if name_re.match(bn):
-                by_logical.setdefault(int(bn), []).append(p.name)
-        for lid, names in sorted(by_logical.items()):
-            if len(names) > 1:
-                issues.append(ValidationIssue(
-                    "SCHEMA_ID_MISMATCH", "ERROR", task_id=lid,
-                    detail=(f"duplicate logical task id {lid}: "
-                            f"{sorted(names)} all resolve to "
-                            f"int(basename)={lid}")))
+    # (calibration-independent structural defect). Single-id mode runs it
+    # over the files that match that one id.
+    by_logical: dict[int, list[str]] = {}
+    for p in candidates:
+        bn = p.stem
+        if name_re.match(bn):
+            by_logical.setdefault(int(bn), []).append(p.name)
+    for lid, names in sorted(by_logical.items()):
+        if len(names) > 1:
+            issues.append(ValidationIssue(
+                "SCHEMA_ID_MISMATCH", "ERROR", task_id=lid,
+                detail=(f"duplicate logical task id {lid}: "
+                        f"{sorted(names)} all resolve to "
+                        f"int(basename)={lid}")))
 
     for yaml_path in candidates:
         basename = yaml_path.stem

@@ -26,7 +26,11 @@ from _plan_engine.compute import (
     compute_active_milestone_task_chain,
     compute_phase_progress,
 )
-from _plan_engine.loading import _milestone_archived_credit, done_task_keys
+from _plan_engine.loading import (
+    _milestone_archived_credit,
+    archived_task,
+    done_task_keys,
+)
 
 
 def fmt_boot(tasks, milestones, target, north_star, op_intent, critical_path,
@@ -354,7 +358,8 @@ def fmt_check(milestones, tasks, milestone_key=None):
 
 def fmt_after(tasks, milestones, task_id, blocking_scores):
     # task_id may be int (single-repo) or str "repo#id" (aggregate).
-    t = tasks.get(task_id)
+    # A closed task lives in the archive, outside the loaded map.
+    t = tasks.get(task_id) or archived_task(tasks, task_id)
     if not t:
         return f"Task {task_id} not found"
 

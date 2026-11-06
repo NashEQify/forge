@@ -1,0 +1,30 @@
+{
+  "name": "forge",
+  "description": "Forge: Buddy, the skills and the roles of a discipline for software development, for Claude Code and Codex; the agents listed here are the roles whose tool limits the host enforces.",
+  "author": {
+    "name": "NashEQify"
+  },
+  "license": "MIT",
+  "agents": [
+    "./agents/brief-architect.md",
+    "./agents/close-retro.md",
+    "./agents/code-architect-lens.md",
+    "./agents/code-verification.md",
+    "./agents/spec-verification.md",
+    "./agents/spec-text-drift-batch.md"
+  ],
+  "skills": [
+    "./skills/council",
+    "./skills/frame",
+    "./skills/bedrock_drill",
+    "./skills/code_review_board",
+    "./skills/root_cause_fix",
+    "./skills/spec_board",
+    "./skills/testing",
+    "./skills/security_and_hardening",
+    "./skills/workflow_router",
+    "./skills/zoom_out",
+    "./skills/boot"
+  ],
+  "hooks": "./orchestrators/claude-code/plugin-hooks.json"
+}
