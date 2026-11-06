@@ -173,6 +173,13 @@ def render_description(phrases: list[tuple[str, str]]) -> str:
     return DESC_PREFIX + catalog + DESC_SUFFIX
 
 
+# The setup offer of the listed method skills (skills/frame/SKILL.md carries the same line).
+OFFER_CHECK_LINE = (
+    'Without Buddy (plugin): if this session holds no Buddy boot entry, run `python3 <root>/scripts/forge_setup.py '
+    "offer-check` once, as its own call (`<root>`: two levels above this skill's folder); if it prints a line, pass that offer to the user in one sentence, then continue with this skill."
+)
+
+
 def render_body(phrases: list[tuple[str, str]]) -> str:
     """
     Thin generated body: one sign-post sentence, the generated-by
@@ -182,6 +189,7 @@ def render_body(phrases: list[tuple[str, str]]) -> str:
     lines = [
         "Read and follow `framework/work-principle.md` before taking up work.",
         "Resolve this reference against the framework root; retain the consumer CWD.",
+        OFFER_CHECK_LINE,
         "",
         "",
         "# Skill: workflow-router",

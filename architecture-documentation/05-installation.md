@@ -1,5 +1,23 @@
 # 05 — Installation
 
+## Ask your agent
+
+```text
+Install Forge from github.com/NashEQify/forge
+```
+
+Your agent follows [INSTALL.md](../INSTALL.md) in the repository: it checks the prerequisites, adds the plugin on
+each host it finds (Claude Code, Codex), asks whether Buddy runs in this project only or in every session (and, for
+every session, which folder holds your personal context, creating it on your yes), and runs
+`scripts/forge_setup.py`, which writes the activation line, the user switch and the `Read` allow rules. Then it
+checks that a fresh session opens with Buddy's orientation line. Nobody edits a file by hand. Once installed, the
+`forge:setup` skill changes the scope later or removes Forge, and the plugin's other skills offer it once when they
+run where Buddy is off.
+
+The rest of this page is the reference: what the agent runs, and how to do it by hand.
+
+## The plugin
+
 Forge reaches Claude Code and Codex as one **plugin**. The plugin carries the skills,
 the boot hook and the framework tree; two small switches turn Buddy on: one line in a
 project's `AGENTS.md` (Buddy in that project), or one setting in your user file (Buddy
@@ -58,15 +76,22 @@ MB from the public marketplace, 165 MB from a local checkout of a large working 
 Codex's boot status line then names a few uncommitted entries of that copy beside your
 own.
 
-The plugin lists eleven stand-alone skills (`council`, `frame`, `bedrock-drill`,
+The plugin lists twelve stand-alone skills (`council`, `frame`, `bedrock-drill`,
 `code-review-board`, `root-cause-fix`, `spec-board`, `testing`,
-`security-and-hardening`, `workflow-router`, `zoom-out`, `boot`) and six read-only roles
-whose tool limits the host enforces. Its always-on cost was about 1,390 tokens for the
-skill descriptions on Claude Code, about 1,900 with the roles. Every other skill and
+`security-and-hardening`, `workflow-router`, `zoom-out`, `boot`, `setup`) and six read-only roles
+whose tool limits the host enforces. Claude Code's own estimate of its always-on cost, in a
+clean home, is about 1,120 tokens for the skill descriptions and about 1,620 with the roles;
+the `setup` skill adds about 80 of them. Estimates for the same package have differed between
+installs by a few hundred tokens. Every other skill and
 role is reached by path from the framework tree and runs as a general agent reading its
 role file.
 
 ## Switch Buddy on
+
+`python3 <plugin root>/scripts/forge_setup.py` makes each of the writes below and is what the agent runs:
+`status` (what is set), `project --project DIR` (the line), `every-session --user-repo DIR [--create-user-repo]`
+(the switch on each host and the allow rules), `every-session --off`, `project --project DIR --off` and `remove`.
+Each prints what it wrote; running it again changes nothing, and `--dry-run` writes nothing.
 
 **In one project.** Add this line to the project's `AGENTS.md` and commit it, so a
 teammate who clones the project gets Buddy too:

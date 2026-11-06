@@ -75,7 +75,7 @@ Canonical for `consistency_check` §Skill-Map; sub-sections derived from `invoca
 
 ### Direct-Invokable Capabilities (`invocation.primary: user-facing`)
 
-`api_and_interface_design`, `boot`, `caveman`, `deprecation_and_migration`, `frontend_design_tty`, `improve_codebase_architecture`, `scoping`, `session_diagnosis`, `shipping_and_launch`, `show_open_tasks`, `task_creation`, `workflow_router`, `youtube_subtitles`, `zoom_out`
+`api_and_interface_design`, `boot`, `caveman`, `deprecation_and_migration`, `frontend_design_tty`, `improve_codebase_architecture`, `scoping`, `session_diagnosis`, `setup`, `shipping_and_launch`, `show_open_tasks`, `task_creation`, `workflow_router`, `youtube_subtitles`, `zoom_out`
 
 ### Workflow-Step / Sub-skill (`workflow-step` | `sub-skill`)
 

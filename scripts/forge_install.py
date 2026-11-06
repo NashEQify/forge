@@ -52,6 +52,7 @@ try:
         MACHINE_PROFILE,
         PROFILES,
         PROJECT_PROFILE,
+        USER_SCOPE_SCAFFOLD,
         UserScope,
         config_path,
         forge_soul,
@@ -77,6 +78,7 @@ except ImportError:
         MACHINE_PROFILE,
         PROFILES,
         PROJECT_PROFILE,
+        USER_SCOPE_SCAFFOLD,
         UserScope,
         config_path,
         forge_soul,
@@ -165,11 +167,6 @@ USER_SCOPE_NEEDED = (
     "your own, and no machine setting names one yet; name it with --user-repo PATH: an existing folder, "
     "or a new one with --create-user-repo (for example --user-repo ~/forge-context --create-user-repo)"
 )
-# The user-scope convention's scaffold: headings only, nothing personal filled in.
-USER_SCOPE_SCAFFOLD = {
-    "profile.md": "# Profile\n\n## Who\n\n## Values and priorities\n\n## Constraint defaults\n",
-    "navigation.md": "# Navigation\n\n- profile.md\n",
-}
 
 
 def _interactive() -> bool:

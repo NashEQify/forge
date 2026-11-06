@@ -100,6 +100,12 @@ ACTIVATION_LINE = (
     "Forge: start Buddy. Before the first answer, run the forge:boot skill and follow the boot entry it returns."
 )
 ACTIVATION_FILE = "AGENTS.md"
+# The user-scope convention's scaffold (context/user/ of a new user repository): headings only, nothing personal
+# filled in. Written by forge_install.py and forge_setup.py; this module only holds it.
+USER_SCOPE_SCAFFOLD = {
+    "profile.md": "# Profile\n\n## Who\n\n## Values and priorities\n\n## Constraint defaults\n",
+    "navigation.md": "# Navigation\n\n- profile.md\n",
+}
 ACTIVATION_MAX_BYTES = 1 << 20  # at most 1 MiB of AGENTS.md is read
 # Byte-wise strip set, the C locale's [[:space:]] (the bash fallback matches with LC_ALL=C grep).
 _LINE_SPACE = b" \t\r\n\v\f"

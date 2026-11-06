@@ -20,6 +20,7 @@ uses: [_protocols/plan-review, _protocols/discourse, _protocols/context-isolatio
 
 Read and follow `framework/work-principle.md` before taking up work.
 Resolve this reference against the framework root; retain the consumer CWD.
+Without Buddy (plugin): if this session holds no Buddy boot entry, run `python3 <root>/scripts/forge_setup.py offer-check` once, as its own call (`<root>`: two levels above this skill's folder); if it prints a line, pass that offer to the user in one sentence, then continue with this skill.
 
 
 # Skill: spec-board

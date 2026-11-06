@@ -79,12 +79,24 @@ with credit:
 
 ## Install and remove
 
+Ask your agent (Claude Code or Codex):
+
+```text
+Install Forge from github.com/NashEQify/forge
+```
+
+It follows [INSTALL.md](INSTALL.md): adds the plugin on the hosts it finds, asks whether
+Buddy should run in this project only or in every session (and, for every session, where
+your personal context lives), writes the settings itself and checks that a fresh session
+starts Buddy. Later, `forge:setup` changes the scope or removes Forge ("switch Buddy on
+for every session", "remove Forge").
+
 You need Claude Code or Codex, Git, Bash (Linux, macOS, or WSL on Windows) and Python
 3.10 or newer with PyYAML (`python3 -m pip install pyyaml`). The boot hook calls plain
 `python3`, so PyYAML must be available to that interpreter, not only inside a virtual
 environment.
 
-Forge is one plugin for both hosts. Add it from the Forge repository:
+**By hand (reference).** Forge is one plugin for both hosts. Add it from the Forge repository:
 
 ```bash
 claude plugin marketplace add NashEQify/forge
@@ -92,7 +104,7 @@ claude plugin install forge@forge --scope user
 ```
 
 On Codex the commands are `codex plugin marketplace add NashEQify/forge` and `codex
-plugin add forge@forge`. The plugin adds eleven skills and six read-only roles; it does
+plugin add forge@forge`. The plugin adds twelve skills and six read-only roles; it does
 not start Buddy by itself.
 
 **Buddy in one project.** Commit this line in the project's `AGENTS.md`:

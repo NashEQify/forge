@@ -19,7 +19,8 @@
         "./skills/security_and_hardening",
         "./skills/workflow_router",
         "./skills/zoom_out",
-        "./skills/boot"
+        "./skills/boot",
+        "./skills/setup"
       ]
     }
   ]
