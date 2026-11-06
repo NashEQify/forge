@@ -3,8 +3,9 @@
 ## What lives here?
 
 **Orchestrator-neutral persona definitions** (source of truth).
-Adapters under `orchestrators/<name>/` and `.claude/agents/`
-reference these files — they don't duplicate, they reference.
+Adapters under `orchestrators/<name>/` and the plugin manifest
+(`.claude-plugin/plugin.json`) reference these files — they don't
+duplicate, they reference.
 
 **Persona clusters:**
 - **Buddy** (`buddy/`) — the orchestrator itself (soul,

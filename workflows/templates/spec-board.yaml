@@ -13,7 +13,7 @@
 # konvergieren durch Loop. Staerkstes Model entscheidet finale Freigabe.
 # Sub-Agent-MDs (SoT): agents/board-{chief,adversary,adversary-2,implementer,impact,consumer}.md
 # (the third Deep-Pass adversary is a Sonnet instance of board-adversary)
-# CC-Adapter (abgeleitet): .claude/agents/board-{...}/board-{...}.md
+# Claude Code: general agent run told to read the SoT file (the plugin lists no board role)
 #
 # v6.0 — 2 Modi (Standard/Deep), Quick eliminiert, empirisch validiertes Agent-Narrowing
 # v5.2 — Consumer: Document Architecture Lens + Consumption Profile
@@ -427,9 +427,8 @@ reviewer_roles:
 # Model Override Mechanismus
 # ============================================================
 #
-# Die CC-Agent-MDs unter .claude/agents/ haben ein statisches model-Feld
-# (z.B. board-adversary: model: opus). Der Agent-Tool-Aufruf hat einen
-# optionalen model-Parameter der das Frontmatter ueberschreibt.
+# The role files set no model (framework/models.md); the Agent tool call
+# names the model through its model parameter.
 #
 # Standard is all-Opus. Deep Pass 1 has 2 Sonnet instances (Adversary-3-as-
 # sonnet-instance, Consumer). Deep Pass 2+ is all-Opus (the third adversary

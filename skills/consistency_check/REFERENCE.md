@@ -10,7 +10,7 @@ details, and refactoring checklists.
 
 A commit is structural when it **moves, renames, deletes, or
 creates** files under `agents/`, `context/` (except
-`context/history/`), `.claude/agents/`, `orchestrators/`,
+`context/history/`), `.claude-plugin/`, `orchestrators/`,
 `skills/`, `workflows/`. Pure content changes to existing files
 are NOT structural. History entries are not structural changes.
 
@@ -57,7 +57,6 @@ automatically; cross-refs do not need rewriting.
 
 Paths with orphan check:
 - `agents/*.md` (except README.md).
-- `.claude/agents/**/*.md`.
 - `orchestrators/**/agent/*.md`.
 - `orchestrators/**/command/*.md`.
 - `skills/*/SKILL.md`.
@@ -68,8 +67,8 @@ Orphan = no incoming reference at all. → **WARNING**.
 
 ### 3. Adapter-SoT sync
 
-Per agent: SoT under `agents/` exists · CC adapter
-`.claude/agents/<name>/<name>.md` references the SoT · OC
+Per agent: SoT under `agents/` exists · each `agents` entry of
+`.claude-plugin/plugin.json` names an existing SoT · OC
 adapter
 `orchestrators/opencode/.opencode/agent/<name>.md` references
 the SoT · the "load and follow" path is correct. Reconcile
@@ -101,8 +100,8 @@ file on disk must be in the tree (except `history/` generic).
 
 ### 5. Refactoring checklists
 
-**Agent added / removed / moved:** SoT under `agents/` · CC
-adapter (`.claude/agents/<name>.md`) · OC adapter
+**Agent added / removed / moved:** SoT under `agents/` · plugin
+manifest entry (`.claude-plugin/plugin.json`, when listed) · OC adapter
 (`orchestrators/opencode/.opencode/agent/<name>.md`) · OC
 command (when present) · `agents/README.md` ·
 `agents/navigation.md` inventory (generator run) ·

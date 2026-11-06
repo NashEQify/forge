@@ -9,6 +9,11 @@ Codex, or another harness can inject the skill into the
 available-skills system-reminder for proactive discovery; they carry
 no methodology.
 
+The repository's own set (`.claude/skills/`, no `--framework-root`,
+not Codex) leaves out every skill `.claude-plugin/plugin.json` lists:
+the Forge plugin already lists those as `forge:<name>`, so a wrapper
+would show them twice in a session in this checkout.
+
 The wrapper is a DERIVED artifact: this script is the sole generator,
 `consistency_check` (check 10) is the validator. Mirrors the
 `scripts/generate_skill_map.py` generator + validator split.
@@ -48,6 +53,7 @@ concrete SoT paths and hash-owned installation; --portable generates templates.
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -243,6 +249,38 @@ class FrontmatterValueError(RuntimeError):
     """A frontmatter field has an invalid type (e.g. cc_wrapper non-bool)."""
 
 
+class PluginManifestError(RuntimeError):
+    """`.claude-plugin/plugin.json` exists but its `skills` list cannot be read."""
+
+
+def plugin_skill_dirs(root: Path) -> frozenset[str]:
+    """
+    The `skills/<dir>` names the plugin manifest lists (`skills: ["./skills/<dir>", ...]`).
+
+    No manifest ⇒ empty set (a tree without the plugin keeps every wrapper).
+    A manifest that is not JSON, or a `skills` entry that is not a
+    `skills/<dir>` path ⇒ PluginManifestError, before any write.
+    """
+    manifest = root / ".claude-plugin" / "plugin.json"
+    if not manifest.is_file():
+        return frozenset()
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise PluginManifestError(f"{manifest}: unreadable ({exc.__class__.__name__})") from exc
+    entries = data.get("skills", []) if isinstance(data, dict) else None
+    if not isinstance(entries, list):
+        raise PluginManifestError(f"{manifest}: `skills` must be a list")
+    dirs = set()
+    for entry in entries:
+        parts = Path(entry).parts if isinstance(entry, str) else ()
+        parts = tuple(part for part in parts if part != ".")
+        if len(parts) != 2 or parts[0] != "skills":
+            raise PluginManifestError(f"{manifest}: skill entry is not ./skills/<dir>: {entry!r}")
+        dirs.add(parts[1])
+    return frozenset(dirs)
+
+
 def is_eligible(data: dict | None) -> tuple[bool, str | None]:
     """
     Apply the locked Option-C inclusion predicate.
@@ -416,10 +454,11 @@ def build_desired(
     tool_label: str = "Claude Code",
     discovery_label: str = "Claude-Code",
     framework_root: Path | None = None,
+    exclude_dirs: frozenset[str] = frozenset(),
 ) -> dict[str, str]:
     """
     Map kebab wrapper name -> wrapper file content for every eligible
-    skill.
+    skill whose source directory is not in `exclude_dirs`.
 
     Raises FrontmatterValueError on a `cc_wrapper` type violation and
     CollisionError on a kebab-name collision between two eligible
@@ -433,6 +472,8 @@ def build_desired(
     seen_fold: dict[str, tuple[str, str]] = {}
 
     for src_dir, data in iter_skills(skills_root):
+        if src_dir in exclude_dirs:
+            continue
         eligible, hard_err = is_eligible(data)
         if hard_err is not None:
             raise FrontmatterValueError(f"{src_dir}: {hard_err}")
@@ -628,13 +669,17 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     try:
+        # The repository's own set leaves out what the plugin lists; the
+        # managed (Codex / --framework-root) set is unchanged.
+        exclude_dirs = frozenset() if managed else plugin_skill_dirs(root)
         desired = build_desired(
             skills_root,
             tool_label=args.tool_label,
             discovery_label=discovery_label,
             framework_root=concrete_root,
+            exclude_dirs=exclude_dirs,
         )
-    except FrontmatterValueError as exc:
+    except (FrontmatterValueError, PluginManifestError) as exc:
         print(f"generate_skill_wrappers: ERROR {exc}", file=sys.stderr)
         return 1
     except CollisionError as exc:

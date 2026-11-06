@@ -34,6 +34,9 @@ carries no methodology — the SoT is `skills/<dir>/SKILL.md`.
   `cc_wrapper` is the override-only escape hatch (see field
   definition in `framework/skill-anatomy-frontmatter.md`); absent ⇒ the implicit `invocation.primary` rule
   decides.
+- **Plugin-listed skills:** the repository's set leaves out every skill
+  `.claude-plugin/plugin.json` lists; the plugin lists it as `forge:<name>`, and a wrapper would show it twice in a
+  session in this checkout. The Codex / `--framework-root` set keeps them. An unreadable manifest is a hard error.
 - **Failure modes:** malformed/missing frontmatter ⇒ skip + stderr
   warning, continue (no crash); two eligible skills normalizing to
   the same kebab name ⇒ hard error, non-zero exit, NO partial

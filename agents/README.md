@@ -33,7 +33,8 @@ follows the [selected process](../framework/process-map.md) and its runbook.
 
 ## Host discovery
 
-- Claude Code wrappers are under `.claude/agents/` in the framework.
+- Claude Code lists the roles `.claude-plugin/plugin.json` names (as `forge:<role>`); every other role runs as a
+  general agent that reads its file here.
 - OpenCode wrappers are under `orchestrators/opencode/.opencode/agent/`.
 - Codex roles are generated into its configured agents directory by the installer.
 - Cursor includes separate rules and persona templates; these alone do not provide
