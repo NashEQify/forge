@@ -7,9 +7,10 @@ Install Forge from github.com/NashEQify/forge
 ```
 
 Your agent follows [INSTALL.md](../INSTALL.md) in the repository: it checks the prerequisites, adds the plugin on
-each host it finds (Claude Code, Codex), asks whether Buddy runs in this project only or in every session (and, for
+each host it finds (Claude Code, Codex; OpenCode needs no plugin step), asks whether Buddy runs in this project only or in every session (and, for
 every session, which folder holds your personal context, creating it on your yes), and runs
-`scripts/forge_setup.py`, which writes the activation line, the user switch and the `Read` allow rules. Then it
+`scripts/forge_setup.py`, which writes the activation line, the user switch, the `Read` allow rules and OpenCode's
+boot skill. Then it
 checks that a fresh session opens with Buddy's orientation line. Nobody edits a file by hand. Once installed, the
 `forge:setup` skill changes the scope later or removes Forge, and the plugin's other skills offer it once when they
 run where Buddy is off.
@@ -26,8 +27,9 @@ The rest of this page is the reference: what the agent runs, and how to do it by
 Forge reaches Claude Code and Codex as one **plugin**. The plugin carries the skills,
 the boot hook and the framework tree; two small switches turn Buddy on: one line in a
 project's `AGENTS.md` (Buddy in that project), or one setting in your user file (Buddy
-in every session). OpenCode has no plugin route yet; it keeps the installer
-(`forge_install.py`, below).
+in every session). OpenCode has no plugin, but the same two switches reach it through a
+boot skill the setup writes ([OpenCode](#opencode), below); the older installer route
+(`forge_install.py`) also still exists.
 
 What the live proof showed, and what it did not, is stated per item. Observed so far:
 
@@ -46,7 +48,7 @@ What the live proof showed, and what it did not, is stated per item. Observed so
 
 ## Prerequisites
 
-- Claude Code or Codex. Host applications and model access are separate from Forge.
+- Claude Code, Codex or OpenCode. Host applications and model access are separate from Forge.
 - Git, and Python 3.10+ with PyYAML available to the `python3` the boot hook runs. The
   hook calls plain `python3`; a virtual environment does not change what a host runs.
 - Bash and the Unix command-line tools the hook uses.
@@ -114,7 +116,8 @@ the folder; if the assistant answers without it, Forge did not load.
 **In every session (the personal extension).** The switch differs by host. On Claude
 Code, set `buddy: every-session` in `~/.config/forge/user.yaml`. On Codex, append the
 activation line (the one above) to `~/.codex/AGENTS.md`; it started the boot with the
-user scope in the checks. On either host, `user.yaml` also names
+user scope in the checks. On OpenCode, the activation line goes into
+`~/.config/opencode/AGENTS.md` ([OpenCode](#opencode)). On every host, `user.yaml` also names
 your user repository, the folder of personal context (who you are, how you work, open
 topics) that carries across projects; the layout is
 [the user-scope convention](../framework/user-scope.md).
@@ -159,12 +162,40 @@ run `codex plugin list` with input from `/dev/null`. Both hosts' removal passed 
 checks; Codex also leaves entries in its `config.toml` (the marketplace, the plugin and
 trust levels of the folders it ran in), which are the host's.
 
-## OpenCode (the installer)
+## OpenCode
 
-OpenCode has no plugin route. For it, `scripts/forge_install.py` installs Buddy in every
-session of the machine (`--profile full-ai-integration --host opencode`), and
-`setup-oc.sh` runs that command. OpenCode has no entry of its own yet; until it does, this
-installer is what OpenCode uses, and nothing else of it is offered. It earlier served
+### The switches (the plugin model's route)
+
+OpenCode has no plugin, but it reads a project's `AGENTS.md` itself (walking up from the
+folder) and a global rules file `${XDG_CONFIG_HOME:-~/.config}/opencode/AGENTS.md`, and it
+lists skills from `${XDG_CONFIG_HOME:-~/.config}/opencode/skills/`. `forge_setup.py` uses
+these, so the same switches as on Claude Code and Codex start Buddy: the project's
+activation line, or for every session the activation line in OpenCode's global
+`AGENTS.md`. With `opencode` on `PATH`, `project` and `every-session` write the boot skill
+`forge:boot` (`opencode/skills/forge-boot/SKILL.md`), a short file that names a Forge
+folder and the boot-entry command. That folder is the one the setup ran from; when that
+is Claude Code's versioned plugin cache, it is Codex's stable plugin folder if Codex has
+the plugin, else the versioned folder, and then the setup is run again after a plugin
+update (`status` reports the folder chosen); `every-session` also writes the
+global line, `every-session --off` takes the line out and keeps the skill, and `remove`
+takes out both. No OpenCode JSON config is edited. The skill points at a Forge folder:
+one found for Claude Code or Codex serves; on a machine with only OpenCode, clone Forge
+(`git clone https://github.com/NashEQify/forge ~/forge`) and run
+`python3 ~/forge/scripts/forge_setup.py`. `--host opencode` limits the host files a run
+writes to OpenCode's; `every-session`, its `--off` and `remove` still write the shared
+machine setting `~/.config/forge/user.yaml`, whose switch Claude Code reads too. An
+edited or foreign `forge-boot` skill stops the setup with its path, and `remove` keeps an
+edited one and names it. The check: `opencode run "hi"` in the project folder; the reply
+opens with Buddy's orientation line. `opencode debug skill` lists `forge:boot` without
+starting a model.
+
+### The installer (the older route)
+
+`scripts/forge_install.py` installs Buddy in every session of the machine
+(`--profile full-ai-integration --host opencode`), and `setup-oc.sh` runs that command.
+It renders Forge's own OpenCode configuration and the `oc` launcher; a session started
+through `oc` loads that configuration whatever the switches above say. Both routes exist.
+It earlier served
 Claude Code and Codex too; those paths were retired when the plugin proved out, and a
 machine that still carries them is moved off with the installer of the Forge version
 before this change: check that version out, run its `--remove`, then add the plugin.

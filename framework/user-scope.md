@@ -1,6 +1,6 @@
 # User scope — who the user is, on every machine
 
-forge serves one person per machine (the plugin's user switch or the OpenCode `full-ai-integration` installation). Everything that is about
+forge serves one person per machine (the plugin model's user switch, on OpenCode too, or the OpenCode `full-ai-integration` installation). Everything that is about
 that person — their soul (how Buddy works with them), their values and
 profile, the facts about them — lives in **their own user repository**, not
 in the framework. The framework knows only where that repository is; the
@@ -23,7 +23,8 @@ maintenance: coordinated                      # optional, installer: the develop
 buddy: every-session                          # optional, plugin on Claude Code: Buddy in every session
 ```
 
-The OpenCode installer writes it (`forge_install.py --profile
+The plugin model's setup writes it (`forge_setup.py every-session`, `skills/setup/SKILL.md`); the
+OpenCode installer writes it too (`forge_install.py --profile
 full-ai-integration --host opencode --user-repo PATH`; on a terminal it asks once for the folder
 when no setting exists, and `--create-user-repo` creates the folder with
 `context/user/profile.md` and `navigation.md`). `user_repo` is the only

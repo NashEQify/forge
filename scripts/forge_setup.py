@@ -3,10 +3,10 @@
 
 The agent decides in conversation (which scope, which folder); this script gathers the facts and does the writes:
 the project's activation line, the machine setting (user.yaml), Codex's AGENTS.md line, Claude Code's two Read
-allow rules and the user-scope scaffold. user_scope.py stays the reader; this script imports its constants and
-readers and re-implements none of them.
+allow rules, OpenCode's boot skill and AGENTS.md line, and the user-scope scaffold. user_scope.py stays the reader;
+this script imports its constants and readers and re-implements none of them.
 
-CLI: forge_setup.py [--dry-run] [--host claude-code|codex]... <command> [options]
+CLI: forge_setup.py [--dry-run] [--host claude-code|codex|opencode]... <command> [options]
   status [--project DIR]                         facts as JSON, writes nothing
   project --project DIR [--off]                  the activation line in DIR/AGENTS.md (+ Claude's rules)
   every-session [--user-repo PATH] [--create-user-repo] | every-session --off
@@ -21,8 +21,10 @@ from __future__ import annotations
 
 import argparse
 import functools
+import hashlib
 import json
 import os
+import shlex
 import shutil
 import stat
 import subprocess
@@ -70,7 +72,7 @@ except ImportError:
     )
 
 FRAMEWORK = Path(__file__).resolve().parents[1]
-HOSTS = ("claude-code", "codex")
+HOSTS = ("claude-code", "codex", "opencode")
 PLUGIN_ID = "forge@forge"
 PLUGIN_MANIFEST = Path(".claude-plugin") / "plugin.json"
 LINE = ACTIVATION_LINE.encode("utf-8")
@@ -99,6 +101,22 @@ def claude_dir() -> Path:
 
 def codex_dir() -> Path:
     return _env_dir("CODEX_HOME", "~/.codex")
+
+
+def opencode_dir() -> Path:
+    """OpenCode's global config folder: $XDG_CONFIG_HOME/opencode (absolute values only), else ~/.config/opencode."""
+    xdg = os.environ.get("XDG_CONFIG_HOME")
+    base = Path(xdg) if xdg and os.path.isabs(xdg) else Path(os.path.expanduser("~/.config"))
+    return Path(os.path.abspath(base)) / "opencode"
+
+
+def opencode_skill_path() -> Path:
+    return opencode_dir() / "skills" / "forge-boot" / "SKILL.md"
+
+
+def opencode_cli() -> str | None:
+    """OpenCode has no plugin: it counts as found when its CLI is on PATH."""
+    return shutil.which("opencode")
 
 
 def state_dir() -> Path:
@@ -155,6 +173,24 @@ def codex_root() -> Path | None:
     return root if _is_root(str(root)) else None
 
 
+def in_claude_cache(root: Path) -> bool:
+    """True when root lies inside Claude Code's plugin cache (a versioned folder a plugin update replaces)."""
+    cache = claude_dir() / "plugins" / "cache"
+    return _inside(root, cache) and os.path.realpath(root) != os.path.realpath(cache)
+
+
+def opencode_root() -> tuple[Path, str | None]:
+    """The framework root OpenCode's boot skill names, and a note when that root is a versioned plugin folder.
+    FRAMEWORK, unless it lies in Claude's plugin cache: then Codex's stable folder when present, else FRAMEWORK."""
+    if not in_claude_cache(FRAMEWORK):
+        return FRAMEWORK, None
+    croot = codex_root()
+    if croot is not None:
+        return croot, None
+    return FRAMEWORK, (f"OpenCode's boot skill names {FRAMEWORK}, a versioned Claude Code plugin folder; run this "
+                       "setup again after a plugin update")
+
+
 def read_rule(path: Path) -> str:
     """The host's form: an absolute path /a/b gives Read(//a/b/**)."""
     return "Read(/" + str(norm(path)) + "/**)"
@@ -162,9 +198,7 @@ def read_rule(path: Path) -> str:
 
 def root_rule(root: Path) -> str:
     """A root inside the host's plugin cache gets the rule on its version-independent parent."""
-    cache = claude_dir() / "plugins" / "cache"
-    inside = _inside(root, cache) and os.path.realpath(root) != os.path.realpath(cache)
-    return read_rule(root.parent if inside else root)
+    return read_rule(root.parent if in_claude_cache(root) else root)
 
 
 def usable_repo(path: Path) -> bool:
@@ -188,6 +222,13 @@ def _read(path: Path) -> bytes | None:
         return None
     except OSError as exc:
         raise Refusal(f"{path}: cannot read ({exc.__class__.__name__})") from exc
+
+
+def _read_quiet(path: Path) -> bytes | None:
+    try:
+        return None if os.path.islink(path) else _read(path)
+    except Refusal:
+        return None
 
 
 def _umask() -> int:
@@ -226,6 +267,7 @@ class Plan:
         self.unchanged: list[dict] = []
         self.skipped: list[dict] = []
         self.notes: list[str] = []
+        self.prune: list[str] = []  # folders removed after the writes when they are left empty
 
     def read(self, path: Path) -> bytes | None:
         key = str(path)
@@ -267,6 +309,12 @@ class Plan:
             else:
                 write_atomic(Path(key), data)
             done.append(key)
+        for folder in self.prune:
+            try:
+                if os.path.isdir(folder) and not os.path.islink(folder) and not os.listdir(folder):
+                    os.rmdir(folder)
+            except OSError:
+                pass
 
     def result(self) -> dict:
         return {
@@ -400,6 +448,111 @@ def drop_rules(plan: Plan, record: dict, rules: list[str]) -> None:
         plan.put(path, _dump_settings(obj), "rules removed: " + ", ".join(dict.fromkeys(found)))
 
 
+# --- OpenCode's boot skill ------------------------------------------------------------------------------------
+
+
+def render_opencode_skill(root: Path) -> bytes:
+    """The boot skill OpenCode lists as forge:boot: it points at the boot entry and the plugin's boot skill and
+    copies none of their prose."""
+    root = norm(root)
+    quoted = shlex.quote(str(root))
+    text = (
+        "---\n"
+        "name: forge:boot\n"
+        "description: >\n"
+        "  Start Buddy, Forge's orchestrator, on OpenCode. Use when the project's or\n"
+        "  the user's AGENTS.md asks for the forge:boot skill before the first answer.\n"
+        "---\n"
+        "\n"
+        "# Skill: forge:boot (OpenCode)\n"
+        "\n"
+        f"Forge's setup wrote this file; `python3 {shlex.quote(str(root / 'scripts' / 'forge_setup.py'))} remove` "
+        "takes it out.\n"
+        "\n"
+        f"Framework root: `{root}`\n"
+        "\n"
+        "Run, as its own call, and follow the printed entry before the first answer:\n"
+        "\n"
+        f"`python3 {shlex.quote(str(root / 'scripts' / 'user_scope.py'))} --framework-root {quoted} --boot-entry`\n"
+        "\n"
+        "The rest of the procedure (whether the boot is already running, what to do when the command fails) is in "
+        f"`{root / 'skills' / 'boot' / 'SKILL.md'}`.\n"
+    )
+    return text.encode("utf-8")
+
+
+def _sha(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def _owned(record: dict, path: Path, data: bytes) -> bool:
+    """True when the record owns path and data matches any hash it lists (an interrupted update lists several)."""
+    entry = record["opencode_skill"]
+    return bool(entry) and entry["path"] == str(path) and _sha(data) in entry["sha256"]
+
+
+def write_skill(plan: Plan, record: dict) -> None:
+    """Write the boot skill: missing → written, equal → unchanged, Forge's earlier render → updated; anything else
+    (an edited or foreign file, a link) refuses before the first write."""
+    path = opencode_skill_path()
+    if os.path.islink(path):
+        raise Refusal(f"{path}: a link; Forge's OpenCode boot skill is written only as a file of its own")
+    root, note = opencode_root()
+    if note:
+        plan.notes.append(note)
+    want = render_opencode_skill(root)
+    data = plan.read(path)
+    if data == want:
+        plan.same(path, "OpenCode boot skill present")
+    elif data is None:
+        plan.put(path, want, "OpenCode boot skill written")
+    elif _owned(record, path, data):
+        plan.put(path, want, "OpenCode boot skill updated")
+    else:
+        raise Refusal(f"{path}: holds content Forge's setup did not write (edited, or another forge-boot skill)")
+    record["opencode_skill"] = {"path": str(path), "sha256": [_sha(want)]}
+
+
+def drop_skill(plan: Plan, record: dict) -> None:
+    """Delete the boot skill when its bytes are Forge's (a recorded hash or the current render); keep an edited one
+    or a link with a note. Its forge-boot folder is pruned when left empty; the skills folder never is."""
+    entry = record["opencode_skill"]
+    path = Path(entry["path"]) if entry else opencode_skill_path()
+    record["opencode_skill"] = None
+    if os.path.islink(path):
+        plan.notes.append(f"{path}: a link, kept (Forge's setup writes no link there)")
+        return
+    data = plan.read(path)
+    if data is None:
+        return
+    if data == render_opencode_skill(opencode_root()[0]) or (entry and _sha(data) in entry["sha256"]):
+        plan.put(path, None, "OpenCode boot skill removed")
+        plan.prune.append(str(path.parent))
+    else:
+        plan.notes.append(f"{path}: edited after Forge's setup wrote it, kept; delete it by hand if it is not wanted")
+
+
+def opencode_agents(record: dict) -> Path:
+    """OpenCode's global AGENTS.md: the recorded one, else the current location."""
+    return Path(record["opencode"]["path"]) if record["opencode"] else opencode_dir() / ACTIVATION_FILE
+
+
+def opencode_parts(plan: Plan, record: dict, every_session: bool) -> None:
+    """OpenCode's share: the boot skill and, for every session, the line in its global AGENTS.md."""
+    skill, agents = opencode_skill_path(), opencode_dir() / ACTIVATION_FILE
+    if not plan.host("opencode"):
+        plan.skip(skill, "opencode not selected (--host)")
+        return
+    if opencode_cli() is None:
+        plan.skip(skill, "OpenCode not found (no opencode on PATH)")
+        return
+    write_skill(plan, record)
+    if every_session:
+        added = add_line(plan, agents)
+        if added:
+            record["opencode"] = added
+
+
 # --- the machine setting ---------------------------------------------------------------------------------------
 
 
@@ -436,8 +589,8 @@ def put_setting(plan: Plan, path: Path, data: dict, what: str) -> None:
 
 
 def empty_record() -> dict:
-    return {"version": 1, "projects": [], "codex": None, "rules": [], "settings_created": False,
-            "permissions_created": False, "allow_created": False}
+    return {"version": 1, "projects": [], "codex": None, "opencode": None, "opencode_skill": None, "rules": [],
+            "settings_created": False, "permissions_created": False, "allow_created": False}
 
 
 def load_record() -> dict:
@@ -452,6 +605,13 @@ def load_record() -> dict:
     record["projects"] = [e for e in data.get("projects", []) if entry_ok(e)] if isinstance(
         data.get("projects"), list) else []
     record["codex"] = data["codex"] if entry_ok(data.get("codex")) else None
+    record["opencode"] = data["opencode"] if entry_ok(data.get("opencode")) else None
+    skill = data.get("opencode_skill")
+    if entry_ok(skill):
+        hashes = skill.get("sha256")
+        hashes = [hashes] if isinstance(hashes, str) else hashes  # an older record: one hash as a string
+        if isinstance(hashes, list) and hashes and all(isinstance(h, str) for h in hashes):
+            record["opencode_skill"] = {"path": skill["path"], "sha256": list(dict.fromkeys(hashes))}
     record["rules"] = [r for r in data.get("rules", []) if isinstance(r, str)] if isinstance(
         data.get("rules"), list) else []
     for flag in ("settings_created", "permissions_created", "allow_created"):
@@ -475,10 +635,19 @@ def union_record(before: dict, after: dict) -> dict:
     projects = {e["path"]: e for e in before["projects"]}
     projects.update({e["path"]: e for e in after["projects"]})
     merged = {"version": 1, "projects": list(projects.values()), "codex": after["codex"] or before["codex"],
+              "opencode": after["opencode"] or before["opencode"],
+              "opencode_skill": _union_skill(before["opencode_skill"], after["opencode_skill"]),
               "rules": list(dict.fromkeys(before["rules"] + after["rules"]))}
     for flag in ("settings_created", "permissions_created", "allow_created"):
         merged[flag] = before[flag] or after[flag]
     return merged
+
+
+def _union_skill(before: dict | None, after: dict | None) -> dict | None:
+    """Every hash either record owns for the same skill path: until the file on disk matches one, Forge owns it."""
+    if before and after and before["path"] == after["path"]:
+        return {"path": after["path"], "sha256": list(dict.fromkeys(before["sha256"] + after["sha256"]))}
+    return after or before
 
 
 def _entry(entries: list[dict], path: Path) -> dict | None:
@@ -524,9 +693,13 @@ def cmd_project(args, plan: Plan, record: dict) -> None:
     added = add_line(plan, agents)
     if added:
         record["projects"] = _without(record["projects"], agents) + [added]
-    if not claude_root() and not codex_root():
-        plan.notes.append("no Forge plugin found on either host; the line takes effect once the plugin is installed")
+    found = ((plan.host("claude-code") and claude_root()) or (plan.host("codex") and codex_root())
+             or (plan.host("opencode") and opencode_cli()))
+    if not found:
+        plan.notes.append("no selected host found (no Forge plugin on Claude Code or Codex, no opencode on PATH); "
+                          "the line takes effect once one is installed")
     claude_rules(plan, record, configured_repo(), repo_required=False)
+    opencode_parts(plan, record, every_session=False)
 
 
 def cmd_every_session(args, plan: Plan, record: dict) -> None:
@@ -541,6 +714,9 @@ def cmd_every_session(args, plan: Plan, record: dict) -> None:
         if plan.host("codex"):
             drop_line(plan, codex_agents, record["codex"])
             record["codex"] = None
+        if plan.host("opencode"):  # the boot skill stays: projects may still carry the line
+            drop_line(plan, opencode_agents(record), record["opencode"])
+            record["opencode"] = None
         return
     if args.user_repo:
         repo = norm(args.user_repo)
@@ -576,6 +752,7 @@ def cmd_every_session(args, plan: Plan, record: dict) -> None:
         if added:
             record["codex"] = added
     claude_rules(plan, record, repo, repo_required=True)
+    opencode_parts(plan, record, every_session=True)
 
 
 def cmd_remove(args, plan: Plan, record: dict) -> None:
@@ -609,12 +786,17 @@ def cmd_remove(args, plan: Plan, record: dict) -> None:
         if isinstance(repo, str) and os.path.isabs(repo):
             rules.append(read_rule(Path(repo)))
         drop_rules(plan, record, rules)
+    if plan.host("opencode"):
+        drop_line(plan, opencode_agents(record), record["opencode"])
+        record["opencode"] = None
+        drop_skill(plan, record)
     if os.path.lexists(marker_path()):
         plan.put(marker_path(), None, "offer marker removed")
 
 
 def cmd_status(args) -> dict:
     root, croot = claude_root(), codex_root()
+    skill, oc_root = opencode_skill_path(), opencode_root()[0]
     setting = config_path(os.environ)
     data = None
     if setting is not None and os.path.lexists(setting):
@@ -648,6 +830,12 @@ def cmd_status(args) -> dict:
                 "cli": shutil.which("codex"), "plugin_root": str(croot) if croot else None,
                 "agents_md": str(codex_dir() / ACTIVATION_FILE),
                 "line": has_activation_line(codex_dir() / ACTIVATION_FILE),
+            },
+            "opencode": {
+                "cli": opencode_cli(), "framework_root": str(oc_root), "skill": str(skill),
+                "skill_present": _read_quiet(skill) == render_opencode_skill(oc_root),
+                "agents_md": str(opencode_dir() / ACTIVATION_FILE),
+                "line": has_activation_line(opencode_dir() / ACTIVATION_FILE),
             },
         },
         "setting": {

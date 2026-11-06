@@ -135,8 +135,12 @@ marketplace (boot, roles, resume, knowledge maintenance, removal) and one with t
 marketplace; Codex with the public marketplace (boot, user scope, knowledge maintenance).
 An update to a newer version is not checked yet. A Claude Code session in the
 cloud works from committed files only, and plugin users need two `Read` allow rules to
-avoid a prompt on every boot. OpenCode has no plugin; it installs through
-`scripts/forge_install.py --profile full-ai-integration --host opencode`.
+avoid a prompt on every boot. OpenCode has no plugin, but takes the same switches:
+`scripts/forge_setup.py` gives it a `forge:boot` skill pointing at a Forge folder, and
+OpenCode reads the `AGENTS.md` line itself (in every session: the line in
+`~/.config/opencode/AGENTS.md`). The older OpenCode route,
+`scripts/forge_install.py --profile full-ai-integration --host opencode` with its `oc`
+launcher, still exists.
 
 The [installation guide](architecture-documentation/05-installation.md) has the details,
 the allow rules and the OpenCode route.

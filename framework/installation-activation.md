@@ -2,7 +2,13 @@
 
 Canonical shared source/update/install/recovery procedure of the OpenCode machine
 installation (`full-ai-integration`, host `opencode`). Claude Code and Codex take
-Forge through the plugin and its own update, not through this installer.
+Forge through the plugin and its own update, not through this installer. OpenCode set
+up through the plugin model's switches (`forge_setup.py`: a `forge:boot` skill and
+`AGENTS.md` lines) is not governed by it either: its skill names a Forge folder and
+reads it in place (the folder the setup ran from, or Codex's stable plugin folder in place
+of Claude Code's versioned plugin folder). For a clone and for Codex's stable folder a
+change there reaches the next session without an install; a skill that names a versioned
+Claude Code plugin folder needs the setup run again after a plugin update.
 
 **Which machines this procedure governs.** On the user path, `git pull` in the
 checkout is the update: each `oc` start runs `forge_install.py --refresh`,
