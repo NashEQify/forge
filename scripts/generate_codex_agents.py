@@ -41,11 +41,6 @@ WRITER_ROLES = {
     "spec-text-drift-batch",
     "security",
 }
-# Markers of the Codex AGENTS.md boot block the retired installer wrote (managed_install.SHARED_BLOCKS).
-START = "<!-- FORGE-CODEX-BOOT:START -->"
-END = "<!-- FORGE-CODEX-BOOT:END -->"
-
-
 _TAIL = (
     "Keep the consumer CWD as the active project. Resolve framework paths\n"
     "against the framework root above; resolve project intent.md, AGENTS.md,\n"
@@ -100,8 +95,7 @@ def active_roles(repo: Path) -> list[Role]:
     """The role inventory: every active neutral role under `repo`/agents, by file name.
 
     Navigation documents (no frontmatter) and archived, deprecated or inactive
-    roles are not roles. One owner for the Codex TOML renderer, the project
-    install's Claude role wrappers and the capability closure.
+    roles are not roles. The Codex TOML renderer's role inventory.
     """
     roles = []
     seen = set()

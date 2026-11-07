@@ -22,9 +22,8 @@ handoff and follows the project's commit/push rules. It does not require a softw
 plan. Optional personal context stays in its configured owner; project knowledge
 can be used independently.
 
-To update, run `git pull` in the Forge checkout; the next session start brings
-the installed entries up to it. A machine on the coordinated maintenance path
-(for changing Forge itself) follows [installation activation](installation-activation.md).
+To update, use the host's plugin update; changing Forge's own sources follows
+[installation activation](installation-activation.md).
 
 This page is a reader entry. Canonical selection rules are in
 [process-map.md](process-map.md); capability ownership is in

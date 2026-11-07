@@ -29,8 +29,7 @@ bits and a trusted-project setting do not override a protected mount.
   call `exec_command` with `sandbox_permissions="require_escalated"` directly when
   that route is offered. Do not make a predictably denied sandbox attempt first.
   This includes `fetch`, `pull`, `add`, `commit`, `push`, and helpers that invoke
-  them, notably `scripts/git-status-check.sh` (which also reads installer status,
-  opening the installation lock file). A push can update tracking refs.
+  them, notably `scripts/git-status-check.sh`. A push can update tracking refs.
 - Keep requests scoped to the concrete command and repository. Supply the host's
   required justification. If using `prefix_rule`, choose a narrow stable prefix
   such as `["git", "pull"]`; never propose a blanket `["git"]` or shell prefix.
@@ -68,4 +67,4 @@ an authorized push compare the intended local commit with the intended remote re
 Host reference: [OpenAI agent approvals and security](https://learn.chatgpt.com/docs/agent-approvals-security).
 This is an instruction protocol, not an app configuration change or an automatic
 retry hook. Activate shared source/integration changes through
-[coordinated installation](../../framework/installation-activation.md).
+[installation activation](../../framework/installation-activation.md).

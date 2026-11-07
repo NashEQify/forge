@@ -3,8 +3,8 @@
 ## What lives here?
 
 **Buddy as orchestrator** — tool-neutral definition. Adapters
-(the Claude Code wrapper in the repo-root `CLAUDE.md`, the OpenCode
-wrapper under `orchestrators/opencode/`) load these files at boot.
+(the Claude Code wrapper in the repo-root `CLAUDE.md`, `AGENTS.md` for Codex
+and OpenCode) load these files at boot.
 
 **Three-tier model** (matches the repo-wide tier convention):
 - **Tier 0 (invariants):** `framework/invariants.md`; the repo-root `CLAUDE.md` +

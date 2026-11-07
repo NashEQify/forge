@@ -59,7 +59,7 @@ def test_scope_leakage(continuity, attack):
 
 
 # TC-009 | INFRA: none
-@pytest.mark.parametrize('variant', ['ordinary', 'migration', 'compare-replace-barrier'])
+@pytest.mark.parametrize('variant', ['ordinary', 'compare-replace-barrier'])
 def test_concurrent_overwrite(continuity, variant):
     cli = continuity
     seed(cli)

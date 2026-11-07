@@ -28,8 +28,7 @@ Forge reaches Claude Code and Codex as one **plugin**. The plugin carries the sk
 the boot hook and the framework tree; two small switches turn Buddy on: one line in a
 project's `AGENTS.md` (Buddy in that project), or one setting in your user file (Buddy
 in every session). OpenCode has no plugin, but the same two switches reach it through a
-boot skill the setup writes ([OpenCode](#opencode), below); the older installer route
-(`forge_install.py`) also still exists.
+boot skill the setup writes ([OpenCode](#opencode), below).
 
 What the live proof showed, and what it did not, is stated per item. Observed so far:
 
@@ -142,8 +141,10 @@ Claude Code and Codex update the plugin through their own commands (`claude plug
 marketplace update forge` and `claude plugin update forge@forge`; `codex plugin
 marketplace upgrade forge`). Both answered "already at the latest version" when nothing
 had changed; an update to a newer commit was not shown. A local marketplace on a Forge
-checkout follows the checkout (`git -C ~/forge pull`) on Claude Code. Sessions already
-running keep what they loaded.
+checkout follows the checkout (`git -C ~/forge pull`) on Claude Code, and OpenCode's
+boot skill reads the Forge folder it names in place. Sessions already running keep what
+they loaded. Changing Forge's own sources on a machine whose sessions read them follows
+[installation activation](../framework/installation-activation.md).
 
 ## Removal
 
@@ -163,8 +164,6 @@ checks; Codex also leaves entries in its `config.toml` (the marketplace, the plu
 trust levels of the folders it ran in), which are the host's.
 
 ## OpenCode
-
-### The switches (the plugin model's route)
 
 OpenCode has no plugin, but it reads a project's `AGENTS.md` itself (walking up from the
 folder) and a global rules file `${XDG_CONFIG_HOME:-~/.config}/opencode/AGENTS.md`, and it
@@ -188,134 +187,5 @@ edited or foreign `forge-boot` skill stops the setup with its path, and `remove`
 edited one and names it. The check: `opencode run "hi"` in the project folder; the reply
 opens with Buddy's orientation line. `opencode debug skill` lists `forge:boot` without
 starting a model.
-
-### The installer (the older route)
-
-`scripts/forge_install.py` installs Buddy in every session of the machine
-(`--profile full-ai-integration --host opencode`), and `setup-oc.sh` runs that command.
-It renders Forge's own OpenCode configuration and the `oc` launcher; a session started
-through `oc` loads that configuration whatever the switches above say. Both routes exist.
-It earlier served
-Claude Code and Codex too; those paths were retired when the plugin proved out, and a
-machine that still carries them is moved off with the installer of the Forge version
-before this change: check that version out, run its `--remove`, then add the plugin.
-That removal also unlinks the Git hooks it had linked into the Forge checkout and the
-skill links it registered, and it prunes the folders it emptied; re-link a skill folder
-of your own, and run `bash scripts/install-git-hooks.sh` in the checkout if you commit
-there. The current installer refuses the `project` profile and the hosts `claude-code` and `codex`
-with a message naming the plugin.
-
-```bash
-git clone https://github.com/NashEQify/forge ~/forge
-python3 ~/forge/scripts/forge_install.py --profile full-ai-integration --host opencode \
-  --user-repo ~/forge-context --create-user-repo --check
-```
-
-`--check` writes nothing: exit 0 means nothing would change, 1 means changes are
-planned, 2 means a reported conflict or error. It lists every path: the machine setting
-`~/.config/forge/user.yaml`, the selection record under `~/.local/state/forge/`, the `oc`
-launcher in `~/.local/bin` and `~/.config/forge/opencode.jsonc`. Start OpenCode with
-`oc`; that directory must come before other commands of the same name on `PATH`.
-`--user-repo PATH` names the user repository (an existing folder, or with
-`--create-user-repo` a new one with `context/user/profile.md` and `navigation.md`);
-once the machine setting names it, later runs need no `--user-repo`. Managed-file
-hashes protect ownership: unknown files, edited managed files and unexpected links stop
-the installation, and `--remove` takes out exactly what it wrote and stops, naming the
-file, if you changed one.
-
-Update with `git -C ~/forge pull`; each `oc` start runs `forge_install.py --refresh`
-first, which brings the installed entries up to the checkout's commit and never stops
-a start (it skips with one line when it may not run). `oc` refuses to start while a
-tracked file other than Markdown has uncommitted changes in the checkout.
-
-## The coordinated maintenance path (changing Forge itself)
-
-This path is for people who change Forge's own sources on the machine they work on.
-It is opt-in: add `--coordinated` (with `--user-repo`) to the OpenCode
-install. The machine setting then records `maintenance: coordinated`, later installs
-keep it, and the refresh skips. A checkout without a Git commit takes this path too.
-
-On this path, changes follow [coordinated activation](../framework/installation-activation.md):
-prepare a baseline before changing sources, install, then accept the new generation
-in a fresh session.
-
-### Verification
-
-An install on this path can succeed while returning **`validation_pending`**.
-Ordinary sessions must remain stopped until acceptance of that exact generation.
-Inspect:
-
-```bash
-python3 ~/forge/scripts/forge_install.py --maintenance status
-```
-
-Record the returned operation ID. For a controlled fresh acceptance session through
-the launcher, substitute that exact ID:
-
-```bash
-~/.local/bin/oc --forge-validation-operation "<operation-id>"
-```
-
-A wrong operation ID, partial installation or source drift refuses entry. For other
-host entrypoints, start a controlled fresh acceptance session and verify the same
-installed generation and selected capabilities. Before that session, check the
-exact pending generation without marking ordinary sessions ready:
-
-```bash
-python3 ~/forge/scripts/forge_install.py --maintenance status \
-  --validation-operation "<operation-id>" --require-ready
-```
-
-Verify what was actually installed: normal entry and instruction loading, relevant
-retrieval, authorized capture/save/resume, and exact selected development continuation
-where applicable. Record host, profile, source generation, observations and limits
-in an evidence file. Check runtime permissions separately from role defaults.
-
-Only after those checks have actually succeeded, submit the evidence:
-
-```bash
-python3 ~/forge/scripts/forge_install.py --maintenance validate \
-  --operation-id "<operation-id>" --validation-evidence /path/to/actual-evidence.md
-python3 ~/forge/scripts/forge_install.py --maintenance status --require-ready
-```
-
-The evidence file must contain real observations. The installer records its hash;
-it cannot establish the truth of a written “passed” claim. Skipped or inaccessible
-targets must remain explicitly unverified.
-
-### Updating on this path
-
-Classify the change first: instruction-only Markdown takes its light path (edit,
-regenerate derived files when needed, consistency check, commit). Every other
-change takes these steps:
-
-1. Identify the source checkout, affected integrations and authorized consumers.
-   Preserve configuration and local changes.
-2. Stop affected sessions before any pull or source edit, and keep them stopped.
-3. From the currently installed generation, prepare the actual working-tree baseline:
-
-```bash
-python3 ~/forge/scripts/forge_install.py --maintenance prepare \
-  --consumer-root /path/to/authorized-consumer
-```
-
-4. Perform the authorized source update without discarding local work.
-5. Preview and apply the intended installation, then perform fresh acceptance above.
-
-Repeat `--consumer-root` for additional explicitly authorized consumers. Omit it
-when no consumer development state is selected for checking. Do not scan unrelated
-workspaces. Preparing after an update cannot retroactively preserve the old baseline.
-
-### Interrupted installation
-
-Inspect `--maintenance status` first. Use `--maintenance retry` or
-`--maintenance rollback` for the journaled operation as appropriate. Retry accepts
-journal-proven states; unknown later edits remain conflicts. Rollback checks the
-matched source/integration baseline and selected workflow compatibility, preserving
-consumer content. It is not a repository reset.
-
-Keep sessions stopped during `applying`, `recovery_required` or unresolved
-`validation_pending`. Do not unlink coordination locks, erase journals or hand-edit
-workflow state to make an installation appear ready.
 
 Next: [Host integrations](07-tool-integrations.md) · [Troubleshooting](12-troubleshooting.md).

@@ -14,10 +14,10 @@ The consumer workspace remains the active CWD and retains its own rules.
 |---|---|---|
 | Codex | The plugin's `forge:boot` skill, asked for by the `AGENTS.md` activation line | Boot and `save` checked from the public marketplace; fresh-session loading, discovery and effective permissions still need verification per machine |
 | Claude Code | The plugin: listed skills and roles, and a SessionStart hook that boots Buddy where the activation line or the user switch asks | Checked on Claude Code 2.1.302 (CLI); hooks depend on the entrypoint; host access rules still apply |
-| OpenCode | `oc` launcher and generated configuration (the installer, `full-ai-integration` only) | Wrapper and configuration loading need host verification |
-| Cursor | Project rules referring to canonical sources | Rules-based adapter, outside the plugin and the installer |
+| OpenCode | The `forge:boot` skill `forge_setup.py` writes, asked for by the `AGENTS.md` activation line | One hosted model called the skill in every case, another never did; the TUI and local models are not verified |
+| Cursor | Project rules referring to canonical sources | Rules-based adapter, outside the plugin and the setup |
 
-The plugin serves Claude Code and Codex; the installer now serves OpenCode only.
+The plugin serves Claude Code and Codex; `forge_setup.py` gives OpenCode the same switches.
 [Installation](05-installation.md) contains the commands and the activation lines. This
 page explains the runtime differences.
 
@@ -37,17 +37,16 @@ boot read.
 
 ## OpenCode
 
-The `oc` launcher resolves the framework checkout, checks installation readiness,
-sets `OPENCODE_CONFIG_DIR` to the framework's wrapper directory and sets
-`OPENCODE_CONFIG` to `~/.config/forge/opencode.jsonc`.
+OpenCode reads the project's `AGENTS.md` and its global rules file itself and lists
+skills from its skills folder. The setup writes the `forge:boot` skill there, which
+names a Forge folder and the boot-entry command, and for every session the activation
+line in the global `AGENTS.md`; no OpenCode JSON configuration is edited. Local project
+AGENTS instructions add the consumer's rules; framework availability does not replace
+them.
 
-The managed configuration is machine-specific. Its source template and neutral
-role definitions remain in the framework. Local project AGENTS instructions add
-the consumer's rules; framework availability does not replace them.
-
-OpenCode uses launcher/configuration entry rather than Claude's SessionStart scripts.
-Verify that the selected role and required skills are available in the session.
-Do not infer host parity from shared Markdown or from the existence of the launcher.
+OpenCode has no SessionStart hook: the activation line asks the model to call the
+skill. Roles run as general agents that read their file. Verify in the session that
+the skill was called; do not infer host parity from shared Markdown.
 
 ## Codex
 
@@ -80,10 +79,10 @@ profile. Claude SessionStart scripts are not Codex boot hooks.
 
 The [Cursor adapter](../orchestrators/cursor/README.md) supplies project rules for
 reading Forge's canonical instructions. Its layout and setup differ from the
-managed Codex, Claude Code and OpenCode integrations.
+plugin (Codex, Claude Code) and OpenCode's boot skill.
 
 Treat these as shipped rules, not evidence of equivalent subagent execution,
-permission enforcement or installer coverage. Verify what the actual Cursor session
+permission enforcement or setup coverage. Verify what the actual Cursor session
 loads and can execute before applying a method that requires independent agents.
 
 ## Delegation vehicles
@@ -96,7 +95,8 @@ offers differs; treat unverified rows as unknown, not as parity.
 |---|---|---|---|
 | Claude desktop app | Subagents | Yes. A session started without a worktree shares the commissioning checkout and branch (observed: `git rev-parse --show-toplevel` → the main checkout, branch `main`) | Optional at session start (own worktree and branch) |
 | Claude Code CLI | Subagents | Background sessions per the host documentation; not verified here | Per the host documentation (subagent and background-session isolation); not verified here |
-| Codex, OpenCode | Generated roles | Not verified | Not verified |
+| Codex | Generated roles | Not verified | Not verified |
+| OpenCode | General agents reading the role file | Not verified | Not verified |
 | Cursor | Not verified | Not verified | Host worktree feature; not verified here |
 
 Fallbacks: without a persistent-session vehicle, the coordinating Buddy runs

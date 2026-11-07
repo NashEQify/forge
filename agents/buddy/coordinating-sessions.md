@@ -76,13 +76,12 @@ the same time — for example several unrelated incidents, or tasks in
 different areas — each get their own worktree and branch from the base
 branch. Independence is verified, not read from task areas: the items contend
 for no shared hook, test machine or installation window; the base commit is
-the installed generation (installer status is `complete` with no uncommitted
-sources, the main checkout's index matches `HEAD`, and no path a branch touches
-has uncommitted changes there); their merge targets do not overlap; and the
+the main checkout's `HEAD` (its index matches `HEAD`, and no path a branch
+touches has uncommitted changes there); their merge targets do not overlap; and the
 user's working mode allows parallel work. A parallel start of programme tasks
 also needs the confirmation in §Programme order. Cut worktrees outside the
-framework tree: inside it the installer counts their files as unrecorded
-sources and readiness refuses. A host that cuts session worktrees inside the
+framework tree: inside it every host and check that reads the tree in place
+reads their files too. A host that cuts session worktrees inside the
 checkout by default (the Claude desktop app uses `.claude/worktrees/`) gets
 the worktree path from the coordinator, cut beforehand. Otherwise run them in sequence. The spec and the code of one delivery
 are one workstream: from the build workflow's Prepare phase on they live
@@ -96,10 +95,9 @@ Integration follows the repository's rules — a pull request and its review
 where the repository uses them, otherwise a merge by the coordinator — one
 branch at a time, with the repository's checks on the branch and on the
 merged result (the project's full gate where it names the merger as its runner:
-`skills/testing/lean-suite.md` §Change-scoped runs and the full gate), activation where the change needs it (on a coordinated
-machine, a merge that changes a non-Markdown installed source is a full-path
-activation: prepare before the merge, `framework/installation-activation.md`
-§Choosing the path), and push where
+`skills/testing/lean-suite.md` §Change-scoped runs and the full gate), activation where the change needs it (a merge that changes a non-Markdown
+source hosts read in place is a full-path activation:
+`framework/installation-activation.md` §Choosing the path), and push where
 authorized; then the worktree and branch are removed. Commits in a shared
 checkout go by path (`git commit -- <paths>` or explicit path staging), never
 blanket staging or another owner's staged entries. Before pushing the base

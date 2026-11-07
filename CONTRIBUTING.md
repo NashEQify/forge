@@ -14,10 +14,9 @@ expected outcome; distinguish observed behavior from an alternative design you p
 For a bug, say which layer failed, because each needs different evidence:
 
 1. **Installation:** the plugin is missing or stale. `claude plugin list` (or `codex
-   plugin list`) shows whether `forge@forge` is installed and from where. For an
-   OpenCode installation, `python3 scripts/forge_install.py --profile
-   full-ai-integration --host opencode --check` and `python3 scripts/forge_install.py
-   --maintenance status` show its state.
+   plugin list`) shows whether `forge@forge` is installed and from where. For
+   OpenCode, `python3 scripts/forge_setup.py status` shows the boot skill and the
+   folder it names.
 2. **Instruction loading:** the agent host did not load Forge's instructions, or the
    agent did not follow the boot they ask for. Report how you started the session
    and whether its first answer followed the boot instructions; that first answer
@@ -99,12 +98,11 @@ by the hook; run the relevant ones explicitly.
 
 ## Working with an installation
 
-Use the [coordinated installation guide](architecture-documentation/05-installation.md).
-Claude Code and Codex use the plugin; only the OpenCode installation
-(`setup-oc.sh`) uses the coordinated path. Instruction-only Markdown follows the light
-path of the activation contract; for other shared source files stop affected
-sessions and preserve the current generation before changing them. Verify the installed outcome after
-changes, not just the repository diff.
+Use the [installation guide](architecture-documentation/05-installation.md).
+Changes to Forge's own sources follow [installation activation](framework/installation-activation.md):
+instruction-only Markdown takes its light path; for other source files keep affected
+sessions off them while they change and verify in a fresh session afterwards, not just
+the repository diff.
 
 ## Boundaries
 

@@ -12,7 +12,7 @@ machinery. Software development has its own explicit state and checks.
 | Protected publication or recovery | [Continuity](../framework/continuity.md) | Stale baselines, interrupted writes and scope containment |
 | Generic reasoning method | Its skill and required protocols | Supplied-context use and complete independent reports |
 | Software progression | Runbook and workflow/plan owner | Exact state, selected obligations and compatibility |
-| Host discovery or source update | [Installation activation](../framework/installation-activation.md) | Managed ownership, selected closure and fresh-session behavior |
+| Host discovery or source update | [Installation activation](../framework/installation-activation.md) | Where each host reads Forge, the light or full path, fresh-session behavior |
 
 Installation availability must not become an implicit workflow selector. Do not
 make generic methods depend on software task files simply because a development
@@ -51,8 +51,8 @@ obligations during both upgrade and rollback.
 Edit canonical sources before regenerating their derived surfaces. Inspect each
 generator's source for its destinations and supported check options; do not assume
 `--help` or `--check` is implemented by every generator. Generating
-repository files and activating installed host integrations are different actions.
-The latter belongs to the coordinated installer.
+repository files and activating host integrations are different actions; the latter
+follows [installation activation](../framework/installation-activation.md).
 
 Run relevant generators again to check idempotency: a second run should introduce
 no additional intended changes. Report the actual diff/check result rather than
@@ -126,14 +126,12 @@ Housekeeping reconciles owners, routes and freshness using the common continuity
 boundary. It need not start a development engine. Knowledge migrations must preserve
 working-tree qualifications and usable routes while recovering partial publications.
 
-For someone who uses Forge, `git pull` in the checkout is the update: the next
-session start refreshes the installed entries. Changing Forge's own sources on the
-machine you work on takes the coordinated maintenance path (`--coordinated`):
-instruction-only Markdown changes take the light path of the activation contract,
-and other framework source and integration updates require stopped-session
-maintenance. Prepare the actual existing baseline before changing sources, then install and
-verify the resulting generation. The [installation guide](05-installation.md) gives
-the procedure; on that path neither a Git pull nor unchanged wrappers proves a usable activation.
+For someone who uses Forge, the host's plugin update is the update
+([updating](05-installation.md#updating)). Changing Forge's own sources on the machine
+you work on follows [installation activation](../framework/installation-activation.md):
+instruction-only Markdown changes take its light path; other source and integration
+changes take its full path, with the tests and a fresh session on each host that reads
+them.
 
 ## Contribution notes
 

@@ -64,7 +64,7 @@ A test plan covers what the change changes, and nothing else.
   edge cases. A real gap surfaces later as a real defect, with its own
   test.
 - Instruction text is not a test subject: its presence and wording carry
-  themselves, and an existing consistency or installer check covers the
+  themselves, and an existing consistency or generator check covers the
   rest. An AC met by instruction text alone names that check in the
   coverage matrix instead of a TC (`run-strategy.md` §Test selection, light path).
 - The adversary test plan and the skeleton writer run only when the

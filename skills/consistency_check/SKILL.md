@@ -66,7 +66,7 @@ implemented).
 2. **Orphan files** — agents / skills / adapters without an
    incoming reference → WARNING.
 3. **Adapter-SoT sync** — `agents/` SoT ↔ `.claude-plugin/plugin.json`
-   `agents` ↔ `orchestrators/opencode/` → ERROR on divergence.
+   `agents` → ERROR on divergence.
 3b. **Framework invariants** — `framework/invariants.md` holds
    `## Invariants`, no adapter keeps a second copy, both adapters
    point to it, `operational.md` delegates without duplication,

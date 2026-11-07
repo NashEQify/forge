@@ -360,34 +360,6 @@ def render_wrapper(
 TRIGGER_MARKERS = ("Use when", "Triggers when", "Trigger:")
 
 
-def render_entry(
-    name: str,
-    description: str,
-    source_path: str | Path,
-    *,
-    tool_label: str = "Claude Code",
-    discovery_label: str = "Claude-Code",
-) -> str:
-    """
-    Render a synthetic installed entry (e.g. `save`, whose SoT is a workflow
-    runbook, not `skills/*/SKILL.md`) with the wrapper template and marker.
-    `source_path` must be absolute; the description must carry a trigger
-    marker so the harness can discover the entry.
-    """
-    if not Path(source_path).is_absolute():
-        raise ValueError(f"entry source must be absolute: {source_path}")
-    if not any(marker in normalize_description(description) for marker in TRIGGER_MARKERS):
-        raise ValueError(f"entry description lacks a trigger marker: {name}")
-    return _render(
-        name,
-        description,
-        str(source_path),
-        tool_label=tool_label,
-        discovery_label=discovery_label,
-        installed=True,
-    )
-
-
 def _render(
     name_kebab: str,
     description: str,
@@ -418,7 +390,7 @@ def _render(
         tool_label=tool_label,
         discovery_label=discovery_label,
         edit_policy=(
-            "Do not hand-edit. The installer preserves custom edits and\n"
+            "Do not hand-edit. The generator keeps custom edits and\n"
             "reports conflicts instead of overwriting them."
             if installed else
             "Do not hand-edit — edits\n"

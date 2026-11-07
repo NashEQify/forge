@@ -65,8 +65,9 @@ missing. It is not permission to commit secrets.
 
 The [continuity contract](framework/continuity.md) describes scoped path checks,
 protected snapshots, baseline comparison and durable multi-file recovery. The
-[installation contract](framework/installation-activation.md) describes managed
-ownership, coordinated activation and matched rollback. These mechanisms complement
+[installation activation](framework/installation-activation.md) describes how a source
+change reaches each host and is verified; the setup reads and checks every target
+before its first write and refuses edited or foreign files. These mechanisms complement
 local approval and storage rules; they do not replace them.
 
 Frozen-history conventions and source-evidence protocols support traceability.

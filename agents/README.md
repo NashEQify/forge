@@ -35,8 +35,8 @@ follows the [selected process](../framework/process-map.md) and its runbook.
 
 - Claude Code lists the roles `.claude-plugin/plugin.json` names (as `forge:<role>`); every other role runs as a
   general agent that reads its file here.
-- OpenCode wrappers are under `orchestrators/opencode/.opencode/agent/`.
-- Codex roles are generated into its configured agents directory by the installer.
+- Codex roles are generated into `.codex/agents/` by `scripts/generate_codex_agents.py`.
+- On OpenCode every role runs as a general agent that reads its file here.
 - Cursor includes separate rules and persona templates; these alone do not provide
   independent-agent execution.
 

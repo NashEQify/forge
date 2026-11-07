@@ -2,8 +2,8 @@
 
 One repository/distribution, plugin and release carries three independently
 usable capabilities. Physical folders are not the capability boundary. The plugin
-(Claude Code, Codex) or the OpenCode machine installer (`full-ai-integration`)
-places them; neither selects a software workflow.
+(Claude Code, Codex) and the setup's boot skill (OpenCode) make all three available;
+neither selects a software workflow.
 
 | Capability | Owns | Depends on |
 |---|---|---|
@@ -12,7 +12,7 @@ places them; neither selects a software workflow.
 | Software development | Task/plan/spec/code/test/release processes and exact engine state | Continuity and selected reasoning methods |
 
 The small common substrate owns location/privacy, authorization, evidence, host
-adaptation and installation composition. It does not absorb topic policy or engine
+adaptation and setup. It does not absorb topic policy or engine
 interpretation. Users retain one conversational entry and their current folders.
 
 ## Live authority and dependency inventory
@@ -37,15 +37,13 @@ interpretation. Users retain one conversational entry and their current folders.
 | Role reasoning-trace/first-principles protocols | Required generic reviewer reasoning discipline |
 | Development caller examples, build/solve paths, ADR helpers | Conditional on explicit development caller; not standalone prerequisites |
 | Historical spec citations | Design attribution, not runtime loading requirements |
-| `install-profiles.yaml` and installer selection | Authoritative selected source/role/helper closure |
 | Skill/router/role generators and generated adapters | Thin discovery/host forwarding, no lifecycle algorithms |
-| Setup entrypoints, source-update hooks, activation owner | Shared coordinated installation boundary |
+| `scripts/forge_setup.py`, `framework/installation-activation.md` | Shared setup and source-update boundary |
 | Release synchronization | Distribution inclusion; retain supported old routes |
 
-The installer validates selected closure, not just top-level skills. Optional methods
-use the same installation mechanism; no plugin registry or independent release is
-introduced. Missing required sources fail recoverably before integration changes.
-Verify selected nondevelopment capability with development-only sources absent.
+The plugin ships the whole tree; there is no per-capability selection, plugin registry
+or independent release. Every path reference in the instruction owners resolves
+(`tests/capabilities/test_reference_resolution.py`).
 
 ## Entry and result contracts
 

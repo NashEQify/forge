@@ -68,10 +68,8 @@ Orphan = no incoming reference at all. → **WARNING**.
 ### 3. Adapter-SoT sync
 
 Per agent: SoT under `agents/` exists · each `agents` entry of
-`.claude-plugin/plugin.json` names an existing SoT · OC
-adapter
-`orchestrators/opencode/.opencode/agent/<name>.md` references
-the SoT · the "load and follow" path is correct. Reconcile
+`.claude-plugin/plugin.json` names an existing SoT · the
+"load and follow" path is correct. Reconcile
 against `agents/README.md`.
 
 ### 3b. Framework invariants and the adapters
@@ -101,9 +99,8 @@ file on disk must be in the tree (except `history/` generic).
 ### 5. Refactoring checklists
 
 **Agent added / removed / moved:** SoT under `agents/` · plugin
-manifest entry (`.claude-plugin/plugin.json`, when listed) · OC adapter
-(`orchestrators/opencode/.opencode/agent/<name>.md`) · OC
-command (when present) · `agents/README.md` ·
+manifest entry (`.claude-plugin/plugin.json`, when listed) ·
+`.codex/agents/` (`scripts/generate_codex_agents.py`) · `agents/README.md` ·
 `agents/navigation.md` inventory (generator run) ·
 `framework/models.md` (when the agent's role has no row) ·
 `agents/buddy/delegation.md`

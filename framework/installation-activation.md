@@ -1,102 +1,53 @@
-# Coordinated installation activation
+# Installation activation
 
-Canonical shared source/update/install/recovery procedure of the OpenCode machine
-installation (`full-ai-integration`, host `opencode`). Claude Code and Codex take
-Forge through the plugin and its own update, not through this installer. OpenCode set
-up through the plugin model's switches (`forge_setup.py`: a `forge:boot` skill and
-`AGENTS.md` lines) is not governed by it either: its skill names a Forge folder and
-reads it in place (the folder the setup ran from, or Codex's stable plugin folder in place
-of Claude Code's versioned plugin folder). For a clone and for Codex's stable folder a
-change there reaches the next session without an install; a skill that names a versioned
-Claude Code plugin folder needs the setup run again after a plugin update.
+How a change to Forge's own sources reaches the hosts that read them, and how it is checked. Read it before changing
+Forge's sources on a machine whose sessions use them, and when a change must be shown active.
 
-**Which machines this procedure governs.** On the user path, `git pull` in the
-checkout is the update: each `oc` start runs `forge_install.py --refresh`,
-which brings the installed entries to the checkout's commit. On a
-`full-ai-integration` machine an install refuses, a refresh skips and readiness
-fails while tracked non-Markdown sources have uncommitted changes. A
-`full-ai-integration` installation takes the user path by default, including one made with an earlier
-version. The procedure below governs a
-machine whose setting records `maintenance: coordinated` (opt-in with
-`--coordinated`, for changing Forge's own sources) and a checkout without a Git
-commit. There, instruction-only changes take the light path below; everything else
-uses stopped-session maintenance, not live switching of mutable framework sources.
-Ordinary knowledge work still uses its existing folder and commands.
+**Where hosts read Forge.** Claude Code and Codex take Forge as a plugin. A plugin from the public marketplace changes
+through the host's own update (`claude plugin update forge@forge`, `codex plugin marketplace upgrade`); a plugin added
+from a local directory reads that directory in place. OpenCode set up through `scripts/forge_setup.py` gets a
+`forge:boot` skill that names a Forge folder and reads it in place (the folder the setup ran from, or Codex's stable
+plugin folder in place of Claude Code's versioned plugin folder). For a clone and for Codex's stable folder a change
+there reaches the next session without a further step; a skill that names a versioned Claude Code plugin folder needs
+the setup run again after a plugin update. Cursor reads its project rules.
 
 ## Choosing the path
 
-Classify each change before editing and state the classification in its brief,
-decision or return record. Unclear whether a path is read directly or through an
-installed copy or an engine → resolve the fact (`readlink`, the generator, the
-installer inventory); still unclear → full path.
+Classify each change before editing and state the classification in its brief, decision or return record. Unclear
+whether a path is read directly or as data by an engine or generator → resolve the fact (`readlink`, the generator,
+the reader); still unclear → full path.
 
-**Light path — instruction-only.** Every changed path is Markdown at an existing
-owner that hosts read directly from the framework root: `framework/`, `skills/`,
-`workflows/` runbook text, `agents/` (the plugin and the OpenCode installation
-read it from the checkout), the root adapters `CLAUDE.md`
-and `AGENTS.md`, `orchestrators/` rule text, and project docs. Steps: edit in the
-framework root; when skill frontmatter or the skill inventory changes, regenerate
-the derived wrappers (`scripts/generate_skill_wrappers.py`, then `--check`) and
-the generated navigation; run the router check
-(`scripts/generate_workflow_router.py --check`), the consistency check and the read-only
-`scripts/forge_install.py --profile full-ai-integration --host opencode --check` (closure preflight; it also lists stale
-installed copies); commit under the repository's commit rules. No prepare, journal operation, install or
-fresh-session validation. Between operations the installer accepts drift of
-recorded `.md` sources, lists it as `instruction_drift` in `--maintenance
-status`, and the next `prepare` records it as the new baseline. Sessions read
-the change on their next read; a session that already loaded a changed boot or
-always-loaded file keeps the old text, so start a fresh session before relying
-on such a change. Markdown that the closure or an engine reads as data is
-not plain instruction text: the common-delivery directive and skill
-frontmatter fields such as `status`, `invocation` and `evidence_layout` —
-resolve the fact with `--check`; still unclear → full path. A new or changed
-non-Markdown source next to the edit makes it a mixed change; the installer
-then refuses until the full path runs.
-Known limit: host- or editor-written non-Markdown files inside the source
-roots (for example `.claude/settings.local.json` from a project-scoped
-permission, a scheduler lock, editor swap files) count as unrecorded sources
-too, so readiness refuses until the file is removed or a full-path operation
-records it.
+**Light path — instruction-only.** Every changed path is Markdown at an existing owner that hosts read directly from
+the framework root: `framework/`, `skills/`, `workflows/` runbook text, `agents/`, the root adapters `CLAUDE.md` and
+`AGENTS.md`, `orchestrators/` rule text, and project docs. Steps: edit in the framework root; when skill frontmatter or
+the skill inventory changes, regenerate the derived wrappers (`scripts/generate_skill_wrappers.py`, then `--check`)
+and the generated navigation; run the router check (`scripts/generate_workflow_router.py --check`) and the
+consistency check; commit under the repository's commit rules. Sessions read the change on their next read; a session
+that already loaded a changed boot or always-loaded file keeps the old text, so start a fresh session before relying
+on such a change. Markdown that an engine or generator reads as data is not plain instruction text: skill frontmatter
+fields such as `status`, `invocation` and `evidence_layout`, and workflow definitions. Such a change, and a new or
+changed non-Markdown source next to the edit, takes the full path.
 
-**Installed copies.** The plugin reads the checkout it was installed from; a
-change reaches a plugin session through the plugin's own update. The OpenCode
-installation (`full-ai-integration`, host `opencode`) links skills and roles to
-the checkout; a light change to a role body or to skill frontmatter reaches
-installed copies only through the next install (`--check` lists them); record
-that host as not yet activated for it, or use the full path when OpenCode use
-depends on it.
+**Full path — everything else.** Scripts, hooks, plugin manifests, host settings and integrations, workflow
+definitions and compatibility mappings, engine-read YAML/JSON, state formats, and every mixed change:
+1. **Before changing a source that running sessions read in place,** establish that the affected sessions will not
+   read or write the changing set while it changes: work on a branch in a worktree outside the framework tree and
+   change the read-in-place checkout only by the merge. A running agent may load another skill or call a script later
+   even if its earlier instructions are cached.
+2. **Check:** the change-scoped tests during the work, and the project's full gate before the merge
+   (`skills/testing/lean-suite.md` §Change-scoped runs and the full gate); `scripts/plugin_release_check.py` when the
+   plugin's manifests, hooks or shipped files change; the light-path checks for the Markdown in it.
+3. **Activate:** merge when no session is in the middle of an operation the change alters (a workflow-engine run, a
+   continuity publication, a script call). In a checkout that hosts read in place the merge is the activation; for
+   the public plugin it is the release and each host's plugin update. Until then, name the hosts that do not have it
+   yet.
+4. **Verify** in a fresh session on each host that reads the change: normal entry and instruction loading, and the
+   changed behaviour. Record host, commit, observations and limits. A check that did not run stays unverified.
+5. **Recovery** is a new commit through the repository's commit rules (a revert or a fix); never reset history or
+   hand-edit installed copies to make a host appear current.
 
-**Full path — everything else.** Scripts, hooks, launchers, host settings and
-integrations, the installer, workflow definitions and compatibility mappings,
-engine-read YAML/JSON, profiles and state formats, and every mixed change, use
-the procedure below. Inside an operation the journal stays strict for every
-recorded source, Markdown included, and rollback restores all of them.
-
-## Full-path procedure
-
-Once a change is classified as full path, before stopping sessions or changing source, and through prepare, install,
-validation, retry and rollback: read and follow `framework/installation-activation-full-path.md` (§Before changing
-source (full path), §One activation owner, §Install and verify, §Failure, retry and rollback).
-
-## Owned boot blocks
-
-The installer owns marker-delimited blocks (older installations left a
-`FORGE-CODEX-BOOT` block in `AGENTS.md` / `AGENTS.override.md` and a
-`FORGE-CLAUDE-BOOT` block in `~/.claude/CLAUDE.md`; they are only removed) through hash state
-files and byte snapshots in the install plan. Continuity publication refuses the home copies under `.codex/` and
-`.claude/` as reserved paths; a project `AGENTS.md` is a shared file that continuity
-may write, and the block hash keeps install authority over a block (an edited
-block refuses the next install). Text before and after a block, including Unicode
-and CRLF line endings, survives create, replace and remove; removal returns the
-outer text (keeping one line break where outer text without a final newline is
-followed by text after the block), and a re-run with unchanged content plans no
-change. Duplicate, reversed or partial markers, an edited owned block, an unowned
-block with the same markers and non-UTF-8 content refuse without writes. A change
-between plan and apply fails the preflight; the installer never retries over it.
-Evidence: `scripts/managed_install.py` (`plan_block`, `plan_block_removal`,
-`plan_text_block`),
-`scripts/install_activation.py` (the production apply and its preflight) and
-`tests/capabilities/test_owned_regions.py`.
+Boot hooks never pull or set up the framework on their own; they report what they find, and the update follows this
+procedure. Consumer-only Git updates follow their own authorization and preservation rules.
 
 ## Consumer integration
 

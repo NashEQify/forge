@@ -15,7 +15,7 @@
 # Machine mode (no argument): non-terminal entrypoints only (claude-desktop /
 # claude-web), the machine-scope entry as SessionStart additionalContext. The
 # eval harnesses (scripts/eval_engagement.py, eval_engagement_direct.py) run it
-# this way; no installer wires it into a settings file any more.
+# this way; nothing writes it into a settings file.
 #
 # Self-resolves FRAMEWORK_DIR via own location, so it works even when
 # CLAUDE_PROJECT_DIR is unset (which is the default in claude-desktop).

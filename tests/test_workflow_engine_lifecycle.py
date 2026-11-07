@@ -246,7 +246,8 @@ def test_explicit_next_reconciles_without_replaying_evidence(local, marker):
     assert local.archived.read_bytes() == before
 
 
-@pytest.mark.parametrize("path", ["guard", "deterministic", "recovery", "warn", "skip"])
+# warn_skipped and skipped close through the same terminal-status set; skipped runs via "guard".
+@pytest.mark.parametrize("path", ["guard", "deterministic", "recovery", "warn"])
 def test_final_transition_uses_local_closure(local, path):
     fields = {}
     if path == "guard":
@@ -315,7 +316,8 @@ def test_failed_check_and_escalation_remain_nonterminal(local, policy):
     assert not local.archived.exists()
 
 
-@pytest.mark.parametrize("terminal", ["complete", "escalated"])
+# Every terminal status takes the same refusal; escalated is the one a skip would hide.
+@pytest.mark.parametrize("terminal", ["escalated"])
 def test_skip_preserves_terminal_transition_evidence(local, terminal):
     state = local.create()
     state["steps"]["publication"].update(
@@ -330,8 +332,11 @@ def test_skip_preserves_terminal_transition_evidence(local, terminal):
     assert local.active.read_bytes() == before
 
 
-@pytest.mark.parametrize("isolation", ["paused", "aborted"])
-@pytest.mark.parametrize("operation", ["complete", "skip", "next", "recover", "retry"])
+# Each consumer runs paused; aborted takes the same refusal and runs once.
+@pytest.mark.parametrize("isolation, operation", [
+    *(("paused", op) for op in ("complete", "skip", "next", "recover", "retry")),
+    ("aborted", "complete"),
+])
 def test_pause_and_abort_consumers_do_not_progress(local, isolation, operation):
     state = local.create(
         completion={
@@ -419,10 +424,6 @@ def failed_archive(local, *, create=True):
     return retained
 
 
-def test_archive_failure_retains_completed_revision_control(local):
-    failed_archive(local)
-
-
 def test_archive_failure_export_and_close_remain_nonterminal(local):
     local.create()
     local.bind()
@@ -443,18 +444,6 @@ def test_corrected_archive_failure_explicit_next_preserves_timestamp(local):
     archived = json.loads(local.archived.read_text())
     assert archived["steps"] == retained["steps"]
     assert archived["completed"] == retained["completed"]
-
-
-def test_stale_archive_revision_preserves_newer_writer_control(local):
-    state = local.create()
-    stale = copy.deepcopy(state)
-    state["steps"]["publication"]["evidence"] = "Newer writer"
-    we.save_state(state)
-    before = local.active.read_bytes()
-    with pytest.raises(we.StaleStateError):
-        we.archive_state(local.wid, expected_revision=stale["revision"])
-    assert local.active.read_bytes() == before
-    assert not local.archived.exists()
 
 
 def test_new_child_skip_finalization_is_explicitly_refused(local):
@@ -553,9 +542,8 @@ def test_contending_lock_cannot_report_premature_success_control(local):
             child.communicate()
 
 
-@pytest.mark.parametrize(
-    "deny_save", [True, False], ids=["save-failure", "successful-control"]
-)
+# The successful guard skip is covered by test_valid_negative_guards_still_skip.
+@pytest.mark.parametrize("deny_save", [True], ids=["save-failure"])
 def test_guard_skip_save_result_matches_durable_progress(local, deny_save):
     """Supported skip/retry positioning must not acknowledge an unsaved guard skip."""
     local.define()

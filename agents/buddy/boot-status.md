@@ -23,15 +23,8 @@ on stderr; treat the associated ahead/behind values as cached. Output on
 stdout: one line per non-clean repo, `<path>` followed by the groups that
 apply: `[ahead N | behind N | ahead M, behind N]`,
 `[uncommitted: S staged, M modified, U untracked]` (entries; an untracked
-directory is one) and, for the framework checkout, from the installer's
-read-only status: `[installed-not-committed: K]` (framework sources whose
-live bytes are not in `HEAD`; K counts files) and `[installer: <phase>]`
-for any phase other than `complete`, `rolled_back` or `unprepared`, with
-`, operation open` while a prepared or validation-pending operation is open
-(the installer knows the phase, not whether anyone drives it). Unavailable
-checks are stderr diagnostics; inside a linked worktree "journal belongs to
-a different source checkout" is expected, as installer state belongs to the
-main checkout. Empty stdout with empty stderr means no cached divergence and
+directory is one). Unavailable checks are stderr diagnostics. Empty stdout
+with empty stderr means no cached divergence and
 no uncommitted work in the checked working trees; linked worktrees and
 staging copies are outside them (`git worktree list` names the linked ones).
 Only a successful fetch establishes remote freshness.
@@ -71,9 +64,9 @@ with this gate or while waiting for the answer.
   already answers this question for the repos it covers.
 - For framework source changes, use `framework/installation-activation.md`
   and classify the change there first (§Choosing the path). On the full path,
-  stop affected sessions before updating shared sources, preserve a matched
-  source/integration baseline, install and validate before fresh-session use.
-  An active boot never silently pulls/reinstalls the framework. Standing pull
+  keep affected sessions off the changing sources and verify in a fresh
+  session before relying on the change.
+  An active boot never silently pulls or sets up the framework. Standing pull
   permission is not evidence that other sessions stopped. Consumer-only approved
   fast-forward updates preserve local changes; no reset/stash/rebase/branch switch.
   Reread changed consumer instructions before use. If update is unavailable,
@@ -104,19 +97,15 @@ Nothing found: don't mention it.
 **On held-back work (step 2):** report every uncommitted entry the freshness
 step found as state that existed before this session: repository, the path of
 each entry (more than five: the first five), and the count, also when this
-session later changed the same file. Then attribute the uncommitted entries,
-installed-not-committed sources and the framework's linked worktrees to
-live owners as `framework/process-map.md` §Authorization defines them;
-`forge_install.py --maintenance status` (an OpenCode installation) lists the source paths. What live
+session later changed the same file. Then attribute the uncommitted entries
+and the framework's linked worktrees to live owners as
+`framework/process-map.md` §Authorization defines them. What live
 owners account for is normal with parallel sessions: one plain line.
 Untracked host-owned entries under `.claude/skills/` (not Forge wrappers)
 are not Forge work: a note. Anything else is held back: report it loudly —
-repo, counts, next step — and investigate before taking up new work. An
-`[installer: …]` group without `operation open` (for example
-`recovery_required`), an open operation no running session drives, or an
-unavailable installer status is loud; next step: inspect
-`forge_install.py --maintenance status` (the installer status applies to an OpenCode installation) (a reason under `.claude/worktrees/`
-is a parallel writer's worktree inside the framework tree). More than about
+repo, counts, next step — and investigate before taking up new work (an
+entry under `.claude/worktrees/` is a parallel writer's worktree inside the
+framework tree). More than about
 20 entries in one repo (intent: more than one in-flight task's working set)
 is a cue to look closely, not a verdict.
 

@@ -123,10 +123,8 @@ It uses the same knowledge lifecycle, preserves useful qualifications and histor
 and does not delete information simply for age or low mention frequency. It creates
 no background schedule by itself.
 
-To update Forge, run `git pull` in the Forge checkout; the next session start
-brings the installed entries up to it. A machine on the coordinated maintenance
-path (for changing Forge itself) stops affected sessions before the source changes,
-and its installation can remain `validation_pending` until a fresh session supplies
-real verification. Follow [installation](05-installation.md#updating) for both.
+To update Forge, use the host's plugin update ([installation](05-installation.md#updating));
+changing Forge's own sources follows
+[installation activation](../framework/installation-activation.md).
 
 [Human guide](10-human-guide.md) · [Usage](06-usage-workflows.md) · [Documentation hub](README.md)

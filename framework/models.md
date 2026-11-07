@@ -69,13 +69,11 @@ token saves. Hence:
 The Codex column follows the host's own model list in the `spawn_agent` tool ("fast and affordable", "workhorse",
 "frontier intelligence for the most demanding work"); check it there on a model switch. Claude Code agent
 definitions (`agents/<n>.md`, the roles the plugin lists) set no model, and neither do the Codex role copies
-(`~/.codex/agents/*.toml`); the call names it. OpenCode sets the model in each agent file
-(`orchestrators/opencode/.opencode/agent/<n>.md`): `tester` on the standard tier, `buddy`, `buddy-thinking`,
-`solution-expert` and `main-code-agent` on the most capable.
+(`~/.codex/agents/*.toml`); the call names it. On OpenCode roles run as general agents in the session's model.
 
 ## Model switch
 
-Update the tier table and the OpenCode agent files by hand; for Codex, read the `spawn_agent` model list.
+Update the tier table by hand; for Codex, read the `spawn_agent` model list.
 
 ## Example: a runtime model router (one consumer's setup)
 

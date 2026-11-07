@@ -74,6 +74,6 @@ bash "$FRAMEWORK_DIR/scripts/install-git-hooks.sh"
 ```
 
 The shared hook source lives under `claude-code/`; Git invokes it independently
-of the editor where installed. Follow the coordinated installation contract in
-`framework/installation-activation.md`. The per-repository installer wires
-`pre-commit`, `pre-merge-commit` and `commit-msg`; its checks do not establish host parity.
+of the editor where installed. Changes to Forge's sources follow `framework/installation-activation.md`.
+`scripts/install-git-hooks.sh` links `pre-commit`, `pre-merge-commit` and
+`commit-msg` per repository; its checks do not establish host parity.

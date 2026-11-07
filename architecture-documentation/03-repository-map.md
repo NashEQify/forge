@@ -37,7 +37,6 @@ state. Do not infer dependencies from physical proximity.
 | How do I compare independent perspectives? | [Council](../skills/council/SKILL.md) |
 | Which software process applies? | [Process map](../framework/process-map.md) |
 | What exact software state must survive? | [Development continuation](../framework/development-continuation.md) |
-| What is installed together? | [Install profiles](../framework/install-profiles.yaml) |
 
 ## Consumer workspace
 

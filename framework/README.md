@@ -14,8 +14,7 @@ file index, use [navigation.md](navigation.md).
 | How are coherent reads, publication and recovery protected? | [Continuity](continuity.md) |
 | Who decides whether software workflows apply? | [Process map](process-map.md) |
 | How is selected development state resumed? | [Development continuation](development-continuation.md) |
-| How is an installed generation updated and verified? | [Installation activation](installation-activation.md) |
-| What source dependencies does each installation need? | [Install profiles](install-profiles.yaml) |
+| How does a change to Forge reach the hosts, and how is it checked? | [Installation activation](installation-activation.md) |
 
 Semantic knowledge reconciliation belongs to the
 [Knowledge Processor](../skills/knowledge_processor/SKILL.md). The continuity helper

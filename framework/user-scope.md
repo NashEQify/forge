@@ -1,13 +1,13 @@
 # User scope — who the user is, on every machine
 
-forge serves one person per machine (the plugin model's user switch, on OpenCode too, or the OpenCode `full-ai-integration` installation). Everything that is about
+forge serves one person per machine (the plugin model's user switch, on OpenCode too). Everything that is about
 that person — their soul (how Buddy works with them), their values and
 profile, the facts about them — lives in **their own user repository**, not
 in the framework. The framework knows only where that repository is; the
 layout inside it is a fixed convention, identical for every person. This file
 is the SoT for that contract. Consumers: `agents/buddy/boot.md`,
 `skills/knowledge_processor/SKILL.md`, the boot injectors and
-`scripts/forge_install.py`.
+`scripts/forge_setup.py`.
 
 ## 1. Machine setting
 
@@ -17,19 +17,13 @@ is the SoT for that contract. Consumers: `agents/buddy/boot.md`,
 ```yaml
 version: 1
 user_repo: /absolute/path/to/the/users/repo   # required
-profile: full-ai-integration                  # OpenCode installer
-skill_links: []                               # optional, installer: external skill dirs
-maintenance: coordinated                      # optional, installer: the developer path
 buddy: every-session                          # optional, plugin on Claude Code: Buddy in every session
 ```
 
-The plugin model's setup writes it (`forge_setup.py every-session`, `skills/setup/SKILL.md`); the
-OpenCode installer writes it too (`forge_install.py --profile
-full-ai-integration --host opencode --user-repo PATH`; on a terminal it asks once for the folder
-when no setting exists, and `--create-user-repo` creates the folder with
-`context/user/profile.md` and `navigation.md`). `user_repo` is the only
-per-person value; `profile`, `skill_links` and `maintenance` describe the
-machine's installation, not the person. Without `user.yaml` (a plugin session under a
+The plugin model's setup writes it (`forge_setup.py every-session`, `skills/setup/SKILL.md`; with
+`--create-user-repo` it creates the folder with `context/user/profile.md` and `navigation.md`). `user_repo` is
+the only per-person value. Settings from earlier installations may still carry `profile`, `skill_links` or
+`maintenance`; the reader accepts them and the setup does not write them. Without `user.yaml` (a plugin session under a
 project's activation line only), a project session has no user scope.
 
 The plugin (§5) reads this setting at session start; whenever Buddy starts,
@@ -133,14 +127,10 @@ so they apply wherever the facts are written.
 Resolved paths are checked after following symlinks (`realpath`) and must
 stay inside `<user_repo>`.
 
-## 5. Install profiles
+## 5. Placement
 
-`framework/install-profiles.yaml` — `full-ai-integration`, the machine
-installation for OpenCode (Buddy in every session of the machine with the user
-scope, all roles, skills, hooks and launchers). The active project's intent
-selects the workflow (`framework/workflow-selection.md`). The profile selects
-where Forge is installed and whether a user scope exists; it never changes who
-the user is.
+The active project's intent selects the workflow (`framework/workflow-selection.md`); where Forge is placed
+never changes who the user is.
 
 The plugin is how Forge is placed on Claude Code and Codex: the host's plugin
 manager installs this repository's plugin (`.claude-plugin/`), and Buddy starts

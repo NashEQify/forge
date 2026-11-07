@@ -8,11 +8,10 @@ fixed convention `context/user/{soul,profile,navigation}.md` applies.
 The resolver never raises on user data: every defect degrades to "no user
 scope" (forge soul) or a skipped file, with a warning. Consumers: the Claude
 Code plugin hook (`--hook-json`, `--plugin`), the boot skill (`--boot-entry`),
-forge_install.py and setup-oc.sh (OpenCode).
+forge_setup.py, the boot probe (`--json`), the generators and eval runners.
 
 CLI: user_scope.py [--framework-root P] [--profile project|full-ai-integration | --project | --plugin]
-                   (--json | --soul | --boot-text | --hook-json | --shell | --boot-entry)
---shell prints USER_REPO=… and BOOT_TEXT=… as shell-quoted assignments (oc).
+                   (--json | --soul | --boot-text | --hook-json | --boot-entry)
 --project renders the project install's entry: no user scope, the machine
 setting is not read (the project hook passes it).
 --plugin (with --hook-json) renders the plugin hook's entry: it reads the
@@ -38,9 +37,8 @@ from typing import Callable, Mapping, NamedTuple
 
 sys.dont_write_bytecode = True
 
-# The two installations (framework/install-profiles.yaml holds where each is placed and what it composes):
-# project: Forge in one named project only, no user scope; full-ai-integration: Buddy in every session of the
-# machine, with the user scope.
+# The two profile names a boot entry carries: project: Forge in one named project only, no user scope;
+# full-ai-integration: Buddy in every session of the machine, with the user scope.
 PROJECT_PROFILE = "project"
 MACHINE_PROFILE = "full-ai-integration"
 PROFILES = (PROJECT_PROFILE, MACHINE_PROFILE)
@@ -101,7 +99,7 @@ ACTIVATION_LINE = (
 )
 ACTIVATION_FILE = "AGENTS.md"
 # The user-scope convention's scaffold (context/user/ of a new user repository): headings only, nothing personal
-# filled in. Written by forge_install.py and forge_setup.py; this module only holds it.
+# filled in. Written by forge_setup.py; this module only holds it.
 USER_SCOPE_SCAFFOLD = {
     "profile.md": "# Profile\n\n## Who\n\n## Values and priorities\n\n## Constraint defaults\n",
     "navigation.md": "# Navigation\n\n- profile.md\n",
@@ -161,8 +159,8 @@ def _and_join(items: list[str]) -> str:
 
 # The boot's first tool round (agents/buddy/boot.md): one batch of reads plus the boot probe as its own call,
 # before the freshness gate. Framework-relative; round_one_line() names their root first.
-# Rendered into the hook tail (hook_tail), the Codex boot block (generate_codex_agents.boot_instructions) and,
-# through boot_text(round_one=True), cc's entry (--shell); the static fallbacks of the hook and cc restate the line.
+# Rendered into the hook tail (hook_tail), the Codex boot block (generate_codex_agents.boot_instructions) and
+# boot_text(round_one=True); the hook's static fallback restates the line.
 ROUND_ONE = (
     "agents/buddy/boot.md",
     "agents/buddy/boot-status.md",
@@ -383,7 +381,7 @@ def load_config(path: Path) -> tuple[dict | None, list[str]]:
 def unusable_setting(env: Mapping[str, str] = os.environ) -> str | None:
     """Warning when a machine setting exists but cannot be used, else None.
 
-    Installers refuse on it instead of defaulting; a missing setting is not
+    forge_setup.py refuses on it instead of defaulting; a missing setting is not
     unusable (no user scope).
     """
     path = config_path(env)
@@ -765,7 +763,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--plugin", action="store_true",
                         help="with --hook-json: the plugin hook's entry, only when Buddy is active (payload on stdin)")
     mode = parser.add_mutually_exclusive_group(required=True)
-    for flag in ("--json", "--soul", "--boot-text", "--hook-json", "--shell", "--boot-entry"):
+    for flag in ("--json", "--soul", "--boot-text", "--hook-json", "--boot-entry"):
         mode.add_argument(flag, action="store_true")
     args = parser.parse_args(argv)
     if args.plugin and not args.hook_json:
@@ -807,15 +805,6 @@ def main(argv: list[str] | None = None) -> int:
             out = scope.soul
         elif args.boot_text:
             out = boot_text(scope, args.framework_root, args.profile).rstrip("\n")
-        elif args.shell:
-            text = boot_text(
-                scope, args.framework_root, args.profile, include=SHELL_INCLUSION,
-                round_one=True,
-            ).rstrip("\n")
-            out = (
-                f"USER_REPO={shlex.quote(scope.user_repo or '')}\n"
-                f"BOOT_TEXT={shlex.quote(text)}"
-            )
         else:
             out = hook_json(scope, args.framework_root)
         sys.stdout.write(out + "\n")

@@ -15,8 +15,7 @@ profile; files it includes in full are loaded and need no read.
 2. **Freshness first:** run the boot probe as `agents/buddy/boot-status.md`
    §Freshness gate says, before reading anything else (Codex callers first follow
    `agents/buddy/codex-execution.md`); on-demand ignores its `chub:` line. Its held-back entries and unavailable
-   checks go into step 6. `[uncommitted: …]`, `[installed-not-committed: K]` and
-   `[installer: …]` groups never block the freshness step. (The soul itself is
+   checks go into step 6. `[uncommitted: …]` groups never block the freshness step. (The soul itself is
    read before this step, from the entry: it shapes even the pull question.)
 3. **The person:** read the configured user profile (who the person is,
    including values and priorities) through one personal snapshot, which also
@@ -58,12 +57,11 @@ profile; files it includes in full are loaded and need no read.
    instruction unit that did not load opens that reply with the notice
    `agents/buddy/boot-status.md` §Greeting findings defines. After that, mention
    only a pull outcome, ahead status, held-back work or a user-scope warning, if
-   any; an unchecked remote is at most one word in the orientation line. Uncommitted or installed-not-committed state is
+   any; an unchecked remote is at most one word in the orientation line. Uncommitted state is
    a note in the shape `agents/buddy/boot-status.md` §Greeting findings gives it: found before this session,
    with path and count. It gates new work only where the project's rules
    ask for that or the checkout is the framework of a coordinated programme;
-   then follow `framework/process-map.md` §Authorization. An `[installer: …]`
-   group without `operation open` is a maintenance need: say so.
+   then follow `framework/process-map.md` §Authorization.
 
 When coordination resumes from a handoff, at a meaningful task/topic change and
 at a consequential decision/adoption boundary, read and follow

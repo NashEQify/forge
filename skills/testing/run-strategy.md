@@ -56,8 +56,7 @@ directly is selected and runs.
 
 **Code selects the tests that exercise it.** For code the selector follows imports, exact
 paths and scripts run by name. A test that only copies the framework tree is not selected
-for a code change unless it also exercises the changed module, as the installer tests do for
-installer code. A code path no test exercises directly answers `broad`.
+for a code change unless it also exercises the changed module. A code path no test exercises directly answers `broad`.
 
 **No whole-suite run per change.** The whole suite runs at the project's full gate
 (`lean-suite.md` §Change-scoped runs and the full gate). It is due for a change only when the

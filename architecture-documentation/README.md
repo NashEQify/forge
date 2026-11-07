@@ -59,8 +59,7 @@ These pages answer different questions; they are not a mandatory reading sequenc
 
 ## Quick entry points
 
-- **Existing user updating:** run `git pull` in the Forge checkout; the next session
-  start refreshes the installed entries ([updating](05-installation.md#updating)).
+- **Existing user updating:** the host's plugin update ([updating](05-installation.md#updating)).
 - **Context is missing or stale:** start with the [daily handbook](13-operational-handbook.md#retrieve-and-correct-context),
   then [troubleshooting](12-troubleshooting.md) if retrieval or recovery is blocked.
 - **A decision needs more scrutiny:** compare [Frame, Bedrock and Council](06-usage-workflows.md#general-reasoning).

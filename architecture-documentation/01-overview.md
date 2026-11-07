@@ -143,7 +143,7 @@ context folder, so knowledge and open work carry across projects. Both
 make the same methods available: knowledge maintenance, save, the reasoning methods
 and the development tooling. Availability does not select a software workflow.
 
-The installer coordinates supported host integrations. Actual capabilities and
+The plugin and the setup carry the supported host integrations. Actual capabilities and
 instruction loading differ by host; Cursor's rules-based integration is distinct.
 Use [installation](05-installation.md) and [host support](07-tool-integrations.md)
 to choose and verify your setup.

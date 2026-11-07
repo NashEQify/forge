@@ -41,13 +41,12 @@ activation line in `AGENTS.md`; its loading must be checked in a fresh session. 
 protocol-anchored via protocols + operational.md.
 
 ## OC Constraints
-The consumer repo is the CWD; the framework is mounted via the OpenCode
-launcher (`$FRAMEWORK_DIR/orchestrators/opencode/bin/oc`, with
-`OPENCODE_CONFIG_DIR=$FRAMEWORK_DIR/orchestrators/opencode/.opencode`).
-A consumer's project-level AGENTS.md (in the consumer repo root) adds
+The consumer repo is the CWD; the framework is reached through the
+`forge:boot` skill `scripts/forge_setup.py` writes, which names the Forge
+folder and the boot entry. A consumer's project-level AGENTS.md (in the consumer repo root) adds
 to this framework AGENTS.md, it doesn't replace it. Commands are
 trigger words without a prefix (wakeup, save, checkpoint, think!).
-OpenCode follows the same protocol-based method. Its launcher, instruction
+OpenCode follows the same protocol-based method. Its skill discovery, instruction
 loading, permissions and actually installed Git checks must be verified for
 that host. Shared methodology does not establish identical execution or
 enforcement. There is no tool-event (PreToolUse/PostToolUse) hook layer on

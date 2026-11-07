@@ -4,10 +4,9 @@
 # A pull that changes this file is applied by the next session start (Task467 AC-13).
 #
 # Used by the boot STATUS-CHECK step (agents/buddy/boot-status.md). Fetches
-# origin (quiet) and reports repos that are behind, ahead or divergent, carry
-# uncommitted entries, or (framework only) have installed Forge sources not
-# committed in HEAD. Output is parsed by Buddy and surfaced in GREET if any
-# repo is non-clean.
+# origin (quiet) and reports repos that are behind, ahead or divergent, or
+# carry uncommitted entries. Output is parsed by Buddy and surfaced in GREET if
+# any repo is non-clean.
 #
 # Usage:
 #   bash $FRAMEWORK_DIR/scripts/git-status-check.sh
@@ -17,23 +16,13 @@
 # groups, in this order, separated by one space):
 #   <path> [ahead N | behind M | ahead N, behind M]
 #          [uncommitted: S staged, M modified, U untracked]
-#          [installed-not-committed: K]
-#          [installer: <phase>] | [installer: <phase>, operation open]
 #   - uncommitted: porcelain entries (an untracked directory is one entry; an
 #     entry can count as staged and modified); all three numbers always shown.
-#   - installed groups: only for the target that is the Git root of
-#     FRAMEWORK_DIR and only when $FRAMEWORK_DIR/scripts/forge_install.py
-#     exists, from `forge_install.py --maintenance status`, printed verbatim:
-#     installed-not-committed when K > 0 (installed sources Git reports as not
-#     committed in HEAD); installer for every phase other than complete,
-#     rolled_back or unprepared, whatever K is, with ", operation open" when
-#     the installer reports `operation_open`.
 # Targets: the framework checkout when CWD is inside it, plus CWD's own Git
 # root when that differs (e.g. a linked worktree nested in the framework).
 # Or, if nothing to report:
 #   (empty stdout)
-# Fetch/status failures and an unavailable installed-vs-HEAD comparison are
-# reported on stderr, never as a clean stdout claim; empty stdout alone does
+# Fetch/status failures are reported on stderr, never as a clean stdout claim; empty stdout alone does
 # not establish successful remote freshness. The caller owns tool approval.
 #
 # --boot (the boot probe): the framework root is the directory above this
@@ -68,14 +57,14 @@
 # A fact that cannot be determined prints `unknown` and a stderr diagnostic.
 # The facts are file facts, not content; a pull invalidates them (re-probe).
 #
-# --boot --no-network: no fetch, no installer status and no Git metadata write.
+# --boot --no-network: no fetch and no Git metadata write.
 # Each target runs only `git --no-optional-locks status --porcelain`; its
 # entries are counted into the uncommitted group as above (no ahead/behind).
 # A line `freshness: not checked (no network)` follows the orient line; the
 # fact lines are printed as with --boot.
 #
 # --boot without a temporary directory: the status lines are computed one by
-# one without fetch or installer status, with one stderr diagnostic.
+# one without fetch, with one stderr diagnostic.
 #
 # Exit codes:
 #   0 — always (graceful — never blocks boot)
@@ -223,10 +212,7 @@ else
   fi
 fi
 
-# Installed-vs-HEAD comparison: only the framework's own Git root, only when
-# its installer exists (sparse checkouts without it stay silent).
 FRAMEWORK_ROOT=$(framework_git_root) || FRAMEWORK_ROOT=""
-INSTALLER="$FRAMEWORK_DIR/scripts/forge_install.py"
 
 # Repository-local config that runs commands is neutralized on every target
 # other than the framework checkout and the configured user repo (in practice
@@ -464,13 +450,13 @@ fi || {
     echo "git-status-check: cannot create temporary directory; freshness unknown" >&2
     exit 0
   fi
-  # The boot probe: sequential status lines without temp files, no fetch and
-  # no installer status (their diagnostics need the files).
+  # The boot probe: sequential status lines without temp files and no fetch
+  # (its diagnostics need the files).
   TMPDIR_BOOT=""
   if [ "$NO_NETWORK" = "1" ]; then
     echo "git-status-check: cannot create temporary directory; status lines computed one by one" >&2
   else
-    echo "git-status-check: cannot create temporary directory; fetch and installer status skipped, status from cached refs" >&2
+    echo "git-status-check: cannot create temporary directory; fetch skipped, status from cached refs" >&2
   fi
   for repo in "${TARGETS[@]}"; do
     harden=()
@@ -496,16 +482,6 @@ for index in "${!TARGETS[@]}"; do
   repo=${TARGETS[$index]}
   (
     error_file="$TMPDIR_BOOT/$index.err"
-    install_pid=""
-    if [ "$NO_NETWORK" = "1" ]; then
-      :  # --boot --no-network: no installer status, no fetch (no lock, no Git metadata write)
-    elif [ -n "$FRAMEWORK_ROOT" ] && [ "$repo" = "$FRAMEWORK_ROOT" ] && [ -f "$INSTALLER" ]; then
-      # Read-only status under the shared installation lock; it may wait on
-      # an exclusive operation, hence the bound. Runs concurrently with fetch.
-      GIT_OPTIONAL_LOCKS=0 timeout 5 python3 -B "$INSTALLER" --maintenance status \
-        >"$TMPDIR_BOOT/$index.install" 2>"$TMPDIR_BOOT/$index.install-err" &
-      install_pid=$!
-    fi
     # Fetch with strict timeout — never block boot on network
     fetch_harden=()
     fetch_options=()
@@ -547,62 +523,6 @@ for index in "${!TARGETS[@]}"; do
       status_exit=$?
       printf '%s: status failed (exit %s); divergence and uncommitted counts unavailable\n' "$repo" "$status_exit" >> "$error_file"
       cat "$TMPDIR_BOOT/$index.status" >> "$error_file"
-    fi
-    if [ -n "$install_pid" ]; then
-      wait "$install_pid"
-      install_exit=$?
-      unavailable=""
-      if [ "$install_exit" = "124" ]; then
-        unavailable="installer status timed out after 5s"
-      elif [ "$install_exit" != "0" ]; then
-        unavailable="installer status exit $install_exit"
-        IFS= read -r first_error 2>/dev/null < "$TMPDIR_BOOT/$index.install-err" || true
-        [ -n "${first_error:-}" ] && unavailable="$unavailable: ${first_error:0:200}"
-      elif ! parsed=$(python3 -I -c '
-import json, sys
-def emit(groups="", diagnostic=""):
-    print(groups)
-    print(diagnostic)
-    sys.exit(0)
-try:
-    data = json.load(sys.stdin)
-except ValueError:
-    data = None
-if not isinstance(data, dict):
-    emit(diagnostic="unparsable installer status")
-phase = data.get("phase")
-if not isinstance(phase, str) or not phase.isidentifier():
-    emit(diagnostic="installer status with invalid phase")
-if phase == "unprepared":
-    emit()  # no journal: no installed generation to compare
-operation_open = data.get("operation_open")
-if not isinstance(operation_open, bool):
-    emit(diagnostic="installer status with invalid operation_open")
-groups, diagnostic = [], ""
-sources = data.get("uncommitted_sources")
-if "uncommitted_sources_unavailable" in data:
-    lines = str(data["uncommitted_sources_unavailable"]).strip().splitlines() or ["no reason given"]
-    diagnostic = lines[0][:200]
-elif not isinstance(sources, list):
-    diagnostic = "installer status without uncommitted_sources"
-elif sources:
-    groups.append("[installed-not-committed: %d]" % len(sources))
-if phase not in {"complete", "rolled_back"}:
-    groups.append("[installer: %s%s]" % (phase, ", operation open" if operation_open else ""))
-emit(" ".join(groups), diagnostic)
-' 2>/dev/null < "$TMPDIR_BOOT/$index.install"); then
-        unavailable="unparsable installer status"
-      fi
-      installed_groups="" diagnostic="$unavailable"
-      if [ -z "$unavailable" ]; then
-        { IFS= read -r installed_groups; IFS= read -r diagnostic; } <<< "$parsed" || true
-      fi
-      if [ -n "$diagnostic" ]; then
-        printf '%s: installed-vs-HEAD comparison unavailable (%s)\n' "$repo" "$diagnostic" >> "$error_file"
-      fi
-      if [ -n "$installed_groups" ]; then
-        groups="${groups:+$groups }$installed_groups"
-      fi
     fi
     if [ -n "$groups" ]; then
       printf '%s %s\n' "$repo" "$groups" > "$TMPDIR_BOOT/$index.out"

@@ -146,20 +146,16 @@ behind it; what the agent settled itself, such as a kept item or a window it
 chose, goes to the decisions list (`skills/return_summary/SKILL.md`). Platform, harness, host and consumer-project rules that require
 confirmation still apply; this rule never relaxes them.
 
-**Held-back work** is accepted or installed work waiting for its commit,
-merge, push or publication: uncommitted changes, installed sources not in
-`HEAD`, accepted work left in a linked worktree, branch or staging copy, results
+**Held-back work** is accepted work waiting for its commit,
+merge, push or publication: uncommitted changes, accepted work left in a linked worktree, branch or staging copy, results
 awaiting publication. Only a live owner accounts for it: a running task or
-session, for the paths its brief or changed paths name (an open installer
-operation counts only through the session driving it; one that no running
-session drives is a maintenance need: validate or roll it back); or an entry in
+session, for the paths its brief or changed paths name; or an entry in
 the handoff's held-back list (task or paths, reason, owner, releasing event)
 whose releasing event is observable — a named authorization lift, a named task
 close or a date — and still pending. Anything else is unaccounted: commit, merge
 or publish it within the authorization, or give it an entry, before new work
 starts. When a boundary lifts, the entries it held are due: reconcile them
-first, clear them, then take up new work. The boot status check and installer
-status show such work; the save runbook carries the list.
+first, clear them, then take up new work. The boot status check shows such work; the save runbook carries the list.
 
 ## DIRECT eligibility
 

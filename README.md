@@ -138,9 +138,7 @@ cloud works from committed files only, and plugin users need two `Read` allow ru
 avoid a prompt on every boot. OpenCode has no plugin, but takes the same switches:
 `scripts/forge_setup.py` gives it a `forge:boot` skill pointing at a Forge folder, and
 OpenCode reads the `AGENTS.md` line itself (in every session: the line in
-`~/.config/opencode/AGENTS.md`). The older OpenCode route,
-`scripts/forge_install.py --profile full-ai-integration --host opencode` with its `oc`
-launcher, still exists.
+`~/.config/opencode/AGENTS.md`).
 
 The [installation guide](architecture-documentation/05-installation.md) has the details,
 the allow rules and the OpenCode route.
@@ -184,7 +182,7 @@ tests run, and the reply says who checked it.
 - It costs time. Buddy reads the project's goal and context at the start of every
   session, so even a quick question takes longer than a bare prompt. Independent review
   adds more; it is worth it where a mistake would be hard to catch or undo.
-- Hosts differ in what they load and allow. The installer checks what it can; whether a
+- Hosts differ in what they load and allow. The setup checks what it can; whether a
   fresh session actually loaded Forge is something to verify, not to assume.
 - One `intent.md` per repository. Forge is pre-1.0: file layouts and commands can still
   change between versions.

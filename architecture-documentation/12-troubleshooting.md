@@ -9,27 +9,16 @@ a repair. A generic reset can destroy the evidence needed to recover safely.
 ### Missing Python dependency or host command
 
 Use the Python environment that provides PyYAML, and verify the intended host CLI
-is installed and on the launcher's PATH. Creating a virtual environment does not
+is installed and on the host's PATH. Creating a virtual environment does not
 change the environment of every desktop host. Follow [installation prerequisites](05-installation.md#prerequisites).
 
-### `--check` exits nonzero
+### The setup stops and names a file
 
-Exit 1 means changes are planned; exit 2 indicates a reported conflict or error.
-Read the paths and error text before applying. A preview is read-only and does
-not complete installation.
-This applies to the OpenCode installer: use its current `--help`. It takes
-`--profile full-ai-integration --host opencode`; the `project` profile and the hosts
-`claude-code` and `codex` are retired and refused with a message naming the plugin.
-
-### Managed file, directory or symlink conflict
-
-An ownership check found content it cannot safely replace. Preserve the current
-content, identify whether it is user-owned or an edited generated file, and compare
-it with the intended managed output. Reconcile through the coordinated procedure.
-
-Do not delete host directories, replace symlinks by hand or remove ownership
-manifests as a general workaround. `--migrate-legacy` recognizes only specific
-byte-identical legacy content; it is not a force-overwrite option.
+`forge_setup.py` reads and checks every target before its first write. It stops with
+exit 2 and names the file and the reason when a target is edited, foreign or unreadable
+(for example an edited `forge-boot` skill, or a `user.yaml` it cannot parse); nothing is
+written then. Preserve that file, decide whether its content is yours, and run the setup
+again once it is reconciled. `status` lists what the setup finds without writing.
 
 ### The plugin did not load or Buddy did not start
 
@@ -42,43 +31,20 @@ the plugin only lists its skills. If `env.FRAMEWORK_DIR` is set in
 plugin root. A prompt on every boot read means the two `Read` allow rules are missing
 ([installation](05-installation.md#switch-buddy-on)).
 
-### The OpenCode entries did not follow a `git pull`
+### OpenCode did not start Buddy
 
-The session start's refresh skips with one line when it may not run. Run
-`python3 ~/forge/scripts/forge_install.py --refresh` by hand and read that line. On the machine installation, uncommitted
-changes to tracked non-Markdown files in the checkout stop it until they are
-committed or discarded; a machine on the coordinated maintenance path never
-refreshes and follows [updating on that path](05-installation.md#updating-on-this-path).
-
-### Installation says `validation_pending`
-
-This happens on the coordinated maintenance path. Application finished but fresh
-acceptance has not. Keep ordinary sessions stopped.
-Inspect `--maintenance status`, use the exact operation ID for a controlled
-acceptance session, and record the checks actually performed. Submit that evidence
-only after the installed generation works for the claimed targets.
-
-See [verification](05-installation.md#verification). Writing “passed” into a file
-without running acceptance does not establish a verified installation.
-
-### Installation was interrupted or source changed unexpectedly
-
-Inspect maintenance status. Keep affected sessions stopped during partial activation
-or recovery. The coordinator's retry and rollback operate on journaled, matched
-states; unknown later edits remain conflicts. Preserve the journal and locks.
-
-If sources were updated before baseline preparation, say so: a later preparation
-cannot recover the missing old working-tree state. Do not reset the repository or
-reconstruct an old generation from wrappers alone. Use
-[the activation contract](../framework/installation-activation.md) to assess recovery.
+`opencode debug skill` lists `forge:boot` without starting a model; `forge_setup.py status`
+names the Forge folder the skill points at. A skill that names a versioned Claude Code
+plugin folder needs the setup run again after a plugin update
+([OpenCode](05-installation.md#opencode)).
 
 ## Host entry problems
 
 ### Buddy did not load the intended instructions
 
 Check the actual host entry: the plugin's activation line or user switch,
-OpenCode launcher/configuration, or Cursor project rules. Verify the framework root,
-consumer CWD and selected profile in a fresh session. Access to a directory does
+OpenCode's boot skill, or Cursor project rules. Verify the framework root and
+consumer CWD in a fresh session. Access to a directory does
 not prove that its instructions loaded. Buddy runs the whole start before its first
 answer, also for a quick question, and its first answer opens with the orientation
 line (time, host, CWD; a blocked check is one word in it, such as `remote
@@ -168,8 +134,8 @@ Do not remove the hook to turn a failing check into a success claim.
 ### Navigation or generated wrappers are stale
 
 Edit the canonical source and run the relevant generator, then inspect its diff
-and check idempotency. Installed integration changes still need coordinated
-activation. See [maintenance](08-development-and-maintenance.md#generators).
+and check idempotency. A change to a host integration then follows
+[installation activation](../framework/installation-activation.md). See [maintenance](08-development-and-maintenance.md#generators).
 
 ## When nothing helps
 
