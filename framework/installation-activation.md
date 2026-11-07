@@ -3,9 +3,11 @@
 How a change to Forge's own sources reaches the hosts that read them, and how it is checked. Read it before changing
 Forge's sources on a machine whose sessions use them, and when a change must be shown active.
 
-**Where hosts read Forge.** Claude Code and Codex take Forge as a plugin. A plugin from the public marketplace changes
-through the host's own update (`claude plugin update forge@forge`, `codex plugin marketplace upgrade`); a plugin added
-from a local directory reads that directory in place. OpenCode set up through `scripts/forge_setup.py` gets a
+**Where hosts read Forge.** Claude Code and Codex take Forge as a plugin, and neither reads the plugin's source in
+place: Claude Code copies it into a versioned plugin folder, also when the marketplace is a local directory, and Codex
+keeps a marketplace copy. A change reaches them only through the host's own update (`claude plugin marketplace update
+forge` then `claude plugin update forge@forge`; `codex plugin marketplace upgrade forge`), and a running session keeps
+the copy it started with until it is restarted. OpenCode set up through `scripts/forge_setup.py` gets a
 `forge:boot` skill that names a Forge folder and reads it in place (the folder the setup ran from, or Codex's stable
 plugin folder in place of Claude Code's versioned plugin folder). For a clone and for Codex's stable folder a change
 there reaches the next session without a further step; a skill that names a versioned Claude Code plugin folder needs
@@ -38,9 +40,10 @@ definitions and compatibility mappings, engine-read YAML/JSON, state formats, an
    (`skills/testing/lean-suite.md` §Change-scoped runs and the full gate); `scripts/plugin_release_check.py` when the
    plugin's manifests, hooks or shipped files change; the light-path checks for the Markdown in it.
 3. **Activate:** merge when no session is in the middle of an operation the change alters (a workflow-engine run, a
-   continuity publication, a script call). In a checkout that hosts read in place the merge is the activation; for
-   the public plugin it is the release and each host's plugin update. Until then, name the hosts that do not have it
-   yet.
+   continuity publication, a script call). For a folder hosts read in place (a clone named by OpenCode's `forge:boot`
+   skill) the merge is the activation; for a plugin it is the release where the marketplace is the public one, then
+   each host's plugin update, run right after the merge or release. Until then, name the hosts and running sessions
+   that do not have it yet.
 4. **Verify** in a fresh session on each host that reads the change: normal entry and instruction loading, and the
    changed behaviour. Record host, commit, observations and limits. A check that did not run stays unverified.
 5. **Recovery** is a new commit through the repository's commit rules (a revert or a fix); never reset history or
