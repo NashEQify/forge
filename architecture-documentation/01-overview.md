@@ -1,7 +1,7 @@
 # 01 — Overview
 
 Forge is a discipline for software development with AI coding agents. It is a
-collection of skills, roles and workflows for the craft (specs, test design, briefs,
+set of skills, roles and workflows built around one design, for the craft (specs, test design, briefs,
 verified review, root-cause fixing, architecture, security, UX, documentation) and for
 the workflow control around it (sizing, scoping, delegation to a coding agent and
 separate reviewers, evidence before "done", continuation across sessions). Forge is
@@ -107,10 +107,11 @@ the routes are in [development usage](06-usage-workflows.md#software-development
 
 ## Forge and the frameworks it learned from
 
-The idea, the concept and how the parts work together are Forge's own. For the
-individual practices, Forge took the best of what other open agent frameworks
-published and built it into that design, under their MIT licenses and with credit.
-Each project is known for something of its own:
+The idea, the concept and how the parts work together are Forge's own. Where
+another open agent framework had already solved a practice well, Forge adopted it
+into that design instead of reinventing it: adapted to Forge's rules, in places word
+for word, under their MIT licenses and with credit. Each project is known for
+something of its own:
 
 | Project | Known for | What Forge took, in its own terms |
 |---|---|---|

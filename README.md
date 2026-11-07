@@ -5,7 +5,7 @@ and Codex). It helps single developers in particular build complex software with
 agent: you start from an idea as in vibe coding, and the result gets the quality that
 specs, tests and review give.
 
-It is a collection of skills, roles and workflows in two areas:
+It is a set of skills, roles and workflows built around one design, in two areas:
 
 - **Craft:** the engineering practices themselves: specifications, test design,
   implementation briefs, code review with verified findings, root-cause fixing,
@@ -60,9 +60,9 @@ step works from, and the hand-over between skills, roles and workflows under one
 of rules (the approved goal, your go-ahead for consequential steps, evidence before
 "done", effort matched to the stakes).
 
-For the individual practices, Forge took the best of what these projects published
-and built it into that design, some of it word for word, under their licenses and
-with credit:
+Where another project had already solved a practice well, Forge adopted it into this
+design instead of reinventing it: adapted to Forge's rules and hand-overs, in places
+word for word, under their licenses and with credit. These projects inspired it:
 
 - [Superpowers](https://github.com/obra/superpowers) (Jesse Vincent): subagent-driven
   development, systematic debugging, verification before completion.
