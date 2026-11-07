@@ -132,7 +132,7 @@ Detail (incl. post-MCA-return trigger consequence): REFERENCE.md.
 ### 1.3 Consolidation
 
 At every level, with at most three reviewers Buddy reads the complete
-reports directly and consolidates (and enforces the drill/trace sections a
+reports directly and consolidates (and enforces the checked-scope section a
 Chief would check): keep/refute triage per §5, reports
 persisted verbatim before reading, verdict at the §7 path. With four or
 more reviewers a Chief consolidates their persisted returns. One roster

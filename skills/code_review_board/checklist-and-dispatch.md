@@ -10,8 +10,8 @@ when running the L2 pre-board frame check, and before a fix pass or re-verify. S
 1. Write brief (5 steps).
 2. Decide level (§1) and, on L1, the trigger lenses (§3).
 3. Check L0 from MCA return (ruff 0, mypy 0).
-4. Assemble prompts: `reviewer-base` + `code-reviewer-protocol` +
-   `reviewer-reasoning-trace` + `first-principles-check` + persona;
+4. Name by path for the seat: `reviewer-base` + `code-reviewer-protocol` +
+   `reviewer-checked-scope` + persona;
    dispatch with brief + review package (§11) + L0 + spec.
    **L2 brief content (per §4a):** persona-prompt + scope + diff +
    spec links + code paths ONLY. NO prior cycle findings, NO prior
@@ -36,8 +36,8 @@ when running the L2 pre-board frame check, and before a fix pass or re-verify. S
    routinely redoing the reviews. Write the checklist result into the
    verdict.
 7. **L2 with ≥ 4 reviewers** (and L1 with ≥ 4, without the frame-check audit):
-   Chief consolidates (F-C-DRILL-MISSING / F-C-TRACE-MISSING
-   enforced; chain-of-custody audit per `agents/code-chief.md`
+   Chief consolidates (F-C-SCOPE-MISSING enforced; aborted seats per
+   `dispatch-template.md` §Aborted seat; chain-of-custody audit per `agents/code-chief.md`
    §CHIEF-1.0 — chief reads frame-check artifact and audits board
    coverage of its substantive concerns; pre-consolidation gates
    §CHIEF-1.1, 1.2; reject every claim without ≥1 verbatim

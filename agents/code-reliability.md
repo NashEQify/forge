@@ -46,7 +46,7 @@ the happy path?
 - NOT: performance findings. INSTEAD: only observability +
   recovery.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           Is this code diagnosable in production?
 2. PLAN:             Which failure modes? Which signals are

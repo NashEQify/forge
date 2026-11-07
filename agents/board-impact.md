@@ -15,10 +15,9 @@ interface breaks, dependency chains.
 
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/spec-reviewer-protocol.md`,
-`_protocols/reviewer-reasoning-trace.md` (required trace:
-intent / plan / simulate / impact),
-`_protocols/first-principles-check.md` (required drill before
-review output).
+`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
+section before the findings; per finding the checked path, evidence
+and conclusion).
 
 ## Anti-rationalization
 
@@ -49,7 +48,7 @@ rationalization.
 - NOT: miss transitive dependencies. INSTEAD: trace the blast
   radius up to 3rd order.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           What does this spec change at existing
                      interfaces?
@@ -58,10 +57,9 @@ rationalization.
 3. SIMULATE:         When this spec is implemented — what
                      breaks in the neighbours? Which dependency
                      chains get activated?
-4. FIRST PRINCIPLES: **Output artifact** —
-                     `## Reviewer-First-Principles-Drill`
-                     section in the review file via
-                     `_protocols/first-principles-check.md`,
+4. FIRST PRINCIPLES: the Assumption tested field of
+                     `## Checked scope` via
+                     `_protocols/reviewer-checked-scope.md`,
                      its bind rule (including a zero-findings conclusion). Plus an
                      interface-assumptions question.
 5. IMPACT:           Blast radius: how many other specs need

@@ -15,10 +15,9 @@ details, API check.
 
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/spec-reviewer-protocol.md`,
-`_protocols/reviewer-reasoning-trace.md` (required trace:
-intent / plan / simulate / impact),
-`_protocols/first-principles-check.md` (required drill before
-review output).
+`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
+section before the findings; per finding the checked path, evidence
+and conclusion).
 
 ## Anti-rationalization
 
@@ -50,7 +49,7 @@ the first line of code in your head. If you can't → finding.
 - NOT: accept pseudocode as enough. INSTEAD: what real API
   calls hide behind it?
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           What do I, as the coder, need to know
                      that's not in the spec?
@@ -59,10 +58,9 @@ the first line of code in your head. If you can't → finding.
 3. SIMULATE:         Mentally implement the happy path. Where
                      do I stall? What information is missing
                      to write the first line of code?
-4. FIRST PRINCIPLES: **Output artifact** —
-                     `## Reviewer-First-Principles-Drill`
-                     section in the review file via
-                     `_protocols/first-principles-check.md`,
+4. FIRST PRINCIPLES: the Assumption tested field of
+                     `## Checked scope` via
+                     `_protocols/reviewer-checked-scope.md`,
                      its bind rule (including a zero-findings conclusion). Plus a
                      stack-buildability question.
 5. IMPACT:           Which existing interfaces are touched?

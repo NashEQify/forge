@@ -45,7 +45,7 @@ error.
 - NOT: generic "edge case missing". INSTEAD: a concrete case
   with values.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           What is the domain rule this code
                      implements?

@@ -43,7 +43,7 @@ This is not 4 classes *within* skills; it is 4 different framework artifacts.
 |---|---|---|---|
 | **Skill** | `skills/<name>/SKILL.md` | self-contained methodology + contract | `spec_authoring`, `frame`, `task_creation` |
 | **Workflow** | `workflows/runbooks/<name>/WORKFLOW.md` | routing tree + phase sequence, composes skills | `build`, `solve`, `fix`, `save` |
-| **Protocol** | `skills/_protocols/*.md`, `agents/_protocols/*.md` | loaded rules/formats | `discourse`, `dispatch-template`, `reasoning-trace` |
+| **Protocol** | `skills/_protocols/*.md`, `agents/_protocols/*.md` | loaded rules/formats | `discourse`, `dispatch-template`, `reviewer-checked-scope` |
 | **Persona** | `agents/<name>/` or `agents/<name>.md` | role prompt layer | `code-adversary`, `board-ux-heuristic` |
 
 Operational skill test:

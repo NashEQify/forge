@@ -45,7 +45,7 @@ finding count does not establish whether the pipeline was checked.
 - NOT: ignoring breaking changes. INSTEAD: before / after
   contract.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           What is this API meant to deliver? Does
                      the contract do that?

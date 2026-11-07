@@ -42,7 +42,7 @@ No data findings? Did you check constraints on the DB level?
 - NOT: generic "improve the schema". INSTEAD: a concrete
   constraint, migration, type change.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           Which data model? Does it fit the business
                      case?

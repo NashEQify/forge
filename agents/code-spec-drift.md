@@ -83,7 +83,7 @@ type**.
 - **NOT:** silently document bugs as intended behaviour.
   INSTEAD: CODE-BUG escalate; the user decides.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 The retroactive walkthrough per section:
 

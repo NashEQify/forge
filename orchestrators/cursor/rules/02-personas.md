@@ -51,8 +51,7 @@ inline before responding. Examples:
 
 - `agents/_protocols/reviewer-base.md` — all review agents
 - `agents/_protocols/<board>-reviewer-protocol.md` — board-specific
-- `agents/_protocols/reviewer-reasoning-trace.md` + `first-principles-check.md`
-  — mandatory for review output
+- `agents/_protocols/reviewer-checked-scope.md` — mandatory for review output
 
 ## Multi-perspective trade-off
 

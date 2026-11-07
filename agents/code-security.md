@@ -44,7 +44,7 @@ endpoint?
 - NOT: findings without an exploit path. INSTEAD: "attacker
   sends [X], result: [Y]."
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           Which attack surface does this code
                      introduce?

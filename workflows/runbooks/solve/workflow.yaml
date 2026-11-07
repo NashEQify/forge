@@ -192,8 +192,8 @@ steps:
           max 3 passes). 0C+0H = PASS.
       (f) delta-verify on PASS when triggered (≥10 normative lines OR
           ≥3 files OR ≥1 MAJOR fixed OR meta-critical change). Team:
-          board-adversary + board-implementer, both first-principles
-          drill required, no chief.
+          board-adversary + board-implementer, both deliver the
+          `## Checked scope` section, no chief.
       (g) update task-YAML board_result + readiness via task_status_update.
     completion:
       type: file_created_matching

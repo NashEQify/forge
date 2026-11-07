@@ -71,7 +71,7 @@ see "Retired / deprecated skills" at the end of this section.
 |---|---|---|
 | `frame` | 8-step problem analysis with first principles | solve phase 1, build specify interview |
 | `spec_board` | multi-perspective spec review (4-7 agents) | build specify, review execute |
-| `code_review_board` | code review (L1/L2) with drill+trace enforcement | build verify |
+| `code_review_board` | code review (L1/L2) with checked-scope enforcement | build verify |
 | `spec_board` (`mode=ux`) | UX review as spec_board mode (3 UX personas) | build verify (conditional) |
 | `convergence_loop` | bounded fix->review loop, max 3 passes | review verify, spec_board internal |
 | `council` | architecture decision with 3+ council members | solve refine (conditional) |

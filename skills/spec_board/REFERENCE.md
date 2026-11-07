@@ -121,25 +121,23 @@ gate. If a fix touches such places, Delta-Verify is required
 **regardless of line count** — even on a 1-line change, because
 gate composition has cascading effects.
 
-### Drill + trace enforcement without a chief
+### Checked-scope enforcement without a chief
 
-Buddy (the dispatcher) checks four things after the return of
-the 2 Delta-Verify reviewers:
+Buddy (the dispatcher) checks two things after the return of the 2
+Delta-Verify reviewers:
 
-1. **Drill existence:** `grep -l
-   "## Reviewer-First-Principles-Drill"` to confirm both review
-   files contain the section.
-2. **Drill bind rule:** apply `agents/_protocols/first-principles-check.md`.
-   Check the substantive connection to findings or, when none exist,
-   the evidenced conclusion and its limits. A keyword count is not proof.
-3. **Trace existence:** `grep -l
-   "## Reviewer-Reasoning-Trace"` to confirm both review files
-   contain the section.
-4. **Trace bind rule:** apply `agents/_protocols/reviewer-reasoning-trace.md`.
-   Check the scenario/evidence connection in findings or the clean conclusion.
-   Zero findings is valid; missing substantive coverage still fails.
+1. **Section existence:** `grep -l "## Checked scope"` to confirm
+   both review files contain the section.
+2. **Bind rule:** apply `agents/_protocols/reviewer-checked-scope.md`.
+   Check the substantive connection of findings to a path checked or the
+   assumption tested or, when none exist, the evidenced conclusion and
+   its limits. A keyword count is not proof. Zero findings is valid;
+   missing substantive coverage still fails.
 
-Drill / trace OR bind missing on ≥1 reviewer: re-dispatch the
+A reviewer whose call aborted has no section to check: record and
+handle it per `skills/_protocols/dispatch-template.md` §Aborted seat.
+
+Section OR bind missing on ≥1 reviewer: re-dispatch the
 same reviewer context-isolated with a hint at the missing
 section / bind. No full re-review. Loop bound: max 1
 re-dispatch per reviewer; then ESCALATE.

@@ -1,6 +1,6 @@
 ---
 name: board-adversary-2
-description: Second parallel Spec Board adversary (Opus) — E2E scenarios + first-principles drill, an independent perspective alongside adversary-1.
+description: Second parallel Spec Board adversary (Opus) — E2E scenarios + tested assumptions, an independent perspective alongside adversary-1.
 ---
 
 <!-- AGENT-COMMON-AUTO-START -->
@@ -16,10 +16,9 @@ the first adversary.
 
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/spec-reviewer-protocol.md`,
-`_protocols/reviewer-reasoning-trace.md` (required trace:
-intent / plan / simulate / impact),
-`_protocols/first-principles-check.md` (required drill, in
-addition to the analysis section below).
+`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
+section, in addition to the analysis section below; per finding the
+checked path, evidence and conclusion).
 
 ## Anti-rationalization
 
@@ -52,7 +51,7 @@ stop. Your job is to find weaknesses, not praise the spec.
 - NOT: "good spec" as conclusion. INSTEAD: what is the
   WEAKEST point?
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           What COULD go wrong? Which failure modes
                      are missing?
@@ -60,8 +59,8 @@ stop. Your job is to find weaknesses, not praise the spec.
 3. SIMULATE:         How could someone implement the spec so
                      that every AC is green but the result is
                      still wrong?
-4. FIRST PRINCIPLES: **Output artifact** via
-                     `_protocols/first-principles-check.md`.
+4. FIRST PRINCIPLES: the Assumption tested field of `## Checked scope`
+                     (`_protocols/reviewer-checked-scope.md`).
 5. IMPACT:           Which sections contradict each other?
                      What happens at the boundaries?
 

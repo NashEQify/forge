@@ -213,7 +213,7 @@ Running → execute. Otherwise L1+ walkthrough:
 ```
 H1: "<hypothesis>"
     Mode: L1+ walkthrough (PRE-HARNESS)
-    Walkthrough: [reasoning trace with values]
+    Walkthrough: [the checked path: each step with its input and output values]
     Assumptions: [what is NOT verified]
     Result: GO / ADAPT / NO-GO
     TODO(POST-HARNESS): tests/eval/<task-id>/<file>

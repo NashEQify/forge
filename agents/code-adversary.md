@@ -132,7 +132,7 @@ scoped without naming the producer task (or vice versa) = finding
 These 3 scan-groups run BEFORE persona Check focus. All findings
 flow back to Buddy for distillation into the board brief.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           What COULD go wrong? Which failure modes
                      are missing?

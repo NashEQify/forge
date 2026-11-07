@@ -36,9 +36,8 @@ description: <core role in 1 sentence, with "Use when ..." trigger>
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/code-reviewer-protocol.md`,
 `_protocols/code-reviewer-base-extended.md` (this file).
-[Plus optional: `_protocols/reviewer-reasoning-trace.md`,
-`_protocols/first-principles-check.md` when drill+trace are
-required.]
+[Plus optional: `_protocols/reviewer-checked-scope.md` when the
+checked scope is required.]
 
 ## Anti-rationalization
 <persona-specific phrases — see convention below>
@@ -46,7 +45,7 @@ required.]
 ## Anti-patterns (P3)
 <persona-specific anti-patterns — see convention below>
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 <persona-specific 5-step fill — see convention below>
 
 ## Check focus
@@ -95,14 +94,14 @@ board — domain bleed is the standard anti-pattern.
 
 ---
 
-## Reasoning — convention
+## Review questions — convention
 
 The 5 steps are filled in **role-specifically**. The generic
 5-step frame is defined in `_protocols/code-reviewer-protocol.md`.
 The persona fills each step with domain sharpening:
 
 ```markdown
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           <domain-specific INTENT question>
 2. PLAN:             <domain-specific PLAN question>
@@ -111,14 +110,12 @@ The persona fills each step with domain sharpening:
 5. IMPACT:           <domain-specific IMPACT question>
 ```
 
-**Visible-output requirement** (from
-`_protocols/code-reviewer-protocol.md`):
-- Steps 1/2/3/5 → `## Reviewer-Reasoning-Trace` section in the
-  output (via `_protocols/reviewer-reasoning-trace.md`).
-- Step 4 → `## Reviewer-First-Principles-Drill` section in the
-  output (via `_protocols/first-principles-check.md`).
-- Apply the shared drill/trace bind rules, including an evidenced
-zero-findings conclusion when there are no findings.
+**Output** (from `_protocols/code-reviewer-protocol.md`): the answers
+go into the `## Checked scope` section (via
+`_protocols/reviewer-checked-scope.md`): step 1 → Purpose, steps 2 and 3
+→ Paths checked, step 4 → Assumption tested, step 5 → Consequence. Apply
+its bind rule, including an evidenced zero-findings conclusion when there
+are no findings.
 
 ---
 
@@ -203,21 +200,22 @@ consolidated to F-CR (code-review). Axis marker in the finding body
 
 ---
 
-## Drill+Trace convention
+## Checked-scope convention
 
 **Whenever a Chief consolidates (four or more reviewers):** code-chief
 enforces on every raw reviewer (with three or fewer, Buddy does at §1.3
-triage):
-- `## Reviewer-First-Principles-Drill` (required section)
-- `## Reviewer-Reasoning-Trace` (required section)
+triage): `## Checked scope` (required section, per
+`_protocols/reviewer-checked-scope.md`).
 
-Apply the shared drill/trace bind rules, including an evidenced
-zero-findings conclusion when there are no findings.
+Apply its bind rule, including an evidenced zero-findings conclusion
+when there are no findings.
 
-Missing → F-C-DRILL-MISSING / F-C-TRACE-MISSING from the chief,
-re-dispatch (max 1), then ESCALATE.
+Missing → F-C-SCOPE-MISSING from the chief, re-dispatch (max 1), then
+ESCALATE. A seat that ended in an abort is recorded as such, not enforced on, and
+its substitute is checked against its own output format
+(`skills/_protocols/dispatch-template.md` §Aborted seat).
 
-**For code-review (multi-axis persona):** drill+trace are enforced
+**For code-review (multi-axis persona):** the checked scope is enforced
 **per axis**, including the shared zero-findings conclusion path.
 One axis's findings or conclusion do not establish coverage of another.
 
@@ -252,5 +250,4 @@ reviewer-base.md with code-domain conventions.
 2. `_protocols/code-reviewer-protocol.md` (code domain)
 3. `_protocols/code-reviewer-base-extended.md` (this file —
    code-persona pattern convention)
-4. `_protocols/reviewer-reasoning-trace.md` (drill required)
-5. `_protocols/first-principles-check.md` (trace required)
+4. `_protocols/reviewer-checked-scope.md` (checked scope required)

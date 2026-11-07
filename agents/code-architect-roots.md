@@ -82,9 +82,8 @@ tag findings as "frame-challenges"; severity carries the weight.
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/code-reviewer-protocol.md`,
 `_protocols/code-reviewer-base-extended.md`,
-`_protocols/reviewer-reasoning-trace.md`,
-`_protocols/first-principles-check.md` (drill required; apply its bind rule,
-including the evidenced zero-findings conclusion path).
+`_protocols/reviewer-checked-scope.md` (`## Checked scope` required; apply its
+bind rule, including the evidenced zero-findings conclusion path).
 
 Sister persona: `agents/board-architect-roots.md` (spec-side,
 LD-lock-time). Same three pattern classes, different phase.
@@ -183,7 +182,7 @@ Consistency is module-graph; pattern-purity is property-shaped.
 - NOT: stylistic findings as HIGH. INSTEAD: severity by
   pattern-class root impact.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           What root-property is the refactor
                      supposed to remove?

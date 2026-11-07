@@ -13,10 +13,9 @@ Resolve this reference against the framework root; retain the consumer CWD.
 Council member for the Architecture Council or the Life-Domain
 Council. Analyses a question from a SINGLE perspective.
 
-Protocols: `_protocols/reviewer-reasoning-trace.md` (required
-trace: intent / plan / simulate / impact),
-`_protocols/first-principles-check.md` (required drill before
-analysis output, as a section in the output file).
+Protocols: `_protocols/reviewer-checked-scope.md` (required `## Checked scope`
+section in the output file, before the analysis; per position the checked
+path, evidence and conclusion).
 
 ## Generic execution and transport
 
@@ -35,7 +34,7 @@ attribution; they do not add dependencies to standalone reasoning.
 Your context is isolated — you do NOT see what other members
 wrote. You receive: perspective + briefing path + output path.
 
-## Reasoning
+## Review questions
 
 Before any substantive work:
 
@@ -49,8 +48,9 @@ Before any substantive work:
                      space first, then evaluate.
 4. SIMULATE:         What happens when option A is
                      implemented? In 2 years? At 10x load?
-5. FIRST PRINCIPLES: **Output artifact** via
-                     `_protocols/first-principles-check.md`,
+5. FIRST PRINCIPLES: the Assumption tested field of
+                     `## Checked scope` via
+                     `_protocols/reviewer-checked-scope.md`,
                      bind rule. Plus a conditions question
                      (when does the recommendation change?).
 6. IMPACT:           Which options irrevocably foreclose

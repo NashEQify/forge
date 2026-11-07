@@ -13,7 +13,7 @@ than one skill in identical form, it belongs here — not duplicated
 inline.
 
 Boundary against `agents/_protocols/`: those are persona-level
-protocols (reviewer base, reasoning trace, first principles). The
+protocols (reviewer base, checked scope). The
 ones here are skill-level.
 
 ## Where to look for which question?

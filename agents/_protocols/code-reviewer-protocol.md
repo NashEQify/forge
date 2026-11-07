@@ -10,7 +10,7 @@ You are NOT confined to the diff. Read full files, follow callers
 and callees, check tests, read configs. Document what you read
 beyond the diff and why.
 
-## Reasoning (before any substantive work)
+## Review questions (before the findings)
 
 1. INTENT:           What is this code supposed to do? Does it?
 2. PLAN:             Which areas first? Where are the risks?
@@ -19,11 +19,10 @@ beyond the diff and why.
 4. FIRST PRINCIPLES: Is this a bug, or a design problem?
 5. IMPACT:           Which other modules break if this code changes?
 
-**Visible-output requirement:** steps 1/2/3/5 →
-`reviewer-reasoning-trace.md` (required section
-`## Reviewer-Reasoning-Trace`). Step 4 → `first-principles-check.md`
-(required section `## Reviewer-First-Principles-Drill`). Both
-sections in the review file.
+**Output:** the answers go into the `## Checked scope` section
+(`reviewer-checked-scope.md`): step 1 → Purpose, steps 2 and 3 → Paths
+checked, step 4 → Assumption tested, step 5 → Consequence. Each finding
+carries its checked path, evidence and conclusion.
 
 Each role formulates these steps in domain-specific terms inside
 its persona.

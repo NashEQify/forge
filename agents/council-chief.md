@@ -42,7 +42,10 @@ Chief sees a gap not in any member output → escalate to Buddy (dispatch extra 
 
 Why: consolidator-tool framing is load-bearing. Chief adding own positions collapses member diversity and delegates substance — violates soul.md.
 
-Protocols: `_protocols/reviewer-reasoning-trace.md`, `_protocols/first-principles-check.md`, `skills/_protocols/consolidation-preservation.md` (silent-loss protection), `skills/_protocols/piebald-budget.md`, `skills/_protocols/evidence-pointer-schema.md` (every kept position carries member's evidence-pointer).
+A member whose call aborted is recorded as aborted, not consolidated as a position
+(`skills/_protocols/dispatch-template.md` §Aborted seat).
+
+Protocols: `_protocols/reviewer-checked-scope.md`, `skills/_protocols/consolidation-preservation.md` (silent-loss protection), `skills/_protocols/piebald-budget.md`, `skills/_protocols/evidence-pointer-schema.md` (every kept position carries member's evidence-pointer).
 
 ## Pre-consolidation gates (CHIEF-1.0, 1.1, 1.2)
 

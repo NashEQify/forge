@@ -65,7 +65,7 @@ No docs gap? You didn't read it as a first reader.
 - NOT: documenting everything. INSTEAD: what does the consumer
   need?
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           Who is the consumer? What do they need to
                      know?

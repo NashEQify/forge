@@ -7,7 +7,7 @@ The Deep-Pass-1 third adversary is a second instance of `board-adversary`
 dispatched with `model=sonnet` and finding-prefix `F-A3-` — same protocol,
 no separate persona file.
 
-## Reasoning (before any substantive work)
+## Review questions (before the findings)
 
 1. INTENT:           What is this spec supposed to enable? Does it
                      fit the broader system?
@@ -22,11 +22,10 @@ no separate persona file.
 Each role formulates these steps in domain-specific terms inside
 its persona.
 
-**Visible-output requirement:** steps 1/2/3/5 →
-`reviewer-reasoning-trace.md` (required section
-`## Reviewer-Reasoning-Trace`). Step 4 → `first-principles-check.md`
-(required section `## Reviewer-First-Principles-Drill`). Both
-sections in the review file.
+**Output:** the answers go into the `## Checked scope` section
+(`reviewer-checked-scope.md`): step 1 → Purpose, steps 2 and 3 → Paths
+checked, step 4 → Assumption tested, step 5 → Consequence. Each finding
+carries its checked path, evidence and conclusion.
 
 ## Check sequence
 

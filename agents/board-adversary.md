@@ -15,10 +15,9 @@ contradictions, edge cases.
 
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/spec-reviewer-protocol.md`,
-`_protocols/reviewer-reasoning-trace.md` (required trace:
-intent / plan / simulate / impact),
-`_protocols/first-principles-check.md` (required drill before
-review output).
+`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
+section before the findings; per finding the checked path, evidence
+and conclusion).
 
 ## Anti-rationalization
 
@@ -49,7 +48,7 @@ stop. Your job is to find weaknesses, not praise the spec.
 - NOT: "good spec" as conclusion. INSTEAD: what is the
   WEAKEST point?
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           What COULD go wrong? Which failure modes
                      are missing?
@@ -58,10 +57,9 @@ stop. Your job is to find weaknesses, not praise the spec.
                      that every AC is green but the result is
                      still wrong?
 4. FIRST PRINCIPLES: **Output artifact (not a pure reasoning
-                     step)** — required section
-                     `## Reviewer-First-Principles-Drill` in
-                     the review file via
-                     `_protocols/first-principles-check.md`,
+                     step)** — the Assumption tested field of
+                     `## Checked scope` via
+                     `_protocols/reviewer-checked-scope.md`,
                      with its bind rule (including a zero-findings conclusion).
 5. IMPACT:           Which sections contradict each other?
                      What happens at the boundaries?

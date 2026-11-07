@@ -125,6 +125,30 @@ Otherwise retain the complete inline fallback. Concise requested output must
 still contain every required finding, evidence pointer, qualification and
 meaningful dissent.
 
+## Aborted seat
+
+A seat is aborted when its call ends without a return: an API or safeguard error (for example a
+safeguard named `reasoning_extraction`), a stop, or a timeout. An abort is not a result. Record it in
+the dispatch or verdict record as `aborted: <error code or text>, <request id>`; never as a verdict,
+a PASS or a seat with zero findings. Its axis counts as not covered until a seat for it returns.
+
+Then, in this order:
+
+1. **Re-dispatch once in the standard shape.** The persona and its protocols named by path for the
+   seat to read, the brief and the review package; the output asked for as `## Checked scope` plus
+   checked path, evidence and conclusion per finding (`agents/_protocols/reviewer-checked-scope.md`).
+   The request asks for checks and evidence, never for the seat's internal deliberation. Do not
+   reword a request so that the same content passes a safeguard.
+2. **Aborted again: substitute.** A code-review seat → `forge:code-verification` (or a general agent
+   reading `agents/code-verification.md`) with the diff and the spec, for that seat's axis. A spec
+   seat → `forge:spec-verification` with the spec and its sources. Record `substitute: <role>` beside the abort. The substitute's return is
+   checked against its own role's output format, not against `## Checked scope`.
+   Another seat type has no substitute: its axis stays uncovered.
+3. **Count.** The verdict states `seats: <dispatched> dispatched, <aborted> aborted, <substituted>
+   substituted` and names each axis left uncovered. Required seats that ended aborted with no
+   substitute leave the review incomplete, never a pass: `PARTIAL` on a code review;
+   on a spec or council review, ESCALATE with the uncovered axis named.
+
 ---
 
 ## §Brief-Quality (verbatim adoption from upstream AgentTool prompt)

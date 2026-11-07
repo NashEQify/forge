@@ -55,8 +55,8 @@ L2 ✓ marks a roster candidate; the roster is sized per `brief-and-team.md` §3
 **Multi-axis persona:** code-quality + code-architecture +
 code-performance were absorbed into code-review as a 3-axis
 persona. Axis marker in findings:
-`Axis: Correctness | Architecture | Performance`. Drill+Trace per
-axis is required.
+`Axis: Correctness | Architecture | Performance`. A `## Checked scope`
+per axis is required.
 
 ## NEW MODULE vs NEW SUBSYSTEM (level-choice detail)
 

@@ -3,7 +3,7 @@
 Applies to all UX Board agents (ux-heuristic, ux-ia,
 ux-interaction). Extends `reviewer-base.md`.
 
-## Reasoning (before any substantive work)
+## Review questions (before the findings)
 
 1. INTENT:           What is the primary user task this UI
                      supports?
@@ -26,11 +26,10 @@ finding: a stated need or a surface missing from the closure table;
 a closure row still marked `no surface` or `no journey`; a decision
 without a source tag; a component missing from either contract.
 
-**Visible-output requirement:** steps 1/2/3/5 →
-`reviewer-reasoning-trace.md` (required section
-`## Reviewer-Reasoning-Trace`). Step 4 → `first-principles-check.md`
-(required section `## Reviewer-First-Principles-Drill`). Both
-sections in the review file.
+**Output:** the answers go into the `## Checked scope` section
+(`reviewer-checked-scope.md`): step 1 → Purpose, steps 2 and 3 → Paths
+checked, step 4 → Assumption tested, step 5 → Consequence. Each finding
+carries its checked path, evidence and conclusion.
 
 ## Mandatory envelope and clean output
 

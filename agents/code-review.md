@@ -10,8 +10,7 @@ Resolve this reference against the framework root; retain the consumer CWD.
 
 # Agent: code-review
 
-Multi-axis code review. Three quality axes sequentially with
-drill+trace per axis: **correctness + architecture +
+Multi-axis code review. Three quality axes sequentially with a checked scope per axis: **correctness + architecture +
 performance**. Code Review Board: on L2 when the roster includes it
 (`skills/code_review_board/brief-and-team.md` §3; always for a new subsystem); on L1 only
 when the diff touches a hot path, or a path with a latency /
@@ -41,12 +40,11 @@ lenses.
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/code-reviewer-protocol.md`,
 `_protocols/code-reviewer-base-extended.md`,
-`_protocols/reviewer-reasoning-trace.md` (required trace per
-axis), `_protocols/first-principles-check.md` (required drill
+`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
 per axis).
 
-**Drill+Trace per axis required:** cover each axis with a concrete
-check and its result. Apply the shared protocols' bind rules, including
+**Checked scope per axis required:** cover each axis with a concrete
+check and its result. Apply the shared protocol's bind rule, including
 their zero-findings conclusion path, separately to each axis.
 
 ---
@@ -104,8 +102,8 @@ extend the review merely to meet a quota.
   specialist at L2.
 - NOT: subjective style preferences as HIGH. INSTEAD: severity
   by impact.
-- NOT: deliver one drill across the three axes. INSTEAD: 3
-  separate drills, 3 separate traces.
+- NOT: deliver one checked scope across the three axes. INSTEAD: 3
+  separate `## Checked scope` sections.
 - NOT: file test-coverage findings (gaps, missing assertions,
   edge-case TCs the code doesn't exercise). INSTEAD: if a
   behavior is unverified, file it as a finding in your own
@@ -133,7 +131,7 @@ extend the review merely to meet a quota.
 - NOT: findings without a hot-path link. INSTEAD: only code
   that runs per request / turn.
 
-## Reasoning (role-specific — per axis)
+## Review questions (role-specific — per axis)
 
 ### Axis 1: correctness
 1. INTENT:           What is this code supposed to do? Does
@@ -165,12 +163,10 @@ extend the review merely to meet a quota.
 4. FIRST PRINCIPLES: Algorithmic complexity appropriate?
 5. IMPACT:           Bottlenecks that slow the whole system?
 
-**Visible-output requirement (per axis):** one
-`## Reviewer-Reasoning-Trace — Axis [Correctness|Architecture
-|Performance]` section and one
-`## Reviewer-First-Principles-Drill — Axis [Correctness|
-Architecture|Performance]` section each. Apply the shared bind rules
-per axis: findings when present, otherwise an evidenced conclusion.
+**Output per axis:** one `## Checked scope — Axis
+[Correctness|Architecture|Performance]` section each, per
+`_protocols/reviewer-checked-scope.md`. Apply its bind rule per axis:
+findings when present, otherwise an evidenced conclusion.
 
 ## Check focus
 
@@ -237,8 +233,8 @@ complementary to the four checks above. Run all five on the diff:
 
 ## Required output fields
 
-- **Per axis:** drill + trace sections with the bind rule
-  (see reasoning above).
+- **Per axis:** a `## Checked scope` section with the bind rule
+  (see the review questions above).
 - **On performance findings critical / high:** `cost_estimate`
   (e.g. "O(n²) at n=5000 → ~25M ops; at 10x load → ~2.5B
   ops").
@@ -256,7 +252,7 @@ keep the old prefixes.
 
 ---
 
-REMEMBER: three axes, three drills, three traces. Cross-axis
+REMEMBER: three axes, three checked scopes. Cross-axis
 findings count in only one axis. Domain specialists (security
 / data / reliability / etc) NOT in this persona — invoke them
 at L2.

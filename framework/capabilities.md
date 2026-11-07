@@ -34,7 +34,7 @@ interpretation. Users retain one conversational entry and their current folders.
 | Council/Frame/Bedrock skills and references | Required selected generic method contracts |
 | Council member/adversary/chief roles | Required for selected independent Council modes |
 | Dispatch/isolation/plan/evidence/consolidation/discourse protocols | Required as invoked by selected generic methods; relative to execution root |
-| Role reasoning-trace/first-principles protocols | Required generic reviewer reasoning discipline |
+| Role checked-scope protocol | Required generic reviewer evidence discipline: checked paths, tested assumption, evidence per finding |
 | Development caller examples, build/solve paths, ADR helpers | Conditional on explicit development caller; not standalone prerequisites |
 | Historical spec citations | Design attribution, not runtime loading requirements |
 | Skill/router/role generators and generated adapters | Thin discovery/host forwarding, no lifecycle algorithms |

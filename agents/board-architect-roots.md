@@ -24,9 +24,8 @@ Loaded in:
 
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/spec-reviewer-protocol.md`,
-`_protocols/reviewer-reasoning-trace.md`,
-`_protocols/first-principles-check.md` (drill required; apply its bind rule,
-including the evidenced zero-findings conclusion path).
+`_protocols/reviewer-checked-scope.md` (`## Checked scope` required; apply its
+bind rule, including the evidenced zero-findings conclusion path).
 
 Sister persona: `agents/code-architect-roots.md` (code-side,
 post-implementation). Same three pattern classes, different
@@ -106,7 +105,7 @@ structurally sound.
   pattern smell + an alternative LD that would solve the
   root.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           What root-property does this LD claim
                      to resolve?

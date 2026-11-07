@@ -16,8 +16,9 @@ are skill-wide: §0, §3, §5 and §7–§10 in `SKILL.md`, §1–§2 in `depth-
    `yaml_loader.py`, existing `workflow.yaml`. Detail: REFERENCE.md.
 6. Read SPEC-MAP; identify neighbour specs for impact.
 7. Agent selection (base + specialists; document rationale).
-8. Assemble prompt: reviewer-base + spec-reviewer-protocol + persona
-   + dispatch-template. Chief additionally: consolidation-preservation
+8. Name by path for the seat to read: reviewer-base +
+   spec-reviewer-protocol + reviewer-checked-scope + persona; follow
+   dispatch-template. Chief additionally: consolidation-preservation
    + piebald-budget.
 9. Dispatch parallel (context-isolated) → spawn chief → read signal
    → verify each kept finding at its cited location

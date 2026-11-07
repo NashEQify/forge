@@ -135,7 +135,7 @@ protocol count, same membership as `intent.md` and
 
 **Agent protocols (in `agents/_protocols/`):**
 reviewer-base, spec-reviewer-protocol, code-reviewer-protocol,
-ux-reviewer-protocol, first-principles-check, reviewer-reasoning-trace
+ux-reviewer-protocol, reviewer-checked-scope
 
 **Utilities:**
 knowledge_processor, knowledge_capture, task_creation, task_status_update,

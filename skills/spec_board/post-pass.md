@@ -20,8 +20,7 @@ teams remain unchanged; the final consuming attempt selects its applicable sourc
 After fix in standard mode: 2-agent re-check on delta scope only.
 Trigger (any): ≥10 normative lines changed; ≥3 files touched; ≥1
 MAJOR fixed; fix touches gate composition / severity / enforcement.
-Team: `board-adversary` + `board-implementer` (both deliver
-first-principles drill; no chief). Acceptance: 0 new BLOCKER + 0 new
+Team: `board-adversary` + `board-implementer` (both deliver the `## Checked scope` section; no chief). Acceptance: 0 new BLOCKER + 0 new
 MAJOR. Max 3 iterations → ESCALATE. Detail: REFERENCE.md.
 
 ## 6. Post-pass (NON-NEGOTIABLE)

@@ -17,17 +17,14 @@ Protocols: `_protocols/reviewer-base.md`,
 `_protocols/spec-reviewer-protocol.md`.
 
 **Intentional protocol exception:** the consumer does **not**
-load `reviewer-reasoning-trace.md` and does **not** load
-`first-principles-check.md`, although the other Spec Board
+load `reviewer-checked-scope.md`, although the other Spec Board
 personas do. The consumer simulates a **first reader** who
 consumes the spec without prior knowledge (see constraints
-below: "MUST NOT: do NOT follow references in the spec"). A
-formal first-principles drill or reasoning trace would disturb
-the first-reader naivety — the consumer should **stay
-foreign**, not analyse structurally. The internal reasoning
-block (INTENT / PLAN / SIMULATE / FIRST PRINCIPLES / IMPACT
-from `reviewer-base`) stays, but without required output
-artifacts.
+below: "MUST NOT: do NOT follow references in the spec"). A structured check record would disturb the first-reader naivety —
+the consumer should **stay foreign**, not analyse structurally. The
+review questions (INTENT / PLAN / SIMULATE / FIRST PRINCIPLES / IMPACT
+from `spec-reviewer-protocol.md`) stay, but without a required
+`## Checked scope` section.
 
 ## Anti-rationalization
 
@@ -57,7 +54,7 @@ that IS the finding.
 - NOT: ignore ambiguous phrasing. INSTEAD: clarify each as
   MUST / OPTIONAL.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           Can I understand from this spec alone
                      what should be built?

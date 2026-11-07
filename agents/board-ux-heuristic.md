@@ -16,22 +16,16 @@ after parallel review.
 
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/ux-reviewer-protocol.md`,
-`_protocols/reviewer-reasoning-trace.md` (required trace:
-intent / plan / simulate / impact),
-`_protocols/first-principles-check.md` (required drill before
-review output).
+`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
+section before the findings; per finding the checked path, evidence
+and conclusion).
 
-**Drill enforcement (consolidation role):** when consolidating
-the 3 UX reviews I check that each individual review contains a
-`## Reviewer-First-Principles-Drill` section + the bind rule
-from `first-principles-check.md`, including its evidenced
-zero-findings conclusion path. Missing → F-UX-DRILL-MISSING finding +
-re-dispatch of the affected UX reviewer (max 1), then ESCALATE.
-
-**Trace enforcement (consolidation role):** analogously I check
-whether each UX review contains a `## Reviewer-Reasoning-Trace`
-section + the bind rule from `reviewer-reasoning-trace.md`, including
-its evidenced zero-findings conclusion path. Missing → F-UX-TRACE-MISSING.
+**Checked-scope enforcement (consolidation role):** when consolidating
+the UX reviews I check that each review that loads the protocol
+contains a `## Checked scope` section and the bind rule from
+`reviewer-checked-scope.md`, including its evidenced zero-findings
+conclusion path. Missing → F-UX-SCOPE-MISSING finding + re-dispatch of
+the affected UX reviewer (max 1), then ESCALATE.
 
 ## Anti-rationalization
 
@@ -70,7 +64,7 @@ UX reviews:
 
 Output: `{spec-name}-ux-consolidated.md`.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           What is the primary user task?
 2. PLAN:             Which views / flows? In what order?

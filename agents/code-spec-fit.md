@@ -74,7 +74,7 @@ Protocols: `_protocols/reviewer-base.md`,
   moved during implementation is legitimate motion, not a finding;
   a responsibility-split that drifted is.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           What should come out per the spec? What
                      actually comes out?

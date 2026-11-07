@@ -39,7 +39,7 @@ Format (P2 short imperatives):
 4 numbered steps. Role-specific.
 Format: "1. **Verb** — what to do, why, what to look out for."
 
-## Reasoning                                               [CC P4 + own pattern]
+## Review questions                                        [CC P4 + own pattern]
 
 5 steps (INTENT/PLAN/SIMULATE/FIRST PRINCIPLES/IMPACT).
 Each step phrased role-specifically — not generic.

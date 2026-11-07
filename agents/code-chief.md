@@ -102,23 +102,17 @@ ground truth.
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/code-reviewer-protocol.md`,
 `_protocols/code-reviewer-base-extended.md`,
-`_protocols/reviewer-reasoning-trace.md` (required trace:
-intent / plan / simulate / impact),
-`_protocols/first-principles-check.md` (required drill before
-review output).
+`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
+section before the findings; per finding the checked path, evidence
+and conclusion).
 
-**Drill enforcement:** chief verifies that every raw review
-contains a `## Reviewer-First-Principles-Drill` section + the
-bind rule from `first-principles-check.md`, including its
-evidenced zero-findings conclusion path. Missing → F-C-DRILL-MISSING finding +
-re-dispatch of the same code reviewer (max 1), then ESCALATE.
-
-**Trace enforcement:** chief verifies that every raw review
-contains a `## Reviewer-Reasoning-Trace` section + the bind
-rule from `reviewer-reasoning-trace.md`, including its
-evidenced zero-findings conclusion path.
-Missing → F-C-TRACE-MISSING finding, analogous to drill
-enforcement.
+**Checked-scope enforcement:** chief verifies that every raw review
+contains a `## Checked scope` section and the bind rule from
+`reviewer-checked-scope.md`, including its evidenced zero-findings
+conclusion path. Missing → F-C-SCOPE-MISSING finding + re-dispatch of
+the same code reviewer (max 1), then ESCALATE. A seat that ended in an abort is not a review to enforce on, and its
+substitute is checked against its own output format:
+`skills/_protocols/dispatch-template.md` §Aborted seat.
 
 Code-review personas (`code-review`, `code-adversary`,
 `code-security`, etc.) are forced by this chief enforcement to
@@ -340,7 +334,7 @@ with rationale.
 
 - A consolidated finding WITHOUT evidence from a source agent
   fails the code-quote mandate → reject + re-dispatch (max 1
-  re-dispatch, then ESCALATE — mirrors the drill-enforcement bound
+  re-dispatch, then ESCALATE — mirrors the checked-scope enforcement bound
   in §Verify-mechanism-exists; distinct from REFUTED, which needs a
   refuting reviewer surface).
 - A REMOVED / REFUTED finding WITHOUT rationale = opaque →

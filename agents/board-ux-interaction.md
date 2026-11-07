@@ -16,16 +16,16 @@ error states, accessibility, dark theme.
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/ux-reviewer-protocol.md`.
 
-**Intentional protocol exception:** board-ux-interaction does
-**not** load `reviewer-reasoning-trace.md` and does **not**
-load `first-principles-check.md`, in contrast to
-board-ux-heuristic (primus with full drill+trace discipline).
+**Intentional protocol exception:** board-ux-interaction does **not** load
+`reviewer-checked-scope.md` and writes no `## Checked scope`
+section, in contrast to board-ux-heuristic (the primus, which does).
+Its findings still carry checked path, evidence and conclusion.
 Rationale: UX-Board quick-mode architecture — heuristic is the
-primus with the consolidation role and full drill / trace; IA
+primus with the consolidation role and the checked scope; IA
 + interaction are focused sub-reviewers with their own check
 focus (interaction: flows / feedback / error states / A11y /
 dark theme). The consolidation step by ux-heuristic delivers
-the drill+trace synthesis for the overall UX-Board verdict.
+the checked scope for the overall UX-Board verdict.
 
 ## Anti-rationalization
 
@@ -54,7 +54,7 @@ scenario = rationalization.
 - NOT: skip dark theme. INSTEAD: EVERY element in BOTH
   themes.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           Which interactions are CRITICAL for the
                      core function?

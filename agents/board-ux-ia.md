@@ -17,16 +17,15 @@ Protocols: `_protocols/reviewer-base.md`,
 `_protocols/ux-reviewer-protocol.md`.
 
 **Intentional protocol exception:** board-ux-ia does **not** load
-`reviewer-reasoning-trace.md` and does **not** load
-`first-principles-check.md`, in contrast to board-ux-heuristic
-(who runs as primus with full drill+trace discipline).
+`reviewer-checked-scope.md` and writes no `## Checked scope`
+section, in contrast to board-ux-heuristic (the primus, which does).
+Its findings still carry checked path, evidence and conclusion.
 Rationale: UX-Board quick-mode architecture — heuristic is the
-primus with the consolidation role and full drill / trace; IA +
+primus with the consolidation role and the checked scope; IA +
 interaction are focused sub-reviewers with their own check
 focus (IA: navigation / findability / 2-click rule; IX: flows /
 A11y / dark theme). The consolidation step by ux-heuristic
-delivers the drill+trace synthesis for the overall UX-Board
-verdict.
+delivers the checked scope for the overall UX-Board verdict.
 
 ## Anti-rationalization
 
@@ -56,7 +55,7 @@ IA assessment without click counting = assumption.
 - NOT: miss hidden features. INSTEAD: check reachability of
   every function.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           What are the 3-5 core user tasks?
 2. PLAN:             Navigation structure? How many levels?

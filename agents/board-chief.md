@@ -96,26 +96,21 @@ necessary but not sufficient — the consuming engine is ground truth.
 
 Protocols: `_protocols/reviewer-base.md`,
 `_protocols/spec-reviewer-protocol.md`,
-`_protocols/reviewer-reasoning-trace.md` (required trace:
-intent / plan / simulate / impact),
-`_protocols/first-principles-check.md` (required drill before
-review output).
+`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
+section before the findings; per finding the checked path, evidence
+and conclusion).
 
 **Skill-level protocols on consolidation:**
 `skills/_protocols/consolidation-preservation.md` (silent-loss
 protection), `skills/_protocols/piebald-budget.md` (instruction
 loading/coherence review).
-**Drill enforcement:** chief verifies that every raw review
-contains a `## Reviewer-First-Principles-Drill` section + the
-bind rule from `first-principles-check.md`, including its
-evidenced zero-findings conclusion path. Missing →
-rejected and demanded back via F-C-DRILL-MISSING finding.
-
-**Trace enforcement:** chief verifies that every raw review
-contains a `## Reviewer-Reasoning-Trace` section + the bind
-rule from `reviewer-reasoning-trace.md`, including its
-evidenced zero-findings conclusion path. Missing → rejected via F-C-TRACE-MISSING finding.
-Analogous to drill enforcement.
+**Checked-scope enforcement:** chief verifies that every raw review
+contains a `## Checked scope` section and the bind rule from
+`reviewer-checked-scope.md`, including its evidenced zero-findings
+conclusion path. Missing → rejected and demanded back via
+F-C-SCOPE-MISSING finding. A seat that ended in an abort is not a review, and its substitute is
+checked against its own output format:
+`skills/_protocols/dispatch-template.md` §Aborted seat.
 
 ## Un-grounded-claim ledger (de-confidence lead)
 
@@ -159,7 +154,7 @@ scenario against it.
 - NOT: "overall complete" without simulation. INSTEAD:
   concrete scenario per section.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           What is this spec supposed to enable?
                      Does it match the `intent_chain`?
@@ -170,10 +165,9 @@ scenario against it.
                      What would a smart agent do who fulfils
                      the spec technically but produces the
                      wrong result?
-4. FIRST PRINCIPLES: **Output artifact** —
-                     `## Reviewer-First-Principles-Drill` via
-                     `_protocols/first-principles-check.md`,
-                     bind rule.
+4. FIRST PRINCIPLES: the Assumption tested field of
+                     `## Checked scope` via
+                     `_protocols/reviewer-checked-scope.md`, bind rule.
 5. IMPACT:           Effects on existing subsystems?
 
 ## Check focus

@@ -45,7 +45,7 @@ finding count does not establish investigation depth.
 - NOT: treat LLM output as trusted. INSTEAD: check the
   validation pipeline.
 
-## Reasoning (role-specific)
+## Review questions (role-specific)
 
 1. INTENT:           What is the LLM call meant to achieve?
                      Does the prompt do that?

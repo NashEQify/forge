@@ -69,7 +69,7 @@ steps:
     name: "Agents parallel dispatchen (Context-Isolated)"
     category: deterministic
     instruction: >
-      Prompt assemblieren: reviewer-base + spec-reviewer-protocol + Persona + dispatch-template.
+      Prompt: reviewer-base + spec-reviewer-protocol + reviewer-checked-scope + Persona per Pfad zum Lesen nennen; dispatch-template befolgen.
       Before mandatory dispatch load evidence-review-capture.md (section 9). Standalone:
       capture this workflow/agent-dispatch while in progress. Nested: use the supplied
       exact review_owner_workflow_id/review_owner_step_id and existing parent identity;
@@ -178,7 +178,7 @@ steps:
       Trigger: >=10 normative Zeilen ODER >=3 ganze Dateien ODER >=1 MAJOR-Finding gefixt
       ODER Meta-Kritisch (Fix beruehrt Gate-Komposition / Severity-Definition / Enforcement-Logik).
       Team: 2 Agents Context-Isolated (board-adversary + board-implementer).
-      Beide MUESSEN Drill liefern (first-principles-check.md).
+      Beide MUESSEN den Checked scope liefern (reviewer-checked-scope.md).
       Acceptance: 0 neue BLOCKER + 0 neue MAJOR.
       Ref: post-pass.md SS3a.
       Buddy-judged (kein Engine-Guard — der Trigger ist eine Bewertung,
