@@ -69,7 +69,8 @@ tree is NEW MODULE; a new top-level directory at the same depth as
 existing subsystems is NEW SUBSYSTEM.
 
 L2 triggers are the five named in `SKILL.md` §1.1 (public API / wire,
-security, real migration doubt, new subsystem, live infrastructure).
+security, real migration doubt, new subsystem, live infrastructure where
+`live-path.md` §1.0a does not hold).
 New state vocabulary, a new state machine or a schema change without
 migration doubt stay at L1, as do shape-preserving extractions.
 

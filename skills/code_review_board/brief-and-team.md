@@ -1,7 +1,7 @@
 # Code review board — review brief and team
 
 Step-loaded unit of `skills/code_review_board/SKILL.md`. Read it after the level choice (§1) and before any reviewer
-dispatch of a board review, at every level (a same-turn DIRECT check is not one: `SKILL.md` §Same-turn DIRECT check). Section numbers are skill-wide: §1 and §6–§10 in `SKILL.md`, §2–§3 in `brief-and-team.md`, §4–§4a in
+dispatch of a board review, at every level (a same-turn DIRECT check is not one: `SKILL.md` §Same-turn DIRECT check). Section numbers are skill-wide: §1 and §6–§10 in `SKILL.md` (§1.0a in `live-path.md`), §2–§3 in `brief-and-team.md`, §4–§4a in
 `checklist-and-dispatch.md`, §5–§5a in `verdict.md`, §11 in `review-package.md`.
 
 ## 2. Review brief (MUST before dispatch)
@@ -89,6 +89,8 @@ taken, or `absorbed` / `still open`.
    secrets; real migration doubt; new subsystem; live infrastructure),
    each `yes | no` with an evidence pointer (file:line, grep or spec
    clause). Copy it into the verdict. A missing row counts as `yes`.
+   A live-infrastructure `yes` that meets `live-path.md` §1.0a names (a)–(c)
+   with their evidence and the gate of (d) in its row; the level is then light.
    On L2 also the roster table (§3): every candidate `run` with its open
    question, or `omit` with the evidence that answers it.
 

@@ -25,6 +25,18 @@ red→green. You do not bless differential-oracle edits (reference,
 golden, property); report any oracle hunk in the diff so the scoped
 `code-adversary` reviews it (`skills/code_review_board/checklist-and-dispatch.md` §4).
 
+**Scope on a small fix on a live path** (`skills/code_review_board/live-path.md`
+§1.0a): the dispatch names the mechanism, its exit table and the full gate.
+Check (a)–(d) there against the package and the record: the diff stays inside
+that mechanism and adds none of the parts (a) excludes; for each exit the diff
+changes, run its test and compare red before with green after; probe the
+exits the table marks unchanged through the mechanism's entry point. Return
+one row per exit (exit · changed · test · result) before the checks below.
+When a condition is false, an exit the diff changes has no reproduction, the
+table misses an exit the code has, or you find a dangerous invariant
+falsification (`skills/_protocols/finding-verification.md` step 4), say so
+first: the review is then set again by `skills/code_review_board/SKILL.md` §1.1.
+
 **Scope on a finding verification:** you verify other reviewers' findings
 at the reviewed bytes, one row each, per
 `skills/_protocols/finding-verification.md`; you grade, you do not review

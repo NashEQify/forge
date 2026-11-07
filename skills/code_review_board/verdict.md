@@ -1,7 +1,7 @@
 # Code review board — verdict and re-review
 
 Step-loaded unit of `skills/code_review_board/SKILL.md`. Read it when reviewer returns are in and a verdict is
-consolidated or decided, and before dispatching a multi-reviewer re-review. Section numbers are skill-wide: §1 and §6–§10 in `SKILL.md`, §2–§3 in `brief-and-team.md`, §4–§4a in
+consolidated or decided, and before dispatching a multi-reviewer re-review. Section numbers are skill-wide: §1 and §6–§10 in `SKILL.md` (§1.0a in `live-path.md`), §2–§3 in `brief-and-team.md`, §4–§4a in
 `checklist-and-dispatch.md`, §5–§5a in `verdict.md`, §11 in `review-package.md`.
 
 ## 5. Verdict

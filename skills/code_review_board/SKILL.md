@@ -26,7 +26,7 @@ Without Buddy (plugin): if this session holds no Buddy boot entry, run `python3 
 Buddy checklist. Detail: REFERENCE.md. Protocols:
 `agents/_protocols/reviewer-base.md` + `code-reviewer-protocol.md`.
 
-Section numbers are skill-wide: §1 and §6–§10 here, §2–§3 in `brief-and-team.md`, §4–§4a in
+Section numbers are skill-wide: §1 and §6–§10 here (§1.0a in `live-path.md`), §2–§3 in `brief-and-team.md`, §4–§4a in
 `checklist-and-dispatch.md`, §5–§5a in `verdict.md`, §11 in `review-package.md` (the stubs below say when to read each).
 
 ## Same-turn DIRECT check
@@ -63,9 +63,11 @@ findings as exact history; record verification limits in the current explicit de
 
 ### 1.0 Proportionality gate (MANDATORY — runs before table)
 
-Safety floors are evaluated first: security/auth/secrets, schema/data
-migration, public or cross-component contract changes and live
-infrastructure exclude `light`. No count or majority can cancel a safety
+Safety floors are evaluated first. Security/auth/secrets, schema/data
+migration and public or cross-component contract changes exclude `light`.
+Live infrastructure is sized by the fix's effect: check §1.0a first; when it
+holds, the level is `light`; when it does not, live infrastructure excludes
+`light` and is the L2 trigger of §1.1. No count or majority can cancel a safety
 floor. Include the actual authorization and impact, not merely LOC.
 Which floor selects L2 is named in §1.1 (L2 triggers), with its roster
 sized in §3; the other floor surfaces run L1 with the matching trigger lens
@@ -78,11 +80,17 @@ Otherwise use the level table; resolve missing facts rather than inventing
 certainty. Pure typo/format-only changes need a diff check on the reviewed path (none on quick),
 not this board.
 
+### 1.0a Small fix on a live path
+
+When live infrastructure is the change's only safety floor, before choosing the level: read and follow
+`skills/code_review_board/live-path.md` (when the level is light, what is recorded, when the level is set again).
+
 ### 1.1 Level-choice table
 
 ```
-light:   all DIRECT criteria + executed relevant tests (red→green), no
-         safety-floor surface → single code-verification: on DIRECT work
+light:   (1) all DIRECT criteria + executed relevant tests (red→green),
+         no safety-floor surface, or (2) a small fix on a live path that
+         meets §1.0a (review package) → single code-verification: on DIRECT work
          that closes in its turn, with the record, the implementer's return
          and the diff in its prompt and an inline return
          (`framework/direct-eligibility.md` §The DIRECT run); otherwise on
@@ -99,7 +107,7 @@ L2:      only on a named trigger: new public API or wire (external
          package); security / auth / secrets / consent / crypto; real
          migration doubt (stored data must be read or rewritten under the
          new shape, strict read-path decoders included); new subsystem
-         (§1.2); live infrastructure → L2 roster per §3 (trigger
+         (§1.2); live infrastructure where §1.0a does not hold → L2 roster per §3 (trigger
          perspective always; Chief at four or more reviewers, §1.3, §4a).
 Unclear: whether an L2 trigger applies → resolve the fact; still
          unclear → L2 for that trigger (its perspective joins the roster).
@@ -200,8 +208,8 @@ tracking table present, SAVE done.
 
 - **NOT** dispatch without brief. INSTEAD run 5 steps first.
 - **NOT** L1 on an L2 trigger (public API / wire, security, real
-  migration doubt, new subsystem, live infrastructure). INSTEAD when
-  unclear → L2 for that trigger. Equally **NOT** L2 on file count or new
+  migration doubt, new subsystem, live infrastructure where §1.0a does not
+  hold). INSTEAD when unclear → L2 for that trigger. Equally **NOT** L2 on file count or new
   state vocabulary alone — that is L1 — and **NOT** the whole L2 roster by
   habit: size it per §3.
 - **NOT** route LOW to `new_task` or write cost-justification escape.

@@ -19,7 +19,7 @@
     "code-api-contract.toml": "9968e666ef99dcab577dbb3aaf2efeae463b62662187ffa78573c406c9e1ebfa",
     "code-architect-lens.toml": "0fba205c33b381f66a11f9e3219c938e213c599873f3b4bca9342b3ff8c06d08",
     "code-architect-roots.toml": "fe7422e88d3617d5b024a71dfc0fd1b515829e3a2b3e7ec9b6ab420873ec6303",
-    "code-chief.toml": "d4b6453d4a1a6bdcf04949443798d6dda86e6823576a206f8e977bcb4c234380",
+    "code-chief.toml": "1bca20f1b2096c21412bb04c7f729d62a4ae0a19634a1edf9b6e74fecacf60ec",
     "code-data.toml": "6af4daa2f5292b028c0c0c65d9ec7b898d61b628b152f040a6bf0ce2a395caad",
     "code-docs-consumer.toml": "7cf15d134bde1a90b473f470d1156abc81fcca988328ba6e6c6c2a854a48bda6",
     "code-domain-logic.toml": "2d90854dd1b207799a67718d82a93324cee9f9cf9af74c1473188f331480bb93",
@@ -28,18 +28,18 @@
     "code-security.toml": "02430d41c95e7173aed46992647ece7274fc82315137a2c58aa6583d06dd6b63",
     "code-spec-drift.toml": "07d7f16652460fd35ae9b0d8574002b3730625377b90724659570a7424164ca7",
     "code-spec-fit.toml": "8fe253c70cbf2f280388f13ba6d015fb5166eaf3ed4bd4d2b983af50c13e7a02",
-    "code-verification.toml": "921b0fcafb57ab2f7cf5d84f1bd5be0068768f7327e7d6434f7983752abe8635",
+    "code-verification.toml": "59ee053675fc595f6d68184edcbdd1d17698c26b8a179b7bd4790e4c74754f51",
     "council-adversary.toml": "d205b87be598e5e96d4741e383d4ee5da96c75a265ad43bd6b686d18ec4143e4",
     "council-chief.toml": "e536be100c4836c9682aa0c15d827be97f15af774ccccf463e758376b59df84d",
     "council-member.toml": "ad2d44e4710789191f4d905d376bbd400cfd0dfa601a76b9a1e07825ee07fe6f",
-    "main-code-agent.toml": "48ecdb950afbf53d59d15f0c718162a237893f3c6fe906cd2cdf45ac903b7361",
+    "main-code-agent.toml": "e10daab2023cb99e00997d79eaabdd4b899bfa0e62d5019cdfc330a53451ac03",
     "plan-adversary.toml": "6e27fa724e933cfffd97b560be96b0bac87c3fef6ff386e9202ba7837834bd84",
-    "security.toml": "f93c2ee87309e7aa31ddcbc5170636d929918a763cf550a86075fac60d6dd8a8",
-    "solution-expert.toml": "5675036b26d6880a91c601d23eb3018648abcacc84c077f7768a7388d76cc3c6",
+    "security.toml": "192a8d6e9e58c63ca92938cff6a00ef8ecf60c9dad2e9944edb7eaf3882f219d",
+    "solution-expert.toml": "d97262d2980b493bc7b9a044a99c6e5238f6e552d034b8cdb672d5f447b258db",
     "spec-text-drift-batch.toml": "9eeb83cfd10695d70cb3fe8b2032f9420f2cf55b214286a446546ce27c2fe352",
     "spec-verification.toml": "abbadb0099f0143e2272813544775ecc2e1975c64c7193409a125189eb798a80",
     "test-skeleton-writer.toml": "b8c171382789e52de93c51cedf66849585ea0f22dbdcfb294fa39e926ed10d54",
-    "tester.toml": "111d1397af6d6bd021cbc75d116538ebf4d67fc1f484a911c8881cdce1bd3af5"
+    "tester.toml": "48a6a988df75cc00533c3486018a3f72ec7cdab37ed464c4157114e24c6cbfcf"
   },
   "version": 1
 }

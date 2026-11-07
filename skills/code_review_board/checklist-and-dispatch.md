@@ -2,7 +2,7 @@
 
 Step-loaded unit of `skills/code_review_board/SKILL.md`. Read it when assembling prompts and dispatching reviewers of a board review (a same-turn DIRECT check is not one:
 `SKILL.md` §Same-turn DIRECT check),
-when running the L2 pre-board frame check, and before a fix pass or re-verify. Section numbers are skill-wide: §1 and §6–§10 in `SKILL.md`, §2–§3 in `brief-and-team.md`, §4–§4a in
+when running the L2 pre-board frame check, and before a fix pass or re-verify. Section numbers are skill-wide: §1 and §6–§10 in `SKILL.md` (§1.0a in `live-path.md`), §2–§3 in `brief-and-team.md`, §4–§4a in
 `checklist-and-dispatch.md`, §5–§5a in `verdict.md`, §11 in `review-package.md`.
 
 ## 4. Buddy checklist

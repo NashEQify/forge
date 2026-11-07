@@ -515,7 +515,8 @@ steps:
       architect-roots + Buddy checklist, trigger lenses, no chief at <= 3
       reviewers) is the default for bounded engine / contract builds; L2
       only on a named trigger (public API / wire, security, real migration
-      doubt, new subsystem, live infrastructure). The review brief carries
+      doubt, new subsystem, live infrastructure unless the skill's §1.0a
+      small fix on a live path holds). The review brief carries
       the owning spec's §Mechanism-Lifecycle matrix when the diff touches a
       state carrier (skill §2 step 4); reviewers and the L1 checklist check
       cells. Re-verify after a fix pass: light (reproductions re-run) only

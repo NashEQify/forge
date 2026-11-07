@@ -2,7 +2,7 @@
 
 Step-loaded unit of `skills/code_review_board/SKILL.md`. Read it before a change that a board review will review starts (to
 record BASE; a same-turn DIRECT check is not one: `SKILL.md` §Same-turn DIRECT check), before dispatching any review seat on it, a re-review after a fix pass included, before a fix after a review in which every seat passed, and when persisting a
-seat's return or writing the verdict (the Range line). Section numbers are skill-wide: §1 and §6–§10 in `SKILL.md`,
+seat's return or writing the verdict (the Range line). Section numbers are skill-wide: §1 and §6–§10 in `SKILL.md` (§1.0a in `live-path.md`),
 §2–§3 in `brief-and-team.md`, §4–§4a in `checklist-and-dispatch.md`, §5–§5a in `verdict.md`, §11 in
 `review-package.md`.
 

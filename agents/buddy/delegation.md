@@ -134,8 +134,9 @@ threshold:
 - **safety-floor** — no security / auth / schema / public-API /
   secrets / data migration / live infrastructure / full-path touch
   (Inv 9: safety floors precede any shortcut and rule out the light
-  review; which floors need L2 is named in
-  `skills/code_review_board/SKILL.md` §1.1, the rest run L1 + lens).
+  review, except a small fix on a live path that meets
+  `skills/code_review_board/live-path.md` §1.0a; which floors need L2 is named
+  in its §1.1, the rest run L1 + lens).
 
 Intent of the judgment: cut the cost when context-transfer would
 cost more than it conveys; preserve MCA's specialization where it
