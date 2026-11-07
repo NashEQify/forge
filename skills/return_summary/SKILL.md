@@ -99,7 +99,9 @@ last final message.
    file). Where you judged a rule's predicate yourself ("deliberately kept",
    "unrelated to the problem"), the point is yours. So is a ruling on a review
    finding (on an implementer's push-back, or a finding's class at the fix
-   loop's cap) that no such check decided.
+   loop's cap) that no such check decided; its entry names the ruling's log id and origin
+   (`skills/convergence_loop/cause-before-answer.md` §Ruling record), and a derived ruling is never
+   reported as approved by the user.
 2. **It costs the user if wrong.** Check: write what the user would lose, miss
    or have to do differently in the result, beyond the edit that redoes the
    point. A point whose only cost is that edit (a name, a file layout), or that

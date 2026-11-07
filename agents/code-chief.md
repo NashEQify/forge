@@ -145,7 +145,8 @@ claim — every load-bearing claim was independently re-executed.
 - You accept "accepted risk" on HIGH — HIGHs are fixed, not
   accepted. Fixing includes simplifying: when the HIGHs repeat a
   prior pass's mechanism class, recommend the simpler mechanism or
-  structural invariant (`skills/convergence_loop/simplify-before-patch.md`
+  structural invariant, or the drill on a mechanism its decision rule
+  sends there (`skills/convergence_loop/simplify-before-patch.md`
   §Simplify-before-patch gate), not another route patch.
 - You route a CRITICAL / HIGH (or dangerously invariant-falsifying) finding on a
   mechanism to `new_task` / `watch_item` because "the producer is

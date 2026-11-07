@@ -11,7 +11,9 @@ checks and answers it reuses are in `skills/convergence_loop/cause-before-answer
 Buddy gives each open finding a class and a ruling instead of a further round; before the limit, each finding takes
 its cause's answer (`cause-before-answer.md` §Cause before answer). A finding with a ruling recorded on the same
 location and claim keeps that ruling. `false` rows and routed `maybe-false` rows
-(`skills/_protocols/finding-verification.md` §What follows) are not open.
+(`skills/_protocols/finding-verification.md` §What follows) are not open. On a mechanism with an owner-approved exit
+criterion, an open part of it goes to the owner as ESCALATE with each part's state, whatever the findings' classes
+(`skills/convergence_loop/derive-and-exit.md` §Exit criterion).
 
 Take the checks in this order; the first that holds gives the class and the ruling:
 
@@ -25,7 +27,7 @@ Take the checks in this order; the first that holds gives the class and the ruli
 Each open finding gets one `remaining_findings` entry in the verdict (§5 Risk carry-forward), its rationale starting
 with the class; one that goes to the caller is carried as the verdict's ESCALATE with the entry open. A finding on a
 mechanism cell placed in another task leaves as that cell's `blocked_by` edge instead (§5 Mechanism-cell floor). None
-leaves without one of the two. A ruling Buddy took here or on a push-back goes on the list of decisions taken for the
+leaves without one of the two. Each ruling taken here gets its entry in the task's ruling log (`cause-before-answer.md` §Ruling record). A ruling Buddy took here or on a push-back goes on the list of decisions taken for the
 user when that list's two tests hold (`skills/return_summary/SKILL.md` §Decisions I took for you); the verdict holds
 the rest. A workflow-engine retry of the code board step past the engine's iteration cap names this verdict
 (`at-the-cap: <verdict path>`; `framework/workflow-engine-cookbook.md` §Iteration cap and review rounds).

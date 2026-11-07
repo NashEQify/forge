@@ -274,13 +274,17 @@ Default: **max 2 re-reviews**, then `skills/convergence_loop/at-the-cap.md` §At
 - **Buddy decision per pass:** if severity does NOT drop from
   pass N to pass N+1 (e.g. the same convergence cluster shows up
   again) → run the Simplify-before-patch gate (`checklist-and-dispatch.md` §4) and
-  propose the simplification, or ESCALATE, instead of continuing. The limit override
+  take its decision rule (simplify, invariant or drill), or ESCALATE, instead of continuing. The limit override
   applies only on measurable progress.
 - **User-override pattern:** the user may say "re-review more than
   2x if needed — your call", which explicitly empowers Buddy without
   pre-escalation.
 
 Non-foundation tasks: max 2 re-reviews stays strict.
+
+A mechanism with an owner-approved exit criterion (`skills/convergence_loop/derive-and-exit.md`) closes only when
+every part holds; a PASS with a part open does not close it. When the criterion includes a closing review, it runs at full breadth, with the seat
+set of the widest earlier review on the mechanism, whatever this file's re-review composition would pick.
 
 ## Re-review composition (full table)
 

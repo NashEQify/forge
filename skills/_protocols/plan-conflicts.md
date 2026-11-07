@@ -43,7 +43,8 @@ Rule on each conflict before the next dispatch, against the binding text: the ap
 (`skills/_protocols/approved-acceptance.md`), then the decisions of the architecture spine the spec links, parent
 first (`skills/_protocols/architecture-spine.md`), then the spec at `spec_ref`. The plan and the briefs argue for a reading;
 they do not bind. Record the ruling in its row with the quoted text it rests on, or with `no binding text` and the
-reason for the choice when neither text settles it, and change the brief it affects before that brief's dispatch (exact values live only in the brief, `skills/_protocols/mca-dispatch.md` §The dispatch).
+reason for the choice when neither text settles it, and its id in the task's ruling log
+(`skills/convergence_loop/cause-before-answer.md` §Ruling record), and change the brief it affects before that brief's dispatch (exact values live only in the brief, `skills/_protocols/mca-dispatch.md` §The dispatch).
 
 - **The binding text admits two readings, or settles nothing, and the readings give the user different results:**
   take both readings and one recommendation to the caller before the next dispatch (`framework/process-map.md` §Authorization).

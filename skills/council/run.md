@@ -35,7 +35,7 @@ Members see FINAL briefing only. Council-chief reads BOTH at CHIEF-1.0.
 4. Spawn N members + adversary in ONE tool block, parallel, `run_in_background: true` (subagent_type + perspective + briefing path + output path + file-output OVERRIDE).
 5. Wait, then spawn `council-chief` with all member outputs + adversary + (when present) frame-check artifact.
 6. Read chief consolidated → recommended verdict + tracking-table verification.
-7. (Full + dissent) Discourse one round per `_protocols/discourse.md`.
+7. (Full + dissent) Discourse one round per `_protocols/discourse.md`, except the user-decided case of `SKILL.md` §6 FAIL handling.
 8. Buddy checks pivotal claims against sources and the recommendation against supplied intent/constraints (§1.1), then owns the decision. Carry unresolved risks into the result. An explicitly selected development caller adds its own coherence and ADR obligations (§12).
 
 ## 9. Perspective profiles

@@ -3,7 +3,7 @@
 Step-loaded unit of `skills/convergence_loop/SKILL.md`. Read it when writing a fix brief from a code review's
 findings, the first fix pass included, when the Simplify-before-patch gate
 (`skills/convergence_loop/simplify-before-patch.md`) answers each open blocking finding by its cause, when an
-implementer's report has a `pushed back` or `unclear` row, when `skills/convergence_loop/at-the-cap.md` applies its
+implementer's report has a `pushed back` or `unclear` row, for any ruling (§Ruling record), when `skills/convergence_loop/at-the-cap.md` applies its
 checks at the re-review limit, and when `skills/root_cause_fix/SKILL.md` Step 4 stops a fix from its third failed attempt.
 
 ### Cause before answer
@@ -74,6 +74,27 @@ The ruling goes into the review decision beside the finding's disposition: the i
 read Buddy made, and the cause and answer that follow. A later fix brief that carries the finding quotes the ruling in
 its cause entry's `check`.
 
+### Ruling record
+
+A ruling is a reading in place of the spec or the owner: a wrong-finding, push-back, cap or plan-conflict
+ruling, or an outcome a fix or implementer decides that no spec item states. Each enters the task's one ruling
+log: the build log's `## Rulings` section, else one `## Rulings` section in the task's first record holding a
+ruling (later records cite it):
+
+```
+- RL-{n}: {claim, location} — origin: owner "{quote}" ({where}) | derived from {text} — by {actor} — class: {open | owner-traceable | mechanical | new reading}
+```
+
+`owner` only when the quoted owner words name this outcome for this case; a ruling applying or interpreting owner text
+is `derived`, the quote in `derived from`. Text carrying a ruling (spec, header, brief, decision list) cites its id and
+origin; a derived ruling is never shown as owner-approved. **Open readings** of a mechanism: its unretired derived
+rulings of class `open` or `new reading` after the RL id its `Derived:` line names (all if none).
+
+**Interpretation stop.** When five derived rulings in the log are `class: open` (intent: readings pile up unchecked;
+five fit one check), the task's next fix brief, dispatch or re-review waits. A fresh-context reviewer who took none
+classifies each: `owner-traceable` (owner text settles it, quoted), `mechanical` (a stated rule decides it), or
+`new reading`. New readings go to the owner in one batch; their cells take no fix pass until answered, and the answer
+re-records the entry as `origin: owner`, quoted, or retires it.
 
 ### Re-derive
 

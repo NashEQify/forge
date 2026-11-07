@@ -18,6 +18,7 @@ spec review, test design, brief, fix brief and re-verify on a mechanism is a
 `skills/code_review_board/brief-and-team.md` §2 step 4, §3 checklist;
 `skills/code_review_board/checklist-and-dispatch.md` §4 re-verify;
 `skills/convergence_loop/simplify-before-patch.md` §Simplify-before-patch gate (`model` row);
+`skills/convergence_loop/derive-and-exit.md` §The drill;
 `agents/code-adversary.md`, `agents/code-domain-logic.md`,
 `agents/board-adversary.md`, `agents/board-implementer.md`,
 `agents/code-chief.md`, `agents/code-architect-roots.md`,

@@ -11,7 +11,9 @@ placement.
 ## §Mechanism-Lifecycle: <mechanism name>
 
 **Owner:** <spec §, task id> · **Carriers:** <state-bearing things, one line each> ·
-**Cross-spec cells:** <spec § pointers, or none> · **Outside this model:** <retro-model only>
+**Cross-spec cells:** <spec § pointers, or none> · **Outside this model:** <retro-model only> ·
+**Derived:** <drill record; owner approval of its axioms, quoted with its place; after RL-{n}, the last ruling then> (only after a drill,
+`skills/convergence_loop/derive-and-exit.md`; cells it decides cite their axiom)
 
 ### States
 <per carrier: every state incl. the absent / initial state and every terminal state;

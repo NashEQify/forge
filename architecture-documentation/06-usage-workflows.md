@@ -144,6 +144,10 @@ contract, review, fixes and an evidenced close. What you see along the way:
   ([cause before answer](../skills/convergence_loop/cause-before-answer.md)). At the
   re-review limit, every open finding gets a class and a ruling instead of another
   round ([at the cap](../skills/convergence_loop/at-the-cap.md)).
+  When the same class keeps returning in a mechanism the spec never decided, the
+  mechanism is derived from first principles first; you approve its axioms and the
+  criterion that ends the fixing, and readings taken in place of the spec are logged
+  with their origin ([derive and exit](../skills/convergence_loop/derive-and-exit.md)).
 - **For a defect:** Fix compares the broken path with a working one, tests one written
   hypothesis before changing code, and after three failed fixes looks for the cause
   outside the code

@@ -120,7 +120,7 @@ briefing format with the required `intent_chain` anchoring, §4 Buddy dispatch c
 
 **DOES NOT:** implement; write spec; choose autonomously (user decides on user-facing decisions; Buddy decides on framework-internal per soul.md).
 
-**FAIL handling:** chief reports NO-CONVERGENCE → check whether briefing framing is wrong (re-frame + new council on revised question) OR escalate to user. Standard → Full on ≥1 adversary BLOCKER + member disagreement.
+**FAIL handling:** chief reports NO-CONVERGENCE → check whether briefing framing is wrong (re-frame + new council on revised question) OR escalate to user. On ≥1 adversary BLOCKER + member disagreement: when the chief's consolidation keeps the BLOCKER, no member output contradicts its premise or evidence (tracking table), and the disagreement is only which option to take on a decision the user makes, the user gets the dissenting positions with the recommendation and no discourse round runs; the decision artifact records that and carries the positions under §11. Otherwise Standard → Full, with its discourse round.
 
 ## 7. Output paths
 

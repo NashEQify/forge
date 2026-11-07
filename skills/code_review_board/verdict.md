@@ -161,8 +161,8 @@ Full table: REFERENCE.md.
 
 The default re-review is the §4 re-verify table; its scoped adversary
 and replaced-mechanism cases use this section's two-phase. Before the fix pass that precedes a pass-2+ re-review,
-the §4 Simplify-before-patch gate runs; a recurring class is answered by
-a simpler mechanism or invariant, not by another route patch.
+the §4 Simplify-before-patch gate runs; a recurring class takes its
+decision rule (simplify, invariant or drill), not another route patch.
 
 Triggers: any re-review with >1 reviewer dispatched
 (multi-reviewer pass-1.5, bundled clusters, pass-2+). Warm-start

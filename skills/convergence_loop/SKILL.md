@@ -94,8 +94,7 @@ terminating:
 - Pass-4 outcomes: 0 BLOCKERs → CONVERGED; BLOCKERs remain →
   ESCALATE (no further extension)
 
-**Hard mechanical cap at pass 4.** No pass 5 from convergence_loop;
-sub-workflow safety valves apply on top (spec-board at 5, etc).
+**Hard mechanical cap at pass 4.**
 
 ### Severity definitions (L2 constrained judgment)
 
@@ -161,8 +160,8 @@ that supports a qualified historical attribution; no baseline leaves it unknown.
 
 | Situation | Decision |
 |-----------|----------|
-| Pass N has 0 findings above the threshold | **CONVERGED** — proceed to the next gate |
-| Pass 1 zero findings | **CONVERGED** — early termination after pass 1 |
+| Mechanism with an owner-approved exit criterion (before every other row, §Pass-3 termination's too) | **CONVERGED** only when every part holds (`derive-and-exit.md`); zero findings above the threshold is not enough |
+| Pass N (pass 1 included) has 0 findings above the threshold | **CONVERGED** — proceed to the next gate |
 | Finding requires an architecture decision | **ESCALATE immediately** — not an iteration problem (any pass) |
 | Pass 3 BLOCKERs | see §Pass-3 termination (and conditional pass-4 extension) |
 | Pass 4 (extension) BLOCKERs remain | **ESCALATE** — no further extension |
@@ -184,7 +183,9 @@ re-deriving). When a re-review leaves findings open at the re-review limit: read
 new review owner or extension on it, and before the pass-4 extension: read and follow
 `skills/convergence_loop/simplify-before-patch.md` (purpose reassessment, counting across the mechanism's whole review
 history, the gap inventory, the Simplify-before-patch record with `model` first, the decision rule and the
-simplification proposal, the two rules read with this gate, the class witness).
+simplification proposal, the two rules read with this gate, the class witness). When that gate answers with a
+drill, and on a mechanism with an owner-approved exit criterion: read and follow
+`skills/convergence_loop/derive-and-exit.md`.
 
 ## State format between passes
 
@@ -226,8 +227,7 @@ fix responsibility: `REFERENCE.md`.
 - **NOT** fix only findings above the threshold between passes.
   **INSTEAD** fix ALL findings — the threshold determines
   convergence, not fix scope. Because: MINOR accumulation compounds
-  across passes. Exception: `code_review_board` FAIL fixes the
-  fix-now set per its §5 proportionality triage.
+  across passes.
 - **NOT** treat pass 2 / 3 as fix verification. **INSTEAD** every
   pass is a fresh analysis. Because: anchoring bias — tainted
   passes miss high findings a fresh look catches.

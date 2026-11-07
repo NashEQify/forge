@@ -153,6 +153,7 @@ mechanism_cells:
   intact:    ["<state> × <op>: <guard that still holds>", ...]  # the cells the fix must leave as they are
   matrix_edit: "same change — <spec>:<lines>"                   # the section is updated with the fix, never only the build log
   class_witness: "<command> — red before each fix: <id> @ <rev>, ..."  # same_class: yes, else n/a (simplify-before-patch.md §Class witness); the fix leaves it unedited, adds no test per finding
+  exit_criterion: "<parts and their state> — owner-approved <where>"  # drilled mechanism, else n/a (derive-and-exit.md)
 ```
 
 `changed` is the fix's whole effect on the mechanism — a fix that cannot list
@@ -176,7 +177,7 @@ from its verified row; causes, checks and answers:
 causes:
   - id: F-…
     cause: wrong-finding | intent | spec | mechanism | stuck | code
-    check: "<the check that holds, quoted>"
+    check: "<the check that holds, quoted; a ruling by its RL id>"
     answer: "<rule | ask <caller> | amend <§> → re-derive <unit> or patch | invariant or replacement | fresh implementer <model> | patch | accept-limit>"
 spec_gaps: report under Concerns each outcome this pass decides that no spec item states
 ```
@@ -197,9 +198,8 @@ applying the template).
 
 A reviewer/MCA receiving a fix brief with all 3 mandatory sections:
 
-1. **Read the phrase check:** if `present-justified` is declared, the
-   reviewer/MCA knows the brief author deliberately quantified loosely —
-   don't push interpretation further.
+1. **Read the phrase check:** `present-justified` means the author
+   quantified loosely on purpose; don't push interpretation further.
 2. **Respect the scope bound:** the file list is a hard bound. The product-code
    limit is the stop: measured after each commit, and at it STOP + escalate
    (`mca-dispatch.md` §The size limit); do not silently expand.
@@ -232,11 +232,10 @@ block precision alone. On ambiguity STOP + escalate (an implementer: an `unclear
 Mitigation:
 1. **Phrase-check `present-justified` without quote** = invalid. The quote
    block is mandatory so the author cannot normalize the exception silently.
-2. **Scope bound without LOC rationale** = invalid. `loc_rationale` forces
-   the author to explain why N and M — no magic numbers.
-3. **Out-of-scope without `why_close`** = invalid. The author has to name
-   the bleed mechanism — otherwise the entry is not declaratively
-   verifiable.
+2. **Scope bound without LOC rationale** = invalid: `loc_rationale` explains
+   N and M.
+3. **Out-of-scope without `why_close`** = invalid: without the bleed
+   mechanism named, the entry is not verifiable.
 
 A reviewer/MCA receiving a brief with theatre sections rejects it with
 "section X formally filled but semantically empty — please tighten". No

@@ -124,7 +124,7 @@ modes:
     chief: council-chief
     adversary: council-adversary
     frame_check: plan-adversary   # cold-start on briefing draft per §2
-    discourse: false              # on dissent → escalate to full
+    discourse: false              # dissent: full, or SKILL §6
     coherence_check: required
     output: decision_file
     adr_required: true
@@ -250,6 +250,7 @@ process:
       adversary on one side): Buddy triggert discourse phase per
       _protocols/discourse.md. AGREE/CHALLENGE/CONNECT/SURFACE grammar.
       Max 1 Runde. Chief re-konsolidiert nach Discourse.
+      Not run in the user-decided case (SKILL.md §6).
     max_iterations: 1
     modes: [full]
 

@@ -111,7 +111,7 @@ Output a **recommended verdict label** (Buddy decides):
 |---|---|
 | ≥3 members in the SAME convergence cluster (chief MERGE-eligible per `skills/_protocols/consolidation-preservation.md` §MERGE rule: identical root cause) AND same recommended action | CONVERGED-recommended |
 | ≥3 members on same recommended action but landing in DIFFERENT clusters (RELATED, not MERGED — similar symptoms, different roots) | FRAGILE-CONVERGENCE-recommended (Buddy probe: which root is load-bearing?) |
-| ≥2 distinct clusters with OPPOSING recommended actions (e.g. one cluster says option A, another says option B) | DISSENT-recommended (escalate to full mode discourse, or Buddy-decide if light) |
+| ≥2 distinct clusters with OPPOSING recommended actions (e.g. one cluster says option A, another says option B) | DISSENT-recommended (escalate to full mode discourse, except the user-decided case of `skills/council/SKILL.md` §6; or Buddy-decide if light) |
 | No actionable plurality (each member in own cluster, no shared action) | NO-CONVERGENCE-recommended (re-frame against revised question OR user-decide) |
 
 **Mechanical predicates** mean: each label maps to a tracking-table state (cluster count + action count) checkable from the consolidated output, not to chief judgment of "same primary reason". Buddy can audit the label against the table.

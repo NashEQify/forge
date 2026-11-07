@@ -17,8 +17,7 @@ earlier fix passes did not converge, and then answers each open blocking
 finding by its cause (`cause-before-answer.md` §Cause before answer). When the cause is a mechanism,
 route-by-route fixing does not converge: each pass closes the reported route
 and the next pass finds a new route of the same class. Convergence then comes
-when the mechanism is simplified or one structural invariant is stated. The
-orchestrator usually knows the cause when asked; this gate asks.
+when the mechanism is simplified or one structural invariant is stated.
 
 **Counting.** Fix passes count across the task's whole review history
 of the mechanism: spec-board passes and code-board passes both count.
@@ -55,12 +54,12 @@ state file (a spec-only review: the consolidated file), write:
 
 ```
 ### Simplify-before-patch check — before fix pass {N}
-- model: present|written-now|n/a — {spec § of the §Mechanism-Lifecycle section, or why no state carrier}
+- model: present|written-now|n/a — {spec § of the §Mechanism-Lifecycle section, or why no state carrier}; derived: {its Derived: line} | no | n/a (model: n/a)
 - inventory: {path} — missing {n}, partial {n}, contradicts {n}, unrequested {n}
 - why: {one sentence: why the earlier passes did not converge, read from the inventory and the prior vs new findings}
 - same_class: yes|no — {mechanism or guiding rule}; prior {ids} vs new {ids}; cells: {matrix cells the findings sit on}
 - simpler_mechanism: yes|no — {named candidate + the cells / invariant locus it removes + the finding ids}
-- spec_is_problem: yes|no — {clause}
+- spec_is_problem: yes|no — {clause}; open readings: {n} ({RL ids})
 - causes: {id}: wrong-finding|intent|spec|mechanism|stuck|code — {the check that holds}; … one per open blocking finding
 - decision: per cause group — patch ({cells changed}; {cells confirmed intact}) | propose-simplification → {caller / PMO / user} | amend-spec ({§}) → re-derive {unit} | patch | ask → {caller} | fresh-implementer {model} | rule {ids} | accept-limit {ids}
 - class_witness: {command} — red: {open ids} at {HEAD}, {prior ids} at {rev}; sharpened: {what was added for a finding it missed} | n/a (same_class: no)
@@ -73,8 +72,7 @@ retro-model trigger fired (protocol §Trigger: a blocking finding on a
 mechanism without a section) and the orchestrator wrote the bounded
 section before the fix brief; `n/a` names why — no state carrier, or no
 blocking finding on one. The remaining rows are answered **against the
-matrix**: `same_class` locates the prior and new findings in cells (two
-findings in different cells of one carrier are the same class);
+matrix**: `same_class` locates the prior and new findings in cells;
 `simpler_mechanism` names the cells or the enforcement locus the
 candidate removes; a `patch` decision names every cell it changes and
 confirms the others intact — a patch that cannot name its cells is not
@@ -89,7 +87,8 @@ they sit on, and the symbols / rules the previous fix diff touched. Prior
 ids are the evidence; a `no` names the different mechanism. Unsure
 counts as `yes` for `same_class` only. `simpler_mechanism: yes` requires
 a named candidate (mechanism or invariant), the cells it removes and the
-finding ids; `spec_is_problem: yes` requires the clause. Without them
+ids; `spec_is_problem: yes` requires the clause, or five or more open readings
+(`cause-before-answer.md` §Ruling record) in its place. Without them
 the answer is `no`, and the `same_class: yes` row below still forces the
 invariant + property generator. Findings on different cells of one
 `§Mechanism-Lifecycle` matrix (or different rows of the
@@ -105,7 +104,8 @@ code, the table decides:
 | `model: written-now` | Write the section first; re-read every new and prior finding against the matrix before answering the rows below. Cells the matrix shows empty or unspecified are findings of this pass, whether or not a reviewer reported them. |
 | `same_class: yes` AND (`simpler_mechanism: yes` OR `spec_is_problem: yes`) | **Stop route patching.** Propose the simplification to the caller (PMO / user) unprompted: a spec amendment and/or one structural invariant whose checks assert effects, not classifications, plus a property generator whose axes are the matrix axes (the class witness below). The proposal names the cells it removes and shows the **whole updated matrix**, not the changed side. This is a legitimate design fork, not permission-seeking. |
 | `same_class: yes`, both others `no` | Patch, but the effect-asserting invariant + property generator above MUST stand as the class witness before the fix brief (below), the record names why no simpler mechanism exists, and the fix brief carries the `§Mechanism-cells` block (`_protocols/fix-brief-template.md`). |
-| `same_class: yes` in two consecutive checks | **Propose-simplification regardless** of the other answers: the invariant route already failed once. |
+| `same_class: yes` in two consecutive checks, `model` not `n/a`, and `derived: no` or five or more open readings | **Drill the mechanism** (`derive-and-exit.md`) instead of a further invariant or patch: its owner-approved axioms go into the spec and the matrix. |
+| `same_class: yes` in two consecutive checks, the drill row not met | **Propose-simplification regardless** of the other answers: the invariant route already failed once. |
 | `same_class: no` | Patch normally (cells named). |
 
 The proposal carries one recommended simplification with its evidence
@@ -116,8 +116,7 @@ change. Cells placed in another planned task or beyond the MVP travel
 as `blocked_by` edges (`_protocols/mechanism-model.md` §Scope and
 placement); every open `now` cell at blocking severity is closed by the
 simplification or the patch — never carried as a risk or filed as a new
-task (lower severities: §Bind rules, verdict floor). The proposal is a design-fork proposal,
-not permission-seeking; while it, or an intent question, waits for an answer it counts as the
+task (lower severities: §Bind rules, verdict floor). While the proposal, a drill or an intent question waits for an answer it counts as the
 ESCALATE of `SKILL.md` §Termination for the re-review limit, which counts the
 simplified fix pass like any other. When the caller is the user (no
 PMO session in between), the council-before-user rule of
