@@ -152,6 +152,7 @@ mechanism_cells:
   changed:   ["<state> × <op>: <old cell> → <new cell>", ...]   # every cell the fix changes
   intact:    ["<state> × <op>: <guard that still holds>", ...]  # the cells the fix must leave as they are
   matrix_edit: "same change — <spec>:<lines>"                   # the section is updated with the fix, never only the build log
+  class_witness: "<command> — red before each fix: <id> @ <rev>, ..."  # same_class: yes, else n/a (simplify-before-patch.md §Class witness); the fix leaves it unedited, adds no test per finding
 ```
 
 `changed` is the fix's whole effect on the mechanism — a fix that cannot list
@@ -245,10 +246,8 @@ silent proceed.
 
 ## Discipline rationale
 
-Loose phrasing in fix briefs is the single most common overcorrection root —
-observed across multiple build/full workflows. More precise line numbers do
-not solve it (pointer blocks were already there). What is missing is
-**phrase discipline + scope bound + explicit out-of-scope acknowledgement**.
+What fixes loose phrasing (§Core claim) is **phrase discipline + scope bound +
+explicit out-of-scope acknowledgement**.
 
 Mechanism approach (3 mandatory sections + quote-block convention) >
 persona approach (brief-adversary review post-hoc). The author is forced

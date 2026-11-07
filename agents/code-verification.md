@@ -21,7 +21,9 @@ Resolve this reference against the framework root; retain the consumer CWD.
 # Agent: code-verification
 
 **Scope on a fix-pass re-verify:** re-run every fix-now reproduction
-red→green. You do not bless differential-oracle edits (reference,
+red→green, and the class witness when the fix brief carries one (its
+recorded red findings now pass; an edit to the witness in the fix diff is
+an oracle hunk). You do not bless differential-oracle edits (reference,
 golden, property); report any oracle hunk in the diff so the scoped
 `code-adversary` reviews it (`skills/code_review_board/checklist-and-dispatch.md` §4).
 

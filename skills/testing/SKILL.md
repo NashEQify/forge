@@ -22,14 +22,9 @@ Without Buddy (plugin): if this session holds no Buddy boot entry, run `python3 
 
 # Skill: testing
 
-Methodology and formats for test-case design and execution across
-the entire SSDLC. Not just code tests — also logic, processes,
-specs, constraints.
-Agent: `agents/tester.md`. Infrastructure discipline
-(cross-project): `REFERENCE.md` §Infrastructure.
-
-Detail mechanics (format details, skeleton templates, eval
-methodology, retest gate): `REFERENCE.md`.
+Agent: `agents/tester.md`. Detail mechanics (format details, skeleton
+templates, eval methodology, retest gate) and the cross-project
+infrastructure discipline (§Infrastructure): `REFERENCE.md`.
 
 ## 6-level test pyramid
 
@@ -82,8 +77,8 @@ which that limit alone decides. A row added later enters only through
 the adversary test plan on a safety floor or a review finding about
 behaviour a consumer relies on, and amends the matrix. A row is covered
 only when its test ran and passed in this run (§Meaningful pre-fix
-witness). A bug fix gets one test that reproduces the bug and fails
-before the fix (`workflows/runbooks/fix/WORKFLOW.md`, test-plan step);
+witness). A bug fix gets one test that reproduces the bug (a
+class: §Meaningful pre-fix witness) and fails before the fix (`workflows/runbooks/fix/WORKFLOW.md`, test-plan step);
 a refactoring adds no tests and keeps
 the existing ones green. Source of the edge-row matrix:
 BMAD-METHOD (MIT License, © 2025 BMad Code, LLC); Forge's register of adopted methods.
@@ -135,6 +130,9 @@ regression, negative and control cases; all applicable required cases must pass.
 A result claim covers only what executed: acceptance reported as `unexecuted`, or
 skipped for missing execution evidence, is unverified and named as such, never
 counted as passing or "green".
+Findings of one repeated review class (`same_class: yes`) share a class
+witness, a generator red on each known finding before its fix, instead of a
+test per finding (`skills/convergence_loop/simplify-before-patch.md` §Class witness).
 Pure preservation/refactor work demonstrates its unchanged contract without
 fabricating a missing-behavior failure. This is a testing rule for behavior changes,
 not a test ceremony for ordinary prose or every activity.
@@ -177,7 +175,7 @@ Context: REFERENCE.md.
 
 **OUTPUT:** test plan + coverage matrix (spec element × TC × bug_class
 × level × AC quality × eval status) + AC-quality assessment + run
-strategy. Persisted in `docs/tasks/<NNN>.md`.
+strategy (persisted per §Coverage matrix).
 
 **DOES NOT:** test execution in design mode (plan only); spec fixes
 (reports vague/contradictory ACs); code skeletons in design mode
@@ -240,5 +238,4 @@ discipline): REFERENCE.md.
 ## References
 
 Python tooling (pytest config, ruff, conventions):
-`skills/python_code_quality_enforcement/SKILL.md`. Detail formats
-(test plan, skeleton, eval, retest gate): `REFERENCE.md`.
+`skills/python_code_quality_enforcement/SKILL.md`.

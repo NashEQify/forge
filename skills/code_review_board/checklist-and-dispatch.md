@@ -63,15 +63,16 @@ cases, decided from the fix diff (the fix-range package, §11):
 | **Otherwise** (new guard / branch / rule on a HIGH mechanism, or edits beyond the finding's lines, or oracle hunks present) | **light + mechanism-scoped `code-adversary`:** cold-start with the owning spec's `§Mechanism-Lifecycle` matrix and the fix diff; mandate "attack the **mechanism**, with the whole matrix as context, not the fix"; returns a coverage table over the invariants and the matrix rows / columns the fix touches (cell · probe · result); two-phase per §5a |
 | **Mechanism replaced** by the Simplify-before-patch gate | matrix updated first; then `code-adversary` + `code-domain-logic` on the **whole updated matrix** (`code-architect-roots` only if structure changed beyond it), two-phase per §5a |
 
-No chief in any case. Reproductions alone prove only that the reported
-routes are closed; a re-verify scoped to the fix diff finds only the
-next side of the same mechanism (observed three times in a row on one
-build). The adversary's unit is therefore the mechanism: it reads the
-whole matrix, probes the invariants and the rows / columns the fix
-touches, and reports which it reached, which held and which failed —
-that table is the evidence the Simplify-before-patch gate reads. A
-missing section follows the retro-model trigger
-(`_protocols/mechanism-model.md` §Trigger). Detail: REFERENCE.md.
+No chief in any case; each re-runs the fix brief's class witness, if
+any. Reproductions alone prove only that the reported routes are closed;
+a re-verify scoped to the fix diff finds only the next side of the same
+mechanism (observed three times in a row). The adversary's unit is
+therefore the mechanism: it reads the whole matrix, probes the
+invariants and the rows / columns the fix touches, and reports which it
+reached, which held and which failed — that table is the evidence the
+Simplify-before-patch gate reads. A missing section follows the
+retro-model trigger (`_protocols/mechanism-model.md` §Trigger). Detail:
+REFERENCE.md.
 
 **Oracle edits on a fix pass (MUST):** a change to a differential
 oracle (reference implementation, golden, property) goes in a separate
@@ -85,13 +86,12 @@ every spec that produces or consumes the field
 
 **Simplify-before-patch gate (MUST before fix pass ≥ 2, counted across
 the task's spec and code passes on the mechanism):** record the check
-per `skills/convergence_loop/simplify-before-patch.md` §Simplify-before-patch gate in
-the build log before briefing the fix — `model` row first (the
-`§Mechanism-Lifecycle` section present or written now), then same class
-/ simpler mechanism / spec at fault answered against the matrix. Same
-class + simpler mechanism or spec at fault → propose the simplification
-to the caller instead of patching routes, showing the whole updated
-matrix. A simplification that removes the class counts as fixing its
+per `skills/convergence_loop/simplify-before-patch.md` in the build log
+before briefing the fix — `model` row first, then same class / simpler
+mechanism / spec at fault answered against the matrix. Same class: class
+witness red before the brief; with a simpler mechanism or spec at
+fault, propose the simplification to the caller instead of patching
+routes, showing the whole updated matrix. A simplification that removes the class counts as fixing its
 HIGHs. A `patch` names every cell it changes (fix brief
 `§Mechanism-cells`).
 

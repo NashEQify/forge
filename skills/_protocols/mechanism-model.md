@@ -143,7 +143,9 @@ Corollaries:
   adversary and domain-logic report uncovered or wrong cells as findings; the
   L1 checklist item "every in-scope cell has a guard or a test".
 - **fix brief:** `§Mechanism-cells` block (cells changed · cells that must
-  stay intact with their guards · matrix updated in the same change).
+  stay intact with their guards · matrix updated in the same change · on
+  `same_class: yes` the class witness, red before the fix:
+  `skills/convergence_loop/simplify-before-patch.md` §Class witness).
 - **re-verify:** the scoped adversary's mandate is the mechanism, with the
   whole matrix as context; its coverage table lists the invariants and the
   matrix rows / columns the fix touches, not every cell.

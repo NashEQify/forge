@@ -129,8 +129,9 @@ the passes do not converge, then answers each blocking finding by its cause
 
 Between passes, MCA fixes findings (per `Fix scope` above). Each fix
 pass runs the **selected set** for its changes, plus the RED skeleton
-of a cross-pass-binding test, and L0 (ruff + mypy) on touched files
-only. A broad run, where one is due at all, comes after the last pass,
+of a cross-pass-binding test, the class witness when the fix brief
+carries one (§Simplify-before-patch, `same_class: yes`), and L0 (ruff +
+mypy) on touched files only. A broad run, where one is due at all, comes after the last pass,
 not per fix-phase. Scope and timing: `skills/testing/run-strategy.md` §Test
 selection. Failure attribution below remains binding.
 
@@ -183,7 +184,7 @@ re-deriving). When a re-review leaves findings open at the re-review limit: read
 new review owner or extension on it, and before the pass-4 extension: read and follow
 `skills/convergence_loop/simplify-before-patch.md` (purpose reassessment, counting across the mechanism's whole review
 history, the gap inventory, the Simplify-before-patch record with `model` first, the decision rule and the
-simplification proposal, the two rules read with this gate).
+simplification proposal, the two rules read with this gate, the class witness).
 
 ## State format between passes
 

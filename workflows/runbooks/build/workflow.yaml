@@ -519,7 +519,7 @@ steps:
       small fix on a live path holds). The review brief carries
       the owning spec's §Mechanism-Lifecycle matrix when the diff touches a
       state carrier (skill §2 step 4); reviewers and the L1 checklist check
-      cells. Re-verify after a fix pass: light (reproductions re-run) only
+      cells. Re-verify after a fix pass: light (reproductions and any class witness re-run) only
       for a line-local fix; any new guard / branch / rule on a mechanism
       that drew a HIGH, or an oracle hunk, adds a code-adversary whose
       mandate is the mechanism with the whole matrix as context, not the

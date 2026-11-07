@@ -63,6 +63,7 @@ state file (a spec-only review: the consolidated file), write:
 - spec_is_problem: yes|no — {clause}
 - causes: {id}: wrong-finding|intent|spec|mechanism|stuck|code — {the check that holds}; … one per open blocking finding
 - decision: per cause group — patch ({cells changed}; {cells confirmed intact}) | propose-simplification → {caller / PMO / user} | amend-spec ({§}) → re-derive {unit} | patch | ask → {caller} | fresh-implementer {model} | rule {ids} | accept-limit {ids}
+- class_witness: {command} — red: {open ids} at {HEAD}, {prior ids} at {rev}; sharpened: {what was added for a finding it missed} | n/a (same_class: no)
 ```
 
 **`model` first (show the whole mechanism before asking for a simpler
@@ -102,8 +103,8 @@ code, the table decides:
 | Answers | Decision |
 |---|---|
 | `model: written-now` | Write the section first; re-read every new and prior finding against the matrix before answering the rows below. Cells the matrix shows empty or unspecified are findings of this pass, whether or not a reviewer reported them. |
-| `same_class: yes` AND (`simpler_mechanism: yes` OR `spec_is_problem: yes`) | **Stop route patching.** Propose the simplification to the caller (PMO / user) unprompted: a spec amendment and/or one structural invariant whose checks assert effects, not classifications, plus a property generator whose axes are the matrix axes. The proposal names the cells it removes and shows the **whole updated matrix**, not the changed side. This is a legitimate design fork, not permission-seeking. |
-| `same_class: yes`, both others `no` | Patch, but the fix pass MUST add the effect-asserting invariant + property generator above, the record names why no simpler mechanism exists, and the fix brief carries the `§Mechanism-cells` block (`_protocols/fix-brief-template.md`). |
+| `same_class: yes` AND (`simpler_mechanism: yes` OR `spec_is_problem: yes`) | **Stop route patching.** Propose the simplification to the caller (PMO / user) unprompted: a spec amendment and/or one structural invariant whose checks assert effects, not classifications, plus a property generator whose axes are the matrix axes (the class witness below). The proposal names the cells it removes and shows the **whole updated matrix**, not the changed side. This is a legitimate design fork, not permission-seeking. |
+| `same_class: yes`, both others `no` | Patch, but the effect-asserting invariant + property generator above MUST stand as the class witness before the fix brief (below), the record names why no simpler mechanism exists, and the fix brief carries the `§Mechanism-cells` block (`_protocols/fix-brief-template.md`). |
 | `same_class: yes` in two consecutive checks | **Propose-simplification regardless** of the other answers: the invariant route already failed once. |
 | `same_class: no` | Patch normally (cells named). |
 
@@ -129,9 +130,29 @@ keep patching.
 
 **Two rules read with this gate.** "HIGHs are fixed, not accepted"
 stays: a simplification that removes the class fixes every HIGH of the
-class (each is then closed by re-running its reproduction). Running a
-delegated build to done means finishing the task, not the current
-design.
+class (each is then closed by re-running its reproduction and the class
+witness). Running a delegated build to done means finishing the task,
+not the current design.
+
+### Class witness (every `same_class: yes` row, before the fix brief)
+
+Tests per finding cover only the reported routes, so a suite can be green after each pass while the next review finds
+new routes of the same class. The property generator the rows above require therefore exists before the fix brief is
+written, not as part of the fix pass. Its axes are the matrix axes and its oracle is written from the matrix by
+someone other than the fix pass's implementer (`skills/testing/test-design.md` §Derivation from §Mechanism-Lifecycle,
+§Oracle discipline); for a proposed simplification they are the axes of the updated matrix. It must turn red every
+known blocking finding of the class, each on the code before its fix: the open (new) ids at the fix package's HEAD,
+each prior id at its pre-fix revision or with its fix reverted (`red at {rev}`). When it misses one, sharpen it (the
+axis, value or route the finding needs) and run it again before any code changes; a finding no generator over the
+matrix axes can produce is an empty or missing cell, which the matrix gets first (the `model: written-now` row); for a
+proposed simplification, a finding on a cell the simplification removes is witnessed by that removal, not by adding
+the cell back. The known findings become fixed examples of the generator, so they run in every run, also with the
+smaller case count outside the full gate (`skills/testing/lean-suite.md` §pytest shape). The record's `class_witness`
+row and the fix brief carry its command and the findings it turned red (`_protocols/fix-brief-template.md` Section 4).
+The fix pass does not edit the witness; an edit to it in the fix diff is an oracle hunk for the re-verify. The class
+witness replaces the hand-written regression test per finding of the class (`skills/testing/SKILL.md` §Meaningful
+pre-fix witness). After the fix, the same command passes: the reported findings and the routes the generator spans are
+closed. The review still judges the rest of the mechanism.
 
 ## Source
 

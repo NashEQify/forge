@@ -28,7 +28,7 @@
     "code-security.toml": "2582946597c577e3c7e5efc76a7d6d9c5fa681ae34c3cf133b02014dbf2b7234",
     "code-spec-drift.toml": "462163aa730f17c52a61a5b3352e2c6b20bd988218f33ac6e868ea090d9d5303",
     "code-spec-fit.toml": "5581b6fb2ea9dacb4fcc33c05a6a126d51e73e78b0dadee932ea5dd30e7f5e66",
-    "code-verification.toml": "59ee053675fc595f6d68184edcbdd1d17698c26b8a179b7bd4790e4c74754f51",
+    "code-verification.toml": "86338bfb4adc41446bea0dfc715b7d65ade579d71b46d365fdbd20fed12935a0",
     "council-adversary.toml": "47ce46cb6ec35e5ee99d3a3ac0e5c00eee011dccab08b00ccd3c2fb73c0ba187",
     "council-chief.toml": "fd613ade4a27682a550eadaede8ec16a9eb86d9b603616e52582b4bc513e887e",
     "council-member.toml": "78aaf92523163f70c6112968a166b239b9978157a90b8dd5ee84eecd003667ee",
@@ -39,7 +39,7 @@
     "spec-text-drift-batch.toml": "9eeb83cfd10695d70cb3fe8b2032f9420f2cf55b214286a446546ce27c2fe352",
     "spec-verification.toml": "abbadb0099f0143e2272813544775ecc2e1975c64c7193409a125189eb798a80",
     "test-skeleton-writer.toml": "b8c171382789e52de93c51cedf66849585ea0f22dbdcfb294fa39e926ed10d54",
-    "tester.toml": "48a6a988df75cc00533c3486018a3f72ec7cdab37ed464c4157114e24c6cbfcf"
+    "tester.toml": "33346f010cd82bf65ddd769c6a0c96b3517df0ddd65c02f6d042d7d2d429975c"
   },
   "version": 1
 }

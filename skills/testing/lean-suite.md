@@ -19,6 +19,11 @@ review applies the first one to every test a change adds (`skills/code_review_bo
 - **No near-duplicate cases.** A parameter axis stays only where its values change an assertion or the code path under
   test (`SKILL.md` §Test design from the change); two values that pass through the same branch or the same mapping get
   one case.
+- **One class witness per repeated class.** Review findings of one repeated class (Simplify-before-patch
+  `same_class: yes`) are covered by its class witness, a property generator with the known findings as fixed
+  examples (`skills/convergence_loop/simplify-before-patch.md` §Class witness), not by a regression test each. A
+  per-finding test from an earlier pass whose finding the witness covers as a fixed example is a near-duplicate and is removed when
+  the witness lands.
 - **No tests for retired mechanisms.** The change that retires a mechanism removes its tests; a test kept for a
   remaining path names that path in its Covers.
 - **Cheap setup, shared deliberately.** A small fixture instead of the project's live data (a test that reads the whole
