@@ -9,6 +9,8 @@ removing a claim, in every mode and under continuous maintenance. Its baseline c
 
 ### 2. Admit, scope and compare
 
+`continuous-maintenance.md` carries a summary of this section (Admission core); change both together.
+
 Identify the future question/decision/continuation each candidate supports. Keep
 subject and applicability (person-wide, topic, event/task/setup) distinct from
 certainty. Apply this admission check to topic knowledge, continuation checkpoints,
