@@ -24,7 +24,9 @@ scope question. Fresh Codex sessions started Buddy in the project and, after the
 folder. Two global sessions put the greeting before the orientation line. After the greeting order was made
 explicit, two fresh global sessions opened with the orientation. Codex created a missing personal-context
 folder as soon as it was named. During removal it preserved the personal context and deleted cache and
-configuration directories outside the documented commands. These trials covered the Linux CLI.
+configuration directories outside the documented commands. In the full repeat, the request explicitly allowed
+creating the folder. Fresh sessions in both scopes opened with the orientation, and Codex removed Forge through
+the documented commands. These trials covered the Linux CLI.
 
 The rest of this page is the reference: what the agent runs, and how to do it by hand.
 
