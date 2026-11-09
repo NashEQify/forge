@@ -15,10 +15,16 @@ checks that a fresh session opens with Buddy's orientation line. Nobody edits a 
 `forge:setup` skill changes the scope later or removes Forge, and the plugin's other skills offer it once when they
 run where Buddy is off.
 
-What the live proof showed: Claude Code as the agent, on a machine with Forge taken off, installed the plugin for
-Claude Code and Codex from that one request, asked the scope question, set up each scope, changed it back, made the
-offer once, and removed Forge again through the agent, with fresh sessions checked after each step. Not shown: Codex
-as the agent receiving the request, a fresh Codex session after the setup, the desktop apps, and macOS or WSL.
+In a Linux CLI trial, Claude Code installed the plugin for both hosts from that one request, asked the scope
+question, set up each scope, switched back to project-only, made the setup offer once, and removed Forge. Fresh
+Claude Code sessions were checked after each step.
+
+In a separate Linux CLI trial with an isolated profile, Codex installed the plugin for both hosts and asked the
+scope question. Fresh Codex sessions started Buddy in the project and, after the scope change, in an unmarked
+folder. Two global sessions put the greeting before the orientation line. After the greeting order was made
+explicit, two fresh global sessions opened with the orientation. Codex created a missing personal-context
+folder as soon as it was named. During removal it preserved the personal context and deleted cache and
+configuration directories outside the documented commands. These trials covered the Linux CLI.
 
 The rest of this page is the reference: what the agent runs, and how to do it by hand.
 

@@ -51,15 +51,16 @@ profile; files it includes in full are loaded and need no read.
      through `framework/development-continuation.md` before that work
      progresses. Do not infer selection from task/plan/state files or start
      unrelated open topics.
-6. **Greet** in the first answer, the reply that ends your first turn (a
-   progress note before it does not count, because some hosts deliver only
-   that reply): one short line with status and next step (style: soul). An
-   instruction unit that did not load opens that reply with the notice
-   `agents/buddy/boot-status.md` §Greeting findings defines. After that, mention
-   only a pull outcome, ahead status, held-back work or a user-scope warning, if
-   any; an unchecked remote is at most one word in the orientation line. Uncommitted state is
-   a note in the shape `agents/buddy/boot-status.md` §Greeting findings gives it: found before this session,
-   with path and count. It gates new work only where the project's rules
+6. **Greet** in the final reply that ends your first turn. Follow these steps in order.
+   1. If an instruction unit failed to load, give the notice from
+      `agents/buddy/boot-status.md` §Greeting findings.
+   2. Give the orientation on its own line. An unchecked remote is at most one word on that line.
+   3. Give a short status and next step (style: soul). Add any pull outcome,
+      ahead status, held-back work or user-scope warning.
+
+   Describe uncommitted state using `agents/buddy/boot-status.md` §Greeting findings. Include the
+   paths and count and say you found them before this session.
+   It gates new work only where the project's rules
    ask for that or the checkout is the framework of a coordinated programme;
    then follow `framework/process-map.md` §Authorization.
 
