@@ -1,17 +1,42 @@
 # Forge
 
-**Buddy** is how you work with Forge in Claude Code, Codex and OpenCode. Tell Buddy
-what you want to accomplish. It picks up the relevant context from earlier sessions,
-works within your project's rules and records what you need to continue later.
+Forge is a discipline for software development with AI coding agents (Claude Code,
+Codex and OpenCode). It helps single developers in particular build complex software
+with an agent: you start from an idea as in vibe coding, and the result gets the
+quality that specs, tests and review give.
 
-## What is in it
+It is a set of skills, roles and workflows built around one design, in two areas:
+
+- **Craft:** the engineering practices themselves: specifications, test design,
+  implementation briefs, code review with verified findings, root-cause fixing,
+  architecture, security, UX and documentation.
+- **Workflow control:** the steering around the craft: sizing a change, scoping,
+  briefs that carry the approved acceptance criteria word for word, delegation to a
+  coding agent and to separate reviewers, evidence before "done", and continuing a
+  change across sessions.
+
+It is written for developers who use Claude Code, Codex or OpenCode for real software
+work. Forge is plain instruction text that the agent reads, plus small helper scripts
+that check specific things (task and plan files, workflow state). The instructions
+carry the method; the scripts do not enforce it.
+
+## How you work with it
+
+You talk to **Buddy**, the one role Forge puts in front of its skills, roles and
+workflows. Tell Buddy what you want to accomplish. It picks up the relevant context
+from earlier sessions, works within your project's rules and records what you need to
+continue later. Three things stand behind it:
 
 - **Knowledge and continuity** carry goals, decisions and open work across sessions
-  through a fact store, a session handoff and a `save` command.
+  through a fact store, a session handoff and a `save` command. Your data stays in
+  files you own.
 - **Reasoning methods** such as Council, Bedrock and Frame help with decisions and
   can be called directly for a single question.
-- **Software development** brings together engineering skills, workflows and roles
-  for implementation, testing and review.
+- **Software development** brings the engineering skills, workflows and roles
+  together for specification, implementation, testing and review.
+
+The first two do not need a software project: they work the same way in any folder
+you give Buddy.
 
 ## Knowledge and continuity
 
@@ -53,10 +78,9 @@ Each can return its result in the conversation and can also be used within a lar
 
 ## Software development
 
-Forge is a discipline for software development with AI coding agents. It helps
-single developers in particular build complex software with an agent. You start
-from an idea as in vibe coding, and the result gets the quality that specs, tests
-and review give.
+This is the main part of Forge: the craft and the workflow control from the top of
+this page, run as one process. Describe the change, or start from an idea whose
+solution is still open.
 
 Buddy sizes the change, carries the approved acceptance criteria into the implementation
 brief, delegates coding and review to separate agents, and reports the evidence for the

@@ -14,21 +14,36 @@ style and limits on action.
 
 ## What Forge covers
 
-| Area | Result | Typical request |
-|---|---|---|
-| Software development | A connected path from intent to a verified result: spec, plan, implementation, review, fixes and an evidenced close | “Build this feature and verify the behavior.” |
-| Continuity | The project's intent, context and session handoff, so a change that spans sessions resumes where it stopped | “Continue the open task from where we stopped.” |
-| Reasoning methods | A clearer problem, examined assumptions or a comparison of viable choices, for decisions inside development | “Use a Council to compare these approaches.” |
+Forge has three parts. Each is described in its own section below.
 
-Continuity serves the development work; the reasoning methods serve its decisions.
-Each can also be used at its own scope: supplied context is sufficient for a
-standalone method, and project context needs no software task system. A personal
-extension (a user repository with your profile, Buddy in every session of the
-machine) builds on this and is optional.
+| Part | Result | Typical request |
+|---|---|---|
+| Continuity and your own data | The project's intent, its knowledge and a session handoff in files you own, so work resumes where it stopped | “Continue the open task from where we stopped.” |
+| Reasoning methods | A comparison of viable choices, examined assumptions or a clearer problem, on the question you supply | “Use a Council to compare these approaches.” |
+| Software development | A connected path from intent to a verified result: spec, plan, implementation, review, fixes and an evidenced close | “Build this feature and verify the behavior.” |
+
+Continuity and your own data are the base every session stands on: any project,
+software or not, gets its goal, its knowledge and its open work carried forward.
+The reasoning methods are directly usable: ask for Council, Bedrock or Frame by
+name and only that runs, on the context you supply. Software development is the
+part most of Forge's skills, roles and workflows belong to. It uses the other
+two: continuity lets a change that spans sessions resume, and the methods serve
+its decisions. A personal extension (a user repository with your profile, Buddy
+in every session of the machine) builds on continuity and is optional.
 
 The [capability contract](../framework/capabilities.md) defines their ownership.
 
-## Knowledge and continuity
+## Continuity and your own data
+
+At the start of a session Buddy reads the project's goal in `intent.md`, the
+relevant knowledge in `context/` and the session handoff. This needs no software
+task system and works for everyday projects as well as software work.
+
+The knowledge is a set of Markdown files in workspaces you control. Project
+knowledge lives with the project; an optional personal repository carries your
+preferences and ongoing topics across projects. You can read, edit, back up and
+move these files yourself, and another supported agent host can use them once it
+has access to the files.
 
 Useful facts and corrections are reconciled during work under the applicable
 maintenance authority. The agent reads relevant context before dependent answers,
@@ -51,16 +66,17 @@ Protected publication checks the baseline before replacing files and retains
 recovery information for interrupted changes across multiple files. Its locks
 coordinate cooperating writers, not every external editor.
 
-## General reasoning
+## Reasoning methods
 
-Three methods address different needs:
+Ask Buddy for a method by name and give it the question, the goal and the
+constraints. Three methods address different needs:
 
-- **Frame** clarifies the problem and opens a meaningful solution space before
-  recommending an approach.
-- **Bedrock** examines assumptions down to logic, physical constraints and chosen
-  values, then traces their implications.
 - **Council** compares a choice from distinct perspectives, preserving disagreement
   and uncertainty for a better-informed decision.
+- **Bedrock** examines assumptions down to logic, physical constraints and chosen
+  values, then traces their implications.
+- **Frame** clarifies the problem and opens a meaningful solution space before
+  recommending an approach.
 
 A method can return a useful report directly in the conversation. It does not need
 Git, a user repository, a software workflow or an automatically created task.
@@ -70,6 +86,10 @@ is still a proposal until the relevant decision is made.
 See [method selection and examples](06-usage-workflows.md#general-reasoning).
 
 ## Software development: from intent to verified result
+
+This is where the craft and the workflow control named at the top run as one
+process: workflows for building, fixing, reviewing and researching, the engineering
+skills they call, and the roles they dispatch.
 
 **Build** takes a defined change through the stages below. When the solution is
 still open, the Solve workflow (tell Buddy **“Forge my idea”**) works out what would
@@ -137,7 +157,8 @@ lists each one, its source, what changed and the Forge file that holds it. The r
 
 ## What's in the box
 
-Forge ships as one plugin for Claude Code and Codex. One committed line in a
+Forge ships as one plugin for Claude Code and Codex; on OpenCode, which has no
+plugin, the setup writes a boot skill that gives it the same two switches. One committed line in a
 project's `AGENTS.md` starts Buddy in that project and changes nothing outside it;
 one user setting starts Buddy in every session of the machine and adds a personal
 context folder, so knowledge and open work carry across projects. Both
@@ -151,7 +172,7 @@ to choose and verify your setup.
 
 ## Who is it for?
 
-Forge is written for developers who use Claude Code or Codex for agent-driven
+Forge is written for developers who use Claude Code, Codex or OpenCode for agent-driven
 software work, above all a single developer on changes too complex to hold in one
 session. Single skills, boards and the reasoning methods are useful on their own;
 the full workflow earns its weight on complex changes. Maintainers who want shared
