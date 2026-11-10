@@ -1,5 +1,7 @@
 # Forge
 
+<img src="assets/vibeforge-logo.png" align="right" width="220" alt="Forge mascot: a furnace working at an anvil" />
+
 Forge is a discipline for software development with AI coding agents (Claude Code,
 Codex and OpenCode). It helps single developers in particular build complex software
 with an agent: you start from an idea as in vibe coding, and the result gets the
