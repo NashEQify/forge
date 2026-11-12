@@ -7,7 +7,7 @@ path routing, step patterns, and multi-machine warnings live here.
 ## Step-loop
 
 ```bash
-# 1. Start (default route is "standard" if workflow.yaml has top-level routes)
+# 1. Start (default route: "standard"; "standard-implementation-only" for a task without spec_ref)
 python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --start <name> --task <id>
 
 # 1a. With explicit path-route (build/sub-build, build/full):
@@ -68,7 +68,8 @@ session, machine or repository may touch the same state: read and follow `framew
 If the workflow has a top-level `routes:` block, the route is picked at
 `--start` (eager). Steps in OTHER routes but NOT in the selected one
 are eagerly marked `STATUS_ROUTE_SKIPPED`. Default without `--route`:
-`"standard"`.
+`"standard"`; `standard-implementation-only` when declared and the task has no
+`spec_ref` (no non-blank string; an unreadable task file keeps `"standard"`).
 
 **Limit — top-level routes are NOT re-routable mid-flow.** A top-level
 route is fixed at `--start` (it IS stored at state-root as

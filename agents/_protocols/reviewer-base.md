@@ -64,7 +64,10 @@ this return. Hashes identify bytes, not authorship or truthful execution.
 Finding-bearing returns use owned per-finding evidence. With no findings, use
 nonempty top-level frontmatter evidence for the checked scope and conclusion.
 Adoption resolves every parseable quote and refuses one that does not hold; form
-problems reach Buddy as diagnostics. Preserve the complete return for caller-owned
+problems reach Buddy as diagnostics. Write each `quote` as one double-quoted string
+copied character for character from the cited lines: lines joined by `\n`, each
+line with its leading spaces, no `...` elision, no `|` or `>` block. A pointer shown as an
+example, not as evidence, goes in a fence that is not `yaml`. Preserve the complete return for caller-owned
 verbatim persistence before downstream consumption.
 
 ## What's working well

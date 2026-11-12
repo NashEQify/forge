@@ -985,6 +985,13 @@ def _frontmatter_in_fence(content: str) -> bool:
     )
 
 
+PASSING_QUOTE_FORM = (
+    "passing quote form: one double-quoted string copied character for character "
+    "from the cited lines, lines joined by \\n with each line's leading spaces, "
+    "no ... elision, no | or > block"
+)
+
+
 def validate_content(
     content: str,
     *,
@@ -1080,9 +1087,12 @@ def validate_content(
         else layout
     )
     try:
-        findings, blocks, errors = _scan_findings(content)
+        # --strict reads evidence as review adoption does, yaml fences included.
+        findings, blocks, errors = _scan_findings(content, reader=strict)
     except EvidenceParseError as exc:
         return ValidationResult(sv, EXIT_PARSE_ERROR, [f"parse-error: {exc}"])
+    if parse_errors := [e for e in errors if ": malformed YAML: " in e]:  # the reader does not raise
+        return ValidationResult(sv, EXIT_PARSE_ERROR, [f"parse-error: {parse_errors[0]}"])
 
     def checked_list(value: Any, location: str) -> list[dict[str, Any]]:
         if not isinstance(value, list) or not value:
@@ -1097,7 +1107,7 @@ def validate_content(
 
     owned_pointers: list[tuple[dict[str, Any], str]] = []
     if selected == "top_level":
-        if findings or blocks:
+        if findings or any(value is not _UNPARSED for _, _, value in blocks):
             errors.append(
                 "layout conflict: top_level evidence cannot contain finding structure or body evidence"
             )
@@ -1115,6 +1125,8 @@ def validate_content(
                 "per_finding requires supported findings with non-empty evidence"
             )
         for owner, line, value in blocks:
+            if value is _UNPARSED:  # evidence in a fence that is not yaml is an example
+                continue
             if owner is None:
                 errors.append(f"line {line}: orphan evidence has no finding owner")
             else:
@@ -1141,6 +1153,8 @@ def validate_content(
             if ok
             else f"pointer {idx}: fail — {location}: {reason}"
         )
+        if not ok and "quote no match" in reason:
+            messages.append(PASSING_QUOTE_FORM)
     if failed:
         return ValidationResult(sv, EXIT_INVALID, messages)
     if owned_pointers and all(
@@ -1191,7 +1205,9 @@ def _main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--strict", action="store_true",
-        help="Require current schema_version: 1; reject missing/legacy schema.",
+        help="Require current schema_version: 1; reject missing/legacy schema; "
+             "read evidence as review adoption does, yaml fences included, with "
+             "every other check kept.",
     )
     parser.add_argument(
         "--layout", choices=("per_finding", "top_level", "auto"),

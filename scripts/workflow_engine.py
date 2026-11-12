@@ -816,6 +816,12 @@ def _assert_task_in_cwd(task_id: int) -> None:
     sys.exit(EXIT_NOT_FOUND)
 
 
+def _spec_ref_text(task: dict[str, Any]) -> str | None:
+    """The task's `spec_ref` when it is a non-blank string; any other value means no spec_ref."""
+    spec_ref = task.get("spec_ref")
+    return spec_ref if isinstance(spec_ref, str) and spec_ref.strip() else None
+
+
 def _resolve_spec_name(task_id: int) -> str | None:
     """resolve {spec_name} variable.
 
@@ -844,8 +850,8 @@ def _resolve_spec_name(task_id: int) -> str | None:
     if not isinstance(data, dict):
         return None
 
-    spec_ref = data.get("spec_ref")
-    if not spec_ref or not isinstance(spec_ref, str):
+    spec_ref = _spec_ref_text(data)
+    if spec_ref is None:
         return None
     # Reject prose / code-path refs on the RAW string before stemming —
     # a section-prose ref like 'SKILL.md §1 (...)' stems to a clean-looking
@@ -858,6 +864,35 @@ def _resolve_spec_name(task_id: int) -> str | None:
     if not _is_spec_slug(stem):
         return None
     return stem
+
+
+def _task_without_spec_ref(task_id: int) -> bool:
+    """True iff the task file is a mapping without a spec_ref (`_spec_ref_text`).
+
+    Picks the default build route. An unreadable task file (OS or YAML error,
+    not a mapping, no PyYAML) prints a NOTE naming it and gives False, so the
+    start keeps the route with the spec phase.
+    """
+    task_yaml = next((c for c in _task_yaml_candidates(task_id) if c.is_file()), None)
+    if task_yaml is None:
+        return False
+    try:
+        import yaml as _yaml
+    except ImportError:
+        data = None
+    else:
+        try:
+            data = _yaml.safe_load(task_yaml.read_text(encoding="utf-8"))
+        except (OSError, ValueError, _yaml.YAMLError):
+            data = None
+    if not isinstance(data, dict):
+        print(
+            f"NOTE: task file {task_yaml} could not be read as a mapping; "
+            f"route defaults to 'standard'",
+            file=sys.stderr,
+        )
+        return False
+    return _spec_ref_text(data) is None
 
 
 def _existing_spec_ref_path(task_id: int) -> Path | None:
@@ -881,8 +916,8 @@ def _existing_spec_ref_path(task_id: int) -> Path | None:
         return None
     if not isinstance(data, dict):
         return None
-    spec_ref = data.get("spec_ref")
-    if not spec_ref or not isinstance(spec_ref, str):
+    spec_ref = _spec_ref_text(data)
+    if spec_ref is None:
         return None
     ref_path = (PROJECT_ROOT / spec_ref).resolve()
     return ref_path if ref_path.is_file() else None
@@ -1687,7 +1722,9 @@ def create_state(
     activation. Distinct from mid-workflow classification-step routes.
 
     Default route resolution: if workflow has top-level routes but `route`
-    not given, default to "standard" if declared, else error with valid list.
+    not given, default to "standard-implementation-only" when both it and
+    "standard" are declared and the task has no spec_ref; otherwise to
+    "standard" if declared, else error with valid list.
     """
     _ensure_state_dir()
 
@@ -1721,7 +1758,17 @@ def create_state(
             )
             sys.exit(EXIT_SCHEMA_ERROR)
         if route is None:
-            if "standard" in wf_routes:
+            if (
+                task_id is not None
+                and {"standard", "standard-implementation-only"} <= wf_routes.keys()
+                and _task_without_spec_ref(task_id)
+            ):
+                route = "standard-implementation-only"
+                print(
+                    f"NOTE: task {task_id} has no spec_ref; route defaults to "
+                    f"'standard-implementation-only' (--route standard authors a spec)"
+                )
+            elif "standard" in wf_routes:
                 route = "standard"
                 route_defaulted_to_standard = True
             else:
@@ -3845,7 +3892,7 @@ def cmd_retry(args: argparse.Namespace) -> None:
 def cmd_skip(args: argparse.Namespace) -> None:
     step_id = args.skip
     reason = args.reason
-    if not reason:
+    if not reason or not reason.strip():
         print("ERROR: --skip requires --reason", file=sys.stderr)
         sys.exit(EXIT_VALIDATION_FAIL)
 

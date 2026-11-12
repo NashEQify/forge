@@ -124,7 +124,9 @@ When Buddy persists a seat's return, before the Chief or Buddy's consolidation r
 1. In the root of the package's checkout, run
    `python3 "$FRAMEWORK_DIR/scripts/validate_evidence_pointers.py" --strict --repo-root . <return file>` (without
    `--strict` when the review has no capture under `skills/_protocols/evidence-review-capture.md` §9).
-2. Exit 0: the return is ready for consolidation.
+2. Exit 0: the return is ready for consolidation; with `--strict`, the validator reads evidence as the adoption does,
+   `yaml` fences included, and keeps every check it has without `--strict`. A `WARN` line alone does not send the seat
+   back.
 3. Any other exit: send the seat back with the validator's output verbatim and the instruction to correct only what
    it names. Persist the corrected return verbatim beside the first, as the slot's current return, and run step 1 on it. A seat that cannot answer
    is replaced by a fresh cold-start seat in the same slot: adoption needs a passing return for every captured slot

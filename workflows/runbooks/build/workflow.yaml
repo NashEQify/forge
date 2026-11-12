@@ -86,13 +86,13 @@ routes:
     - code-review-board
     - spec-drift-check
   standard-implementation-only:
-    # Child of a CLOSED parent task with a locked spec — same as sub-build
-    # for Specify (skipped: parent already authored the spec), BUT keeps
-    # phase-close + close-bookkeeping + commit-deploy because there is no
-    # active parent workflow to inherit closing from. Use when: spec_ref
-    # points to a locked section authored upstream (parent task, predecessor
-    # task, manually authored, external spec), no spec amendment in scope,
-    # task is implementation-only. Proportionality release-valve at the
+    # Skips Specify, BUT keeps phase-close + close-bookkeeping + commit-deploy
+    # because there is no active parent workflow to inherit closing from.
+    # Chosen in one of two ways: without --route, the engine picks it for a
+    # task that has no spec_ref (the task's acceptance is the contract); or
+    # explicitly, when spec_ref points to a section locked upstream (parent or
+    # predecessor task, manually authored, external spec) and no spec
+    # amendment is in scope. Proportionality release-valve at the
     # workflow-routing surface — avoids the SUB-BUILD semantic pollution
     # (skipped close-bookkeeping on an independent child task).
     - phase-prepare
@@ -349,7 +349,15 @@ steps:
       Anchor mode vs heuristik mode is auto-detected by the lens
       (grep for `^## §Module-Decomposition` in target spec); no
       configuration.
+
+      Skip only when all three hold: fewer than three touched modules,
+      no new subsystem, effort not L or XL. Run
+      `--skip architect-lens --reason "<each of the three facts>"`; the
+      reason is stored in `steps.architect-lens.skipped_reason`. A brief
+      of L2 shape (three or more touched modules, a new subsystem, or
+      effort L or XL) is never skipped.
     skill_ref: agents/code-architect-lens.md
+    required: false
     completion:
       type: manual
     skip_when: "path == DIRECT OR path == AUTHORITY-ONLY OR (scope_modules < 3 AND NOT new_subsystem AND effort NOT IN ('L', 'XL'))"
@@ -507,8 +515,9 @@ steps:
       section 9. Capture this exact workflow/step before production; pass its owner
       to nested skills without a competing capture. Use successful capture stdout
       for run/subject metadata, preserve complete current returns, write and adopt
-      an explicit decision, then check the declared policy before completion or
-      review-derived task writes. Relevant fixes require retry and fresh applicable
+      an explicit decision at docs/reviews/code/{task_id}-verdict.md, then check the
+      declared policy before completion or review-derived task writes. The completion
+      check reads that path and refuses an adoption held at another path. Relevant fixes require retry and fresh applicable
       capture. For code, declare state/report/decision exclusions before capture.
       Select light / L1 / L2 using skills/code_review_board/SKILL.md §1.
       Safety floors precede file counts and other size signals. DIRECT

@@ -63,8 +63,10 @@ eager-activated via `workflow_engine.py --start build --task <id> --route
 <path>`. **Route step-sequences live in `workflow.yaml` `routes:` (runtime
 SoT)** — not re-listed here. What each route skips:
 - **SUB-BUILD** — skips Specify (parent owns spec) + Close (parent owns task status).
-- **STANDARD-IMPLEMENTATION-ONLY** — skips Specify (spec locked at `spec_ref`);
-  KEEPS Close (no active parent to inherit closing from).
+- **STANDARD-IMPLEMENTATION-ONLY** — skips Specify; KEEPS Close (no active parent
+  to inherit closing from). The engine's default for a task without `spec_ref` (the
+  task's acceptance is the contract; `--route standard` authors a spec), or chosen
+  explicitly when `spec_ref` names a spec locked upstream.
 - **AUTHORITY-ONLY** — skips Prepare/Execute/Verify (no code surface).
 
 ## Path discipline (why each path exists)
