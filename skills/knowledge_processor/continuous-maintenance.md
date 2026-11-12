@@ -5,11 +5,44 @@ Step-loaded unit of `skills/knowledge_processor/SKILL.md`. Read it at boot (LOAD
 maintenance, and again after compaction; its rules apply from the first turn. Before the first write this
 maintenance causes, and again after compaction, read `retrieve.md` for the baseline and follow `write.md`.
 
+§Admission is the skill's one admission check. `write.md` §2 sends every write to it, in every mode; a reader who
+comes from there without continuous maintenance reads that section only.
+
+## Admission
+
+Identify the future question/decision/continuation each candidate supports. Apply this admission check to topic
+knowledge, continuation checkpoints, handoffs, history and FACTS candidates before classifying a delta:
+
+1. **Required record:** an explicit request to retain a particular item or a domain
+   audit obligation goes to its specified owner with its required evidence.
+2. **Knowledge:** retain facts about the subject, the content of statements, commitments,
+   decisions with their reasons, scoped preferences, events and observed experiences/outcomes. Record their meaning,
+   implications and necessary detail. A statement being made, repeated or processed
+   does not by itself add knowledge about its subject.
+3. **Open work:** name the unfinished goal, leading owner or artifact, next action or
+   blocker. Retain a constraint, approval boundary or failed attempt when it changes
+   that next action. Update this checkpoint to the current state as work progresses.
+4. **Conversation and execution trace:** when the candidate only records that
+   something was said, drafted, attempted, rendered, processed, checked or edited, and
+   adds no knowledge from step 2 or dependency from step 3, do not persist it in topic
+   files, checkpoints, handoffs, history or FACTS. Tool calls, search sequences,
+   intermediate outputs, draft versions, tool or rendering paths, layout fixes, routine
+   confirmations, completed checks and edits are examples; their occurrence alone does
+   not make them knowledge. A general wish to lose no information, or an ongoing task,
+   does not make its entire course a record to preserve.
+
+For mixed input, extract the finding, decision, outcome or remaining dependency and
+drop the surrounding chronology. Before a write, name the future decision or next action
+that would change without it; if there is none, do not write. If the current owner or
+artifact and its pointer suffice to resume, retain the pointer and next action. A
+different section name does not turn a trace into knowledge or necessary continuation
+state.
+
 ## Continuous maintenance
 
 Configuring user scope authorizes its maintenance; project rules authorize project
 maintenance. Honor explicit limits including “do not save”. Reconcile useful new
-facts, decisions, corrections and changed state admitted by `write.md` §2 in the same
+facts, decisions, corrections and changed state admitted by §Admission in the same
 response cycle, before final output. Apply that admission check before preparing a
 topic update or continuation checkpoint; it also governs handoff, history and FACTS.
 A task-specific instruction remains with that task/topic. Checkpoint
@@ -24,17 +57,6 @@ After compaction/resume reread `framework/work-principle.md`, project rules,
 configured boot set, full handoff and relevant topics; retrieve the applicable
 agreement and unresolved requirements and apply its comparison before dependent
 continuation. Check pending reconciliation before dependent work.
-
-**Admission core** (summary of `write.md` §2; read `write.md` before the first write,
-this summary does not replace it). Persist: an item the person explicitly asked to
-retain or an audit obligation requires, at its specified owner; knowledge about the
-subject (facts, the content of statements, decisions with reasons, scoped preferences,
-events and outcomes); open work (goal, leading artifact, next step or blocker, plus a
-constraint, approval boundary or failed attempt that changes that next step). Do not
-persist a trace whose only content is that something was said, drafted, attempted,
-rendered, checked or edited, such as draft versions, tool or rendering paths, layout
-fixes or completed checks. Before a write, name the later question or next step that
-would change without it; if there is none, do not write.
 
 Every write updates rather than appends (`write.md` §5): first find where the subject already
 stands in the scope, then change its leading owner in place, replace other copies by
@@ -53,7 +75,7 @@ FACTS line while continuous maintenance applies:
 `FACTS: keine | {Fakt} → {Ziel} [geschrieben|deferred:{Grund}]`.
 Report only actual writes of admitted knowledge or continuation state. `FACTS: keine`
 is the normal outcome of a turn spent working on an artifact; when such work yields an
-entry in every turn, recheck those entries against the admission core. Private deferred payloads never enter another repo's
+entry in every turn, recheck those entries against §Admission. Private deferred payloads never enter another repo's
 handoff. A blocked write is **not persisted**; state target and reason in the
 conversation, retry only with available source and authorized writable owner.
 Project deferrals may stay in that project's handoff. Conversation-only retention

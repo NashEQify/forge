@@ -9,35 +9,11 @@ removing a claim, in every mode and under continuous maintenance. Its baseline c
 
 ### 2. Admit, scope and compare
 
-`continuous-maintenance.md` carries a summary of this section (Admission core); change both together.
-
-Identify the future question/decision/continuation each candidate supports. Keep
-subject and applicability (person-wide, topic, event/task/setup) distinct from
-certainty. Apply this admission check to topic knowledge, continuation checkpoints,
-handoffs, history and FACTS candidates before classifying a delta:
-
-1. **Required record:** an explicit request to retain a particular item or a domain
-   audit obligation goes to its specified owner with its required evidence.
-2. **Knowledge:** retain facts about the subject, commitments, decisions with their
-   reasons, scoped preferences and observed experiences/outcomes. Record their meaning,
-   implications and necessary detail. A statement being made, repeated or processed
-   does not by itself add knowledge about its subject.
-3. **Open work:** name the unfinished goal, leading owner or artifact, next action or
-   blocker. Retain a constraint, approval boundary or failed attempt when it changes
-   that next action. Update this checkpoint to the current state as work progresses.
-4. **Conversation and execution trace:** when the candidate only records that
-   something was said, attempted, processed or checked, and adds no knowledge from
-   step 2 or dependency from step 3, do not persist it in topic files, checkpoints,
-   handoffs, history or FACTS. Tool calls, search sequences, intermediate outputs,
-   routine confirmations, completed checks and edits are examples; their occurrence
-   alone does not make them knowledge. A general wish to lose no information, or an
-   ongoing task, does not make its entire course a record to preserve.
-
-For mixed input, extract the finding, decision, outcome or remaining dependency and
-drop the surrounding chronology. Before retaining a process detail, name the future
-decision or next action that would change without it; if the current owner or artifact
-and its pointer suffice to resume, retain the pointer and next action. A different
-section name does not turn a trace into knowledge or necessary continuation state.
+Before classifying a delta, apply the admission check in
+`skills/knowledge_processor/continuous-maintenance.md` §Admission to every candidate: topic knowledge, continuation
+checkpoints, handoffs, history and FACTS. A session under continuous maintenance loaded that unit at boot; any other
+session reads its §Admission now. Keep subject and applicability (person-wide, topic, event/task/setup) distinct
+from certainty.
 
 Separate user statements, observations, proposals, third-party reports
 and marked inferences. Unknowns can be retained as open questions, never facts.
