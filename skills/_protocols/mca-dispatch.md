@@ -32,7 +32,9 @@ recorded skip).
 
 ## The dispatch
 
-The prompt holds these five parts, in this order:
+The call (main-code-agent as an agent type, or a general agent told to read its role file, and the model) is
+written as `skills/_protocols/role-dispatch.md` says. After its role line the prompt holds these five parts, in this
+order:
 
 1. **Where it fits:** the task's `intent_chain` (`framework/intent-tree.md`), or for work without a task one line
    naming the defect, and who integrates the result.
@@ -103,14 +105,18 @@ dispatch. When a test the brief requires to pass still fails at the return, the 
 ```markdown
 | TC | Failing assertion | Class | Why this class |
 |---|---|---|---|
-| <id> | <file:line, expected and actual as the run printed them> | product / oracle / fixture | <the brief or spec item, or the observed setup fact, that decides it> |
+| <id> | <file:line, expected and actual as the run printed them> | product / oracle / fixture / spec | <the brief or spec item, or the observed setup fact, that decides it; where the wrong side took its expectation> |
 ```
+
+The classes are the triage of a difference between production and oracle (`skills/testing/test-design.md` §Oracle
+discipline); the implementer's class is a proposal that the routing in §The return, step 2, decides:
 
 - **product:** the code does not do what the brief or spec item the TC tests requires.
 - **oracle:** the code does what that item requires, and the expected value or the assertion contradicts the item or
   another test the brief requires.
 - **fixture:** the setup (data, patches, clock, host, the test's own instrumentation) does not reach the TC's
   precondition, or itself produces the effect the TC measures.
+- **spec:** the item is silent or ambiguous about the asserted case, or contradicts another item the brief requires.
 
 Each row is one Concerns line `<TC> <class>: <assertion>`, and the Status is `PARTIAL`. Buddy routes the rows before
 any ruling (`mca-dispatch.md` §The return, step 2).
@@ -134,7 +140,8 @@ the report under `## Re-dispatch <n>`. Buddy then:
    - an oracle or fixture row on a test the skeleton return does not list gets Buddy's ruling;
    - a product row, a row the repair returns as `stands`, and a `repaired` test that still fails are the
      implementer's open work for a re-dispatch;
-   - a row the repair returns as `spec conflict` gets Buddy's ruling;
+   - a `spec` row and a row the repair returns as `spec conflict` get Buddy's ruling, through the spec amendment when
+     the item is to change;
 3. builds the review package (`skills/code_review_board/review-package.md`) and hands it, the brief path and the
    report path to the review owner; `skills/code_review_board/SKILL.md` decides which seat receives which input. A
    fix brief is written from the report and the review, not from the short return.

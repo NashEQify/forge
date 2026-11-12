@@ -10,7 +10,7 @@
     "board-ux-heuristic.toml": "dad76530edb2e0c73c6b8ce980fb00f09a353ccead068f207203eca5a5bec114",
     "board-ux-ia.toml": "4e48345035a47278559c8ad54e93c2f205aeb11f6e851233ce8e4f3901e9c8c0",
     "board-ux-interaction.toml": "f44b5f803b11e303ef0e2f3a9280c2207c8eeb3c60a57475c7fb51705b1d896a",
-    "brief-architect.toml": "95f29af900d4e5f3ca7b2a4a5fd35f547bc082cfac877f9a6144d5e5a7ab31ff",
+    "brief-architect.toml": "a2e8798b3a8c3b2c284016d4c76cc05a9f7e8a3063e220f5a42a7dbae98d8821",
     "buddy-thinking.toml": "7d7d5d4109776f9d2e5615fcd89531868c9af86e74fb25ce1abc295c57527c48",
     "buddy.toml": "69d46aab28545f7204add97ddb7fefb527d276176dfc2c8ff077000bcb049964",
     "close-retro.toml": "70d537b1cc61c635b4c85d050e2574e759219d23e0aeec226c4b7996eeaab1d7",
@@ -38,7 +38,7 @@
     "solution-expert.toml": "f2182e8036ba0a38b462cbaa3078828360019404a0916d801749dbcc6da3f486",
     "spec-text-drift-batch.toml": "9eeb83cfd10695d70cb3fe8b2032f9420f2cf55b214286a446546ce27c2fe352",
     "spec-verification.toml": "abbadb0099f0143e2272813544775ecc2e1975c64c7193409a125189eb798a80",
-    "test-skeleton-writer.toml": "b8c171382789e52de93c51cedf66849585ea0f22dbdcfb294fa39e926ed10d54",
+    "test-skeleton-writer.toml": "593881f21e175e497b3e147cf800bb014407b55ab7405a9b6fe301bcd3660507",
     "tester.toml": "33346f010cd82bf65ddd769c6a0c96b3517df0ddd65c02f6d042d7d2d429975c"
   },
   "version": 1

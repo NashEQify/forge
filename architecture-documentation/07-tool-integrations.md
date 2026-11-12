@@ -95,7 +95,7 @@ offers differs; treat unverified rows as unknown, not as parity.
 |---|---|---|---|
 | Claude desktop app | Subagents | Yes. A session started without a worktree shares the commissioning checkout and branch (observed: `git rev-parse --show-toplevel` → the main checkout, branch `main`) | Optional at session start (own worktree and branch) |
 | Claude Code CLI | Subagents | Background sessions per the host documentation; not verified here | Per the host documentation (subagent and background-session isolation); not verified here |
-| Codex | Generated roles | Not verified | Not verified |
+| Codex | General agents reading the role file (the plugin lists no roles; generated role copies only in the Forge repository's own `.codex/agents/`) | Not verified | Not verified |
 | OpenCode | General agents reading the role file | Not verified | Not verified |
 | Cursor | Not verified | Not verified | Host worktree feature; not verified here |
 

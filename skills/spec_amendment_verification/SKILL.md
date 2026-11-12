@@ -64,7 +64,10 @@ Buddy passes:
 When a sweep was authored, include its existing edit-list and application
 observations. Consume that context under
 `_protocols/spec-amendment-discipline-reconcile.md` §Bounded amendment sweep;
-MCA and retro callers need not invent an absent sweep.
+MCA and retro callers need not invent an absent sweep. When
+`_protocols/spec-amendment-discipline-reconcile.md` §Independent
+references of a changed clause applies, include its entries; their
+absence is an issue of the `Independent references` row.
 
 ## Agent
 
@@ -88,6 +91,8 @@ Neither the map nor the caller's inventory is a scope whitelist.
 Read all specs in the verification scope. For large specs: the
 sections that contain cross-references (interface tables, import
 lists, type definitions, message-channel lists such as NATS subjects, consumer configs).
+For the `Independent references` row, also the references it finds
+under the test tree.
 
 ### 3. CHECK
 
@@ -105,9 +110,11 @@ For every changed spec, against every referenced spec:
 | **Derived-state routes** | Amendment touches an "X changes only via Y" invariant → every input-changing operation (withdraw, processing / meaning successor, scope move, replacement field edits, cross-principal acts) is a matrix column with a guard or a stated unreachability reason (`skills/spec_board/checklist-and-dispatch.md` §4b) |
 | **Fix values** | A new validator / rule taken from a review finding or ruling agrees with every spec that produces or consumes the field, and names the contract-owner spec |
 | **Supplied sweep** | Perform the verifier responsibilities in `_protocols/spec-amendment-discipline-reconcile.md` §Bounded amendment sweep against actual applied consumers and protected text. |
+| **Independent references** | The amendment changes what a clause requires → find the references that encode it yourself: those the spec and its test plan name, and the test tree searched for the identifiers the clause had before the amendment. Compare them with the edit-list entries (`_protocols/spec-amendment-discipline-reconcile.md` §Independent references of a changed clause). An issue: no entries where a reference encodes a changed clause, a reference missing from them, an `unchanged` reason the change does reach. No reference found: not applicable, with the search in Notes. |
 
 No completeness check on the spec itself — only cross-spec
-consistency of the changed places.
+consistency of the changed places and the completeness of the
+amendment's own entries the rows above name.
 
 ### 4. RETURN
 
@@ -157,7 +164,7 @@ a fix is needed or acceptable.
 **DOES NOT DELIVER:**
 - No fixes — read-only, only findings.
 - No completeness check — only cross-spec consistency of the
-  changed places.
+  changed places, beyond the amendment's own entries the §3 rows name.
 - No pre-amendment review — this is POST-amendment.
 
 **ENABLES:**

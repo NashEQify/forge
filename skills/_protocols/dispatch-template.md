@@ -15,6 +15,9 @@ Return the complete review inline for: {output-path}
 This is pass {N}, {Standard|Deep|Quick} mode.
 ```
 
+The call that carries it, an agent type or a general agent told to read the seat's role file, is written as
+`skills/_protocols/role-dispatch.md` says; this template follows that protocol's role line.
+
 ## What MAY go into the dispatch
 
 - Neutral commissioning bounds: the intended user outcome, assignment and edit

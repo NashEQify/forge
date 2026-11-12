@@ -86,7 +86,7 @@ DIRECT is a short complete lifecycle of four steps, in this order:
    independent check.
 
 A role that is not installed as an agent type on the host runs as a general
-agent run told to read its role file (`agents/<role>.md`) first; a missing
+agent run told to read its role file (`agents/<role>.md`) first (`skills/_protocols/role-dispatch.md`); a missing
 agent type is not a reason to build or check inline.
 
 No separate spec, architect or signoff cycle, and no workflow engine.

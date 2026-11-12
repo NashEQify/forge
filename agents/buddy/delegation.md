@@ -118,7 +118,8 @@ Line counts and one aggregate sample do not establish savings.
 Multi-agent work pays on parallelizable, high-value work and costs on
 sequential work; a spawn needs an isolation or independence gain. Host
 vehicles and fallbacks: `architecture-documentation/07-tool-integrations.md`
-§Delegation vehicles. Sessions and concurrent writers:
+§Delegation vehicles; how a role is called, as an agent type or a general agent reading its role file:
+`skills/_protocols/role-dispatch.md`. Sessions and concurrent writers:
 `agents/buddy/coordinating-sessions.md`. The MCA questions below are the code case of this choice.
 
 Before every MCA delegation, ask two questions in order:

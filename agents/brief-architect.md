@@ -201,7 +201,8 @@ outputs differ. Mode-specific notes are inline.
      Applies to fix-task briefs, not ordinary L0/L1 build briefs.
    - **`mode=spec_amendment`:** perform the author responsibilities in
      `skills/_protocols/spec-amendment-discipline-reconcile.md`
-     §Bounded amendment sweep. Ground the live inventory by meaning and
+     §Bounded amendment sweep and §Independent references of a changed
+     clause (its search covers the test tree). Ground the live inventory by meaning and
      actual dependency, including differently named consumers; carry
      input observations, dispositions and expected checks in the existing
      edit-list. For cross-spec coupling, read each coupled spec end-to-end

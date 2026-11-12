@@ -67,7 +67,7 @@ DIRECT-eligible change (`framework/direct-eligibility.md` §Choosing the path),
 Buddy changes the product code himself, also when he chose that path, and the
 result says so. A role not installed as an agent type
 runs as a general agent run told to read its role file (`agents/<role>.md`
-under the framework root); outside the quick path, a missing agent type is no reason to build inline. Buddy writes orchestrator artifacts
+under the framework root), called as `skills/_protocols/role-dispatch.md` says; outside the quick path, a missing agent type is no reason to build inline. Buddy writes orchestrator artifacts
 (`agents/`, `framework/`, `skills/`, `workflows/`, `context/`, `docs/`)
 within the approved intent-scope. Detail: `framework/agent-autonomy.md`.
 

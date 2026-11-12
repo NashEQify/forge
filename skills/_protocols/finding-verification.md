@@ -41,7 +41,14 @@ graded too low being parked.
    observed output showing the outcome), or whose claim Buddy's pivotal-claim check
    (`agents/buddy/architecture-comprehension.md` §B) already re-executed, is verified from that output when the
    check's input reaches the outcome through the entry point the claim names (its caller, boot or command path);
-   otherwise step 1 reads on. Such a check is not run again here. Buddy's pivotal-claim check before the verdict still re-executes a claim only its asserter ran.
+   otherwise step 1 reads on. When that check is a differential test (production against an oracle), its red output
+   shows a difference, not the outcome: the verdict follows the origin against the spec item the case tests
+   (`skills/testing/test-design.md` §Oracle discipline), and the Evidence names the class, the quoted item and the origin. A
+   product origin is graded; a spec origin is graded, and its cause is the spec row of
+   `skills/convergence_loop/cause-before-answer.md`; where the reads point to the oracle or its fixture, the verdict is
+   `maybe-false`, settled by the skeleton writer's repair of the case (`agents/test-skeleton-writer.md` §Repair of a
+   failing test), not by this seat.
+   Such a check is not run again here. Buddy's pivotal-claim check before the verdict still re-executes a claim only its asserter ran.
 3. Give exactly one verdict:
    - **`critical`, `high`, `medium` or `low`:** the outcome occurs. Grade it by the harm on the scale of the
      reviewer protocols (`agents/_protocols/code-reviewer-protocol.md` and
@@ -82,8 +89,9 @@ first. A seat's rows are persisted verbatim before adoption.
 - **Disposition runs on the verified grades** (`skills/code_review_board/verdict.md` §5, `skills/spec_board/post-pass.md`
   §6). A cluster takes the highest verified grade among its members.
 - **`false`:** rejected on its refutation. The row stays; it takes no target and is not carried forward.
-- **`maybe-false`:** enters no fix pass unsettled. When its grade if true is high or above, or it would block an
-  acceptance criterion, Buddy runs the settling check before the verdict and replaces the verdict. Otherwise, on the
+- **`maybe-false`:** enters no fix pass unsettled. One that step 2 settles by the skeleton writer's repair goes to that
+  repair whatever its grade if true, and the repair's line replaces the verdict. For the others: when its grade if true
+  is high or above, or it would block an acceptance criterion, Buddy runs the settling check before the verdict and replaces the verdict. Otherwise, on the
   code board, a grade if true of `low` takes `accept` and `medium` takes `watch_item` or `re_review`; on the spec
   board it is carried forward (`skills/spec_board/post-pass.md` §6a). Either way the settling check goes into its
   rationale, and a carried `severity` is the grade if true, marked unverified.

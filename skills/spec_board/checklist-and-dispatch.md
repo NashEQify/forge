@@ -20,7 +20,8 @@ are skill-wide: §0, §3, §5 and §7–§10 in `SKILL.md`, §1–§2 in `depth-
    spec-reviewer-protocol + reviewer-checked-scope + persona; follow
    dispatch-template. Chief additionally: consolidation-preservation
    + piebald-budget.
-9. Dispatch parallel (context-isolated) → spawn chief → read signal
+9. Dispatch parallel (context-isolated) → spawn chief, each seat and the chief
+   called as `skills/_protocols/role-dispatch.md` says → read signal
    → verify each kept finding at its cited location
    (`skills/_protocols/finding-verification.md`)
    → **decision-grounding C-VERIFY** on the verdict's pivotal code/spec

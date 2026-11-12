@@ -1,8 +1,8 @@
 # Spec-amendment discipline — sweep and same-commit reconciliation
 
 Step-loaded unit of `skills/_protocols/spec-amendment-discipline.md`. Read it after the pre-edit gate's comparison
-(step 3), before deciding what the amendment commit reconciles, and for a rename, mechanism or contract change or
-another amendment with coordinated live impact: as author, as integrator before and after applying it, and as
+(step 3), before deciding what the amendment commit reconciles, and for a rename, mechanism or contract change, an
+amendment that changes what a clause requires, or another amendment with coordinated live impact: as author, as integrator before and after applying it, and as
 verifier.
 
 ### Bounded amendment sweep
@@ -71,6 +71,31 @@ thresholds remain unchanged.
 This procedure uses existing artifacts and owners. It introduces no
 machine schema, runtime enforcement, reference validator, effort estimator
 or numerical efficiency guarantee.
+
+### Independent references of a changed clause
+
+An independent reference is a test-side model of a clause that production does not share: a reference oracle or
+implementation, a golden corpus, a property oracle, or a matrix or catalog row a test takes expected values from
+(`skills/testing/test-design.md` §Oracle discipline). This section applies when the amendment changes what a clause
+requires (not its wording, a cross-reference or the changelog) and either the spec or its test plan names a reference
+for the mechanism, or the author's search for the identifiers the clause has before the amendment, run over the test
+tree as well, finds one. Otherwise it adds nothing.
+
+**Author.** The edit-list has one entry per reference that encodes a changed clause, also when it models the clause
+without the new mechanism: its path, the clause, and `update; witness: <test>` or `unchanged: <why the change does not
+reach what it encodes>`. The build's brief names each `update` entry as required work.
+
+**Who writes the new reference and the witness, from what.** The test skeleton writer (`agents/test-skeleton-writer.md`
+§Flow, step 9), dispatched for these entries alone when the build dispatches it for nothing else: from the amended
+clause and the old reference, without the implementation, in an oracle hunk of its own citing the clause, committed
+before the implementing dispatch.
+
+**Implemented.** An `update` entry is done when its witness, the class witness of the new semantics
+(`skills/convergence_loop/simplify-before-patch.md` §Class witness; its oracle is the new reference, its axes those of
+the amended clause), run on the implemented code, is red with the old reference (`red at {reference rev}`) and green
+with the new one. The implementer runs both and reports them; the code review checks them as a requirement of the
+brief. A red run with the new reference is triaged under `skills/testing/test-design.md` §Oracle discipline.
+`spec_amendment_verification` checks that the entries exist and are complete (its CHECK row `Independent references`).
 
 ### Same-commit reconciliation rule
 

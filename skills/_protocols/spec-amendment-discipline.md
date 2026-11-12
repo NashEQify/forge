@@ -50,9 +50,11 @@ ground against the actual code state:
 ### Bounded amendment sweep, same-commit reconciliation, divergence categories
 
 After the comparison (step 3), before deciding what the amendment commit reconciles, and for a rename, mechanism or
-contract change or another amendment with coordinated live impact (author, integrator, verifier): read and follow
-`skills/_protocols/spec-amendment-discipline-reconcile.md` (the bounded amendment sweep per role; the same-commit
-reconciliation rule; what counts as divergence, categories (a)–(g), and the strand-scope stop rule).
+contract change, an amendment that changes what a clause requires, or another amendment with coordinated live impact
+(author, integrator, verifier): read and follow
+`skills/_protocols/spec-amendment-discipline-reconcile.md` (the bounded amendment sweep per role; the independent
+references of a changed clause; the same-commit reconciliation rule; what counts as divergence, categories (a)–(g),
+and the strand-scope stop rule).
 
 ### Applies to both paths
 

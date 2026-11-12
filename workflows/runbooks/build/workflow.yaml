@@ -314,7 +314,10 @@ steps:
       names, not in a world where the clause trivially holds.
 
       No safety floor: skip adversary mode and the skeleton writer with a
-      one-line rationale.
+      one-line rationale. An amendment's `update` entries
+      (_protocols/spec-amendment-discipline-reconcile.md §Independent
+      references of a changed clause) still dispatch the skeleton writer for
+      its §Flow step 9.
     skill_ref: skills/testing/SKILL.md
     completion:
       type: manual

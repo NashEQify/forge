@@ -133,6 +133,27 @@ implementation, golden, property, spec-bullet arms).
   for that owner (spec-bullet arms or properties) and relabel the old
   parity tests between the former copies as wiring tests: both sides
   now share one implementation and can no longer disagree.
+- **A difference between production and oracle.** A red differential test shows that the two disagree, not which
+  one is wrong. Before either side changes, decide the origin against the spec item the case tests, quoting it. The
+  classes are those of the implementer's still-failing table (`skills/_protocols/mca-dispatch.md` §Tests still
+  failing at the return):
+  - **product:** production contradicts the item; production is fixed.
+  - **oracle:** the expected value or the reference contradicts the item and production follows it; the oracle is
+    repaired under Independence above.
+  - **fixture:** the setup or the test's tooling (an adapter, a sort, a clock) produces the difference; it is repaired
+    like the oracle.
+  - **spec:** the item is silent, ambiguous or contradicted by another item, and each side follows a reading. The
+    spec is amended through its owner's path (`skills/convergence_loop/cause-before-answer.md`, the spec row); the
+    case stays red until the amendment lands, and the reference then follows the amended text
+    (`skills/_protocols/spec-amendment-discipline-reconcile.md` §Independent references of a changed clause).
+  The record that holds the difference (the still-failing row, the skeleton writer's repair line, the finding's
+  verification row) names the class, the quoted item and the origin: where the wrong side took its expectation (an
+  amendment the reference did not follow, an adapter, a sort). An oracle or fixture repair keeps the case and every
+  assertion the item implies for it: deleting or skipping the case, marking it expected to fail, widening a tolerance
+  or asserting less is not a repair, and a difference only such a change would close is of the spec class. The class
+  is decided by the skeleton writer's repair, which has no implementation in context (`agents/test-skeleton-writer.md`
+  §Repair of a failing test), or by Buddy's ruling on the quoted item; the implementer and a review seat only
+  propose it.
 - **Latency on a growing log or store.** A latency AC carries a
   two-size slope leg: measure at N and 4N and assert the growth stays
   within the stated complexity, not only the absolute budget at one

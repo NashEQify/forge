@@ -151,7 +151,8 @@ trigger lenses and L2 sizing).
 
 When assembling prompts and dispatching reviewers, when running the L2 pre-board frame check, and before a fix pass
 or re-verify: read and follow `skills/code_review_board/checklist-and-dispatch.md` (§4 Buddy checklist, including
-the re-verify table and the simplify-before-patch gate; §4a L2 dispatch with the pre-board frame check). Before a
+the re-verify table and the simplify-before-patch gate; §4a L2 dispatch with the pre-board frame check); each seat and the chief is called per
+`skills/_protocols/role-dispatch.md`. Before a
 fix after a review in which every seat passed, read `review-package.md` §Small fix after a passing review first; where
 it applies, it replaces the re-verify.
 

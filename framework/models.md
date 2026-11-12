@@ -92,8 +92,8 @@ token saves. Hence:
 
 The Codex column follows the host's own model list in the `spawn_agent` tool ("fast and affordable", "workhorse",
 "frontier intelligence for the most demanding work"); check it there on a model switch. Claude Code agent
-definitions (`agents/<n>.md`, the roles the plugin lists) set no model, and neither do the Codex role copies
-(`~/.codex/agents/*.toml`); the call names it. On OpenCode roles run as general agents in the session's model.
+definitions (`agents/<n>.md`, the roles the plugin lists) set no model; the call names it, also for a role run as a
+general agent (`skills/_protocols/role-dispatch.md`). On OpenCode roles run as general agents in the session's model.
 
 ## Model switch
 

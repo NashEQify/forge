@@ -40,7 +40,8 @@ Before any substantive work:
   meaningful pre-fix witness rule, including valid passing controls.
 - **Reference oracle** (only when the test plan names one, e.g. a
   `reference.py` or golden corpus) — to check skeleton oracles against
-  it (Flow step 8). It is test-side code, not the implementation.
+  it (Flow step 8), and to rewrite it for an amendment's `update` entries (Flow step 9). It is test-side code, not
+  the implementation.
 
 ## DO NOT read
 
@@ -119,6 +120,11 @@ Without a TC scope: every TC.
    the reference and list each disagreement. Do not silently align
    either side; the parent rules which one is wrong before the MCA
    dispatch (`skills/testing/test-design.md` §Oracle discipline).
+9. Amendment `update` entries (when the call names them,
+   `skills/_protocols/spec-amendment-discipline-reconcile.md` §Independent references of a changed clause): rewrite
+   each named reference from the amended clause and the old reference, in a hunk of its own citing the clause, and
+   write or extend the witness the entry names: a generator over the amended clause's axes whose oracle is the new
+   reference. Step 8 then checks the skeletons against the new reference.
 
 ## Output (back to the parent)
 
@@ -130,6 +136,7 @@ Oracle unverified: {U; TC IDs whose only failure is the missing interface under 
 Passing controls/regressions/already-satisfied behavior: {P; TC IDs and reasons}.
 Skipped/unverified: {S; TC IDs and blockers}. Unexpected errors: {E; details}.
 Reference-oracle disagreements: {none | n/a (no reference) | list TC → expected vs reference}
+References rewritten: {n/a | per entry: path, the clause cited, the witness command and its result}
 Files (new and rewritten; for a rewritten file, the tests in it you changed):
   - tests/{spec_name}/test_{group1}.py
   - tests/{spec_name}/test_{group2}.py
@@ -139,7 +146,8 @@ Files (new and rewritten; for a rewritten file, the tests in it you changed):
 ## Repair of a failing test
 
 Input: rows of an implementer's `## Still-failing tests` table classed `oracle` or `fixture`
-(`skills/_protocols/mca-dispatch.md` §Tests still failing at the return), each with the spec item the TC tests.
+(`skills/_protocols/mca-dispatch.md` §Tests still failing at the return), or finding-verification rows whose origin is
+the oracle or its fixture (`skills/_protocols/finding-verification.md` step 2), each with the spec item the TC tests.
 Context isolation still holds: read the rows, the spec, the test plan and the tests, not the implementation. A setup
 fact a row states (a clock source, a host check) is a run observation you may use; you do not open the code to
 confirm it.
@@ -147,8 +155,12 @@ confirm it.
 Per row, check the TC's assertion and fixture against that item alone:
 
 - **The item supports the row:** change the oracle or the fixture so the TC tests the item, run the TC, and report
-  `repaired: <what changed>; <passes | fails: assertion>`.
-- **The item supports the test as written:** change nothing; report `stands: <the item's sentence>`.
+  `repaired: <what changed>; origin: <where the wrong expectation came from>; <passes | fails: assertion>`. The
+  repaired TC keeps the case and asserts everything the item requires for it; deleting or skipping it, marking it
+  expected to fail, widening a tolerance or asserting less is not a repair (`skills/testing/test-design.md` §Oracle
+  discipline): when only such a change would make the row hold, change nothing and report
+  `spec conflict: <the item; the change it would need>`.
+- **The item supports the test as written:** change nothing; report `stands: <the item's sentence>; origin: product`.
 - **Two items the TC depends on contradict each other:** change nothing; report `spec conflict: <both items>`.
 
 Return one line per TC in that form.
