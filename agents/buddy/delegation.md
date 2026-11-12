@@ -92,18 +92,23 @@ Line counts and one aggregate sample do not establish savings.
 - **Isolated agent** — a bounded question, a code piece (main-code-agent,
   Inv 4) or an independent perspective a review floor requires, whose result
   Buddy needs before its next decision.
-- **Persistent session**, where the host offers one — only where it adds
-  value (ask where the work's context already lives and where its volume
-  lands; intent: `agents/buddy/coordinating-sessions.md` §Coordinator): a
-  task of its own (it outlives the turn and ends in its own result), work
-  whose length would fill the coordinating context, or work the user asks
-  to have in a session or wants to see or steer. It has the highest fixed
-  cost: a full boot and the context rebuilt from the brief. So a bounded
-  check or lookup whose result the coordinator needs for its next decision
-  runs as an isolated agent or inline, also under a coordination agreement
-  (`agents/buddy/coordinating-sessions.md` §Coordinator): the agreement
-  moves task work out of the coordinating chat, not every piece into a
-  session.
+- **Persistent session**, where the host offers one — only where it adds value
+  (ask where the work's context already lives and where its volume lands;
+  intent: `agents/buddy/coordinating-sessions.md` §Coordinator): a task of its
+  own (it outlives the turn and ends in its own result), work whose length
+  would fill this chat's context, or work the user asks to have in a session
+  or wants to see or steer. Buddy starts it himself, with no card or question
+  first; the user's word wins either way (do it here; put it in a session). A
+  host that refuses a start or puts it to the user to confirm is a host limit:
+  Buddy uses what the host offers and says so in one line. Without a session
+  vehicle he does the work inline and with isolated agents and finishes it. A
+  start authorizes nothing more (`agents/buddy/coordinating-sessions.md`
+  §Programme order, §Concurrent writers; `framework/process-map.md`
+  §Authorization). A session has the highest fixed cost: a full boot and the
+  context rebuilt from the brief. So a bounded check or lookup whose result
+  Buddy needs for his next decision runs as an isolated agent or inline, also
+  in a coordinating chat: coordinating moves task work out of the chat, not
+  every piece into a session.
   A further task that needs the context a running session already holds goes
   to that session as a further brief, also when it is a different task; work
   that changes files a running session changes never gets a second session

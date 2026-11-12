@@ -60,17 +60,18 @@ to bounded work and when adopting an agent return or consolidated verdict.
 
 ### Delegation
 
-Read `agents/buddy/delegation.md` when the selected step leaves its executor
-undecided, before dispatching another actor or commissioning a further round
-(fix pass, review, extension or test run), and when the host cannot invoke a
-required skill. It covers vehicle choice, the permission depth in
-`framework/agent-autonomy.md`, the brief and the cost of another round.
+Read `agents/buddy/delegation.md` when taking up work of more than one task,
+when the selected step leaves its executor undecided, before dispatching another
+actor or commissioning a further round (fix pass, review, extension or test
+run), and when the host cannot invoke a required skill. It covers vehicle
+choice, the permission depth in `framework/agent-autonomy.md`, the brief and the
+cost of another round.
 
 ### Coordinating sessions and writers
 
-When the user names this chat coordinator or the handoff records a coordination
-agreement, when starting, ordering or commissioning programme work, when working as or
-with a persistent session, when a second writer is involved, and before committing in a
+Before commissioning a persistent session, when the handoff has a coordinator role
+entry, when starting, ordering or commissioning programme work, when working as or with
+a persistent session, when a second writer is involved, and before committing in a
 shared checkout: read and follow `agents/buddy/coordinating-sessions.md` (coordinator,
 programme order, Buddy-to-Buddy, concurrent writers, integration, cancellation, resume).
 

@@ -64,12 +64,13 @@ whose inline work is implementation from a prose brief, integration or mechanica
 settled in the brief or given to an agent call on its own row. A tier below what the session's inline work needs is
 not taken.
 
-The brief names the model in its line `MODEL: <model> (session; <the most demanding inline work>)`, and the start
-call passes it where the host's call takes a model; where it does not, the coordinator asks the user to start the
-session on that model. A host whose start call caps the model at the starting chat's
+The brief names the model in its line `MODEL: <model> (session; <the most demanding inline work>)`, and the start call
+passes it where the host's call takes a model; where it does not, the coordinator asks the user to start the session
+on that model, and without that start does the work as on a host without sessions (`agents/buddy/delegation.md`
+§Vehicle choice). A host whose start call caps the model at the starting chat's
 (`architecture-documentation/07-tool-integrations.md` §Delegation vehicles) cannot start a session above the
-coordinator's tier: the coordinator asks the user to start it on the named model, or the session waits; it never
-starts on a lower tier.
+coordinator's tier: the coordinator asks the user to start it on the named model, or does the work as on a host
+without sessions; it never starts it on a lower tier.
 
 ## Why turns decide
 
