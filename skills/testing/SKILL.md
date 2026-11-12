@@ -53,15 +53,14 @@ A test plan covers what the change changes, and nothing else.
 
 - Each changed behaviour that an AC names gets one test that fails
   without the change (§Meaningful pre-fix witness).
-- A negative case is added only where the AC or the change spec names
-  a refusal.
-- Unchanged behaviour gets no new test, and there are no speculative
-  edge cases. A real gap surfaces later as a real defect, with its own
-  test.
-- Instruction text is not a test subject: its presence and wording carry
-  themselves, and an existing consistency or generator check covers the
-  rest. An AC met by instruction text alone names that check in the
-  coverage matrix instead of a TC (`run-strategy.md` §Test selection, light path).
+- A negative case is added only where the AC or change spec names a refusal.
+- Unchanged behaviour gets no new test and no speculative edge cases;
+  a real gap surfaces later as a defect with its own test.
+- For text an outside agent runs on a user's machine (install, setup,
+  removal) an AC names the live run in `skills/_protocols/evidence-author-claims.md`
+  §8.5. Other instruction text is not a test subject: an AC met by it alone
+  names its consistency or generator check in the coverage matrix instead
+  of a TC (`run-strategy.md` §Test selection, light path).
 - The adversary test plan and the skeleton writer run only when the
   change touches a safety floor (`skills/adversary_test_plan/SKILL.md`
   §When to call).
@@ -83,8 +82,7 @@ a refactoring adds no tests and keeps
 the existing ones green. Source of the edge-row matrix:
 BMAD-METHOD (MIT License, © 2025 BMad Code, LLC); Forge's register of adopted methods.
 
-Each new test, whether from test design, an adversary test plan or a
-review finding, names its consumer in its docstring or plan row: who
+Each new test, whatever its source, names its consumer in its docstring or plan row: who
 relies on the behaviour it guards. A combination grid justifies each
 axis: an axis stays only where its values change an assertion or the
 code path under test, and combinations that assert nothing new are not

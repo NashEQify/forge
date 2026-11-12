@@ -152,6 +152,7 @@ separate list. Without that evidence, write what holds instead of the claim: "no
 | Nothing else changed, all removed | The inventory shown (§8.2) | A name search with zero hits |
 | Committed, pushed | The commit hash; for a push, the state after it: `git status -sb` showing `...origin/<branch>` with no ahead count | The push command without its result; "will be pushed" in a record written before the push |
 | Active (installed, deployed) | Instruction text: committed at the path hosts read (for the public plugin: released, and the host's plugin check showing that version), or the hosts named that do not have it yet. A non-Markdown change: the same, plus a fresh session on each host that read the change (`framework/installation-activation.md` §Choosing the path, Full path). A service: the user or service outcome after deployment (`framework/invariants.md` Invariant 6) | An install command's exit status; HTTP 200; a live process |
+| Text an outside agent runs on a user's machine (install, setup, removal) works | A live agent run of the published text, request and actions shown, for a one-shot request (it cannot ask: each question the text needs ends the turn or has a stated default) and one worded "completely" (it does what the text names, no more). Before it: criterion open, run outstanding; no machine or host: "unverified: <boundary>" | Tests; text checks; an unpublished copy |
 
 ---
 

@@ -29,6 +29,8 @@ that already loaded a changed boot or always-loaded file keeps the old text, so 
 on such a change. Markdown that an engine or generator reads as data is not plain instruction text: skill frontmatter
 fields such as `status`, `invocation` and `evidence_layout`, and workflow definitions. Such a change, and a new or
 changed non-Markdown source next to the edit, takes the full path.
+Text an outside agent runs on a user's machine (install, setup, removal) is shown working only by the live run in
+`skills/_protocols/evidence-author-claims.md` §8.5.
 
 **Full path — everything else.** Scripts, hooks, plugin manifests, host settings and integrations, workflow
 definitions and compatibility mappings, engine-read YAML/JSON, state formats, and every mixed change:

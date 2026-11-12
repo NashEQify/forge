@@ -52,7 +52,8 @@ reference the changed files and how you found them.
 **Instruction-only Markdown runs no pytest.** The selector lists Markdown that no test reads
 directly as `light-path: <path>`. Its verification is the light-path checks
 (`framework/installation-activation.md` §Light path). A test that reads the file's content
-directly is selected and runs.
+directly is selected and runs. Text an outside agent runs on a user's machine (install, setup, removal) also
+needs the live run in `skills/_protocols/evidence-author-claims.md` §8.5 before its acceptance is claimed.
 
 **Code selects the tests that exercise it.** For code the selector follows imports, exact
 paths and scripts run by name. A test that only copies the framework tree is not selected
