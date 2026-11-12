@@ -18,6 +18,11 @@ protected, even though its purpose is a status check.
 The probe finds the framework root itself and checks the active project, the
 framework whose instructions this session uses and the configured user repo
 (deduped by canonical root). It fetches and reports ahead/behind status.
+Only the active project's own work is reported (ahead, uncommitted, entry
+paths); the framework, when it is not the active project, and the user repo
+appear only when they are behind, since that decides whether loaded
+instructions or the profile are stale. Another repository's unpushed or
+uncommitted work belongs to that repository's sessions and is not mentioned.
 5-second network timeout. Failed fetches produce a per-repository diagnostic
 on stderr; treat the associated ahead/behind values as cached. Output on
 stdout: one line per non-clean repo, `<path>` followed by the groups that

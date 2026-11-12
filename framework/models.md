@@ -1,6 +1,7 @@
 # Model Assignment
 
-Read it before any agent call: it decides which model the call runs on and where the call names it. The consumer is
+Read it before any agent call and before commissioning a persistent session: it decides which model the call or
+session runs on and where it is named. The consumer is
 the agent that dispatches. The cost it prevents: no Claude Code or Codex agent definition sets a model, so a call
 without one runs on the session's model whatever the role needs, and the same role runs on different tiers from
 session to session.
@@ -46,7 +47,29 @@ Inside a fix loop, a fix pass whose cause is a stuck implementer runs one tier a
 implementer's brief, with that reason in its `MODEL` line (`skills/convergence_loop/cause-before-answer.md`). Every
 other fix pass takes the row of its own brief. A resumed implementer keeps its model: it takes the pass when that
 model is at or above the row, with `resumed` as the reason; otherwise a new dispatch on the row's tier does
-(`skills/_protocols/mca-dispatch.md` §A fix pass's implementer).
+(`skills/_protocols/mca-dispatch.md` §A fix pass's implementer). A persistent session below the most capable tier
+is stuck when its return reports a finding or check it fixed that came back, or one it could not fix. It runs no
+further round on that tier: the coordinator moves its work one tier up, to a new session briefed from its return and
+records, with the line `MODEL: <model> (session; stuck: <evidence>)` (§A persistent session's model).
+
+## A persistent session's model
+
+Read it before commissioning a persistent session (`agents/buddy/coordinating-sessions.md`). A session is not one
+dispatch role: besides its task it writes briefs, adopts reviews and returns, and closes its item, and a miss at those
+points costs a round. Its tier is the highest row of §Defaults per dispatch role that matches work the session carries
+inline, not through an agent call; writing standing instruction text or a spec, and choosing between design options,
+count as the Design row. The floor is the standard tier (§Why turns decide). The session's own agent calls keep taking
+their rows, whatever the session runs on. A coordinator on the most capable tier names the standard tier for a session
+whose inline work is implementation from a prose brief, integration or mechanical steps, with every design choice
+settled in the brief or given to an agent call on its own row. A tier below what the session's inline work needs is
+not taken.
+
+The brief names the model in its line `MODEL: <model> (session; <the most demanding inline work>)`, and the start
+call passes it where the host's call takes a model; where it does not, the coordinator asks the user to start the
+session on that model. A host whose start call caps the model at the starting chat's
+(`architecture-documentation/07-tool-integrations.md` §Delegation vehicles) cannot start a session above the
+coordinator's tier: the coordinator asks the user to start it on the named model, or the session waits; it never
+starts on a lower tier.
 
 ## Why turns decide
 

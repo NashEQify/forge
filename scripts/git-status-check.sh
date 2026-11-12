@@ -29,11 +29,16 @@
 # script unless FRAMEWORK_DIR is set (an explicit FRAMEWORK_DIR wins). Targets:
 # the framework always, CWD's Git root, and the configured user repo (resolved
 # by `user_scope.py --json`) when its canonical Git root differs from both.
+# Only the active project (CWD's Git root) gets the full status line; every
+# other target (the framework from a consumer, the user repo) is reported
+# only as `<path> [behind N]` when it is behind: its own unpublished work
+# (ahead, uncommitted) belongs to that repository's sessions.
 # Prints, in this order:
 #   orient: <YYYY-MM-DD HH:MM TZ> <hostname> <pwd>
-#   <the status lines above, unchanged, for every non-clean target; after a
-#    line with uncommitted entries: `  entries: <path>, … (+N more)`, the first
-#    five porcelain paths as Git prints them>
+#   <the status lines above for every non-clean target, reduced to behind for
+#    the other targets; after a line with uncommitted entries:
+#    `  entries: <path>, … (+N more)`, the first five porcelain paths as Git
+#    prints them>
 #   intent: <absolute path of the nearest intent.md walking up from CWD | none>
 #   mode-line: <software | on-demand | none>   (only an explicit
 #              `Forge workflows: …` line under the intent's `## Context`)
@@ -240,12 +245,31 @@ untrusted_target() {
   [ "$1" != "$FRAMEWORK_ROOT" ] && { [ -z "$USER_ROOT" ] || [ "$1" != "$USER_ROOT" ]; }
 }
 
+# The boot probe reports a repository's own work (ahead, uncommitted, entry
+# paths) only for the active project, CWD's Git root. Every other target (the
+# framework from a consumer, the user repo) is checked only for incoming
+# updates (behind), which decide whether the instructions or the profile it
+# loads are stale; another repository's unpublished work is not this session's.
+OWN_ROOT=$(git_root "$CWD" 2>/dev/null || true)
+own_target() {
+  [ "$BOOT" = "0" ] || [ "$1" = "$OWN_ROOT" ]
+}
+
 # Counts porcelain entries into the groups (line 1). In --boot mode a second
-# line names the first five entry paths as Git prints them (F-6).
-porcelain_summary() {  # <status output> <with branch header: 0|1>
+# line names the first five entry paths as Git prints them (F-6). For a target
+# that is not the own project (own: 0) only a behind count is kept.
+porcelain_summary() {  # <status output> <with branch header: 0|1> [own: 1|0]
   local status=$1 status_line="" groups="" entry staged=0 modified=0 untracked=0 shown=""
   local -a paths=()
   [ "$2" = "1" ] && status_line=${status%%$'\n'*}
+  if [ "${3:-1}" = "0" ]; then
+    if [[ "$status_line" =~ \[(ahead\ [0-9]+,\ )?(behind\ [0-9]+)\] ]]; then
+      printf '%s\n' "[${BASH_REMATCH[2]}]"
+    else
+      printf '\n'
+    fi
+    return 0
+  fi
   # Extract ahead/behind. Patterns:
   #   ## main...origin/main                  → clean
   #   ## main...origin/main [behind 3]       → behind
@@ -466,7 +490,9 @@ fi || {
       status_command=(git --no-optional-locks -C "$repo" ${harden[@]+"${harden[@]}"} status --porcelain --untracked-files=normal)
     fi
     if status=$(GIT_OPTIONAL_LOCKS=0 "${status_command[@]}" 2>/dev/null); then
-      summary=$(porcelain_summary "$status" "$((1 - NO_NETWORK))")
+      own=1
+      own_target "$repo" || own=0
+      summary=$(porcelain_summary "$status" "$((1 - NO_NETWORK))" "$own")
       if [ -n "${summary%%$'\n'*}" ]; then
         printf '%s %s\n' "$repo" "$summary"
       fi
@@ -516,7 +542,9 @@ for index in "${!TARGETS[@]}"; do
       status_command=(git --no-optional-locks -C "$repo" ${harden[@]+"${harden[@]}"} status --porcelain --untracked-files=normal)
     fi
     if status=$(GIT_OPTIONAL_LOCKS=0 "${status_command[@]}" 2>"$TMPDIR_BOOT/$index.status"); then
-      summary=$(porcelain_summary "$status" "$((1 - NO_NETWORK))")
+      own=1
+      own_target "$repo" || own=0
+      summary=$(porcelain_summary "$status" "$((1 - NO_NETWORK))" "$own")
       groups=${summary%%$'\n'*}
       [ "$summary" != "$groups" ] && entries_line=${summary#*$'\n'}
     else

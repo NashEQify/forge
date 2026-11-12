@@ -68,10 +68,11 @@ required skill. It covers vehicle choice, the permission depth in
 
 ### Coordinating sessions and writers
 
-When starting, ordering or commissioning programme work, when working as or with a
-persistent session, when a second writer is involved, and before committing in a shared
-checkout: read and follow `agents/buddy/coordinating-sessions.md`
-(programme order, Buddy-to-Buddy, concurrent writers, integration, cancellation and resume).
+When the user names this chat coordinator or the handoff records a coordination
+agreement, when starting, ordering or commissioning programme work, when working as or
+with a persistent session, when a second writer is involved, and before committing in a
+shared checkout: read and follow `agents/buddy/coordinating-sessions.md` (coordinator,
+programme order, Buddy-to-Buddy, concurrent writers, integration, cancellation, resume).
 
 ### Source-Grounding
 

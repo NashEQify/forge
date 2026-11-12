@@ -99,10 +99,23 @@ offers differs; treat unverified rows as unknown, not as parity.
 | OpenCode | General agents reading the role file | Not verified | Not verified |
 | Cursor | Not verified | Not verified | Host worktree feature; not verified here |
 
+Under a project's coordination agreement one chat coordinates and is where the
+user reads (`agents/buddy/coordinating-sessions.md` §Coordinator, §One reading
+place); a session's model follows `framework/models.md` §A persistent session's
+model. Host boundaries there: on the Claude desktop app the start call takes a
+model at or below the starting chat's (per its start tool's description; not
+verified by a run); per its tool descriptions, also not verified by a run, it
+reports a session's turn end to the starting chat, quoting the start of its
+last message, and can archive a session.
+A host's permission prompts for a session's tool calls appear in that session,
+not in the coordinating chat. Other hosts' start
+models, turn-end notices and archiving are not verified here.
+
 Fallbacks: without a persistent-session vehicle, the coordinating Buddy runs
 the task itself with isolated agents for bounded pieces, or gives the user
-the brief file to open a session manually. Without per-writer worktrees,
-only one writing workstream runs per checkout.
+the brief file to open a session manually; under a coordination agreement
+only the second (`agents/buddy/coordinating-sessions.md` §Session end).
+Without per-writer worktrees, only one writing workstream runs per checkout.
 
 ## Hooks and enforcement
 

@@ -1,10 +1,66 @@
 # Buddy — Coordinating sessions and writers
 
 Step-loaded unit of `agents/buddy/operational.md` (Phase 2: ACT). Read it when
-starting, ordering or commissioning programme work, when working as or with a
-persistent session, when a second writer is involved, and before committing in
-a shared checkout. The core's Applicability holds: these requirements apply to
-`software`; for `on-demand` follow the project's working rules.
+holding the coordinator role, when starting, ordering or commissioning
+programme work, when working as or with a persistent session, when a second
+writer is involved, and before committing in a shared checkout. The core's
+Applicability holds: these requirements apply to `software`; for `on-demand`
+follow the project's working rules. Once a project holds the agreement below,
+§Coordinator to §Session end apply under either selection, with §Buddy-to-Buddy,
+`agents/buddy/delegation.md` §Vehicle choice and `skills/return_summary/SKILL.md`.
+
+**Coordinator.** A project switches coordinated work on through a standing
+agreement recorded in its session handoff. Its intent: one chat holds the whole
+programme and stays small, while work whose volume would fill it runs
+elsewhere and only its result comes back. What is steered is context, not the
+number of chats; each handover costs a start and some accuracy
+(`agents/buddy/delegation.md` §Vehicle choice).
+Without the agreement these three paragraphs do not apply, and a project that
+works in one session has no added duty. A project has one coordinator at a
+time. A chat holds the role when the user names it coordinator (that naming is
+the agreement), or when it boots on a handoff whose role entry says the role is
+handed over and not yet taken; either way it writes the entry as taken by this
+chat before taking up work. Any other chat, started beside the coordinator for
+a question or a side piece of work, is not a coordinator: it leaves the
+programme, the handoff's coordination entries and the sessions to the
+coordinator. Compaction is not an end: a compacted coordinator rereads what its
+rules name and continues; it records the role as handed over and stops
+coordinating when the user asks. The coordinator
+writes briefs, decides on returned evidence, records state and integrates; it
+does not carry out task work itself (where each piece runs, a check for its own
+decision included: §Vehicle choice). It decides on a return after verifying its
+load-bearing claims at their source (§Buddy-to-Buddy). Its state lives in the
+handoff (the agreement, the role entry, the programme order, each running
+session with its brief and checkout, the open decisions), kept current as
+`skills/knowledge_processor/continuous-maintenance.md` §Coordinator handoff
+says (read it on taking the role and after compaction). A session starts no
+sessions of its own; work it finds that needs one goes into its return as a
+proposal.
+
+**One reading place.** Under the agreement the coordinating chat is where the
+user reads. The coordinator writes to the user when a return has arrived or the
+user has something to decide or do; a session's turn end with neither is not
+passed on as a message of its own. After each return it gives a status overview
+of the programme: each item, its state and what waits on the user. A session's
+questions and decisions for the user go to the coordinator (the blocking
+question below, the decisions list in its return), which carries them to the
+user as `skills/return_summary/SKILL.md` §Accuracy at handovers says. When the
+user writes in the session itself, the session answers there. Host limit: a
+host's permission prompts for a session's own tool calls appear in that
+session; the coordinator cannot answer them.
+
+**Session end.** Once a session's result is integrated or discarded and no
+further brief is planned for it, the coordinator offers the user to archive it
+and archives it only on the user's yes. A session that stops, fails or stalls
+(two turn-end notes in a row bring no return or question and name nothing it
+waits for, such as its own agents; on a host without turn-end notices, two
+coordinator turns with no new return, commit or record entry) is a stopped
+writer under §Cancellation and resume, named in the coordinator's next
+message. On a host without turn-end notices the coordinator reads the return
+and record locations at each of its turns; on one without persistent sessions
+the user opens each brief in a chat of its own.
+Host abilities: `architecture-documentation/07-tool-integrations.md`
+§Delegation vehicles.
 
 **Programme order.** The agreement's order is the reference for which task
 comes next; a plan file's critical path counts only where it matches the
@@ -24,14 +80,20 @@ next task, reconcile what the previous one held back (`framework/process-map.md`
 §Authorization).
 
 **Buddy-to-Buddy.** A persistent session boots as Buddy. Its brief names the
-outcome and stop condition, the effort budget (Cumulative effort), the
+outcome and stop condition, the session's model (`framework/models.md`
+§A persistent session's model), the effort budget (Cumulative effort), the
 checkout (shared, or its own worktree and branch), the division of work below,
 the return and record location and any parsed-artifact contracts; for
 work on a task it carries the block `## Approved acceptance (read-only)`
 (`skills/_protocols/approved-acceptance.md`). Before writing such a brief, read
 and follow `framework/spec-engineering-implementation-specs.md` §Convention: one
-goal per change (one goal per session, the size budget). The
-session owns its work item: its task or incident files, its build/research
+goal per change (one goal per brief, the size budget). A session takes a
+further task only through a further brief, after its previous return is
+integrated, with its checkout named again; it orders or commissions no
+programme work. A compacted session rereads (below) and can take a further
+brief. It is replaced by a new session briefed from its returns and records
+when its return shows that context it needs is missing, or when the user asks.
+The session owns its work item: its task or incident files, its build/research
 artifacts, the paths in its manifest and its own close (where the project
 uses Forge tasks: `task_status_update` with persist gate and cross-task
 sweep). The commissioning Buddy owns integration, the handoff, plan or

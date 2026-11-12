@@ -194,6 +194,7 @@ An agent that calls `/spec`, then `/plan`, then `/build`, etc. on the user's beh
 - Max depth is 1: Buddy → skill / persona. Skills load `_protocols/`; that's flat load, not a deep tree.
 - Spec board: Buddy → 7 personas in parallel + 1 chief = depth 1, no deep tree.
 - The consolidation role (board-chief / code-chief / board-ux-heuristic primus) is its own persona, not a "coordinator layer".
+- Coordinated sessions: a coordinating chat commissions topic sessions, each a full Buddy whose own dispatches keep depth 1. A session starts no sessions of its own, so there is one session level below the coordinator (`agents/buddy/coordinating-sessions.md` §Coordinator).
 
 **What to do instead:** keep the orchestration depth at most 1 (slash command → personas). The merge happens in the main agent.
 

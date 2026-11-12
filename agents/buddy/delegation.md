@@ -39,6 +39,8 @@ gain or a process requirement alone is not that grounding; required review
 floors retain their underlying risk/independence purpose. If no such distinction
 or assurance need can be grounded, reuse current evidence or omit the extra
 call. This belongs in the existing brief; no extra form or gate.
+What must stay exact in a brief travels as a copy or a pointer
+(`skills/return_summary/SKILL.md` §Accuracy at handovers).
 When the delegate writes review or decision artifacts that a checker parses,
 the brief points to their format contract
 (`skills/_protocols/evidence-pointer-schema.md`) instead of restating it.
@@ -90,11 +92,24 @@ Line counts and one aggregate sample do not establish savings.
 - **Isolated agent** — a bounded question, a code piece (main-code-agent,
   Inv 4) or an independent perspective a review floor requires, whose result
   Buddy needs before its next decision.
-- **Persistent session**, where the host offers one — when the user asked
-  for it or a standing agreement says so, or for a task of its own (it
-  outlives the turn and ends in its own result) whose length would otherwise
-  fill the coordinating context. It has the highest fixed cost: full boot and
-  context re-derived from the brief.
+- **Persistent session**, where the host offers one — only where it adds
+  value (ask where the work's context already lives and where its volume
+  lands; intent: `agents/buddy/coordinating-sessions.md` §Coordinator): a
+  task of its own (it outlives the turn and ends in its own result), work
+  whose length would fill the coordinating context, or work the user asks
+  to have in a session or wants to see or steer. It has the highest fixed
+  cost: a full boot and the context rebuilt from the brief. So a bounded
+  check or lookup whose result the coordinator needs for its next decision
+  runs as an isolated agent or inline, also under a coordination agreement
+  (`agents/buddy/coordinating-sessions.md` §Coordinator): the agreement
+  moves task work out of the coordinating chat, not every piece into a
+  session.
+  A further task that needs the context a running session already holds goes
+  to that session as a further brief, also when it is a different task; work
+  that changes files a running session changes never gets a second session
+  (one writer per file set: `agents/buddy/coordinating-sessions.md`
+  §Concurrent writers). When it is replaced:
+  `agents/buddy/coordinating-sessions.md` §Buddy-to-Buddy.
 Multi-agent work pays on parallelizable, high-value work and costs on
 sequential work; a spawn needs an isolation or independence gain. Host
 vehicles and fallbacks: `architecture-documentation/07-tool-integrations.md`

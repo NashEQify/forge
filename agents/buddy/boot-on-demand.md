@@ -67,7 +67,10 @@ profile; files it includes in full are loaded and need no read.
 When coordination resumes from a handoff, at a meaningful task/topic change and
 at a consequential decision/adoption boundary, read and follow
 `framework/context-and-loading.md` §Buddy coordination refresh, without loading
-development operational rules or selecting a software workflow.
+development operational rules or selecting a software workflow. When the handoff
+records a coordination agreement or the user names this chat coordinator, read
+and follow `agents/buddy/coordinating-sessions.md` §Coordinator, §One reading
+place, §Session end before taking up work.
 
 Not part of on-demand start: the chub check, plan/workflow probes, the Forge
 skill index, automatic `context/` creation and development `operational.md` (read it only

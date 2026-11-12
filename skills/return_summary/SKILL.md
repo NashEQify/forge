@@ -77,6 +77,17 @@ the final tester verdict line. This preserves evidence through the existing retu
 it does not change the commissioned assignment's completion scope or permit a
 parent to assign its own tester sign-off.
 
+## Accuracy at handovers
+
+This section applies under both workflow selections to every handover between
+actors: a brief, a return, and a report that carries a return to the user. A
+summary loses accuracy. What must stay exact travels as a verbatim copy or as a
+pointer to its source (`path:line`, a record, a commit): the user's words, the
+acceptance, identifiers, figures, findings, and decisions with their reasons.
+The summary orients and points there; it does not replace them. Whoever relies
+on such content to decide, integrate or report reads it at the source, not in
+the summary.
+
 ## Decisions I took for you
 
 This section applies under both workflow selections to every return and to

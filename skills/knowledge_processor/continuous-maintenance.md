@@ -6,7 +6,9 @@ maintenance, and again after compaction; its rules apply from the first turn. Be
 maintenance causes, and again after compaction, read `retrieve.md` for the baseline and follow `write.md`.
 
 §Admission is the skill's one admission check. `write.md` §2 sends every write to it, in every mode; a reader who
-comes from there without continuous maintenance reads that section only.
+comes from there without continuous maintenance reads that section only. A coordinating chat reads §Coordinator
+handoff and §Admission when it takes the role and after compaction (`agents/buddy/coordinating-sessions.md`
+§Coordinator), with or without continuous maintenance.
 
 ## Admission
 
@@ -37,6 +39,17 @@ that would change without it; if there is none, do not write. If the current own
 artifact and its pointer suffice to resume, retain the pointer and next action. A
 different section name does not turn a trace into knowledge or necessary continuation
 state.
+
+## Coordinator handoff
+
+A coordinator's handoff is current whenever a new or compacted chat would otherwise decide or act differently. In the
+same turn in which the coordinator adopts or discards a return, settles a decision or a basic assumption with the user
+(with its reason), starts, replaces or ends a session, or changes the programme order, it updates the handoff in place.
+Where neither the user nor the project's rules exclude a commit (`agents/buddy/coordinating-sessions.md` §Commit, push
+and transfer), it commits the update locally in the same turn. Nothing else triggers this write: a session's interim
+notes, the coordinator's own checks and a discussion still in progress do not. At each trigger §Admission decides what
+the update contains: what a future decision or next action needs. It does not push: a push needs the user's request or
+the project's standing authorization. The full save runs on the user's command.
 
 ## Continuous maintenance
 
