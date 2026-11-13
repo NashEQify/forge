@@ -144,6 +144,14 @@ completed without it.
   the user's words decided or your integration changed, merge entries of one
   kind, and carry the rest into your own list.
 
+## Signs of context pressure
+
+Adopting a return, compare it with its brief, its report and the changes it names. Signs the actor ran short of context: a brief criterion
+not reported on; a step reported done whose output is missing or incomplete at its source; general wording where
+sites, commands or results belong. A short return that reports every criterion with evidence shows none. On a sign, do
+not adopt that part as done: check it at its source; when the check confirms a gap, cut the actor's next brief to
+fewer goals or files to read.
+
 ## Format
 
 ```
@@ -200,7 +208,7 @@ Tester: SIGNED OFF (N tests, M new) | NOT SIGNED OFF — <reason>
 
 ## Incident block (MUST always be present — even when no incident)
 
-Buddy can't read along during execution (ARCH-007). Incidents
+Buddy can't read along during execution. Incidents
 have to be visible structurally in the return.
 
 No incident:
@@ -242,13 +250,11 @@ Applies on non-code tasks too:
 - **NOT** set SIGNED OFF without tester confirmation. INSTEAD
   the tester confirms; the return summary reproduces.
   Because: self-assignment makes the gate worthless.
-- **NOT** drop the incident block when nothing notable
-  happened. INSTEAD say "Incident: none" explicitly. Because:
-  absence of incident is information too.
 - **NOT** write the return summary before retest closure.
   INSTEAD retest → result → summary. Because: a premature
   summary skews the status.
 
 ## Source
 
-Superpowers (MIT License, © 2025 Jesse Vincent) and BMAD-METHOD (MIT License, © 2025 BMad Code, LLC); Forge's register of adopted methods.
+Superpowers (MIT License, © 2025 Jesse Vincent), BMAD-METHOD (MIT License, © 2025 BMad Code, LLC) and Get Shit Done
+(MIT License, © 2025 Lex Christopherson); Forge's register of adopted methods.

@@ -73,9 +73,9 @@ cost of another round.
 Before commissioning a persistent session, when the handoff has a coordinator role
 entry, when starting, ordering or commissioning programme work, and when working as or
 with a persistent session: read and follow `agents/buddy/coordinating-sessions.md`
-(coordinator, programme order, Buddy-to-Buddy, commit). When a second writer is
-involved or a writer stopped, and before cutting a writer's worktree, committing in a
-shared checkout or integrating a branch: read and follow
+(coordinator, programme order, Buddy-to-Buddy). With a second or a
+stopped writer, and before cutting a writer's worktree, committing in a shared or
+assigned checkout or integrating a branch: read and follow
 `agents/buddy/concurrent-writers.md`.
 
 ### Source-Grounding

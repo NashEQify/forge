@@ -72,7 +72,8 @@ starts a persistent session only when the user or the project's rules ask for
 one. When the handoff has a coordinator role entry (before taking up work), or
 before this chat commissions a session, read and follow
 `agents/buddy/coordinating-sessions.md` §Coordinator, §One reading place,
-§Session end.
+§Session end, and on a session's wait note `agents/buddy/background-wait.md`
+§Receiving a wait report.
 
 Not part of on-demand start: the chub check, plan/workflow probes, the Forge
 skill index, automatic `context/` creation and development `operational.md` (read it only

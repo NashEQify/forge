@@ -26,7 +26,7 @@ from httpx import AsyncClient
 
 async def test_invalid_request_returns_422(client: AsyncClient):
     """FA-U1: Invalid request body → 422 with Pydantic detail format."""
-    resp = await client.post("/api/brain/entities", json={"name": 123})  # name expects str
+    resp = await client.post("/api/store/entities", json={"name": 123})  # name expects str
     assert resp.status_code == 422
     detail = resp.json()["detail"]
     assert isinstance(detail, list)
@@ -53,7 +53,7 @@ from myapp.gateway.models import EntityResponse
 
 async def test_response_matches_model(client: AsyncClient):
     """FA-U2: Response is exactly the declared response model."""
-    resp = await client.get("/api/brain/entities/some-uuid")
+    resp = await client.get("/api/store/entities/some-uuid")
     assert resp.status_code == 200
 
     try:
@@ -70,7 +70,7 @@ async def test_response_matches_model(client: AsyncClient):
 ### FA-U3: Dependency Injection
 
 - **Level:** L2 Unit
-- **Check question:** Can dependencies (Brain, NATS client, etc.) be cleanly substituted in tests without changing app logic?
+- **Check question:** Can dependencies (Store, NATS client, etc.) be cleanly substituted in tests without changing app logic?
 - **Violation signal:** Test requires a real DB connection even though only endpoint logic is being tested. Or: `app.dependency_overrides` has no effect.
 - **Code:**
 
@@ -93,7 +93,7 @@ async def test_dependency_override():
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as c:
-        resp = await c.get("/api/brain/entities/test")
+        resp = await c.get("/api/store/entities/test")
 
     assert resp.status_code == 200
     mock_repo.get_entity.assert_called_once_with("test")
@@ -112,7 +112,7 @@ async def test_dependency_override():
 # INFRA: none
 async def test_not_found_returns_404(client: AsyncClient):
     """FA-U4: Non-existent entity → 404 with readable detail."""
-    resp = await client.get("/api/brain/entities/nonexistent-uuid")
+    resp = await client.get("/api/store/entities/nonexistent-uuid")
     assert resp.status_code == 404
     body = resp.json()
     assert "detail" in body
@@ -133,14 +133,14 @@ async def test_not_found_returns_404(client: AsyncClient):
 # INFRA: none
 async def test_protected_endpoint_without_auth(client: AsyncClient):
     """FA-U5: Protected endpoint without auth → 401."""
-    resp = await client.post("/api/brain/entities", json={"name": "test"})
+    resp = await client.post("/api/store/entities", json={"name": "test"})
     assert resp.status_code in (401, 403)
 
 
 async def test_protected_endpoint_with_invalid_token(client: AsyncClient):
     """FA-U5: Protected endpoint with invalid token → 401."""
     resp = await client.post(
-        "/api/brain/entities",
+        "/api/store/entities",
         json={"name": "test"},
         headers={"Authorization": "Bearer invalid-token-xxx"},
     )
@@ -178,17 +178,17 @@ def test_openapi_contract(case):
 **Note:** `call_and_validate()` automatically checks: status code is documented in the schema, response body matches the schema, content-type is correct. For endpoints with DB state, use the `from_fixture` variant (schemathesis 4.x):
 
 ```python
-# Alternative: pytest-fixture-based (recommended when Brain is needed)
+# Alternative: pytest-fixture-based (recommended when the store is needed)
 @pytest.fixture
-def api_schema(brain):
-    app = create_app(brain=brain)
+def api_schema(store):
+    app = create_app(store=store)
     return schemathesis.openapi.from_asgi("/openapi.json", app)
 
 schema = schemathesis.pytest.from_fixture("api_schema")
 
 @schema.parametrize()
 @pytest.mark.contract
-def test_api_with_brain(case):
+def test_api_with_store(case):
     case.call_and_validate()
 ```
 
@@ -253,7 +253,7 @@ async def test_schema_no_breaking_changes():
 async def test_wrong_content_type_rejected(client: AsyncClient):
     """FA-C3: Endpoint rejects the wrong content type."""
     resp = await client.post(
-        "/api/brain/entities",
+        "/api/store/entities",
         content="name=test",
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
@@ -263,7 +263,7 @@ async def test_wrong_content_type_rejected(client: AsyncClient):
 @pytest.mark.contract
 async def test_response_content_type_json(client: AsyncClient):
     """FA-C3: API responses have content-type application/json."""
-    resp = await client.get("/api/brain/entities")
+    resp = await client.get("/api/store/entities")
     assert resp.status_code == 200
     assert "application/json" in resp.headers.get("content-type", "")
 ```
@@ -281,7 +281,7 @@ async def test_response_content_type_json(client: AsyncClient):
 @pytest.mark.contract
 async def test_pagination_empty_results(client: AsyncClient):
     """FA-C4: Empty result set → 200 with empty list, not 404."""
-    resp = await client.get("/api/brain/entities?offset=99999&limit=10")
+    resp = await client.get("/api/store/entities?offset=99999&limit=10")
     assert resp.status_code == 200
     body = resp.json()
     assert body["items"] == []
@@ -289,16 +289,16 @@ async def test_pagination_empty_results(client: AsyncClient):
 
 
 @pytest.mark.contract
-async def test_pagination_no_duplicates(client: AsyncClient, brain):
+async def test_pagination_no_duplicates(client: AsyncClient, store):
     """FA-C4: Sequential pages contain no duplicates."""
     for i in range(15):
-        await brain.create_entity(name=f"entity-{i}", entity_type="test")
+        await store.create_entity(name=f"entity-{i}", entity_type="test")
 
     all_ids = []
     offset = 0
     limit = 5
     while True:
-        resp = await client.get(f"/api/brain/entities?offset={offset}&limit={limit}")
+        resp = await client.get(f"/api/store/entities?offset={offset}&limit={limit}")
         items = resp.json()["items"]
         if not items:
             break
@@ -323,18 +323,18 @@ async def test_pagination_no_duplicates(client: AsyncClient, brain):
 # Generated from FA-I1 (L3 Integration, Negative)
 # INFRA: Postgres
 @pytest.mark.integration
-async def test_transaction_rollback_on_error(client: AsyncClient, brain):
+async def test_transaction_rollback_on_error(client: AsyncClient, store):
     """FA-I1: On error in a multi-step operation → no partial state."""
-    count_before = await brain.count_entities()
+    count_before = await store.count_entities()
 
-    resp = await client.post("/api/brain/entities", json={
+    resp = await client.post("/api/store/entities", json={
         "name": "test-entity",
         "entity_type": "test",
         "relations": [{"target_id": "nonexistent-uuid", "relation_type": "depends_on"}],
     })
     assert resp.status_code >= 400
 
-    count_after = await brain.count_entities()
+    count_after = await store.count_entities()
     assert count_after == count_before, "Partial state: entity created without relation"
 ```
 
@@ -355,10 +355,10 @@ import pytest
 
 @pytest.mark.integration
 async def test_entity_created_event_emitted(client: AsyncClient, nats_client):
-    """FA-I2: Entity create emits a brain.entity.created event."""
-    sub = await nats_client.subscribe("brain.entity.created")
+    """FA-I2: Entity create emits a store.entity.created event."""
+    sub = await nats_client.subscribe("store.entity.created")
 
-    resp = await client.post("/api/brain/entities", json={
+    resp = await client.post("/api/store/entities", json={
         "name": "event-test",
         "entity_type": "test",
     })
@@ -379,9 +379,9 @@ async def test_entity_created_event_emitted(client: AsyncClient, nats_client):
 @pytest.mark.integration
 async def test_no_event_on_failed_mutation(client: AsyncClient, nats_client):
     """FA-I2: No event on a failed operation."""
-    sub = await nats_client.subscribe("brain.entity.>")
+    sub = await nats_client.subscribe("store.entity.>")
 
-    resp = await client.post("/api/brain/entities", json={"invalid": True})
+    resp = await client.post("/api/store/entities", json={"invalid": True})
     assert resp.status_code >= 400
 
     with pytest.raises(asyncio.TimeoutError):
@@ -406,7 +406,7 @@ import pytest
 @pytest.mark.integration
 async def test_pool_exhaustion_graceful(client: AsyncClient):
     """FA-I3: On pool exhaustion → defined error rather than hang."""
-    tasks = [client.get("/api/brain/entities?limit=100") for _ in range(50)]
+    tasks = [client.get("/api/store/entities?limit=100") for _ in range(50)]
     responses = await asyncio.gather(*tasks, return_exceptions=True)
 
     status_codes = []

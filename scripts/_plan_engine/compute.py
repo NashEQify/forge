@@ -993,7 +993,7 @@ def compute_next_actions(
     Sort order: (1) on critical path, (2) on target path (milestone is target
     or in requires-chain of target), (3) blocking score desc, (4) effort asc.
     This ensures MVP-path tasks rank above non-MVP tasks even when milestones
-    like intelligence/life-os are technically unblocked.
+    off the MVP path are technically unblocked.
 
     Uses t.key throughout so the same logic applies to aggregate mode.
     """

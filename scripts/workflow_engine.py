@@ -747,7 +747,7 @@ def _ensure_state_variables_resolved(state: dict[str, Any]) -> bool:
 # Spec-slug shape gate for {spec_name}. A `spec_ref` is supposed to be
 # a spec PATH (`docs/specs/299-fabrication-mitigation.md`) whose stem is a clean
 # slug. But some tasks carry PROSE in `spec_ref` (e.g. "Implements
-# BrainPostgresStore at src/.../postgres_store.py:195.") — `Path(prose).stem`
+# PostgresStore at src/.../postgres_store.py:195.") — `Path(prose).stem`
 # then yields garbage like `postgres_store.py:195.`. That garbage flowed into
 # {spec_name} and the board-spec compound pointer_check globbed a non-existent
 # `docs/reviews/board/postgres_store.py:195.-consolidated-pass1.md`, blocking

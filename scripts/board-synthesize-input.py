@@ -6,7 +6,7 @@ Liest consolidated-passN.md, extrahiert ALLE Finding-IDs (C/H/M/L),
 gibt einen strukturierten Fix-Auftrag aus. Keine Finding wird ausgelassen.
 
 Usage:
-  python3 scripts/board-synthesize-input.py docs/reviews/board/brain-search-v2-consolidated-pass1.md
+  python3 scripts/board-synthesize-input.py docs/reviews/board/my-spec-consolidated-pass1.md
 
 Output: Strukturierter Text mit allen Findings, gruppiert nach Severity.
 """

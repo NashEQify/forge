@@ -153,7 +153,7 @@ async def create_task(
 - Between internal functions that share type contracts.
 - In utility functions called by already-validated code.
 - On data that just came out of your own DB (Pydantic models
-  in the brain facade are fine).
+  in your own data-access facade are fine).
 
 > **Third-party API responses are untrusted data.** Validate
 > shape + content before any logic / rendering / decision-

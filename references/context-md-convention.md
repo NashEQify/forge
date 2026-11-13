@@ -8,7 +8,7 @@ Lazy-create when the first term is resolved.
 
 **Repo scope:**
 - Consumer repositories with their own domain vocabulary.
-- When terms like "Order" / "Customer" / "Brain" / "Context-Assembly"
+- When terms like "Order" / "Customer" / "Catalog" / "Billing"
   are interpreted differently by devs / agents (drift risk).
 - When CLAUDE.md / AGENTS.md hold consensus but domain terminology is
   not centrally fixed.
@@ -62,8 +62,8 @@ Lazy-create when the first term is resolved.
 
 ## Multi-context repos: CONTEXT-MAP.md
 
-For repos with multiple distinct sub-contexts (e.g. an application with brain /
-context-assembly / materialization as separate concepts): at repo
+For repos with multiple distinct sub-contexts (e.g. an application with catalog /
+billing / fulfilment as separate concepts): at repo
 root, a `CONTEXT-MAP.md` pointing to sub-CONTEXT.md files.
 
 ```
@@ -72,11 +72,11 @@ root, a `CONTEXT-MAP.md` pointing to sub-CONTEXT.md files.
 ├── docs/
 │   └── adr/                          ← system-wide ADRs
 ├── src/
-│   ├── brain/
-│   │   ├── CONTEXT.md                ← brain vocabulary (entity / edge / materialization)
+│   ├── catalog/
+│   │   ├── CONTEXT.md                ← catalog vocabulary (product / variant / listing)
 │   │   └── docs/adr/
-│   ├── context_assembly/
-│   │   ├── CONTEXT.md                ← assembly vocabulary (greedy allocation / token budget)
+│   ├── billing/
+│   │   ├── CONTEXT.md                ← billing vocabulary (invoice / ledger / settlement)
 │   │   └── docs/adr/
 │   └── api/
 │       ├── CONTEXT.md                ← API vocabulary (endpoint / schema / boundary)
@@ -132,7 +132,7 @@ the framework root needed — the existing files are the glossary SoT.
 A CONTEXT.md would be duplication.
 
 **Consequence for consumer repositories:** when they have their own
-domain vocabularies (brain / context-assembly / materialization in one
+domain vocabularies (catalog / billing / fulfilment in one
 application, channel / room / user in another): **lazy-create their own
 CONTEXT.md there**.
 

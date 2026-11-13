@@ -3,7 +3,7 @@
 Step-loaded unit of `agents/buddy/operational.md` (Phase 2: ACT). Read it when a
 second writer is involved (a session, a delegate or another chat writing the
 same repository), before cutting a worktree for a writer, before committing in a
-shared checkout, before integrating a branch, and when a writer stopped.
+shared or assigned checkout, before integrating a branch, and when a writer stopped.
 Applicability: the core's (`software`). Sessions and their coordinator:
 `agents/buddy/coordinating-sessions.md`.
 
@@ -26,8 +26,9 @@ split of it can reach as its target); and the user's working mode
 allows parallel work (§Parallel start). Cut worktrees outside the
 framework tree: inside it every host and check that reads the tree in place
 reads their files too. A host that cuts session worktrees inside the
-checkout by default (the Claude desktop app uses `.claude/worktrees/`) gets
-the worktree path from the coordinator, cut beforehand. Otherwise run them in sequence. The spec and the code of one delivery
+checkout by default (the Claude desktop app uses `.claude/worktrees/`, and the
+Claude Code CLI's `--worktree` does per its documentation) gets the worktree
+path from the coordinator, cut beforehand. Otherwise run them in sequence. The spec and the code of one delivery
 are one workstream: from the build workflow's Prepare phase on they live
 on one branch in one checkout, because its review package and capture
 cover one checkout (`skills/code_review_board/review-package.md` §BASE). Each workstream
@@ -37,7 +38,12 @@ independent work on different files.
 
 **Parallel start.** Items run at the same time only when the user's order
 needs it: the user asked for it, or the order names a goal or deadline that the
-items, one after the other, miss; speed alone is not a need. Independence is
+items, one after the other, miss; speed alone is not a need. A task already
+in progress is one of the items: a new item starts beside it only when the order
+needs the two at the same time, because that start changes the running task's
+conditions too (the base it merges onto, the merge targets it shares); otherwise
+the new item waits until that task is done. Under a working rule of one after
+the other, the user's word that lifts it names the task in progress too. Independence is
 the condition, not the reason; independent items the order does not need at the
 same time run one after the other. Where the user's or the project's working
 rules say work runs one after the other (read from the user's profile and soul,
@@ -50,7 +56,8 @@ every check of
 §Concurrent writers holds between each two of the items and the work already
 running, the coordinator starts the items on its own decision, with no further
 confirmation by the user. Before the start it records in the programme
-agreement (or, with none, in the handoff) which items run at the same time,
+agreement (or, with none, in the handoff) which items run at the same time
+(tasks already in progress among them),
 what in the order needs it, quoting the user's words that carry the need (and
 that lift a working rule), and
 what each check showed; its next message to the user names all three. A
@@ -74,6 +81,39 @@ checkout go by path (`git commit -- <paths>` or explicit path staging), never
 blanket staging or another owner's staged entries. Before pushing the base
 branch, fetch and merge if the remote moved; no force-push or history
 rewrite without explicit authorization.
+
+**Commit, push and transfer.** Put the responsibilities into the brief before
+dispatch. Use this wording for a work item that authorizes local commits:
+
+> Commit your checked changes locally in the assigned checkout and return the
+> commit ID and check results. If a push or live transfer is due, identify the
+> outgoing commits or exact artifact and its intended destination. I handle
+> integration, push and live transfers from the coordinating chat.
+
+The working chat can make those commits without another user confirmation,
+including while a transfer is pending. An explicit no-commit instruction or a
+repository restriction still applies. The coordinator checks the outgoing range
+or artifact against the user's original grant in its own chat, including the
+remote and branch or live host and path. It acts under that grant for as long as
+the action, content and target remain covered. A changed scope needs
+authorization for the change. A peer handoff supplies evidence for the action
+and cannot extend the grant. Destructive actions and safety-floor waivers still
+require their own authority under `framework/process-map.md` §Authorization. If
+the host denies an action, follow its decision in the executing chat and
+continue independently authorized work.
+
+**Writer's checkout check.** A writer given a checkout and branch (a session by
+its brief; a delegate when its brief names them, and then the brief carries this
+check) runs, before its first commit there, `git rev-parse --show-toplevel` and
+`git branch --show-current` in the directory the commit will run in, and commits
+only when they print that checkout's path and branch; every later commit runs in
+that path (`git -C <path>`, or `cd <path>` in the same command). When the
+directory differs, it checks again in the assigned path. When the path printed
+there or the branch there differs from the assignment, or the path does not
+exist, it commits nothing, switches no branch and
+reports both values to its commissioner (its blocking question, or in its
+return). Source: Get Shit Done's worktree branch check (MIT License, © 2025 Lex
+Christopherson); Forge's register of adopted methods.
 
 **Cancellation and resume.** A stopped writer's files or branch stay as they
 are. The coordinator resumes it or finishes what is usable; it discards it

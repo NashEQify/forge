@@ -23,6 +23,6 @@ steps:
   - id: document
     title: Entscheidung einarbeiten
     description: >
-      Ergebnis in relevante Context-Dateien schreiben (Brain, Domain-Datei, decisions.md
+      Ergebnis in relevante Context-Dateien schreiben (Wissensspeicher, Domain-Datei, decisions.md
       wenn architektonisch relevant). IMPACT CHAIN ausfuehren.
     exit_criteria: Alle betroffenen Context-Dateien upgedated

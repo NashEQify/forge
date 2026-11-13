@@ -36,7 +36,7 @@ compliance check.
 
 Required on:
 
-- **Foundation build** (AI brain, memory, intake pipeline,
+- **Foundation build** (knowledge store, memory, intake pipeline,
   knowledge graph, auth layer, etc.) — where "not quite right"
   is expensive later.
 - **Cross-domain construction** (>2 domain boundaries) —
@@ -201,8 +201,8 @@ docs/reviews/audits/
 - **NOT** frame POST-MVP-VISION as a "backlog task" and
   blindly file it via `task_creation`. **INSTEAD** check the
   roadmap mapping — many pre-MVP concepts already have a
-  post-MVP milestone slot (e.g. `intake-mvp` →
-  `intake-worker` → `enterprise-intake`). Only when no slot
+  post-MVP milestone slot (e.g. `<area>-mvp` →
+  `<area>-worker` → `enterprise-<area>`). Only when no slot
   exists: a new task in the right milestone, not generic
   "backlog". Because: the roadmap topology is lost when
   everything ends up as a generic backlog task.

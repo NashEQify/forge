@@ -150,34 +150,34 @@ Full workflows that traverse multiple layers:
 async def test_entity_lifecycle(client: AsyncClient):
     """Full lifecycle: Create -> Get -> Update -> Search -> Delete."""
     # Create
-    resp = await client.post("/api/brain/entities", json={
+    resp = await client.post("/api/store/entities", json={
         "name": "e2e-test", "entity_type": "concept",
     })
     assert resp.status_code == 201
     entity_id = resp.json()["id"]
 
     # Get
-    resp = await client.get(f"/api/brain/entities/{entity_id}")
+    resp = await client.get(f"/api/store/entities/{entity_id}")
     assert resp.status_code == 200
     assert resp.json()["name"] == "e2e-test"
 
     # Update
-    resp = await client.patch(f"/api/brain/entities/{entity_id}", json={
+    resp = await client.patch(f"/api/store/entities/{entity_id}", json={
         "name": "e2e-updated",
     })
     assert resp.status_code == 200
 
     # Search
-    resp = await client.get("/api/brain/search?q=e2e-updated")
+    resp = await client.get("/api/store/search?q=e2e-updated")
     assert resp.status_code == 200
     assert any(e["id"] == entity_id for e in resp.json()["items"])
 
     # Delete
-    resp = await client.delete(f"/api/brain/entities/{entity_id}")
+    resp = await client.delete(f"/api/store/entities/{entity_id}")
     assert resp.status_code == 204
 
     # Verify deleted
-    resp = await client.get(f"/api/brain/entities/{entity_id}")
+    resp = await client.get(f"/api/store/entities/{entity_id}")
     assert resp.status_code == 404
 ```
 
@@ -214,10 +214,10 @@ Note in the verification report: `Browser E2E: SKIPPED — no custom UI present.
 
 ### 4.1 Define hypothesis strategies
 
-Reusable strategies live in `tests/brain/strategies.py`:
+Reusable strategies live in `tests/store/strategies.py`:
 
 ```python
-# tests/brain/strategies.py
+# tests/store/strategies.py
 from hypothesis import strategies as st
 import numpy as np
 
@@ -272,7 +272,7 @@ pytest tests/ -m "property" -v --hypothesis-seed=0 -s
 On a hypothesis failure:
 
 1. **Read the minimal counter-example** — hypothesis automatically shrinks to the smallest input that reproduces the error.
-2. **Reproduce** — the seed is in the output: `pytest tests/brain/test_properties.py --hypothesis-seed=<SEED>`
+2. **Reproduce** — the seed is in the output: `pytest tests/store/test_properties.py --hypothesis-seed=<SEED>`
 3. **Identify root cause** — is it an app bug or an over-tight test?
 4. **Fix + retest** — after the fix, run the same seed again.
 
@@ -331,19 +331,19 @@ async def test_openapi_schema_available():
 
 
 @pytest.mark.smoke
-async def test_brain_search_responds():
-    """Smoke: brain search endpoint responds (may be empty)."""
+async def test_store_search_responds():
+    """Smoke: store search endpoint responds (may be empty)."""
     async with AsyncClient(base_url=PROD_URL) as c:
-        resp = await c.get("/api/brain/search?q=test")
+        resp = await c.get("/api/store/search?q=test")
     assert resp.status_code == 200
     assert "items" in resp.json()
 
 
 @pytest.mark.smoke
-async def test_brain_entities_list():
+async def test_store_entities_list():
     """Smoke: entity list responds."""
     async with AsyncClient(base_url=PROD_URL) as c:
-        resp = await c.get("/api/brain/entities?limit=1")
+        resp = await c.get("/api/store/entities?limit=1")
     assert resp.status_code == 200
 ```
 

@@ -7,7 +7,7 @@
 
 # Historical future-system discussion (not an executable contract)
 
-Documents how this skill changes once the Brain is built (ARCH-009). No code — design intent.
+Documents how this skill would change once a knowledge store (the Brain below) is built. No code — design intent.
 
 ## Forward-compatibility table
 
@@ -29,7 +29,7 @@ Documents how this skill changes once the Brain is built (ARCH-009). No code —
 - ACT sets valid_until on existing relations on CONTRADICTS/OBSOLETES, creates new ones with valid_from
 - RECURSE traverses the Neo4j graph instead of recursively reading files
 
-**Dual write:** Brain first (SoT), then MD (cache). Dynamic MDs are kept fresh by the background curator (ARCH-010).
+**Dual write:** Brain first (SoT), then MD (cache). Dynamic MDs are kept fresh by the background curator.
 
 **SOURCE_REF dispatch → Cognee ECL:** the dispatcher routes to the Cognee ECL pipeline. Custom DataPoints control the ontology. Document pointer in Postgres is still written.
 

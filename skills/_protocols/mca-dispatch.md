@@ -53,7 +53,9 @@ goes into the brief file, and the acceptance check runs again on the file. The d
 part 3 holds only what that work uses, never a summary of earlier tasks, passes or the session. Buddy saves the
 dispatch text in the dispatch file before dispatching, under a first line `BASE: <sha>`
 (`skills/code_review_board/review-package.md` §BASE) and a second line `MODEL: <model> (<role row>)`, the model the
-call passes (`framework/models.md` §Naming the model).
+call passes (`framework/models.md` §Naming the model). Before dispatching, check the brief's fit to the implementer's
+context (`framework/spec-engineering-implementation-specs.md` §Convention: one goal per change, fit to the delegate's
+context).
 
 When the brief requires `skills/impl_plan_review/SKILL.md`, the implementer writes its plan to the report file and
 replies `PARTIAL` with `plan ready for review` in Concerns; Buddy runs the review and dispatches again with the gate's

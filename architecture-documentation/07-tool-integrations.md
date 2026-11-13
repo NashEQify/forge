@@ -94,7 +94,7 @@ offers differs; treat unverified rows as unknown, not as parity.
 | Host | Isolated agent | Persistent user-visible session | Own worktree per writer |
 |---|---|---|---|
 | Claude desktop app | Subagents | Yes. A session started without a worktree shares the commissioning checkout and branch (observed: `git rev-parse --show-toplevel` → the main checkout, branch `main`) | Optional at session start (own worktree and branch) |
-| Claude Code CLI | Subagents | Background sessions per the host documentation; not verified here | Per the host documentation (subagent and background-session isolation); not verified here |
+| Claude Code CLI | Subagents | Background sessions per the host documentation; not verified here | `--worktree [name]` starts a session in a new git worktree (seen in `claude --help`); per the host documentation it lies inside the checkout at `.claude/worktrees/<name>` on branch `worktree-<name>`, location not verified by a run |
 | Codex | General agents reading the role file (the plugin lists no roles; generated role copies only in the Forge repository's own `.codex/agents/`) | Not verified | Not verified |
 | OpenCode | General agents reading the role file | Not verified | Not verified |
 | Cursor | Not verified | Not verified | Host worktree feature; not verified here |
@@ -117,7 +117,8 @@ session start is refused in a turn that the completion notice of the
 coordinating chat's own background agent began: the start tool answered with a
 refusal that asked for a proposal instead, so no turn of such a chain started
 the next session; starts in turns begun by the user's message or by a session's
-turn end succeeded. Second, every session turn end begins a turn of the
+turn end succeeded (the latter not while the user works over Remote Control, the
+fourth limit below). Second, every session turn end begins a turn of the
 coordinating chat that expects a reply, also when the session brought neither a
 return nor a question. The order of calls and the one-line reply that answer
 them: `agents/buddy/coordinating-sessions.md` §Coordinator, §One reading place.
@@ -129,6 +130,12 @@ holds it. Peers that message each other therefore cannot run for long without
 the user; Forge runs parallel work under one coordinator instead. What the
 coordinator does about the cap: `agents/buddy/coordinating-sessions.md` §One
 reading place.
+A fourth limit of the Claude desktop app was seen in use, not tested by a run:
+while the user works over Remote Control, a turn begun by a session's turn end
+cannot start a session (the start tool says so and asks to tell the user in one
+line to start it in the desktop app); in the same use a start in a turn the user
+began succeeded, and so did a further brief to an existing session. What the
+coordinator does then: `agents/buddy/coordinating-sessions.md` §Coordinator.
 A host's permission prompts for a session's tool
 calls appear in that session, not in the coordinating chat. Other hosts' start
 models, turn-end notices and archiving are not verified here.

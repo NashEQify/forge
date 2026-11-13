@@ -213,6 +213,9 @@ When multiple agents run in parallel:
   foreground and return its result. Checking whether dispatched work still runs
   (its state, its output location) is not peeking:
   `agents/buddy/background-wait.md`.
+- **Checkout check.** A dispatch that gives the agent a checkout and branch to
+  commit in carries the check of `agents/buddy/concurrent-writers.md`
+  §Writer's checkout check.
 - **Persistent sessions** return through a return artifact (plus the
   host's notification where it has one), not a tool result. Don't peek applies to their transcripts too;
   ownership: `agents/buddy/coordinating-sessions.md`; integration: `agents/buddy/concurrent-writers.md`.

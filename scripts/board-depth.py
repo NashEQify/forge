@@ -6,9 +6,9 @@ Bestimmt ob eine Spec Quick oder Deep reviewed werden muss.
 4 Checks — mindestens 1 JA → Deep.
 
 Usage:
-  python3 scripts/board-depth.py brain-search-v2
-  python3 scripts/board-depth.py docs/specs/brain-search-v2.md
-  python3 scripts/board-depth.py --project-root /path/to/project brain-search-v2
+  python3 scripts/board-depth.py my-spec
+  python3 scripts/board-depth.py docs/specs/my-spec.md
+  python3 scripts/board-depth.py --project-root /path/to/project my-spec
 
 Exit-Codes:
   0 = QUICK
@@ -160,7 +160,7 @@ def main():
     )
     parser.add_argument(
         "spec",
-        help="Spec name (e.g. brain-search-v2) or path (docs/specs/brain-search-v2.md)",
+        help="Spec name (e.g. my-spec) or path (docs/specs/my-spec.md)",
     )
     parser.add_argument(
         "--project-root",
@@ -181,7 +181,7 @@ def main():
         SPEC_MAP = SPECS_DIR / "SPEC-MAP.md"
 
     spec_input = args.spec
-    # Normalize: accept "brain-search-v2" or "docs/specs/brain-search-v2.md"
+    # Normalize: accept "my-spec" or "docs/specs/my-spec.md"
     spec_name = Path(spec_input).stem.replace(".md", "")
     spec_path = SPECS_DIR / f"{spec_name}.md"
 

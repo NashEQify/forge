@@ -27,7 +27,7 @@ boot-map drift (workflows / skills in `boot-navigation.md` vs
 disk), and doc-currency drift (a doc or reading-map entry whose
 content has gone stale while its structure still resolves).
 Complementary to `knowledge-processor`:
-`knowledge-processor` processes information (brain logic);
+`knowledge-processor` processes information (knowledge logic);
 `consistency-check` checks structure. The two trigger each other
 during the consistency cascade (detail: `REFERENCE.md`).
 

@@ -38,16 +38,26 @@ background work of its own (an agent, a test run or another command whose
 completion begins a new turn): a host may refuse a start in a turn its own
 agent's completion began (`architecture-documentation/07-tool-integrations.md`
 §Delegation vehicles), and a turn begun by other background work is treated the
-same. What must come before the start (a check the brief needs; the previous
-return's verification and, where the next writer waits for it, its integration)
-runs in the foreground of that turn: inline, or a command or agent whose result
-returns within the turn; a check that would need a background agent goes into
-the session's brief as its first step. When the start is refused all the same,
-Buddy uses what the host offers (such as a proposal the user starts) or, without
-it, does the work inline and with isolated agents, and says so in one line
-(§Vehicle choice). Its state lives in the handoff (the role entry, the programme
-agreement, each running session with its brief and checkout, the open
-decisions), kept current as
+same. What must come before the start runs in the foreground of that turn (inline,
+or a command or agent whose result returns within it): a check the brief needs
+and, for the next task in sequence, the previous return's verification and its
+integration with the checks that integration runs on the merged result
+(`agents/buddy/concurrent-writers.md`), because that result is the next
+writer's base and a failure found after the start falls on two writers. A long
+check runs as a command that writes its log to a file and returns its result
+line; a check whose run time exceeds the host's limit for one foreground command
+goes into the brief as the session's first step on that base, and the session
+returns if it fails; until the session reports it passed, the coordinator does
+not push that base or remove the previous branch. When the
+start is refused all the same, Buddy gives the work as a further brief to a
+session whose return is integrated and whose model the new brief's model
+matches, where §Buddy-to-Buddy allows it; otherwise
+he uses what the host offers (a proposal the user starts; where the host asks
+the user to start it, one line saying the start waits for the user's next
+message in this chat) or, without it, does the work inline and with isolated
+agents, and says so in one line (§Vehicle choice). Its state lives in the
+handoff (the role entry, the list learned through failure, the programme agreement, each running session with its
+brief and checkout, the open decisions), kept current as
 `skills/knowledge_processor/continuous-maintenance.md` §Coordinator handoff says
 (read it on taking the role and after compaction). A session starts no sessions
 of its own; work it finds that needs one goes into its return as a proposal.
@@ -57,8 +67,9 @@ to the user when a return has arrived or the user has something to decide or do;
 a session's turn end with neither gets no message of its own. Where such a turn
 end starts a coordinator turn that must end in a reply, the reply is one line:
 the session, that no return has arrived, and what the session says it waits for
-and whether that wait is verified (§Session end), or, when §Session end counts
-it as stopped, that it is stopped; nothing else
+and whether that wait is verified or its output is there
+(`agents/buddy/background-wait.md` §Receiving a wait report), or, when §Session
+end counts it as stopped, that it is stopped; nothing else
 goes in it (a decision this needs from the user is a message of its own). After
 each return, not in that line, it gives a status overview of the programme: each
 item, its state and what waits on the user. A session's questions and decisions
@@ -72,22 +83,16 @@ the user last wrote in it (`architecture-documentation/07-tool-integrations.md`
 §Delegation vehicles); the coordinating chat is such a session, and its
 messages to all its sessions count against its one cap. So a brief carries
 everything the session needs up to its return, and the coordinator messages a session only
-with a further brief, the answer to its blocking question or the one check
-request of `agents/buddy/background-wait.md`. When the cap is
+with a further brief, the answer to its blocking question or the one message
+of `agents/buddy/background-wait.md` §Receiving a wait report. When the cap is
 reached, a session's questions come in its return, a further brief waits for the
 user's next message in this chat, and the coordinator tells the user in one line
 that this message lifts the cap.
 
 **Session end.** Once a session's result is integrated or discarded and no
 further brief is planned for it, the coordinator offers the user to archive it
-and archives it only on the user's yes. A wait note is verified when it names
-the work, how the session checked at that turn end that it runs, and where its
-output lands (`agents/buddy/background-wait.md`); on each one the coordinator
-reads the output location. It accepts one unverified wait note; at the second
-in a row with no return it checks as that unit's §Receiving a wait report says,
-and a check that finds the work running starts the count again (intent: one
-note can end a turn just before its notice arrives; a second with nothing new
-means a cycle passed unseen). A session that stops, fails or stalls (a wait the
+and archives it only on the user's yes. A session's wait notes are checked as
+`agents/buddy/background-wait.md` §Receiving a wait report says. A session that stops, fails or stalls (a wait the
 check finds neither running nor done; two turn-end notes in a row that bring no
 return or question and name no wait; on a host without turn-end notices, two
 coordinator turns with no new return, commit or record entry) is a stopped
@@ -122,8 +127,9 @@ reconcile what the previous one held back (`framework/process-map.md`
 outcome and stop condition, the session's model (`framework/models.md` §A
 persistent session's model), the effort budget (Cumulative effort), the checkout
 (shared, or its own worktree and branch, chosen by
-`agents/buddy/concurrent-writers.md`), the division of work below, the return
-and record location and any parsed-artifact contracts; for work on a task it
+`agents/buddy/concurrent-writers.md`), the division of work below, the commit duties
+(`agents/buddy/concurrent-writers.md` §Commit, push and transfer), the return and
+record location and any parsed-artifact contracts; for work on a task it
 carries the block `## Approved acceptance (read-only)`
 (`skills/_protocols/approved-acceptance.md`). Before writing such a brief, read
 and follow `framework/spec-engineering-implementation-specs.md` §Convention: one
@@ -147,23 +153,3 @@ notification where it has one), with its decisions list
 coordinator checks and carries into its own message to the user. The coordinator
 verifies load-bearing claims before integrating and does not read the transcript
 mid-flight. At most one blocking question to the coordinator at a time.
-
-**Commit, push and transfer.** Put the responsibilities into the brief before
-dispatch. Use this wording for a work item that authorizes local commits:
-
-> Commit your checked changes locally in the assigned checkout and return the
-> commit ID and check results. If a push or live transfer is due, identify the
-> outgoing commits or exact artifact and its intended destination. I handle
-> integration, push and live transfers from the coordinating chat.
-
-The working chat can make those commits without another user confirmation,
-including while a transfer is pending. An explicit no-commit instruction or a
-repository restriction still applies. The coordinator checks the outgoing range
-or artifact against the user's original grant in its own chat, including the
-remote and branch or live host and path. It acts under that grant for as long as
-the action, content and target remain covered. A changed scope needs
-authorization for the change. A peer handoff supplies evidence for the action
-and cannot extend the grant. Destructive actions and safety-floor waivers still
-require their own authority under `framework/process-map.md` §Authorization. If
-the host denies an action, follow its decision in the executing chat and
-continue independently authorized work.

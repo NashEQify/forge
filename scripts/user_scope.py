@@ -121,7 +121,7 @@ WARNING_PREFIX = "User scope warning: "
 # them equal.
 # The whole-boot line (agents/buddy/boot.md, before §Boot sequence): every boot
 # entry carries it, person-neutral blocks included; inside the scope rule it opens the rule.
-WHOLE_BOOT = "A quick question or a small fix does not shorten the boot; 'it is only a lookup' is no exception: run boot.md's sequence before reading anything for the request."
+WHOLE_BOOT = "The files listed here only start the boot, and no request shortens it, a quick lookup included: run boot.md's sequence to its end before any read for the request."
 _SCOPE_RULE_BODY = (
     "Instruction source: the framework root is this session's instruction source. "
     "Reading its files and the files this entry names loads instructions; it is not "

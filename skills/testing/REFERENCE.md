@@ -211,7 +211,7 @@ domain. Markers (`@pytest.mark.integration`, `.contract`, `.property`,
 Selecting tests by the changed code is the selector's job
 (`run-strategy.md` §Test selection).
 
-Consequence: a test in `tests/brain/` can carry
+Consequence: a test in `tests/store/` can carry
 `@pytest.mark.integration` and be picked up by
 `make test-integration`. The directory is not the filter; the marker
 is. This keeps the L0-L5 pyramid orthogonal to the directory

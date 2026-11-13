@@ -33,7 +33,7 @@ OUTPUT_PATH = ROOT / "docs" / "architecture" / "generated" / "component-status.m
 REFERENCE_SPECS = {
     "knowledge-architecture",   # High-level architecture, no direct code
     "cognitive-architecture",   # Theoretical model
-    "graph-ontology",           # Reference catalog, implemented via brain-foundation
+    "graph-ontology",           # Reference catalog, implemented by a foundation spec
     "harness-runtime-patterns", # Day-N patterns, cross-cutting reference
     "architecture-overview",    # Gesamtbild, no direct code
 }
@@ -113,8 +113,8 @@ def parse_task_yamls(tasks_dir: Path) -> list[TaskInfo]:
 
             spec_ref = data.get("spec_ref") or ""
             if isinstance(spec_ref, str):
-                # Normalize: "brain-foundation.md" → "brain-foundation"
-                # Also handle "docs/specs/architecture-portal.md"
+                # Normalize: "my-spec.md" → "my-spec"
+                # Also handle "docs/specs/my-spec.md"
                 spec_ref = spec_ref.strip().strip('"').strip("'")
                 spec_ref = spec_ref.replace("docs/specs/", "")
                 if spec_ref.endswith(".md"):

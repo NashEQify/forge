@@ -61,7 +61,9 @@ Empty `target:` = validation fail. All same `target:` = missed
 triage anti-pattern. `risk-followup-routing` files new_tasks
 mechanically.
 
-**Proportionality triage (NON-NEGOTIABLE on FAIL):**
+**Proportionality triage** (every verdict, NON-NEGOTIABLE on FAIL; a `fix-now` finding is fixed on PASS and
+PASS_WITH_RISKS too, checked as `review-package.md` §Small fix after a passing review decides, else by the §4
+re-verify table):
 
 | Disposition | Criterion |
 |---|---|
@@ -78,14 +80,15 @@ caller; a spec-caused one goes to the spec in this pass.
 
 **Pre-existing defects.** First: a product defect under the code paths of an entry in the project's `intent.md`
 `## Core mechanisms` that carries `product gaps: always closed` (its observable outcome contradicts the entry's spec)
-is triaged as if this change introduced it; the verdict names the entry. Every other finding about behavior this change neither
-introduced nor exposed (its observable outcome reproduces on the pre-change
+is triaged as if this change introduced it; the verdict names the entry. Second: a finding the Mechanism-cell floor
+below blocks follows that floor, also when it reproduces on the baseline.
+Every other finding about behavior this change neither introduced nor exposed (its observable outcome reproduces on the pre-change
 baseline through the same entry point, and it is not the reported defect) does not block this change: `accept` with the limit
 recorded in the verdict, `watch`, or `new_task` under the value floor. An
 acceptance criterion about what the fix or change does binds this change,
 not prior state; it is in scope only when its observable outcome fails now.
-Such a pre-existing CRITICAL or safety-floor defect goes to the user as a scope
-decision, not into this fix pass.
+Outside the first two cases, a pre-existing CRITICAL or safety-floor defect goes to
+the user as a scope decision, not into this fix pass.
 
 **Hard floor LOW:** standalone LOW → `accept`. LOW → `new_task`
 FORBIDDEN. LOW feels important = severity wrong; re-classify MEDIUM

@@ -138,7 +138,7 @@ FastAPI, NATS and LLM calls. Apply the parts that match your stack:
 - [ ] Prompt cache reuse where possible.
 - [ ] Retry with backoff + jitter + max cap.
 
-### Brain search
+### Vector search
 - [ ] Limit parameter set.
 - [ ] HNSW index active on pgvector.
 - [ ] Query rewriting only where benefit is clear.

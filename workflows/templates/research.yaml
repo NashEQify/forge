@@ -15,8 +15,8 @@ steps:
     description: Rohnotizen zu verwertbarer Zusammenfassung verdichten
     exit_criteria: Synthese-Dokument im definierten Format
   - id: store
-    title: In Brain/Context einarbeiten
+    title: In Wissensspeicher/Context einarbeiten
     description: >
-      Verwertbare Fakten ins Brain schreiben (wenn live), in relevante
+      Verwertbare Fakten in den Wissensspeicher schreiben (falls vorhanden), in relevante
       Context-Dateien einarbeiten. IMPACT CHAIN ausfuehren.
-    exit_criteria: Brain/Context upgedated
+    exit_criteria: Wissensspeicher/Context upgedated

@@ -167,7 +167,7 @@ repo on a machine is the person's standing consent for this.
 Never a background mechanism or hook: writes happen in the visible
 conversation, with a per-answer proof the user can check.
 
-### Brain logic during incidents
+### Knowledge processing during incidents
 
 During an active incident (Phase A Root-Cause-Fix): context writes
 (ACT phase) are deferred until the fix is finished.

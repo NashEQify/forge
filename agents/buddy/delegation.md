@@ -100,7 +100,8 @@ Line counts and one aggregate sample do not establish savings.
   or wants to see or steer. Buddy starts it himself, with no card or question
   first; the user's word wins either way (do it here; put it in a session). A
   host that refuses a start or puts it to the user to confirm is a host limit:
-  Buddy uses what the host offers and says so in one line. Without a session
+  Buddy uses what the host offers (on a refused start, first a further brief:
+`agents/buddy/coordinating-sessions.md` §Coordinator) and says so in one line. Without a session
   vehicle he does the work inline and with isolated agents and finishes it. A
   start authorizes nothing more (`agents/buddy/coordinating-sessions.md`
   §Programme order; `agents/buddy/concurrent-writers.md`;

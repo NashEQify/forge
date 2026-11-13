@@ -265,9 +265,11 @@ user.
 
 Default: **max 2 re-reviews**, then `skills/convergence_loop/at-the-cap.md` §At the cap. But:
 
-- **Foundation tasks** (intake-mvp, brain-foundation, brain-schema,
-  schema-foundation, harness-runtime-patterns, other tier-1 builds):
-  Buddy may override the limit if convergence / severity drop per
+- **Foundation tasks** (a build whose code later work builds on: the plan
+  names it as the base of a later milestone, or two or more open tasks name
+  it in `blocked_by`; a placement edge under
+  `skills/_protocols/mechanism-model.md` alone does not count): Buddy may
+  override the limit if convergence / severity drop per
   re-review is measurable (e.g. pass 1 FAIL 3C+16H → pass 2 FAIL
   0C+4H → pass 3 FAIL 0C+1H → pass 4 PASS). Foundation work needs
   to settle — better 4 reviews than permanent architecture drift.
@@ -298,8 +300,8 @@ fix-claim names a third-party teardown / lifecycle API (`close` /
 until the **installed** SDK surface is shell-verified (e.g. `python3 -c
 "import openai; print(hasattr(openai.AsyncOpenAI,'close'),
 hasattr(openai.AsyncOpenAI,'aclose'))"`) — not the remembered API.
-Observed: a `_close_client_quietly` resolved only `aclose`, absent on
-the installed openai 2.41.1 → `close()` a silent no-op, the pooled
+Observed: a client-close helper resolved only `aclose`, absent on
+the installed SDK version → `close()` a silent no-op, the pooled
 transport leaked at every drain. A "wired-but-ineffective" fix passes
 the Phase-2 "addressed?" column until the installed surface is checked
 (`evidence-author-claims.md` §8.3, re-review layer).

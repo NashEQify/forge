@@ -81,6 +81,17 @@ def _link_refusal(path: str) -> str:
     )
 
 
+def _first_link(root: Path, relative: str) -> str | None:
+    """Repository-relative path of the first component of `relative` that is a link."""
+    walked = root
+    parts = relative.split("/")
+    for i, part in enumerate(parts):
+        walked = walked / part
+        if walked.is_symlink():
+            return "/".join(parts[: i + 1])
+    return None
+
+
 def _nonblank(value: Any) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
@@ -124,10 +135,9 @@ def _under(path: str, prefix: str) -> bool:
 
 
 def _target(root: Path, relative: str) -> Path:
-    path = root
-    for part in _path(relative).split("/"):
-        path = path / part
-        _require(not path.is_symlink(), f"unsupported symlink: {relative}")
+    rel = _path(relative)
+    _require(_first_link(root, rel) is None, f"unsupported symlink: {relative}")
+    path = root / rel
     _require(
         path.resolve().is_relative_to(root.resolve()),
         f"path escapes project: {relative}",
@@ -358,7 +368,19 @@ def capture_subject(
         changes: list[dict[str, Any]] = []
         for path in sorted(set(before) | current):
             old = before.get(path, {"type": "absent"})
-            _require(not (root / path).is_symlink(), _link_refusal(path))
+            link = _first_link(root, path)
+            if link == path:
+                raise ReviewRefusal(_link_refusal(path))
+            if link and path in files:
+                raise ReviewRefusal(
+                    f"required input reached through symbolic link {link}: {path} "
+                    f"(name the file's real path in files instead, and declare {path} in exclude_files)"
+                )
+            if link:
+                raise ReviewRefusal(
+                    f"path reached through symbolic link {link}: {path} "
+                    f"(declare {path} in exclude_files to record its omission with the capture)"
+                )
             new = _endpoint(root, path)
             if old != new:
                 changes.append({"path": path, "before": old, "after": new})

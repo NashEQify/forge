@@ -31,10 +31,10 @@ from pathlib import Path
 
 def test_no_string_formatting_in_sql():
     """PG-U1: No f-strings or .format() in SQL queries."""
-    brain_src = Path("src/myapp/db/")
+    store_src = Path("src/myapp/db/")
     violations = []
 
-    for py_file in brain_src.rglob("*.py"):
+    for py_file in store_src.rglob("*.py"):
         source = py_file.read_text()
         tree = ast.parse(source)
         for node in ast.walk(tree):
@@ -63,32 +63,32 @@ def test_no_string_formatting_in_sql():
 import pytest
 
 
-async def test_optional_field_stored_as_null(brain):
+async def test_optional_field_stored_as_null(store):
     """PG-U2: Optional fields → SQL NULL, not the string 'None'."""
-    entity_id = await brain.create_entity(
+    entity_id = await store.create_entity(
         name="null-test",
         entity_type="test",
         metadata=None,  # optional field
     )
-    entity = await brain.get_entity(entity_id)
+    entity = await store.get_entity(entity_id)
 
     # Must be None, not the string "None"
     assert entity["metadata"] is None
 
 
-async def test_optional_field_roundtrip(brain):
+async def test_optional_field_roundtrip(store):
     """PG-U2: Entity storable with and without optional fields."""
     # With metadata
-    id_with = await brain.create_entity(
+    id_with = await store.create_entity(
         name="with-meta", entity_type="test", metadata={"key": "value"},
     )
     # Without metadata
-    id_without = await brain.create_entity(
+    id_without = await store.create_entity(
         name="without-meta", entity_type="test",
     )
 
-    e_with = await brain.get_entity(id_with)
-    e_without = await brain.get_entity(id_without)
+    e_with = await store.get_entity(id_with)
+    e_without = await store.get_entity(id_without)
 
     assert e_with["metadata"] == {"key": "value"}
     assert e_without["metadata"] is None
@@ -107,18 +107,18 @@ async def test_optional_field_roundtrip(brain):
 import uuid
 
 
-async def test_uuid_format(brain):
+async def test_uuid_format(store):
     """PG-U3: Generated IDs are valid UUID4."""
-    entity_id = await brain.create_entity(name="uuid-test", entity_type="test")
+    entity_id = await store.create_entity(name="uuid-test", entity_type="test")
     parsed = uuid.UUID(entity_id)
     assert parsed.version == 4
 
 
-async def test_uuid_uniqueness(brain):
+async def test_uuid_uniqueness(store):
     """PG-U3: 100 generated IDs are all unique."""
     ids = []
     for i in range(100):
-        eid = await brain.create_entity(name=f"unique-{i}", entity_type="test")
+        eid = await store.create_entity(name=f"unique-{i}", entity_type="test")
         ids.append(eid)
 
     assert len(ids) == len(set(ids)), "UUID duplicates found"
@@ -137,27 +137,27 @@ async def test_uuid_uniqueness(brain):
 import json
 
 
-async def test_jsonb_query_by_key(brain):
+async def test_jsonb_query_by_key(store):
     """PG-U4: JSONB query by key returns correct results."""
-    await brain.create_entity(
+    await store.create_entity(
         name="jsonb-test",
         entity_type="test",
         metadata={"category": "alpha", "priority": 1},
     )
-    results = await brain.search_entities_by_metadata(key="category", value="alpha")
+    results = await store.search_entities_by_metadata(key="category", value="alpha")
     assert len(results) >= 1
     assert results[0]["metadata"]["category"] == "alpha"
 
 
-async def test_jsonb_stored_as_jsonb_not_string(brain):
+async def test_jsonb_stored_as_jsonb_not_string(store):
     """PG-U4: metadata is stored as JSONB, not as a string."""
-    entity_id = await brain.create_entity(
+    entity_id = await store.create_entity(
         name="jsonb-type-test",
         entity_type="test",
         metadata={"nested": {"deep": True}},
     )
     # Direct DB query to check the actual type
-    row = await brain._conn.fetchrow(
+    row = await store._conn.fetchrow(
         "SELECT pg_typeof(metadata) AS dtype FROM entities WHERE id = $1",
         entity_id,
     )
@@ -222,21 +222,21 @@ import pytest
 
 
 @pytest.mark.integration
-async def test_read_your_own_writes(brain):
+async def test_read_your_own_writes(store):
     """PG-I2: Within a transaction, your own writes are immediately visible."""
-    entity_id = await brain.create_entity(name="ryow-test", entity_type="test")
-    entity = await brain.get_entity(entity_id)
+    entity_id = await store.create_entity(name="ryow-test", entity_type="test")
+    entity = await store.get_entity(entity_id)
     assert entity is not None
     assert entity["name"] == "ryow-test"
 
 
 @pytest.mark.integration
-async def test_concurrent_writes_no_lost_updates(brain_pool):
+async def test_concurrent_writes_no_lost_updates(store_pool):
     """PG-I2: Parallel updates do not lose data."""
     from myapp.db.core import Repo
 
     # Create a shared entity
-    async with brain_pool.acquire() as conn:
+    async with store_pool.acquire() as conn:
         b = Repo(conn)
         entity_id = await b.create_entity(name="concurrent-test", entity_type="counter")
 
@@ -252,10 +252,10 @@ async def test_concurrent_writes_no_lost_updates(brain_pool):
                 eid,
             )
 
-    tasks = [increment(brain_pool, entity_id, i) for i in range(10)]
+    tasks = [increment(store_pool, entity_id, i) for i in range(10)]
     await asyncio.gather(*tasks)
 
-    async with brain_pool.acquire() as conn:
+    async with store_pool.acquire() as conn:
         b = Repo(conn)
         entity = await b.get_entity(entity_id)
     assert entity["metadata"]["counter"] == 10, "Lost update: not all increments counted"
@@ -275,15 +275,15 @@ import pytest
 
 
 @pytest.mark.integration
-async def test_entity_lookup_uses_index(brain):
+async def test_entity_lookup_uses_index(store):
     """PG-I3: Entity lookup by ID uses index, not seq scan."""
     # Enough data so the planner does not prefer a seq scan
     for i in range(100):
-        await brain.create_entity(name=f"idx-test-{i}", entity_type="test")
+        await store.create_entity(name=f"idx-test-{i}", entity_type="test")
 
-    entity_id = await brain.create_entity(name="target", entity_type="test")
+    entity_id = await store.create_entity(name="target", entity_type="test")
 
-    plan = await brain._conn.fetchval(
+    plan = await store._conn.fetchval(
         "EXPLAIN (FORMAT TEXT) SELECT * FROM entities WHERE id = $1",
         entity_id,
     )
@@ -291,22 +291,22 @@ async def test_entity_lookup_uses_index(brain):
 
 
 @pytest.mark.integration
-async def test_vector_search_uses_index(brain):
+async def test_vector_search_uses_index(store):
     """PG-I3: Vector nearest-neighbour uses HNSW/IVFFlat index."""
     # Seed with embeddings (at least 100 for IVFFlat)
     import numpy as np
     for i in range(100):
         embedding = np.random.rand(768).tolist()
-        await brain.create_entity(
+        await store.create_entity(
             name=f"vec-{i}", entity_type="test", embedding=embedding,
         )
 
     query_vec = np.random.rand(768).tolist()
-    plan = await brain._conn.fetchval(
+    plan = await store._conn.fetchval(
         "EXPLAIN (FORMAT TEXT) SELECT * FROM entities ORDER BY embedding <-> $1 LIMIT 10",
         str(query_vec),
     )
-    # HNSW or IVFFlat index scan expected (brain-schema.md: HNSW default)
+    # HNSW or IVFFlat index scan expected (the schema spec: HNSW default)
     assert "Seq Scan" not in plan or "Index" in plan, (
         f"Vector search does not use an index:\n{plan}"
     )
@@ -344,14 +344,14 @@ async def test_alembic_upgrade_downgrade(live_services):
 
 
 @pytest.mark.integration
-async def test_migration_preserves_data(brain):
+async def test_migration_preserves_data(store):
     """PG-I4: Data survives the migration cycle."""
-    entity_id = await brain.create_entity(name="migration-test", entity_type="test")
+    entity_id = await store.create_entity(name="migration-test", entity_type="test")
 
     # Alembic upgrade (no-op if already at head)
     subprocess.run(["alembic", "upgrade", "head"], check=True)
 
-    entity = await brain.get_entity(entity_id)
+    entity = await store.get_entity(entity_id)
     assert entity is not None, "Entity disappeared after migration"
     assert entity["name"] == "migration-test"
 ```
@@ -394,10 +394,10 @@ entity_metadata = st.one_of(
 @pytest.mark.property
 @given(name=entity_names, etype=entity_types, meta=entity_metadata)
 @settings(max_examples=50, deadline=5000)
-async def test_entity_roundtrip(brain, name, etype, meta):
+async def test_entity_roundtrip(store, name, etype, meta):
     """PG-P1: Every valid entity survives create → get identically."""
-    entity_id = await brain.create_entity(name=name, entity_type=etype, metadata=meta)
-    entity = await brain.get_entity(entity_id)
+    entity_id = await store.create_entity(name=name, entity_type=etype, metadata=meta)
+    entity = await store.get_entity(entity_id)
 
     assert entity["name"] == name
     assert entity["entity_type"] == etype
@@ -429,13 +429,13 @@ search_terms = st.text(
 @pytest.mark.property
 @given(term=search_terms)
 @settings(max_examples=30, deadline=5000)
-async def test_search_finds_existing_entity(brain, term):
+async def test_search_finds_existing_entity(store, term):
     """PG-P2: Entity with term in its name is found by search()."""
     assume(term.strip())  # No pure whitespace terms
     name = f"searchable-{term}-entity"
-    await brain.create_entity(name=name, entity_type="test")
+    await store.create_entity(name=name, entity_type="test")
 
-    results = await brain.search(query=term)
+    results = await store.search(query=term)
     found_names = [r["name"] for r in results]
     assert any(term in n for n in found_names), (
         f"search('{term}') did not find entity '{name}'. "
@@ -461,26 +461,26 @@ from hypothesis import strategies as st
 @pytest.mark.property
 @given(n_entities=st.integers(min_value=2, max_value=5))
 @settings(max_examples=20, deadline=10000)
-async def test_no_orphaned_relations_after_delete(brain, n_entities):
+async def test_no_orphaned_relations_after_delete(store, n_entities):
     """PG-P3: No orphaned relations after delete_entity()."""
     # Create N entities and chain them
     ids = []
     for i in range(n_entities):
-        eid = await brain.create_entity(name=f"rel-test-{i}", entity_type="test")
+        eid = await store.create_entity(name=f"rel-test-{i}", entity_type="test")
         ids.append(eid)
 
     # Create relations: 0→1, 1→2, ...
     for i in range(len(ids) - 1):
-        await brain.create_relation(
+        await store.create_relation(
             source_id=ids[i], target_id=ids[i + 1], relation_type="depends_on",
         )
 
     # Delete the middle entity
     target = ids[len(ids) // 2]
-    await brain.delete_entity(target)
+    await store.delete_entity(target)
 
     # Check: no relation references the deleted entity
-    orphans = await brain._conn.fetch(
+    orphans = await store._conn.fetch(
         """SELECT * FROM relations
            WHERE source_id = $1 OR target_id = $1""",
         target,
@@ -512,25 +512,25 @@ EMBEDDING_DIM = 768
 @pytest.mark.property
 @given(dim=st.integers(min_value=1, max_value=2000).filter(lambda d: d != EMBEDDING_DIM))
 @settings(max_examples=10, deadline=5000)
-async def test_wrong_embedding_dimension_rejected(brain, dim):
+async def test_wrong_embedding_dimension_rejected(store, dim):
     """PG-P4: Embedding with the wrong dimension is rejected."""
     wrong_embedding = np.random.rand(dim).tolist()
 
     with pytest.raises(Exception):  # ValueError or asyncpg.DataError
-        await brain.create_entity(
+        await store.create_entity(
             name="wrong-dim",
             entity_type="test",
             embedding=wrong_embedding,
         )
 
 
-async def test_correct_embedding_dimension_accepted(brain):
+async def test_correct_embedding_dimension_accepted(store):
     """PG-P4: Embedding with 768 dimensions is accepted."""
     embedding = np.random.rand(EMBEDDING_DIM).tolist()
-    entity_id = await brain.create_entity(
+    entity_id = await store.create_entity(
         name="correct-dim", entity_type="test", embedding=embedding,
     )
-    entity = await brain.get_entity(entity_id)
+    entity = await store.get_entity(entity_id)
     assert len(entity["embedding"]) == EMBEDDING_DIM
 ```
 
@@ -538,10 +538,10 @@ async def test_correct_embedding_dimension_accepted(brain):
 
 ## Reusable hypothesis Strategies
 
-These strategies can be placed in `tests/brain/strategies.py` and used via import:
+These strategies can be placed in `tests/store/strategies.py` and used via import:
 
 ```python
-# tests/brain/strategies.py
+# tests/store/strategies.py
 """Reusable hypothesis strategies for domain models."""
 from hypothesis import strategies as st
 import numpy as np
@@ -591,4 +591,4 @@ In execution mode for Postgres-related tests, walk through these criteria:
 7. New queries: PG-I3 (index usage via EXPLAIN)?
 8. New migrations: PG-I4 (up/down/up)?
 9. Property tests present for critical invariants: PG-P1 through PG-P4?
-10. hypothesis strategies from `tests/brain/strategies.py` used rather than rewritten?
+10. hypothesis strategies from `tests/store/strategies.py` used rather than rewritten?

@@ -18,7 +18,7 @@ Buddy checks before phase 1:
    `grep -h "^milestone:" docs/tasks/*.yaml | sort | uniq -c`.
    That is the roadmap topology — POST-MVP concepts from
    pre-MVP specs often already have a roadmap slot (e.g.
-   `intake-mvp` → `intake-worker` → `enterprise-intake`). The
+   `<area>-mvp` → `<area>-worker` → `enterprise-<area>`). The
    triage in phase 3 links to existing slots instead of
    creating new backlog entries.
 4. The spec directory exists and is filled
@@ -91,11 +91,11 @@ task lens is then too narrow.
 
 **Pattern observed:** phase 1 with task keywords filters out
 specs that are foundation-relevant but not task-relevant. Example
-recurrence: integration specs, harness-core/runtime patterns,
-cognitive-architecture, phase-plan specs are not HIGH in phase 1
+recurrence: integration specs, runtime-pattern specs,
+cognitive-model specs, phase-plan specs are not HIGH in phase 1
 when the task keyword is narrow (e.g. chat / intake) — but with
 the foundation lens they are HIGH-FOUNDATION (worker topology,
-brain architecture).
+store architecture).
 
 **When phase 1b is not needed:**
 - The build is single-domain without cross-cutting (e.g. a UI

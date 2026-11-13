@@ -164,8 +164,8 @@ carrier holds, its lifetime, what moves to the durable spec before close).
 
 ### Convention: one goal per change
 
-When the route decision counts two or more deliverables, and when a change spec (a session or implementation brief
-included) passes 12,000 bytes: read and follow
+When the route decision counts two or more deliverables, when a change spec (a session or implementation brief
+included) passes 12,000 bytes, and before dispatching any brief (its fit to the delegate's context): read and follow
 `framework/spec-engineering-implementation-specs.md` (§Convention: one goal per change: one user-facing goal, split
 and defer, the size budget).
 

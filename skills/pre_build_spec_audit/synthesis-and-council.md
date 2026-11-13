@@ -55,7 +55,7 @@ approach that could improve our current MVP solution. A
 trade-off analysis is needed.
 
 NEW-METHODOLOGY examples:
-- Pre-MVP had an outbox pattern for brain-vs-DB consistency —
+- Pre-MVP had an outbox pattern for graph-store-vs-DB consistency —
   we do best-effort. Outbox MVP-viable or too complex?
 - Pre-MVP had a trust pipeline with weighted confidence — we
   have binary quarantine. Pipeline MVP-relevant?

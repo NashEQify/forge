@@ -196,7 +196,7 @@ docs/reviews/coherence/
 
 ## Calibration data (foundation-spec review pass)
 
-- 4 foundation specs (HC4 × GBWI × HRP × brain-foundation):
+- 4 foundation specs (spec A × spec B × spec C × spec D):
   182 interfaces extracted, 99 consistent, 56 divergent, 21 gaps,
   11 HIGH decisions.
 - Typical effort: 2-3 sessions for 3-4 specs.

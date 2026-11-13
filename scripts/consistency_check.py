@@ -544,6 +544,7 @@ INSTRUCTION_UNIT_FILES = ("CLAUDE.md", "AGENTS.md")
 # Lookup references: read for one entry at the step, so the binding limit is whole arrival at that read.
 LOOKUP_REFERENCES: tuple[tuple[str, str], ...] = (
     ("framework/adopted-methods.md", "one adopted method's row"),
+    ("framework/adopted-methods-superpowers.md", "one adopted method's row"),
     ("framework/enforcement-registry.md", "one rule's row"),
     ("skills/code_review_board/REFERENCE.md", "one row or schema per question"),
     ("skills/consistency_check/REFERENCE-drift.md", "one check's detail at that check"),

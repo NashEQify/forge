@@ -48,8 +48,18 @@ of one result are one goal.
   above 12,000 held two goals. When a change spec passes 12,000 bytes (`wc -c`), state its size to the caller and
   offer a split by goal or keeping it whole. The caller's choice stands; a kept spec records its size and the reason
   where a split's answer goes. A durable spec at `spec_ref` is not measured by this budget.
+- **Fit to the delegate's context.** A brief is also cut so that its delegate finishes inside its context with room to
+  spare: what it must read before it starts leaves most of its window for the work (reading the code it changes, test
+  runs, a fix round). Before dispatch, the briefing agent adds up the bytes (`wc -c`) of the brief and of every file
+  the brief tells the delegate to read and, for a session, of its boot units, and compares the sum with the delegate's
+  context window as its host or the model's documentation states it, at about 3 bytes per token; when neither states
+  it, the window assumed is written in the dispatch file. When the sum passes a third of the window, it splits by goal as above, or narrows the
+  files to read to those the change touches; one goal that still does not fit is cut into steps that each end in a
+  commit and a report. The brief's stop limit (`skills/_protocols/mca-brief-template.md` §Stop limit) counts what the
+  delegate changed, not what it had to hold.
 
-Source: BMAD-METHOD (MIT License, © 2025 BMad Code, LLC); Forge's register of adopted methods.
+Source: BMAD-METHOD (MIT License, © 2025 BMad Code, LLC) and, for the fit to the delegate's context, Get Shit Done (MIT
+License, © 2025 Lex Christopherson); Forge's register of adopted methods.
 
 ### Convention: interfaces & protocols (optional, recommended for implementation specs)
 

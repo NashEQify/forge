@@ -719,17 +719,15 @@ _YAML_INFO = frozenset({"yaml", "yml"})
 
 def _scan_findings(
     content: str,
-    *,
-    reader: bool = False,
 ) -> tuple[list[_Finding], list[tuple[_Finding | None, int, Any]], list[str]]:
     """Scan body boundaries, owners and examples together; retain every block.
 
-    ``reader`` (``review_evidence`` only) keeps the heading, fence and ownership
-    rules with two differences: a block that fails to parse is reported in
-    ``errors`` and retained as ``_UNPARSED`` while the scan continues, and an
+    One reading of review evidence: headings, fences and ownership decide which
+    finding a block belongs to. A block that fails to parse is reported in
+    ``errors`` and retained as ``_UNPARSED`` while the scan continues. An
     ``evidence:`` block inside a ``yaml``/``yml`` fence is a body block of the
-    enclosing finding. Evidence inside any other fence is retained as
-    ``_UNPARSED`` so its finding still counts as carrying an evidence block.
+    enclosing finding; inside any other fence it is retained as ``_UNPARSED``,
+    so its finding still counts as carrying an evidence block.
     """
     lines = content.splitlines()
     frontmatter = _FRONTMATTER_RE.match(content)
@@ -755,7 +753,7 @@ def _scan_findings(
                 fence_char = ""
                 i += 1
                 continue
-            if not (reader and _EVIDENCE_RE.match(line)):
+            if not _EVIDENCE_RE.match(line):
                 i += 1
                 continue
             if not fence_yaml:
@@ -766,7 +764,7 @@ def _scan_findings(
         elif fence:
             fence_char, fence_length = fence.group(1)[0], len(fence.group(1))
             info = fence.group(2).split()
-            fence_yaml = reader and bool(info) and info[0].lower() in _YAML_INFO
+            fence_yaml = bool(info) and info[0].lower() in _YAML_INFO
             i += 1
             continue
         else:
@@ -822,17 +820,9 @@ def _scan_findings(
         location = owner.location if owner else f"line {block_line} (no finding owner)"
         try:
             parsed = yaml.safe_load("\n".join(snippet))
-        except yaml.YAMLError as exc:
-            if not reader:
-                raise EvidenceParseError(
-                    f"{location}, evidence line {block_line}: malformed YAML: {exc}"
-                ) from exc
+        except (yaml.YAMLError, ValueError) as exc:  # ValueError: e.g. an impossible date
             parsed = exc
-        except ValueError as exc:  # e.g. an impossible date; strict mode keeps raising
-            if not reader:
-                raise
-            parsed = exc
-        if reader and not (isinstance(parsed, dict) and "evidence" in parsed):
+        if not (isinstance(parsed, dict) and "evidence" in parsed):
             detail = f"malformed YAML: {parsed}" if isinstance(parsed, Exception) else "unreadable block"
             errors.append(f"{location}, evidence line {block_line}: {detail}")
             blocks.append((owner, block_line, _UNPARSED))
@@ -896,7 +886,7 @@ def review_evidence(content: str, *, repo_root: str) -> ReviewEvidence:
 
     if "evidence" in fm:
         collect(fm["evidence"], "frontmatter evidence")
-    findings, blocks, errors = _scan_findings(content, reader=True)
+    findings, blocks, errors = _scan_findings(content)
     result.diagnostics.extend(errors)
     with_blocks: set[int] = set()
     for owner, line, value in blocks:
@@ -1086,12 +1076,9 @@ def validate_content(
         if layout == "auto"
         else layout
     )
-    try:
-        # --strict reads evidence as review adoption does, yaml fences included.
-        findings, blocks, errors = _scan_findings(content, reader=strict)
-    except EvidenceParseError as exc:
-        return ValidationResult(sv, EXIT_PARSE_ERROR, [f"parse-error: {exc}"])
-    if parse_errors := [e for e in errors if ": malformed YAML: " in e]:  # the reader does not raise
+    # Both paths read evidence as review adoption does, yaml fences included.
+    findings, blocks, errors = _scan_findings(content)
+    if parse_errors := [e for e in errors if ": malformed YAML: " in e]:  # the scan reports, it does not raise
         return ValidationResult(sv, EXIT_PARSE_ERROR, [f"parse-error: {parse_errors[0]}"])
 
     def checked_list(value: Any, location: str) -> list[dict[str, Any]]:
