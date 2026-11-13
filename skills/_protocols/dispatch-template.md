@@ -208,8 +208,13 @@ When multiple agents run in parallel:
 - **Launch in one tool block.** When you launch multiple agents
   for independent work, send them in a single message with multiple
   tool-use content blocks so they run concurrently.
+- **No return while its own work runs.** Every dispatch tells the agent: do not
+  return while background work you started still runs; wait for it in the
+  foreground and return its result. Checking whether dispatched work still runs
+  (its state, its output location) is not peeking:
+  `agents/buddy/background-wait.md`.
 - **Persistent sessions** return through a return artifact (plus the
   host's notification where it has one), not a tool result. Don't peek applies to their transcripts too;
-  ownership and integration: `agents/buddy/coordinating-sessions.md`.
+  ownership: `agents/buddy/coordinating-sessions.md`; integration: `agents/buddy/concurrent-writers.md`.
 
 SoT: spec 306 §7.2.

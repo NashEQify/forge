@@ -13,6 +13,9 @@ Resolve this reference against the framework root; retain the consumer CWD.
 Spec-fit reviewer in the Code Review Board. Implementation vs
 spec.
 Conditional: only when the task has a `spec_ref`.
+Also dispatched, at any level, as the core mechanism search
+(`skills/code_review_board/review-package.md` §Core mechanism search): there its dispatch mandate replaces the
+check focus below.
 
 **Sole owner of test-coverage findings (post-build).** Other
 reviewers cannot file coverage-gap findings. If a reviewer

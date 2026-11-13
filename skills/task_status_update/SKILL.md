@@ -69,11 +69,16 @@ Off-plan starts and held-back work never pass silently. Before Step 2:
 
 1. **Programme order (`in_progress`).** While the project has an active
    agreed programme (it names its agreement), compare the start with the
-   agreement's next task and with the programme tasks at `in_progress`. Any
-   start that is not the agreed next task — listed in the agreement or not —
-   or that runs beside another `in_progress` programme task needs the user's
-   confirmation recorded in the agreement (`agents/buddy/coordinating-sessions.md`
-   §Programme order); without it, refuse the start. A paused task is set back to `pending` or `blocked`
+   agreement's next task (the first in its order not yet started) and with the
+   programme tasks at `in_progress`. Any start that is not the agreed next
+   task — listed in the agreement or not — needs the user's confirmation
+   recorded in the agreement (`agents/buddy/coordinating-sessions.md`
+   §Programme order); without it, refuse the start. A start beside another
+   `in_progress` programme task needs the parallel-start record in the
+   agreement (`agents/buddy/concurrent-writers.md` §Parallel start: which tasks
+   run at the same time, what in the user's order needs it and what each
+   independence check showed); without it, or with a check that failed or did
+   not run, refuse the start. A paused task is set back to `pending` or `blocked`
    through this skill, with its reason; there is no third state. Uncommitted
    work it leaves gets the entry of item 2.
 2. **Commit state (`done`).** Take the task's changed paths from its diff or
@@ -180,7 +185,7 @@ Status update: [{task_id}] {title}
   plan.yaml sweep: K descs rewritten | n/a
   critical-path: on-path | off-path | gates {ids} via --after | n/a
   archive: forward | reverse | no-op
-  order: agreed next | deviation confirmed by {who} | n/a
+  order: agreed next | agreed next beside {ids}, parallel-start record in agreement | deviation confirmed by {who} | n/a
   commit: {hashes} | not committed: {reason}, owner {who}, when {event} | n/a
   acceptance: executed | unexecuted {which}, owner {who}, follow-up {id} | n/a
 ```

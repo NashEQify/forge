@@ -1,9 +1,7 @@
 # Convergence loop — simplify-before-patch gate
 
 Step-loaded unit of `skills/convergence_loop/SKILL.md`. Read it before writing the brief for any fix pass ≥ 2 on a
-mechanism (counted across review owners, workflows and tasks), before approving a new review owner or extension on
-it, and before the pass-4 extension. The causes and their answers it applies are in
-`skills/convergence_loop/cause-before-answer.md`.
+mechanism (§Counting), before approving a new review owner or extension on it, and before the pass-4 extension.
 
 ### Simplify-before-patch gate (before every fix pass ≥ 2, MUST)
 
@@ -12,7 +10,7 @@ This pass-count safeguard does not postpone purpose reassessment. Apply
 additional machinery and when returned findings call its necessity into
 question; use the existing brief and triage record.
 
-Applies to spec boards and code boards alike. The gate first asks why the
+The gate first asks why the
 earlier fix passes did not converge, and then answers each open blocking
 finding by its cause (`cause-before-answer.md` §Cause before answer). When the cause is a mechanism,
 route-by-route fixing does not converge: each pass closes the reported route
@@ -57,11 +55,11 @@ state file (a spec-only review: the consolidated file), write:
 - model: present|written-now|n/a — {spec § of the §Mechanism-Lifecycle section, or why no state carrier}; derived: {its Derived: line} | no | n/a (model: n/a)
 - inventory: {path} — missing {n}, partial {n}, contradicts {n}, unrequested {n}
 - why: {one sentence: why the earlier passes did not converge, read from the inventory and the prior vs new findings}
-- same_class: yes|no — {mechanism or guiding rule}; prior {ids} vs new {ids}; cells: {matrix cells the findings sit on}
+- same_class: yes|no — {mechanism or guiding rule}; prior {ids} vs new {ids}; cells: {matrix cells the findings sit on}; defined_by: {unit, place} | n/a | none | unsure ({candidates})
 - simpler_mechanism: yes|no — {named candidate + the cells / invariant locus it removes + the finding ids}
 - spec_is_problem: yes|no — {clause}; open readings: {n} ({RL ids})
 - causes: {id}: wrong-finding|intent|spec|mechanism|stuck|code — {the check that holds}; … one per open blocking finding
-- decision: per cause group — patch ({cells changed}; {cells confirmed intact}) | propose-simplification → {caller / PMO / user} | amend-spec ({§}) → re-derive {unit} | patch | ask → {caller} | fresh-implementer {model} | rule {ids} | accept-limit {ids}
+- decision: per cause group — derive-from ({unit}) | patch ({cells changed}; {cells confirmed intact}) | propose-simplification → {caller / PMO / user} | amend-spec ({§}) → re-derive {unit} | patch | ask → {caller} | fresh-implementer {model} | rule {ids} | accept-limit {ids}
 - class_witness: {command} — red: {open ids} at {HEAD}, {prior ids} at {rev}; sharpened: {what was added for a finding it missed} | n/a (same_class: no)
 ```
 
@@ -101,6 +99,7 @@ code, the table decides:
 
 | Answers | Decision |
 |---|---|
+| `defined_by:` names a unit | **Derive from it** (`derive-and-exit.md` §Derive from the defining unit), the rows below do not apply to the class; no further channel, case or invariant in the copy. |
 | `model: written-now` | Write the section first; re-read every new and prior finding against the matrix before answering the rows below. Cells the matrix shows empty or unspecified are findings of this pass, whether or not a reviewer reported them. |
 | `same_class: yes` AND (`simpler_mechanism: yes` OR `spec_is_problem: yes`) | **Stop route patching.** Propose the simplification to the caller (PMO / user) unprompted: a spec amendment and/or one structural invariant whose checks assert effects, not classifications, plus a property generator whose axes are the matrix axes (the class witness below). The proposal names the cells it removes and shows the **whole updated matrix**, not the changed side. This is a legitimate design fork, not permission-seeking. |
 | `same_class: yes`, both others `no` | Patch, but the effect-asserting invariant + property generator above MUST stand as the class witness before the fix brief (below), the record names why no simpler mechanism exists, and the fix brief carries the `§Mechanism-cells` block (`_protocols/fix-brief-template.md`). |

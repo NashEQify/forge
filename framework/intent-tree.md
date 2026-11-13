@@ -111,6 +111,19 @@ this format:
  Not relevant = what should not be loaded.]
 ```
 
+`## Core mechanisms` is optional, after `## Context`: one entry per mechanism the owner names as core, nothing else
+makes a mechanism core.
+
+```
+- <mechanism>: spec <file> §<section>; code <paths>; owner: "<words>" (<place>)
+  [product gaps: always closed]
+```
+
+When the owner says that a mechanism is core, or that its product gaps are always closed, write or update its entry
+in that turn with the owner's words and their place; those words are the confirmation §Intent update asks for. Code
+review searches an entry's mechanism once per change and treats its product defects as the change's under that line (`skills/code_review_board/review-package.md` §Core
+mechanism search, `verdict.md` §Pre-existing defects).
+
 ## Intent freshness
 
 Before every substantial action (agent check step 0):

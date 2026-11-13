@@ -1,7 +1,7 @@
 # Convergence loop — derive the mechanism, exit on the owner's criterion
 
 Step-loaded unit of `skills/convergence_loop/SKILL.md`. Read it when the Simplify-before-patch decision rule
-(`skills/convergence_loop/simplify-before-patch.md`) answers with a drill, before declaring a loop on a mechanism with
+(`skills/convergence_loop/simplify-before-patch.md`) answers with a drill or records `same_class: yes` (its `defined_by:` field), before declaring a loop on a mechanism with
 an owner-approved exit criterion converged, and when such a loop reaches the re-review limit
 (`skills/convergence_loop/at-the-cap.md`).
 
@@ -30,6 +30,46 @@ derived, whatever its matrix holds.
    header gets its `Derived:` line (naming the last RL id); every derived ruling on the mechanism is re-read against the axioms, and one they
    contradict is retired in the ruling log. Then the gate's record is written again against the derived matrix (it starts the consecutive `same_class` count
    again), and the class witness takes its axes (`simplify-before-patch.md` §Class witness).
+
+### Derive from the defining unit
+
+A hand-kept copy of semantics another unit defines differs from it in cases nobody listed: each patch adds one listed
+case, and the next review finds another. Deriving the copying mechanism cleanly does not help; the gap lies between
+the copy and the unit that defines its semantics (the defining unit; not the person who approves a drill).
+
+**When the gate asks.** Only when its record says `same_class: yes` and the failing artifact computes a derived
+quantity (a reach, a dependency, an index, a cache, a projection, a second reader or validator); otherwise
+`defined_by: n/a`. A first finding never reaches the gate.
+
+**Finding the defining unit.** Checked in this order, the first that holds named with its place:
+1. a rules module or other code unit implements the spec section or contract that defines what the quantity
+   encodes, and the copy restates its cases (a definition in text with no implementing unit does not count);
+2. other code asks that unit for the same answer (a function, predicate set or reader the rest calls);
+3. the copy was written beside an earlier implementation of the same answer and kept in step by hand.
+None holds: `defined_by: none`, and the gate's other rows decide. The checks cannot decide (two candidates, or one
+that covers only part): `defined_by: unsure` with the candidates and what is missing; no fix pass runs on the class
+until the caller answers, and the wait counts as the ESCALATE of `SKILL.md` §Termination.
+
+**The answer.** The quantity is computed from the defining unit: one call to its function, its predicate set or its
+own reader, with the copy's own cases removed; the fix brief's `mechanism_cells` names the copy's cells as removed.
+The defining unit's behaviour is the fixed point: the change reaches the copy and its callers, not what that unit
+decides. Where it has no call for the quantity, adding one that reads its existing definitions and changes none of
+its outputs (its tests stay unedited and pass) is part of the answer. A copy meant to differ (a stricter validator)
+reads through the defining unit and keeps only its stated difference on top, named in the record. A defect the
+derivation shows in the defining unit (it contradicts its own spec) is its own finding, with its own cause and pass;
+for the inputs it affects the copy is not replaced until that finding is answered, and a known finding of the class
+that is really that defect is witnessed there, not by the comparison.
+
+**The comparison.** Before the fix brief, someone other than the implementer writes it without the copy's cases or
+the derived function in view (`skills/testing/test-design.md` §Oracle discipline): over the input space the quantity
+covers, it gets the quantity by brute force from the defining unit's behaviour (run that unit end to end on each
+input and observe, not the call the derivation makes; where only that call exists, it is recorded as weaker) and
+checks the derived quantity against it, exhaustively where the space can be enumerated, else as a sampled or property
+comparison recorded as weaker with the part it covers. Run against the copy, it turns red every other known finding
+of the class. For this answer it replaces the matrix-axis generator as the class witness
+(`simplify-before-patch.md` §Class witness); the `class_witness` row's command is followed by `exhaustive` or
+`sampled ({covered part})`. Where real data exists, the derived quantity is also compared with the copy's result on
+it, each difference explained.
 
 ### Exit criterion
 

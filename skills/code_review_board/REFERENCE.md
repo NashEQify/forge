@@ -286,6 +286,24 @@ A mechanism with an owner-approved exit criterion (`skills/convergence_loop/deri
 every part holds; a PASS with a part open does not close it. When the criterion includes a closing review, it runs at full breadth, with the seat
 set of the widest earlier review on the mechanism, whatever this file's re-review composition would pick.
 
+## Fix-completeness C-VERIFY
+
+Read from `verdict.md` §5a when a fix claim names a third-party teardown or lifecycle API.
+
+**Fix-completeness C-VERIFY (extends verdict-adoption C-VERIFY to the
+fix-pass's OWN claims):** a fix-pass introduces NEW load-bearing claims
+("I closed it on shutdown") the original C-VERIFY never covered. When a
+fix-claim names a third-party teardown / lifecycle API (`close` /
+`aclose` / `shutdown` / `__aexit__`), the claim is NOT "addressed"
+until the **installed** SDK surface is shell-verified (e.g. `python3 -c
+"import openai; print(hasattr(openai.AsyncOpenAI,'close'),
+hasattr(openai.AsyncOpenAI,'aclose'))"`) — not the remembered API.
+Observed: a `_close_client_quietly` resolved only `aclose`, absent on
+the installed openai 2.41.1 → `close()` a silent no-op, the pooled
+transport leaked at every drain. A "wired-but-ineffective" fix passes
+the Phase-2 "addressed?" column until the installed surface is checked
+(`evidence-author-claims.md` §8.3, re-review layer).
+
 ## Re-review composition (full table)
 
 Default re-review on FAIL = the **re-verify table** (`checklist-and-dispatch.md` §4): one

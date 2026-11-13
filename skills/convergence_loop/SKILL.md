@@ -184,7 +184,7 @@ new review owner or extension on it, and before the pass-4 extension: read and f
 `skills/convergence_loop/simplify-before-patch.md` (purpose reassessment, counting across the mechanism's whole review
 history, the gap inventory, the Simplify-before-patch record with `model` first, the decision rule and the
 simplification proposal, the two rules read with this gate, the class witness). When that gate answers with a
-drill, and on a mechanism with an owner-approved exit criterion: read and follow
+drill or records `same_class: yes`, and on a mechanism with an owner-approved exit criterion: read and follow
 `skills/convergence_loop/derive-and-exit.md`.
 
 ## State format between passes

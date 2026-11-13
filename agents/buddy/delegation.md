@@ -1,9 +1,9 @@
 # Buddy — Delegation
 
 Step-loaded unit of `agents/buddy/operational.md` (Phase 2: ACT). Read it when
-the selected step leaves its executor undecided, before dispatching another
-actor or commissioning a further round, and when the host cannot invoke a
-required skill. The core's Applicability holds for software. On demand, follow
+taking up work of more than one task, when the selected step leaves its executor
+undecided, before dispatching another actor or commissioning a further round,
+and when the host cannot invoke a required skill. The core's Applicability holds for software. On demand, follow
 the project's working rules.
 
 Routing lookup:
@@ -103,8 +103,8 @@ Line counts and one aggregate sample do not establish savings.
   Buddy uses what the host offers and says so in one line. Without a session
   vehicle he does the work inline and with isolated agents and finishes it. A
   start authorizes nothing more (`agents/buddy/coordinating-sessions.md`
-  §Programme order, §Concurrent writers; `framework/process-map.md`
-  §Authorization). A session has the highest fixed cost: a full boot and the
+  §Programme order; `agents/buddy/concurrent-writers.md`;
+  `framework/process-map.md` §Authorization). A session has the highest fixed cost: a full boot and the
   context rebuilt from the brief. So a bounded check or lookup whose result
   Buddy needs for his next decision runs as an isolated agent or inline, also
   in a coordinating chat: coordinating moves task work out of the chat, not
@@ -112,15 +112,14 @@ Line counts and one aggregate sample do not establish savings.
   A further task that needs the context a running session already holds goes
   to that session as a further brief, also when it is a different task; work
   that changes files a running session changes never gets a second session
-  (one writer per file set: `agents/buddy/coordinating-sessions.md`
-  §Concurrent writers). When it is replaced:
+  (one writer per file set: `agents/buddy/concurrent-writers.md`). When it is replaced:
   `agents/buddy/coordinating-sessions.md` §Buddy-to-Buddy.
 Multi-agent work pays on parallelizable, high-value work and costs on
 sequential work; a spawn needs an isolation or independence gain. Host
 vehicles and fallbacks: `architecture-documentation/07-tool-integrations.md`
 §Delegation vehicles; how a role is called, as an agent type or a general agent reading its role file:
-`skills/_protocols/role-dispatch.md`. Sessions and concurrent writers:
-`agents/buddy/coordinating-sessions.md`. The MCA questions below are the code case of this choice.
+`skills/_protocols/role-dispatch.md`. Sessions: `agents/buddy/coordinating-sessions.md`;
+concurrent writers: `agents/buddy/concurrent-writers.md`. The MCA questions below are the code case of this choice.
 
 Before every MCA delegation, ask two questions in order:
 

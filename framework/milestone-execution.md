@@ -65,7 +65,9 @@ For milestone M:
 
 `plan_engine --critical-path` + blocked_by chains.
 A spec without consumed entries in the milestone goes first.
-Multiple tasks without deps can run in parallel.
+Tasks without deps run in parallel only where the user's order needs it and
+their independence is verified (`agents/buddy/concurrent-writers.md`
+§Parallel start); otherwise one after the other.
 
 ## First slice = learning phase
 

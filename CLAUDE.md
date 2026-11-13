@@ -49,7 +49,7 @@ never bypass hooks. An explicit task boundary such as "no commit" overrides
 this standing local-commit permission. With several Buddy sessions on one
 repository, the commissioning Buddy commits and integrates unless a brief
 names another committer; parallel writers use their own worktree and branch
-(`agents/buddy/coordinating-sessions.md`). `git push` requires authorization for
+(`agents/buddy/concurrent-writers.md`). `git push` requires authorization for
 publication to the intended remote; destructive operations (force-push,
 `reset --hard`, history rewrite) require explicit authorization for that action.
 A heads-up alone is not permission. See process-map.md, Authorization.

@@ -106,21 +106,44 @@ session coordinates that work and is where the user reads
 session's model follows `framework/models.md` §A persistent session's model.
 Host boundaries there: on the Claude desktop app the start call takes a model at
 or below the starting chat's (per its start tool's description; not verified by
-a run); per its tool descriptions, also not verified by a run, it reports a
-session's turn end to the starting chat, quoting the start of its last message,
-and can archive a session. A host's permission prompts for a session's tool
+a run); it reports a session's turn end to the starting chat, quoting the start
+of its last message (seen in use), reports the end of a chat's own background
+agent or background command to that chat (seen in use), and per its tool
+descriptions, not verified by a run, can archive a session and offers a
+scheduled wake-up or a monitor in some modes. How a wait on such work ends a
+turn: `agents/buddy/background-wait.md`. Two limits of the Claude desktop app were seen in
+use while one chat coordinated several sessions, not tested by a run. First, a
+session start is refused in a turn that the completion notice of the
+coordinating chat's own background agent began: the start tool answered with a
+refusal that asked for a proposal instead, so no turn of such a chain started
+the next session; starts in turns begun by the user's message or by a session's
+turn end succeeded. Second, every session turn end begins a turn of the
+coordinating chat that expects a reply, also when the session brought neither a
+return nor a question. The order of calls and the one-line reply that answer
+them: `agents/buddy/coordinating-sessions.md` §Coordinator, §One reading place.
+A third limit of the Claude desktop app was seen in use, not tested by a run:
+after 20 messages from one session to other sessions since the user last typed
+in it, the host delivers no further message from it until the user writes there
+again; a message to a session that is busy or away is queued, and that session
+holds it. Peers that message each other therefore cannot run for long without
+the user; Forge runs parallel work under one coordinator instead. What the
+coordinator does about the cap: `agents/buddy/coordinating-sessions.md` §One
+reading place.
+A host's permission prompts for a session's tool
 calls appear in that session, not in the coordinating chat. Other hosts' start
 models, turn-end notices and archiving are not verified here.
 
 Fallbacks: without a persistent-session vehicle, Buddy does the work himself,
 inline and with isolated agents, and finishes it (`agents/buddy/delegation.md`
 §Vehicle choice); a brief the user opens in a chat of their own is an option
-only when the user asks for it. Without turn-end notices, archiving or messages
+only when the user asks for it, or when the host refused a start and offers that
+proposal instead. Without turn-end notices, archiving or messages
 between chats, the coordinator reads the return and record locations at its own
 turns, names the session to close, takes a session's questions from its return
 and starts a new session for a further brief
 (`agents/buddy/coordinating-sessions.md` §Session end). Without per-writer
-worktrees, only one writing workstream runs per checkout.
+worktrees, only one writing workstream runs per checkout
+(`agents/buddy/concurrent-writers.md`).
 
 ## Hooks and enforcement
 

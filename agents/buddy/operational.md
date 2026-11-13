@@ -60,7 +60,8 @@ to bounded work and when adopting an agent return or consolidated verdict.
 
 ### Delegation
 
-Read `agents/buddy/delegation.md` when taking up work of more than one task,
+Read `agents/buddy/delegation.md` when taking up work of more than one task
+(before choosing any task's path: DIRECT does not settle where work runs),
 when the selected step leaves its executor undecided, before dispatching another
 actor or commissioning a further round (fix pass, review, extension or test
 run), and when the host cannot invoke a required skill. It covers vehicle
@@ -70,10 +71,12 @@ cost of another round.
 ### Coordinating sessions and writers
 
 Before commissioning a persistent session, when the handoff has a coordinator role
-entry, when starting, ordering or commissioning programme work, when working as or with
-a persistent session, when a second writer is involved, and before committing in a
-shared checkout: read and follow `agents/buddy/coordinating-sessions.md` (coordinator,
-programme order, Buddy-to-Buddy, concurrent writers, integration, cancellation, resume).
+entry, when starting, ordering or commissioning programme work, and when working as or
+with a persistent session: read and follow `agents/buddy/coordinating-sessions.md`
+(coordinator, programme order, Buddy-to-Buddy, commit). When a second writer is
+involved or a writer stopped, and before cutting a writer's worktree, committing in a
+shared checkout or integrating a branch: read and follow
+`agents/buddy/concurrent-writers.md`.
 
 ### Source-Grounding
 
@@ -125,13 +128,14 @@ Read the incident block:
 **No-fixture / testcontainer tests (MANDATORY run-at-return):** when an
 MCA WROTE tests it could not RUN in its sandbox (no-fixture, Neo4j/PG
 testcontainers, real-store), Buddy MUST run them at return before
-trusting the fix-pass — the MCA's unit-green is blind to them. Observed:
-an MCA's real-store tests carried 2 witness-bugs (a query on a
-non-existent field; an out-of-scope assertion) that surfaced ONLY when
-Buddy ran them at return. The return-stage actuator is load-bearing —
+trusting the fix-pass — the MCA's unit-green is blind to them. The return-stage actuator is load-bearing —
 the test may exist and be faithful (test-design, `skills/testing/test-design.md`
 §Execution-faithfulness), but only an actor holding the fixtures
 executes it.
+
+**Waits:** before ending a turn while own background work runs, or on a report
+that an actor waits on its own background work: read and follow
+`agents/buddy/background-wait.md`.
 
 Discoveries: `knowledge_processor (mode=process)`. Reconcile MCA
 discoveries against active specs AND milestone topology

@@ -76,13 +76,15 @@ one the pass leaves, gets its cause and answer first, every review
 wrong finding leaves with a ruling, an intent one as a question to the
 caller; a spec-caused one goes to the spec in this pass.
 
-**Pre-existing defects.** A finding about behavior this change neither
+**Pre-existing defects.** First: a product defect under the code paths of an entry in the project's `intent.md`
+`## Core mechanisms` that carries `product gaps: always closed` (its observable outcome contradicts the entry's spec)
+is triaged as if this change introduced it; the verdict names the entry. Every other finding about behavior this change neither
 introduced nor exposed (its observable outcome reproduces on the pre-change
 baseline through the same entry point, and it is not the reported defect) does not block this change: `accept` with the limit
 recorded in the verdict, `watch`, or `new_task` under the value floor. An
 acceptance criterion about what the fix or change does binds this change,
 not prior state; it is in scope only when its observable outcome fails now.
-A pre-existing CRITICAL or safety-floor defect goes to the user as a scope
+Such a pre-existing CRITICAL or safety-floor defect goes to the user as a scope
 decision, not into this fix pass.
 
 **Hard floor LOW:** standalone LOW → `accept`. LOW → `new_task`
@@ -162,7 +164,7 @@ Full table: REFERENCE.md.
 The default re-review is the §4 re-verify table; its scoped adversary
 and replaced-mechanism cases use this section's two-phase. Before the fix pass that precedes a pass-2+ re-review,
 the §4 Simplify-before-patch gate runs; a recurring class takes its
-decision rule (simplify, invariant or drill), not another route patch.
+decision rule (derive from the defining unit, simplify, invariant or drill), not another route patch.
 
 Triggers: any re-review with >1 reviewer dispatched
 (multi-reviewer pass-1.5, bundled clusters, pass-2+). Warm-start
@@ -195,16 +197,5 @@ Output: table — prior finding | addressed? | evidence | correct fix?
 Chief: Phase-1 = primary evidence, Phase-2 = closure-verification.
 `remaining_findings` = Phase-1 minus prior-cycle-confirmed-closed.
 
-**Fix-completeness C-VERIFY (extends verdict-adoption C-VERIFY to the
-fix-pass's OWN claims):** a fix-pass introduces NEW load-bearing claims
-("I closed it on shutdown") the original C-VERIFY never covered. When a
-fix-claim names a third-party teardown / lifecycle API (`close` /
-`aclose` / `shutdown` / `__aexit__`), the claim is NOT "addressed"
-until the **installed** SDK surface is shell-verified (e.g. `python3 -c
-"import openai; print(hasattr(openai.AsyncOpenAI,'close'),
-hasattr(openai.AsyncOpenAI,'aclose'))"`) — not the remembered API.
-Observed: a `_close_client_quietly` resolved only `aclose`, absent on
-the installed openai 2.41.1 → `close()` a silent no-op, the pooled
-transport leaked at every drain. A "wired-but-ineffective" fix passes
-the Phase-2 "addressed?" column until the installed surface is checked
-(`evidence-author-claims.md` §8.3, re-review layer).
+**Fix-completeness C-VERIFY:** when a fix claim names a third-party teardown or lifecycle API, read and follow
+`REFERENCE.md` §Fix-completeness C-VERIFY before the Phase-2 table marks it addressed.
