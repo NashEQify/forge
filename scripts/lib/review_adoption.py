@@ -74,6 +74,13 @@ def _require(ok: bool, message: str) -> None:
         raise ReviewRefusal(message)
 
 
+def _link_refusal(path: str) -> str:
+    return (
+        f"symbolic link is not captured: {path} "
+        "(declare it in exclude_files to record its omission with the capture)"
+    )
+
+
 def _nonblank(value: Any) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
@@ -318,6 +325,7 @@ def capture_subject(
             if selected_raw(rawpath):
                 path = _path(_decode(rawpath))
                 mode, kind, oid = meta.decode("ascii").split()
+                _require(mode != "120000", _link_refusal(path))
                 _require(
                     kind == "blob" and mode in {"100644", "100755"},
                     f"unsupported baseline entry: {path}",
@@ -336,6 +344,7 @@ def capture_subject(
                 path = _path(_decode(rawpath))
                 mode, _oid, stage = meta.decode("ascii").split()
                 _require(stage == "0", f"unresolved merge: {path}")
+                _require(mode != "120000", _link_refusal(path))
                 _require(
                     mode in {"100644", "100755"}, f"unsupported index entry: {path}"
                 )
@@ -349,6 +358,7 @@ def capture_subject(
         changes: list[dict[str, Any]] = []
         for path in sorted(set(before) | current):
             old = before.get(path, {"type": "absent"})
+            _require(not (root / path).is_symlink(), _link_refusal(path))
             new = _endpoint(root, path)
             if old != new:
                 changes.append({"path": path, "before": old, "after": new})
