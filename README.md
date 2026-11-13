@@ -132,8 +132,6 @@ word for word, under their licenses and with credit. These projects inspired it:
   source of the code.
 - [skills](https://github.com/mattpocock/skills) (Matt Pocock): small engineering
   skills for architecture, diagnosis and design interviews.
-- [Get Shit Done](https://github.com/gsd-build/get-shit-done) (Lex Christopherson):
-  context engineering for agent work across sessions.
 
 [What came from where](framework/adopted-methods.md) · [NOTICE](NOTICE)
 

@@ -140,7 +140,6 @@ something of its own:
 | [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) | Right-sized agile planning, explicit decisions, review triage | Verifying each finding before grading it, classifying its cause, approved acceptance carried verbatim, a fix that guards only demonstrated states, edge rows as the test plan, when to settle a point and report it |
 | [spec-kit](https://github.com/github/spec-kit) | Spec-driven development: the specification as the source of the code | The complexity-tracking table, and the gap inventory that checks each requirement against the present code |
 | [Matt Pocock's skills](https://github.com/mattpocock/skills) | Small, sharp engineering skills | Zooming out to the module map, deep-module architecture review, the feedback loop as the product of debugging, the decision-record threshold, the one-question-at-a-time design interview |
-| [Get Shit Done](https://github.com/gsd-build/get-shit-done) | Context engineering and state that carries across sessions | A brief sized to the delegate's context, lessons learned through failure in the coordinator's handoff, a bound on the handoff's running part, signs of context pressure in a return, a writer's checkout check |
 
 Forge's design holds them together: every adopted method answers to the same
 intent, authorization rules, evidence standard and proportional effort, and hands its
