@@ -65,9 +65,6 @@ moves out what is done or settled (finished items, decisions with their reasons)
 project's history (`history-imports.md` §6), leaving one pointer line per moved item, then writes the update. When the running part still passes the bound, the coordinator says so to
 the user in one line and asks whether to split the programme.
 
-Source (learned through failure, the bound): Get Shit Done (MIT License, © 2025 Lex Christopherson); Forge's register
-of adopted methods.
-
 ## Continuous maintenance
 
 Configuring user scope authorizes its maintenance; project rules authorize project

@@ -256,5 +256,5 @@ Applies on non-code tasks too:
 
 ## Source
 
-Superpowers (MIT License, © 2025 Jesse Vincent), BMAD-METHOD (MIT License, © 2025 BMad Code, LLC) and Get Shit Done
-(MIT License, © 2025 Lex Christopherson); Forge's register of adopted methods.
+Superpowers (MIT License, © 2025 Jesse Vincent) and BMAD-METHOD (MIT License, © 2025 BMad Code, LLC); Forge's register
+of adopted methods.

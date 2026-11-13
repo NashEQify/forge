@@ -58,8 +58,7 @@ of one result are one goal.
   commit and a report. The brief's stop limit (`skills/_protocols/mca-brief-template.md` §Stop limit) counts what the
   delegate changed, not what it had to hold.
 
-Source: BMAD-METHOD (MIT License, © 2025 BMad Code, LLC) and, for the fit to the delegate's context, Get Shit Done (MIT
-License, © 2025 Lex Christopherson); Forge's register of adopted methods.
+Source: BMAD-METHOD (MIT License, © 2025 BMad Code, LLC); Forge's register of adopted methods.
 
 ### Convention: interfaces & protocols (optional, recommended for implementation specs)
 

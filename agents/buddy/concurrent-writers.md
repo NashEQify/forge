@@ -112,8 +112,7 @@ directory differs, it checks again in the assigned path. When the path printed
 there or the branch there differs from the assignment, or the path does not
 exist, it commits nothing, switches no branch and
 reports both values to its commissioner (its blocking question, or in its
-return). Source: Get Shit Done's worktree branch check (MIT License, © 2025 Lex
-Christopherson); Forge's register of adopted methods.
+return).
 
 **Cancellation and resume.** A stopped writer's files or branch stay as they
 are. The coordinator resumes it or finishes what is usable; it discards it
