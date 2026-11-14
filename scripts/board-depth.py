@@ -10,6 +10,9 @@ Usage:
   python3 scripts/board-depth.py docs/specs/my-spec.md
   python3 scripts/board-depth.py --project-root /path/to/project my-spec
 
+The interface type names come from the project's SPEC-MAP line
+`**Interface types:** NameA, NameB`; without that line the type marker is not checked.
+
 Exit-Codes:
   0 = QUICK
   1 = DEEP
@@ -80,7 +83,7 @@ def check_cross_layer(spec_name: str) -> tuple[bool, str]:
     layers = parse_spec_map_layers()
     spec_layer = layers.get(spec_name, "")
     if not spec_layer:
-        return False, f"spec not found in SPEC-MAP"
+        return False, "spec not found in SPEC-MAP"
 
     consumers = parse_spec_map_consumers(spec_name)
     cross = []
@@ -92,6 +95,18 @@ def check_cross_layer(spec_name: str) -> tuple[bool, str]:
     if cross:
         return True, f"spec={spec_layer}, cross-layer consumers: {', '.join(cross)}"
     return False, f"all consumers in same layer ({spec_layer})"
+
+
+def parse_interface_types() -> list[str]:
+    """Interface type names from the first `**Interface types:**` line in SPEC-MAP."""
+    if not SPEC_MAP.exists():
+        return []
+    for line in SPEC_MAP.read_text(encoding="utf-8").splitlines():
+        m = re.match(r'\s*(?:[-*>]\s*)?\*\*Interface types(?::\*\*|\*\*:)\s*(.*)', line, re.IGNORECASE)
+        if m:
+            names = (n.strip().strip("`").strip() for n in m.group(1).split(","))
+            return [n for n in names if n]
+    return []
 
 
 def check_interface(spec_path: Path) -> tuple[bool, str]:
@@ -106,7 +121,8 @@ def check_interface(spec_path: Path) -> tuple[bool, str]:
         markers.append("async API")
     if re.search(r'CREATE TABLE|CREATE INDEX|ALTER TABLE', text, re.IGNORECASE):
         markers.append("DDL")
-    if re.search(r'SearchResult|BrainFacade|DelegationSpec', text):
+    type_names = parse_interface_types()
+    if type_names and re.search("|".join(re.escape(n) for n in type_names), text):
         markers.append("Interface type")
 
     if markers:
@@ -116,7 +132,6 @@ def check_interface(spec_path: Path) -> tuple[bool, str]:
 
 def check_full_path(spec_name: str) -> tuple[bool, str]:
     """Check 3: Any task with dev_path: full referencing this spec?"""
-    spec_ref = f"{spec_name}.md"
     for yaml_path in TASKS_DIR.glob("*.yaml"):
         if yaml_path.name.endswith("-gates.yaml"):
             continue

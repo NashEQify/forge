@@ -2,16 +2,16 @@
 > `../SKILL.md`. Facet routing, immediate-stable promotion, decay matrices,
 > automatic contradiction interviews and maturity-based placement below are
 > obsolete assumptions, not requirements for this release or a future system.
-> No future Brain redesign, service, dual-write or async mechanism is implemented
+> No future knowledge-store redesign, service, dual-write or async mechanism is implemented
 > or authorized by this document. Preserve these notes as design history only.
 
 # Historical future-system discussion (not an executable contract)
 
-Documents how this skill would change once a knowledge store (the Brain below) is built. No code — design intent.
+Documents how this skill would change once a knowledge store (a graph and vector store behind the context files) is built. No code — design intent.
 
 ## Forward-compatibility table
 
-| Step | Pre-Brain (now) | Post-Brain |
+| Step | Without a store (now) | With a store |
 |------|-----------------|------------|
 | EXTRACT | LLM reads raw information | LLM + entity extraction pipeline (assertion-titled) |
 | LOCATE | Navigation-guided file reading + grep | Graph traversal (SQL) + embedding search (pgvector) |
@@ -23,31 +23,31 @@ Documents how this skill would change once a knowledge store (the Brain below) i
 
 ## What changes
 
-**IMPACT CHAIN → Brain invalidation mechanism:**
-- LOCATE uses brain.search() (graph traversal + semantic search) instead of file grep
+**IMPACT CHAIN → store invalidation mechanism:**
+- LOCATE uses store.search() (graph traversal + semantic search) instead of file grep
 - ASSESS compares against structured Neo4j entities instead of free text
 - ACT sets valid_until on existing relations on CONTRADICTS/OBSOLETES, creates new ones with valid_from
 - RECURSE traverses the Neo4j graph instead of recursively reading files
 
-**Dual write:** Brain first (SoT), then MD (cache). Dynamic MDs are kept fresh by the background curator.
+**Dual write:** the store first (SoT), then MD (cache). Dynamic MDs are kept fresh by the background curator.
 
 **SOURCE_REF dispatch → Cognee ECL:** the dispatcher routes to the Cognee ECL pipeline. Custom DataPoints control the ontology. Document pointer in Postgres is still written.
 
-**LOCATE uses brain.search():** hybrid search (semantic + graph + fulltext) replaces navigation-guided file reading + grep. Graph traversal finds indirect impacts (2+ hops).
+**LOCATE uses store.search():** hybrid search (semantic + graph + fulltext) replaces navigation-guided file reading + grep. Graph traversal finds indirect impacts (2+ hops).
 
-**mode=user-signal Post-Brain:** the pipeline is taken over by a user-model worker in the consumer repo. The dispatcher routes `user.signal` events to a broker, the worker processes asynchronously.
+**mode=user-signal with a store:** the pipeline is taken over by a user-model worker in the consumer repo. The dispatcher routes `user.signal` events to a broker, the worker processes asynchronously.
 
-## Hybrid sync/async IMPACT CHAIN (Post-Brain)
+## Hybrid sync/async IMPACT CHAIN (with a store)
 
 Design decision: option C — critical path sync, RECURSE async.
 
 | Step | Execution | Latency budget |
 |------|-----------|----------------|
 | EXTRACT | Synchronous (LLM call) | ~500ms-2s |
-| LOCATE | Synchronous (brain.search()) | ~20-50ms |
+| LOCATE | Synchronous (store.search()) | ~20-50ms |
 | ASSESS | Synchronous (LLM call, produces narrative_fragment) | ~500ms-2s |
 | ACT | Synchronous (Neo4j MERGE + Postgres embedding) | ~10-30ms |
-| RECURSE | **Asynchronous** via NATS `brain.impact.indirect.{relation_id}` | unbounded, eventual consistency |
+| RECURSE | **Asynchronous** via NATS `knowledge.impact.indirect.{relation_id}` | unbounded, eventual consistency |
 
 **Rationale:** direct impact (entity/relation + narrative_fragment) is persistent immediately (~50ms DB time). RECURSE (indirect impacts, 2+ hop graph traversal, potential further LLM calls) is the only unbounded-expensive part. Indirect impacts are by definition not immediately critical — eventual consistency is acceptable.
 
@@ -82,4 +82,4 @@ What stays identical:
 - **Proportionality** — still applies
 - **MUST NOT: dispatcher never writes directly into context/** — always via knowledge_processor (exception: decisions.md)
 - **Maturity promotion** — becomes an explicit field instead of implicit position, same logic
-- **Delta check** — before every write, whether MD or Brain entity
+- **Delta check** — before every write, whether MD or store entity

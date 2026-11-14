@@ -22,7 +22,7 @@ interpretation. Users retain one conversational entry and their current folders.
 | `framework/user-scope.md`, `scripts/user_scope.py` | Shared location/configuration/privacy; fixed profile boot interface |
 | `skills/knowledge_processor/SKILL.md` | Continuity semantic lifecycle authority, required |
 | KP modes | Continuity routing specializations; no independent policies |
-| KP concepts reference | Explanatory only; brain-forward is historical, not required execution |
+| KP concepts reference | Explanatory only; `skills/knowledge_processor/reference/knowledge-store-forward.md` is historical, not required execution |
 | `framework/continuity.md`, `scripts/continuity.py` | Required protected snapshot/publication/recovery interface |
 | `agents/buddy/boot-on-demand.md` | Common minimal entry; conditional selected-domain restore |
 | `agents/buddy/boot.md`, `boot-software.md`, `operational.md` | Development boot/composition; delegates on-demand early |

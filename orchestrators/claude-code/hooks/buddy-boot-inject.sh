@@ -110,9 +110,22 @@ activation_found() {
 # fails on user data; if python3 itself fails (missing, crash, timeout) the
 # static forge-soul entry below is emitted instead. Never exit non-zero
 # because of the resolver — a missing boot is worse than the forge soul.
+# FORGE_BOOT_RESOLVER_TIMEOUT (seconds: 1-4 ASCII digits, optionally 1-3
+# decimals, not zero) sets the resolver's limit; anything else gives the
+# default 1.5, which with the 0.5 s kill grace keeps the fallback inside the
+# host's 3 s hook timeout (plugin-hooks.json). The bounded shape keeps every
+# accepted value at 0.001 or more (timeout(1) reads 0 as no limit); the
+# spelled-out digits match ASCII only in every locale. A value of 2.5 or more
+# can lose the fallback when the resolver hangs; the tests raise it so machine
+# load cannot trip the fallback.
+RESOLVER_TIMEOUT=1.5
+if [[ "${FORGE_BOOT_RESOLVER_TIMEOUT:-}" =~ ^[0123456789]{1,4}([.][0123456789]{1,3})?$ ]] \
+  && [[ "$FORGE_BOOT_RESOLVER_TIMEOUT" =~ [123456789] ]]; then
+  RESOLVER_TIMEOUT="$FORGE_BOOT_RESOLVER_TIMEOUT"
+fi
 RESOLVER=(python3 "$FRAMEWORK_DIR/scripts/user_scope.py" --framework-root "$FRAMEWORK_DIR" --hook-json ${SCOPE_ARGS[@]+"${SCOPE_ARGS[@]}"})
 if command -v timeout >/dev/null 2>&1; then
-  RESOLVER=(timeout -k 0.5 1.5 "${RESOLVER[@]}")
+  RESOLVER=(timeout -k 0.5 "$RESOLVER_TIMEOUT" "${RESOLVER[@]}")
 fi
 if [ "$MODE" = "plugin" ]; then
   # Yield to a leftover project hook entry (the project's .claude/settings.json or
