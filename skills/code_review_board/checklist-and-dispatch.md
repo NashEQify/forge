@@ -52,8 +52,8 @@ the choice. It carries each fix-now finding's verified row (`skills/_protocols/f
 §What follows), and the `§Complexity-Tracking` rows the fix
 adds: no public surface and no guard for undemonstrated state without one
 (`_protocols/mca-brief-template.md` §Complexity-Tracking). The fix pass and its re-verify run the selected set for the fix's
-changes and L0 on touched files; whether a broad run is due, and when,
-follows `skills/testing/run-strategy.md` §Test selection.
+changes and L0 on touched files; only the full gate's runner is told to run the whole suite
+(`skills/testing/run-strategy.md` §Test selection).
 **Re-verify** — three
 cases, decided from the fix diff (the fix-range package, §11):
 

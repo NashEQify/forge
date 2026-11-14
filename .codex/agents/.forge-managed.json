@@ -39,7 +39,7 @@
     "spec-text-drift-batch.toml": "9eeb83cfd10695d70cb3fe8b2032f9420f2cf55b214286a446546ce27c2fe352",
     "spec-verification.toml": "abbadb0099f0143e2272813544775ecc2e1975c64c7193409a125189eb798a80",
     "test-skeleton-writer.toml": "593881f21e175e497b3e147cf800bb014407b55ab7405a9b6fe301bcd3660507",
-    "tester.toml": "33346f010cd82bf65ddd769c6a0c96b3517df0ddd65c02f6d042d7d2d429975c"
+    "tester.toml": "22cf5c966cb1105c404ed5f90ceea87e13c5491757f5c1fcf14d6504759ff27d"
   },
   "version": 1
 }

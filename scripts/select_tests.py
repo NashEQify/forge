@@ -91,7 +91,9 @@ a ``glob``/``rglob`` in test code also counts as reading the files it matches.
 How a test reaches a path (edges):
   * Imports, followed transitively through repo modules: absolute against the
     importing file's directory, the root, the test paths and directories test
-    code puts on ``sys.path``; relative by package; ``importlib.import_module``
+    code puts on ``sys.path``, pytest's ``pythonpath`` and a root ``src/``, and,
+    for an import that resolved nowhere else, the parent of each non-zone
+    package directory named like its first segment; relative by package; ``importlib.import_module``
     and ``__import__`` with a constant name too.
   * File references, collected only at depth 0 (the test, its ``conftest.py``
     ancestry and support files under the configured test paths, or under
@@ -147,6 +149,16 @@ cross-cutting entry:
   * A lowercase root-like name bound to a temporary directory over-selects, and
     it can also make an otherwise unmapped path look mapped (``targeted``
     where ``broad`` was due).
+  * Import roots set only at runtime (``PYTHONPATH``, ``.pth`` files, packages
+    installed outside the repository) are not followed. A module reached only
+    that way is unmapped (``broad``), but it is missed when another test
+    reaches it by another edge. Namespace packages (no ``__init__.py``) under
+    a root that is neither ``src/`` nor a ``pythonpath`` entry are not followed
+    either.
+  * A package named like a standard-library module that sits directly on a
+    primary base (the root, ``src/``, a ``pythonpath`` entry) picks up the
+    stdlib imports of that name (over-selection). One on a fallback-only root
+    is not reached by its importers: Python shadows it with the stdlib module.
 Paths built on temporary or fixture bases in test code are not edges.
 
 Exit codes: 0 result printed (also when the reader closes stdout early, as
@@ -389,6 +401,7 @@ class PytestConfig:
     python_files: tuple[str, ...] = DEFAULT_PYTHON_FILES
     norecursedirs: tuple[str, ...] = DEFAULT_NORECURSE
     support_paths: tuple[str, ...] = DEFAULT_SUPPORT_PATHS
+    pythonpath: tuple[str, ...] = ()
 
     @classmethod
     def read(cls, root: Path) -> PytestConfig:
@@ -414,6 +427,11 @@ class PytestConfig:
             python_files=words("python_files") or DEFAULT_PYTHON_FILES,
             norecursedirs=words("norecursedirs") or DEFAULT_NORECURSE,
             support_paths=testpaths or DEFAULT_SUPPORT_PATHS,
+            pythonpath=tuple(
+                "" if n == "." else n
+                for n in (_normalize(p) for p in (words("pythonpath") or ()))
+                if n is not None
+            ),
         )
 
     @staticmethod
@@ -1219,6 +1237,7 @@ class ReferenceMap:
                 if facts is not None:
                     bases.update(facts.syspath_dirs)
         self._test_syspath = sorted(d for d in bases if d in self.index.dirs or d == "")
+        self._pkg_roots: dict[str, list[str]] | None = None
 
     # -- files --------------------------------------------------------------
 
@@ -1356,13 +1375,21 @@ class ReferenceMap:
             bases = list(dict.fromkeys(
                 [posixpath.dirname(rel), "", *self.config.testpaths, *self.config.support_paths,
                  *self._test_syspath,
-                 *(d for d in facts.syspath_dirs if d in self.index.dirs)]
+                 *(d for d in facts.syspath_dirs if d in self.index.dirs),
+                 *(d for d in (*self.config.pythonpath, "src") if d == "" or d in self.index.dirs)]
             ))
+        hits = self._import_hits(bases, targets, spec.level)
+        first = targets[0].split(".")[0] if targets else ""
+        if not spec.level and first not in sys.stdlib_module_names:
+            hits = list(dict.fromkeys([*hits, *self._import_hits(self._package_roots(first), targets, 0)]))
+        return hits
+
+    def _import_hits(self, bases: list[str], targets: list[str], level: int) -> list[str]:
         files = self.index.files
         hits: list[str] = []
         for base in bases:
             pre = f"{base}/" if base else ""
-            if spec.level and f"{pre}__init__.py" in files:
+            if level and f"{pre}__init__.py" in files:
                 hits.append(f"{pre}__init__.py")
             for target in targets:
                 parts = target.split(".")
@@ -1375,6 +1402,18 @@ class ReferenceMap:
                         if (init := pre + "/".join(parts[:i]) + "/__init__.py") in files
                     )
         return hits
+
+    def _package_roots(self, name: str) -> list[str]:
+        """Parents of the top-level packages called name (``<parent>/<name>/__init__.py``) outside the zones."""
+        if self._pkg_roots is None:
+            roots: dict[str, list[str]] = {}
+            for d in sorted(self.index.dirs):
+                parent = posixpath.dirname(d)
+                if (d and not is_zone(d + "/") and f"{d}/__init__.py" in self.index.files
+                        and f"{parent}/__init__.py" not in self.index.files):
+                    roots.setdefault(posixpath.basename(d), []).append(posixpath.dirname(d))
+            self._pkg_roots = roots
+        return self._pkg_roots.get(name, [])
 
     def _channel(self, rel: str, facts: FileFacts) -> Iterator[tuple[str, str, bool, bool]]:
         """By-name loading: a repo directory plus a literal basename in one module (tree edges)."""

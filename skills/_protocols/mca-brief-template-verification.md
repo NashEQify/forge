@@ -10,7 +10,7 @@ or check Claim-Verifications rows or 4-link closure claims.
 Brief encodes the **selected set** per round, not the full repo suite;
 scope and any due broad run follow `skills/testing/run-strategy.md` §Test
 selection. When a broad run is due, the brief says which round carries
-it and who runs it.
+it and that the full gate's runner runs it.
 
 Per-fix DoD:
 1. **Selected set** — `python3 "$FRAMEWORK_DIR/scripts/select_tests.py" <changed paths>`

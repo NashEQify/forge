@@ -275,5 +275,7 @@ from design).
 
 ## Default commands
 
-Python: `python -m pytest`. Node: `npm test`. Rust:
-`cargo test`. Go: `go test ./...`.
+With the selected set's paths (step 5); the bare form only for a broad
+run step 5 makes yours. Python: `python -m pytest <paths>`. Node:
+`npm test -- <paths>`. Rust: `cargo test --test <name>` per file. Go:
+`go test <packages>`.

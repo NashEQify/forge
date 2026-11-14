@@ -41,6 +41,15 @@ canonical block (below; mechanism cells: `mca-brief-template-decision-classes.md
 Structural success does not establish decision quality, trigger correctness or
 authorization; Buddy retains those judgments. No evidence schema is repurposed.
 
+
+## Test/Verification scope, gate cadence, Claim-Verifications, Reviewer Checkpoints, structural-refactor pre-lock
+
+When writing the brief's test and verification scope (DoD), and before locking a brief that covers several commits,
+uses a claim trigger formulation, is reviewed at L2 or touches imports: read and follow
+`skills/_protocols/mca-brief-template-verification.md` (per-fix DoD and its bind rule; gate cadence; the
+Claim-Verifications table, its triggers and resolved-seam depth; the L2 4-link evidence chain; the import-graph
+pre-lock checklist).
+
 ---
 
 ## Trigger (when the section is mandatory)
@@ -240,13 +249,3 @@ guard to meet its criterion, the brief carries the row with that need;
 everything else is dropped.
 
 Source: BMAD-METHOD (MIT License, © 2025 BMad Code, LLC); Forge's register of adopted methods.
-
----
-
-## Test/Verification scope, gate cadence, Claim-Verifications, Reviewer Checkpoints, structural-refactor pre-lock
-
-When writing the brief's test and verification scope (DoD), and before locking a brief that covers several commits,
-uses a claim trigger formulation, is reviewed at L2 or touches imports: read and follow
-`skills/_protocols/mca-brief-template-verification.md` (per-fix DoD and its bind rule; gate cadence; the
-Claim-Verifications table, its triggers and resolved-seam depth; the L2 4-link evidence chain; the import-graph
-pre-lock checklist).

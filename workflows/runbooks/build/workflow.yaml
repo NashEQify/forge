@@ -536,7 +536,11 @@ steps:
       that drew a HIGH, or an oracle hunk, adds a code-adversary whose
       mandate is the mechanism with the whole matrix as context, not the
       fix — returning a coverage table over the invariants and the rows /
-      columns the fix touches (skill §4). Buddy owns the
+      columns the fix touches (skill §4). Test scope: a fix pass and its
+      re-verify run the selected set for the fix's changes; a due broad run
+      comes once, after the last pass, by the full gate's runner, and no fix
+      brief or dispatch tells another actor to run the whole suite
+      (skills/testing/run-strategy.md §Test selection). Buddy owns the
       decision and verifies pivotal claims after reading the reports or
       Chief consolidation. Fix passes: oracle edits go in a separate hunk
       citing their ruling and are reviewed by a non-implementer

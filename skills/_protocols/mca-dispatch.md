@@ -50,7 +50,9 @@ order:
 
 Exact values (paths, counts, signatures, test cases, boundaries) appear only in the brief: a new value or boundary
 goes into the brief file, and the acceptance check runs again on the file. The dispatch holds one piece of work;
-part 3 holds only what that work uses, never a summary of earlier tasks, passes or the session. Buddy saves the
+part 3 holds only what that work uses, never a summary of earlier tasks, passes or the session. A dispatch orders a whole-suite
+run only to the full gate's runner: the implementer runs the selected set its brief names (`mca-brief-template-verification.md` §Test/Verification
+scope); the broad run is the full gate's runner's (`skills/testing/run-strategy.md` §Test selection). Buddy saves the
 dispatch text in the dispatch file before dispatching, under a first line `BASE: <sha>`
 (`skills/code_review_board/review-package.md` §BASE) and a second line `MODEL: <model> (<role row>)`, the model the
 call passes (`framework/models.md` §Naming the model). Before dispatching, check the brief's fit to the implementer's

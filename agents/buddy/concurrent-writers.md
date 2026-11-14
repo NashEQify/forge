@@ -72,8 +72,14 @@ coordinator cuts no worktree without the record.
 Integration follows the repository's rules — a pull request and its review
 where the repository uses them, otherwise a merge by the coordinator — one
 branch at a time, with the repository's checks on the branch and on the
-merged result (the project's full gate where it names the merger as its runner:
-`skills/testing/lean-suite.md` §Change-scoped runs and the full gate), activation where the change needs it (a merge that changes a non-Markdown
+merged result. The merger's broad run (the project's full gate where it names the merger as its runner:
+`skills/testing/lean-suite.md` §Change-scoped runs and the full gate) is not run when the merged tree is a tree it
+already passed on: `git rev-parse <merged-commit>^{tree}` prints the tree id that run recorded from a clean checkout
+(`git status --porcelain` printed nothing, then `git rev-parse HEAD^{tree}`), as after a branch it ran on was merged
+fast-forward while the target did not move. Otherwise it is due only where `skills/testing/run-strategy.md` §Test
+selection makes it due: the selector answers `broad` for the branch's changes (`select_tests.py --diff
+<target>...<branch>` from the branch's worktree; while the target has not moved since the cut, the session's returned
+line is that answer) or the change touches a safety floor. It then runs once, on the merged result. Then come activation where the change needs it (a merge that changes a non-Markdown
 source hosts read in place is a full-path activation:
 `framework/installation-activation.md` §Choosing the path), and push where
 authorized; then the worktree and branch are removed. Commits in a shared
@@ -85,8 +91,12 @@ rewrite without explicit authorization.
 **Commit, push and transfer.** Put the responsibilities into the brief before
 dispatch. Use this wording for a work item that authorizes local commits:
 
-> Commit your checked changes locally in the assigned checkout and return the
-> commit ID and check results. If a push or live transfer is due, identify the
+> Run the selected set for your change, not the whole suite, which only the
+> full gate's runner runs (`skills/testing/run-strategy.md` §Test selection). Commit your
+> checked changes locally in the assigned checkout and return the commit ID, the
+> check results and the selector's result line for your whole range
+> (`select_tests.py --diff <base>..HEAD`), so I know whether a broad run is due.
+> If a push or live transfer is due, identify the
 > outgoing commits or exact artifact and its intended destination. I handle
 > integration, push and live transfers from the coordinating chat.
 

@@ -127,8 +127,8 @@ reconcile what the previous one held back (`framework/process-map.md`
 outcome and stop condition, the session's model (`framework/models.md` §A
 persistent session's model), the effort budget (Cumulative effort), the checkout
 (shared, or its own worktree and branch, chosen by
-`agents/buddy/concurrent-writers.md`), the division of work below, the commit duties
-(`agents/buddy/concurrent-writers.md` §Commit, push and transfer), the return and
+`agents/buddy/concurrent-writers.md`), the division of work below, the commit duties and
+the session's test runs, in that section's wording (`agents/buddy/concurrent-writers.md` §Commit, push and transfer), the return and
 record location and any parsed-artifact contracts; for work on a task it
 carries the block `## Approved acceptance (read-only)`
 (`skills/_protocols/approved-acceptance.md`). Before writing such a brief, read

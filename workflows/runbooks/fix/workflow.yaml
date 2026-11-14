@@ -159,7 +159,11 @@ steps:
       Safety floors precede file counts and other size signals. DIRECT
       eligibility comes from framework/process-map.md; a fix is not
       automatically L1. Consolidation follows the actual reviewer count
-      under the skill's §1.3. Buddy owns the decision and verifies pivotal
+      under the skill's §1.3. Test scope: a fix pass and its re-verify run
+      the selected set for the fix's changes; a due broad run comes once,
+      after the last pass, by the full gate's runner, and no fix brief or
+      dispatch tells another actor to run the whole suite
+      (skills/testing/run-strategy.md §Test selection). Buddy owns the decision and verifies pivotal
       claims after reading the reports or Chief consolidation.
 
       On post-board FAIL with `target: spec_text` entries: Buddy
@@ -255,9 +259,11 @@ steps:
     name: "Commit + deploy"
     category: deterministic
     instruction: >
-      First make sure the tests skills/testing/run-strategy.md §Test selection
-      asks for ran after the last code change; run them now if not, and do
-      not rerun them after a hash-checked transfer.
+      First make sure the tests that exercise the fix ran after the last code
+      change (skills/testing/run-strategy.md §Test selection); run them now if
+      not. A due broad run is the full gate's runner's: run it here only when
+      you are that runner and it has not followed the last code change, and
+      not again after a hash-checked transfer.
 
       Flip task status=done via the task_status_update skill — NOT a raw
       `status:` YAML edit. The skill runs the cross-task graph closure,
