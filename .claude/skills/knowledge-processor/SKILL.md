@@ -1,6 +1,6 @@
 ---
 name: knowledge-processor
-description: Reconcile useful new information with scoped knowledge and retrieve relevant context before dependent work. Shared continuity infrastructure for all work; no software workflow or user repository is required for project knowledge.
+description: Reconcile useful new information with scoped knowledge and retrieve relevant context before dependent work. Shared continuity infrastructure for all work; no software workflow or user repository is required for project knowledge. Use when new information is worth keeping or prior context is needed before dependent work; NOT for a larger research artifact (use knowledge_capture).
 ---
 
 # Skill: knowledge-processor (Wrapper)

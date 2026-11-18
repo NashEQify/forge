@@ -104,6 +104,7 @@ the save completes. In Git run
 Report actual knowledge/handoff/history outcome, commit/push or reason omitted, and
 concrete partial-persistence/domain blockers. Foreign untouched diffs are not failures.
 Do not represent a successful local save as a successful push.
+The report names each binding the development export lists under `ready_to_close`, with its close request; the save closes nothing.
 
 ## Compatibility
 

@@ -3,7 +3,8 @@ name: transparency-header
 description: >
   Prepare a header for a delegation or task start that identifies the actor, scope
   and intent. The direct-action line in Buddy's operational rules lets the
-  user track a local action in the same conversation.
+  user track a local action in the same conversation. Use when a delegation
+  or a task starts.
 status: active
 relevant_for: ["*"]
 invocation:

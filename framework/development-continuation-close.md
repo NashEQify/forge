@@ -84,6 +84,8 @@ guarantees (`scripts/development_continuation.py` `_envelope`;
   with `stale_baseline` (exit 3); the caller recaptures and reconciles semantically.
   A pending reconciliation naming the handoff blocks the adapter.
 
+The envelope is one unindented JSON line; an older indented one stays readable.
+
 Limits: a verified close removes its binding. The last one removes the fence and leaves the text around it
 byte-identical; when the envelope ends the file, it also takes back the one separator newline the adapter adds when
 it creates the envelope (an envelope created before that rule may leave one newline). A removed binding ID can be
@@ -101,8 +103,12 @@ check has `plan:docs/plan.yaml`. Task archive relocation retains its identity an
 must agree with the authoritative task file's `id`. Task statuses come from the
 plan/task owner. Rebinding adds obligations; changing an existing expectation
 requires explicit `reconcile`, which replaces that identity's expectation while
-retaining every other obligation and records its prior value, reason and evidence.
-It cannot remove an obligation or invent a successful task transition. Run the
+retaining every other obligation. The binding keeps only the current expectation; output
+returns `reconciliation_records` (reason, evidence, prior and reconciled checks) for the caller's evidence
+owner (the commit). An earlier open binding's `reconciliations` list is released first at the next successful
+reconcile or verified close; an earlier closed binding keeps its list until removed by hand. A
+blocked reconcile or a publish refused before writing releases nothing; an interrupted publish's error output
+carries them. Reconcile cannot remove an obligation or invent a successful task transition. Run the
 owner's task-status process first, then submit the observed authoritative status:
 
 ```json
@@ -125,7 +131,9 @@ same qualified result in the closure receipt. Failed or unknown required results
 cannot pass merely because workflow/task terminality passed. Plan validity alone and an empty selection cannot prove completion.
 Failed close preserves all obligations. A successful close removes the binding and returns its verified
 receipt for the caller to keep at its evidence owner; if publication is interrupted, the error output still
-carries that record. A binding closed under the earlier contract stays historical, and export/restore preserve
+carries that record. `export` outputs `ready_to_close`: each open binding that close would verify now, as
+`{"command": "close", "binding_id": "<id>", "reason": "<why>", "evidence": "<path>"}` to fill;
+it closes nothing and stores no `ready_to_close`; a stored check blocker keeps only identity and root-relative reason. A binding closed under the earlier contract stays historical, and export/restore preserve
 its receipt without reopening completed checks.
 
 The engine exports `lifecycle: {status, terminal}` for each selected workflow

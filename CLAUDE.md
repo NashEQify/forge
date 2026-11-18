@@ -24,12 +24,12 @@ only when the active project is the forge repository itself.
 - Use German only when quoting existing German source text verbatim or when the user explicitly requests German output.
 
 ## Frozen Zones + Consistency
-SoT: `docs/STRUCTURE.md`. Consistency cascade: `context-rules.md`.
+SoT: `docs/STRUCTURE.md`. Consistency cascade: `agents/buddy/context-rules.md`.
 
 ## Commit
 Format and types are enforced by the `pre-commit` hook (CG-CONV). On
-`save`: ALWAYS go through `workflows/runbooks/save/WORKFLOW.md`, no
-shortcuts.
+`save`, run `workflows/runbooks/save/WORKFLOW.md` in full: its steps carry
+what a save persists, and a hand-made commit skips them.
 
 Before a commit, Buddy applies operational.md §Post-Action Obligations: what
 the commit changed decides what is persisted (context when something was
@@ -52,7 +52,7 @@ names another committer; parallel writers use their own worktree and branch
 (`agents/buddy/concurrent-writers.md`). `git push` requires authorization for
 publication to the intended remote; destructive operations (force-push,
 `reset --hard`, history rewrite) require explicit authorization for that action.
-A heads-up alone is not permission. See process-map.md, Authorization.
+A heads-up alone is not permission. See `framework/process-map.md` §Authorization.
 
 ## Active Hooks
 
@@ -64,6 +64,8 @@ SessionStart on Claude Code, from the plugin (`orchestrators/claude-code/plugin-
   project's `AGENTS.md` carries the activation line or the user switch
   (`buddy: every-session` in `~/.config/forge/user.yaml`) is on; it yields to a
   leftover machine or project entry so Buddy boots once. Load-bearing for boot.
+- `buddy-boot-inject --plugin --standing-block` — a second handler on the same
+  events that injects the Forge standing rules block.
 
 Codex boots through the plugin's `forge:boot` skill, asked for by the same
 activation line in `AGENTS.md`. Additional-directory access or a Buddy role file
@@ -88,8 +90,8 @@ Everything else is carried by discipline, not hooks:
 - Path: Buddy writes within intent-scope; deliberate-action for anything else.
 - History / WORM zones (`context/history/**`): convention — corrections via
   `.correction.md` sidecars (rare).
-- Delegation prompt quality: `_protocols/dispatch-template.md` +
-  `mca-brief-template.md` carry the brief shape; Buddy authors with the
+- Delegation prompt quality: `skills/_protocols/dispatch-template.md` +
+  `skills/_protocols/mca-brief-template.md` carry the brief shape; Buddy authors with the
   protocol open.
 - Plan-adversary: Buddy invokes `plan-adversary` explicitly on non-trivial
   Tier-1 edits per `_protocols/plan-review.md`.

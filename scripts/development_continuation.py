@@ -85,7 +85,7 @@ def _render(text: str, envelope: dict) -> str:
         return before + after
     block = (
         "```forge-development\n"
-        + json.dumps(envelope, ensure_ascii=False, indent=2)
+        + json.dumps(envelope, ensure_ascii=False, separators=(",", ":"))
         + "\n```\n"
     )
     if match:
@@ -152,6 +152,9 @@ def _validate_binding(binding: dict, root: Path) -> None:
         if identity in seen_checks and seen_checks[identity] != check:
             raise ValueError("conflicting expectations require explicit reconciliation")
         seen_checks[identity] = check
+    history = binding.get("reconciliations", [])
+    if not isinstance(history, list) or not all(isinstance(e, dict) for e in history):
+        raise ValueError("invalid legacy reconciliation history")
     if "closed" in binding:
         receipt = binding["closed"]
         if (
@@ -422,6 +425,26 @@ def _inspect(root: Path, envelope: dict, operation: str) -> dict:
     }
 
 
+def _close_verdict(result: dict, binding: dict) -> tuple[bool, list[dict], list[dict]]:
+    """Close's predicate on one inspected binding; export's ready_to_close uses the same."""
+    states = [x for x in result['states'] if x['workflow_id'] in binding['workflow_ids']]
+    checks = [x for x in result['checks'] if x['check'] in binding.get('required_checks', [])]
+    tasks = [x for x in checks if x['check']['kind'] == 'task']
+    verified = (not binding['blockers'] and bool(states or tasks)
+        and all(x['lifecycle']['terminal'] for x in states)
+        and all(x['status'] == 'complete' for x in checks)
+        and all(x.get('observed_status') in TERMINAL_STATUSES for x in tasks))
+    return verified, states, checks
+
+
+def _stored_blocker(problem: dict, root: Path) -> dict:
+    """A check blocker is stored as its identity and a root-relative reason; workflow blockers stay whole."""
+    if isinstance(problem.get("check"), dict):
+        reason = str(problem.get("reason", "")).replace(str(root) + "/", "").replace(str(root), ".")
+        return {"check": _check_id(problem["check"]), "reason": reason}
+    return problem
+
+
 def contribute(command: str, root: Path, handoff: str, request: dict) -> dict:
     root = root.resolve(strict=True)
     scope = resolve_continuity_scope('project', root)
@@ -462,7 +485,9 @@ def contribute(command: str, root: Path, handoff: str, request: dict) -> dict:
             }
             binding["check_observation_refs"] = copy.deepcopy(existing.get("check_observation_refs", []))
             binding["observed_states"] = existing.get("observed_states", {})
-            binding["reconciliations"] = existing.get("reconciliations", [])
+            if "reconciliations" in existing:
+                # A list written under the earlier contract; it leaves at the next successful reconcile or verified close.
+                binding["reconciliations"] = existing["reconciliations"]
             if existing.get("closed"):
                 raise ValueError(
                     "closed binding cannot reopen; select a new binding identity"
@@ -476,8 +501,14 @@ def contribute(command: str, root: Path, handoff: str, request: dict) -> dict:
         else:
             envelope["bindings"].append(binding)
     elif command in {"reconcile", "close"}:
-        if not request.get("reason") or not request.get("evidence"):
+        if not all(
+            isinstance(request.get(key), str) and request[key]
+            for key in ("reason", "evidence")
+        ):
             raise ValueError("explicit lifecycle reason and evidence required")
+        if any(request[key].strip() in ("<why>", "<path>") for key in ("reason", "evidence")):
+            # Export's ready_to_close request names placeholders the caller must fill.
+            raise ValueError("placeholder reason or evidence")
         target = next(
             (
                 b
@@ -488,13 +519,22 @@ def contribute(command: str, root: Path, handoff: str, request: dict) -> dict:
         )
         if target is None or target.get("closed"):
             raise ValueError("open binding identity required")
+        _validate_binding(target, root)
+        # History never stays in the handoff: legacy entries first, then this reconcile's
+        # record, are released in the output for the caller's evidence owner.
+        records = [
+            {"binding_id": target["binding_id"], **entry}
+            for entry in target.get("reconciliations", [])
+        ]
         if command == "reconcile":
+            target.pop("reconciliations", None)
             before_checks = target.get("required_checks", [])
             target["required_checks"] = _merge_checks(
                 before_checks, request.get("required_checks", []), reconcile=True
             )
-            target.setdefault("reconciliations", []).append(
+            records.append(
                 {
+                    "binding_id": target["binding_id"],
                     "reason": request["reason"],
                     "evidence": request["evidence"],
                     "prior_checks": before_checks,
@@ -512,13 +552,7 @@ def contribute(command: str, root: Path, handoff: str, request: dict) -> dict:
     result = _inspect(root, envelope, command)
     if command == 'close':
         selected = next(b for b in result['bindings'] if b['binding_id'] == request['binding_id'])
-        selected_states = [x for x in result['states'] if x['workflow_id'] in selected['workflow_ids']]
-        selected_checks = [x for x in result['checks'] if x['check'] in selected.get('required_checks', [])]
-        tasks = [x for x in selected_checks if x['check']['kind'] == 'task']
-        verified = (not selected['blockers'] and bool(selected_states or tasks)
-            and all(x['lifecycle']['terminal'] for x in selected_states)
-            and all(x['status'] == 'complete' for x in selected_checks)
-            and all(x.get('observed_status') in TERMINAL_STATUSES for x in tasks))
+        verified, selected_states, selected_checks = _close_verdict(result, selected)
         if verified:
             selected.update(closed={'reason': request['reason'], 'evidence': request['evidence'],
                 'verified_states': [{k: v for k, v in x.items() if k not in ('state', 'stale_inputs')} for x in selected_states],
@@ -540,7 +574,21 @@ def contribute(command: str, root: Path, handoff: str, request: dict) -> dict:
                 # A verified close removes the binding; the output keeps its closed record.
                 final_bindings = [b for b in final_bindings if b['binding_id'] != ids[0]]
     elif command == 'export':
-        final_bindings = copy.deepcopy(result['bindings'])
+        # The handoff keeps a check blocker's identity and reason; the output keeps the full result.
+        final_bindings = [dict(b, blockers=[_stored_blocker(p, root) for p in b['blockers']])
+                          for b in copy.deepcopy(result['bindings'])]
+        # Output only: close's own predicate names what the caller may close; nothing closes here.
+        result['ready_to_close'] = [
+            {'command': 'close', 'binding_id': b['binding_id'], 'reason': '<why>', 'evidence': '<path>'}
+            for b in result['bindings'] if 'closed' not in b and _close_verdict(result, b)[0]]
+    released = None
+    if command in {'reconcile', 'close'} and not selected_result['blockers']:
+        released = {'binding_id': ids[0]}
+        if command == 'close':
+            released['closed'] = selected['closed']
+        if records:
+            released['reconciliation_records'] = records
+            result['reconciliation_records'] = records
     if final_bindings is not None and envelope['bindings']:
         # One publish with the accepted binding changes and their receipts; legacy top-level data passes through.
         owner = copy.deepcopy(accepted)
@@ -551,9 +599,11 @@ def contribute(command: str, root: Path, handoff: str, request: dict) -> dict:
                 'source_references': ['development adapter'],
                 'affected_paths': [handoff], 'replacements': {handoff: _render(text, owner)}})
         except continuity.ContinuityError as exc:
-            if command == 'close':
-                # The handoff may already lack the binding; the caller must still receive its closed record.
-                exc.closed_binding = {'binding_id': selected['binding_id'], 'closed': selected['closed']}  # type: ignore[attr-defined]
+            if released and exc.reason == 'publication_interrupted':
+                # The write may have landed: the handoff may already lack the binding or its
+                # history, so the output is their only copy. A publish refused before writing
+                # (stale baseline, lock, invalid request) releases nothing; the handoff still holds them.
+                exc.released = released  # type: ignore[attr-defined]
             raise
     if command == 'restore':
         result['retention'] = 'not_persisted'
@@ -584,9 +634,7 @@ def main(argv: list[str] | None = None) -> int:
             "status": "blocked",
             "blockers": [{"reason": reason}],
         }
-        closed_binding = getattr(exc, "closed_binding", None)
-        if closed_binding:
-            payload.update(closed_binding)
+        payload.update(getattr(exc, "released", None) or {})
         print(json.dumps(payload))
         return exc.code if isinstance(exc, continuity.ContinuityError) else 2
 
