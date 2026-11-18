@@ -1,0 +1,475 @@
+# Spec Board — Multi-Model Review Sub-Workflow
+#
+# SoT for Board-Mechanik. Referenziert von:
+#   - workflows/runbooks/build/WORKFLOW.md (Phase Specify, BOARD Step)
+#   - framework/spec-engineering.md (Schritt 3a-3c)
+#   - workflows/runbooks/build/WORKFLOW.md (Specify-Phase)
+#   - skills/spec_board/SKILL.md (Callable Skill)
+#   - agents/buddy/multi-perspective.md (Board + Council)
+#   - agents/README.md (Agent-Landschaft)
+#   - skills/convergence_loop/SKILL.md (generisches Konvergenz-Protokoll)
+#
+# Kern-Idee: 7 unabhaengige Reviewer, Context-Isolation (CC = Claude Code Sub-Agents),
+# konvergieren durch Loop. Staerkstes Model entscheidet finale Freigabe.
+# Sub-Agent-MDs (SoT): agents/board-{chief,adversary,adversary-2,implementer,impact,consumer}.md
+# (the third Deep-Pass adversary is a Sonnet instance of board-adversary)
+# Claude Code: general agent run told to read the SoT file (the plugin lists no board role)
+#
+# v6.0 — 2 Modi (Standard/Deep), Quick eliminiert, empirisch validiertes Agent-Narrowing
+# v5.2 — Consumer: Document Architecture Lens + Consumption Profile
+# v5.1 — 7-Persona Board, 2 Betriebsmodi (review/synthesize), 2 Tiefenmodi (Quick/Deep)
+# Breaking Changes v5.2 → v6.0:
+#   - Quick eliminiert. 2 Modi: Standard (3-4 Agents, 1 Pass) + Deep (7→4→2, Convergence)
+#   - Standard: Opus-only. Deep: 5 Opus + 2 Sonnet in Pass 1, 4 Opus ab Pass 2
+#   - Implementer-Modell-Upgrade: Sonnet → Opus (Sonnet Implementer empirisch unzureichend)
+#   - Deep Discovery: Pass 1 only (nicht Pass 1-2). Narrowing ab Pass 2
+#   - Minimum-Viable-Review = 3 Agents
+# Breaking Changes v4.0 → v5.0 (kumulativ): 5→7 Reviewer, Adversary 2+3 neu
+# Breaking Changes v3.0 → v4.0 (kumulativ): 3→5 Reviewer
+
+version: "6.0"
+
+# ============================================================
+# Voraussetzungen and Begriffe
+# ============================================================
+#
+# P1-P5: Die 5 Spec Primitives (Self-Containedness, Completeness, Constraint
+#   Architecture, Agentic Safety, Intent-Driven Naming).
+#   Definiert in: framework/spec-engineering.md, Abschnitt "Die 5 Primitives".
+#
+#
+# CC (Claude Code): CLI-Tool for Agent-Ausfuehrung. Sub-Agents haben
+#   isolierte Context Windows (CC Sub-Agent-Isolation).
+#
+# Harness: Automatisiertes Ausfuehrungs-Framework for headless CC-Instanzen.
+#   Tier 2 Repraesentation. Nicht gebaut — Spec beschreibt Zielzustand.
+#
+# gates.yaml: Task-spezifisches Tracking-File for Gate-Status.
+#   Pfad: docs/tasks/{task_id}-gates.yaml.
+#   Schema: gates-template.yaml. Relevante Felder: spec_review.{mode, status, escalated_from}.
+#
+# Foundation-Spec: Spec die ein neues Subsystem, ein Core-Interface, or einen
+#   grundlegenden Workflow definiert. Erkennung: siehe foundation_flag.detection_criteria.
+#
+# Finding-IDs:
+#   F-{role_initial}-{NNN}: Lokale Finding-ID eines einzelnen Reviewers.
+#     C = Chief, A = Adversary, A2 = Adversary 2, A3 = Adversary 3,
+#     I = Implementer, X = Impact, S = Consumer.
+#     Eindeutig pro Reviewer pro Pass.
+#   C-{NNN}: Konsolidierte Finding-ID aus der Aggregation (von Buddy vergeben).
+#     Sequenziell ueber alle Passes. Mapping auf Original-IDs dokumentiert.
+
+# ============================================================
+# Modus-Auswahl (Buddy, 2 Schritte)
+# ============================================================
+
+mode_selection:
+  description: >
+    Zwei Schritte, kein Ermessen:
+
+    Schritt 0 — Scoped Pre-Check:
+      "Spec hat board_result: pass/pass_with_risks UND change betrifft <= 3 Sektionen?"
+        → Ja: STANDARD mit 3 Reviewern (Adversary + Implementer + Impact, kein Chief Discovery)
+        → Nein: Schritt 1
+
+    Schritt 1 — Tiefenauswahl:
+      "Neues Verhalten, neues Interface, >1 Schicht, or Security-relevant?"
+        → Ja: DEEP
+        → Nein: STANDARD mit 4 Reviewern (Chief + Adversary + Implementer + Impact)
+
+    Development Process Full Path: IMMER deep (mit DR-Scorecard).
+    Modus wird in gates.yaml notiert: spec_review.mode: standard|deep
+
+  escalation:
+    description: >
+      Standard kann waehrend des Reviews zu Deep eskalieren.
+      Eskalation ist ONE-WAY (nie zurueck zu Standard).
+    trigger: >
+      Konsolidierte Findings (nach phase_2_aggregation) enthalten >= 1 Finding
+      mit severity critical ODER >= 3 Findings mit severity high.
+    action: >
+      Switch zu Deep.
+      Deep startet bei Pass 2 (nicht Pass 1). Die Standard-Pass-1-Findings werden
+      als "Pass 1" in den Deep-Loop uebernommen.
+      prev_new_count wird mit der Anzahl Standard-Pass-1 high+ Findings initialisiert.
+      WICHTIG — Divergenz-Check im ersten Deep-Pass nach Eskalation:
+      Deep hat mehr Agents als Standard. Der Divergence-Check (Step 5)
+      wird for pass == 2 UND escalated_from == standard AUSGESETZT.
+      Ab pass == 3 gelten die normalen Divergenz-Regeln.
+      pass-Zaehler: Standard-Pass-1 = pass 1 (global). Deep startet bei pass = 2.
+      Stagnation-Check (pass >= 3) and Safety Valve (pass >= 5) zaehlen global.
+      gates.yaml update: spec_review.mode: deep, spec_review.escalated_from: standard.
+
+# ============================================================
+# Betriebsmodi: review vs. synthesize
+# ============================================================
+#
+# Das Board hat zwei Betriebsmodi. Beide nutzen dieselben 7 Agents,
+# dieselbe Dispatch-Mechanik, dieselbe Isolation.
+# Unterschied: Was die Agents produzieren.
+
+operation_modes:
+
+  review:
+    description: >
+      Standard-Modus. Agents analysieren die Spec and produzieren Findings.
+      Output: Review-Files mit Findings (severity, scope, primitive, suggested_fix).
+      Konvergenz: 0 critical + 0 high.
+    output_type: findings
+    when: "Board Review einer bestehenden Spec"
+
+  synthesize:
+    description: >
+      Fix-Modus. Agents bekommen Findings + Spec and schreiben gefixte Spec-Sektionen.
+      Jeder Agent fixt aus seiner Perspektive. Agents die nichts beizutragen haben
+      liefern "no changes" (billig). Chief aggregiert die Fixes and baut eine neue Spec-Version.
+      Danach: review-Pass zur Verifikation.
+
+      Gleicher Dispatch-Mechanismus wie review (7 Agents parallel, Context-Isolation).
+      Gleiche Model-Zuordnung (Quick/Deep).
+
+      Flow im Convergence-Loop:
+        1. review-Pass: Findings finden
+        2. Chief konsolidiert + schreibt Findings-Briefing
+        3. SAVE (mechanisch)
+        4. synthesize-Pass: Agents fixen (Input: Findings + Spec)
+        5. Chief aggregiert Proposals + baut neue Spec-Version (spec_version++)
+        6. Adversary + Implementer pruefen Integration
+        7. SAVE (mechanisch)
+        8. review-Pass: verifizieren ob Fixes halten
+        9. SAVE
+        → Loop bis konvergiert
+
+      Auch for Spec-Erstellung nutzbar (creation = synthesize auf leerer Basis):
+        Pass 1: Agents schreiben Spec-Draft unabhaengig (Input: Briefing)
+        Pass 2: Agents lesen alle v1-Drafts + User-Draft, schreiben v2
+        Chief aggregiert → konsolidierte Spec → review-Pass
+    output_type: fixed_spec_sections
+    when: >
+      (a) Convergence-Loop: nach review-Pass mit high+ Findings.
+      (b) Spec-Erstellung (creation): Foundation-Specs mit Multi-Perspektiven-Entwurf.
+
+    agent_prompt_template: >
+      SYNTHESIZE-MODUS — Du bist im Fix-Modus, nicht im Review-Modus.
+
+      Input:
+      - Spec: {spec_path}
+      - Findings die gefixt werden muessen: {findings}
+
+      Aufgabe: Schreibe die gefixten Spec-Sektionen.
+      Fuer jedes Finding: zeige die VORHER/NACHHER-change mit Kontext.
+      Wenn ein Finding nicht in deinem Kompetenzbereich liegt: "no changes" mit rationale.
+      Wenn ein Fix Seiteneffekte in anderen Sektionen hat: dokumentiere sie.
+
+      Output-Format:
+      ## Fixes
+      ### Fix for {Finding-ID}: {Kurzbeschreibung}
+      **Sektion:** {Sektions-Name/Nummer}
+      **Vorher:**
+      ```
+      {Original-Text}
+      ```
+      **Nachher:**
+      ```
+      {Gefixter Text}
+      ```
+      **Seiteneffekte:** {keine | Liste betroffener Sektionen}
+
+      ### no changes: {Finding-ID}
+      **rationale:** {Warum dieser Agent nichts beizutragen hat}
+
+      ## Summary
+      - fixes_proposed: {N}
+      - no_changes: {N}
+      - side_effects_flagged: {N}
+
+    output: "docs/reviews/board/{spec-name}-synthesize-pass{N}.md"
+
+# ============================================================
+# Tiefenmodi: Standard / Deep
+# ============================================================
+#
+# Standard: 3-4 Reviewer (Opus), 1 Pass. Default for alle Reviews.
+# Deep: 7→4→2 Reviewer, Convergence-Loop. Fuer Foundation, Security, Multi-Layer.
+#
+# Empirische Basis (v6.0):
+#   - Agents 5-7 (Consumer, Adv-2, Adv-3) liefern marginale Returns in Single Pass
+#   - Ihr Wert entsteht in Convergence Loops (Diversitaet bricht Anchoring)
+#   - Sonnet Implementer empirisch unzureichend → Opus
+#   - Scoped Board (3 Agents) reicht für CRITICAL + alle relevanten HIGHs (empirisch verifiziert)
+
+modes:
+
+  standard:
+    description: >
+      Default-Modus. 3-4 Reviewer, alle Opus, 1 Pass.
+      Wenn sauber: Final Arbiter → done.
+      Wenn >= 1 critical or >= 3 high: auto-escalate zu Deep.
+
+      Variante A (reviewed Spec, <= 3 Sektionen geaendert):
+        3 Reviewer — kein Chief Discovery (Spec war bereits reviewed).
+        Chief nur for Consolidation.
+
+      Variante B (neue Spec or breite change):
+        4 Reviewer — Chief macht Discovery + Consolidation.
+    reviewer_config:
+      variant_a_reviewed:
+        reviewers: 3
+        agents:
+          - role: adversary
+            model: opus
+            sub_agent: board-adversary
+          - role: implementer
+            model: opus
+            sub_agent: board-implementer
+          - role: impact
+            model: opus
+            sub_agent: board-impact
+        chief: consolidation_only
+      variant_b_new:
+        reviewers: 4
+        agents:
+          - role: chief
+            model: opus
+            sub_agent: board-chief
+          - role: adversary
+            model: opus
+            sub_agent: board-adversary
+          - role: implementer
+            model: opus
+            sub_agent: board-implementer
+          - role: impact
+            model: opus
+            sub_agent: board-impact
+    checkpoint: combined
+    convergence: "0 critical, 0 high in konsolidierten Findings"
+    final_arbiter: opus
+    expected_cc_calls:
+      variant_a: { per_pass: 3, consolidation: 1, final_arbiter: 1, total: 5 }
+      variant_b: { per_pass: 4, final_arbiter: 1, total: 5 }
+
+  deep:
+    description: >
+      Gruendlicher Review. Convergence-Loop bis 0 critical + 0 high.
+      Foundation-Specs: Chief erhaelt DR-Scorecard-Instruktion
+      (alle 12 Design Rules, nicht Spot-Check).
+
+      Phase-basiertes Agent-Narrowing:
+        Discovery (Pass 1): 7 Agents — volle Breite, frischer Blick
+        Convergence (Pass 2+): 4 Agents (Adv + Adv2 + Impl + Impact) — fokussiert
+        Verification (Final): 2 Agents (Adv + Impl) — mechanisch
+      Sonnet-Perspektiven (Adv-3, Consumer) laufen NUR in Pass 1.
+      Ab Pass 2: alle Opus.
+    phases:
+      discovery:
+        passes: [1]
+        reviewers: 7
+        agents:
+          - { role: chief, model: opus }
+          - { role: adversary, model: opus }
+          - { role: adversary-2, model: opus }
+          - { role: adversary-3, model: sonnet }
+          - { role: implementer, model: opus }
+          - { role: impact, model: opus }
+          - { role: consumer, model: sonnet }
+      convergence:
+        passes: "2+"
+        reviewers: 4
+        agents:
+          - { role: adversary, model: opus }
+          - { role: adversary-2, model: opus }
+          - { role: implementer, model: opus }
+          - { role: impact, model: opus }
+        chief: consolidation_only
+        note: "Consumer + Adv-3 fallen nach Pass 1 raus. Ihr Wert liegt im frischen Blick (Discovery), nicht in Fix-Verifikation."
+      verification:
+        passes: "final"
+        reviewers: 2
+        agents:
+          - { role: adversary, model: opus }
+          - { role: implementer, model: opus }
+        buddy: "Buddy liest Verification direkt (kein Chief noetig)"
+    checkpoint: combined
+    convergence: "0 critical, 0 high in konsolidierten Findings"
+    final_arbiter: opus
+    expected_cc_calls:
+      pass_1: 7
+      pass_2_plus: 4
+      verification: 2
+      formula: "7 + (4 * (passes-1)) + 2 + 1"
+      range: "min=14 (2 Passes + Verify + Arbiter), typical=18-22"
+
+    foundation_flag:
+      description: >
+        Wenn Spec eine Foundation-Spec ist: Chief bekommt DR-Scorecard-Instruktion
+        automatisch (kein Opt-out). Buddy setzt foundation=true im Review-Prompt.
+      trigger: "Development Process Full Path, or detection_criteria erfuellt"
+      detection_criteria:
+        description: >
+          Mindestens eins der folgenden Kriterien muss zutreffen:
+        criteria:
+          - "Spec fuehrt ein neues Subsystem-Verzeichnis ein (neuer Ordner unter src/)"
+          - "Spec definiert ein neues shared Interface das >1 andere Spec konsumiert"
+          - "Spec erstellt ein neues Schema (DB, API, Event, Pydantic Model)"
+          - "Spec ist in SPEC-MAP.md als Foundation markiert"
+          - "Development Process Full Path (automatisch)"
+      chief_prompt_addition: >
+        Zusaetzlich zu P1-P5: Pruefe gegen ALLE 12 Design Rules.
+        DR-Scorecard: PASS | RISK | FAIL pro DR.
+        Findings mit severity=high for jedes FAIL, severity=medium for jedes RISK.
+        Scorecard als eigener Abschnitt im Review-Output.
+
+# ============================================================
+# Reviewer-Rollen (7 Personas)
+# ============================================================
+
+reviewer_roles:
+
+  chief:
+    description: >
+      Konsistenz, Intent-Alignment, Completeness. Final Arbiter.
+      Prueft gegen P1-P5 (5 Spec Primitives) and DR-Spot-Check (3-5 DRs).
+      Validiert E2E-Szenarien (wenn in Spec vorhanden) auf Datenfluss-Korrektheit.
+    focus: [consistency, intent, completeness, dr_scorecard, e2e_scenario_validation]
+    extra_input: null
+    agent: board-chief
+
+  adversary:
+    description: >
+      Edge Cases, smart-but-wrong Scenarios, Widersprueche,
+      fehlende Failure Modes. E2E Data Flow Simulation (konkrete Inputs
+      durch die gesamte Pipeline verfolgen). First-Run/Bootstrap-Szenarien.
+      Boundary-Tracing an Komponenten-Grenzen (Race Conditions, Ordering).
+      Scope-Complete E2E, Alternative-Approach, Change-Impact, Planung.
+    focus: [edge_cases, contradictions, failure_modes, smart_but_wrong,
+            e2e_data_flow, first_run_bootstrap, boundary_tracing,
+            scope_complete_e2e, alternative_approach, change_impact]
+    extra_input: null
+    agent: board-adversary
+
+  adversary-2:
+    description: >
+      Zweiter Adversary mit First-Principles-Analyse. Identische Basis
+      wie Adversary (E2E, smart-but-wrong, Boundary-Tracing). Zusaetzlich:
+      Intent- and Task-Decomposition von Grund auf, Alternative-Assessment.
+      Laeuft parallel and unabhaengig — generiert eigene E2E-Szenarien.
+    focus: [edge_cases, contradictions, failure_modes, smart_but_wrong,
+            e2e_data_flow, boundary_tracing, first_principles,
+            scope_complete_e2e, alternative_approach, change_impact]
+    extra_input: null
+    agent: board-adversary-2
+
+  adversary-3:
+    description: >
+      Third adversary as a Sonnet variant of board-adversary. Identical
+      methodology — no separate persona file. Cheaper third E2E perspective.
+      Runs in parallel and generates independent E2E scenarios. Buddy
+      dispatches with model=sonnet (override of board-adversary.md's Opus
+      default) and manually sets the finding prefix to F-A3- for continuity
+      with existing audit files.
+    focus: [edge_cases, contradictions, failure_modes, smart_but_wrong,
+            e2e_data_flow, first_run_bootstrap, boundary_tracing,
+            scope_complete_e2e, alternative_approach, change_impact]
+    extra_input: null
+    agent: board-adversary
+    model: sonnet
+    finding_prefix: F-A3-
+
+  implementer:
+    description: >
+      Umsetzbarkeit, fehlende Details, API-Annahmen,
+      Integration mit bestehendem Code. First-Run/Bootstrap-Anforderungen.
+      Infra-Realitaet (passt das Design auf die Ziel-Hardware?).
+    focus: [buildability, missing_details, api_verification, integration,
+            first_run_bootstrap, infra_reality]
+    extra_input: null
+    agent: board-implementer
+
+  impact:
+    description: >
+      Cross-Spec Blast Radius. Interface-Breaks. Dependency Chains.
+      Bewertet Auswirkungen von changeen auf Nachbar-Specs.
+      Infrastruktur-Impact (neue Prozesse, Container, Ressourcen-Anforderungen).
+      Cross-Spec E2E Simulation (Daten ueber Spec-Grenzen verfolgen).
+      Scope-Complete E2E, Alternative-Approach, Change-Impact, Planung.
+    focus: [blast_radius, interface_breaks, dependency_chains, ripple_effects,
+            infra_impact, cross_spec_e2e, scope_complete_e2e,
+            alternative_approach, change_impact]
+    extra_input:
+      - docs/specs/SPEC-MAP.md
+      - >
+        Neighbor-Spec-Header: Buddy extrahiert aus SPEC-MAP die 'Konsumiert'
+        and 'Konsumenten' Spalten for die reviewte Spec and laedt die
+        referenzierten Spec-Header (Name, Version, Interface-Sections).
+        Fallback: Wenn SPEC-MAP keinen Eintrag for die Spec hat, meldet
+        Impact Analyst dies als Finding and arbeitet nur mit den in der
+        Spec selbst referenzierten Nachbar-Specs.
+    agent: board-impact
+
+  consumer:
+    description: >
+      Readability, Clarity, Developer Comprehension, Document Architecture.
+      Simuliert einen Erstleser der weiss WO das Dokument operativ lebt.
+    focus: [readability, clarity, ambiguity, self_containment, onboarding, document_architecture]
+    extra_input:
+      - >
+        CONSUMPTION_PROFILE: Consumer bekommt die Spec + ein Consumption Profile.
+        Kein SPEC-MAP, keine Nachbarn, kein intent.md, keine architecture-overview.md.
+        Simuliert First-Reader-Perspektive MIT operativem Kontext.
+      - >
+        consumption_profile (von Buddy erstellt):
+          loaded_by: Wer laedt dieses Dokument (z.B. "Buddy bei Task-Start", "MCA bei Implementation")
+          co_loaded: Was ist gleichzeitig im Context Window (Dateiname + ~Zeilen)
+          pattern: Architektur-Pattern (z.B. "Routing-Dokument (WANN), Detail in Skill-Files (WIE)")
+    agent: board-consumer
+
+# ============================================================
+# Model Override Mechanismus
+# ============================================================
+#
+# The role files set no model (framework/models.md); the Agent tool call
+# names the model through its model parameter.
+#
+# Standard is all-Opus. Deep Pass 1 has 2 Sonnet instances (Adversary-3-as-
+# sonnet-instance, Consumer). Deep Pass 2+ is all-Opus (the third adversary
+# and Consumer are not part of Pass 2+).
+#
+# The third adversary in Deep Pass 1 is a second instance of board-adversary
+# with model=sonnet override and finding_prefix=F-A3-. There is no separate
+# board-adversary-3 persona file.
+#
+# The phases/reviewer_config above are the SoT for the per-mode model.
+
+# ============================================================
+# Constraints (MUST / MUST NOT / PREFER / ESCALATE)
+# ============================================================
+
+constraints:
+
+  must:
+    - "Standard: 3-4 Reviewer (Opus). Deep: 7 in Pass 1, 4 ab Pass 2, 2 in Verification"
+    - "Context-Isolation: Kein Reviewer sieht den Output eines anderen Reviewers"
+    - "Konvergenz-Kriterium: 0 critical + 0 high in konsolidierten Findings"
+    - "Finding-Tracking ab Pass 2: jedes vorherige Finding als RESOLVED or STILL_PRESENT"
+    - "Final Arbiter (Chief, Opus) entscheidet Freigabe nach Konvergenz"
+    - "spec_version++ bei jedem Fix zwischen Passes"
+
+  must_not:
+    - "Reviewer duerfen NICHT die Reviews anderer Reviewer sehen (Context-Isolation)"
+    - "Board reviewed KEINE Code-Artefakte — nur Specs"
+    - "Einzelne Reviewer aendern KEINE Spec — nur Chief im Aggregation-Step (4b) baut die neue Version"
+    - "Board gibt KEINE Architektur-Empfehlungen — das macht Council"
+    - "Consumer darf KEINE anderen Dateien lesen ausser der Spec and seinem Output-File (Consumption Profile kommt inline im Prompt)"
+
+  prefer:
+    - "Bei Deduplizierung: hoehere Severity gewinnt"
+    - "Bei gleicher Severity: Finding mit mehr Reviewer-Bestaetigungen hat hoehere Konfidenz"
+    - "Standard bevorzugen wenn kein Trigger for Deep vorhanden"
+
+  escalate:
+    - "Wenn alle 7 Reviewer dasselbe Finding mit entgegengesetzter Bewertung haben: User-Entscheidung"
+    - "Wenn Finding eine Architektur-Entscheidung erfordert: → Council, nicht Board-Fix"
+    - "Wenn Divergenz-Check auslöst: → User mit Council-Empfehlung"
+
+# convergence_loop, process, failure_modes, post_review, tier_behavior and
+# propagation_checklist: workflows/templates/spec-board-convergence.yaml

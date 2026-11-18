@@ -1,0 +1,136 @@
+# DIRECT eligibility
+
+Step-loaded unit of `framework/process-map.md`. Read it before taking or proposing the DIRECT path for software
+work, and when a verified known fix is considered for DIRECT.
+
+## DIRECT eligibility
+
+Write the three sizing facts (`workflows/runbooks/build/lifecycle.md` §Sizing facts) and check against them,
+safety floors first. DIRECT excludes changes to authorization/auth,
+secrets, schema/data migration, public or cross-component contracts, live
+infrastructure, and changes with hidden/racing/unbounded failure effects.
+Size does not cancel a safety floor.
+
+Before choosing DIRECT, trace what the producer changes and what each affected
+consumer calls, reads or relies on before and after. Record the deciding fact and
+its source in the sizing facts. A new CLI call or a new value in a versioned
+definition can change the contract while the earlier invocation or format still
+works. Resolve consequential gaps before choosing DIRECT.
+
+Otherwise DIRECT requires ALL of:
+- A clear authorized outcome and concrete success criteria.
+- A locally bounded, reversible change following an observed existing pattern.
+- No unresolved consequential design decision or new subsystem.
+- Relevant implementation/spec context read and an executable verification
+  appropriate to the changed behavior; a defect's claimed cause is checked.
+
+New local behavior is allowed. A pre-existing spec is not a reason to repeat
+spec authoring; update any affected contract description within scope. File
+and line counts are useful warning signals, never the eligibility decision.
+If a criterion is unknown, gather targeted evidence; if still unresolved,
+use STANDARD/FULL or ask the missing decision, not a ritual authorization.
+
+## Choosing the path
+
+An eligible change still needs a choice of how much check it gets (Invariant 9):
+what a defect would cost, how easily the change is undone, and how sure the
+record is that it does what it should. Choose one path per change:
+
+- **quick:** the change alters no behaviour (a typo, formatting, wording), or
+  it is a trivially reversible local change whose existing test shows its
+  effect directly. A defect would show at once and cost little to undo.
+- **checked:** the change alters local behaviour along an observed pattern,
+  and an executable test covers that behaviour. The test carries the risk;
+  Buddy's own reading of the diff and rerun of the test is enough second look.
+- **reviewed:** uncertainty remains (the cause, the pattern or the test's
+  reach is not established), or the effect reaches beyond the changed unit. A
+  defect could pass the builder's tests unseen, so someone who did not build
+  it checks.
+
+In doubt between two paths, ask in one sentence that names both and the
+reason, so a word answers it ("Checked or reviewed? The test covers the
+parser, not the two callers that read its output."). Where the user said to
+run the work through without stopping, take the heavier of the two instead and
+name it with the reason in the result. The user's word sets the path in either
+direction for the change it names ("quick", "reviewed"), and so does a standing
+preference in the user profile; neither lifts a safety floor or eligibility:
+work outside them gets one sentence saying why, and the path it takes instead.
+Interactive and autonomous work choose the same way. A question, a lookup or a
+request that changes no code has no path to choose and gets no question about
+one.
+
+## The DIRECT run
+
+DIRECT is a short complete lifecycle of four steps, in this order:
+
+1. **Record:** in the turn, the sizing facts, path, outcome, scope, success criteria and verification plan.
+   Ground the scope in the applicable project intent and original local objective. Cite both, show how the
+   choice serves both and hold the dependent choice on missing or conflicting intent
+   (owner: framework/invariants.md §Intent-driven). This record is the delegation.
+2. **Build:** before a substantive deviation from the approach, apply the Record's intent comparison
+   in the existing decision. If a proposed or discovered change alters the producer, its consumers or
+   their expectations, the builder holds that deviation while Buddy checks eligibility again.
+   On checked and reviewed, main-code-agent receives the record in its prompt,
+   implements, runs the relevant tests and returns inline (`agents/main-code-agent.md` §Direct path).
+   On quick, Buddy makes the change himself and runs the relevant test (the exception in Invariant 4).
+3. **Check:** compare the actual diff with the Record's deciding scope facts before using the planned
+   DIRECT check. If a safety floor applies or a consequential fact remains unresolved, hold the affected
+   work until the route is resolved. Use the Record's intent comparison before relying on a result to
+   change the cut. On reviewed, a change to behaviour gets one fresh-context
+   `code-verification` seat, started as its own agent run and never the
+   implementer. Dispatch either host role form through
+   `skills/_protocols/role-dispatch.md` §The call with the record, the implementer's
+   return and the diff. The seat independently runs the required reproduction
+   and assigned direct exercises. For equivalent selected-suite execution, it
+   runs the applicable set or qualifies its original receipt under
+   `skills/testing/run-strategy.md` §Run strategy. The seat returns inline.
+   A typo- or format-only change gets a diff check. On checked,
+   Buddy reads the diff and reruns the tests himself. On quick, nothing checks
+   beyond the builder's own test.
+4. **Report:** Buddy reads the returns and checks the claim the result rests on. Before claiming completion,
+   check the conditions for the same-turn exception below and qualify the remaining evidence duties
+   (owner: framework/agent-autonomy.md §Path precedence). Before closing a reviewed
+   round or starting another, record each new probe's retained test or scratch mark so unsettled probes
+   stay out of later queues (owner: skills/testing/run-strategy.md §Review execution). The final reply, after any boot status the first answer opens with
+   (`agents/buddy/boot.md` §Restricted user scope), says what the change now
+   does in the request's own terms (the behaviour it promised, not only the
+   code edit) and the results of the checks. For a test, give the command run after
+   the edit, its exit status and the pass, fail and skip counts. Say what it exercised. One line after it
+   names the path, why it was chosen when Buddy chose it, who changed the code
+   and what did not run (on quick: "changed by Buddy himself, no independent
+   check"). On reviewed it names the verifying agent run by its name or id,
+   with its verdict and the commands it ran. A check that Buddy or the building
+   agent ran itself is reported as its own check, never as independent; so is a
+   verifier run that executed nothing or returned PARTIAL. When no separate
+   agent run can be started for reviewed, the reply says the change has no
+   independent check.
+
+A role that is not installed as an agent type on the host runs as a general
+agent run told to read its role file (`agents/<role>.md`) first (`skills/_protocols/role-dispatch.md`); a missing
+agent type is not a reason to build or check inline.
+
+No separate spec, architect or signoff cycle, and no workflow engine.
+
+The work **closes in its turn** when it has no task record (`docs/tasks/<id>`),
+no fix pass has started, and its result goes into this turn's final reply.
+Then the four steps carry it: no brief, dispatch, report, review-brief, review
+or verdict files, no review package and no review capture. On quick and checked
+nothing else is recorded either, except one handoff line when the change stays
+uncommitted at the end of the turn (Invariant 2); on reviewed the handoff keeps
+what continuous maintenance writes. Otherwise the steps
+keep their roles, and the files of `skills/_protocols/mca-dispatch.md` and the
+review package and capture of `skills/code_review_board/SKILL.md` apply. When
+the work stops closing in its turn (a failed check starts a fix pass, a task
+record is made, the turn ends on a question), Buddy first saves the record as the
+brief file and the returns so far, verbatim, in the record directory
+(`mca-dispatch.md` §The files); a check that ran without a capture is history,
+and the next mandatory review gets a fresh capture.
+
+When the next mandatory review needs a capture, resolve its applicable owner
+before dispatch. If there is no applicable owner, retain the work and evidence,
+leave the review and completion open, and resolve the route before proceeding.
+DIRECT stays outside the workflow engine.
+
+An authorization boundary and an independent quality check are different gates.
+
+---

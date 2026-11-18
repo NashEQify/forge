@@ -1,0 +1,54 @@
+# Gate-File Template
+#
+# Kopiere nach docs/tasks/{task_id}-gates.yaml.
+# Ersetze Platzhalter.
+#
+# Status: null | pass | pass_with_risks | fail
+# Done-Signal ist diese Datei, NICHT Chat-Output.
+# Naechster Schritt nur wenn vorheriger pass.
+# Prozess-SoT: workflows/runbooks/build/WORKFLOW.md
+
+task_id: "{task_id}"
+workflow: "{workflow}"  # direct | standard | full
+spec: "{spec_path}"
+spec_version: v1
+created: "{date}"
+
+gates:
+  spec_review:
+    status: null
+    output: null      # → docs/reviews/board/{spec-name}-final.md
+    mode: null        # quick | deep (Board-Modus, v4.0)
+    foundation: null  # true | false (DR-Scorecard bei Deep)
+    escalated_from: null  # quick | null (wenn Quick zu Deep eskaliert)
+    eval: null        # GO | ADAPT | NO-GO | skipped (Eval-Ergebnis, in spec_review eingebettet)
+
+  impl_plan_review:
+    status: null      # null | pass | revise | reject
+    output: null      # → MCA Implementation Plan + Review-Findings
+
+  test_design:
+    status: null
+    output: null      # → docs/tasks/{task_id}-test-plan.md
+    tc_count: null    # Mechanisch pruefbar: muss == Anzahl TC-Bloecke
+
+  delegation:
+    status: null
+    output: null      # → docs/tasks/{task_id}-delegation.md
+
+  implementation:
+    status: null
+    output: null      # MCA Return-Summary
+    iterate_count: 0  # Zaehlt Iterate-Zyklen. Max 3.
+
+  code_review:
+    status: null      # null | pass | pass_with_risks | fail
+    output: null      # → docs/reviews/board/{task_id}-code-*-final.md
+    level: null       # L0 | L1 | L2
+
+  ux_review_mode:
+    status: null      # null | pass | pass_with_risks | fail | skipped
+    output: null      # → docs/reviews/board/{task_id}-spec-board-ux-final.md
+
+  done:
+    status: null      # Buddy schreibt pass nach Verify

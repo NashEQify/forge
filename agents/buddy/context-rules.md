@@ -1,0 +1,174 @@
+# Buddy — Context Rules + Operational Details
+
+Two parts: (1) situational rules for context writes, structural
+changes, and life-domain work. (2) operational detail extracted out
+of operational.md.
+
+Buddy reads this file (Read tool call) before starting any of the
+following: context writes, structural changes, life-domain work, or a
+mode switch. operational.md points here at the relevant places via
+`→ context-rules.md §...`.
+
+## Consistency cascade on first-principle changes
+
+Any change that affects how agents derive meaning, run processes, or
+make decisions — even a small-looking one — triggers a consistency
+cascade. The test: "Do other files / agents / processes read this
+text and derive behavior from it?" If yes → check immediately.
+
+Buddy runs the cascade with the recursive **IMPACT CHAIN pattern**
+(`skills/knowledge_processor/write.md`, §5 Bounded impact and protected publication): the methodology
+change is the initial "information" → LOCATE (every spot that
+interprets the concept) → ASSESS (semantically: do logic,
+assumptions, and derivations still hold?) → ACT (fix inconsistencies
+immediately) → RECURSE (each fix is new information → walk the tree
+recursively until exhausted).
+
+This is Buddy's job as orchestrator — Buddy sees the big picture and
+recognizes what's affected. A global rule in `CLAUDE.md` →
+consistency cascade.
+
+## Consistency-check gate (MUST — after structural changes)
+
+After every structural commit (definition: see
+`skills/consistency_check/REFERENCE.md` §Structural commit), the
+consistency check is a blocking gate before the next work step. Not
+"should run" — same firmness as the History Writing gate.
+
+Flow:
+1. Commit contains a structural change → gate active.
+2. Run the consistency_check skill.
+3. Check reports ERRORS → fix, re-run. Loop until CLEAN.
+4. Check reports only WARNINGS or CLEAN → continue.
+
+If the check itself is stale (new paths/patterns it doesn't cover):
+update the check first, then run it. That's not a special case — the
+check implicitly checks itself, since new paths get reported as
+orphaned and dead references to old paths surface.
+
+Post-harness: a pre-commit hook that verifies the path patterns in
+consistency_check actually cover the directory structure.
+Mechanical, no prompt needed.
+
+## Source-Grounding trigger
+
+When an agent writes an assertion about an artifact AND the last read
+of that artifact is more than 5 turns back → **source-read before the
+assertion.**
+
+Applies to:
+- `str_replace` on spec/code files → reading the target file is
+  mandatory.
+- Consistency assertions across 2+ artifacts → reading both is
+  mandatory.
+- Status updates on tasks with a spec reference → reading the spec is
+  mandatory.
+- Recommendations based on context claims → verify the claim against
+  the current state (context names a file path → does the file exist?
+  Context names an API endpoint → does it exist? Context names a
+  value/status/number → is it still right?). A context claim is any
+  statement that comes from a context file, session-handoff, or
+  `plan_engine --boot` output and refers to the current state of
+  code, infrastructure, or data. "Context says X" is not the same as
+  "X is true now".
+
+Does NOT apply to:
+- Simple status updates without a spec link (too expensive, low
+  risk).
+- Reads / greps (those ARE the source check).
+- User facts and preferences (rarely change, verification is
+  impractical).
+
+Staleness: turn-based (>5 turns). Time-based only in the harness
+(Tier 1 has no clock).
+Post-harness: Pattern 3.20 Source-Grounding gate (mechanically
+enforced).
+
+## Frozen-zone guard
+
+Before every rename, refactor, or batch update:
+
+1. Identify frozen zones: `docs/tasks/archive/`, `docs/specs/archive/`,
+   `context/history/`, `documents/`.
+2. `grep` for the old term in frozen zones — hits are reported, NOT
+   replaced.
+3. Downstream agents (main-code-agent, sub-agents) get an explicit
+   MUST NOT for frozen zones in the delegation prompt.
+
+This applies even when the user prompt doesn't mention frozen-zone
+exclusion. Buddy adds it on its own — every agent checks its own
+stage independently.
+
+A reminder: corrections to archived facts go through the corrections
+addendum (see STRUCTURE.md), never via mutation.
+
+## Knowledge and life-domain maintenance
+
+Apply `skills/knowledge_processor/SKILL.md` for admission, placement, relevance,
+validity, retrieval, bounded impact and history. Apply `framework/continuity.md`
+for coherent snapshots, protected publication and interrupted reconciliation.
+User location/privacy is owned by `framework/user-scope.md`. A new topic follows
+existing vocabulary; no mandatory domain scaffold or repeated permission question.
+Preserve concrete project conditions and all meaningful details during migration.
+
+## History format
+
+`context/history/` is a directory, one file per entry. Frozen zone —
+existing entries are never mutated. Applies everywhere, no special
+format for external projects.
+
+## Extracted operational details
+
+Detail extracted from operational.md that doesn't need to load on
+every boot. operational.md keeps the judgment one-liners; the
+context lives here.
+
+### Session-switch boundary
+
+Mid-session switch to a different project is NOT supported.
+CC limitation: `--add-dir` and the project root are startup
+parameters. The project CLAUDE.md is not auto-enforced after start
+and `.claude/agents/` is not updated. Switch by starting a new
+`cc <project>` call.
+
+Consumer-specific work-mode matrices (e.g. a "coding ↔ life"
+split between code work and personal-management workspaces) belong
+in the consumer's own override files, not in the framework.
+
+### User facts — standing consent, visible proof
+
+Portable person facts go to
+`<user_repo>/context/user/` via `knowledge_processor (mode=user-signal)`,
+maintained in the same response cycle with the FACTS line as visible
+proof (`skills/knowledge_processor/continuous-maintenance.md`). Configuring the user
+repo on a machine is the person's standing consent for this.
+
+Never a background mechanism or hook: writes happen in the visible
+conversation, with a per-answer proof the user can check.
+
+### Knowledge processing during incidents
+
+During an active incident (Phase A Root-Cause-Fix): context writes
+(ACT phase) are deferred until the fix is finished.
+
+### SCR — state verification after agent interrupt
+
+**Trigger:** user interrupt or agent cancel during a dispatch.
+
+**Problem:** tool interrupts don't reliably land before agent
+completion. An agent can run silently to the end before the
+interrupt is processed in the CC harness. The user intent was
+"stop", but the state is "completed" — a silent-completion race.
+
+**Rule:** after every tool interrupt or agent cancel, Buddy must
+check the actual filesystem / git state BEFORE planning the next
+action or doing a rollback. Cancel signal != stable state.
+
+**Proof output:** `git status --porcelain` + relevant file stat.
+If file changes are detected: report them explicitly and clarify
+with the user whether that was the expected completion or a race.
+
+This stays discipline-only: Buddy runs the proof-output check himself
+on agent completion / interrupt detection. A CC-coupled PostToolUse
+hook could automate the trigger, but forge no longer adds
+CC-Terminal-only hooks.

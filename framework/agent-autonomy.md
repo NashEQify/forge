@@ -1,0 +1,206 @@
+# Agent Autonomy
+
+Tier-1 refinement of invariants 2-4 (`framework/invariants.md`).
+
+SoT for the question: "who writes which artifact, with which gate,
+through which routing".
+
+These Forge delegation and review gates apply to software development.
+For `on-demand`, project-local working rules govern delegation and review;
+see `framework/workflow-selection.md`. Explicitly requested
+Forge methods retain their scoped requirements and all authorization bounds.
+
+---
+
+## The three autonomy sub-questions (orthogonal)
+
+Autonomy decisions split into three independent sub-questions.
+Every write act must answer all three:
+
+1. **Permission** — may this agent write this path at all?
+   Approved scope in shared Invariant 2 and role ownership in Invariant 4;
+   effective platform permissions are a separate technical boundary.
+2. **Gate** — does this act require pre-write review or peer consultation?
+   Artifact-type specific, encoded in the table below.
+3. **Routing** — who executes the act concretely?
+   Encoded in `agents/buddy/delegation.md` (routing lookup),
+   downstream of permission + gate.
+
+The sub-questions are logically orthogonal, but two seam cases exist
+(see gate polymorphism below).
+
+---
+
+## Consultation cascade
+
+Three documents form one cascade:
+
+**`framework/invariants.md` Invariants 2-4** (Tier-0 anchor)
+-> **framework/agent-autonomy.md** (specific, this file)
+-> **local workflow runbook** (further refinement when workflow mechanics require it)
+
+**Rule 1 — earlier layer beats later layer:** if shared Invariant 4 is explicit
+(e.g. "docs/ = Buddy zone"), later layers refine it — not override it.
+
+**Rule 2 — later layer may refine, not invent:** specific layers may
+concretize generic layers (e.g. "docs/specs/*.md requires spec_board"),
+but not contradict them. The invariant-parity test detects adapter drift;
+semantic contradictions need review and behavioral checks. `plan_engine
+--validate` validates its structured inputs, not arbitrary prose semantics.
+
+**Rule 3 — resolve uncertainty:** inspect the relevant facts before routing.
+If DIRECT eligibility remains unknown, use the appropriate standard path
+or ask the missing consequential decision. A redundant review is not always
+cheaper; safety floors are never bypassed. Authorization is governed by
+`framework/process-map.md`, not repeated at each routine phase transition.
+
+---
+
+## Gate polymorphism
+
+Pre-write gates appear in two structurally different forms:
+
+- **Review-skill gate**: `spec_board` (incl. mode=ux), `code_review_board`,
+  `impl_plan_review`, `architecture_coherence_review`.
+  Gate is satisfied by running the skill.
+- **Peer-consultation gate**: `council`, `solution-expert`.
+  Gate is satisfied by consultation, and in merger-cases
+  gate and routing are the same mechanism.
+
+In the table below, gate is encoded as `<gate-type>:<target>`, e.g.
+`review:spec_board`, `peer:council`, `none`.
+
+### Gate composition (multiple gates in one cell)
+
+If multiple gates are listed (`+`), execution is **sequential in notation order**:
+
+1. Left entry first (notation order is normative).
+2. If no veto, run the next gate.
+3. If peer and review conflict: peer wins (highest consultation authority).
+4. If a cell shows reversed order (`review:X + peer:Y`), table is wrong —
+   fix the table, not agent behavior.
+
+Conditional gates are encoded inline in parentheses and apply only when true.
+
+### Merger cases — why not duplicated in routing
+
+For merger cases (`peer:...`), routing is implicit:
+
+- `peer:council` -> council is both gate and routing target.
+- `peer:solution-expert` -> same.
+- `review:*` agents are also merger-style at review level:
+  review output is gate result.
+
+Therefore the delegation-routing table in `operational.md` is **not a full
+agent list**. It lists **pure routing decisions**.
+Merger cases are represented in the gate column of this file.
+
+---
+
+## Table — artifact type, autonomy, conflict resolution
+
+By artifact category, not by individual file pattern. The category
+column drives permission and review; specific path patterns are listed
+for reference only.
+
+| Category | Who edits | Who must review | On conflict |
+|---|---|---|---|
+| **Orchestrator-text** (`agents/`, `framework/`, `skills/`, `workflows/`, `references/`, `context/`, `docs/`) | Buddy directly | spec_board on substantive changes; none on wording/typo | run `plan_engine --validate`; on disagreement, escalate to user |
+| **Consumer code** (`src/`, `scripts/` consumer-side, `tests/`) | main-code-agent (NOT Buddy, except the quick path of Invariant 4) | code_review_board post-write; on DIRECT, the check its path names | MCA iterates; spec change ⇒ escalate to Buddy |
+| **Spec** (`docs/specs/*.md`) | Buddy via build-workflow Specify | spec_board pre-write (Standard or Deep) | convergence_loop max 3 → user escalation |
+| **ADR** (`docs/decisions/`, `decisions.md`) | Buddy | council on architecture decisions; none on small docs | council decision binds |
+| **Config / hooks** (`pyproject.toml`, `package.json`, `orchestrators/**/hooks/`, `scripts/hooks/`) | Buddy or main-code-agent depending on scope | code_review_board on semantic change | revert; reopen with explicit user gate |
+| **Generated / AUTO blocks** (`framework/skill-map.md` AUTO, `framework/agent-skill-map.md`, `*/navigation.md` AUTO) | regenerator scripts only | `consistency_check` + `--check` modes of the generators | rerun the generator; manual edits revert on next run |
+
+### Substantive and wording changes
+
+A wording/typo fix:
+- preserves what an actor does, when it acts and what evidence it needs
+- no change to normative prose tokens (MUST, MUST NOT, never, only, …)
+- no add/remove negations or quantifiers
+- no new/removed bullet
+- no new/removed subsection/header level
+- no semantic interface change (field names, types, paths, agents, workflows)
+
+If any criterion is violated, it is **substantive** → trigger the
+review for the artefact category.
+
+### Path precedence
+
+When a path matches more than one category, the most specific category
+wins for permission and routing; review obligations are unioned.
+Example: `src/auth/session.py` is consumer code AND security-relevant —
+MCA writes, code_review_board + security both review.
+
+Before selecting checks, inventory the changed artifacts and their duties.
+For each applicable artifact category above, record the due review family and
+when it must run, using its own criteria for depth. For mixed work, retain
+substantive instruction review for changed operator duties alongside the
+applicable code review. In the existing decision, state what a shortened
+route or check simplifies, the evidence that permits it and the duties it
+retains.
+
+Before advancing or closing, recheck the duties against the delivered change
+and qualify each required result on the exact subject. For a fresh engine-owned
+adoption, check the captured subject, adopt, then check the success policy.
+When relying on an existing adoption, run the exact owner's read-only check
+for the policy required by the dependent action (owner:
+skills/_protocols/evidence-review-adoption.md §9.4–9.5). Hold that action if its
+required proof is missing, stale or refused. Apply the same qualification
+when the executing chat also owns closure.
+
+### Delegation artifact
+
+CLAUDE.md requires: no agent call without a delegation artifact.
+
+| Path | Artifact | Minimum content |
+|---|---|---|
+| Direct | plan block in turn output or state file | scope + goal + agent (1 sentence each) |
+| Standard | gate file in `docs/solve/` or `docs/tasks/` | scope + goal + agent + ACs + constraints |
+| Full | state file with plan + review output | full frame + plan-review block |
+
+### "Autonomy" — two distinct meanings
+
+- **In this file:** permission / who-reviews / conflict resolution.
+- **In workflow runbooks:** phase mode (Discuss / Bounded / Agent-autonomous / Mechanical).
+
+These are orthogonal concepts; avoid cross-document confusion.
+
+---
+
+## Enforcement via `plan_engine --validate`
+
+Autonomy-specific checks:
+1. mirror-check (all sections referencing this file in CLAUDE/AGENTS)
+2. existence-check (this file + expected header + main table)
+3. reference integrity (links in CLAUDE/AGENTS/operational/delegation/solve workflow)
+
+---
+
+## Consumers of this file
+
+Referenced by:
+- `framework/invariants.md` §Code delegation
+- `agents/buddy/operational.md` self-execution + delegation routing
+- `workflows/runbooks/solve/WORKFLOW.md` phase autonomy
+- `workflows/runbooks/docs-rewrite/WORKFLOW.md`
+- `workflows/runbooks/fix/WORKFLOW.md` execute skills
+- `framework/process-map.md`
+- `framework/getting-started.md`
+
+Consciously not listed: build/review/research/context_housekeeping runbooks,
+which use phase-mode autonomy and rely on Tier-0 reference path.
+
+---
+
+## Short version (cold start)
+
+If you need a fast autonomy answer:
+1. find artifact type in table
+2. check permission
+3. check gate (`review:X`, `peer:Y`, `none`)
+4. check routing target
+5. apply cascade (CLAUDE permission, this file gate+routing)
+6. unknown type -> analogy rule; no analogy -> defensive default
+7. before a wording exemption, check that the actor's actions, timing and required evidence stay the same
+   (§Substantive and wording changes). If unsure, apply the artifact gate.

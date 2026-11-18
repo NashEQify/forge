@@ -1,0 +1,41 @@
+name: context_housekeeping
+description: "Periodic upkeep of the context system \u2014 analysis (read-only) then curation."
+need_phrase: do periodic context-system maintenance
+trigger:
+- context_housekeeping
+- context-housekeeping
+derived_from: WORKFLOW.md@2026-10-22
+steps:
+- id: phase-analysis
+  name: "Phase 1 \u2014 analysis (read-only)"
+  category: content
+  instruction: Follow WORKFLOW.md Phase 1 using the shared Knowledge Processor lifecycle. Read-only
+    scoped inventory of ownership, navigation, validity, duplicates and source coverage; size
+    is a review signal, never a deletion rule. Preserve this legacy step and its recorded completion
+    evidence.
+  completion:
+    type: manual
+  on_fail: block
+- id: phase-curation
+  name: "Phase 2 \u2014 curation (knowledge_processor per area)"
+  category: content
+  instruction: Follow WORKFLOW.md Phase 2 through Knowledge Processor and protected continuity
+    publication. Resume any legacy area checklist and scoped pending record against actual files
+    before proceeding. Preserve source meaning and later edits; retain completed/remaining area
+    progress. Existing authorization suffices for routine curation; ask only for unresolved
+    consequential choices. Skip only if analysis found nothing actionable.
+  skill_ref: skills/knowledge_processor/SKILL.md
+  completion:
+    type: manual
+  on_fail: block
+  required: false
+- id: phase-close
+  name: "Close \u2014 delete status file, commit"
+  category: deterministic
+  instruction: 'Follow WORKFLOW.md Close: remove only fully reconciled area progress, preserve
+    unresolved recovery and meaningful evidence. Commit only within existing authorization.
+    Keep the legacy completion obligation; do not report complete while required reconciliation
+    is pending.'
+  completion:
+    type: manual
+  on_fail: block

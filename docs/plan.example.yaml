@@ -1,0 +1,40 @@
+# Minimal starting plan.yaml for a forge consumer repo.
+#
+# scripts/plan_engine.py reads THIS file + docs/tasks/*.yaml to build the
+# DAG, compute milestone status + critical path, and emit --boot / --validate.
+# Copy it to docs/plan.yaml in your own repo and replace the example values.
+#
+# Milestone STATUS is computed live from your tasks (each task's `milestone`
+# + `status` field) — never hand-write a "Status:" line into a milestone
+# `desc`. A hand-written status label is shadow state that only drifts from
+# what the engine computes; consistency_check check-12 (d) WARNs on it.
+
+target: my-project
+
+# One self-contained paragraph: the durable goal this project exists to reach.
+# Rendered on the dashboard — the engine reads this verbatim and cannot reach
+# your intent.md, so keep it standalone here.
+north_star: >
+  The one-paragraph north star: what "done, and worth it" looks like for this
+  project, in terms a newcomer (or an agent) can act on without more context.
+
+operational_intent:
+  goal: >
+    The current operational focus — what "in progress" means right now.
+  done: >
+    The observable criterion that ends the current operational push.
+
+phases:
+  build:
+    title: "Build"
+    desc: "Initial implementation."
+
+milestones:
+  - key: mvp
+    title: "MVP"
+    desc: >
+      First end-to-end slice. Describe scope + intent here — NOT a status
+      (the engine computes that from your tasks).
+    phases: [build]
+    gate: []        # optional pre-set gate conditions (see plan_engine docs)
+    requires: []    # keys of milestones that must complete first

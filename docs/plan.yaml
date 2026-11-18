@@ -1,0 +1,27 @@
+# forge Plan — PUBLIC MIRROR STUB.
+#
+# This is the public OSS mirror of forge. The live program plan
+# (operational_intent, phases, milestones) and the task backlog
+# (docs/tasks/*.yaml) live in the private forge_dev repo and are
+# deliberately excluded from the mirror by scripts/release-sync.sh.
+# See CLAUDE.md Invariant 8 + docs/STRUCTURE.md.
+#
+# Consumer repos using forge as a tool keep their own plan.yaml in
+# their own repo (e.g. BuddyAI/docs/plan.yaml is BuddyAI's plan, not
+# this one). For a minimal starting template see docs/plan.example.yaml.
+#
+# scripts/plan_engine.py reads this file + docs/tasks/*.yaml; in the
+# mirror both are stubbed, so plan_engine output is intentionally empty.
+
+target: forge
+
+north_star: >
+  Skill + Discipline Layer between human and LLM — opinionated workflows
+  + codified discipline patterns enabling vibe-at-complexity and sustained
+  quality on complex projects. Single-dev primary, small teams secondary.
+  Tier-0/1/2 model, pre-delegation non-negotiable, persistent workflow_engine
+  state across sessions. Mechanical prevention is Claude-Code-coupled (PreToolUse-
+  class hooks) and degrades gracefully on non-CC harnesses; methodology +
+  skill format + state engine + git pre-commit are standards-portable.
+  Sweet-spot: long-running complex multi-session work where coherence and
+  trust-of-the-system are the bottleneck.

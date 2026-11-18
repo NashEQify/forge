@@ -1,0 +1,49 @@
+# Knowledge Processor — History, imports and maintenance
+
+Step-loaded unit of `skills/knowledge_processor/SKILL.md`. Read it when writing history or the handoff, importing
+sources, or restructuring owners; writes still follow `write.md`.
+
+### 6. History, imports and maintenance
+
+History preserves decisions, obligations, meaningful trajectories and unresolved
+conflicts; no new entry per correction/save or agent self-chronicle. A code
+change without a task writes no history entry for the change itself: its diff,
+commit message and reply carry it; it writes one only for what passes the test. The
+test for an entry is whether a later session would need it
+after it leaves the handoff and could not get it from the diff, the commit message
+or the task: a decision with its reason, a rejected approach, a finding about the
+system. Explicit domain
+audit/closeout obligations remain effective. The handoff holds per open topic its
+goal, current state, leading file and next step or blocker, with the decisions,
+approvals, failed attempts and job status that step needs; a changed or closed item
+is written once, in one line, with its result at its owner, and a later session's
+save removes that note, whoever wrote it; nothing is appended, no session log the
+project's rules do not require; over 16,000 bytes the save reports the size and
+removes nothing for it; purpose: the next session continues from it (owner:
+`workflows/runbooks/save/WORKFLOW.md` §2).
+
+Imports use existing source/package indexes and original-storage policy. Distinguish
+discovery, actual source reading, attachment review, relevance screening and knowledge
+integration. A summary/metadata scan proves none of the later stages. Record enough
+coverage, resume position, unread attachments and pending integration at the existing
+owner. Scope-complete assessment is not a completely read corpus. Counts are dated
+snapshots unless automatically maintained; no duplicate manual status inventory.
+This contract does not authorize reading excluded content or expanding retention.
+
+**Restructuring** keeps the shape aligned with how knowledge is retrieved. Triggers,
+noticed during retrieval or writing: a claim found outside the route for its
+question; new information repeatedly landing in an owner that does not fit it; one
+owner answering unrelated questions; navigation that no longer describes its
+content; a repository whose shape no longer fits what it holds. Size (around 200
+lines) is a review signal only; coherent longer files can remain with sectional
+retrieval. The operation splits, merges or renames owners: record the old→new
+mapping in the change record, update navigation and every live link, and prove no
+loss by inventory (each claim of the old owners is at a new owner or was removed as a
+copy of a named leading owner, and each relation or qualifier it carried survives as
+words). It runs during use or at save/checkpoint under the scope's maintenance
+authority, never as a scheduled job and never as a side effect of an unrelated write.
+Restructuring a person's top-level files (`soul.md`, `profile.md`, `navigation.md`) or
+changing what is boot-loaded is a proposal to that person, not applied; content writes
+to them follow `write.md` §3. The first restructuring of a scope that still holds legacy structure
+is a proposal to the person too. Never evict by size, age or low
+mentions. Use the same lifecycle, not a separate decay algorithm.

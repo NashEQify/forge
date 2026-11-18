@@ -1,0 +1,763 @@
+name: build
+description: "Implement a feature / task — specify → prepare → execute → verify → close."
+need_phrase: "implement a feature or task"
+trigger: ["build"]
+derived_from: "WORKFLOW.md@2026-05-09"
+
+# Engine-state-machine version of `runbooks/build/WORKFLOW.md`. The markdown
+# is the human-prose SoT for narrative; this yaml is engine-readable for
+# state tracking + cross-session continuity.
+
+# Named gates (the user-decided steps): interview, spec-write, board,
+# test-design, brief-author, brief-signoff, mca-implementation, code-review-board,
+# spec-drift-check, close-bookkeeping, commit-deploy. Phase-status transitions
+# happen automatically when the engine advances between steps; they are NOT
+# user-visible gates.
+
+routes:
+  standard:
+    # 11 named gates (incl. architect-lens conditional pre-call to brief-author);
+    # phase-status updates are engine-internal.
+    - phase-specify
+    - interview
+    - spec-write
+    - board
+    - board-spec
+    - board-council
+    - phase-prepare
+    - test-design
+    - architect-lens
+    - brief-author
+    - brief-signoff
+    - phase-execute
+    - mca-implementation
+    - phase-verify
+    - code-review-board
+    - spec-drift-check
+    - phase-close
+    - close-bookkeeping
+    - commit-deploy
+  authority-only:
+    # Spec / ADR / plan authority without code implementation.
+    # No architect-lens — no MCA dispatch on this route, no brief authored.
+    - phase-specify
+    - interview
+    - spec-write
+    - board
+    - board-spec
+    - board-council
+    - phase-close
+    - close-bookkeeping
+    - commit-deploy
+  full:
+    # Same gate set as standard; reserved for extra board passes on
+    # foundation-spec L3 depth (currently identical to standard).
+    - phase-specify
+    - interview
+    - spec-write
+    - board
+    - board-spec
+    - board-council
+    - phase-prepare
+    - test-design
+    - architect-lens
+    - brief-author
+    - brief-signoff
+    - phase-execute
+    - mca-implementation
+    - phase-verify
+    - code-review-board
+    - spec-drift-check
+    - phase-close
+    - close-bookkeeping
+    - commit-deploy
+  sub-build:
+    # Nested build on a parent's locked spec — skips Specify entirely, parent
+    # owns task-level status. architect-lens included for route consistency;
+    # its skip_when clause idles the gate on narrow sub-build scopes.
+    - phase-prepare
+    - test-design
+    - architect-lens
+    - brief-author
+    - brief-signoff
+    - phase-execute
+    - mca-implementation
+    - phase-verify
+    - code-review-board
+    - spec-drift-check
+  standard-implementation-only:
+    # Skips Specify, BUT keeps phase-close + close-bookkeeping + commit-deploy
+    # because there is no active parent workflow to inherit closing from.
+    # Chosen in one of two ways: without --route, the engine picks it for a
+    # task that has no spec_ref (the task's acceptance is the contract); or
+    # explicitly, when spec_ref points to a section locked upstream (parent or
+    # predecessor task, manually authored, external spec) and no spec
+    # amendment is in scope. Proportionality release-valve at the
+    # workflow-routing surface — avoids the SUB-BUILD semantic pollution
+    # (skipped close-bookkeeping on an independent child task).
+    - phase-prepare
+    - test-design
+    - architect-lens
+    - brief-author
+    - brief-signoff
+    - phase-execute
+    - mca-implementation
+    - phase-verify
+    - code-review-board
+    - spec-drift-check
+    - phase-close
+    - close-bookkeeping
+    - commit-deploy
+
+steps:
+  # ============================================================================
+  # Phase: Specify
+  # ============================================================================
+
+  - id: phase-specify
+    name: "workflow_phase=specify (engine-internal)"
+    category: deterministic
+    instruction: >
+      task_status_update workflow_phase=specify and create the state file
+      docs/build/YYYY-MM-DD-task-NNN-slug.md (Standard / Full only).
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: interview
+    name: "Spec interview via frame skill"
+    category: content
+    instruction: >
+      Open the solution space via frame/SKILL.md (8 sub-steps). The frame report
+      is the basis for the spec. Pre-interview: cross-spec-consistency-check is
+      a frame sub-step (frame step 4 source-grounding) — high-severity conflicts
+      must be resolved BEFORE the interview proceeds. Skip-eligible on greenfield
+      spec without a source-grounding set.
+
+      Deep-mode trigger (all 4 must hold): foundation spec, cross-layer impact,
+      new subsystem, schema change. On hit → bedrock_drill via frame deep mode.
+
+      An owner answer that retires a capability (drops a feature, a history or
+      stored data): the spec written or amended from it carries the retirement
+      inventory of skills/_protocols/spec-amendment-discipline.md §Retiring a
+      capability.
+    skill_ref: skills/frame/SKILL.md
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: spec-write
+    name: "Spec write (5 primitives) + source-spec-reduce"
+    category: content
+    instruction: >
+      6 required elements + schema SoT (spec-engineering.md §Spec). On external
+      library API references: get_api_docs skill BEFORE AC formulation.
+      Persisted-shape change: record the migration-needed check
+      (deprecation_and_migration §Migration-needed check: decode path, then
+      version bump / upcast / empty-store precondition with ending trigger).
+      State carrier (two or more states, two or more operations; any derived
+      state; any "X changes only via Y" invariant; a hold / settlement / undo
+      flow): write the §Mechanism-Lifecycle section in the owning spec per
+      skills/_protocols/mechanism-model.md — states, every operation with its
+      grepped producer and its consumer, the states × operations matrix with
+      every cell filled and placed (now / task-N / beyond-MVP: the vision
+      decides what is modelled, the plan when it is built; protocol §Scope
+      and placement), invariants with enforcement locus. One matrix, not one
+      rule per scenario; the board, test design, brief and re-verify read it.
+
+      Source-spec-reduce is a final sub-step — when a source spec is overlaid:
+      3-way triage (existing-task / new-task / delete) → source patches +
+      docs/build/{build_id}/drift-items.yaml. Skip-eligible on greenfield NEW.
+
+      Amendment path (per spec 306 §14.2): when this step operates on an
+      EXISTING spec (mid-build mechanism shift, class rename, contract
+      retraction) AND the substantial-amendment threshold fires (cross-ref
+      cascade ≥3 OR cross-spec coupling OR semantic-change OR Buddy-heuristic
+      "more than 1 edit-round anticipated"), Buddy dispatches
+      brief-architect mode=spec_amendment via Agent tool rather than
+      authoring inline. Architect returns prose + cross-ref edit-list +
+      spec_version bump + §Changelog inline; Buddy integrates and dispatches
+      spec_amendment_verification. Sub-threshold: Buddy-direct.
+    skill_ref: skills/spec_authoring/SKILL.md
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: board
+    name: "Spec-quality gate routing — spec_board OR council"
+    category: classification
+    routes:
+      spec: [board-spec]
+      council: [board-council]
+    instruction: >
+      Route the specify-phase quality gate by the shape of the specify
+      output:
+      - spec-quality artifact (a written spec) → route 'spec' → spec_board.
+      - architectural decision (ADR / design-shape, with no spec-quality
+        artifact to review) → route 'council' → council per §1.0.
+      Pick mid-flow via `--complete board --route <spec|council>`. The
+      non-selected board step is ROUTE_SKIPPED; both routes converge on
+      phase-prepare (downstream steps are governed by the top-level route,
+      not by this classification). This is the engine-recognized form of
+      the spec_board-OR-council gate: a council-substitute build no longer
+      hits the spec_board-shaped completion pointer.
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: board-spec
+    name: "Spec quality gate — spec_board"
+    category: content
+    instruction: >
+      Before mandatory review dispatch, load skills/_protocols/evidence-pointer-schema.md
+      section 9. Capture this exact workflow/step before production; pass its owner
+      to nested skills without a competing capture. Name the captured files, including
+      authority inputs, and pinned history. Until adoption, the commissioner keeps those paths
+      write-free and puts reports, the decision and other records outside them to preserve the
+      capture (owner: skills/_protocols/evidence-review-capture.md §9.2). Use successful capture
+      stdout for run/subject metadata, preserve complete current returns and write the explicit
+      decision at docs/reviews/board/{task_id}-spec-verdict.md. Run
+      `--review-subject-check board-spec --id WORKFLOW` on the exact owner before
+      `--review-adopt`; adopt on success, then check the declared policy before completion
+      or review-derived task writes. For a changed subject or relevant fix, retry and freshly capture before
+      the applicable review (owner: skills/_protocols/evidence-review-adoption.md §9.4).
+      spec_board/SKILL.md (spec-quality review). Convergence_loop max 3
+      passes. Output: docs/reviews/board/{spec_name}-consolidated-pass{N}.md
+      per pass (history, never rewritten) and, at adoption with 0C+0H, the
+      adoption verdict docs/reviews/board/{task_id}-spec-verdict.md (spec_board
+      §7: adopted pass, reviewed revision, pivotal pointers re-checked
+      against the adopted spec). Completion binds to that verdict only.
+      Pre-gate: a diff that introduces or changes a state carrier without a
+      complete §Mechanism-Lifecycle section in the owning spec FAILs before
+      depth is chosen (spec_board/depth-and-team.md §1.0); reviewers check cells, no PASS with
+      an empty cell, no blocking finding on a now cell in residual;
+      board-implementer joins the pass that adds or changes an unbuilt or
+      placed cell (§2b). Before every fix pass >= 2,
+      record the Simplify-before-patch check (skills/convergence_loop/simplify-before-patch.md)
+      in the build log, model row first; a recurring class with a simpler
+      mechanism or a faulty spec clause goes to the caller as a simplification
+      proposal showing the whole updated matrix, not another route patch.
+      After a mechanism redesign the next pass is a cold seat over the whole
+      matrix (§2c), not an orchestrator-only verification.
+    skill_ref: skills/spec_board/SKILL.md
+    completion:
+      type: compound
+      checks:
+        - type: pointer_check
+          source_file: "docs/reviews/board/{task_id}-spec-verdict.md"
+          review_owner_workflow: self
+          review_owner_step: board-spec
+          review_policy: spec_success
+          min_schema_version: 1
+        - type: manual
+    on_fail: block
+
+  - id: board-council
+    name: "Architectural-decision gate — council"
+    category: content
+    instruction: >
+      skills/council/SKILL.md (architectural decision review) when the
+      specify-phase output shape is an architectural decision (ADR /
+      design-shape) rather than a spec-quality artifact. Council mode per
+      §1.0 proportionality (light / standard / full). Output:
+      docs/reviews/council/<date>-<topic>-consolidated.md + decision.md.
+    skill_ref: skills/council/SKILL.md
+    tier1_pointer_exempt: "council output is <date>-<topic>-keyed, not an engine variable (ADR-007 O-4)"
+    completion:
+      # Manual (Buddy attests the council decision artifact), NOT a
+      # pointer_check: the council output path is <date>-<topic>-keyed,
+      # not an engine variable — a pointer_check here would re-introduce a
+      # stale-pointer class. Consistent with ADR-007 O-4 (engine stays
+      # Buddy-driven [WORKFLOW], not pointer-enforced).
+      type: manual
+    on_fail: block
+
+  # ============================================================================
+  # Phase: Prepare
+  # ============================================================================
+
+  - id: phase-prepare
+    name: "workflow_phase=prepare (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update workflow_phase=prepare"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: test-design
+    name: "Test design (with adversary augmentation on a safety floor)"
+    category: content
+    instruction: >
+      tester.md §Design — TC-Plan based on the board-approved spec, one test
+      per changed behaviour an AC names (skills/testing/SKILL.md §Test design
+      from the change).
+
+      Adversary mode only when the change touches a safety floor
+      (skills/adversary_test_plan/SKILL.md §When to call): run
+      adversary_test_plan to challenge
+      and refine the plan and its oracles, adding edge-case TCs only where
+      justified (NEW-V-001, Compensation-Bug, Cycle-Entry-Point, Smart-but-Wrong,
+      Stale-State, Race-Condition). Zero additions can be valid with substantive
+      evidence of refinements or sufficient existing coverage. Then test-skeleton-
+      writer agent writes all planned assertions (context-isolated) and verifies meaningful
+      pre-fix failure witnesses for intended behavior changes under
+      skills/testing/SKILL.md section Meaningful pre-fix witness. Retain valid
+      passing controls and regressions; unavailable prerequisites are unverified,
+      not RED. A RED that only shows the interface under test is missing is
+      listed in the skeleton return as `oracle unverified`. MCA brief includes "all ADV-TC-* MUST pass post-implementation".
+
+      Oracle discipline (testing/SKILL.md): RED skeleton disagreements with
+      a named reference oracle are ruled before MCA dispatch; latency ACs on
+      a growing log/store carry an N and 4N slope leg; a lens-adopted single
+      owner gets an independent oracle and its old parity tests become
+      wiring tests. With a §Mechanism-Lifecycle section in scope
+      (testing/test-design.md §Derivation from §Mechanism-Lifecycle): the property
+      generator's axes are the matrix axes and its span counts as cell
+      coverage; explicit TCs only for cells it does not reach (refusal-only
+      on placed cells; unreachable cells carry a reason), the oracle is written from
+      the matrix as separate arms, and every TC runs in the state the matrix
+      names, not in a world where the clause trivially holds.
+
+      No safety floor: skip adversary mode and the skeleton writer with a
+      one-line rationale. An amendment's `update` entries
+      (_protocols/spec-amendment-discipline-reconcile.md §Independent
+      references of a changed clause) still dispatch the skeleton writer for
+      its §Flow step 9.
+    skill_ref: skills/testing/SKILL.md
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: architect-lens
+    name: "Preventive plan-time architectural lens (sequential pre-call to brief-author)"
+    category: content
+    instruction: >
+      Per spec 372 §4 (workflow integration): on L2-shape briefs,
+      dispatch agents/code-architect-lens.md BEFORE brief-author.
+      The lens reads the target spec + brief scope and returns
+      module-state + optional decomposition-recommendation +
+      sign-off field (lens_clear | lens_with_decomposition: <s> |
+      escalate: <r>).
+
+      Buddy writes the lens return to
+      docs/build/<date>-task-<id>-lens.md and stores the path in
+      workflow_state as `lens_output_path`. The next gate
+      (`brief-author`) reads the path and passes
+      `lens_output: <path>` in the brief-architect dispatch.
+
+      On sign-off `lens_clear`: proceed to brief-author normally.
+      On `lens_with_decomposition`: proceed to brief-author; brief
+      MUST address the recommendation per spec 372 AC-5.
+      On `escalate`: STOP — escalate to user with the reason;
+      do not dispatch brief-author until resolved.
+
+      Anchor mode vs heuristik mode is auto-detected by the lens
+      (grep for `^## §Module-Decomposition` in target spec); no
+      configuration.
+
+      Skip only when all three hold: fewer than three touched modules,
+      no new subsystem, effort not L or XL. Run
+      `--skip architect-lens --reason "<each of the three facts>"`; the
+      reason is stored in `steps.architect-lens.skipped_reason`. A brief
+      of L2 shape (three or more touched modules, a new subsystem, or
+      effort L or XL) is never skipped.
+    skill_ref: agents/code-architect-lens.md
+    required: false
+    completion:
+      type: manual
+    skip_when: "path == DIRECT OR path == AUTHORITY-ONLY OR (scope_modules < 3 AND NOT new_subsystem AND effort NOT IN ('L', 'XL'))"
+    on_fail: block
+
+  - id: brief-author
+    name: "Brief authoring (architect-authored when substantial; Buddy-inline on DIRECT)"
+    category: content
+    instruction: >
+      Per spec 306 §4.3 + §4.1. The inline-vs-architect branch is
+      governed by the single DIRECT-eligibility policy in
+      framework/process-map.md (safety floors first, then clear authorized,
+      bounded, reversible work with observed pattern and verification).
+
+      - direct_eligible TRUE → Buddy authors a short inline delegation
+        with scope, success criteria and verification; local new behavior
+        is allowed within those bounds.
+      - direct_eligible FALSE or unclassifiable → dispatch
+        `agents/brief-architect.md`. Fail-safe direction is UP: any
+        ambiguity routes to the architect, never inline. A FULL-shape
+        task (e.g. 7 files / 5 spec amendments) is therefore routed to
+        brief-architect — it cannot be relabelled DIRECT.
+      - The `context-locality` delegation-hygiene axis does NOT license
+        inline authoring for a brief that touches existing code:
+        spec-derived held context is not as-is grounding — the spec is
+        the least-trustworthy source for a brief's code claims,
+        especially when the task exists because the spec drifted from
+        the code.
+      - STANDARD/FULL below §4.2 escalation: single brief-architect
+        (perspective=generalist). FULL with §4.2 escalation: three
+        brief-architect dispatches in parallel via Agent tool calls in
+        one message (perspective pattern | integration | scope).
+      - AUTHORITY-ONLY: full gate skipped via skip_when (no MCA
+        boundary, no brief authored).
+      The architect's brief covers required sections per spec 306
+      §5.1 (qualitative guidance plus checked declared structure). MCA
+      input validation per main-code-agent.md is "delegation input
+      exists" only. A brief that touches a state carrier carries the
+      ## Mechanism-cells block (mca-brief-template-decision-classes.md §4): cells in scope,
+      placed cells (explicit refusal now; blocked_by wired),
+      forbidden-adjacent cells; a missing section follows
+      skills/_protocols/mechanism-model.md §Trigger. The brief's test list
+      follows the count rule: one test per behaviour the change promises,
+      one reproduction per defect, none for unchanged behaviour
+      (skills/_protocols/mca-brief-template-verification.md §Tests the brief
+      orders).
+
+      Enforcement class [DISCIPLINE]: eligibility is applied by
+      Buddy — the engine does not evaluate skip_when (the
+      architect-lens skip_when is the same class). The structural
+      read-only brief-architect is a fresh investigator. Reading actual code
+      is a discipline requirement, not a structurally guaranteed action.
+      Persist the final artifact and stamp brief_contract with the selected
+      workflow_id and explicit applicability declarations. Bind that exact
+      project-relative final path (synthesized output in multi-mode):
+      python3 scripts/workflow_engine.py --id <workflow-id> --complete
+      brief-author --set brief_path <project-relative-brief-path>.
+      Do not discover the brief by filename, newest-file glob or task number.
+      Qualitative guidance remains qualitative; declared applicable block
+      structure is checked at brief-signoff.
+    skill_ref: agents/brief-architect.md
+    completion:
+      type: manual
+    # skip_when fires only the full-gate skip (AUTHORITY-ONLY). The
+    # DIRECT-eligibility predicate above is the inline-vs-architect
+    # branch, applied by Buddy [DISCIPLINE]; the engine does not
+    # evaluate either clause.
+    skip_when: "path == AUTHORITY-ONLY"
+    on_fail: block
+
+  - id: brief-signoff
+    name: "Brief sign-off (user approval before MCA dispatch)"
+    category: gate
+    instruction: >
+      Per spec 306 §4.4 (mirrors upstream Plan Mode Step 4).
+      Multi-mode: Buddy synthesizes the candidate briefs first per
+      spec 306 §6 (synthesis is the coordinator's load-bearing job,
+      not delegated). Single mode: brief is the architect's direct
+      output, no synthesis.
+
+      Apply framework/process-map.md section Authorization in both modes.
+      Compare the synthesized brief with the already approved scope. Record
+      the matching authorization and continue without another routine gate.
+      First consume the explicitly bound final brief through brief_check. Invalid
+      required input leaves signoff open; force is refused even for valid input.
+      The artifact is read once for structure; success remains agent-confirmed
+      (not verified), and Buddy retains semantic and authorization judgment.
+      Structural check before any dispatch: a brief above the
+      mca-brief-template.md §Trigger without its
+      ## Implicit-Decisions-Surfaced block, or a brief
+      touching a state carrier without its ## Mechanism-cells block, is
+      returned to the author — not signed off. A precedent ("as task N") is
+      not a reason to skip a block or a seat; the skip names the coverage
+      that makes it redundant.
+      If synthesis introduces a consequential decision, changed scope/risk,
+      or unresolved divergence, present it for user approval before dispatch.
+
+      User approves: dispatch MCA. User rejects with comments:
+      Buddy decides — re-dispatch brief-architect with comments
+      folded in, or escalate to spec amendment, or file separate
+      task.
+
+      On architect output `escalate: <reason>`: synthesis is
+      skipped; Buddy escalates to user with the reason; resolution
+      may be pull-in-scope, file-separate-task, amend-spec, or
+      council. MCA does NOT dispatch until escalation is resolved.
+
+      DIRECT path (Buddy-inline brief): no architect dispatched, no
+      sign-off needed; legacy direct path applies.
+    completion:
+      type: compound
+      checks:
+        - type: brief_check
+          path: "{brief_path}"
+        - type: manual
+    skip_when: "path == DIRECT or path == AUTHORITY-ONLY"
+    on_fail: block
+
+  # ============================================================================
+  # Phase: Execute
+  # ============================================================================
+
+  - id: phase-execute
+    name: "workflow_phase=execute (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update workflow_phase=execute"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: mca-implementation
+    name: "MCA implementation (Plan → [Plan-Review] → Implement → L0)"
+    category: content
+    instruction: >
+      main-code-agent inline. Plan + impl_plan_review (conditional: ≥3 ACs OR
+      schema change OR cross-module impact) + Implement + L0 (ruff/mypy).
+    completion:
+      type: manual
+    commit_gate: true
+    on_fail: block
+
+  # ============================================================================
+  # Phase: Verify
+  # ============================================================================
+
+  - id: phase-verify
+    name: "workflow_phase=verify (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update workflow_phase=verify"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: code-review-board
+    name: "Code review board (light / L1 / L2 per spec 306 §4.4a)"
+    category: content
+    instruction: >
+      Before mandatory review dispatch, load skills/_protocols/evidence-pointer-schema.md
+      section 9. Capture this exact workflow/step before production; pass its owner
+      to nested skills without a competing capture. Name the captured files and diff
+      roots and the pinned history. Declare eligible state/report/decision exclusions before
+      capture. Until adoption, the commissioner keeps these captured paths and pinned history
+      write-free and puts records outside them or in eligible exclusions already declared
+      for this capture (owner: skills/_protocols/evidence-review-capture.md §9.2). Use successful
+      capture stdout for run/subject metadata, preserve complete current returns and write the
+      explicit decision at docs/reviews/code/{task_id}-verdict.md. Run
+      `--review-subject-check code-review-board --id WORKFLOW` on the exact owner before
+      `--review-adopt`; adopt on success, then check the declared policy before completion
+      or review-derived task writes. The completion check reads that verdict path and refuses
+      an adoption held at another path. For a changed subject or relevant fix, retry and freshly capture before
+      the applicable review (owner: skills/_protocols/evidence-review-adoption.md §9.4).
+      Select light / L1 / L2 using skills/code_review_board/SKILL.md §1.
+      Safety floors precede file counts and other size signals. DIRECT
+      eligibility comes from framework/process-map.md; this step defines
+      no separate shortcut. Consolidation follows the actual reviewer
+      count under the skill's §1.3. L1 (adversary + domain-logic +
+      architect-roots + Buddy checklist, trigger lenses, no chief at <= 3
+      reviewers) is the default for bounded engine / contract builds; L2
+      only on a named trigger (public API / wire, security, real migration
+      doubt, new subsystem, live infrastructure unless the skill's §1.0a
+      small fix on a live path holds). The review brief carries
+      the owning spec's §Mechanism-Lifecycle matrix when the diff touches a
+      state carrier (skill §2 step 4); reviewers and the L1 checklist check
+      cells. Re-verify after a fix pass: light (reproductions and any class witness re-run) only
+      for a line-local fix; any new guard / branch / rule on a mechanism
+      that drew a HIGH, or an oracle hunk, adds a code-adversary whose
+      mandate is the mechanism with the whole matrix as context, not the
+      fix — returning a coverage table over the invariants and the rows /
+      columns the fix touches (skill §4). Test scope: a fix pass and its
+      re-verify run the selected set for the fix's changes; a due broad run
+      comes once, after the last pass, by the full gate's runner, and no fix
+      brief or dispatch tells another actor to run the whole suite
+      (skills/testing/run-strategy.md §Test selection). Tests in a fix pass:
+      the fix brief gives each finding one test (a named existing test that
+      is strengthened, one reproduction, or a command only), findings of one
+      class share one test, and tests an earlier pass wrote per finding are
+      listed for removal (skills/_protocols/fix-brief-template.md Section 5).
+      A finding whose only subject is a test that exists (a surviving mutant,
+      a guard no test pins, a vacuous assertion) and a test the added-tests
+      check rejects change no verdict and open no fix pass or re-review of
+      their own; which of them is fixed now, which is carried, and what is
+      not such a finding (evidence a rule requires, wrong product behaviour,
+      an owner-approved exit criterion):
+      skills/code_review_board/test-findings.md. Before commissioning a fix pass or a re-review: re-reviews are at most two per
+      mechanism, counted across review owners, workflows and tasks, then
+      skills/convergence_loop/at-the-cap.md (owner: skills/code_review_board/verdict.md
+      §Re-review); where the
+      findings mainly concern machinery this solution introduced, reassess that
+      machinery against the original outcome first and remove what it does not need
+      through the brief or the triage; no task is filed solely because a finding
+      exists (owner: agents/buddy/architecture-comprehension.md §B). Purpose: rounds
+      on machinery the fix itself added, and tasks born of findings alone, cost more
+      than the defect they answer. Buddy owns the
+      decision and verifies pivotal claims after reading the reports or
+      Chief consolidation. Fix passes: oracle edits go in a separate hunk
+      citing their ruling and are reviewed by a non-implementer
+      (testing/test-design.md §Oracle discipline); the fix brief carries the
+      §Mechanism-cells block and the matrix is edited in the same change.
+      Before every fix pass >= 2 (counted across the task's spec and code
+      passes on the mechanism), record the Simplify-before-patch check
+      (skills/convergence_loop/simplify-before-patch.md) in the build log before briefing
+      the fix, model row first. Verdict floor (skill §5): a CRITICAL / HIGH
+      or invariant-falsifying finding on a now cell is fix-now or a
+      simplification, never new_task / accept / watch_item; lower severities
+      follow the normal triage with the cell annotated; placed cells leave
+      the task as blocked_by edges on the owning task.
+
+      Verdict lines (read at completion): write the verdict from the skeleton in
+      skills/code_review_board/REFERENCE.md §Verdict file skeleton and fill its lines
+      before adopting it; a line added after adoption changes the adopted bytes, and
+      the same decision is adopted again. The completion check refuses with
+      `compound check [<n>] failed` until docs/reviews/code/{task_id}-verdict.md holds
+      [1] the line `Skeleton: verdict <n>`; [2] `review: <light | L0 | L1 | L2>,
+      seats: <names>` or `review: waived because <reason>`; [3] `re_reviews: <n> of 2
+      on <mechanism>` (a waived or first review writes 0, a waived one `on none`; past
+      the limit, the count reached, with the at-the-cap ruling); [4] the findings table with its
+      `disposition` column, its header kept when there are no findings. It reads
+      presence only. A form none of these fits: --force, counted, while the adoption
+      check [0] still refuses (`Mandatory review adoption refused`). Retry forms of this step
+      (framework/workflow-engine-cookbook.md §Iteration cap and review rounds): a fix
+      pass with its re-review is `--retry code-review-board --reason "<what changed>"`,
+      counted against the engine cap of 3 runs; a corrected capture before any
+      reviewer ran is `--reason "capture-correction: <what>"`, not counted; past the
+      cap the reason is `at-the-cap: <verdict path>`, naming a verdict whose
+      remaining_findings list is not empty. The fix brief of a pass is written from
+      skills/_protocols/fix-brief-skeleton.md; its `## Round` block names the round
+      against the task's budget.
+
+      On post-board FAIL with `target: spec_text` entries in
+      remaining_findings (per spec 306 §4.7 + §4.8): Buddy dispatches
+      MCA fix-pass + spec-text-drift-batch agent in parallel via two
+      Agent tool calls in ONE message. Both return → block-commit
+      both diffs (MCA src/+tests/ + batch agent docs/specs/) per
+      spec 306 §4.8 partial-failure-rollback semantics.
+    skill_ref: skills/code_review_board/SKILL.md
+    completion:
+      type: compound
+      checks:
+        # Engine-facing pointer keys on {task_id}: the board names its verdict
+        # by task-id (skills/code_review_board/SKILL.md §7), independent of the
+        # specify-phase gate type. Keying on {spec_name} mis-derived the pointer
+        # whenever spec-name != task-id — sharpest when the specify gate was an
+        # architectural decision, whose artifact has no task-id-shaped name.
+        # The canonical verdict name is a [DISCIPLINE] convention the writer
+        # follows (SKILL §7); this pointer_check is the [WORKFLOW] safety net —
+        # it refuses missing/noncurrent mandatory adoption even with --force when the verdict is missing or
+        # non-canonical, but only while the engine drives the run. The L2 chief
+        # consolidation behind the verdict is [DISCIPLINE] too (its tracking
+        # table is convention the engine cannot read) — not a separate pointer.
+        - type: pointer_check
+          source_file: "docs/reviews/code/{task_id}-verdict.md"
+          min_schema_version: 1
+          review_owner_workflow: self
+          review_owner_step: code-review-board
+          review_policy: code_success
+        # Verdict lines: presence of the skeleton's lines, keyed [1] to [4] in the
+        # step text. Forceable; the adoption check above still refuses under force.
+        - type: file_content_check
+          path: "docs/reviews/code/{task_id}-verdict.md"
+          pattern: '(?m)^Skeleton: verdict [0-9]+[ \t\r]*$'
+          condition: has_match
+        - type: file_content_check
+          path: "docs/reviews/code/{task_id}-verdict.md"
+          pattern: '(?m)^review:[ \t]*(?:(?:L0|L1|L2|light)\b[^\n]*\bseats:[ \t]*[^\s<|][^\n]*|waived because[ \t]+[^\s<][^\n]*)$'
+          condition: has_match
+        - type: file_content_check
+          path: "docs/reviews/code/{task_id}-verdict.md"
+          pattern: '(?m)^re_reviews:[ \t]*[0-9]+ of [0-9]+ on[ \t]+[^\s<][^\n]*$'
+          condition: has_match
+        - type: file_content_check
+          path: "docs/reviews/code/{task_id}-verdict.md"
+          pattern: '(?m)^\|[^\n]*\bdisposition\b'
+          condition: has_match
+        - type: manual
+    commit_gate: true
+    on_fail: block
+
+  - id: spec-drift-check
+    name: "Spec drift check (amendment-verify + co-evolve, merged)"
+    category: content
+    instruction: >
+      Implementation-decision drift to spec body — did MCA's diff change
+      behaviour defined in a spec (Cypher templates, state machines, schemas,
+      interface contracts, pipeline phases)? Yes → spec patch in the SAME
+      block-commit, then re-verify with spec_amendment_verification.
+
+      No spec-defined behaviour touched: skip with one-line rationale.
+    skill_ref: skills/spec_amendment_verification/SKILL.md
+    tier1_pointer_exempt: "conditional spec patch inside the code block-commit; no standalone artifact path"
+    required: false
+    completion:
+      type: manual
+    on_fail: warn
+
+  # ============================================================================
+  # Phase: Close
+  # ============================================================================
+
+  - id: phase-close
+    name: "workflow_phase=close (engine-internal)"
+    category: deterministic
+    instruction: "task_status_update workflow_phase=close"
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: close-bookkeeping
+    name: "Close bookkeeping (distill → emit)"
+    category: content
+    instruction: >
+      If a workflow definition's semantic fingerprint changed, include its reviewed
+      compatibility pair in the same change so retained runs can continue
+      (owner: framework/workflow-compatibility.md §Reviewed workflow compatibility).
+
+      Distill → emit: first the distill (close_retro), then the emit
+      sub-checks consume it; each one-liner-skippable.
+
+      DISTILL — close_retro (skill: skills/close_retro/SKILL.md; spec 374).
+      Fires on FULL, or STANDARD with a new-pattern signal (brief LD
+      pattern-class new-class-*, brief-architect.md §3); else skip with a
+      one-liner. On fire: Buddy dispatches the read-only agents/close-retro.md
+      with this build's artifacts (brief, RETURN-SUMMARY, verdict, spec-drift,
+      ACs, optional docs/build/<slug>-observations.md); it returns a retro
+      1-pager inline; Buddy writes it to docs/build/<slug>-retro.md
+      (§Stale-Decisions T0×T1 + §Patterns-Emerged + §Framework-Feed).
+
+      EMIT — consume the retro when present, else current raw-artifact
+      behaviour (no regression):
+
+      (a) ADR-discipline triple — consume the retro's §Stale-Decisions: which
+      decision meets hard-to-reverse + surprising-without-context +
+      result-of-real-trade-off? Yes → write ADR via
+      documentation_and_adrs/SKILL.md. Otherwise one-line skip.
+
+      (b) Risk follow-up — for every verdict file in Verify, check
+      `remaining_findings:`. Non-empty → route each entry by its `target:`
+      via skills/risk_followup_routing/SKILL.md. Orthogonal to close_retro
+      (routes REVIEW findings, not lessons). No remaining: skip.
+
+      (c) Knowledge process — pass the retro's §Patterns-Emerged as
+      `information` to knowledge_processor mode=process (or extract directly
+      if close_retro was skipped).
+
+      (d) §Framework-Feed — the retro's forge-feed-format entries land as
+      forge-feed entries (this replaces the old workflow-retro safety net).
+      When close_retro is SKIPPED, (d) reverts to the safety net: capture-now
+      only the on-notice forge-feed entries missed during the work; skip if
+      none.
+    completion:
+      type: manual
+    on_fail: warn
+
+  - id: commit-deploy
+    name: "Commit + deploy"
+    category: deterministic
+    instruction: >
+      Flip task status=done via the task_status_update skill — NOT a raw
+      `status:` YAML edit. The skill runs the cross-task graph closure,
+      plan.yaml ref sweep, atomic archive move + integrity guard, and the
+      persist-gate; a hand edit silently skips all of them (half-closed
+      archive, dangling blocked_by). Conditional on whether the workflow
+      closes the WHOLE task (skip on sub-build — parent owns task status).
+
+      Persist the completed local result. Apply framework/process-map.md
+      section Authorization separately to commit, push and deployment.
+      Continue actions already authorized for the unchanged scope and target
+      without routine reapproval. A completed task or local implementation
+      does not grant publication authority. Commit only under applicable
+      request or standing repository policy; run installed checks where present.
+      Push and dashboard deployment only when authorization covers that action
+      and target. Record omitted publication and its reason; do not claim it ran.
+      An authorized missing or failed publication remains an unresolved obligation.
+      Engine advancement of workflow_phase does not prove commit, push or
+      deployment (the task status flip is the skill call above).
+    completion:
+      type: manual
+    commit_gate: true
+    on_fail: block

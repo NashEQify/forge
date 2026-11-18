@@ -1,0 +1,138 @@
+name: save
+description: Legacy development-tracked save adapter; common save runs directly through WORKFLOW.md.
+  Preserve existing step identities and pending obligations.
+need_phrase: persist a session
+trigger:
+- save
+derived_from: WORKFLOW.md@2026-10-22
+steps:
+- id: orient
+  name: Orient on project state and rules
+  category: deterministic
+  instruction: 'Follow common WORKFLOW.md section 1: verified scope, permissions, coherent handoff
+    and pending recovery. This is an already selected legacy tracked run, not permission to
+    select every engine state.'
+  completion:
+    type: manual
+  on_fail: block
+- id: dispatcher-final
+  name: Dispatcher final run (inline)
+  category: deterministic
+  instruction: "Buddy inline: triage PENDING entries from docs/session-buffer.md (act / defer\
+    \ / drop; never silently delete an unresolved entry). Skip when the buffer is absent or\
+    \ empty. Framework-feedback routing below only where $FRAMEWORK_DIR/docs/dogfood-learnings/\
+    \ exists. The dispatcher skill is retired \u2014 the mechanic now runs inline.\n\n`[framework-feedback]`\
+    \ routing (safety-net actuator): a `[framework-feedback]`-tagged PENDING entry is framework-friction\
+    \ that belongs in forge_dev's forge-feed, NOT the consumer buffer. Write-direct on notice\
+    \ stays PRIMARY (`$FRAMEWORK_DIR/docs/dogfood-learnings/README.md` \xA739-40) \u2014 this\
+    \ step is only the backstop for what slipped into the buffer. Per such entry: (1) run the\
+    \ 6-check pre-write filter (README \xA7Pre-write filter) \u2014 2+ checks fire skip \u21D2\
+    \ mark the buffer entry `status: PROCESSED` with a one-line drop-note, do NOT route; (2)\
+    \ passes \u21D2 allocate the next `L-NNN` (= max `L-NNN` across BOTH `forge-feed.md` + `implemented-forge-feeds.md`,\
+    \ +1), append the entry to `$FRAMEWORK_DIR/docs/dogfood-learnings/forge-feed.md` in the\
+    \ README entry format, then mark the buffer entry `status: PROCESSED` (the `buffer-cleanup`\
+    \ step removes it). The destination is ALWAYS `$FRAMEWORK_DIR` (injected every session)\
+    \ \u2014 the buffer is consumer-local (CWD), the forge-feed is cross-repo.\n"
+  completion:
+    type: manual
+  required: false
+  on_fail: skip
+- id: validate-reconciliation
+  name: Validate + reconciliation
+  category: content
+  instruction: "Follow common save reconciliation; private deferred facts never enter project\
+    \ handoff. Forward selected development task-status and plan checks to framework/development-continuation.md.\
+    \ Preserve this legacy step\u2019s pending obligations. Recover selection from explicit\
+    \ session evidence; ambiguity blocks completion rather than skipping required checks. File\
+    \ presence alone never selects new development work."
+  completion:
+    type: manual
+  on_fail: block
+- id: knowledge-process
+  name: Knowledge processing and navigation
+  category: content
+  instruction: Apply skills/knowledge_processor/SKILL.md lifecycle to actual session deltas.
+    Preserve meaningful content, private scope, navigation and latest-result pointers. Publish
+    through framework/continuity.md; pending reconciliation prevents a complete-save claim.
+  completion:
+    type: manual
+  on_fail: block
+- id: workflow-handoff-context
+  name: Workflow-engine handoff context
+  category: deterministic
+  instruction: 'Compatibility forwarding: framework/development-continuation.md exports exact
+    selected authoritative workflow references and validation status. Preserve legacy workflow
+    export obligations, route/variable/evidence meaning and unrelated runs. A truncated all-active
+    display is not exact continuation. Missing or ambiguous selected state blocks completion;
+    common save alone does not activate an engine.'
+  completion:
+    type: manual
+  required: false
+  on_fail: skip
+- id: handoff-write
+  name: Write the session handoff (merge-default)
+  category: content
+  instruction: Follow common WORKFLOW.md section 2 through protected continuity publication.
+    Coherent full read then semantic merge; preserve untouched open topics and opaque unfinished
+    domain bindings. Include goal/state, leading files, next step/blocker and necessary decisions,
+    approvals, failed attempts and jobs. No nine-heading requirement. Multifile pending recovery
+    precedes the first mutation; stale baselines require fresh reconciliation.
+  completion:
+    type: file_content_check
+    path: context/session-handoff.md
+    condition: has_match
+    pattern: '(?i)session.handoff|## '
+  commit_gate: false
+  on_fail: block
+- id: history-entry
+  name: History entry
+  category: content
+  instruction: Use Knowledge Processor meaningful-history threshold plus selected development
+    closeout audit obligations. Preserve durable decisions, obligations, useful trajectories
+    and unresolved conflicts. No entry solely for save/session length. Follow existing source/storage/frozen-history
+    conventions.
+  completion:
+    type: file_created_matching
+    pattern: context/history/*
+  commit_gate: false
+  required: false
+  on_fail: skip
+- id: buffer-cleanup
+  name: Session-buffer cleanup
+  category: deterministic
+  instruction: Remove only actually reconciled PROCESSED buffer items through protected publication.
+    Preserve unresolved entries and recovery records. Empty buffer needs no write.
+  completion:
+    type: manual
+  required: false
+  on_fail: skip
+- id: commit-push
+  name: Commit + push
+  category: deterministic
+  instruction: "Review the diff and staged content for secrets, temporary output and unintended\
+    \ changes; run an available secret scanner in addition. Stage concrete own paths (no blind\
+    \ `git add .`); never commit foreign staged changes; in a mixed file select own hunks or\
+    \ report the conflict. Commit per the project's commit policy; no empty commit. An explicit\
+    \ `save` from the user is a commit-and-push request for the active project's tracked upstream\
+    \ unless the project's rules forbid or restrict it; otherwise push only when the project's\
+    \ rules or the user authorize push to that remote (process-map \xA7Authorization); a save\
+    \ never widens permissions. User repo: when user-scope files changed and the user repo is\
+    \ not the active project, persist it the same way under its own rules; changes under its\
+    \ context/user/ from other sessions count as its own content there. No force-push, reset,\
+    \ automatic stash, rebase or branch switch. Conflict, missing access or SSH passphrase prompt\
+    \ \u2192 keep the local save, name the concrete blocker, no unchecked retry loop.\n\n\nObserve current content persistence for every applicable project and configured user repository, including required remote persistence. A no-new-commit save still requires current persistence observations. Missing, failed, timed-out or unknown outcomes remain incomplete: report the concrete blocker. After observing success with existing authorized tools, complete explicitly with --complete commit-push --id <workflow-id> --evidence \"<current observations and retained evidence>\". Evidence must be supplied in this invocation, including force. The engine checks presence only; outcome truth, freshness and completeness remain agent obligations. Completion is agent-confirmed; force remains forced."
+  evidence_required: true
+  completion:
+    type: "manual"
+  commit_gate: false
+  on_fail: escalate
+- id: verify-report
+  name: Verify and report
+  category: deterministic
+  instruction: Follow common WORKFLOW.md section 3. Verify actual files/routes/pending records
+    and selected domain contribution before complete-save claims. Report partial persistence,
+    concrete blockers, commit/push evidence separately. Foreign unchanged diffs are not a save
+    failure.
+  completion:
+    type: manual
+  on_fail: warn

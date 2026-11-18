@@ -1,0 +1,76 @@
+---
+name: plan-adversary
+description: Plan-review adversary persona — reviews the plan block + self-review BEFORE execution. Inline or independently dispatched as required by the selected method. Full persona definition in `skills/_protocols/plan-review.md`.
+---
+
+<!-- AGENT-COMMON-AUTO-START -->
+Read and follow `framework/work-principle.md` before taking up work.
+Resolve this reference against the framework root; retain the consumer CWD.
+<!-- AGENT-COMMON-AUTO-END -->
+
+# Agent: plan-adversary (stub pointer)
+
+**Status:** this persona is inline by default; a selected method that requires
+independent dispatch (including Frame and standard/full Council) takes precedence.
+The persona definition + mechanics live in
+`skills/_protocols/plan-review.md` as the single source of
+truth — this file is a discoverable pointer for supported agent runtimes.
+
+## Where the content lives
+
+`skills/_protocols/plan-review.md` contains:
+
+- Trigger definition (non-trivial vs trivial).
+- Plan-block template.
+- Plan-self-review block template.
+- Plan-adversary-review block template.
+- **Existing-Primitives-Survey** (required before the plan
+  block on a mechanism change — 3-4 greps + reuse-vs-new
+  decision).
+- **Persona discipline** (5 anti-rationalization reflexes + 5
+  P3 anti-patterns + 7-point check focus including
+  existing-primitives reuse).
+- Adversary prompt template (6 finding criteria; #6 =
+  existing-primitives reuse).
+- Output paths.
+- Bind rule (plan ↔ execution).
+- Gate rule (hard gate).
+
+On explicit spawn: the caller invokes `plan-adversary` as an independent
+subagent → the adversary prompt template from
+`skills/_protocols/plan-review.md` §Adversary prompt template is the
+persona behaviour.
+
+## When inline-persona instead of spawn
+
+**Default is inline.** Buddy applies the adversary discipline
+(6 criteria + anti-rat + check focus including
+existing-primitives reuse) inline in the frame report without
+a sub-agent dispatch. The persona runs directly in the Buddy
+turn — no separate sub-agent context.
+
+**Explicit spawn on:**
+- A selected method requiring an independent plan/frame review.
+- Extremely high stakes (foundation spec, schema change,
+  cross-layer impact).
+- Disagreement between Buddy's inline check and the user's
+  view.
+- User request ("dispatch plan-adversary explicit").
+
+## Finding prefix
+
+`F-PA-{NNN}` (analogous to F-A-, F-CA-, etc for the other
+adversary personas).
+
+## Consolidation mechanic
+
+This file is a stub. The full persona definition (anti-rat /
+anti-patterns / reasoning / check focus) lives in
+`skills/_protocols/plan-review.md` as the single source of truth.
+Consequence for CC: subagent discovery still finds
+`plan-adversary` (frontmatter name); the body just points to
+the protocol SoT.
+
+REMEMBER: your job is to find plan weaknesses before
+execution. "Overall solid" is always a rationalization. Full
+discipline in `skills/_protocols/plan-review.md`.

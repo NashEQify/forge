@@ -1,0 +1,292 @@
+# Architecture Council — Multi-Perspective Deliberation Sub-Workflow
+#
+# Referenziert von build/WORKFLOW.md (Specify-Phase) + gates-template.yaml.
+# Tier 1 SoT: workflows/runbooks/build/WORKFLOW.md.
+# Tier 1 SKILL (Buddy checklist): skills/council/SKILL.md + REFERENCE.md.
+# Diese YAML ist die Tier 2 (Harness) Repraesentation.
+# Auch eigenstaendig nutzbar: "buddy: architecture council for {Fragestellung}"
+#
+# Kern-Idee: Min 3 unabhaengige Members + (standard/full) 1 adversary,
+# Context-Isolation (CC Sub-Agents), sehen gegenseitig NICHTS bis chief
+# consolidation. council-chief = consolidator-tool per Inv 1 (Buddy decides).
+# Sub-Agent-MDs: agents/council-member.md, agents/council-adversary.md,
+#                agents/council-chief.md
+
+version: "2.1"
+
+# ============================================================
+# Trigger-Check: Council noetig?
+# ============================================================
+
+trigger_check:
+  description: >
+    Buddy prueft 4 binaere Trigger BEVOR Council startet.
+    Kein Trigger → dokumentierter Skip ("Council nicht noetig: [rationale]").
+    Min 1 Trigger → Council starten, dann Modus waehlen.
+  triggers:
+    - id: multi_path
+      question: ">1 valider Loesungsweg UND schwer umkehrbar?"
+    - id: multi_layer
+      question: ">1 Schicht/Agent betroffen?"
+    - id: high_impact
+      question: "Substanzieller Impact auf Security/Sovereignty/Simplicity/Experience/Compatibility/Scale?"
+    - id: uncertainty
+      question: "Buddy ist unsicher?"
+  escalation_path: >
+    Council kann auch waehrend/nach Board feuern wenn Board eine
+    Architektur-Frage entdeckt (sekundaerer Eintrittspunkt).
+    Gilt auch zwischen Spec-Ebenen im Full Path (E1/E2/E3):
+    Board entdeckt Arch-Frage → Council → Spec-Update → Board Re-Review.
+    Dokumentation: workflows/runbooks/build/WORKFLOW.md §Phase Specify (Full Path, Council Step).
+
+# ============================================================
+# Council-Output
+# ============================================================
+
+output_definition:
+  description: >
+    Council kartiert den Loesungsraum and gibt dem Spec-Autor Leitplanken.
+    Council-Output wird direkt zu Spec-Input.
+  fields:
+    loesungsraum:
+      description: "Viable Approaches + Trade-offs"
+      flows_into: "Spec: Loesungswahl-rationale"
+    constraints:
+      description: "Grenzen die Council identifiziert hat"
+      flows_into: "Spec: Constraint Architecture (MUST/MUST NOT)"
+    dimensionen:
+      description: "Aspekte die die Spec abdecken MUSS"
+      flows_into: "Spec: AC-Struktur, Scope"
+    input_quellen:
+      description: "Wo noch Fakten/Perspektiven gebraucht werden"
+      flows_into: "Discovery/Recherche"
+    decision:
+      description: "Konvergiert → Empfehlung. Offen → Trade-off-Matrix for User"
+      flows_into: "User/Buddy entscheiden"
+    adr:
+      description: "Bei schwer umkehrbaren Entscheidungen"
+      flows_into: "decisions.md"
+
+# ============================================================
+# Modus-Auswahl (nach Trigger-Check)
+# ============================================================
+
+mode_selection:
+  description: >
+    Buddy bestimmt den Modus BEVOR der Council startet.
+    Zwei binaere Fragen:
+    
+    Frage 1: ">2 Council-Dimensionen betroffen?"
+      → Ja: full
+      → Nein: Frage 2
+    
+    Frage 2: "Schwer umkehrbar?"
+      → Ja: standard
+      → Nein: light
+    
+    Kein Council noetig? Dokumentierter Skip:
+    "Council nicht noetig: [rationale]."
+
+# ============================================================
+# Modi — aligned with skills/council/SKILL.md §1.1 (post-Stage-1)
+# ============================================================
+
+modes:
+
+  light:
+    description: >
+      Reversible decisions, 3 perspectives sufficient.
+      3 members + council-chief. No adversary, no frame-check, no discourse.
+    members: 3
+    member_config:  # each member's model: framework/models.md, Design row
+      - perspective: primary
+      - perspective: contrasting
+      - perspective: additional
+    chief: council-chief         # Inv 1 — chief consolidates even at N=3
+    adversary: false
+    frame_check: false
+    discourse: false
+    coherence_check: required    # Buddy applies architecture-comprehension.md §B
+    output: decision_file
+    adr_required: optional
+    expected_cc_calls: 4  # 3 members + 1 chief
+
+  standard:
+    description: >
+      Hard-to-reverse OR 2-3 layers OR 1+ HARD constraint touched.
+      3 members + chief + council-adversary + pre-council frame check
+      + post-council coherence check.
+    members: 3
+    member_config:
+      - perspective: primary
+      - perspective: contrasting
+      - perspective: additional
+    chief: council-chief
+    adversary: council-adversary
+    frame_check: plan-adversary   # cold-start on briefing draft per §2
+    discourse: false              # dissent: full, or SKILL §6
+    coherence_check: required
+    output: decision_file
+    adr_required: true
+    expected_cc_calls: 6  # 3 members + adversary + frame-check + chief
+
+  full:
+    description: >
+      >2 dimensions OR foundational pattern OR ≥2 hard constraints.
+      4-6 members + chief + adversary + frame-check + coherence-check
+      + discourse on dissent.
+    members: "4-6"
+    member_config:
+      - perspective: primary
+      - perspective: contrasting
+      - perspective: additional
+      # + additional per dimension count
+    chief: council-chief
+    adversary: council-adversary
+    frame_check: plan-adversary
+    discourse: on_dissent          # _protocols/discourse.md, max 1 round
+    coherence_check: required
+    output: decision_file
+    adr_required: true
+    expected_cc_calls: "7-12"  # 4-6 members + adversary + frame-check + chief + (optional discourse round)
+
+# ============================================================
+# Perspektiven-Profile
+# ============================================================
+
+profiles:
+
+  architecture:
+    description: "Default for ARCH-XXX Entscheidungen."
+    perspectives:
+      security:
+        focus: "Angriffsvektoren, Datenfluss, Credentials. Angriffsflaeche groesser/kleiner?"
+      sovereignty:
+        focus: "Datensouveraenitaet, Selfhosting, Vendor-Lock-in. Kontrolle ueber Daten?"
+      simplicity:
+        focus: "Komplexitaet, Wartbarkeit, Absorption (neue Primitive absorbieren bestehende, statt zusaetzlich). Einfachste Loesung die funktioniert?"
+      experience:
+        focus: "User/Developer Experience. Verbessert die Loesung den Alltag?"
+      compatibility:
+        focus: "Integration, Migration, Abwaertskompatibilitaet. Passt zum Stack?"
+      scale:
+        focus: "Performance, Zukunftsfaehigkeit. Haelt bei 10x Volumen?"
+
+  life_domain:
+    description: "Fuer nicht-technische Entscheidungen."
+    perspectives:
+      pragmatist:
+        focus: "Schnellster Weg zum Ergebnis. Kosten-Nutzen."
+      risk_analyst:
+        focus: "Was kann schiefgehen? Worst Case? Reversibilitaet?"
+      long_term_thinker:
+        focus: "Wie sieht das in 2/5/10 Jahren aus?"
+      devils_advocate:
+        focus: "Warum ist die bevorzugte Loesung FALSCH?"
+
+# ============================================================
+# Prozess
+# ============================================================
+
+process:
+
+  phase_0_briefing_draft:
+    title: Briefing-Draft erstellen
+    agent: buddy
+    description: >
+      Buddy schreibt Briefing-Draft. NOCH NICHT final. Per
+      skills/council/run.md §3: question + intent_chain + context-paths
+      + null option + perspectives. MUST NOT: Buddy's proposal,
+      pre-classified conflicts, severity tags, lean hints. Brief-contagion
+      empirisch demonstriert.
+    output: "docs/reviews/council/{date}-{topic}-briefing-draft.md"
+    modes: [standard, full]  # light skips frame-check, goes direct to final
+
+  phase_1_frame_check:
+    title: Pre-council frame check
+    agent: buddy
+    description: >
+      Follow skills/council/run.md §2: when triggered, give plan-adversary
+      the draft and intent sources. Ask which missing intent sentence
+      distinguishes options. Save the return verbatim and integrate concerns.
+    sub_agent: plan-adversary
+    output: "docs/reviews/council/{date}-{topic}-frame-check.md"
+    final_briefing: "docs/reviews/council/{date}-{topic}-briefing.md"
+    modes: [standard, full]
+
+  phase_2_independent_analysis:
+    title: Unabhaengige Analyse
+    description: >
+      Buddy spawnt N council-member + 1 council-adversary (standard/full)
+      Sub-Agents PARALLEL via Task tool. Jeder: Perspektive + Briefing-Pfad
+      + Output-Pfad + File-Output OVERRIDE block. Context-Isolation durch
+      CC Sub-Agent-Mechanismus. Members sehen FINAL briefing only,
+      NICHT frame-check artifact.
+    sub_agents:
+      - council-member  # N domain members
+      - council-adversary  # 1, standard/full only
+    output_per_member: "docs/reviews/council/{date}-{topic}-{perspective}.md"
+    output_adversary: "docs/reviews/council/{date}-{topic}-adversary.md"
+
+  phase_3_chief_consolidation:
+    title: Chief Consolidation
+    description: >
+      Send council-chief all member returns, adversary and frame-check artifacts
+      when present, and the final briefing's intent anchor for deferrals
+      (owner: skills/council/run.md §4). Chief consolidates and recommends
+      a verdict per its persona. Buddy decides per Inv 1 / soul.md.
+    sub_agent: council-chief
+    output: "docs/reviews/council/{date}-{topic}-consolidated.md"
+    modes: [light, standard, full]
+
+  phase_3b_discourse:
+    title: Discourse on dissent (Full only)
+    description: >
+      Bei chief-recommended DISSENT-recommended (members split,
+      adversary on one side): Buddy triggert discourse phase per
+      _protocols/discourse.md. AGREE/CHALLENGE/CONNECT/SURFACE grammar.
+      Max 1 Runde. Chief re-konsolidiert nach Discourse.
+      Not run in the user-decided case (SKILL.md §6).
+    max_iterations: 1
+    modes: [full]
+
+  phase_4_coherence_and_decision:
+    title: Post-council coherence check + Entscheidung
+    agent: buddy
+    description: >
+      MANDATORY (unconditional, standard/full): Buddy applied
+      agents/buddy/architecture-comprehension.md §B
+      (post-return) auf Chief-Output BEVOR Adoption. Topology-Contradiction
+      (producer/consumer absent, deploy-state incompatible) → escalate
+      oder re-frame, NICHT adopt. Pass → Buddy decides mit rationale.
+      Bei ueberstimmten Perspektiven: explizit warum. ADR per
+      adr_required.
+    output: "docs/reviews/council/{date}-{topic}-decision.md"
+    gate_update: "council.status: pass"
+
+# ============================================================
+# Tier-Verhalten
+# ============================================================
+
+tier_behavior:
+  tier_1:
+    description: >
+      CC-basiert. Buddy spawnt N council-member + 1 council-adversary
+      (standard/full) Sub-Agents parallel via Task tool. Jeder schreibt
+      sein Analysis-File mit evidence-pointer-schema:v1. Buddy liest Consolidation,
+      applied post-council coherence check, decided.
+    execution: >
+      Buddy spawnt parallel (ONE tool block, run_in_background: true):
+        council-member "Perspektive: {X}. Briefing: {path}. Output: {output_path}."
+        (wiederholt for jede Perspektive)
+        council-adversary "Briefing: {path}. Output: {adversary_output_path}."  # standard/full
+      Wait for the returns, then dispatch Chief per phase_3 with the final
+      briefing's intent anchor for deferrals (owner: skills/council/run.md §4).
+      Read the consolidation.
+      Coherence check (Arch-Comp B). Decision.
+
+  tier_2:
+    description: >
+      Harness dispatcht N CC-Instanzen parallel.
+      Wartet auf alle Outputs. Dispatcht council-chief.
+      Dispatcht Buddy for Decision.

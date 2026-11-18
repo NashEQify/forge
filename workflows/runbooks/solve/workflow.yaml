@@ -1,0 +1,381 @@
+name: solve
+description: "Problem-driven workflow: frame → refine → artifact → validate → execute"
+need_phrase: "solve a problem whose solution shape is still open"
+trigger: ["solve"]
+derived_from: "WORKFLOW.md@2026-05-09"
+
+# Named gates: frame, refine, write-artifact, validate, apply-artifact,
+# close-bookkeeping, commit-deploy
+# (7 user-decided steps + 5 engine-internal phase transitions).
+
+routes:
+  standard: &solve_steps
+    - phase-frame
+    - frame-report
+    - phase-refine
+    - refine
+    - phase-artifact
+    - write-artifact
+    - phase-validate
+    - validate
+    - phase-execute
+    - apply-artifact
+    - close-bookkeeping
+    - commit-deploy
+  full: *solve_steps
+
+steps:
+
+  - id: phase-frame
+    name: "workflow_phase=frame (engine-internal)"
+    category: deterministic
+    instruction: >
+      Create the exact Solve state file with phase: frame, status: active,
+      artefacts: [], and task_ref set to the attached task ID or null.
+      Open a taskless run with --set state_file docs/solve/YYYY-MM-DD-<slug>.md
+      so the engine can find its record. For a bound run, set status=in_progress
+      and workflow_phase=frame via task_status_update. State format:
+      workflows/runbooks/solve/REFERENCE.md §State file.
+    completion:
+      type: manual
+    on_fail: block
+
+  - id: frame-report
+    name: "Frame report (frame skill, 8 sub-steps)"
+    category: content
+    instruction: >
+      Problem framing via frame skill: reformulate, plan + review,
+      first-principles, repo-check, constraints, SOTA, solution-space,
+      evaluate + recommend. Result is a connected frame report in the
+      state file.
+    skill_ref: skills/frame/SKILL.md
+    completion:
+      type: compound
+      checks:
+        - type: manual
+        - type: file_content_check
+          path: "{state_file}"
+          condition: has_match
+          pattern: "Problem reformul"
+        - type: file_content_check
+          path: "{state_file}"
+          condition: has_match
+          pattern: "First.Principles"
+    commit_gate: false
+    on_fail: block
+    context_refs:
+      - skills/frame/SKILL.md
+
+  - id: phase-refine
+    name: "workflow_phase=refine (engine-internal)"
+    category: deterministic
+    instruction: >
+      Use the canonical state file from the first ordinary accepted Frame.
+      On a path mismatch, return to that file and preserve all receipts.
+      Hold if the original checked path is missing or conflicts with the
+      retained Frame evidence (owner: REFERENCE.md §State file).
+      Update state-file frontmatter: phase=refine. If authorized, commit
+      "solve(frame): frame report". Add a task suffix only for an attached task.
+    completion:
+      type: file_content_check
+      path: "{state_file}"
+      condition: has_match
+      pattern: "phase: refine"
+    commit_gate: true
+    on_fail: block
+
+  - id: refine
+    name: "Refine (user dialog + optional council + refinement notes)"
+    category: content
+    instruction: >
+      Three sub-steps:
+      (a) user-dialog — present the frame report, discuss the
+          recommendation, sharpen the direction. Purely dialogic, no
+          file output required.
+      (b) council — for either entry, invoke when the Council decision
+          criteria apply to multiple viable paths and a hard-to-reverse
+          choice (owner: skills/council/SKILL.md §1). Retain the result under
+          docs/reviews/council/. Otherwise record a one-line rationale.
+      (c) refinement notes — record the chosen approach, rationale and
+          open points in the existing "Phase 2" section. Cite the applicable
+          project intent (or supplied standing intent for standalone work)
+          and the original local objective. Explain how the chosen approach
+          serves both, including a choice revised after Council. An unchanged
+          approach still supported by both sources may reference the grounded
+          Frame. Record unresolved conflicts or missing authority in open
+          points and hold dependent artifact writing (owner:
+          framework/invariants.md §Intent-driven).
+          For an agreed outcome spanning separately commissioned work, record
+          its agreement, each promised result and observable acceptance, known
+          prerequisites and uncertainties, the first executable slice and later
+          outcomes, and who owns integration, activation and outcome evidence.
+          In Phase 2, check each agreed outcome against its work and evidence
+          and check first-slice prerequisites and authority. Record the checked
+          plan there. Hold Refine completion and dependent work until coverage,
+          first-slice prerequisites and authority are established
+          (owner: REFERENCE.md §Planning and plan maintenance).
+    completion:
+      type: compound
+      checks:
+        - type: manual
+        - type: file_content_check
+          path: "{state_file}"
+          condition: has_match
+          pattern: "Phase 2"
+    on_fail: block
+    context_refs:
+      - workflows/templates/council.yaml
+
+  - id: phase-artifact
+    name: "workflow_phase=artifact (engine-internal)"
+    category: deterministic
+    instruction: >
+      Update state-file frontmatter: phase=artifact. User-confirm
+      required. If authorized, commit "solve(refine): refinement".
+      Add a task suffix only for an attached task.
+    completion:
+      type: file_content_check
+      path: "{state_file}"
+      condition: has_match
+      pattern: "phase: artifact"
+    commit_gate: true
+    on_fail: block
+
+  - id: write-artifact
+    name: "Write artefact (with registration plan)"
+    category: content
+    instruction: >
+      If the agreement spans separately commissioned work, compare the current
+      plan, evidence and authority with it before dependent artifact writing
+      or Build commission. Hold both for a missing, unreachable or incomplete
+      plan or evidence due now, or unresolved authority (owner: REFERENCE.md §Planning and plan maintenance).
+
+      Create the artefact based on the sharpened frame + chosen approach.
+      Type is context-dependent (spec, workflow, protocol, code plan).
+      Keep essential guidance self-contained and conditional detail reachable
+      per skills/_protocols/piebald-budget.md; length alone is not a gate. For specs:
+      use spec_authoring skill. For code: MCA via the build sub-workflow.
+
+      Sub-step — registration plan: write a "Registration" section into
+      the state file describing how the artefact lands in process-map,
+      STRUCTURE.md, etc. For specs with handoff fields: target_spec_path,
+      problem_statement, scope_summary, frame_report_ref.
+      Complete the exact step with --set artifact_path PATH --evidence TEXT
+      to record the selected nonempty project file and its registration.
+    evidence_required: true
+    completion:
+      type: file_content_check
+      path: "{artifact_path}"
+      condition: has_match
+      pattern: '\S'
+    commit_gate: false
+    on_fail: block
+    context_refs:
+      - skills/_protocols/piebald-budget.md
+      - framework/spec-authoring.md
+
+  - id: phase-validate
+    name: "workflow_phase=validate (engine-internal)"
+    category: deterministic
+    instruction: >
+      Update state-file frontmatter: phase=validate. Artefact +
+      registration plan must exist. If authorized, commit "solve(artifact):
+      artefact draft". Add a task suffix only for an attached task.
+    completion:
+      type: file_content_check
+      path: "{state_file}"
+      condition: has_match
+      pattern: "phase: validate"
+    commit_gate: true
+    on_fail: block
+
+  - id: validate
+    name: "Validate the selected artifact"
+    category: content
+    instruction: >
+      If the agreement spans separately commissioned work, retrieve the current
+      plan and evidence due now before choosing artifact review. Hold Validate if
+      either is missing or unreachable. Trace every agreed outcome through the plan
+      to executable or later work and observable acceptance, including agreed
+      activation, integration and verification. Check prerequisites and authority
+      for the first slice. If coverage is missing, hold Validate and dependent
+      work until the plan is repaired and checked. Record the coverage decision
+      in the Solve record and review the selected artifact separately
+      (owner: REFERENCE.md §Planning and plan maintenance).
+
+      Choose the review for the selected artifact's actual consumer.
+      Apply the method's roster, decision owner, success outcome and limits.
+
+      For code use code_review_board and code_success. For spec use Spec Board
+      Standard. For ui-spec use Spec Board mode=ux. For reader-facing-doc use
+      Spec Board mode=ux with board-ux-ia and board-ux-heuristic. Use
+      spec_success for all three Spec Board classes. Capture on this exact
+      Solve ID and validate step, listing the selected artifact in the capture files.
+      Retain originals, verify pivotal evidence and adopt the current
+      decision before completing. Keep code PASS_WITH_RISKS distinct from a
+      specification PASS (owner: skills/_protocols/evidence-pointer-schema.md §9).
+
+      For architecture-decision use Council to review this artifact.
+      Retain the actual authorized decision maker's ACCEPTED disposition
+      after Council, separately from any Refine recommendation. Hold when
+      that decision remains open.
+
+      For impl-plan, locate the actual commissioned MCA plan, that
+      implementation task's spec and delegation artifact. Apply
+      impl_plan_review after delegation and before coding when its trigger
+      applies. Buddy reads the reviewers directly and records APPROVED to
+      advance. REVISE keeps Validate open and REJECT requires the skill's
+      escalation. Preserve its two-iteration limit. A missing prerequisite
+      or ineligible artifact holds Validate (owner: skills/impl_plan_review/SKILL.md).
+
+      For Council and impl-plan, retain the run-owned decision identifying
+      the exact workflow, selected artifact and reviewed SHA-256, method,
+      original reports and authorized decision maker. Complete explicitly
+      with --set artifact_class CLASS and fresh --evidence TEXT. For the
+      operator decision methods also supply --set validation_decision PATH
+      (owner: REFERENCE.md §Validation decision).
+
+      For a bound run, derive task board_result and readiness only from the
+      actual attached task's applicable current evidence through task_status_update.
+      Code PASS_WITH_RISKS maps to APPROVED_WITH_RISKS where applicable
+      (owner: skills/_protocols/evidence-review-adoption.md §9.6).
+    evidence_required: true
+    completion:
+      type: named_predicate
+      name: solve-validated
+    commit_gate: true
+    on_fail: block
+    context_refs:
+      - skills/spec_board/SKILL.md
+      - skills/code_review_board/SKILL.md
+      - skills/impl_plan_review/SKILL.md
+      - skills/council/SKILL.md
+      - skills/_protocols/consolidation-preservation.md
+      - framework/agent-patterns.md
+
+  - id: phase-execute
+    name: "workflow_phase=execute (engine-internal)"
+    category: deterministic
+    instruction: >
+      Update the original Frame state-file frontmatter to phase=execute after
+      the selected method's current validation success. If the artifact or
+      decision changed, retry Validate and re-establish the applicable proof
+      before releasing handoff. Apply framework/process-map.md section
+      Authorization. Commit "solve(validate): current result" only under an applicable request
+      or standing repository policy. Add a task suffix only for an attached
+      task. Push and dashboard
+      deployment only when authorized for that action and target. Continue
+      unchanged authorized actions without routine reapproval. Local phase
+      advancement grants no publication authority; record omitted publication
+      and retain any authorized missing outcome as an unresolved obligation.
+    completion:
+      type: file_content_check
+      path: "{state_file}"
+      condition: has_match
+      pattern: "phase: execute"
+    commit_gate: true
+    on_fail: block
+
+  - id: apply-artifact
+    name: "Apply artefact"
+    category: content
+    instruction: >
+      Activate the artefact. Variants: direct (register in process-map +
+      stale cleanup + deploy), handoff to build (spec/plan → build
+      workflow), handoff to docs-rewrite, self-apply. Follow autonomy
+      rules in framework/agent-autonomy.md. Complete this step with
+      --complete apply-artifact --id WORKFLOW and fresh --evidence TEXT.
+      Record the current validated artifact and version. For a handoff,
+      include the receiving owner, its acknowledgment and the next authorized
+      action. For direct execution, record the observed outcome. If the
+      receiving workflow requires a task, execution starts once an applicable
+      real task exists. Completion is agent-confirmed.
+
+      If the agreement spans separately commissioned work, retrieve the current
+      plan and evidence before Apply and compare coverage and authority with
+      the agreement. Hold Apply and dependent work for missing, unreachable or
+      incomplete plan or evidence due now, or unresolved authority. Apply the existing
+      Validate retry when artifact proof changes.
+      Send the agreement, current plan and evidence links, remaining acceptance
+      duties and next authorized action. Record what the receiver acknowledges.
+      In the handoff itself, require the receiver to retrieve the current plan
+      and evidence from their owners immediately before filing or releasing
+      work, compare them with the agreement and hold for any unresolved gap or
+      authority change, even after acknowledgment. For authorized work without
+      a task, the receiver uses task_creation before tracked execution and links
+      the live plan and evidence from the task. Carry the plan's prerequisites, authority,
+      acceptance and stop/report condition into its brief
+      (owner: REFERENCE.md §Planning and plan maintenance).
+    evidence_required: true
+    completion:
+      type: manual
+    on_fail: block
+    context_refs:
+      - framework/process-map.md
+      - framework/agent-autonomy.md
+
+  - id: close-bookkeeping
+    name: "Close bookkeeping (distill → emit)"
+    category: content
+    instruction: >
+      Distill → emit: first the distill (close_retro), then the emit
+      sub-checks consume it; each one-liner-skippable.
+
+      DISTILL — close_retro (skill: skills/close_retro/SKILL.md; spec 374).
+      Fires on a decision-heavy / new-pattern solve (orchestrator judgment;
+      solve is the highest §Stale-Decisions-value workflow — exploration-heavy,
+      early framings go stale); else skip with a one-liner. On fire: Buddy
+      dispatches the read-only agents/close-retro.md with this solve's artifacts
+      (frame report, review verdict, ACs, optional
+      docs/solve/<slug>-observations.md; solve has no MCA RETURN-SUMMARY); it
+      returns a retro 1-pager inline; Buddy writes it to
+      docs/solve/<slug>-retro.md (§Stale-Decisions T0×T1 + §Patterns-Emerged +
+      §Framework-Feed).
+
+      EMIT — consume the retro when present, else current raw-artifact
+      behaviour (no regression):
+
+      (a) ADR-discipline triple — consume the retro's §Stale-Decisions: which
+      decision meets hard-to-reverse + surprising-without-context +
+      result-of-real-trade-off? Yes → write ADR via documentation_and_adrs.
+      Solve hits this trigger more than any workflow (open-solution shape →
+      real trade-off decisions). Otherwise one-line skip.
+
+      (b) Knowledge process — pass the retro's §Patterns-Emerged as
+      `information` to knowledge_processor mode=process (or extract directly if
+      close_retro was skipped). MUST write a history entry with frame-report-ref
+      + IMPACT CHAIN under context/history/ — this is the step's completion
+      artifact (the retro at docs/solve/<slug>-retro.md does NOT satisfy
+      completion).
+
+      (c) §Framework-Feed — the retro's forge-feed-format entries land as
+      forge-feed entries (this replaces the old workflow-retro safety net).
+      When close_retro is SKIPPED, (c) reverts to the safety net: capture-now
+      only the on-notice forge-feed entries missed during the work; skip if
+      none.
+    skill_ref: skills/knowledge_processor/SKILL.md
+    completion:
+      type: file_created_matching
+      pattern: "context/history/*"
+    on_fail: warn
+
+  - id: commit-deploy
+    name: "Close and authorized publication"
+    category: deterministic
+    instruction: >
+      Close the state file checked during Frame with phase: done, status: done,
+      and its original task_ref (null for a taskless run). For an attached
+      task, set its status=done via task_status_update. Apply framework/process-map.md
+      section Authorization to commit, push and dashboard deployment;
+      do not publish without applicable authorization. Local result
+      persistence can complete the solve independently of publication.
+
+      Complete this exact workflow with --complete commit-deploy --id WORKFLOW
+      --evidence "current local persistence and applicable authorized outcomes".
+      An authorized outcome still missing remains an open obligation.
+    evidence_required: true
+    completion:
+      type: named_predicate
+      name: solve-closed
+    commit_gate: true
+    on_fail: block

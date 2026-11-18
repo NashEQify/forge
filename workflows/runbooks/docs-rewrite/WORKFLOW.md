@@ -1,0 +1,270 @@
+# Workflow: docs-rewrite
+
+Rewrite reader-facing documentation reader-journey-first:
+structure follows the audience, not the system. Covers the
+architecture-doc site, the README, and positioning / intent
+surfaces — a full from-scratch rewrite or an audience-driven
+re-frame.
+
+## Trigger
+
+- Framework refactoring that makes existing docs stale.
+- New audience or changed information goal.
+- User imperative ("docs rewrite").
+
+## Input
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| scope | yes | What is rewritten (e.g. "Framework site /dev/") |
+| reason | yes | Why stale (e.g. "framework fundamentally reworked, docs lag the as-is state") |
+| content_goal | yes | What the docs should convey (e.g. "Workflows, architectures, design decisions — no file listings") |
+| personas | no | Path to persona definitions. Default: derive from existing docs / task. |
+| existing_docs | no | Path to existing pages being rewritten |
+
+---
+
+### Phase: Research
+- **Agent:** CC subagent_type `Explore`
+  (thoroughness: very thorough). Not a framework agent —
+  native CC mechanism for repo exploration. No prompt
+  assembly, no persona file.
+- **Input:** repo access + focus instructions from
+  content_goal.
+- **Output:** research document (~1500–2500 words):
+  design decisions, workflows, architecture principles,
+  technology stack, key interconnections — extracted
+  from source files, not paraphrased.
+- **Gate:** Buddy checks the research against a
+  content_goal checklist: every item from content_goal
+  must be covered by at least one substantiated
+  statement. Missing items → follow-up.
+- **Failure:** gaps → Buddy adds specific follow-up
+  reads (max 2).
+- **Autonomy:** agent-autonomous (reads what it needs).
+
+Entry points (Buddy fills these in before dispatch from
+context):
+- Always: intent.md (vision), framework/invariants.md (invariants),
+  process-map.md (workflows).
+- Framework rewrite: 273.md (design decisions), workflow runbooks.
+- Product rewrite: ARCHITECTURE.md, specs, container
+  atlas.
+- Buddy derives entry points from scope + reason. No
+  heuristic — from known context.
+
+**Prompt core for the research agent:** see
+`prompts.md` §research-agent prompt.
+
+---
+
+### Phase: Structure
+- **Agent:** Buddy direct (orchestrator work: docs/ is
+  Buddy scope).
+- **Input:** research document + personas + existing
+  pages (to understand what was there).
+- **Output:** page plan — for each page: title, file
+  name, core question it answers, 3–5 content points
+  (from research), estimated length, dependencies on
+  other pages.
+- **Gate:** every persona finds its entry. Every
+  research point is mapped to a page. No research point
+  orphaned. Gate check: mapping table (research point →
+  page) without gaps.
+- **Failure:** gap in the mapping → research follow-up
+  or add a page.
+- **Autonomy:** Buddy decides; the user can intervene.
+
+Page-plan logic:
+1. Define reader journeys (1 per persona).
+2. Per journey: which pages in which order.
+3. Pages that appear in multiple journeys = core pages
+   (written first).
+4. Distribute research points across pages — each point
+   exactly once.
+5. Index page: entry points per journey (like the
+   existing index.md).
+6. How-to pages: derive from the page plan (operational
+   guides as their own category).
+7. Stale-cleanup plan: list of existing pages to be
+   removed / replaced.
+
+---
+
+### Phase: Write
+- **Agent:** CC subagent_type `general-purpose` (1
+  spawn per page, parallel where possible). NOT MCA —
+  doc pages aren't code; MCA expects delegation
+  artifacts (intent_chain, spec, test plan) that don't
+  exist here.
+- **Input:** per agent: page-plan entry + relevant
+  research excerpt + persona context + writing
+  guidelines + neighbour-page titles (for boundary).
+- **Output:** finished markdown page as a file in the
+  target docs location from the scope (e.g.
+  `architecture-documentation/`).
+- **Gate:** the page answers its core question. Length
+  in the estimated range. No file listings as a goal in
+  themselves.
+- **Failure:** page misses the core question → Buddy
+  gives specific feedback, new agent spawn (max 2).
+- **Autonomy:** agent writes autonomously within the
+  page-plan scope.
+
+**Prompt core for the writer agent:** see `prompts.md`
+§writer-agent prompt.
+
+Parallelisation: pages without dependencies spawn in
+parallel. Pages WITH a dependency are sequential.
+
+---
+
+### Phase: Coherence
+- **Agent:** Buddy direct.
+- **Input:** all written pages.
+- **Output:** coherence report + fixes.
+- **Gate:** uniform terms, consistent tone, no
+  redundancies, no gaps between pages.
+- **Failure:** inconsistencies → Buddy fixes directly
+  (autonomy SoT: `framework/agent-autonomy.md`,
+  docs-rewrite runbook mechanic is the Buddy zone).
+- **Autonomy:** mechanical.
+
+Check points:
+1. Glossary consistency: same terms for same concepts
+   (scan all pages).
+2. Transitions: page A references page B → does the
+   context exist there?
+3. Redundancy: same information on 2+ pages → keep on
+   one, link from the others.
+4. Tone: technical-explanatory, not marketing, not a
+   reference manual.
+
+---
+
+### Phase: Assemble
+- **Agent:** Buddy direct.
+- **Input:** all written pages + page plan +
+  stale-cleanup plan.
+- **Output:** index / README entry (updated), site nav
+  (updated, when the project has a site config such as
+  `mkdocs.yml`), cross-links, old pages removed /
+  replaced; intent.md updated when positioning or intent
+  surfaces are in scope.
+- **Gate:** all pages reachable from the index / nav.
+  Local link + anchor check passes (`mkdocs build
+  --strict` where a site config exists). Each journey has
+  an entry on the index. Stale-cleanup complete
+  (invariant 5).
+- **Failure:** build error or missing links → fill in.
+  Mechanical.
+- **Autonomy:** mechanical.
+
+Stale cleanup (invariant 5):
+1. Old pages marked "replaced" in the page plan →
+   remove.
+2. Site nav (if any) → remove old entries.
+3. Cross-links in other files pointing to removed pages
+   → update.
+4. `grep -rn` on removed file names in docs/ and
+   framework/ → clean up.
+
+---
+
+### Phase: Review
+- **Agent:** spec_board (mode=ux, quick mode, 3 UX
+  personas: board-ux-heuristic, board-ux-ia,
+  board-ux-interaction).
+- **Input:** page plan + 2–3 core pages + index.md.
+  Context in the dispatch: "This is framework
+  documentation (markdown), not a UI spec.
+  Check navigability, comprehensibility, information
+  architecture for the defined personas."
+- **Output:** UX findings (navigation,
+  comprehensibility, information architecture).
+- **Gate:** 0 critical + 0 high.
+- **Failure:** findings → Buddy fixes the affected
+  pages (targeted, not everything) → optionally
+  re-review.
+- **Autonomy:** agents autonomous. Fixes: Buddy direct
+  (autonomy SoT: `framework/agent-autonomy.md`).
+- **Protocols:** context-isolation.
+
+---
+
+### Phase: Close
+- **Agent:** Buddy direct.
+- **Input:** all pages, review result.
+- **Output:** committed docs; deployed site only when a
+  site exists and deployment is authorized.
+- **Gate:** link check (or `mkdocs build --strict` with a
+  site config) PASS; deploy + visual check only when
+  deploying.
+- **Failure:** build error → fix. Deploy error → fix.
+  Mechanical.
+
+Steps:
+1. TASK-UPDATE — task_status_update if a task exists
+   (BEFORE commit, so the YAML lands in the commit).
+2. BUILD-TEST — local link + anchor check, or
+   `mkdocs build --strict` when a site config exists.
+3. COMMIT-GUARD — the pre-commit hook (PLAN-VALIDATE,
+   CG-CONV, SKILL-FM-VALIDATE BLOCK; SECRET-SCAN,
+   SOURCE-VERIFICATION WARN).
+4. COMMIT — only with applicable authorization from the request or standing
+   repository policy; push separately per `framework/process-map.md`.
+5. DEPLOY — `$FRAMEWORK_DIR/scripts/deploy-docs.sh` only when deployment was
+   authorized. Otherwise return the verified local result.
+6. VERIFY — use an available browser for an authorized deployment; if visual
+   inspection is unavailable, report that boundary and ask the user to check.
+
+---
+
+## Iteration bounds
+
+| Phase | Max | On overshoot |
+|-------|-----|--------------|
+| Research | 2 follow-ups | Buddy closes with the available material |
+| Write (per page) | 2 rewrites | Buddy writes the page directly (autonomy SoT: `framework/agent-autonomy.md`) or user escalation |
+| Review (UX Board) | 1 re-review | User decides on further iteration |
+
+## References
+
+| Step | Detail SoT |
+|------|-----------|
+| Research | CC subagent_type: Explore (native CC mechanism) |
+| Write | CC subagent_type: general-purpose (no MCA) |
+| Coherence | Buddy direct (autonomy SoT: `framework/agent-autonomy.md`) |
+| UX review (mode=ux) | skills/spec_board/SKILL.md |
+| Deploy | $FRAMEWORK_DIR/scripts/deploy-docs.sh |
+| Personas | the `personas` input (§Input); default: derived from existing docs / task |
+
+## Workflow-Engine Integration
+
+This runbook is tracked by `scripts/workflow_engine.py` when engine-driven
+(some lifecycle / ad-hoc runs are skip-eligible — see the cookbook's *Skip
+allowed for* list). The engine holds step state in `.workflow-state/<id>.json`
+(SoT for the step pointer; persistent + cross-session-recoverable) and is
+**Buddy-driven `[WORKFLOW]`** — it advances only when Buddy drives
+`--complete`, a discipline-run state-tracker, not an autonomous runtime
+(ADR-007 O-4, affirming ADR-004: no force-gate).
+
+Generic cycle (identical across every workflow):
+
+```bash
+python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --start <name> --task <id> [--route <path>]
+python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --next                       # current step + instruction
+python3 $FRAMEWORK_DIR/scripts/workflow_engine.py --complete <step> --evidence "<short>"
+#   classification step (mid-flow route): --complete <step> --route <key>
+#   skip-eligible step: --skip <step> --reason "<why>"   ·   re-run: --retry <step> --reason "<why>"
+#   >=2 workflows live? add --id <wf> (from --next `ID:`) — engine refuses keyless (exit 5)
+```
+
+`on_fail` per step: `block` (fix + retry), `warn` (`--complete --force` + reason),
+`skip` (auto `warn_skipped`), `escalate` (pauses, user decision). Cross-session
+resume surfaces active workflows at session start (`--boot-context`).
+
+Full CLI + path-routing + extension API (`--guard` / `--handoff-context`) +
+multi-machine constraint + skip-eligible list:
+`framework/workflow-engine-cookbook.md`. Operational invariant:
+`agents/buddy/operational.md` §Workflow engine.
