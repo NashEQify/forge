@@ -137,18 +137,14 @@ value or an oracle, or touches a safety floor (§1).
 
 ### Persisting a seat's return
 
-When Buddy persists a seat's return, before the Chief or Buddy's consolidation reads it:
-
-1. In the root of the package's checkout, run
-   `python3 "$FRAMEWORK_DIR/scripts/validate_evidence_pointers.py" --strict --repo-root . <return file>` (without
-   `--strict` when the review has no capture under `skills/_protocols/evidence-review-capture.md` §9).
-2. Exit 0: the return is ready for consolidation; with `--strict`, the validator reads evidence as the adoption does,
-   `yaml` fences included, and keeps every check it has without `--strict`. A `WARN` line alone does not send the seat
-   back.
-3. Any other exit: send the seat back with the validator's output verbatim and the instruction to correct only what
-   it names. Persist the corrected return verbatim beside the first, as the slot's current return, and run step 1 on it. A seat that cannot answer
-   is replaced by a fresh cold-start seat in the same slot: adoption needs a passing return for every captured slot
-   (`skills/_protocols/evidence-review-adoption.md` §9.4).
+Persist each return with `python3 "$FRAMEWORK_DIR/scripts/workflow_engine.py" --review-persist <step> --id <workflow>
+--slot <slot> --to <path> --from <return file>` before the Chief or Buddy's consolidation reads it. It checks that the
+return echoes the captured run, subject and slot, keeps the path outside the captured subject and new, and runs
+`validate_evidence_pointers.py --strict` (a `WARN` line alone does not refuse); a refusal writes nothing and prints the validator's output. Send the seat
+back with that output verbatim and the instruction to correct only what it names; persist the corrected return beside
+the first under a new name. A seat that cannot answer is replaced by a fresh cold-start seat in the same slot:
+adoption needs a passing return for every captured slot (`skills/_protocols/evidence-review-adoption.md` §9.4). A
+review with no capture runs the validator without `--strict` by hand.
 
 ### The record
 

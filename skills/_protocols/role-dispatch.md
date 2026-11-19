@@ -47,8 +47,12 @@ file path that resolves against the project instead of the framework, and a read
 6. **Return contract:** the prompt ends with what the return must end with: the adoption lines of
    `skills/return_summary/SKILL.md` §Adoption line, quoted; for a role that starts commands or agents, "do not return
    while one of them runs"; for a review seat, its severity scale (critical, high, medium, low:
-   `agents/_protocols/code-reviewer-protocol.md`). Purpose: the returner holds the contract in its prompt, and the
-   adopter meets the check in the return.
+   `agents/_protocols/code-reviewer-protocol.md`) and, as the prompt's last part, the evidence layout of its reviewer
+   protocol (code or spec)
+   (§Mandatory envelope and clean output, §Output format: frontmatter first with the captured run, subject and slot
+   verbatim, then findings with their `evidence:` pointers); the dispatcher adds no return shape of its own, and
+   `workflow_engine.py --review-persist` refuses a return outside that layout. Purpose: the returner holds the
+   contract in its prompt, and the adopter meets the check in the return.
 
 With the plugin, Claude Code lists the roles whose file sets `disallowedTools` and Codex lists none, so every other
 role takes step 3.

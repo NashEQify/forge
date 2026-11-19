@@ -15,7 +15,7 @@ an ambient owner, complete/retry the step implicitly, or resume a workflow.
 python3 "$FRAMEWORK_DIR/scripts/workflow_engine.py" --review-capture STEP --id WORKFLOW < capture-request.json
 # Consume the single successful JSON stdout envelope only after persistence.
 # Pass run/subject/slot to each producer for its frontmatter echo; persist complete
-# returns and record actor/path/raw-byte digest before consuming them.
+# returns with --review-persist and record actor/path/raw-byte digest before consuming them.
 # Write Buddy's decision with current_reports, then check the subject before adoption.
 python3 "$FRAMEWORK_DIR/scripts/workflow_engine.py" --review-subject-check STEP --id WORKFLOW
 # Adopt on subject-check success. Adoption compares the subject again and prints its diagnostics.

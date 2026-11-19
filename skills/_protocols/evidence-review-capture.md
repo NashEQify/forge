@@ -27,6 +27,8 @@ active `review` record. Operations:
 - `--review-capture STEP --id WORKFLOW`: read the capture request (§9.2) from JSON stdin; capture before dispatch.
 - `--review-subject-check STEP --id WORKFLOW`: read-only comparison of the retained capture with the current
   subject, usable before adoption (§9.4).
+- `--review-persist STEP --id WORKFLOW --slot SLOT --to PATH [--from FILE]`: persist one seat's return after its
+  echo, place and `validate_evidence_pointers --strict` pass; a refusal writes nothing and prints why.
 - `--review-adopt STEP --id WORKFLOW --verdict PATH`: qualify and retain Buddy's decision artifact (§9.4).
 - `--review-check STEP --id WORKFLOW --review-policy POLICY`: read-only current check (§9.5).
 

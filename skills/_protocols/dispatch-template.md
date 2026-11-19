@@ -79,7 +79,7 @@ state-path parsing, status-text derivation or fabricated success envelope.
 Require reviewer-base/domain or light-verification §9 loading in the assembled
 prompt. The producer echoes the three identity fields with schema version 1.
 
-Before downstream consumption, persist each complete returned payload verbatim,
+Before downstream consumption, persist each complete returned payload verbatim (`--review-persist`),
 frontmatter at byte zero. Record actual returned actor identity, selected path and
 raw-byte SHA-256 in Buddy's selected references. Preserve prior reports before
 canonical replacement. Scope qualifications and dissent are part of the payload;

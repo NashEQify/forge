@@ -446,6 +446,70 @@ def cmd_review_subject_check(args: argparse.Namespace) -> None:
         raise CompletionEvaluationError(message)
 
 
+def _print_capture_obligations(record: dict[str, Any], workflow_id: str, step_id: str) -> None:
+    """Name, at the capture, what the review package unit asks of the commissioner (stderr; stdout stays JSON)."""
+    request = record.get("request", {})
+    slots = [entry.get("slot") for entry in request.get("slots", []) if isinstance(entry, dict)]
+    lines = ["capture obligations (owner: skills/code_review_board/review-package.md §11):"]
+    code_diff = request.get("code_diff")
+    if isinstance(code_diff, dict):
+        lines += [
+            f"- BASE: {code_diff.get('base')} (record it as the review's BASE; the package covers BASE..HEAD).",
+            "- Package: one file review-<BASE7>..<HEAD7>.diff in the record directory: '## Commits' (git log --oneline),"
+            " '## Files changed' (git diff --stat), '## Other changed paths in the checkout', '## Diff' (git diff -U10),"
+            " all over the change's PATHS; a dirty PATHS set gets a snapshot commit first (§Building the package).",
+        ]
+        lines.append(
+            "- Each seat receives: L1/L2 the package and the review brief, no implementer report; light the package, the"
+            " brief or Buddy's record and the approved acceptance verbatim; a re-review the fix package.")
+    protocol = ("agents/_protocols/code-reviewer-protocol.md" if request.get("family") == "code"
+                else "agents/_protocols/spec-reviewer-protocol.md")
+    lines += [
+        f"- Each seat prompt ends with the evidence layout of {protocol}"
+        " (§Mandatory envelope, §Output format), the run and subject above verbatim; the dispatcher adds no return shape.",
+        "- Until adoption the captured paths stay unchanged; records go outside them or into the declared exclusions.",
+        f"- Persist each return: workflow_engine.py --review-persist {step_id} --id {workflow_id} --slot <slot>"
+        f" --to <path> --from <file> (slots: {', '.join(str(s) for s in slots)}).",
+    ]
+    print("\n".join(lines), file=sys.stderr)
+
+
+def cmd_review_persist(args: argparse.Namespace) -> None:
+    """Persist one seat's return for a captured slot after review_adoption.check_return accepts it."""
+    from scripts.lib.review_adoption import check_return  # noqa: PLC0415
+    step_id = args.review_persist
+    state, step = _review_owner(args.wf_id, step_id, mutate=False)
+    try:
+        record = _review_capture_record(state, step, step_id)
+        if not args.to or Path(args.to).is_absolute():
+            raise ReviewRefusal("--to <project-relative path> required")
+        target = (PROJECT_ROOT / args.to).resolve()
+        if not target.is_relative_to(PROJECT_ROOT.resolve()):
+            raise ReviewRefusal("--to must lie inside the project")
+        rel = target.relative_to(PROJECT_ROOT.resolve()).as_posix()
+        if target.exists():
+            raise ReviewRefusal(f"{rel} exists; persist a corrected return beside it under a new name")
+        source = Path(args.source) if args.source else None
+        if source is not None and not source.is_absolute():
+            source = PROJECT_ROOT / source
+        raw = source.read_bytes() if source is not None else sys.stdin.buffer.read()
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeError as exc:
+            raise ReviewRefusal(f"return is not UTF-8: {exc}") from exc
+        warnings = check_return(PROJECT_ROOT, record, args.slot or "", rel, text)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with open(target, "xb") as handle:
+            handle.write(raw)
+        sha = hashlib.sha256(target.read_bytes()).hexdigest()
+        print(f"Review return persisted: {rel} (slot {args.slot}, run {record['review_run_id']}, sha256 {sha}); "
+              "validate_evidence_pointers --strict exit 0")
+        for warning in warnings:
+            print(f"diagnostic: {warning}")
+    except (ReviewRefusal, ReviewEvaluationError, KeyError, OSError) as exc:
+        raise CompletionEvaluationError(f"Review persist refused: {exc}") from exc
+
+
 def cmd_review(args: argparse.Namespace) -> None:
     step_id = args.review_capture or args.review_adopt or args.review_check
     mutate = bool(args.review_capture or args.review_adopt)
@@ -503,6 +567,7 @@ def cmd_review(args: argparse.Namespace) -> None:
                 save_state(state)
             envelope = {key: record[key] for key in ("schema_version", "owner", "iteration", "review_run_id", "review_subject_digest")}
             print(json.dumps(envelope))
+            _print_capture_obligations(record, args.wf_id, step_id)
             return
         if not args.verdict:
             raise CompletionEvaluationError("--review-adopt requires --verdict")
@@ -3963,6 +4028,7 @@ def main() -> None:
     group.add_argument("--review-capture", metavar="STEP", help="Capture current review subject from JSON stdin; explicit --id required (evidence-pointer protocol §9)")
     group.add_argument("--review-subject-check", metavar="STEP", help="Read-only check of the exact captured subject; --id required")
     group.add_argument("--review-adopt", metavar="STEP", help="Retain qualified explicit decision; --id and --verdict required")
+    group.add_argument("--review-persist", metavar="STEP", help="Persist one seat return for a captured slot; --id, --slot, --to; return from --from or stdin; runs validate_evidence_pointers --strict")
     group.add_argument("--review-check", metavar="STEP", help="Read-only exact current review check; --id and --review-policy required")
     group.add_argument("--export-selected", action="store_true", help="Read exact explicitly selected state; JSON request on stdin")
     group.add_argument("--start", metavar="WORKFLOW", help="Start a new workflow")
@@ -3989,6 +4055,9 @@ def main() -> None:
 
     # Shared options
     parser.add_argument("--verdict", help="Project-relative retained Buddy decision path for --review-adopt")
+    parser.add_argument("--slot", help="Captured slot for --review-persist")
+    parser.add_argument("--to", help="Project-relative destination for --review-persist")
+    parser.add_argument("--from", dest="source", help="Return file to persist (default: stdin) for --review-persist")
     parser.add_argument("--review-policy", help="evidence | spec_success | code_success for --review-check")
     parser.add_argument("--task", type=str, default=None, help="Task ID")
     parser.add_argument("--id", type=str, default=None, dest="wf_id", help="Workflow ID")
@@ -4035,6 +4104,8 @@ def main() -> None:
     try:
         if args.review_subject_check is not None:
             cmd_review_subject_check(args)
+        elif args.review_persist:
+            cmd_review_persist(args)
         elif args.review_capture or args.review_adopt or args.review_check:
             cmd_review(args)
         elif args.export_selected:
