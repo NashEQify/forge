@@ -26,7 +26,8 @@ set -euo pipefail
 #   2. CG-CONV              (BLOCK) — commit message format matches convention
 #   3. SKILL-FM-VALIDATE    (BLOCK) — SKILL.md YAML/frontmatter subset
 #   4. SECRET-SCAN          (WARN)  — gitleaks wrapper; WARN-only; skipped when
-#                                     gitleaks is not installed.
+#                                     gitleaks is not installed. BLOCK under
+#                                     range mode (see Range mode below).
 #   5. SOURCE-VERIFICATION  (WARN)  — board/council reviews must cite source
 #                                     files (line-numbered evidence pointers)
 #                                     present in the indexed candidate, and
@@ -46,13 +47,306 @@ set -euo pipefail
 # framework/invariants.md and scripts/consistency_check.py); in any other
 # repository they do nothing and print nothing.
 #
+# Range mode (CI): pre-commit.sh --range [--portable]
+#   [--host-commits-format strict|exempt] [--default-ref REF] BASE HEAD
+# replays each commit of BASE..HEAD in one throwaway linked worktree: working
+# tree and index at the commit, HEAD at its first parent (a root commit: an
+# unborn HEAD), MERGE_HEAD for a merge's further parents. Range resolution
+# takes no degraded path and prints the rule it took: a given BASE that does
+# not resolve exits 2 (force push or shallow history); a resolvable BASE gives
+# BASE := merge-base(BASE, HEAD); a missing or all-zeros BASE takes the
+# merge-base with REF (equal to HEAD: the branch adds no commits, exit 0);
+# without a resolving REF the whole history (a repository's first push).
+# A shallow clone or git older than 2.40 exits 2.
+# It runs this script's pre-commit and commit-msg modes there with the commit's
+# message, so the per-commit check list stays the one above. Exit 0 pass,
+# 1 a check blocked, 2 usage or setup error. Under range mode no check prints
+# SKIP and passes. --host-commits-format (only with --portable, default exempt):
+# exempt runs no commit-msg mode for a commit whose committer email is
+# noreply@github.com or whose author name ends in [bot], and prints EXEMPT;
+# its secret scan runs. The replayed modes see three variables:
+#   FORGE_HOOK_RANGE=1          SECRET-SCAN blocks (gitleaks missing, findings,
+#                               or an error); commit-msg never takes the merge
+#                               fallback and blocks an empty or `#` subject;
+#                               no hook-link warnings; no marker file.
+#   FORGE_HOOK_CHECKS=portable  (--portable; only with FORGE_HOOK_RANGE=1)
+#                               pre-commit runs only check 4, commit-msg only
+#                               check 2. Any other non-empty value exits 2.
+#   FORGE_HOOK_GITLEAKS_DIR     (only with FORGE_HOOK_RANGE=1) the driver's
+#                               trusted gitleaks rules: config.toml and
+#                               gitleaksignore exported from merge-base(REF,
+#                               HEAD), else BASE (none: default rules). The
+#                               replayed commit's own rules are never read; a
+#                               commit that changes them prints a WARN line.
+#                               gitleaks runs with GIT_ATTR_SOURCE=<a tree
+#                               holding only `* diff`> (attr-tree there).
+# SOURCE-VERIFICATION stays WARN. Range-only whole-tree checks (not under
+# --portable; HEAD's tree holds framework/invariants.md): RANGE_TREE_CHECKS
+# below, run once at HEAD in the replay worktree with that tree's scripts.
+# Replay fidelity: the per-commit checks run the trusted programs from
+# FRAMEWORK_ROOT (in Forge CI the checkout at HEAD), and the plan engine reads
+# its framework inputs (CLAUDE.md, AGENTS.md, framework/agent-autonomy.md,
+# framework/task-schema.yaml) from there; every commit of a range is judged by
+# HEAD's rules and programs.
+#
 # Dropped in the hook paradigm shift (was 8 checks):
 #   TASK-SYNC, OBLIGATIONS, STALE-CLEANUP, PERSIST-GATE, ENGINE-USE,
 #   RUNBOOK-DRIFT, AGENT-SKILL-DRIFT, PIEBALD-BUDGET — discipline replaces
 #   observability WARN signals; Piebald budget loosened in same commit.
 
+# indent_head N TEXT — first N lines of TEXT, indented by four spaces.
+# Pipe-free on purpose: under `set -o pipefail`, `echo "$big" | head -N`
+# lets head exit first, echo dies with SIGPIPE (141) and the hook aborts
+# silently, turning a WARN check into an unexplained BLOCK.
+indent_head() {
+  local n="$1" i=0 line
+  while [ "$i" -lt "$n" ] && IFS= read -r line; do
+    printf '    %s\n' "$line"
+    i=$((i + 1))
+  done <<< "$2"
+}
+
+# ---------- Range mode driver (CI) ----------
+#
+# The whole-tree checks of range mode: one entry per run, script under scripts/
+# then its arguments.
+RANGE_TREE_CHECKS=(
+  "generate_skill_wrappers.py --check"
+  "consistency_check.py --check tier1-drift"
+  "consistency_check.py --check tier1-multi-workflow-drift"
+  "consistency_check.py --check enforcement-registry"
+  "consistency_check.py --check instruction-units"
+  "consistency_check.py --check dead-references"
+  "validate_runbook_consistency.py"
+)
+
+range_die() {
+  echo "range: $1" >&2
+  exit 2
+}
+
+# range_mb A B — merge-base into RANGE_MB; return 1 for no shared history, any other failure exits 2.
+range_mb() {
+  local ret=0
+  RANGE_MB="$("${G[@]}" merge-base "$1" "$2")" || ret=$?
+  [ "$ret" -le 1 ] || range_die "git merge-base $1 $2 failed (exit $ret)"
+  return "$ret"
+}
+
+# Remove the replay worktree and temp dirs on every exit path; keep the run's
+# status, but a failed removal turns a pass (0) into a setup error (2).
+range_cleanup() {
+  local rc=$? fail=0
+  if [ -n "${RANGE_WT:-}" ] && [ -e "$RANGE_WT/.git" ]; then
+    if ! git --no-replace-objects -C "$RANGE_ROOT" worktree remove --force "$RANGE_WT" >/dev/null 2>&1; then
+      echo "range: could not remove the replay worktree $RANGE_WT" >&2
+      fail=1
+    fi
+  fi
+  if [ -n "${RANGE_TMP:-}" ]; then rm -rf "$RANGE_TMP" || fail=1; fi
+  if [ "$fail" -eq 1 ] && [ "$rc" -ne 1 ]; then rc=2; fi
+  exit "$rc"
+}
+
+range_main() {
+  local usage="usage: pre-commit.sh --range [--portable] [--host-commits-format strict|exempt] [--default-ref REF] BASE HEAD"
+  local portable=0 default_ref="" host_format="" base="" head ref mb c short subject rc_pre rc_msg entry out ret
+  local rule gv gmaj gmin orphan exempt changed rules
+  local -a G=(git --no-replace-objects) commits=() parents=() blocked=() argv=() hook_env=()
+  shift
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --portable) portable=1; shift ;;
+      --default-ref) [ $# -ge 2 ] || range_die "$usage"; default_ref="$2"; shift 2 ;;
+      --host-commits-format)
+        [ $# -ge 2 ] || range_die "$usage"
+        case "$2" in strict|exempt) host_format="$2" ;; *) range_die "$usage" ;; esac
+        shift 2 ;;
+      -*) range_die "$usage" ;;
+      *) break ;;
+    esac
+  done
+  [ $# -eq 2 ] || range_die "$usage"
+  if [ -n "$host_format" ] && [ "$portable" -eq 0 ]; then
+    range_die "--host-commits-format needs --portable (Forge's own range is always strict)"
+  fi
+  [ "$portable" -eq 0 ] || host_format="${host_format:-exempt}"
+  unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY \
+    GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_COMMON_DIR GIT_PREFIX
+  export PYTHONDONTWRITEBYTECODE=1
+  RANGE_ROOT="$("${G[@]}" rev-parse --show-toplevel 2>/dev/null)" || range_die "not inside a Git repository"
+  cd "$RANGE_ROOT"
+  # GIT_ATTR_SOURCE (git 2.40) keeps the replayed commit's .gitattributes away from the secret scan.
+  gv="$(git --version)"; gv="${gv#git version }"
+  IFS=. read -r gmaj gmin _ <<< "$gv"
+  if ! [[ "$gmaj" =~ ^[0-9]+$ && "$gmin" =~ ^[0-9]+$ ]] || [ "$gmaj" -lt 2 ] || { [ "$gmaj" -eq 2 ] && [ "$gmin" -lt 40 ]; }; then
+    range_die "git $gv is older than 2.40 (range mode needs GIT_ATTR_SOURCE)"
+  fi
+  if [ "$("${G[@]}" rev-parse --is-shallow-repository)" != false ]; then
+    range_die "RANGE: shallow clone; range mode needs the full history (fetch-depth: 0)"
+  fi
+  if [ "$portable" -eq 0 ] && ! python3 -c 'import yaml' >/dev/null 2>&1; then
+    range_die "PyYAML is not importable by python3; without it three checks pass silently (install PyYAML, or use --portable)"
+  fi
+
+  # Range resolution: no degraded path. A given BASE that does not resolve stops
+  # the run; a missing BASE takes the default-ref merge-base, else the whole history.
+  head="$("${G[@]}" rev-parse -q --verify "$2^{commit}")" || range_die "HEAD '$2' is not a commit"
+  ref=""
+  [ -z "$default_ref" ] || ref="$("${G[@]}" rev-parse -q --verify "$default_ref^{commit}")" || ref=""
+  if [ -n "$1" ] && ! [[ "$1" =~ ^0+$ ]]; then
+    c="$("${G[@]}" rev-parse -q --verify "$1^{commit}")" \
+      || range_die "RANGE: BASE $1 not in this clone (force push or shallow history?)"
+    if range_mb "$c" "$head"; then
+      base="$RANGE_MB"; rule="RANGE: base from merge-base with BASE"
+    else
+      base=""; rule="RANGE: whole history (BASE shares no history with HEAD)"
+    fi
+  elif [ -n "$ref" ]; then
+    if ! range_mb "$ref" "$head"; then
+      rule="RANGE: whole history (no merge-base with $default_ref)"
+    elif [ "$RANGE_MB" = "$head" ]; then
+      echo "RANGE: branch adds no commits beyond $default_ref"
+      echo "RANGE: $("${G[@]}" rev-parse --short "$head")..$("${G[@]}" rev-parse --short "$head") (0 commits)"
+      exit 0
+    else
+      base="$RANGE_MB"; rule="RANGE: base from default-ref merge-base"
+    fi
+  else
+    rule="RANGE: whole history (first push)"
+  fi
+  out="$("${G[@]}" rev-list --reverse --topo-order "${base:+$base..}$head")" || range_die "could not list the commits"
+  [ -z "$out" ] || mapfile -t commits <<< "$out"
+  if [ "${#commits[@]}" -eq 0 ] && [ "$base" != "$head" ]; then
+    range_die "RANGE: commit list empty although ${base:-(root)}..$head is not"
+  fi
+  echo "$rule"
+  echo "RANGE: $(if [ -n "$base" ]; then "${G[@]}" rev-parse --short "$base"; else echo '(root)'; fi)..$("${G[@]}" rev-parse --short "$head") (${#commits[@]} commits)"
+  [ "${#commits[@]}" -gt 0 ] || exit 0
+
+  RANGE_TMP="$(mktemp -d)" || range_die "could not create a temp dir"
+  trap range_cleanup EXIT
+  trap 'exit 2' INT TERM HUP
+  mkdir "$RANGE_TMP/nohooks" "$RANGE_TMP/links" "$RANGE_TMP/gitleaks"
+  ln -s "$(readlink -f "$0")" "$RANGE_TMP/links/pre-commit"
+  ln -s "$(readlink -f "$0")" "$RANGE_TMP/links/commit-msg"
+  # gitleaks rules from a trusted tree, never the replayed commit's: the default
+  # branch's merge-base with HEAD when --default-ref resolves, else BASE.
+  rules="$base"
+  if [ -n "$ref" ] && range_mb "$ref" "$head"; then rules="$RANGE_MB"; fi
+  if [ -n "$rules" ] && "${G[@]}" cat-file -e "$rules:.gitleaks.toml" 2>/dev/null; then
+    "${G[@]}" cat-file blob "$rules:.gitleaks.toml" > "$RANGE_TMP/gitleaks/config.toml" \
+      || range_die "could not export the trusted .gitleaks.toml"
+    if awk '/^[[:space:]]*\[/ { ext = /^[[:space:]]*\[extend\][[:space:]]*(#.*)?$/ }
+            ext && /^[[:space:]]*path[[:space:]]*=/ { found = 1 } END { exit !found }' "$RANGE_TMP/gitleaks/config.toml"; then
+      range_die "RANGE: trusted .gitleaks.toml uses [extend] path (not supported in range mode)"
+    fi
+  else
+    printf '[extend]\nuseDefault = true\n' > "$RANGE_TMP/gitleaks/config.toml"
+  fi
+  if [ -n "$rules" ] && "${G[@]}" cat-file -e "$rules:.gitleaksignore" 2>/dev/null; then
+    "${G[@]}" cat-file blob "$rules:.gitleaksignore" > "$RANGE_TMP/gitleaks/gitleaksignore" \
+      || range_die "could not export the trusted .gitleaksignore"
+  fi
+  # Attribute tree for the scan: `* diff` only, so no file (NUL bytes, `-diff`) is diffed as binary.
+  out="$(printf '* diff\n' | "${G[@]}" hash-object -w --stdin)" || range_die "could not write the attribute blob"
+  printf '100644 blob %s\t.gitattributes\n' "$out" | "${G[@]}" mktree > "$RANGE_TMP/gitleaks/attr-tree" \
+    || range_die "could not write the attribute tree"
+  RANGE_WT="$RANGE_TMP/wt"
+  local -a W=("${G[@]}" -C "$RANGE_WT" -c core.hooksPath="$RANGE_TMP/nohooks")
+  "${G[@]}" -c core.hooksPath="$RANGE_TMP/nohooks" worktree add -q --detach --no-checkout "$RANGE_WT" "$head" \
+    >/dev/null 2>&1 || range_die "could not create the replay worktree"
+  local merge_head
+  merge_head="$("${W[@]}" rev-parse --git-path MERGE_HEAD)" || range_die "replay worktree unreadable"
+  [[ "$merge_head" = /* ]] || merge_head="$RANGE_WT/$merge_head"
+  hook_env=(env -u FORGE_HOOK_CHECKS -u GITLEAKS_CONFIG FORGE_HOOK_RANGE=1 FORGE_HOOK_GITLEAKS_DIR="$RANGE_TMP/gitleaks")
+  [ "$portable" -eq 0 ] || hook_env+=(FORGE_HOOK_CHECKS=portable)
+  orphan="forge-range-root-$$-$RANDOM"
+
+  for c in "${commits[@]}"; do
+    short="$("${G[@]}" rev-parse --short "$c")"
+    subject="$("${G[@]}" log -1 --format=%s "$c")"
+    echo ""
+    echo "== $short $subject"
+    read -ra parents <<< "$("${G[@]}" rev-list --parents -n 1 "$c")"
+    "${W[@]}" checkout -q -f --detach "$c" >/dev/null 2>&1 || range_die "could not check out $short"
+    "${W[@]}" clean -ffdxq || range_die "could not clean the replay worktree"
+    if [ "${#parents[@]}" -lt 2 ]; then
+      # Root commit: unborn HEAD, index and tree at C (no ref is created).
+      "${W[@]}" checkout -q --orphan "$orphan" || range_die "could not replay the root commit $short"
+      changed="$("${G[@]}" ls-tree --name-only "$c" -- .gitleaks.toml .gitleaksignore)"
+    else
+      "${W[@]}" reset -q --soft "${parents[1]}" || range_die "could not reset to the parent of $short"
+      changed="$("${G[@]}" diff --name-only "${parents[1]}" "$c" -- .gitleaks.toml .gitleaksignore)"
+    fi
+    if [ -n "$changed" ]; then
+      echo "WARN $short gitleaks rules changed (${changed//$'\n'/, }); this run applies the trusted rules"
+    fi
+    # gitleaks reads .gitleaksignore from the working tree; the index keeps the commit's copy.
+    rm -rf "$RANGE_WT/.gitleaksignore"
+    if [ "${#parents[@]}" -gt 2 ]; then printf '%s\n' "${parents[@]:2}" > "$merge_head"; fi
+    "${G[@]}" log -1 --format=%B "$c" > "$RANGE_TMP/message" || range_die "could not read the message of $short"
+    rc_pre=0; (cd "$RANGE_WT" && "${hook_env[@]}" "$RANGE_TMP/links/pre-commit") || rc_pre=$?
+    exempt=""
+    if [ "$host_format" = exempt ]; then
+      if [ "$("${G[@]}" log -1 --format=%ce "$c")" = noreply@github.com ]; then
+        exempt="committer noreply@github.com"
+      elif [[ "$("${G[@]}" log -1 --format=%an "$c")" == *'[bot]' ]]; then
+        exempt="author is a [bot]"
+      fi
+    fi
+    rc_msg=0
+    if [ -n "$exempt" ]; then
+      echo "EXEMPT $short commit format: host-generated commit ($exempt)"
+    else
+      (cd "$RANGE_WT" && "${hook_env[@]}" "$RANGE_TMP/links/commit-msg" "$RANGE_TMP/message") || rc_msg=$?
+    fi
+    rm -f "$merge_head"
+    if [ "$rc_pre" -ne 0 ] || [ "$rc_msg" -ne 0 ]; then blocked+=("$short"); fi
+  done
+
+  if [ "$portable" -eq 0 ] && "${G[@]}" cat-file -e "$head:framework/invariants.md" 2>/dev/null; then
+    echo ""
+    echo "== whole tree at $("${G[@]}" rev-parse --short "$head")"
+    "${W[@]}" checkout -q -f --detach "$head" >/dev/null 2>&1 || range_die "could not check out HEAD"
+    "${W[@]}" clean -ffdxq || range_die "could not clean the replay worktree"
+    rm -f "$merge_head"
+    for entry in "${RANGE_TREE_CHECKS[@]}"; do
+      read -ra argv <<< "$entry"
+      if [ ! -f "$RANGE_WT/scripts/${argv[0]}" ]; then
+        echo "range: WHOLE-TREE BLOCK — scripts/${argv[0]} missing at HEAD"
+        blocked+=("whole-tree:$entry"); continue
+      fi
+      set +e
+      out="$(cd "$RANGE_WT" && env -u FRAMEWORK_ROOT python3 "scripts/${argv[0]}" "${argv[@]:1}" 2>&1)"
+      ret=$?
+      set -e
+      if [ "$ret" -eq 0 ] && [[ $'\n'"$out" != *$'\n'SKIP* ]]; then
+        echo "range: WHOLE-TREE PASS — $entry"
+      else
+        echo "range: WHOLE-TREE BLOCK — $entry (exit $ret)"
+        indent_head 40 "$out"
+        blocked+=("whole-tree:$entry")
+      fi
+    done
+  fi
+
+  echo ""
+  if [ "${#blocked[@]}" -gt 0 ]; then
+    echo "range: blocked: ${blocked[*]}"
+    echo "RANGE: BLOCKED"
+    exit 1
+  fi
+  echo "range: no check blocked"
+  echo "RANGE: PASS"
+  exit 0
+}
+
 FRAMEWORK_ROOT="$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)"
 PLAN_ENGINE="${FRAMEWORK_ROOT}/scripts/plan_engine.py"
+if [ "$(basename "$0")" != commit-msg ] && [ "${1:-}" = --range ]; then
+  range_main "$@"
+fi
 PROJECT_ROOT="$(git --no-replace-objects rev-parse --show-toplevel)"
 cd "$PROJECT_ROOT"
 COMMIT_MSG_HOOK="$(git rev-parse --git-path hooks/commit-msg)"
@@ -67,18 +361,6 @@ fi
 # Check 7's instruction roots (the one list).
 READ_PATH_ROOTS='^(agents|framework|skills|workflows)/|^orchestrators/[^/]+/rules/|^(CLAUDE|AGENTS)\.md$'
 READ_PATH_KEYS=(Read-path-reader Read-path-moment Read-path-text Read-path-carrier)
-
-# indent_head N TEXT — first N lines of TEXT, indented by four spaces.
-# Pipe-free on purpose: under `set -o pipefail`, `echo "$big" | head -N`
-# lets head exit first, echo dies with SIGPIPE (141) and the hook aborts
-# silently, turning a WARN check into an unexplained BLOCK.
-indent_head() {
-  local n="$1" i=0 line
-  while [ "$i" -lt "$n" ] && IFS= read -r line; do
-    printf '    %s\n' "$line"
-    i=$((i + 1))
-  done <<< "$2"
-}
 
 # ---------- Hook-Mode-Detection ----------
 #
@@ -104,6 +386,19 @@ HOOK_MODE="pre-commit"
 case "$(basename "$0")" in
   commit-msg) HOOK_MODE="commit-msg" ;;
 esac
+
+# Replayed by range mode (see the header): RANGE_RUN and PORTABLE select the
+# range behaviour; FORGE_HOOK_CHECKS has no effect without FORGE_HOOK_RANGE=1.
+RANGE_RUN=0
+PORTABLE=0
+if [ "${FORGE_HOOK_RANGE:-}" = 1 ]; then
+  RANGE_RUN=1
+  case "${FORGE_HOOK_CHECKS:-}" in
+    '') ;;
+    portable) PORTABLE=1 ;;
+    *) echo "pre-commit: FORGE_HOOK_CHECKS='${FORGE_HOOK_CHECKS}' unknown (expected: portable)" >&2; exit 2 ;;
+  esac
+fi
 
 # ---------- Check 2: CG-CONV — Commit-Convention Format (BLOCK in commit-msg mode) ----------
 #
@@ -132,8 +427,12 @@ if [ "$HOOK_MODE" = "commit-msg" ]; then
     COMMIT_MSG_FILE="$1"
     FIRST_LINE=$(head -1 "$COMMIT_MSG_FILE" | tr -d '\r')
 
-    # Skip empty lines and comment-only messages (git aborts these anyway)
-    if [ -z "$FIRST_LINE" ] || [[ "$FIRST_LINE" =~ ^# ]]; then
+    # Skip empty lines and comment-only messages (git aborts these anyway);
+    # a stored message under range mode already exists, so it blocks.
+    if [ "$RANGE_RUN" -eq 1 ] && { [ -z "$FIRST_LINE" ] || [[ "$FIRST_LINE" =~ ^# ]]; }; then
+      echo "commit-msg: COMMIT-CONVENTION BLOCK — stored commit message has no subject line"
+      BLOCK=1
+    elif [ -z "$FIRST_LINE" ] || [[ "$FIRST_LINE" =~ ^# ]]; then
       echo "commit-msg: COMMIT-CONVENTION SKIP (empty or comment-only first line)"
     elif echo "$FIRST_LINE" | grep -qE "$CONVENTION_REGEX"; then
       echo "commit-msg: COMMIT-CONVENTION PASS"
@@ -163,7 +462,7 @@ if [ "$HOOK_MODE" = "commit-msg" ]; then
   # space/comma/colon/end, or on-demand. Each bad record is named in the
   # refusal. Form only: whether the record is true is a reviewer's question.
   # A merge commit (MERGE_HEAD) is exempt: its commits passed their own check.
-  if [ "$FORGE_CHECKOUT" -eq 1 ] && [ -n "${COMMIT_MSG_FILE:-}" ] \
+  if [ "$FORGE_CHECKOUT" -eq 1 ] && [ "$PORTABLE" -eq 0 ] && [ -n "${COMMIT_MSG_FILE:-}" ] \
      && [ ! -e "$(git rev-parse --git-path MERGE_HEAD)" ]; then
     RECORD_LIST="$(mktemp)"
     if ! git diff --cached --name-only --no-renames -z > "$RECORD_LIST"; then
@@ -237,7 +536,8 @@ if [ "$HOOK_MODE" = "commit-msg" ]; then
     rm -f "$RECORD_LIST"
   fi
 
-  if [ ! -e "$(git rev-parse --git-path MERGE_HEAD)" ] || [ -e "$PRE_MERGE_HOOK" ]; then
+  # Range mode never takes the fallback: its driver runs pre-commit mode itself.
+  if [ "$RANGE_RUN" -eq 1 ] || [ ! -e "$(git rev-parse --git-path MERGE_HEAD)" ] || [ -e "$PRE_MERGE_HOOK" ]; then
     if [ "$BLOCK" -eq 1 ]; then
       echo ""
       echo "pre-commit: BLOCKED — fix errors above before committing."
@@ -267,12 +567,15 @@ fi
 # '^Summary: 0 errors\b|^CLEAN:' — a greedy '.*0 errors' would fail open on
 # multi-digit counts such as "Summary: 100 errors".
 
+# Range mode --portable skips this block (body not re-indented: the heredoc).
+if [ "$PORTABLE" -eq 0 ]; then
 set +e
 python3 -I - "$FRAMEWORK_ROOT" "$PROJECT_ROOT" <<'INDEXED_PY'
 import contextlib
 import importlib
 import io
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -298,7 +601,11 @@ try:
         driver = importlib.import_module('indexed_standalone')
         related = importlib.import_module('indexed_related')
         report = driver.run(repo, skill, related, framework)
+    range_run = os.environ.get('FORGE_HOOK_RANGE') == '1'
     for line in report.lines:
+        # Range mode prints no passing SKIP: a tree without skills/ is not applicable.
+        if range_run and line == 'SKILL-FM-VALIDATE SKIP — no skills/ candidate membership':
+            line = 'SKILL-FM-VALIDATE N/A — no skills/ candidate membership'
         print(line)
     print('INDEXED-STANDALONE ' + report.record)
     sys.exit(1 if report.blocking else 0)
@@ -350,6 +657,7 @@ if [ "$INDEXED_RET" -ne 0 ]; then
   fi
   BLOCK=1
 fi
+fi
 
 # ---------- Check 6: INSTRUCTION-UNIT-SIZE (BLOCK) ----------
 #
@@ -358,7 +666,7 @@ fi
 # modified instruction unit against its byte cap. A check that cannot run
 # (python3 missing, import or git read failure) BLOCKs with that reason.
 
-if [ "$FORGE_CHECKOUT" -eq 1 ]; then
+if [ "$FORGE_CHECKOUT" -eq 1 ] && [ "$PORTABLE" -eq 0 ]; then
   if ! command -v python3 >/dev/null 2>&1; then
     echo "pre-commit: INSTRUCTION-UNIT-SIZE BLOCK — check could not run: python3 not found"
     BLOCK=1
@@ -389,8 +697,10 @@ fi
 # merge-commit fallback). Here the message may be stale, so check 2 only
 # reports SKIP and warns when a hook link this contract relies on is missing.
 
-if [ "$HOOK_MODE" != "commit-msg" ]; then
+if [ "$HOOK_MODE" != "commit-msg" ] && [ "$RANGE_RUN" -eq 0 ]; then
   echo "pre-commit: COMMIT-CONVENTION SKIP (authoritative validation runs in commit-msg hook)"
+fi
+if [ "$HOOK_MODE" != "commit-msg" ] && [ "$RANGE_RUN" -eq 0 ]; then
   if [ ! -e "$COMMIT_MSG_HOOK" ]; then
     WARNINGS+=("COMMIT-CONVENTION: commit-msg hook missing. Install via: bash ${FRAMEWORK_ROOT}/scripts/install-git-hooks.sh ${PROJECT_ROOT}")
   fi
@@ -414,7 +724,42 @@ fi
 #   - Linux apt: download release from github.com/gitleaks/gitleaks/releases
 #   - Go: go install github.com/gitleaks/gitleaks/v8@latest
 
-if command -v gitleaks &>/dev/null; then
+# Range mode: gitleaks missing, findings (exit 1, also a fatal gitleaks error)
+# or any other failure BLOCKs; no marker file is written. Rules come from the
+# driver's FORGE_HOOK_GITLEAKS_DIR (BASE's tree), never the replayed commit;
+# attributes from the empty tree, so a committed `-diff` hides nothing.
+if [ "$RANGE_RUN" -eq 1 ]; then
+  GITLEAKS_DIR="${FORGE_HOOK_GITLEAKS_DIR:-}"
+  if ! command -v gitleaks &>/dev/null; then
+    echo "pre-commit: SECRET-SCAN BLOCK — gitleaks not installed (range mode requires it)"
+    BLOCK=1
+  elif [ -z "$GITLEAKS_DIR" ] || [ ! -f "$GITLEAKS_DIR/config.toml" ] || [ ! -s "$GITLEAKS_DIR/attr-tree" ]; then
+    echo "pre-commit: SECRET-SCAN BLOCK — no trusted gitleaks config (FORGE_HOOK_GITLEAKS_DIR unset or empty)"
+    BLOCK=1
+  else
+    GITLEAKS_ARGS=(protect --staged --no-banner --redact --verbose --config "$GITLEAKS_DIR/config.toml")
+    GITLEAKS_HELP="$(gitleaks protect --help 2>&1 || true)"
+    if [[ "$GITLEAKS_HELP" == *--no-color* ]]; then GITLEAKS_ARGS+=(--no-color); fi
+    if [ -f "$GITLEAKS_DIR/gitleaksignore" ] && [[ "$GITLEAKS_HELP" == *--gitleaks-ignore-path* ]]; then
+      GITLEAKS_ARGS+=(--gitleaks-ignore-path "$GITLEAKS_DIR/gitleaksignore")
+    fi
+    set +e
+    GITLEAKS_OUT=$(GIT_ATTR_SOURCE="$(cat "$GITLEAKS_DIR/attr-tree")" gitleaks "${GITLEAKS_ARGS[@]}" 2>&1)
+    GITLEAKS_RET=$?
+    set -e
+    if [ "$GITLEAKS_RET" -eq 0 ]; then
+      echo "pre-commit: SECRET-SCAN PASS"
+    elif [ "$GITLEAKS_RET" -eq 1 ]; then
+      echo "pre-commit: SECRET-SCAN BLOCK — gitleaks reported finding(s) or a fatal error in staged content:"
+      indent_head 60 "$GITLEAKS_OUT"
+      BLOCK=1
+    else
+      echo "pre-commit: SECRET-SCAN BLOCK — gitleaks could not run (exit ${GITLEAKS_RET}):"
+      indent_head 20 "$GITLEAKS_OUT"
+      BLOCK=1
+    fi
+  fi
+elif command -v gitleaks &>/dev/null; then
   set +e
   GITLEAKS_OUT=$(gitleaks protect --staged --no-banner --redact 2>&1)
   GITLEAKS_RET=$?

@@ -86,6 +86,11 @@ that `git merge` creates, pre-merge-commit):
   review evidence-pointer schema; section cross-references that the
   commit touches).
 
+CI (GitHub Actions, on every push of this repository): runs
+`pre-commit.sh --range` over the pushed commits, so CI runs the hook's own checks
+per commit (gitleaks blocks there) plus the whole-tree checks the script lists. It
+reports after the push and gates nothing; the local hooks stay the gate.
+
 Everything else is carried by discipline, not hooks:
 - Path: Buddy writes within intent-scope; deliberate-action for anything else.
 - History / WORM zones (`context/history/**`): convention — corrections via

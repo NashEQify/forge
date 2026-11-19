@@ -181,6 +181,10 @@ how you work, open topics) that carries across projects. On Codex, add the same
 activation line as above to `~/.codex/AGENTS.md`; the personal-context folder is still
 named in `user.yaml`. On OpenCode, setup adds the line to OpenCode's global `AGENTS.md`.
 
+**CI (optional).** A reusable GitHub Actions workflow runs Forge's commit-format check
+and a gitleaks scan on every push, next to your own checks.
+[CI in your repository](architecture-documentation/05-installation.md#ci-in-your-repository-optional)
+
 **Change scope or remove.** Ask your agent to switch Buddy's scope or remove Forge.
 On Claude Code and Codex, the `forge:setup` skill handles this. [Removal steps](INSTALL.md#remove)
 

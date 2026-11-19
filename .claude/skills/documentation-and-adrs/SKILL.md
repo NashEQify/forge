@@ -1,6 +1,6 @@
 ---
 name: documentation-and-adrs
-description: Capture decisions + documentation with the why, alternatives, and trade-offs — ADRs, README / changelog, API docs, agent-ready rules (CLAUDE.md). Triggers when an architecture/API decision needs capturing (after the decision, or before save); NOT for inline code comments.
+description: 'Capture decisions + documentation for people with the why, alternatives, and trade-offs — ADRs, README / changelog, API docs. Triggers when an architecture/API decision needs capturing (after the decision, or before save); NOT for inline code comments, and NOT for text an agent follows (CLAUDE.md, AGENTS.md, a skill, a role): use instruction_authoring.'
 ---
 
 # Skill: documentation-and-adrs (Wrapper)

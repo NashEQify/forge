@@ -1,0 +1,115 @@
+# Reusable workflow for consumer repositories. Forge contributes only its two
+# portable checks (commit-message format and gitleaks), replayed per pushed
+# commit by the shared Git hook's range mode. A consumer's own test, build or
+# lint steps go in the `commands` input; its own or external workflows are
+# sibling jobs in the consumer's caller file.
+name: forge-consumer-checks
+
+on:
+  workflow_call:
+    inputs:
+      commands:
+        description: Shell commands run in the consumer's checkout (bash -eo pipefail); empty skips the job.
+        type: string
+        required: false
+        default: ''
+      forge-repository:
+        description: Repository that provides the Forge hook.
+        type: string
+        required: false
+        default: NashEQify/forge
+      forge-ref:
+        description: Ref of forge-repository to check out (a tag or commit SHA, so the pinned workflow runs pinned code).
+        type: string
+        required: true
+      host-commits-format:
+        description: "Commit-format check for host-generated commits (committer noreply@github.com, author ending in [bot]): exempt or strict."
+        type: string
+        required: false
+        default: exempt
+      runs-on:
+        description: Runner label for both jobs (the Forge checks need Linux x64).
+        type: string
+        required: false
+        default: ubuntu-latest
+
+permissions:
+  contents: read
+
+jobs:
+  forge-checks:
+    if: ${{ !github.event.deleted }}
+    runs-on: ${{ inputs.runs-on }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Require a push or pull_request event
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" != push ] && [ "$EVENT_NAME" != pull_request ]; then
+            echo "::error::The Forge checks support push and pull_request events only; got $EVENT_NAME."
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ inputs.forge-repository }}
+          ref: ${{ inputs.forge-ref }}
+          path: .forge-ci
+          persist-credentials: false
+      - name: Show the Forge commit
+        run: echo "Forge at $(git -C .forge-ci rev-parse HEAD)"
+      - name: Require Linux x64
+        run: |
+          if [ "$RUNNER_OS" != Linux ] || [ "$RUNNER_ARCH" != X64 ]; then
+            echo "::error::The Forge checks need a Linux x64 runner (gitleaks linux_x64); got $RUNNER_OS $RUNNER_ARCH."
+            exit 1
+          fi
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: 8.18.4
+          GITLEAKS_SHA256: ba6dbb656933921c775ee5a2d1c13a91046e7952e9d919f9bac4cec61d628e7d
+        run: |
+          set -euo pipefail
+          dir="$RUNNER_TEMP/gitleaks"
+          mkdir -p "$dir"
+          curl -fsSL -o "$dir/gitleaks.tar.gz" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  $dir/gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf "$dir/gitleaks.tar.gz" -C "$dir" gitleaks
+          echo "$dir" >> "$GITHUB_PATH"
+      - name: Check the pushed commits
+        env:
+          BASE: ${{ github.event_name == 'push' && github.event.before || github.event_name == 'pull_request' && github.event.pull_request.base.sha || '' }}
+          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          HOST_COMMITS_FORMAT: ${{ inputs.host-commits-format }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          FORCED: ${{ github.event.forced }}
+        run: |
+          # A force push to a non-default branch: the old tip is gone; the default-ref merge-base covers the branch.
+          if [ "$EVENT_NAME" = push ] && [ "$FORCED" = true ] && [ "$REF_NAME" != "$DEFAULT_BRANCH" ]; then BASE=""; fi
+          args=(--range --portable --host-commits-format "$HOST_COMMITS_FORMAT")
+          if [ "$EVENT_NAME" = pull_request ] || [ "$REF_NAME" != "$DEFAULT_BRANCH" ]; then
+            args+=(--default-ref "origin/$DEFAULT_BRANCH")
+          fi
+          bash .forge-ci/orchestrators/claude-code/hooks/pre-commit.sh "${args[@]}" "$BASE" "$HEAD_SHA"
+
+  commands:
+    if: ${{ inputs.commands != '' && !github.event.deleted }}
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run the consumer commands
+        shell: bash
+        env:
+          FORGE_COMMANDS: ${{ inputs.commands }}
+        run: bash --noprofile --norc -eo pipefail -c "$FORGE_COMMANDS"

@@ -143,6 +143,66 @@ and starts without the machine's plugin. If `env.FRAMEWORK_DIR` is set in
 plugin root; unset it. The activation line starts the boot for the session you open;
 a subagent a session spawns does not need its own.
 
+## CI in your repository (optional)
+
+Forge's Git hooks run only on the machine where they are installed. To run checks on
+every push regardless of the machine, call Forge's reusable GitHub Actions workflow from
+a workflow file in your repository. Forge contributes two checks that fit any
+repository, run over each commit of the pushed range or of a pull request (on the first
+push of a repository, over its whole history):
+
+- **Commit format:** the first line of each message reads `type(scope): description`,
+  with `type` one of `feat`, `fix`, `refactor`, `review`, `save`, `docs`, `chore`,
+  `solve`, `build`, `audit`, `research`, the scope optional and an optional
+  ` [Task-NNN]` at the end. This is the format Forge's local hooks enforce.
+- **Secret scan:** gitleaks over each commit's changes, with the gitleaks configuration
+  of the range's base commit (or gitleaks' default), not the one a pushed commit brings.
+  In CI a finding fails the run; the local hook only warns.
+
+Commits that GitHub makes itself (merge, squash and revert commits made on GitHub, whose
+committer is GitHub) and commits by bot accounts (author name ending in `[bot]`, such as
+Dependabot) never pass through a local hook. By default the format check exempts them and
+names each one in the log; the secret scan still covers them. The exemption trusts the
+commit's committer and author fields, which whoever makes a commit can set, so it keeps
+the format check for cooperating contributors, not against a deliberate one. Set
+`host-commits-format: strict` to check every commit, for example when you squash-merge
+with conforming pull-request titles.
+
+Your own tests, builds and linters stay yours: run them as commands through the
+`commands` input, or as your own or external workflows next to Forge's job in the same
+file.
+
+```yaml
+# .github/workflows/ci.yml
+name: ci
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  forge:
+    uses: NashEQify/forge/.github/workflows/consumer-checks.yml@<tag-or-sha>
+    with:
+      forge-ref: <tag-or-sha>     # required: the same ref as in `uses:`
+      commands: |                 # optional, runs in your checkout
+        python3 -m pytest -q
+  tests:                          # your own workflow, if you have one
+    uses: ./.github/workflows/tests.yml
+  lint:                           # or an external reusable workflow
+    uses: some-org/shared-workflows/.github/workflows/lint.yml@v1
+```
+
+Inputs: `forge-ref` (required: the ref of the check scripts the workflow fetches; give
+the ref you use in `uses:`, and the run prints the commit it fetched), `commands`
+(optional shell commands run with `bash -eo pipefail` in your checkout),
+`host-commits-format` (`exempt`, the default, or `strict`), `forge-repository` (default
+`NashEQify/forge`) and `runs-on` (default `ubuntu-latest`; the Forge job needs a Linux
+x64 runner). The workflow supports the `push` and `pull_request` events and fails on any
+other. GitHub Actions cannot call a workflow whose name arrives as an input, so your
+other workflows are jobs in your file, as above. A push whose base commit is no longer in
+the repository (a force push) or a shallow clone fails with that reason rather than
+checking fewer commits. The run reports after a push; it blocks a merge only if you make
+it a required check in your repository's branch protection.
+
 ## Updating
 
 Claude Code and Codex update the plugin through their own commands (`claude plugin

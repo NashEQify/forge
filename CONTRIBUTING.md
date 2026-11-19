@@ -96,6 +96,13 @@ is not a comprehensive security or behavioral test. Do not bypass a blocking che
 instead of addressing its cause. Additional generator checks are not all enforced
 by the hook; run the relevant ones explicitly.
 
+The same hook script checks a commit range with
+`bash orchestrators/claude-code/hooks/pre-commit.sh --range <base> <head>`: it replays
+each commit, runs the hook's checks on it (a gitleaks finding or a missing gitleaks
+blocks there), then runs the whole-tree checks listed in the script once at `<head>`.
+A CI job runs this mode after a push; it reports and gates nothing, the local
+hooks stay the gate.
+
 ## Working with an installation
 
 Use the [installation guide](architecture-documentation/05-installation.md).

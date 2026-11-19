@@ -1,8 +1,8 @@
 # Reviewed workflow compatibility — test-scope transitions
 
 Step-loaded unit of `framework/workflow-compatibility.md`. Read it when a retained build or fix run is interpreted,
-installed or rolled back under the test-design challenge, fix verification-scope, test-volume or fix test-count
-and review-round pairs, and when a change to those definitions is reviewed.
+installed or rolled back under the test-design challenge, fix verification-scope, test-volume, fix test-count
+and review-round or instruction-text branch pairs, and when a change to those definitions is reviewed.
 
 ## Build test-design challenge transition
 
@@ -105,3 +105,25 @@ this pair. There is no reverse allowance: a rollback would put a current run on 
 closing actor who is not the runner to run the whole suite, and on a `fix-execute` text inviting tests the current
 added-tests check removes. There is no transitive allowance: the intermediate definitions of those days have no pair,
 and older fix pairs do not chain to this one. Any further definition change fails closed until separately reviewed.
+
+## Instruction-text branch transition
+
+The build definition changed only in the `mca-implementation` step's `instruction:` text. Its main-code-agent
+sentence is narrowed to product code, and a second sentence covers instruction text, text an agent follows (a skill,
+a role or agent file, a rules file, a step text; in the Forge repository a planned path under the instruction roots
+of `skills/_protocols/instruction-form.md` §Read-path record): Buddy writes it himself, calls the
+`instruction_authoring` skill before writing it, and puts the read-path record into the commit message, which the
+Forge repository's commit hook checks. Steps, ids, order, routes, gates, completion checks and variables are
+unchanged.
+
+| Retained obligation | Preserved interpretation |
+|---|---|
+| Completed `mca-implementation` | Keeps its evidence; it is not replayed. |
+| In-progress `mca-implementation` | Work already written keeps its evidence; instruction text not yet written follows the current text. A commit of instruction text, written before or after, carries the read-path record where the commit hook checks it. |
+| Brief authored under the earlier definition | Not re-authored; the current step text decides who writes an instruction-text path, over the brief's writer. |
+| Pending `mca-implementation` | Takes the current text; product code goes to main-code-agent as before. |
+| Read-path record | In the Forge repository unchanged: the commit-message hook already refused an instruction-root commit without it; the text names it earlier. |
+
+The pair is upgrade-only: the earlier text sends instruction text to main-code-agent, which the current text does not,
+so no reverse allowance. There is no transitive allowance. Any further definition change fails closed until
+separately reviewed.

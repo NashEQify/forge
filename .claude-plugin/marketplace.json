@@ -17,6 +17,7 @@
         "./skills/spec_board",
         "./skills/testing",
         "./skills/security_and_hardening",
+        "./skills/instruction_authoring",
         "./skills/workflow_router",
         "./skills/zoom_out",
         "./skills/boot",

@@ -87,7 +87,7 @@ Canonical for `consistency_check` §Skill-Map; sub-sections derived from `invoca
 
 ### Cross-cutting Skills (`cross-cutting`)
 
-`consistency_check`, `knowledge_processor`, `task_status_update`, `transparency_header`
+`consistency_check`, `instruction_authoring`, `knowledge_processor`, `task_status_update`, `transparency_header`
 
 ### Hook-triggered Skills (`hook`)
 

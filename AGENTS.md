@@ -40,6 +40,9 @@ boot hook. Codex boots through the plugin's `forge:boot` skill, asked for by the
 activation line in `AGENTS.md`; its loading must be checked in a fresh session. The framework runs no tool-event hooks
 (PreToolUse / PostToolUse / UserPromptSubmit); write-time discipline is
 protocol-anchored via protocols + operational.md.
+The same hook script has a range mode (`pre-commit.sh --range <base> <head>`)
+that replays each commit of a range and runs the hook's checks on it; CI uses it after a
+push. It reports, it does not gate.
 
 ## OC Constraints
 The consumer repo is the CWD; the framework is reached through the

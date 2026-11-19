@@ -36,7 +36,8 @@ These can be invoked directly by user:
 
 Loaded by Buddy's operational rules in multiple phases:
 - `consistency_check`, `knowledge_processor`, `task_status_update`,
-  `transparency_header`
+  `transparency_header`, `instruction_authoring` (called before writing
+  instruction text)
 
 ## Skill-Level Protocols
 

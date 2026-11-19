@@ -282,3 +282,10 @@ mappings:
   - upgrade
   review_status: accepted
   preserved_obligations: framework/workflow-compatibility.md
+- workflow: build
+  prior: 859ed22679157cfa0e2867790df85b944a2f693cb7f567c28eec16ef33e92316
+  current: 651d4beeaeb9fed7f1e7ad0f1628ea71b5a508690f0df9bc75f301acd479d02a
+  allowed_directions:
+  - upgrade
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility-test-scope.md

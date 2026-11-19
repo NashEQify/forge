@@ -497,8 +497,17 @@ steps:
     name: "MCA implementation (Plan → [Plan-Review] → Implement → L0)"
     category: content
     instruction: >
-      main-code-agent inline. Plan + impl_plan_review (conditional: ≥3 ACs OR
-      schema change OR cross-module impact) + Implement + L0 (ruff/mypy).
+      Product code: main-code-agent inline. Plan + impl_plan_review (conditional:
+      ≥3 ACs OR schema change OR cross-module impact) + Implement + L0 (ruff/mypy).
+      Instruction text, that is text an agent follows (a skill, a role or agent
+      file, a rules file such as CLAUDE.md or AGENTS.md, a step text) and, in the
+      Forge repository, every planned path under agents/, framework/, skills/,
+      workflows/, orchestrators/*/rules/, CLAUDE.md or AGENTS.md, since its commit
+      hook tests the path: Buddy writes it himself; before writing it, call the instruction_authoring skill and follow
+      it, and put its read-path record (four Read-path- lines per changed rule)
+      into the commit message. In the Forge repository the commit hook refuses the
+      commit without them; elsewhere no hook checks them (owner:
+      skills/_protocols/instruction-form.md §Read-path record).
     completion:
       type: manual
     commit_gate: true

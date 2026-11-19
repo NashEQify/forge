@@ -1,10 +1,11 @@
 ---
 name: documentation-and-adrs
 description: >
-  Capture decisions + documentation with the why, alternatives, and trade-offs
-  — ADRs, README / changelog, API docs, agent-ready rules (CLAUDE.md). Triggers
-  when an architecture/API decision needs capturing (after the decision, or
-  before save); NOT for inline code comments.
+  Capture decisions + documentation for people with the why, alternatives, and
+  trade-offs — ADRs, README / changelog, API docs. Triggers when an
+  architecture/API decision needs capturing (after the decision, or before
+  save); NOT for inline code comments, and NOT for text an agent follows
+  (CLAUDE.md, AGENTS.md, a skill, a role): use instruction_authoring.
 status: active
 invocation:
   primary: workflow-step
@@ -63,7 +64,11 @@ workflow step triggers the skill; the skill verifies the triple.
   again and again).
 
 **Not:** commenting on obvious code. No docs for throwaway
-prototypes without a persistence decision.
+prototypes without a persistence decision. Not text an agent
+follows (`CLAUDE.md`, `AGENTS.md`, a skill, a role or agent
+file, a workflow's step text): write or change it with
+`instruction_authoring`, which places each rule in the text its
+actor has when it acts.
 
 ## Architecture Decision Records (ADRs)
 
@@ -153,7 +158,8 @@ consistent with the consumer-repo convention.
 
 ## Documentation for agents
 
-- `CLAUDE.md` / `AGENTS.md` — project rules.
+- `CLAUDE.md` / `AGENTS.md` — project rules; written and changed
+  with `instruction_authoring`.
 - Specs — let them build what is specified.
 - ADRs — prevent agents from re-negotiating old decisions.
 - Inline gotchas — avoid known traps.
@@ -187,7 +193,8 @@ After documentation work:
 - [ ] Public APIs documented with params / return / errors.
 - [ ] Gotchas where they apply.
 - [ ] No dead commented-out code.
-- [ ] Rule files consistent with behaviour.
+- [ ] Rule files consistent with behaviour; a change to one is
+  written with `instruction_authoring`.
 - [ ] Code-mechanics claims: load-bearing positive claims carry an
   evidence pointer at write time (Inv 10); on the verify-pass trigger
   (`verify-pass.md` §Independent verify-pass — observable-signal fire, not self-assessed),
