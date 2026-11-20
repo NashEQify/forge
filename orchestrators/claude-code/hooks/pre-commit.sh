@@ -9,16 +9,16 @@ set -euo pipefail
 # .git/hooks/commit-msg from any consumer repo. Idempotent installer:
 # scripts/install-git-hooks.sh.
 #
-# Post hook-paradigm-shift (capability-first, hooks-minimal): 7 checks.
-# 5 BLOCK + 2 WARN. Shared Git hook for repositories where installed;
+# Post hook-paradigm-shift (capability-first, hooks-minimal): 8 checks.
+# 6 BLOCK + 2 WARN. Shared Git hook for repositories where installed;
 # runtime prerequisites and actual Git invocation determine coverage.
 # This does not establish equal host loading or enforcement.
 #
 # Each check runs once per commit: pre-commit (git commit) and
 # pre-merge-commit (a merge commit that git merge creates) run checks 1, 3,
-# 4, 5 and 6; commit-msg runs checks 2 and 7 only, except for a merge commit
-# in an install without the pre-merge-commit hook, where it runs every check
-# but 7 (a merge commit is exempt from 7).
+# 4, 5 and 6; commit-msg runs checks 2, 7 and 8 only, except for a merge
+# commit in an install without the pre-merge-commit hook, where it runs every
+# check but 7 and 8 (a merge commit is exempt from 7 and 8).
 #
 # Checks (ordered; 1, 3 and 5 share one captured indexed candidate):
 #   1. PLAN-VALIDATE        (BLOCK) — plan_engine.py --validate on the indexed
@@ -43,9 +43,46 @@ set -euo pipefail
 #                                     instruction roots carries read-path
 #                                     records in its message, each with the
 #                                     four Read-path-* lines.
+#   8. ROUTE-TRAILER        (BLOCK) — commit-msg: a staged path (either side
+#                                     of a rename) under an entry of
+#                                     HEAD:.forge-product-paths needs a
+#                                     `Route: <direct|brief|engine>[ <ref>],
+#                                     tests: <N>` line. Grammar: one entry per
+#                                     line, `#` comment lines and blank lines
+#                                     ignored; an entry ending in / is a
+#                                     directory prefix, any other an exact file
+#                                     path, matched literally. An entry that
+#                                     starts with / or ./, holds * ? [ or a
+#                                     space before #, or lacks the / but names
+#                                     a directory at HEAD blocks every commit
+#                                     until fixed. Route: lines are checked only
+#                                     when a declared path is touched; then
+#                                     every one must be well formed. A Route:
+#                                     line counts at any line start, body
+#                                     included (not git interpret-trailers),
+#                                     and above a `# --- >8 ---` scissors line.
+#                                     No declaration at HEAD (unborn HEAD
+#                                     included): nothing runs, nothing prints;
+#                                     a declaration that is not a readable blob
+#                                     blocks. Known limits: an entry whose
+#                                     object is missing reads as no
+#                                     declaration; `--amend` reads HEAD, the
+#                                     commit being replaced, for both the
+#                                     declaration and the staged diff, so it
+#                                     sees only the paths the amend stages;
+#                                     range mode replays against the real
+#                                     parent and closes it. A merge commit is
+#                                     not checked: product code written during
+#                                     a merge itself (a conflict resolution, a
+#                                     file added before the merge commit) is
+#                                     not checked, locally or in range mode.
+#                                     `git revert` and `cherry-pick` run no
+#                                     commit-msg hook; range mode checks those
+#                                     commits.
 # Checks 6 and 7 run only in a Forge framework checkout (top level holds
 # framework/invariants.md and scripts/consistency_check.py); in any other
-# repository they do nothing and print nothing.
+# repository they do nothing and print nothing. Check 8 runs in any
+# repository whose HEAD holds .forge-product-paths.
 #
 # Range mode (CI): pre-commit.sh --range [--portable]
 #   [--host-commits-format strict|exempt] [--default-ref REF] BASE HEAD
@@ -71,7 +108,8 @@ set -euo pipefail
 #                               no hook-link warnings; no marker file.
 #   FORGE_HOOK_CHECKS=portable  (--portable; only with FORGE_HOOK_RANGE=1)
 #                               pre-commit runs only check 4, commit-msg only
-#                               check 2. Any other non-empty value exits 2.
+#                               checks 2 and 8. Any other non-empty value
+#                               exits 2.
 #   FORGE_HOOK_GITLEAKS_DIR     (only with FORGE_HOOK_RANGE=1) the driver's
 #                               trusted gitleaks rules: config.toml and
 #                               gitleaksignore exported from merge-base(REF,
@@ -297,7 +335,7 @@ range_main() {
     fi
     rc_msg=0
     if [ -n "$exempt" ]; then
-      echo "EXEMPT $short commit format: host-generated commit ($exempt)"
+      echo "EXEMPT $short commit-message checks: host-generated commit ($exempt)"
     else
       (cd "$RANGE_WT" && "${hook_env[@]}" "$RANGE_TMP/links/commit-msg" "$RANGE_TMP/message") || rc_msg=$?
     fi
@@ -369,8 +407,8 @@ READ_PATH_KEYS=(Read-path-reader Read-path-moment Read-path-text Read-path-carri
 #   - pre-merge-commit: no args; runs exactly as pre-commit, for the merge
 #                       commit git merge creates (a conflicted merge ends in
 #                       git commit, which fires pre-commit instead)
-#   - commit-msg:       $1 = path to the commit message file; check 2 only,
-#                       then exit (merge-commit fallback: see Check 2)
+#   - commit-msg:       $1 = path to the commit message file; checks 2, 7
+#                       and 8, then exit (merge-commit fallback: see Check 2)
 # Any other basename runs in pre-commit mode.
 #
 # Root cause: `git commit --amend -m "msg"` doesn't write the new message
@@ -534,6 +572,76 @@ if [ "$HOOK_MODE" = "commit-msg" ]; then
       fi
     fi
     rm -f "$RECORD_LIST"
+  fi
+
+  # ---------- Check 8: ROUTE-TRAILER (BLOCK, commit-msg mode) ----------
+  #
+  # A staged path (either side of a rename) under an entry of the parent's
+  # .forge-product-paths (HEAD:, so a commit cannot exempt itself) needs a
+  # Route: line; every Route: line must match ROUTE_RE. Pure bash: runs in
+  # any repository and under portable. Silent without a declaration at HEAD.
+  if [ -n "${COMMIT_MSG_FILE:-}" ] && [ ! -e "$(git rev-parse --git-path MERGE_HEAD)" ] \
+     && git cat-file -e HEAD:.forge-product-paths 2>/dev/null; then
+    ROUTE_RE='^Route:[[:space:]]+(direct|brief|engine)([[:space:]]+[^,]*)?,[[:space:]]*tests:[[:space:]]*(0|[1-9][0-9]*)[[:space:]]*$'
+    ROUTE_DECL=""
+    ROUTE_LIST="$(mktemp)"
+    ROUTE_TYPE=$(git cat-file -t HEAD:.forge-product-paths 2>/dev/null || true)
+    if [ "$ROUTE_TYPE" != blob ] || ! ROUTE_DECL=$(git cat-file blob HEAD:.forge-product-paths 2>/dev/null); then
+      echo "commit-msg: ROUTE-TRAILER BLOCK — check could not run: HEAD:.forge-product-paths is not a readable file."
+      BLOCK=1
+    elif ! git diff --cached --name-only --no-renames -z > "$ROUTE_LIST"; then
+      echo "commit-msg: ROUTE-TRAILER BLOCK — check could not run: staged paths not readable."
+      BLOCK=1
+    else
+      ROUTE_ENTRIES=()
+      ROUTE_INVALID=0
+      while IFS= read -r e || [ -n "$e" ]; do
+        e="${e//$'\r'/}"
+        e="${e#"${e%%[![:space:]]*}"}"
+        e="${e%"${e##*[![:space:]]}"}"
+        [ -n "$e" ] && [ "${e:0:1}" != "#" ] || continue
+        if [ "${e:0:1}" = / ] || [ "${e:0:2}" = ./ ] || [[ "$e" == *[*?[]* || "$e" == *[[:space:]]#* ]] \
+           || { [ "${e: -1}" != / ] && [ "$(git cat-file -t "HEAD:$e" 2>/dev/null)" = tree ]; }; then
+          echo "commit-msg: ROUTE-TRAILER BLOCK — check could not run: .forge-product-paths entry '$e' is not a path or a dir/ prefix"
+          BLOCK=1; ROUTE_INVALID=1
+        fi
+        ROUTE_ENTRIES+=("$e")
+      done <<< "$ROUTE_DECL"
+      ROUTE_PATHS=()
+      [ "$ROUTE_INVALID" -eq 0 ] || ROUTE_ENTRIES=()
+      while IFS= read -r -d '' path; do
+        for e in "${ROUTE_ENTRIES[@]}"; do
+          if { [ "${e: -1}" = / ] && [[ "$path" == "$e"* ]]; } || [ "$path" = "$e" ]; then
+            ROUTE_PATHS+=("$path"); break
+          fi
+        done
+      done < "$ROUTE_LIST"
+      ROUTE_COUNT=0
+      ROUTE_BAD=""
+      while IFS= read -r line || [ -n "$line" ]; do
+        line="${line//$'\r'/}"
+        if [ "$RANGE_RUN" -ne 1 ] && [[ "$line" =~ ^#\ -+\ \>8\ -+$ ]]; then break; fi
+        [ "${line#Route:}" != "$line" ] || continue
+        ROUTE_COUNT=$((ROUTE_COUNT + 1))
+        if ! [[ "$line" =~ $ROUTE_RE ]] && [ -z "$ROUTE_BAD" ]; then ROUTE_BAD="${line:0:80}"; fi
+      done < "$COMMIT_MSG_FILE"
+      if [ "${#ROUTE_PATHS[@]}" -gt 0 ] && { [ "$ROUTE_COUNT" -eq 0 ] || [ -n "$ROUTE_BAD" ]; }; then
+        if [ "$ROUTE_COUNT" -eq 0 ]; then
+          echo "commit-msg: ROUTE-TRAILER BLOCK — product code changed without a Route: trailer (missing):"
+        else
+          echo "commit-msg: ROUTE-TRAILER BLOCK — product code changed with a malformed Route: line: '$ROUTE_BAD'"
+        fi
+        for path in "${ROUTE_PATHS[@]:0:5}"; do echo "    $path"; done
+        [ "${#ROUTE_PATHS[@]}" -le 5 ] || echo "    … and $(( ${#ROUTE_PATHS[@]} - 5 )) more"
+        echo "  Add to the commit message, as its own line:"
+        echo "    Route: <direct|brief|engine>[ <reference>], tests: <number of tests run>"
+        echo "  Product paths are declared in .forge-product-paths (read from HEAD)."
+        BLOCK=1
+      elif [ "${#ROUTE_PATHS[@]}" -gt 0 ]; then
+        echo "commit-msg: ROUTE-TRAILER PASS"
+      fi
+    fi
+    rm -f "$ROUTE_LIST"
   fi
 
   # Range mode never takes the fallback: its driver runs pre-commit mode itself.

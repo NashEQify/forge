@@ -51,6 +51,8 @@ addition the table does not list is dropped, or reported in the return with a pr
 - <test name> — <the behaviour it covers> — relied on by <whom>; cases: <the cases that change an assertion>
 - Unchanged: <behaviour> — guarded by <existing test> | unguarded
 - Run: the selected set (`python3 $FRAMEWORK_DIR/scripts/select_tests.py <changed paths>`), not the whole suite
+- Commit trailer: a commit touching a path in `.forge-product-paths` carries `Route: <brief|engine> <this brief's path
+  or the workflow id>, tests: <number of tests run>`; the commit-msg hook refuses it without one
 
 ## Stop limit
 

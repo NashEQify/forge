@@ -34,7 +34,7 @@ Format and types are enforced by the `pre-commit` hook (CG-CONV).
 Forge's shared git hooks run when installed in the active repository:
 `pre-commit.sh` (pre-commit, pre-merge-commit and commit-msg; PLAN-VALIDATE / CG-CONV /
 SKILL-FM-VALIDATE BLOCK; INSTRUCTION-UNIT-SIZE / READ-PATH-RECORD BLOCK in a Forge
-framework checkout only; SECRET-SCAN / SOURCE-VERIFICATION WARN). The
+framework checkout only; ROUTE-TRAILER BLOCK where the project declares `.forge-product-paths`; SECRET-SCAN / SOURCE-VERIFICATION WARN). The
 plugin's SessionStart hook is Claude-specific and conditional, not a universal Codex
 boot hook. Codex boots through the plugin's `forge:boot` skill, asked for by the
 activation line in `AGENTS.md`; its loading must be checked in a fresh session. The framework runs no tool-event hooks

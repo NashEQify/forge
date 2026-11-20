@@ -66,7 +66,9 @@ DIRECT is a short complete lifecycle of four steps, in this order:
 1. **Record:** in the turn, the sizing facts, path, outcome, scope, success criteria and verification plan.
    Ground the scope in the applicable project intent and original local objective. Cite both, show how the
    choice serves both and hold the dependent choice on missing or conflicting intent
-   (owner: framework/invariants.md §Intent-driven). This record is the delegation.
+   (owner: framework/invariants.md §Intent-driven). This record is the delegation. A commit of the change that touches
+   a path in the project's `.forge-product-paths` carries `Route: direct[ <quick|checked|reviewed>], tests: <number of
+   tests run>`; the commit-msg hook refuses it without one.
 2. **Build:** before a substantive deviation from the approach, apply the Record's intent comparison
    in the existing decision. If a proposed or discovered change alters the producer, its consumers or
    their expectations, the builder holds that deviation while Buddy checks eligibility again.

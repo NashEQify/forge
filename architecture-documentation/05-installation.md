@@ -148,7 +148,7 @@ a subagent a session spawns does not need its own.
 Forge's Git hooks run only on the machine where they are installed. To run checks on
 every push regardless of the machine, call Forge's reusable GitHub Actions workflow from
 a workflow file in your repository. Forge contributes two checks that fit any
-repository, run over each commit of the pushed range or of a pull request (on the first
+repository, and a third where you declare product paths, run over each commit of the pushed range or of a pull request (on the first
 push of a repository, over its whole history):
 
 - **Commit format:** the first line of each message reads `type(scope): description`,
@@ -158,15 +158,27 @@ push of a repository, over its whole history):
 - **Secret scan:** gitleaks over each commit's changes, with the gitleaks configuration
   of the range's base commit (or gitleaks' default), not the one a pushed commit brings.
   In CI a finding fails the run; the local hook only warns.
+- **Route trailer (only where you declare product paths):** a file `.forge-product-paths`
+  at the repository root lists your product paths, one per line: `dir/` for a directory,
+  otherwise an exact file path, matched literally from the repository root; `#` starts a
+  comment line. An entry the check cannot match (a leading `/` or `./`, a wildcard, an
+  inline comment, a directory named without its trailing `/`) refuses the commit. A commit
+  that touches a declared path needs its own line
+  `Route: <direct|brief|engine>[ <reference>], tests: <number of tests run>`, recording
+  how the change was made; it is not verified. The file is read from the commit's parent,
+  so it takes effect from the commit after the one that adds it; merge commits are not
+  checked. The local commit-msg hook checks the same.
 
 Commits that GitHub makes itself (merge, squash and revert commits made on GitHub, whose
 committer is GitHub) and commits by bot accounts (author name ending in `[bot]`, such as
-Dependabot) never pass through a local hook. By default the format check exempts them and
+Dependabot) never pass through a local hook. By default the commit-message checks (the
+format and, where declared, the route trailer) exempt them and
 names each one in the log; the secret scan still covers them. The exemption trusts the
 commit's committer and author fields, which whoever makes a commit can set, so it keeps
 the format check for cooperating contributors, not against a deliberate one. Set
 `host-commits-format: strict` to check every commit, for example when you squash-merge
-with conforming pull-request titles.
+with conforming pull-request titles; under `strict` a bot or GitHub-made commit that
+touches a declared product path is refused, since it carries no route trailer.
 
 Your own tests, builds and linters stay yours: run them as commands through the
 `commands` input, or as your own or external workflows next to Forge's job in the same
