@@ -6,7 +6,8 @@ Forge's sources on a machine whose sessions use them, and when a change must be 
 **Where hosts read Forge.** Claude Code and Codex take Forge as a plugin, and neither reads the plugin's source in
 place: Claude Code copies it into a versioned plugin folder, also when the marketplace is a local directory, and Codex
 keeps a marketplace copy. A change reaches them only through the host's own update (`claude plugin marketplace update
-forge` then `claude plugin update forge@forge`; `codex plugin marketplace upgrade forge`), and a running session keeps
+forge` then `claude plugin update forge@forge`; for Codex `codex plugin remove forge@forge` then `codex plugin add forge@forge`, since `codex plugin marketplace upgrade
+forge` was not shown to bring a new commit), and a running session keeps
 the copy it started with until it is restarted. OpenCode set up through `scripts/forge_setup.py` gets a
 `forge:boot` skill that names a Forge folder and reads it in place (the folder the setup ran from, or Codex's stable
 plugin folder in place of Claude Code's versioned plugin folder). For a clone and for Codex's stable folder a change

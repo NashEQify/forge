@@ -95,7 +95,7 @@ adopting it (with a report file, the short return: `skills/_protocols/mca-dispat
 
 Read the incident block:
 - None → `architecture-comprehension.md` §B (post-return coherence-check)
-  → if pass: Persist Gate, continue. *(landed clean; topology coheres)*
+  → if pass: continue. *(landed clean; topology coheres)*
 - AUTO-FIXED → retest. FAIL → Root-Cause-Fix. *(verify before trust)*
 - ARCH-CONFLICT → solution-expert. *(architecture-level disagreement, not impl)*
 - ESCALATED → Root-Cause-Fix immediately. *(blocking issue, won't yield to retry)*
@@ -148,17 +148,6 @@ CLI surface, path routing, step patterns, on_fail behaviour, multi-
 machine warnings, and skip-eligible workflow list:
 `framework/workflow-engine-cookbook.md`.
 
-Brief-quality gate for MCA dispatches: when engagement applies per
-`multi-perspective.md`, the brief MUST contain
-`## Implicit-Decisions-Surfaced` with 5 standard classes
-(schema_and_contract, error_and_stop, layer_discipline,
-structural_invariants, vision_alignment). Template SoT (incl. its own
-trigger): `skills/_protocols/mca-brief-template.md`. Buddy self-checks
-the 5 classes before dispatch by reading the protocol. Every brief for
-work on a task with acceptance criteria, at any size, carries the read-only block
-`## Approved acceptance (read-only)` and passes its check before dispatch:
-`skills/_protocols/approved-acceptance.md`.
-
 ---
 
 ## Phase 3: BOUNDARY
@@ -167,8 +156,10 @@ work on a task with acceptance criteria, at any size, carries the read-only bloc
 
 After state-changing actions:
 - **Context:** learned something new → write it (active context path).
-- **History:** task closeout → Persist Gate.
-- **Backlog:** task status change → Persist Gate.
+- **History and backlog:** a task status change runs through `task_status_update`; on a close its
+  persist gate (Step 5.5) writes the overview and the close-out before the next task starts.
+
+After a structural commit: consistency check → `context-rules.md`.
 
 ### Final message and returns
 
@@ -179,15 +170,6 @@ redoing the edit. Give its cost and undo.
 A completion claim carries the evidence its reporting step specifies. For
 returns, task close or a claim whose proof the step does not specify, read
 `skills/_protocols/evidence-author-claims.md` §8.5 before reporting it.
-
-### Persist Gate
-
-Blocking on a task status change — the next task only starts after
-PASS. Two writes with a delta check:
-1. `overview.md` — project-state patch
-2. `history/` — on task closeout
-
-After a structural commit: consistency check → `context-rules.md`.
 
 ### Incident + Root-Cause-Fix
 

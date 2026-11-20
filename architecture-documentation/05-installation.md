@@ -206,8 +206,9 @@ it a required check in your repository's branch protection.
 ## Updating
 
 Claude Code and Codex update the plugin through their own commands (`claude plugin
-marketplace update forge` and `claude plugin update forge@forge`; `codex plugin
-marketplace upgrade forge`). Both answered "already at the latest version" when nothing
+marketplace update forge` and `claude plugin update forge@forge`; on Codex `codex plugin
+remove forge@forge` then `codex plugin add forge@forge`, which brought commit `f772db35` into the cache on
+2026-11-20 where `codex plugin marketplace upgrade forge` had not been shown to). Both answered "already at the latest version" when nothing
 had changed; an update to a newer commit was not shown. A local marketplace on a Forge
 checkout follows the checkout (`git -C ~/forge pull`) on Claude Code, and OpenCode's
 boot skill reads the Forge folder it names in place. Sessions already running keep what

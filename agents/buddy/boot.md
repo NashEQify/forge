@@ -145,12 +145,7 @@ or CWD-relative (session-specific). User-scope paths resolve through
 |-------|------|-------|
 | context-rules.md | `agents/buddy/context-rules.md` | Only when listed in the Context field |
 | user profile | `<user_repo>/context/user/profile.md` | always-load (§User scope, CWD-independent) |
-| boot-navigation.md | `$FRAMEWORK_DIR/framework/boot-navigation.md` | Not at boot: at its read trigger (`boot-software.md` step 5, `boot-on-demand.md`). Explicit-absolute because consumer sessions (CWD≠FRAMEWORK_DIR) resolve relative `framework/` paths through `--add-dir` — the explicit form is more fail-safe. |
-| session-buffer.md | `<CWD>/docs/session-buffer.md` | Only when present (repo-local) |
 | plan_engine --boot | `$FRAMEWORK_DIR/scripts/plan_engine.py --boot` | Not at boot: when choosing or taking up a task, where `docs/plan.yaml` exists (bash call; `operational.md` §Phase 1, `task_status_update` Step 1b) |
-| chub-status-check | the boot probe's `chub:` line | Software mode, LOAD step. `installed`, or exactly `not installed` (no check in this installation): nothing to report; otherwise a single advisory line surfaced in GREET. |
-| session-handoff | `<CWD>/context/session-handoff.md` | Only when present (repo-local) |
-| project backlog | `<CWD>/docs/backlog.md` | Only when ROUTE found a local backlog |
 | boot-status.md | `agents/buddy/boot-status.md` | Every boot: step 2 (freshness gate) and step 7 (greeting findings) |
 | boot-routing.md | `agents/buddy/boot-routing.md` | Every boot: RESOLVE and ROUTE; again when choosing a write path |
 | boot-software.md | `agents/buddy/boot-software.md` | Software mode: steps 4–7, read at step 3 |

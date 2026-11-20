@@ -15,33 +15,14 @@ it); the probe still checks the project and the user repo.
 Codex callers first follow `agents/buddy/codex-execution.md`: the helper
 performs a Git write and needs the offered escalation route when `.git` is
 protected, even though its purpose is a status check.
-The probe finds the framework root itself and checks the active project, the
-framework whose instructions this session uses and the configured user repo
-(deduped by canonical root). It fetches and reports ahead/behind status.
-Only the active project's own work is reported (ahead, uncommitted, entry
-paths); the framework, when it is not the active project, and the user repo
-appear only when they are behind, since that decides whether loaded
-instructions or the profile are stale. Another repository's unpushed or
-uncommitted work belongs to that repository's sessions and is not mentioned.
-5-second network timeout. Failed fetches produce a per-repository diagnostic
-on stderr; treat the associated ahead/behind values as cached. Output on
-stdout: one line per non-clean repo, `<path>` followed by the groups that
-apply: `[ahead N | behind N | ahead M, behind N]`,
-`[uncommitted: S staged, M modified, U untracked]` (entries; an untracked
-directory is one). Unavailable checks are stderr diagnostics. Empty stdout
-with empty stderr means no cached divergence and
-no uncommitted work in the checked working trees; linked worktrees and
-staging copies are outside them (`git worktree list` names the linked ones).
-Only a successful fetch establishes remote freshness.
-The probe also prints its first line `orient: <date time zone> <host> <CWD>`
-(ORIENT) and, after the status lines, one `key: value` line per boot fact:
-`intent`, `mode-line`, `context-dir`, `backlog`, `handoff`, `session-buffer`,
-`pending-project`, `pending-personal`, `plan`, `tasks-in-progress`, `binding`
-and `chub`. These are file facts for ROUTE, the mode choice and the
-continuing-work trigger; after a pull, run the probe again. `unknown` means a
-fact could not be determined (stderr says why): check that file directly
-before relying on it. Under a target with uncommitted entries, an
-`entries:` line names their paths (the first five) for §Greeting findings.
+The probe checks the active project, the framework and the user repo and prints
+its findings as data to act on: `pull-question:` (each repository behind after a
+successful fetch), `remote:` (the fetch outcome), `mode:`, `read-list:` and
+`profile-read:` (the reads of Rounds 2 and 3), `greet:` (the computed greeting
+findings), status lines per repository with an `entries:` line, and the file
+facts ROUTE, the mode choice and RESUME use. After a pull, run it again. `unknown`
+means a fact could not be determined (stderr says why): check that file directly
+before relying on it.
 When the user's scope forbids network use or writes outside the project, do
 not fetch (it writes Git metadata): run `git-status-check.sh --boot --no-network`,
 which prints `freshness: not checked (no network)` and each root's read-only
@@ -55,14 +36,11 @@ RESOLVE, ROUTE, LOAD or RESUME begins. Do not load context in parallel
 with this gate or while waiting for the answer.
 
 **Pull decision (behind > 0, including divergence):**
-- The script can report cached tracking refs after a failed fetch. Before
-  claiming an online update, confirm a successful bounded fetch for the
-  affected repo and re-read its status. If offline or fetch fails, mark
-  `remote unchecked` in the orientation line, label any cached status as such, and continue
-  without a pull or a blocking update question.
-- If still behind, name the repo and ahead/behind counts and ask:
-  "Remote has N newer commits in <repo>. Shall I run git pull before
-  continuing?" Batch multiple affected repos into one question. Wait for
+- A repository under `remote: unchecked` has cached status only: mark `remote
+  unchecked` in the orientation line and continue without a pull or a blocking
+  update question.
+- For each repository in `pull-question:` ask: "Remote has N newer commits in
+  <repo>. Shall I run git pull before continuing?" Batch multiple affected repos into one question. Wait for
   the user's answer before continuing the boot sequence. Silence
   is not approval. An explicit pull instruction in the current request,
   or a standing session-start pull permission in the project's rules,
