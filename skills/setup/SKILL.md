@@ -36,8 +36,8 @@ else `<root>`, and the script then notes that the setup must be run again after 
 Run `S status --project <project folder>` as its own call (the project folder is the session's working folder unless
 the user named another). It prints JSON: the hosts found and their plugin roots (OpenCode: its CLI, the framework
 root its boot skill points at, and whether that skill is in place), whether the project carries the activation line,
-whether the user switch is on per host, the personal-context folder the machine setting names, and the allow rules
-present. Decide from it; do not read or parse the host files yourself.
+whether the user switch is on per host, the personal-context folder the machine setting names, the allow rules
+and Forge's deny rules present. Decide from it; do not read or parse the host files yourself.
 
 ## 2. The choice
 

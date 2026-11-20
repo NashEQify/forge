@@ -50,7 +50,10 @@ material scope/risk change or a genuinely unresolved user decision.
 Diagnosis-only does not authorize a fix. Live and publication actions
 retain their explicit boundaries. Destructive actions do too, except that
 the user's cleanup or fix order covers deleting the provably useless
-within its scope. When a boundary lifts (commit,
+within its scope. Reading a secret (a `.env` file, an SSH private key) has
+no permitted path; on Claude Code the deny rules Forge's setup writes
+refuse `.env` files and SSH keys named `id_*` (`scripts/forge_setup.py`
+`DENY_RULES`). When a boundary lifts (commit,
 push, publication), first reconcile the work it held back, then take up new
 work. Bookkeeping does not authorize new substantive decisions.
 SoT: `framework/process-map.md` section Authorization.

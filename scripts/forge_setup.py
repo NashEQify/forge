@@ -206,6 +206,10 @@ def root_rule(root: Path) -> str:
     return read_rule(root.parent if in_claude_cache(root) else root)
 
 
+# Invariant 2's secret-read refusal, written as Claude Code deny rules into the user's settings.
+DENY_RULES = ("Read(//**/.env)", "Read(~/.ssh/id_*)")
+
+
 def usable_repo(path: Path) -> bool:
     """A usable user repo, as the reader decides it (a folder holding context/user/)."""
     return from_config(FRAMEWORK, {"version": 1, "user_repo": str(path)}).configured
@@ -400,8 +404,9 @@ def load_settings(plan: Plan) -> dict | None:
     perms = obj.get("permissions", {})
     if not isinstance(perms, dict):
         raise Refusal(f"{path}: permissions is not an object")
-    if not isinstance(perms.get("allow", []), list):
-        raise Refusal(f"{path}: permissions.allow is not a list")
+    for kind in ("allow", "deny"):
+        if not isinstance(perms.get(kind, []), list):
+            raise Refusal(f"{path}: permissions.{kind} is not a list")
     return obj
 
 
@@ -409,52 +414,65 @@ def _dump_settings(obj: dict) -> bytes:
     return (json.dumps(obj, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
 
 
-def add_rules(plan: Plan, record: dict, rules: list[str]) -> None:
+# A permission list kind and its ownership-record keys: the recorded rules and the "Forge made the list" flag.
+_KINDS = {"allow": ("rules", "allow_created"), "deny": ("deny_rules", "deny_created")}
+
+
+def add_rules(plan: Plan, record: dict, rules: list[str], kind: str = "allow") -> None:
+    key, made_flag = _KINDS[kind]
     path = settings_path()
     obj = load_settings(plan)
     created = not os.path.lexists(path)
     obj = {} if obj is None else obj
     perms_created = "permissions" not in obj
-    allow_created = perms_created or "allow" not in obj["permissions"]
-    allow = obj.get("permissions", {}).get("allow", [])
-    missing = [rule for rule in dict.fromkeys(rules) if rule not in allow]
+    kind_created = perms_created or kind not in obj["permissions"]
+    present = obj.get("permissions", {}).get(kind, [])
+    missing = [rule for rule in dict.fromkeys(rules) if rule not in present]
     for rule in rules:
-        if rule in allow:
-            plan.same(path, f"rule present: {rule}")
+        if rule in present:
+            plan.same(path, f"{kind} rule present: {rule}")
     if not missing:
         return
-    obj.setdefault("permissions", {}).setdefault("allow", []).extend(missing)
-    plan.put(path, _dump_settings(obj), "rules added: " + ", ".join(missing))
-    record["rules"] = list(dict.fromkeys(record["rules"] + missing))
+    obj.setdefault("permissions", {}).setdefault(kind, []).extend(missing)
+    plan.put(path, _dump_settings(obj), f"{kind} rules added: " + ", ".join(missing))
+    record[key] = list(dict.fromkeys(record[key] + missing))
     record["settings_created"] = record["settings_created"] or created
     record["permissions_created"] = record["permissions_created"] or perms_created
-    record["allow_created"] = record["allow_created"] or allow_created
+    record[made_flag] = record[made_flag] or kind_created
 
 
-def drop_rules(plan: Plan, record: dict, rules: list[str]) -> None:
+def drop_rules(plan: Plan, record: dict, rules: list[str], kind: str = "allow") -> None:
+    key, made_flag = _KINDS[kind]
     path = settings_path()
     obj = load_settings(plan)
     gone = set(rules)
-    created, made = record["settings_created"], (record["permissions_created"], record["allow_created"])
-    record["rules"] = [rule for rule in record["rules"] if rule not in gone]
-    if not record["rules"]:
-        record.update(settings_created=False, permissions_created=False, allow_created=False)
+    created, made = record["settings_created"], (record["permissions_created"], record[made_flag])
+    record[key] = [rule for rule in record[key] if rule not in gone]
+    if not record[key]:
+        record[made_flag] = False
+    if not record["rules"] and not record["deny_rules"]:  # both lists share the file and the permissions object
+        record.update(settings_created=False, permissions_created=False)
     perms = obj.get("permissions") if obj else None
-    allow = perms.get("allow", []) if perms else []
-    found = [rule for rule in allow if rule in gone]
+    listed = perms.get(kind, []) if perms else []
+    found = [rule for rule in listed if rule in gone]
     if not found:
         if obj is not None:
-            plan.same(path, "no Forge rule")
+            plan.same(path, f"no Forge {kind} rule")
         return
-    perms["allow"] = [rule for rule in allow if rule not in gone]
-    if not perms["allow"] and made[1]:
-        del perms["allow"]
+    kept = list(listed)
+    for rule in dict.fromkeys(found):  # one copy each, the last (Forge appends); another copy is the user's own
+        del kept[len(kept) - 1 - kept[::-1].index(rule)]
+    perms[kind] = kept
+    if not perms[kind] and made[1]:
+        del perms[kind]
         if not perms and made[0]:
             del obj["permissions"]
     if not obj and created:
         plan.remove(path, _dump_settings(obj), "file removed (it held only Forge's rules)")
     else:
         plan.put(path, _dump_settings(obj), "rules removed: " + ", ".join(dict.fromkeys(found)))
+        for rule in dict.fromkeys(rule for rule in found if rule in kept):
+            plan.same(path, f"{kind} rule kept: a copy outside Forge's record: {rule}")
 
 
 # --- OpenCode's boot skill ------------------------------------------------------------------------------------
@@ -599,7 +617,8 @@ def put_setting(plan: Plan, path: Path, data: dict, what: str) -> None:
 
 def empty_record() -> dict:
     return {"version": 1, "projects": [], "codex": None, "opencode": None, "opencode_skill": None, "rules": [],
-            "settings_created": False, "permissions_created": False, "allow_created": False}
+            "settings_created": False, "permissions_created": False, "allow_created": False,
+            "deny_rules": [], "deny_created": False}
 
 
 def load_record() -> dict:
@@ -621,9 +640,10 @@ def load_record() -> dict:
         hashes = [hashes] if isinstance(hashes, str) else hashes  # an older record: one hash as a string
         if isinstance(hashes, list) and hashes and all(isinstance(h, str) for h in hashes):
             record["opencode_skill"] = {"path": skill["path"], "sha256": list(dict.fromkeys(hashes))}
-    record["rules"] = [r for r in data.get("rules", []) if isinstance(r, str)] if isinstance(
-        data.get("rules"), list) else []
-    for flag in ("settings_created", "permissions_created", "allow_created"):
+    for key in ("rules", "deny_rules"):  # an older record without deny_rules reads as empty
+        record[key] = [r for r in data.get(key, []) if isinstance(r, str)] if isinstance(
+            data.get(key), list) else []
+    for flag in ("settings_created", "permissions_created", "allow_created", "deny_created"):
         record[flag] = data.get(flag) is True
     return record
 
@@ -646,8 +666,9 @@ def union_record(before: dict, after: dict) -> dict:
     merged = {"version": 1, "projects": list(projects.values()), "codex": after["codex"] or before["codex"],
               "opencode": after["opencode"] or before["opencode"],
               "opencode_skill": _union_skill(before["opencode_skill"], after["opencode_skill"]),
-              "rules": list(dict.fromkeys(before["rules"] + after["rules"]))}
-    for flag in ("settings_created", "permissions_created", "allow_created"):
+              "rules": list(dict.fromkeys(before["rules"] + after["rules"])),
+              "deny_rules": list(dict.fromkeys(before["deny_rules"] + after["deny_rules"]))}
+    for flag in ("settings_created", "permissions_created", "allow_created", "deny_created"):
         merged[flag] = before[flag] or after[flag]
     return merged
 
@@ -678,7 +699,7 @@ def project_dir_arg(value: str) -> Path:
 
 
 def claude_rules(plan: Plan, record: dict, repo: Path | None, repo_required: bool) -> None:
-    """Claude's share: the plugin-root rule and, with a usable user repo, its rule."""
+    """Claude's share: the plugin-root rule and, with a usable user repo, its rule; the deny rules in every case."""
     path = settings_path()
     if not plan.host("claude-code"):
         plan.skip(path, "claude-code not selected (--host)")
@@ -688,8 +709,9 @@ def claude_rules(plan: Plan, record: dict, repo: Path | None, repo_required: boo
         plan.skip(path, "Claude Code plugin not found")
         if repo_required:
             plan.skip(path, "user-repo rule skipped: Claude Code plugin not found")
-        return
-    add_rules(plan, record, [root_rule(root)] + ([read_rule(repo)] if repo else []))
+    else:
+        add_rules(plan, record, [root_rule(root)] + ([read_rule(repo)] if repo else []))
+    add_rules(plan, record, list(DENY_RULES), "deny")
 
 
 def cmd_project(args, plan: Plan, record: dict) -> None:
@@ -801,6 +823,7 @@ def cmd_remove(args, plan: Plan, record: dict) -> None:
         if isinstance(repo, str) and os.path.isabs(repo):
             rules.append(read_rule(Path(repo)))
         drop_rules(plan, record, rules)
+        drop_rules(plan, record, list(record["deny_rules"]), "deny")  # only what Forge recorded, never DENY_RULES
     if plan.host("opencode"):
         drop_line(plan, opencode_agents(record), record["opencode"])
         record["opencode"] = None
@@ -823,6 +846,7 @@ def cmd_status(args) -> dict:
     except Refusal:
         obj = None
     allow = (obj or {}).get("permissions", {}).get("allow", [])
+    deny = (obj or {}).get("permissions", {}).get("deny", [])
     rule = root_rule(root) if root else None
     user_rule = read_rule(repo) if repo else None
     project = None
@@ -842,7 +866,8 @@ def cmd_status(args) -> dict:
                 "cli": shutil.which("claude"), "plugin_root": str(root) if root else None,
                 "settings": str(settings_path()),
                 "rules": {"plugin_root": rule, "plugin_root_present": rule is not None and rule in allow,
-                          "user_repo": user_rule, "user_repo_present": user_rule is not None and user_rule in allow},
+                          "user_repo": user_rule, "user_repo_present": user_rule is not None and user_rule in allow,
+                          "deny": {rule: rule in deny for rule in DENY_RULES}},
             },
             "codex": {
                 "cli": shutil.which("codex"), "plugin_root": str(croot) if croot else None,

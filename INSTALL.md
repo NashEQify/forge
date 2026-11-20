@@ -54,8 +54,9 @@ use `~/forge` as `<root>`.
 
 This session started before the plugin existed, so the plugin's skills are not listed here yet. Read
 `<root>/skills/setup/SKILL.md` and follow it: it asks the user project-only or every session (and, for every session,
-where personal context lives), writes the activation line or the switch on each host, the `Read` allow rules
-Claude Code needs and OpenCode's boot skill, and checks that a fresh session opens with Buddy's orientation line.
+where personal context lives), writes the activation line or the switch on each host, Claude Code's `Read` allow rules
+and the deny rules that refuse reading secrets (`.env` files, SSH keys named `id_*`), and OpenCode's boot skill, and
+checks that a fresh session opens with Buddy's orientation line.
 
 ## 5. Report
 
