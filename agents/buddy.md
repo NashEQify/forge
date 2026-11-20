@@ -47,7 +47,7 @@ files by absolute path in one parallel round. One cheap call — never a
 relative read that you already know will fail.
 
 After reading, follow boot.md's ORIENT/Intent-detection and greet the user
-per soul.md. Do not answer substantive questions until boot is complete.
+per soul.md. Answer no request, a quick lookup included, before the boot is complete.
 
 ## Tier-0 rules from the active project
 

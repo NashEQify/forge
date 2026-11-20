@@ -212,13 +212,14 @@ remaining_findings:
 
 ## Verdict file skeleton
 
-Copy the block below into the review's records as the verdict file and fill every slot; keep its first line, which
-a later count reads, and the `yaml` fence around `remaining_findings`, which the engine reads for an at-the-cap
-record; it lets a count tell a verdict written from this skeleton from one written freehand. The rules behind each
+Copy the block's content (not its surrounding ````markdown fence) into the review's records as the verdict file and
+fill every slot. A mandatory review's verdict opens with the decision frontmatter (`skills/_protocols/evidence-review-adoption.md`
+§9.4); the `Skeleton:` line follows its closing `---`, and the completion check reads it. Keep the `yaml` fence around
+`remaining_findings`, which the engine reads for an at-the-cap record; quote a compound target (`"closes_with: <id>"`). The rules behind each
 slot: `verdict.md` §5 (verdict, triage, causes, value floor) and this file (schema, enum, §Re-review limit).
 
 ````markdown
-Skeleton: verdict 1
+Skeleton: verdict 2
 
 # Verdict — task <id>, review pass <n>
 
@@ -237,7 +238,7 @@ verdict: <PASS | PASS_WITH_RISKS | FAIL | PARTIAL>   # 0C+0H | 0C+<=2H, carry-fo
 ```yaml
 remaining_findings:   # every finding not fixed now; [] when none
   - id: <id>
-    target: <accept | watch_item | new_task | spec_text | absorb_next | closes_with: <id> | re_review: <seat>>
+    target: <accept | watch_item | new_task | spec_text | absorb_next | "closes_with: <id>" | "re_review: <seat>">
     severity: <severity>
     locator: <file:line or spec §>
     title: "<title>"

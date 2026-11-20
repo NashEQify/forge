@@ -22,7 +22,7 @@ trigger_check:
   description: >
     Buddy prueft 4 binaere Trigger BEVOR Council startet.
     Kein Trigger → dokumentierter Skip ("Council nicht noetig: [rationale]").
-    Min 1 Trigger → Council starten, dann Modus waehlen.
+    Wann Council startet und welcher Modus: skills/council/SKILL.md §1.0 und §1.1 (diese Liste nur als Hilfe).
   triggers:
     - id: multi_path
       question: ">1 valider Loesungsweg UND schwer umkehrbar?"
@@ -74,15 +74,7 @@ output_definition:
 mode_selection:
   description: >
     Buddy bestimmt den Modus BEVOR der Council startet.
-    Zwei binaere Fragen:
-    
-    Frage 1: ">2 Council-Dimensionen betroffen?"
-      → Ja: full
-      → Nein: Frage 2
-    
-    Frage 2: "Schwer umkehrbar?"
-      → Ja: standard
-      → Nein: light
+    Modus nach skills/council/SKILL.md §1.1 (Owner).
     
     Kein Council noetig? Dokumentierter Skip:
     "Council nicht noetig: [rationale]."
@@ -194,13 +186,13 @@ process:
     title: Briefing-Draft erstellen
     agent: buddy
     description: >
-      Buddy schreibt Briefing-Draft. NOCH NICHT final. Per
-      skills/council/run.md §3: question + intent_chain + context-paths
-      + null option + perspectives. MUST NOT: Buddy's proposal,
+      Buddy schreibt das Briefing genau nach skills/council/run.md §3
+      (Anchor-Zeilen mit Quelle und Bestaetigung, Question derivation,
+      Examples); in light direkt final unter dem final_briefing-Pfad von phase_1. MUST NOT: Buddy's proposal,
       pre-classified conflicts, severity tags, lean hints. Brief-contagion
       empirisch demonstriert.
     output: "docs/reviews/council/{date}-{topic}-briefing-draft.md"
-    modes: [standard, full]  # light skips frame-check, goes direct to final
+    modes: [light, standard, full]  # light skips the frame check, writes the final briefing here
 
   phase_1_frame_check:
     title: Pre-council frame check
@@ -254,7 +246,7 @@ process:
     title: Post-council coherence check + Entscheidung
     agent: buddy
     description: >
-      MANDATORY (unconditional, standard/full): Buddy applied
+      MANDATORY in every mode: run.md §4 step 8, then Buddy applied
       agents/buddy/architecture-comprehension.md §B
       (post-return) auf Chief-Output BEVOR Adoption. Topology-Contradiction
       (producer/consumer absent, deploy-state incompatible) → escalate
@@ -288,5 +280,5 @@ tier_behavior:
   tier_2:
     description: >
       Harness dispatcht N CC-Instanzen parallel.
-      Wartet auf alle Outputs. Dispatcht council-chief.
+      Wartet auf alle Outputs. Dispatcht council-chief per phase_3 (mit dem Intent-Anchor).
       Dispatcht Buddy for Decision.

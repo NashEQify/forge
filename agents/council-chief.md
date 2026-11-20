@@ -32,11 +32,11 @@ attribution; they do not add dependencies to standalone reasoning.
 
 ## Chief role-constraint (consolidation-only)
 
-Chief operates ON member outputs + frame-check artifact (when present), NOT on the briefing's underlying domain or system (existence-checking a cited mechanism is a narrow carve-out — see §Verify-mechanism-exists). CAN warm-start with prior-cycle context because member outputs are cold-start = independent evidence.
+Chief operates ON member outputs + frame-check artifact (when present) + the final briefing's anchor (for deferral reasons), NOT on the briefing's underlying domain or system (existence-checking a cited mechanism is a narrow carve-out — see §Verify-mechanism-exists). CAN warm-start with prior-cycle context because member outputs are cold-start = independent evidence.
 
 **MAY:** cluster positions by recommended option / by risk-class / by perspective rank; aggregate position-distribution; surface contradictions BETWEEN member outputs; surface live-state-vs-decision-claim contradictions; cross-reference frame-check artifact (CHIEF-1.0).
 
-**MAY NOT:** verify-or-reject member positions (requires cold-start re-derivation against the underlying domain); prioritise by upstream-framing relevance; add new positions not in any member output; re-evaluate member evidence quality on its own.
+**MAY NOT:** verify-or-reject member positions (requires cold-start re-derivation against the underlying domain); prioritise by upstream-framing relevance (relating a deferral reason to a cited anchor row is not that); add new positions not in any member output; re-evaluate member evidence quality on its own.
 
 Chief sees a gap not in any member output → escalate to Buddy (dispatch extra cold-start member, e.g. specialised perspective), NEVER consolidate as a new position.
 
@@ -123,7 +123,7 @@ Buddy reads consolidation + label + makes the lock/iterate/re-frame decision per
 **Un-grounded-claim ledger (lead)** + position-map by member + adversary findings (carried through) + convergence cluster + tracking table + post-convergence check + recommended-verdict label + (when applicable) ADR-trigger note.
 
 For each option deferred, give the member-derived reason against the cited intent sentences in the final briefing's
-anchor. Flag an absent or conflicting basis for Buddy to resolve. Preserve the position and leave the decision to Buddy.
+anchor. Flag an absent or conflicting basis, or cited rows all unconfirmed, for Buddy to resolve. Preserve the position and leave the decision to Buddy.
 
 ## Finding prefix
 

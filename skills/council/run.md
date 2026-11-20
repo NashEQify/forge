@@ -29,12 +29,14 @@ Fill the `intent_chain` block before relying on the question:
 1. **Anchor rows** — Give each applicable overarching vision or goal, standing constraint and local objective its own
    row: `ID | intent sentence | named source and locator | user confirmation (confirmed / unconfirmed / unknown)`.
    Use the active project's intent and applicable standing sources for repository work. For standalone work, use the
-   supplied goals and constraints, citing the message or supplied material. Use sourced intent for the anchor.
+   supplied goals and constraints, citing the message or supplied material. Use sourced intent for the anchor; a row
+   whose only source is your own record is an author derivation, not a row.
    Put any author inference needed to explain the framing on a separate line labeled **author derivation — unconfirmed**.
 2. **Question derivation** — Write `This question advances [anchor IDs] by [how resolving the local objective serves
    the overarching goal within the standing constraints].` State any conflict among these sources or with the proposed
    framing before relying on it. Resolve it from the supplied authority or keep the question conditional and name the
-   unresolved point. An author derivation carries no authority to settle the conflict.
+   unresolved point. An author derivation carries no authority to settle the conflict. Check that no intent sentence
+   that decides between the options is missing from the anchor (§2's question; in light mode the only such check).
 
 **Briefing examples to check while drafting**, before sending to the frame checker or, in light mode, the members:
 

@@ -1,11 +1,12 @@
-Skeleton: implementer-brief 1
+Skeleton: implementer-brief 2
 
 # Implementer brief — task <id>: <goal>
 
 <!-- Copy this file into the work unit's records as the brief. Keep the line above: the brief-acceptance check reads
 it; at build signoff the brief opens with the `brief_contract` frontmatter (`---` block, mca-brief-template.md),
 and this line follows the frontmatter's closing `---`. Fill every slot; a slot that does not apply keeps its one-line `n/a` or `None.` form with the reason. What each
-slot means: skills/_protocols/mca-brief-template.md. Delete this comment. -->
+slot means: skills/_protocols/mca-brief-template.md. A slot change raises the number on line 1 (owner:
+approved-acceptance.md §The check). Delete this comment. -->
 
 MODEL: <model> (<role row of framework/models.md>)
 Size: goal: <the one user-facing goal, one sentence>; brief <bytes> bytes (`wc -c`), with the files it tells the

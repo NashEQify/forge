@@ -37,8 +37,8 @@ scope).
    from its step 3 (steps 1–2 are done) and GREET as it says. Skip the
    software steps 4–7 (`boot-software.md`); a project may explicitly require its own probes.
    This branch also governs generic boot summaries supplied by adapters.
-   **For software:** load `$FRAMEWORK_DIR/agents/buddy/operational.md` before
-   development process work. Then read and follow
+   **For software:** load `$FRAMEWORK_DIR/agents/buddy/operational.md` now, before
+   the greeting, also for a quick request. Then read and follow
    `$FRAMEWORK_DIR/agents/buddy/boot-software.md`: steps 4–7 (ROUTE, LOAD,
    RESUME, GREET).
 

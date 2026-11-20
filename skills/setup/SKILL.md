@@ -83,11 +83,11 @@ or `project.wrapper_migration` in status. Report the listed project-relative
 paths and whether each old target is reachable or missing. A reachable
 wrapper can still take precedence over the plugin skill. Offer to remove
 the listed files only. After the user expressly approves the paths, run
-`S remove-migration-wrappers --project <folder> --wrapper <path>` with one
-`--wrapper` per approved path, then run project status again. Report the
-wrapper check as clear only on `clear`. On `pending`, report the conflicts
-that remain. On `unavailable`, report that the plugin skill list could not
-be checked and the migration status remains unresolved.
+`S remove-migration-wrappers --project <folder> --wrapper <path>=<target_state>:<sha256>`
+with one `--wrapper` per approved row, its values copied from that row, then run project status again; the
+command refuses a file that changed since it was listed. Report the wrapper check as clear only on `clear`. On
+`pending`, report the conflicts that remain. On `unavailable`, report its reason (the plugin skill list or a
+wrapper location could not be checked) and that the migration status remains unresolved.
 
 Forge uninstall uses `S remove` and the host's uninstall commands. Outside
 uninstall and the approved wrapper cleanup, every file stays as it is, also one that

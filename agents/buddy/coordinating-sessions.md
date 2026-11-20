@@ -46,11 +46,10 @@ the user's next message here lifts it. Otherwise stay silent where allowed or us
 The session sends blocking questions and return decisions through the coordinator, which follows
 `skills/return_summary/SKILL.md` §Accuracy at handovers. When the user
 writes in the session itself, the session answers there. If the user answers the session's
-blocking question while open at the coordinator, the session reports the answer there and
-waits for the coordinator's release with conditions before commissioning that
-work. Without messages, report in the return and await a further brief with the
-release and conditions. An explicit later user instruction changing this
-requirement takes precedence. In the turn it forwards a blocking question, the
+blocking question while open at the coordinator, the session reports the answer to the coordinator and
+waits for its release with conditions before continuing or commissioning that
+work; a conditions preview is not the release. Without messages, report in the return and await a further
+brief with the release and conditions. Only a user instruction that names this hold lifts it. In the turn it forwards a blocking question, the
 coordinator sends the session any option conditions, conditional on user agreement.
 Answer permission prompts in the session that receives them. The host may cap messages across all
 the coordinator's sessions until the user writes here. Brief everything needed up to the return.
@@ -107,14 +106,16 @@ Brief contents for a first or further session brief. Before writing, read and fo
 - **Effort budget.** Label the coordinator's estimate (Cumulative effort).
 - **Checkout.** Name the shared checkout or the assigned worktree and branch (`agents/buddy/concurrent-writers.md`).
 - **Division of work.** Name ownership under this section and, for programme tasks, the coordinator's recorded start.
-- **Open approval boundaries.** Compare the order with both the handoff and the programme agreement. Quote every open boundary that concerns the brief's subject with its source. Complete this comparison before dispatch.
-- **Date source.** In brief and task prose, cite the user's words or the hard domain limit for each delivery date. Mark other timing as the coordinator's estimate. The coordinator handles hard domain limits in the plan and does not pass them on as development deadlines.
+- **Open approval boundaries.** Compare the order with the handoff, the programme agreement, earlier returns and this chat's user turns. Quote every open boundary that concerns the brief's subject with its source, or state that none is open; mark a constraint you set yourself as yours. Complete this before dispatch.
+- **Date source.** In brief and task prose, cite the user's words for each delivery date and mark other timing as the writer's estimate. A hard domain limit goes into the plan as a sourced fact; a brief names it as context, never as a deadline.
 - **Commit duties and session tests.** State both. When authorizing local commits, copy the exact wording from `agents/buddy/concurrent-writers.md` §Commit, push and transfer.
-- **Return and record place.** Name versioned, machine-independent paths and require keeping results there.
+- **Return and record place.** Name versioned paths and require keeping results there; host-local or scratch storage is temporary and never the only copy.
   Mark poll-only or clipping-prone routes in the brief.
   Include in the brief: “Keep the coordinator's chat for actionable reports. Label interim entries in your return
   file. End autonomous turns only on a return, blocking question or named wait under `agents/buddy/background-wait.md`.
-  On a clear boot, work in the same turn and include the greeting in its first reply. If briefed to use polling for
+  On a clear boot, work in the same turn and include the greeting in its first reply. If the owner answers here a
+  question open at the coordinator, report it to the coordinator and wait for its release before continuing (a conditions preview is not the release; without
+  messages, report in your return and await a further brief). If briefed to use polling for
   absent or clipped notices, append each wait note to the named return or record before ending the
   turn. Mark it ended before resuming work
   (owner: `agents/buddy/coordinating-sessions.md` §Buddy-to-Buddy).”
@@ -133,8 +134,8 @@ Buddy owns integration, the handoff, plan or programme agreements and other
 items, including the shared save. After compaction or resume the session rereads
 its brief and its own build record (the decision file holds its budget, design
 and dispositions) before continuing, and works from the brief's
-approved-acceptance block as written. Keep workflow review floors and return at the named versioned,
-machine-independent path. Send the host notification where available. Include the decisions list and adoption line
+approved-acceptance block as written. Keep workflow review floors and return at the named versioned
+path, never only in host-local storage. Send the host notification where available. Include the decisions list and adoption line
 (`skills/return_summary/SKILL.md`), which the coordinator checks and carries to the user. The coordinator verifies
 load-bearing claims at source before integrating and leaves the live transcript alone. Send at most one blocking
 question at a time.

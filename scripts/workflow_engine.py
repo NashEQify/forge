@@ -2523,14 +2523,33 @@ def _at_the_cap_record(reason: str) -> tuple[dict[str, str] | None, str]:
             fence = None
         else:
             body.append(line)
+    def filled(value: object) -> bool:
+        return isinstance(value, (str, int, float)) and bool(str(value).strip()) and not str(value).strip().startswith("<")
+
+    first_error = ""
+    unfilled = ""
     for block in blocks:
         try:
             parsed = yaml.safe_load(block)
-        except yaml.YAMLError:
+        except yaml.YAMLError as exc:
+            # Kept for the refusal: an unquoted compound target makes the whole block unreadable.
+            first_error = first_error or " ".join(str(exc).split())
             continue
         findings = parsed.get("remaining_findings") if isinstance(parsed, dict) else None
-        if isinstance(findings, list) and findings:
+        if not (isinstance(findings, list) and findings):
+            continue
+        # Each entry records a finding: a mapping whose id and rationale_for_carry_over are filled, not slots.
+        bad = next((n for n, entry in enumerate(findings, 1)
+                    if not (isinstance(entry, dict) and filled(entry.get("id"))
+                            and filled(entry.get("rationale_for_carry_over")))), None)
+        if bad is None:
             return {"path": written, "sha256": hashlib.sha256(data).hexdigest()}, ""
+        unfilled = unfilled or (f"remaining_findings entry {bad} in {written} has no filled id and "
+                                "rationale_for_carry_over (a mapping, nonblank, not a `<` slot)")
+    if unfilled:
+        return None, unfilled
+    if first_error:
+        return None, f"no non-empty remaining_findings in {written} (yaml error in a block: {first_error})"
     return None, f"no non-empty remaining_findings in {written}"
 
 

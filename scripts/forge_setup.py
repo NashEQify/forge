@@ -10,13 +10,19 @@ CLI: forge_setup.py [--dry-run] [--host claude-code|codex|opencode]... <command>
   status [--project DIR]                         facts as JSON, writes nothing
   project --project DIR [--off]                  the activation line in DIR/AGENTS.md (+ Claude's rules)
   every-session [--user-repo PATH] [--create-user-repo] | every-session --off
-  remove-stale-wrappers --project DIR --wrapper PATH...  remove only the selected stale project-local skill files
-  remove-migration-wrappers --project DIR --wrapper PATH...  remove only the selected wrapper migration conflicts
+  remove-migration-wrappers --project DIR --wrapper PATH=TARGET_STATE:SHA256...  remove only the approved
+                                                 wrapper migration conflicts (the command the setup skill uses)
+  remove-stale-wrappers --project DIR --wrapper PATH=TARGET_STATE:SHA256...  the same, missing targets only
   remove [--project DIR]...                      everything this script wrote
   offer-check [--project DIR]                    the one-time setup offer line (plain text, never JSON)
 Writing commands print one JSON object {command, dry_run, written, unchanged, skipped, notes}. Exit 0 on success
 (also when nothing changed), 2 on a refusal or usage error (stderr names the file and reason; nothing written:
 every target is read and checked before the first write).
+Wrapper rows (status/project `wrapper_migration.conflicts`) are {path, target, target_state, sha256}, sha256 the
+digest of the SKILL.md bytes; `--wrapper` repeats the approved row as PATH=TARGET_STATE:SHA256 (split on the last
+`=`). A removal refuses (exit 2, files kept) unless every approved file still hashes to its digest and still is that
+conflict; all are checked before the first removal. A scan that could not inspect a skill root reports
+`unavailable` with a reason naming the path, never `clear`.
 """
 
 from __future__ import annotations
@@ -37,7 +43,13 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 
 try:
-    from .stale_skill_wrappers import missing_wrapper_paths, remove_skill_wrapper, stale_skill_wrappers, wrapper_migration
+    from .stale_skill_wrappers import (
+        exported_skills,
+        missing_wrapper_paths,
+        parse_approval,
+        remove_skill_wrappers,
+        wrapper_migration,
+    )
     from .user_scope import (
         _LINE_SPACE,
         ACTIVATION_FILE,
@@ -56,7 +68,13 @@ try:
         unusable_setting,
     )
 except ImportError:
-    from stale_skill_wrappers import missing_wrapper_paths, remove_skill_wrapper, stale_skill_wrappers, wrapper_migration
+    from stale_skill_wrappers import (
+        exported_skills,
+        missing_wrapper_paths,
+        parse_approval,
+        remove_skill_wrappers,
+        wrapper_migration,
+    )
     from user_scope import (
         _LINE_SPACE,
         ACTIVATION_FILE,
@@ -726,7 +744,8 @@ def cmd_project(args, plan: Plan, record: dict) -> None:
     plan.stale_skill_wrappers = missing_wrapper_paths(conflicts)
     if conflicts:
         plan.notes.append("Offer to remove the listed wrapper migration conflicts. "
-                          "Use remove-migration-wrappers only after explicit approval of the exact paths.")
+                          "Use remove-migration-wrappers only after explicit approval of the exact rows "
+                          "(--wrapper PATH=TARGET_STATE:SHA256).")
     added = add_line(plan, agents)
     if added:
         record["projects"] = _without(record["projects"], agents) + [added]
@@ -894,28 +913,28 @@ def cmd_status(args) -> dict:
 
 
 def cmd_remove_wrappers(args, plan: Plan) -> int:
-    done = []
+    """Both wrapper removal commands: one routine (stale_skill_wrappers.remove_skill_wrappers)."""
+    done: list[str] = []
     try:
         if len(args.project) != 1:
             raise Refusal(f"{args.command} takes one --project")
         project = project_dir_arg(args.project[0])
+        approvals: dict[str, tuple[str, str, str]] = {}
+        for value in args.wrapper:
+            approval = parse_approval(value)
+            if approvals.setdefault(approval[0], approval) != approval:
+                raise Refusal(f"{approval[0]}: approved twice with different rows")
         migration = args.command == "remove-migration-wrappers"
+        exports: frozenset[str] = frozenset()
         if migration:
-            conflicts = wrapper_migration(project)["conflicts"]
-        else:
-            conflicts = [dict(row, target_state="missing") for row in stale_skill_wrappers(project)]
-        candidates = {entry["path"]: entry for entry in conflicts}
-        selected = list(dict.fromkeys(args.wrapper))
-        for path in selected:
-            if path not in candidates:
-                kind = "migration" if migration else "stale"
-                raise Refusal(f"{path}: not a detected {kind} wrapper in {project}")
-        for path in selected:
-            if not plan.dry_run:
-                remove_skill_wrapper(project, candidates[path])
-                done.append(path)
-            description = "migration conflict wrapper removed" if migration else "stale skill wrapper removed"
-            plan.written.append({"path": str(project / path), "what": description})
+            try:
+                exports = exported_skills()
+            except (OSError, ValueError):
+                pass  # without the plugin list only missing-target wrappers are conflicts
+        remove_skill_wrappers(project, list(approvals.values()), exports,
+                              ("missing", "reachable") if migration else ("missing",), plan.dry_run, done)
+        description = "migration conflict wrapper removed" if migration else "stale skill wrapper removed"
+        plan.written.extend({"path": str(project / path), "what": description} for path in approvals)
     except (OSError, Refusal, ValueError) as exc:
         print(f"forge setup: {exc}; already removed: {', '.join(done) or 'nothing'}", file=sys.stderr)
         return 2

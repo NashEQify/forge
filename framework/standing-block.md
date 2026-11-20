@@ -1,6 +1,6 @@
 # Standing block
 
-The standing rules, delivered at session start and after compaction. On Claude Code a start handler of its own
+The standing rules, delivered at session start and after compaction (on Codex, reread from this file after compaction). On Claude Code a start handler of its own
 prints the lines between the two markers (`scripts/user_scope.py --standing-block`); on Codex the boot entry ends with
 them. Each sentence is worded from its owner and says no more and no less; change the owner
 first, then the sentence. The handler refuses to print a block over 7,600 characters or 190 lines.

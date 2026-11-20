@@ -29,6 +29,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 try:
@@ -39,9 +40,9 @@ except ImportError:
 
 
 try:
-    from .stale_skill_wrappers import stale_skill_wrappers
+    from .stale_skill_wrappers import ScanIncomplete, stale_skill_wrappers
 except ImportError:
-    from stale_skill_wrappers import stale_skill_wrappers
+    from stale_skill_wrappers import ScanIncomplete, stale_skill_wrappers
 
 
 _FRAMEWORK_ROOT = Path(__file__).resolve().parent.parent
@@ -56,7 +57,7 @@ if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
 from _plan_engine.core import ValidationIssue  # noqa: E402
-from user_scope import ENTRY_UNITS  # noqa: E402
+from user_scope import ENTRY_UNITS, STANDING_BLOCK_FILE, standing_block  # noqa: E402
 
 
 def _read_skill_frontmatter(skill_md: Path) -> dict | None:
@@ -586,9 +587,19 @@ def instruction_units(root: Path | None = None) -> list[str]:
     return sorted(found - lookups)
 
 
+def standing_block_violations(root: Path, shown: str = STANDING_BLOCK_FILE) -> list[str]:
+    """The refusal of user_scope.standing_block(root) as one violation line, else none. `shown` names the file in
+    the line in place of its path under `root` (a staged copy lives in a temporary directory)."""
+    _, reason = standing_block(root)
+    if reason is None:
+        return []
+    reason = reason.replace(str(Path(root) / STANDING_BLOCK_FILE), shown)
+    return [f"{STANDING_BLOCK_FILE}: standing block not delivered: {reason}"]
+
+
 def check_instruction_units(root: Path | None = None) -> tuple[int, list[str]]:
     """Every enumerated unit is at most INSTRUCTION_UNIT_BUDGET bytes, every listed lookup exists and is at most
-    LOOKUP_READ_CEILING bytes, and every required unit exists."""
+    LOOKUP_READ_CEILING bytes, every required unit exists, and the standing block is one the boot handler delivers."""
     root = root or _FRAMEWORK_ROOT
     units = instruction_units(root)
     errors = [f"{rel}: missing" for rel in required_units() if not (root / rel).is_file()]
@@ -604,6 +615,7 @@ def check_instruction_units(root: Path | None = None) -> tuple[int, list[str]]:
         size = path.stat().st_size
         if size > LOOKUP_READ_CEILING:
             errors.append(f"{rel}: {size} bytes > {LOOKUP_READ_CEILING} (lookup)")
+    errors.extend(standing_block_violations(root))
     if errors:
         return 1, errors
     return 0, [
@@ -622,6 +634,12 @@ def _glob_regex(pattern: str) -> re.Pattern[str]:
 _UNIT_GLOB_RES = tuple(_glob_regex(pattern) for pattern in INSTRUCTION_UNIT_GLOBS)
 
 
+def _enumerated(rel: str) -> bool:
+    """A repository-relative path that the size guard measures: a listed lookup or an enumerated unit."""
+    return (rel in {r for r, _ in LOOKUP_REFERENCES} or rel in INSTRUCTION_UNIT_FILES
+            or any(regex.match(rel) for regex in _UNIT_GLOB_RES))
+
+
 def unit_size_violations(paths, size_of) -> list[str]:
     """Violations among repository-relative `paths`: a listed lookup over LOOKUP_READ_CEILING, any other enumerated
     unit over INSTRUCTION_UNIT_BUDGET. `size_of(rel)` gives a path's size in bytes; other paths are not measured."""
@@ -630,7 +648,7 @@ def unit_size_violations(paths, size_of) -> list[str]:
     for rel in paths:
         if rel in lookups:
             limit, kind = LOOKUP_READ_CEILING, "lookup"
-        elif rel in INSTRUCTION_UNIT_FILES or any(regex.match(rel) for regex in _UNIT_GLOB_RES):
+        elif _enumerated(rel):
             limit, kind = INSTRUCTION_UNIT_BUDGET, "unit"
         else:
             continue
@@ -641,14 +659,31 @@ def unit_size_violations(paths, size_of) -> list[str]:
 
 
 def check_staged_instruction_units() -> tuple[int, list[str]]:
-    """The staged blob of every staged added or modified enumerated unit is within its limit (run from the
-    repository's top level; the pre-commit hook's INSTRUCTION-UNIT-SIZE check)."""
+    """The staged blob of every staged added, modified or type-changed enumerated unit is within its limit and no
+    such unit is a symlink; a staged framework/standing-block.md (deleted included) yields a block that
+    user_scope.standing_block delivers. Run from the repository's top level; the pre-commit hook's
+    INSTRUCTION-UNIT-SIZE check."""
     def git(*args: str) -> bytes:
-        return subprocess.run(["git", *args], capture_output=True, check=True).stdout
+        return subprocess.run(["git", "--no-replace-objects", *args], capture_output=True, check=True).stdout
 
-    raw = git("diff", "--cached", "--name-only", "--no-renames", "--diff-filter=AM", "-z")
-    paths = [name for name in raw.decode("utf-8", "surrogateescape").split("\0") if name]
-    errors = unit_size_violations(paths, lambda rel: int(git("cat-file", "-s", f":{rel}")))
+    # --raw -z: ":<old mode> <new mode> <old sha> <new sha> <status>\0<path>\0" per entry.
+    raw = git("diff", "--cached", "--raw", "--no-renames", "--diff-filter=AMT", "-z")
+    fields = raw.decode("utf-8", "surrogateescape").split("\0")
+    entries = [(fields[i].split()[1], fields[i + 1]) for i in range(0, len(fields) - 1, 2) if fields[i]]
+    paths = [rel for _, rel in entries]
+    errors = [f"{rel}: an instruction unit is a symlink" for mode, rel in entries
+              if mode == "120000" and _enumerated(rel)]
+    links = {rel for mode, rel in entries if mode == "120000"}
+    errors += unit_size_violations([rel for rel in paths if rel not in links],
+                                   lambda rel: int(git("cat-file", "-s", f":{rel}")))
+    if git("diff", "--cached", "--name-only", "--no-renames", "-z", "--", STANDING_BLOCK_FILE):
+        with tempfile.TemporaryDirectory() as tmp:
+            staged = Path(tmp) / STANDING_BLOCK_FILE
+            staged.parent.mkdir(parents=True)
+            listed = git("ls-files", "-s", "-z", "--", STANDING_BLOCK_FILE).decode("utf-8", "surrogateescape")
+            if listed.startswith("100"):  # a regular file in the index; deleted or a symlink: nothing written
+                staged.write_bytes(git("cat-file", "blob", f":{STANDING_BLOCK_FILE}"))
+            errors += standing_block_violations(Path(tmp), f":{STANDING_BLOCK_FILE} (staged)")
     if errors:
         return 1, errors
     return 0, [f"OK: instruction-units --staged — {len(paths)} staged paths, none over its limit"]
@@ -1238,10 +1273,13 @@ def _main(argv: list[str] | None = None) -> int:
     elif args.check == "spine":
         exit_code, warnings = check_spine(Path(args.spine))
     elif args.check == "dead-references":
-        warnings = [
-            f"ERROR: {entry['path']}: dead reference to {entry['target']}"
-            for entry in stale_skill_wrappers(Path.cwd())
-        ]
+        try:
+            warnings = [
+                f"ERROR: {entry['path']}: dead reference to {entry['target']}"
+                for entry in stale_skill_wrappers(Path.cwd())
+            ]
+        except ScanIncomplete as exc:  # an uninspected skill root is not a pass
+            warnings = [f"ERROR: {problem}" for problem in exc.problems]
         exit_code = int(bool(warnings))
     else:
         print(f"ERROR: unknown check {args.check!r}", file=sys.stderr)

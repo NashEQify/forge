@@ -124,13 +124,16 @@ rule it changes, four lines:
 Read-path-reader: <who acts on the changed sentence>
 Read-path-moment: <the decision at which it acts>
 Read-path-text: <what that reader has in front of it then, and how it got there>
-Read-path-carrier: <the letter of §Which text the actor has at the moment, or on-demand>
+Read-path-carrier: <(a)..(g) of §Which text the actor has at the moment, or on-demand, then the carrier>
 ```
 
 Write them by walking the reader's path from its session start or dispatch to that moment, text by text. When the
 changed sentence is not in the text the reader has then, the record says `on-demand` or the change moves the sentence
-to a carrier. The commit-message hook refuses such a commit without the four lines (a merge commit excepted); it checks
-that they are there, not that they are true. The review of such a change checks the record against the text the named
+to a carrier. Each value has three or more non-space characters and does not start with `<`; a line that repeats a
+key opens the next record. The commit-message hook refuses such a commit without complete records (a merge commit
+excepted); it checks their form, not that they are true. It reads the message down to git's scissors line, and it does
+not see an `--amend` that only rewords, rule text written while resolving a merge, or a revert or cherry-pick (no
+commit-message hook runs); CI's range replay checks the first and the third. The review of such a change checks the record against the text the named
 reader has at the named moment, and its dispatch says so. Purpose: a rule its actor does not have at the decision does
 nothing, and the author is the one who can see that before the commit.
 

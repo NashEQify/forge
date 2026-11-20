@@ -154,7 +154,7 @@ Required rules:
 3. Workflow steps are always checkboxes, never prose.
 4. Last `in_progress` step = entry point for the next session (NDI principle).
 5. `## Blockers` only when a blocker currently exists.
-6. In task prose, cite the user's words or the hard domain limit for each delivery date. Label other timing as the coordinator's estimate. Handle hard domain limits in the plan without assigning them to development as deadlines, so estimates and domain facts do not gain the authority of a user deadline. (owner: `agents/buddy/coordinating-sessions.md` §Buddy-to-Buddy)
+6. In task prose, cite the user's words for each delivery date and label other timing as the writer's estimate. A hard domain limit goes into the plan as a sourced fact, never as a development deadline, so estimates and domain facts do not gain the authority of a user deadline. (owner: `agents/buddy/coordinating-sessions.md` §Buddy-to-Buddy)
 
 ## Workflow templates
 

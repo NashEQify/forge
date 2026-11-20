@@ -37,12 +37,34 @@ set -euo pipefail
 #                                     indexed candidate (WARN).
 #   6. INSTRUCTION-UNIT-SIZE (BLOCK) — pre-commit / pre-merge-commit: each
 #                                     staged instruction unit's staged blob is
-#                                     within its byte cap (consistency_check.py
-#                                     --check instruction-units --staged).
+#                                     within its byte cap, a staged unit is no
+#                                     symlink, and a staged
+#                                     framework/standing-block.md yields a
+#                                     block within the hook budget
+#                                     (consistency_check.py --check
+#                                     instruction-units --staged). A commit
+#                                     that removes framework/invariants.md
+#                                     from the index while HEAD holds it
+#                                     blocks (checks 6 and 7 would stop).
 #   7. READ-PATH-RECORD     (BLOCK) — commit-msg: a change under the
 #                                     instruction roots carries read-path
 #                                     records in its message, each with the
-#                                     four Read-path-* lines.
+#                                     four Read-path-* lines, above a
+#                                     `# --- >8 ---` scissors line (`#` comment
+#                                     character only). Known
+#                                     limits: `--amend` diffs against the
+#                                     commit being replaced, so it sees only
+#                                     the paths the amend stages (a reword
+#                                     can drop the record); range mode
+#                                     replays against the real parent and
+#                                     closes it. A merge commit is not
+#                                     checked: rule text written during a
+#                                     merge itself (a conflict resolution, a
+#                                     file added before the merge commit) is
+#                                     not checked, locally or in range mode.
+#                                     `git revert` and `cherry-pick` run no
+#                                     commit-msg hook; range mode checks those
+#                                     commits.
 #   8. ROUTE-TRAILER        (BLOCK) — commit-msg: a staged path (either side
 #                                     of a rename) under an entry of
 #                                     HEAD:.forge-product-paths needs a
@@ -79,9 +101,10 @@ set -euo pipefail
 #                                     `git revert` and `cherry-pick` run no
 #                                     commit-msg hook; range mode checks those
 #                                     commits.
-# Checks 6 and 7 run only in a Forge framework checkout (top level holds
-# framework/invariants.md and scripts/consistency_check.py); in any other
-# repository they do nothing and print nothing. Check 8 runs in any
+# Checks 6 and 7 run only in a Forge framework checkout (the index, else
+# HEAD, holds framework/invariants.md and scripts/consistency_check.py; the
+# working tree is not read); in any other repository they do nothing and
+# print nothing. Check 8 runs in any
 # repository whose HEAD holds .forge-product-paths.
 #
 # Range mode (CI): pre-commit.sh --range [--portable]
@@ -392,9 +415,21 @@ PRE_MERGE_HOOK="$(git rev-parse --git-path hooks/pre-merge-commit)"
 
 BLOCK=0
 WARNINGS=()
+# The Forge-checkout predicate reads the index (HEAD: fallback), not the working
+# tree, so a sparse or moved working copy keeps checks 6 and 7 on. A commit
+# that drops the marker from the index while HEAD holds it is refused in
+# pre-commit mode (FORGE_MARKER_REMOVED), so it cannot switch both checks off.
 FORGE_CHECKOUT=0
-if [ -f framework/invariants.md ] && [ -f scripts/consistency_check.py ]; then
+FORGE_MARKER_REMOVED=0
+# Index and HEAD are read by path listing (ls-files, ls-tree), not cat-file:
+# the hook's per-blob reads name object ids only.
+forge_indexed() { [ -n "$(git --no-replace-objects ls-files --cached -- "$1" 2>/dev/null)" ]; }
+forge_marker() {
+  forge_indexed "$1" || [ -n "$(git --no-replace-objects ls-tree HEAD -- "$1" 2>/dev/null)" ]
+}
+if forge_marker framework/invariants.md && forge_marker scripts/consistency_check.py; then
   FORGE_CHECKOUT=1
+  if ! forge_indexed framework/invariants.md; then FORGE_MARKER_REMOVED=1; fi
 fi
 # Check 7's instruction roots (the one list).
 READ_PATH_ROOTS='^(agents|framework|skills|workflows)/|^orchestrators/[^/]+/rules/|^(CLAUDE|AGENTS)\.md$'
@@ -496,10 +531,17 @@ if [ "$HOOK_MODE" = "commit-msg" ]; then
   # where a key line repeats a key the record already holds; that line opens
   # the next record. Other lines neither open nor end a record. Each record
   # holds all four keys, each with a valid value: 3+ non-space characters, not
-  # starting with `<`; the carrier starts with (a)..(g), a..g then
-  # space/comma/colon/end, or on-demand. Each bad record is named in the
-  # refusal. Form only: whether the record is true is a reviewer's question.
+  # starting with `<`; the carrier starts with (a)..(g), or a..g or on-demand
+  # then space, comma or colon (on-demand also alone). Each bad record is
+  # named in the refusal. Form only: whether the record is true is a
+  # reviewer's question. Outside range mode the message is read down to git's
+  # scissors line (`git commit -v`), below which git strips the text.
   # A merge commit (MERGE_HEAD) is exempt: its commits passed their own check.
+  # Known limits (header, Check 7): the scissors line is recognised with the
+  # `#` comment character only; `--amend` sees only the paths the amend
+  # stages; rule text written while resolving a merge is not checked, locally
+  # or in range mode; revert and cherry-pick run no commit-msg hook (range
+  # mode checks them).
   if [ "$FORGE_CHECKOUT" -eq 1 ] && [ "$PORTABLE" -eq 0 ] && [ -n "${COMMIT_MSG_FILE:-}" ] \
      && [ ! -e "$(git rev-parse --git-path MERGE_HEAD)" ]; then
     RECORD_LIST="$(mktemp)"
@@ -525,6 +567,7 @@ if [ "$HOOK_MODE" = "commit-msg" ]; then
       }
       while IFS= read -r line || [ -n "$line" ]; do
         line="${line%$'\r'}"
+        if [ "$RANGE_RUN" -ne 1 ] && [[ "$line" =~ ^#\ -+\ \>8\ -+$ ]]; then break; fi
         lkey=""
         for key in "${READ_PATH_KEYS[@]}"; do
           if [ "${line#"$key:"}" != "$line" ]; then lkey="$key"; break; fi
@@ -542,7 +585,7 @@ if [ "$HOOK_MODE" = "commit-msg" ]; then
         if [ "${#compact}" -lt 3 ] || [ "${value:0:1}" = "<" ]; then
           rec_invalid+="$lkey "
         elif [ "$lkey" = Read-path-carrier ] \
-             && ! [[ "$value" =~ ^(\([a-g]\)|[a-g]([\ ,:]|$)|on-demand) ]]; then
+             && ! [[ "$value" =~ ^(\([a-g]\)|[a-g]([\ ,:]|$)|on-demand([\ ,:]|$)) ]]; then
           rec_invalid+="$lkey "
         fi
       done < "$COMMIT_MSG_FILE"
@@ -581,12 +624,12 @@ if [ "$HOOK_MODE" = "commit-msg" ]; then
   # Route: line; every Route: line must match ROUTE_RE. Pure bash: runs in
   # any repository and under portable. Silent without a declaration at HEAD.
   if [ -n "${COMMIT_MSG_FILE:-}" ] && [ ! -e "$(git rev-parse --git-path MERGE_HEAD)" ] \
-     && git cat-file -e HEAD:.forge-product-paths 2>/dev/null; then
+     && git --no-replace-objects cat-file -e HEAD:.forge-product-paths 2>/dev/null; then
     ROUTE_RE='^Route:[[:space:]]+(direct|brief|engine)([[:space:]]+[^,]*)?,[[:space:]]*tests:[[:space:]]*(0|[1-9][0-9]*)[[:space:]]*$'
     ROUTE_DECL=""
     ROUTE_LIST="$(mktemp)"
-    ROUTE_TYPE=$(git cat-file -t HEAD:.forge-product-paths 2>/dev/null || true)
-    if [ "$ROUTE_TYPE" != blob ] || ! ROUTE_DECL=$(git cat-file blob HEAD:.forge-product-paths 2>/dev/null); then
+    ROUTE_TYPE=$(git --no-replace-objects cat-file -t HEAD:.forge-product-paths 2>/dev/null || true)
+    if [ "$ROUTE_TYPE" != blob ] || ! ROUTE_DECL=$(git --no-replace-objects cat-file blob HEAD:.forge-product-paths 2>/dev/null); then
       echo "commit-msg: ROUTE-TRAILER BLOCK — check could not run: HEAD:.forge-product-paths is not a readable file."
       BLOCK=1
     elif ! git diff --cached --name-only --no-renames -z > "$ROUTE_LIST"; then
@@ -601,7 +644,7 @@ if [ "$HOOK_MODE" = "commit-msg" ]; then
         e="${e%"${e##*[![:space:]]}"}"
         [ -n "$e" ] && [ "${e:0:1}" != "#" ] || continue
         if [ "${e:0:1}" = / ] || [ "${e:0:2}" = ./ ] || [[ "$e" == *[*?[]* || "$e" == *[[:space:]]#* ]] \
-           || { [ "${e: -1}" != / ] && [ "$(git cat-file -t "HEAD:$e" 2>/dev/null)" = tree ]; }; then
+           || { [ "${e: -1}" != / ] && [ "$(git --no-replace-objects cat-file -t "HEAD:$e" 2>/dev/null)" = tree ]; }; then
           echo "commit-msg: ROUTE-TRAILER BLOCK — check could not run: .forge-product-paths entry '$e' is not a path or a dir/ prefix"
           BLOCK=1; ROUTE_INVALID=1
         fi
@@ -770,10 +813,19 @@ fi
 # ---------- Check 6: INSTRUCTION-UNIT-SIZE (BLOCK) ----------
 #
 # Forge checkout only. The trusted consistency_check.py measures the staged
-# blob (what is committed, not the working tree) of each staged added or
-# modified instruction unit against its byte cap. A check that cannot run
-# (python3 missing, import or git read failure) BLOCKs with that reason.
+# blob (what is committed, not the working tree) of each staged added,
+# modified or type-changed instruction unit against its byte cap, refuses a
+# staged unit that is a symlink (index mode 120000), and, when
+# framework/standing-block.md is staged, refuses a block that
+# user_scope.standing_block would not deliver. A check that cannot run
+# (python3 missing, import or git read failure) BLOCKs with that reason. A
+# commit that removes framework/invariants.md from the index while HEAD holds
+# it BLOCKs here, before the checks would stop for every later commit.
 
+if [ "$FORGE_CHECKOUT" -eq 1 ] && [ "$PORTABLE" -eq 0 ] && [ "$FORGE_MARKER_REMOVED" -eq 1 ]; then
+  echo "pre-commit: INSTRUCTION-UNIT-SIZE BLOCK — Forge marker removed; checks 6 and 7 would stop: framework/invariants.md is at HEAD but not in the index."
+  BLOCK=1
+fi
 if [ "$FORGE_CHECKOUT" -eq 1 ] && [ "$PORTABLE" -eq 0 ]; then
   if ! command -v python3 >/dev/null 2>&1; then
     echo "pre-commit: INSTRUCTION-UNIT-SIZE BLOCK — check could not run: python3 not found"
@@ -789,6 +841,10 @@ if [ "$FORGE_CHECKOUT" -eq 1 ] && [ "$PORTABLE" -eq 0 ]; then
       echo "pre-commit: INSTRUCTION-UNIT-SIZE BLOCK — staged instruction text over its byte cap:"
       indent_head 50 "$SIZE_OUT"
       echo "  Split at a step boundary and give the moved part a carrier at that step: skills/_protocols/instruction-form.md §Writing rule."
+      BLOCK=1
+    elif [ "$SIZE_RET" -eq 1 ] && grep -qE ': (an instruction unit is a symlink|standing block not delivered: )' <<< "$SIZE_OUT"; then
+      echo "pre-commit: INSTRUCTION-UNIT-SIZE BLOCK — staged instruction text refused:"
+      indent_head 50 "$SIZE_OUT"
       BLOCK=1
     else
       # Exit 1 without a violation line is an uncaught error (import failure), not a cap.

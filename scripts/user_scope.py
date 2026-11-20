@@ -21,8 +21,10 @@ SessionStart payload from stdin and prints nothing unless Buddy is active
 activation check), followed by the standing block.
 --standing-block prints the standing block (framework/standing-block.md, the
 lines between its markers); with --plugin, as the plugin's second start
-handler's JSON and only when Buddy is active. A block that is missing,
-malformed or over the hook budget is not printed (a reason on stderr, exit 0).
+handler's JSON and only when Buddy is active. A block that is missing, empty,
+malformed or over the hook budget is not printed (a reason on stderr, exit 0);
+with --plugin and in --boot-entry the pointer line (standing_block_pointer)
+takes its place.
 Exit 0 whenever a scope (possibly empty) was produced; exit 2 on internal error.
 """
 
@@ -125,7 +127,7 @@ WARNING_PREFIX = "User scope warning: "
 # them equal.
 # The whole-boot line (agents/buddy/boot.md, before §Boot sequence): every boot
 # entry carries it, person-neutral blocks included; inside the scope rule it opens the rule.
-WHOLE_BOOT = "The files listed here only start the boot, and no request shortens it, a quick lookup included: run boot.md's sequence to its end before any read for the request."
+WHOLE_BOOT = "The files listed here only start the boot, and no request shortens it, a quick lookup included: run boot.md's sequence to its end before any read for the request or the first answer."
 _SCOPE_RULE_BODY = (
     "Instruction source: the framework root is this session's instruction source. "
     "Reading its files and the files this entry names loads instructions; it is not "
@@ -149,6 +151,12 @@ _REREAD_QUALIFIERS = {
     "software": "for software development",
     "on-demand": "for on-demand use",
     "codex": "on Codex",
+}
+# Files the reread line names beyond ENTRY_UNITS, per qualifier: on Codex no handler re-prints the standing block
+# after compaction, so the line names its source. The Claude Code hook's entries leave it out (block_reread=False):
+# there the block's own start handler runs on compact, and the hook budget has no room for the clause.
+_REREAD_EXTRA = {
+    "codex": ["framework/standing-block.md (the lines between its markers)"],
 }
 _REREAD_PROJECT = "the project rules, intent.md and the session handoff"
 _REREAD_STEP = (
@@ -185,8 +193,10 @@ def round_one_line(framework_root: Path | str) -> str:
     )
 
 
-def reread_line(framework_root: Path | str) -> str:
+def reread_line(framework_root: Path | str, block_reread: bool = True) -> str:
     """The post-compaction reread line, naming the framework root once.
+
+    block_reread=False (the Claude Code hook's entries) leaves out the Codex reread of the standing block.
 
     framework_root is named as given (callers pass an absolute root, or a
     placeholder such as <FRAMEWORK_ROOT> for portable role templates).
@@ -197,6 +207,8 @@ def reread_line(framework_root: Path | str) -> str:
     groups: dict[str | None, list[str]] = {}
     for unit in ENTRY_UNITS:
         groups.setdefault(unit.qualifier, []).append(unit.path)
+    for qualifier, extra in _REREAD_EXTRA.items() if block_reread else ():
+        groups.setdefault(qualifier, []).extend(extra)
     parts = [", ".join(groups.pop(None, []))]
     parts += [f"{_REREAD_QUALIFIERS[q]} {_and_join(files)}" for q, files in groups.items() if q is not None]
     maintenance = "/".join(MAINTENANCE_UNIT)
@@ -601,7 +613,7 @@ def is_snapshot(framework_root: Path) -> bool:
     return not os.path.exists(Path(os.path.abspath(framework_root)) / ".git")
 
 
-def _unresolved_text(scope: UserScope, framework: Path, round_one: bool = False) -> str:
+def _unresolved_text(scope: UserScope, framework: Path, round_one: bool = False, block_reread: bool = True) -> str:
     """PyYAML missing: the setting exists but was not read — state no false facts."""
     buddy = framework / "agents" / "buddy"
     config = scope.config_path or "the machine setting"
@@ -616,7 +628,7 @@ def _unresolved_text(scope: UserScope, framework: Path, round_one: bool = False)
         "framework/user-scope.md",
     ]
     lines += [WARNING_PREFIX + w for w in scope.warnings if w != PYYAML_MISSING]
-    lines.append(reread_line(framework))
+    lines.append(reread_line(framework, block_reread))
     if round_one:
         lines.append(round_one_line(framework))
     return "\n".join(lines) + "\n"
@@ -625,7 +637,7 @@ def _unresolved_text(scope: UserScope, framework: Path, round_one: bool = False)
 def boot_text(
     scope: UserScope, framework_root: Path, profile: str | None = None, *,
     install_time: bool = False, neutral: bool = False, include: Inclusion | None = None,
-    round_one: bool = False,
+    round_one: bool = False, block_reread: bool = True,
 ) -> str:
     """Person-specific boot lines.
 
@@ -640,10 +652,11 @@ def boot_text(
     agents/buddy/operational.md. Install-time text includes nothing, whatever
     the policy: a baked copy would go stale on the next light-path edit.
     round_one=True adds the Round-1 line after the reread line (carriers without a hook tail).
+    block_reread=False: the reread line without the Codex standing-block reread (reread_line).
     """
     framework = Path(os.path.abspath(framework_root))
     if profile is None and not neutral and PYYAML_MISSING in scope.warnings:
-        return _unresolved_text(scope, framework, round_one)
+        return _unresolved_text(scope, framework, round_one, block_reread)
     profile = profile or scope.profile
     if profile not in PROFILES and profile != PLUGIN_RENDER:
         raise ValueError(f"unknown profile: {profile}")
@@ -664,7 +677,7 @@ def boot_text(
     lines += [f"- {framework / unit.path}" for unit in ENTRY_UNITS if unit.read_first]
     if neutral:
         lines.append(WHOLE_BOOT)
-        lines.append(reread_line(framework))
+        lines.append(reread_line(framework, block_reread))
         if round_one:
             lines.append(round_one_line(framework))
         return "\n".join(lines) + "\n"
@@ -687,7 +700,7 @@ def boot_text(
         if install_time and warning.startswith(_MISSING_BOOT_FILE):
             continue
         lines.append(WARNING_PREFIX + warning)
-    lines.append(reread_line(framework))
+    lines.append(reread_line(framework, block_reread))
     if round_one:
         lines.append(round_one_line(framework))
     if include is None or install_time:
@@ -736,7 +749,8 @@ def fits_hook(context: str) -> bool:
 def hook_json(scope: UserScope, framework_root: Path, profile: str | None = None) -> str:
     framework = os.path.abspath(framework_root)
     policy = Inclusion(entry_fits=lambda entry: fits_hook(hook_context(entry, framework)))
-    context = hook_context(boot_text(scope, framework_root, profile, include=policy), framework)
+    entry = boot_text(scope, framework_root, profile, include=policy, block_reread=False)
+    context = hook_context(entry, framework)
     return json.dumps(
         {
             "hookSpecificOutput": {
@@ -780,6 +794,8 @@ def standing_block(framework_root: Path | str) -> tuple[str | None, str | None]:
         return None, f"{path} has no end marker {STANDING_BLOCK_END} after its start marker"
     end = marks.index(STANDING_BLOCK_END, start + 1)
     block = "\n".join(lines[start + 1:end]).rstrip("\n")
+    if not block.strip():
+        return None, f"{path} has no text between its markers"
     chars, count = _hook_measure(block)
     if chars > HOOK_CONTEXT_MAX_CHARS or count > HOOK_CONTEXT_MAX_LINES:
         return None, (
@@ -787,6 +803,25 @@ def standing_block(framework_root: Path | str) -> tuple[str | None, str | None]:
             f"{HOOK_CONTEXT_MAX_CHARS} / {HOOK_CONTEXT_MAX_LINES}"
         )
     return block, None
+
+
+def standing_block_pointer(framework_root: Path | str, reason: str) -> str:
+    """The line a carrier delivers in place of a refused block: why, and where the rules are read instead.
+    The hook's static fallback restates it with the reason "resolver failed"; tests/test_boot_injectors.py keeps
+    the two equal."""
+    return (
+        f"Standing block not delivered ({reason}): read "
+        f"{os.path.abspath(framework_root)}/{STANDING_BLOCK_FILE} between its markers."
+    )
+
+
+def standing_block_text(framework_root: Path | str) -> str:
+    """The standing block, or the pointer line naming why it is refused (the reason also goes to stderr)."""
+    block, reason = standing_block(framework_root)
+    if block is not None:
+        return block
+    _not_delivered(reason or "unknown")
+    return standing_block_pointer(framework_root, reason or "unknown")
 
 
 def _not_delivered(reason: str) -> None:
@@ -802,24 +837,41 @@ def _plugin_active(scope: UserScope, data: Mapping | None, payload: object) -> t
 
 
 def _standing_block_mode(framework_root: Path, plugin: bool) -> int:
-    """--standing-block: the block as text, or with --plugin as the second start handler's JSON. Always exit 0."""
+    """--standing-block: the block as text, or with --plugin as the second start handler's JSON. Always exit 0.
+
+    With --plugin, where Buddy is active, a refused block (or an internal error after the activation test) is
+    delivered as the pointer line instead, so the session sees that the rules are missing and where they are."""
+    active = False
+
+    def emit(context: str) -> None:
+        sys.stdout.write(json.dumps(
+            {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": context}},
+            ensure_ascii=False,
+        ) + "\n")
+
     try:
         if plugin:
             scope, data = _resolve_with_setting(framework_root, os.environ)
             if not _plugin_active(scope, data, _stdin_payload())[0]:
                 return 0  # not active: the handler stays silent
+            active = True
         block, reason = standing_block(framework_root)
         if block is None:
             _not_delivered(reason or "unknown")
+            if plugin:
+                emit(standing_block_pointer(framework_root, reason or "unknown"))
             return 0
         if plugin:
-            block = json.dumps(
-                {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": block}},
-                ensure_ascii=False,
-            )
-        sys.stdout.write(block + "\n")
+            emit(block)
+        else:
+            sys.stdout.write(block + "\n")
     except Exception as exc:  # the hook path never exits non-zero
         _not_delivered(f"internal error: {exc}")
+        if active:
+            try:
+                emit(standing_block_pointer(framework_root, "internal error"))
+            except Exception:
+                pass
     return 0
 
 
@@ -867,12 +919,9 @@ def main(argv: list[str] | None = None) -> int:
             scope, data = _resolve_with_setting(args.framework_root, os.environ)
             if args.boot_entry:
                 out = plugin_boot_entry(scope, args.framework_root).rstrip("\n")
-                # On Codex the boot entry carries the standing block; on Claude Code its own handler does.
-                block, reason = standing_block(args.framework_root)
-                if block is None:
-                    _not_delivered(reason or "unknown")
-                else:
-                    out += "\n\n" + block
+                # On Codex the boot entry carries the standing block (or the pointer line naming why it is
+                # refused); on Claude Code its own handler does.
+                out += "\n\n" + standing_block_text(args.framework_root)
             else:
                 active, unread_switch = _plugin_active(scope, data, _stdin_payload())
                 if not active:

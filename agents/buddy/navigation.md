@@ -45,7 +45,9 @@ a trigger.
 | Choosing or waiving a review; about to ask the user | `multi-perspective.md` | the review step texts; standing block "Decision to the user" |
 | Scoping outcomes, comparing structures, adding machinery | `architecture-comprehension.md` | none (on demand) |
 | Adopting a return | `skills/return_summary/SKILL.md` | the return's adoption lines |
-| Ending a turn with own background work; a wait report | `background-wait.md` | standing block "Turn end with own background work" |
+| Ending a turn with own background work | `background-wait.md` | standing block "Turn end with own background work" |
+| Receiving a wait report | `background-wait.md` §Receiving a wait report | from a session: `coordinating-sessions.md` §One reading place; from an agent: none (on demand), the dispatch's "No return while its own work runs" prevents it |
+| Proposing a simpler mechanism; a pattern-replacing MCA dispatch | `multi-perspective.md` | none (on demand) |
 | Writing or changing a rule | `skills/_protocols/instruction-form.md` | the commit checks' refusal text |
 | A required skill the host cannot invoke | `skill-fallback.md` | none (on demand) |
 

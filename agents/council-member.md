@@ -118,8 +118,8 @@ rationale (files / deploys / data / dependents).}
 
 ## Conditions
 {Under what conditions do you change your recommendation?
-Name each conclusion that depends solely on a derivation labeled unconfirmed
-in the briefing, and what changes if that derivation fails.}
+Name each conclusion that depends solely on the briefing's **author derivation —
+unconfirmed** line or on an anchor row marked unconfirmed or unknown, and what changes if it fails.}
 ```
 
 ## Evidence-pointer mandate

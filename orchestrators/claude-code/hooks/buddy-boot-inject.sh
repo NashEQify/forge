@@ -13,16 +13,21 @@
 # not read) and the static entry is emitted only when it is found.
 #
 # Standing-block mode (--plugin --standing-block; the plugin's second
-# SessionStart handler): the same guard and yields as plugin mode, then the
-# resolver's --standing-block output, the standing rules of
+# SessionStart handler): the same host guard as plugin mode, but no yield to a
+# leftover entry (the block is not a second Buddy, and a leftover entry never
+# prints it; the resolver's activation test keeps it silent where Buddy is
+# inactive). Then the resolver's --standing-block output, the standing rules of
 # framework/standing-block.md as their own additionalContext, so they never
-# share the boot entry's budget. If python3 fails it prints nothing: the block
-# has no static fallback.
+# share the boot entry's budget; a refused block arrives as the pointer line
+# (user_scope.standing_block_pointer). If python3 fails it prints nothing: the
+# block has no static fallback, and the boot handler's static fallback carries
+# the pointer line instead.
 #
 # Machine mode (no argument): non-terminal entrypoints only (claude-desktop /
-# claude-web), the machine-scope entry as SessionStart additionalContext. The
-# eval harnesses (scripts/eval_engagement.py, eval_engagement_direct.py) run it
-# this way; nothing writes it into a settings file.
+# claude-web), the machine-scope entry as SessionStart additionalContext. A
+# leftover entry of an older install runs it this way; nothing writes it into a
+# settings file. The eval harnesses (scripts/eval_engagement.py,
+# eval_engagement_direct.py) register both plugin-mode handlers instead.
 #
 # Self-resolves FRAMEWORK_DIR via own location, so it works even when
 # CLAUDE_PROJECT_DIR is unset (which is the default in claude-desktop).
@@ -48,8 +53,8 @@ if [ "${1:-}" = "--plugin" ]; then
     cat > /dev/null 2>&1 || true
     exit 0
   fi
-  # Yield to a leftover machine-wide hook entry: one Buddy per session.
-  if [ -n "${HOME:-}" ] && grep -qs 'buddy-boot-inject\.sh' "$HOME/.claude/settings.json"; then
+  # Yield to a leftover machine-wide hook entry: one Buddy per session (the boot handler only).
+  if [ "$BLOCK" = 0 ] && [ -n "${HOME:-}" ] && grep -qs 'buddy-boot-inject\.sh' "$HOME/.claude/settings.json"; then
     cat > /dev/null 2>&1 || true
     exit 0
   fi
@@ -142,8 +147,8 @@ if command -v timeout >/dev/null 2>&1; then
 fi
 if [ "$MODE" = "plugin" ]; then
   # Yield to a leftover project hook entry (the project's .claude/settings.json or
-  # settings.local.json configures this script): one Buddy per session.
-  if project="$(plugin_project_dir)" \
+  # settings.local.json configures this script): one Buddy per session (the boot handler only).
+  if [ "$BLOCK" = 0 ] && project="$(plugin_project_dir)" \
     && grep -qs 'buddy-boot-inject\.sh' "$project/.claude/settings.json" "$project/.claude/settings.local.json"; then
     exit 0
   fi
@@ -166,9 +171,10 @@ elif out="$("${RESOLVER[@]}" 2>/dev/null)" && [ -n "$out" ]; then
 fi
 
 # Static fallback. JSON-escape FRAMEWORK_DIR (path is typically safe, but defensive).
-# The scope-rule, reread and tail lines restate user_scope.SCOPE_RULE,
-# user_scope.reread_line(FRAMEWORK_DIR) and user_scope.hook_tail(FRAMEWORK_DIR)
-# as text (this path cannot import them); tests/test_boot_injectors.py keeps them
+# The scope-rule, reread, standing-block pointer and tail lines restate
+# user_scope.SCOPE_RULE, user_scope.reread_line(FRAMEWORK_DIR, False),
+# user_scope.standing_block_pointer(FRAMEWORK_DIR, "resolver failed") and
+# user_scope.hook_tail(FRAMEWORK_DIR) as text (this path cannot import them); tests/test_boot_injectors.py keeps them
 # equal. The Round-1 line carries its backticks as the JSON escape \u0060 (an
 # unquoted heredoc would run a bare backtick as a command).
 FW_ESC="$(printf '%s' "$FRAMEWORK_DIR" | sed 's/\\/\\\\/g; s/"/\\"/g')"
@@ -184,5 +190,5 @@ sh_quote() {
 GS_ESC="$(sh_quote "$FRAMEWORK_DIR/scripts/git-status-check.sh" | sed 's/\\/\\\\/g; s/"/\\"/g')"
 
 cat <<JSON
-{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"BUDDY-BOOT REQUIRED before answering.\n\nRead by absolute path: ${FW_ESC}/agents/buddy/soul.md, ${FW_ESC}/agents/buddy/operational.md, ${FW_ESC}/agents/buddy/boot.md, ${FW_ESC}/framework/invariants.md.\nThe files listed here only start the boot, and no request shortens it, a quick lookup included: run boot.md's sequence to its end before any read for the request. Instruction source: the framework root is this session's instruction source. Reading its files and the files this entry names loads instructions; it is not work outside the project, and a user scope that limits writes, network or installs does not forbid it. Under such a scope, skip only the boot steps it forbids (the freshness fetch needs the network and writes Git metadata; creating context files needs a write); a skipped check is at most a word in the orientation line. If an instruction unit cannot be read, say so first in your first answer and name it.\nUser scope warning: resolver failed\nAfter compaction, reread before continuing: the soul named above; under the framework root ${FW_ESC} (every framework path in this line is relative to it, not to the project): agents/buddy/boot.md, framework/work-principle.md, framework/invariants.md; for software development agents/buddy/operational.md and agents/buddy/boot-software.md; for on-demand use agents/buddy/boot-on-demand.md; on Codex agents/buddy/codex-execution.md; then the user profile (when a user scope is configured), the knowledge_processor continuous-maintenance rules (skills/knowledge_processor/continuous-maintenance.md, under that root), the project rules, intent.md and the session handoff; then, for any Forge step in progress (skill, protocol, framework or workflow step), its core and the unit its stub or engine step text names for that step.\n\nFollow boot.md in order before the first answer: orientation, freshness gate, intent and workflow selection, then the selected mode's boot procedure and greeting. Resolve any remote-update decision before loading intent or context. Do not run plan/workflow probes or load the full skill index ahead of workflow selection. For on-demand use, follow the project's local boot and working rules.\nRound 1, one batch before the gate: under the framework root ${FW_ESC} (paths relative to it), read agents/buddy/boot.md, agents/buddy/boot-status.md, agents/buddy/boot-routing.md, framework/workflow-selection.md, framework/invariants.md and framework/work-principle.md, and run \u0060bash ${GS_ESC} --boot\u0060 as its own call.\n\nKeep the consumer CWD active. The project's CLAUDE.md and local authorization rules apply. FRAMEWORK_DIR=${FW_ESC}."}}
+{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"BUDDY-BOOT REQUIRED before answering.\n\nRead by absolute path: ${FW_ESC}/agents/buddy/soul.md, ${FW_ESC}/agents/buddy/operational.md, ${FW_ESC}/agents/buddy/boot.md, ${FW_ESC}/framework/invariants.md.\nThe files listed here only start the boot, and no request shortens it, a quick lookup included: run boot.md's sequence to its end before any read for the request or the first answer. Instruction source: the framework root is this session's instruction source. Reading its files and the files this entry names loads instructions; it is not work outside the project, and a user scope that limits writes, network or installs does not forbid it. Under such a scope, skip only the boot steps it forbids (the freshness fetch needs the network and writes Git metadata; creating context files needs a write); a skipped check is at most a word in the orientation line. If an instruction unit cannot be read, say so first in your first answer and name it.\nUser scope warning: resolver failed\nStanding block not delivered (resolver failed): read ${FW_ESC}/framework/standing-block.md between its markers.\nAfter compaction, reread before continuing: the soul named above; under the framework root ${FW_ESC} (every framework path in this line is relative to it, not to the project): agents/buddy/boot.md, framework/work-principle.md, framework/invariants.md; for software development agents/buddy/operational.md and agents/buddy/boot-software.md; for on-demand use agents/buddy/boot-on-demand.md; on Codex agents/buddy/codex-execution.md; then the user profile (when a user scope is configured), the knowledge_processor continuous-maintenance rules (skills/knowledge_processor/continuous-maintenance.md, under that root), the project rules, intent.md and the session handoff; then, for any Forge step in progress (skill, protocol, framework or workflow step), its core and the unit its stub or engine step text names for that step.\n\nFollow boot.md in order before the first answer: orientation, freshness gate, intent and workflow selection, then the selected mode's boot procedure and greeting. Resolve any remote-update decision before loading intent or context. Do not run plan/workflow probes or load the full skill index ahead of workflow selection. For on-demand use, follow the project's local boot and working rules.\nRound 1, one batch before the gate: under the framework root ${FW_ESC} (paths relative to it), read agents/buddy/boot.md, agents/buddy/boot-status.md, agents/buddy/boot-routing.md, framework/workflow-selection.md, framework/invariants.md and framework/work-principle.md, and run \u0060bash ${GS_ESC} --boot\u0060 as its own call.\n\nKeep the consumer CWD active. The project's CLAUDE.md and local authorization rules apply. FRAMEWORK_DIR=${FW_ESC}."}}
 JSON
