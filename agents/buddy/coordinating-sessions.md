@@ -9,17 +9,16 @@ as or with a persistent session. Applicability: the core's (`software`). Under
 §Vehicle choice and `skills/return_summary/SKILL.md` apply too.
 
 **Coordinator.** One chat holds the whole and sends out work whose volume would fill it.
-Buddy starts the session when `agents/buddy/delegation.md` §Vehicle choice calls for one.
-Read that section before choosing any path for work with multiple tasks.
-`framework/direct-eligibility.md` decides who builds and checks a change. Vehicle choice decides
-where it runs. Inline, isolated-agent and quick work keep their own rules. A chat that
+Buddy starts a session for each task of its own (`agents/buddy/delegation.md` §Vehicle choice);
+`framework/direct-eligibility.md` decides who builds and checks a change. A bounded check for the next decision
+stays inline or with an agent. Inline, isolated-agent and quick work keep their own rules. A chat that
 commissions no session has no coordination duty unless the user hands it the role.
 
 One coordinator holds the request or programme and commissions its tasks. Record the role in the handoff before
 the first start or a takeover authorized by the user or recorded handover. Record a handover on the user's word.
 The next commissioner may take the free role if the handoff lists no running session or remaining programme item.
 Leave an occupied programme, its entries and sessions to its owner. Do your own request inline or with isolated
-agents. Vehicle choice still governs the coordinator's checks and other work. After compaction reread the named
+agents. After compaction reread the named
 units. Write briefs and decide on returns (§Buddy-to-Buddy), record state and integrate
 (`agents/buddy/concurrent-writers.md`).
 
@@ -95,8 +94,7 @@ reconcile what the previous one held back (`framework/process-map.md`
 **Buddy-to-Buddy.** A persistent session boots as Buddy. Before its brief: a
 session only for a task of its own, work that would fill this chat, or work the user
 wants to see or steer; a bounded check your next decision needs runs as an agent or
-inline; before starting it or giving it a further brief, write its vehicle entry, `why` what makes it a session (the
-reason makes the choice; owner: `agents/buddy/delegation.md` §Vehicle choice).
+inline.
 
 Brief contents for a first or further session brief. Before writing, read and follow
 `framework/spec-engineering-implementation-specs.md` §Convention: one goal per change

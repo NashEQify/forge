@@ -83,49 +83,14 @@ unavailable values unknown. Distinguish cached input from total input and
 reasoning already included in output. Preserve setup failures and all attempts.
 Line counts and one aggregate sample do not establish savings.
 
-**Vehicle choice.** Choose where each piece runs before its first act.
-When the remainder becomes a task with its own result, would fill this
-chat, or needs an independent view, choose again before acting on it,
-including drafting its repair or state artifact. The lookup's choice
-cannot cover that remainder. Once a bounded check establishes a separate
-repair, do not read its implementation or run its diagnostics before
-choosing and writing any due entry. Discovery to establish whether a
-separate repair exists and reading the vehicle rules can precede the choice.
-- **Inline** — Buddy holds the context, needs the result this turn and needs
-  no independent view. Product code stays with main-code-agent except the
-  quick path (Inv 4).
-- **Isolated agent** — a bounded question, a code piece (main-code-agent,
-  Inv 4) or a required independent view for Buddy's next decision.
-- **Persistent session** — a task of its own (it outlives the turn and has
-  its own result), work that would fill this chat, or work the user wants
-  in a session or wants to see or steer. Buddy starts it within host and
-  role limits, without first asking or offering a card. Follow the user's
-  direction about where work runs. On a refused or unavailable start, use
-  the supported fallback in `agents/buddy/coordinating-sessions.md`
-  §Coordinator and report it in one line. Without a session route, work
-  inline and with isolated agents within role, authority and review limits.
-  A start grants no new authority (`agents/buddy/coordinating-sessions.md`
-  §Programme order, `agents/buddy/concurrent-writers.md`,
-  `framework/process-map.md` §Authorization).
-  A session costs a full boot and rebuilt context. A bounded check for the
-  next decision stays inline or with an agent, including for a coordinator.
-  Coordinators send out their task work. Send a further brief when a running session holds the context, including
-  for a different task. Keep one writer per file set
-  (`agents/buddy/concurrent-writers.md`). For replacement see
-  `agents/buddy/coordinating-sessions.md` §Buddy-to-Buddy.
-**The vehicle entry.** Before a piece's first act Buddy appends its entry to `.forge/decisions.jsonl` in the project
-root: before an agent call (one for a batch of one decision), a session start or a further brief, and before
-inline work he expects to take more than ten own tool calls, a check included, at the latest before the
-eleventh (intent: past ten, inline work fills the chat unseen). Inline work of ten or fewer writes none,
-nor a session for its brief's work. Purpose: writing the reason makes the choice.
-```
-mkdir -p .forge && echo '*' >.forge/.gitignore && printf '{"kind":"vehicle","v":1,"ts":"%s","session":"%s","what":"…","where":"inline|agent|session","rests_on":"…","why":"…","est":N}\n' "$(date -Is)" "${CLAUDE_CODE_SESSION_ID:-$PWD}" >>.forge/decisions.jsonl
-```
-`rests_on`: `context-held`; `bounded-question`, `code-piece`, `independent-view`; `own-task`, `fills-chat`,
-`user-steers`, `running-session`; `host-limit`; `step` (a step or brief names it); `user-word` (`why` quotes the user;
-nothing more is asked). `why`: name the fact about this piece or remainder that meets the chosen condition and
-check that the next act follows from it. `est`: tool calls for that work if done in this chat.
-No `%` or `"` in texts. Readers skip other kinds, unknown fields.
+**Vehicle choice.** Where work runs follows its organisation: a workflow step that names its executor decides it,
+and product code goes to main-code-agent outside the quick path (Inv 4). A task of its own, with its own result, or
+work that would fill this chat goes to a persistent session, which Buddy starts within host and role limits; a
+bounded question or a required independent view goes to an isolated agent; the rest stays inline. Follow the user's
+direction about where work runs. On a refused or unavailable start, use the fallback and report it in one line
+(`agents/buddy/coordinating-sessions.md` §Coordinator). A start grants no new authority
+(`framework/process-map.md` §Authorization). Send a further brief when a running session holds the context, and keep
+one writer per file set (`agents/buddy/concurrent-writers.md`).
 Multi-agent work pays on parallelizable, high-value work and costs on
 sequential work; a spawn needs an isolation or independence gain. Host
 vehicles and fallbacks: `architecture-documentation/07-tool-integrations.md`
