@@ -219,6 +219,15 @@ class Task:
 TaskKey = object  # documentation alias only
 
 
+def spec_ref_text(spec_ref: object) -> str | None:
+    """The spec_ref when it is a string with non-whitespace content; any other value means no spec_ref.
+
+    The one predicate for "does this task carry a spec_ref": workflow_engine routes on it
+    (standard vs standard-implementation-only) and fmt_boot's sizing line prints the same route.
+    """
+    return spec_ref if isinstance(spec_ref, str) and spec_ref.strip() else None
+
+
 def _format_tid(t: Task) -> str:
     """Render task ID. Prefixes with '<repo>#' in aggregate mode."""
     if t._repo:

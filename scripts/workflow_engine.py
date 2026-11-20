@@ -60,6 +60,8 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 _FRAMEWORK_ROOT = _SCRIPT_DIR.parent
 if str(_FRAMEWORK_ROOT) not in sys.path:
     sys.path.insert(0, str(_FRAMEWORK_ROOT))
+if str(_SCRIPT_DIR) not in sys.path:  # the _plan_engine package, imported as plan_engine.py does
+    sys.path.insert(0, str(_SCRIPT_DIR))
 
 from scripts.lib.yaml_loader import (  # noqa: E402
     SchemaError,
@@ -73,6 +75,7 @@ from scripts.lib.yaml_loader import (  # noqa: E402
 
 
 from scripts.lib.evidence_pointers import _FENCE_RE  # noqa: E402
+from _plan_engine.core import spec_ref_text  # noqa: E402
 from scripts.lib.review_adoption import (  # noqa: E402
     OPTION_FIELDS, POLICIES, ReviewEvaluationError, ReviewRefusal,
     _metadata,
@@ -923,8 +926,7 @@ def _assert_task_in_cwd(task_id: int) -> None:
 
 def _spec_ref_text(task: dict[str, Any]) -> str | None:
     """The task's `spec_ref` when it is a non-blank string; any other value means no spec_ref."""
-    spec_ref = task.get("spec_ref")
-    return spec_ref if isinstance(spec_ref, str) and spec_ref.strip() else None
+    return spec_ref_text(task.get("spec_ref"))
 
 
 def _resolve_spec_name(task_id: int) -> str | None:

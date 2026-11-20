@@ -19,6 +19,7 @@ from _plan_engine.core import (
     EFFORT_WEIGHTS,
     ValidationIssue,
     _format_tid,
+    spec_ref_text,
 )
 from _plan_engine.compute import (
     _hashable_cp_set,
@@ -31,6 +32,17 @@ from _plan_engine.loading import (
     archived_task,
     done_task_keys,
 )
+
+
+def _fmt_sizing(t) -> str:
+    """The sizing line under a --boot entry: the fields that size a take-up of the task."""
+    ref = spec_ref_text(t.spec_ref)
+    ref_shown = " ".join(ref.split()) if ref is not None else "none"
+    route = "standard" if ref is not None else "standard-implementation-only"
+    lens = "yes" if t.effort in ("L", "XL") else "no"
+    readiness = t.readiness.strip() if isinstance(t.readiness, str) and t.readiness.strip() else "none"
+    return (f"    sizing: effort {t.effort}; spec_ref {ref_shown} \u2192 build route {route}; "
+            f"lens by effort {lens}; readiness {readiness}")
 
 
 def fmt_boot(tasks, milestones, target, north_star, op_intent, critical_path,
@@ -76,6 +88,7 @@ def fmt_boot(tasks, milestones, target, north_star, op_intent, critical_path,
     for t in in_progress:
         summary = f" — {t.summary[:60]}" if t.summary else ""
         lines.append(f"  [{_format_tid(t)}] {t.title[:40]} ({t.milestone}){summary}")
+        lines.append(_fmt_sizing(t))
     lines.append("")
 
     # Next actions
@@ -88,6 +101,7 @@ def fmt_boot(tasks, milestones, target, north_star, op_intent, critical_path,
             f"  {i}. [{_format_tid(t)}] {t.title[:45]} ({t.milestone}) "
             f"effort:{t.effort}  blocking:{bs}{cp_flag}"
         )
+        lines.append(_fmt_sizing(t))
     lines.append("")
 
     # Milestones

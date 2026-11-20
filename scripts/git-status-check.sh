@@ -59,6 +59,24 @@
 #              recognizes it, malformed ones included)
 #   chub: <installed | the advisory line of chub-status-check.sh | not installed>
 #              (not installed: the helper is not part of this installation)
+# then six lines derived only from the facts above and the per-target fetch
+# and status outcome (targets in target order):
+#   mode: <software | on-demand | unknown | from-intent | none>
+#              (the mode-line; from-intent: an intent without one; none: no intent)
+#   remote: <fetched | unchecked <path>[, <path>…] | not checked (no network) | none>
+#              (unchecked: a target whose fetch failed, timed out or was skipped,
+#              or whose branch's upstream is not on origin;
+#              none: no Git target)
+#   pull-question: <none | <path> behind N[; <path> behind M…]>
+#              (behind after a successful fetch only; cached counts never)
+#   read-list: <none | absolute paths joined by `, `>  (the intent; the mode's
+#              boot units; the handoff; the pending session buffer; the backlog;
+#              continuous-maintenance.md with a configured user scope)
+#   profile-read: <the personal snapshot command with its stdin request,
+#              runnable as printed | no-user-scope | unknown>
+#   greet: <none | findings joined by `; `>  (remote unchecked; uncommitted
+#              <own path> (N entries); pending recovery: project | personal;
+#              user profile missing; user soul missing)
 # A fact that cannot be determined prints `unknown` and a stderr diagnostic.
 # The facts are file facts, not content; a pull invalidates them (re-probe).
 #
@@ -255,20 +273,19 @@ own_target() {
   [ "$BOOT" = "0" ] || [ "$1" = "$OWN_ROOT" ]
 }
 
-# Counts porcelain entries into the groups (line 1). In --boot mode a second
-# line names the first five entry paths as Git prints them (F-6). For a target
-# that is not the own project (own: 0) only a behind count is kept.
-porcelain_summary() {  # <status output> <with branch header: 0|1> [own: 1|0]
-  local status=$1 status_line="" groups="" entry staged=0 modified=0 untracked=0 shown=""
-  local -a paths=()
+# Counts a status output into globals, without printing (called directly, not
+# in $(...), where the numbers must outlive the call): PC_STAGED, PC_MODIFIED,
+# PC_UNTRACKED, PC_ENTRIES (porcelain entries; an entry can count as staged
+# and modified), PC_PATHS (the entry paths as Git prints them), PC_BEHIND (N of
+# the branch header's behind N, else empty) and PC_DIVERGENCE (the header's
+# ahead/behind group, else empty).
+porcelain_counts() {  # <status output> <with branch header: 0|1>
+  local status=$1 status_line="" entry
+  PC_STAGED=0 PC_MODIFIED=0 PC_UNTRACKED=0 PC_ENTRIES=0 PC_BEHIND="" PC_DIVERGENCE=""
+  PC_PATHS=()
   [ "$2" = "1" ] && status_line=${status%%$'\n'*}
-  if [ "${3:-1}" = "0" ]; then
-    if [[ "$status_line" =~ \[(ahead\ [0-9]+,\ )?(behind\ [0-9]+)\] ]]; then
-      printf '%s\n' "[${BASH_REMATCH[2]}]"
-    else
-      printf '\n'
-    fi
-    return 0
+  if [[ "$status_line" =~ \[(ahead\ [0-9]+,\ )?behind\ ([0-9]+)\] ]]; then
+    PC_BEHIND=${BASH_REMATCH[2]}
   fi
   # Extract ahead/behind. Patterns:
   #   ## main...origin/main                  → clean
@@ -276,30 +293,48 @@ porcelain_summary() {  # <status output> <with branch header: 0|1> [own: 1|0]
   #   ## main...origin/main [ahead 2]        → ahead
   #   ## main...origin/main [ahead 1, behind 2]
   if [[ "$status_line" =~ \[(ahead\ [0-9]+(,\ behind\ [0-9]+)?|behind\ [0-9]+)\] ]]; then
-    # Format: <repo> [<bracket>] — matches the GREET format in agents/buddy/boot-status.md
-    groups="[${BASH_REMATCH[1]}]"
+    PC_DIVERGENCE=${BASH_REMATCH[1]}
   fi
   # Entries after the header: XY <path>; X = index, Y = worktree column.
   while IFS= read -r entry; do
     case "$entry" in
       '##'*|'') continue ;;
     esac
-    paths+=("${entry:3}")
+    PC_PATHS+=("${entry:3}")
+    PC_ENTRIES=$((PC_ENTRIES + 1))
     case "$entry" in
-      '??'*) untracked=$((untracked + 1)); continue ;;
+      '??'*) PC_UNTRACKED=$((PC_UNTRACKED + 1)); continue ;;
     esac
-    case "${entry:0:1}" in ' '|'?'|'!') ;; *) staged=$((staged + 1)) ;; esac
-    case "${entry:1:1}" in ' '|'?'|'!') ;; *) modified=$((modified + 1)) ;; esac
+    case "${entry:0:1}" in ' '|'?'|'!') ;; *) PC_STAGED=$((PC_STAGED + 1)) ;; esac
+    case "${entry:1:1}" in ' '|'?'|'!') ;; *) PC_MODIFIED=$((PC_MODIFIED + 1)) ;; esac
   done <<< "$status"
-  if [ $((staged + modified + untracked)) -gt 0 ]; then
-    groups="${groups:+$groups }[uncommitted: $staged staged, $modified modified, $untracked untracked]"
+}
+
+# Renders the groups (line 1) from porcelain_counts. In --boot mode a second
+# line names the first five entry paths as Git prints them (F-6). For a target
+# that is not the own project (own: 0) only a behind count is kept.
+porcelain_summary() {  # <status output> <with branch header: 0|1> [own: 1|0]
+  local groups="" entry shown=""
+  porcelain_counts "$1" "$2"
+  if [ "${3:-1}" = "0" ]; then
+    if [ -n "$PC_BEHIND" ]; then
+      printf '%s\n' "[behind $PC_BEHIND]"
+    else
+      printf '\n'
+    fi
+    return 0
+  fi
+  # Format: <repo> [<bracket>] — matches the GREET format in agents/buddy/boot-status.md
+  [ -n "$PC_DIVERGENCE" ] && groups="[$PC_DIVERGENCE]"
+  if [ $((PC_STAGED + PC_MODIFIED + PC_UNTRACKED)) -gt 0 ]; then
+    groups="${groups:+$groups }[uncommitted: $PC_STAGED staged, $PC_MODIFIED modified, $PC_UNTRACKED untracked]"
   fi
   printf '%s\n' "$groups"
-  if [ "$BOOT" = "1" ] && [ "${#paths[@]}" -gt 0 ]; then
-    for entry in "${paths[@]:0:5}"; do
+  if [ "$BOOT" = "1" ] && [ "${#PC_PATHS[@]}" -gt 0 ]; then
+    for entry in "${PC_PATHS[@]:0:5}"; do
       shown="${shown:+$shown, }$entry"
     done
-    [ "${#paths[@]}" -gt 5 ] && shown="$shown (+$(( ${#paths[@]} - 5 )) more)"
+    [ "${#PC_PATHS[@]}" -gt 5 ] && shown="$shown (+$(( ${#PC_PATHS[@]} - 5 )) more)"
     printf '  entries: %s\n' "$shown"
   fi
 }
@@ -309,17 +344,23 @@ porcelain_summary() {  # <status output> <with branch header: 0|1> [own: 1|0]
 # PENDING line starts, status lines and list markers, the tasks' top-level
 # status lines and the handoff's envelope marker lines.
 # Paths are relative to CWD (the project, as boot-routing.md routes them).
+# Each printed value is also kept in FACT_<key> (dashes as underscores) for
+# boot_derived.
+fact() {  # <key> <value>: prints `<key>: <value>` and keeps the value
+  printf -v "FACT_${1//-/_}" '%s' "$2"
+  printf '%s: %s\n' "$1" "$2"
+}
 fact_unknown() {  # <key> <reason>
   echo "git-status-check: $1 unknown ($2)" >&2
-  echo "$1: unknown"
+  fact "$1" "unknown"
 }
 fact_file() {  # <key> <path>: present | absent | unknown
   if [ -f "$2" ]; then
-    echo "$1: present"
+    fact "$1" "present"
   elif [ -e "$2" ]; then
     fact_unknown "$1" "not a regular file: $2"
   else
-    echo "$1: absent"
+    fact "$1" "absent"
   fi
 }
 boot_facts() {
@@ -333,10 +374,10 @@ boot_facts() {
     [ "$dir" = "/" ] && break
     dir=$(dirname "$dir")
   done
-  echo "intent: ${intent:-none}"
+  fact "intent" "${intent:-none}"
 
   if [ -z "$intent" ]; then
-    echo "mode-line: none"
+    fact "mode-line" "none"
   elif [ ! -r "$intent" ]; then
     fact_unknown "mode-line" "intent.md not readable: $intent"
   else
@@ -351,15 +392,15 @@ boot_facts() {
         if (line == "Forge workflows: software") { print "software"; exit }
         if (line == "Forge workflows: on-demand") { print "on-demand"; exit }
       }' "$intent" 2>/dev/null)
-    echo "mode-line: ${mode:-none}"
+    fact "mode-line" "${mode:-none}"
   fi
 
   if [ -d "$CWD/context" ]; then
-    echo "context-dir: present"
+    fact "context-dir" "present"
   elif [ -e "$CWD/context" ]; then
     fact_unknown "context-dir" "not a directory: $CWD/context"
   else
-    echo "context-dir: absent"
+    fact "context-dir" "absent"
   fi
   fact_file "backlog" "$CWD/docs/backlog.md"
 
@@ -369,11 +410,11 @@ boot_facts() {
       break
     fi
   done
-  echo "handoff: ${handoff:-absent}"
+  fact "handoff" "${handoff:-absent}"
 
   file="$CWD/docs/session-buffer.md"
   if [ ! -e "$file" ]; then
-    echo "session-buffer: absent"
+    fact "session-buffer" "absent"
   elif [ ! -f "$file" ] || [ ! -r "$file" ]; then
     fact_unknown "session-buffer" "not a readable file: $file"
   else
@@ -401,9 +442,9 @@ boot_facts() {
       status { n++ }
       END { print n + 0 }' "$file" 2>/dev/null); then
       if [ "$count" = "0" ]; then
-        echo "session-buffer: none"
+        fact "session-buffer" "none"
       else
-        echo "session-buffer: pending $count"
+        fact "session-buffer" "pending $count"
       fi
     else
       fact_unknown "session-buffer" "cannot read $file"
@@ -413,8 +454,8 @@ boot_facts() {
   fact_file "pending-project" "$CWD/context/maintenance-pending.md"
   case "$USER_SCOPE_STATE" in
     configured) fact_file "pending-personal" "$USER_REPO/context/user/maintenance-pending.md" ;;
-    unknown) echo "pending-personal: unknown" ;;  # the resolver diagnostic is already on stderr
-    *) echo "pending-personal: no-user-scope" ;;
+    unknown) fact "pending-personal" "unknown" ;;  # the resolver diagnostic is already on stderr
+    *) fact "pending-personal" "no-user-scope" ;;
   esac
 
   fact_file "plan" "$CWD/docs/plan.yaml"
@@ -425,35 +466,146 @@ boot_facts() {
       count=$((count + 1))
     fi
   done
-  echo "tasks-in-progress: $count"
+  fact "tasks-in-progress" "$count"
 
   if [ -z "$handoff" ]; then
-    echo "binding: absent"
+    fact "binding" "absent"
   elif [ ! -r "$CWD/$handoff" ]; then
     fact_unknown "binding" "handoff not readable: $CWD/$handoff"
   elif grep -Eq '^[^[:alnum:]_`~]*([0-9]{1,9}[.)])?[^[:alnum:]_`~]*(`{3,}|~{3,})[[:blank:]]*forge-development' \
       "$CWD/$handoff" 2>/dev/null; then
     # Any opening marker development_continuation.py (OPENER) treats as an
     # envelope, malformed ones included: the restore step reports those.
-    echo "binding: present"
+    fact "binding" "present"
   else
-    echo "binding: absent"
+    fact "binding" "absent"
   fi
 
   chub_script="$FRAMEWORK_DIR/scripts/chub-status-check.sh"
   if [ ! -e "$chub_script" ]; then
-    echo "chub: not installed"  # the helper is not part of this installation
+    fact "chub" "not installed"  # the helper is not part of this installation
   elif chub_out=$(bash "$chub_script" 2>/dev/null); then
     chub_out=${chub_out%%$'\n'*}
-    echo "chub: ${chub_out:-installed}"
+    fact "chub" "${chub_out:-installed}"
   else
     fact_unknown "chub" "chub-status-check.sh failed (exit $?): $chub_script"
   fi
 }
 
+# Quotes one argument as Python's shlex.quote does: bare when it consists only
+# of [A-Za-z0-9_@%+=:,./-], else in single quotes with each ' written as '"'"'.
+# The letters are spelled out: a bracket range follows the locale's collation.
+shell_quote() {  # <argument>
+  local sq="'" escaped="'\"'\"'"
+  case "$1" in
+    '') printf "''" ;;
+    *[!abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_@%+=:,./-]*)
+      printf "'%s'" "${1//$sq/$escaped}" ;;
+    *) printf '%s' "$1" ;;
+  esac
+}
+
+# The derived lines (--boot), after the fact lines: computed only from the
+# FACT_* values, the per-target record and the user scope state; the only
+# reads of their own are the existence of the configured user repo's
+# context/user/profile.md and soul.md.
+boot_derived() {
+  local mode remote="" pull="" reads="" greet="" index path arg command=""
+  local -a units=()
+
+  if [ "$FACT_intent" = "none" ]; then
+    mode="none"
+  else
+    case "$FACT_mode_line" in
+      software|on-demand|unknown) mode=$FACT_mode_line ;;
+      *) mode="from-intent" ;;
+    esac
+  fi
+  echo "mode: $mode"
+
+  if [ "${#REC_PATHS[@]}" -eq 0 ]; then
+    remote="none"
+  elif [ "$NO_NETWORK" = "1" ]; then
+    remote="not checked (no network)"
+  else
+    for index in "${!REC_PATHS[@]}"; do
+      [ "${REC_REMOTE[$index]}" = "fetched" ] && continue
+      remote="${remote:+$remote, }${REC_PATHS[$index]}"
+    done
+    if [ -z "$remote" ]; then
+      remote="fetched"
+    else
+      remote="unchecked $remote"
+    fi
+  fi
+  echo "remote: $remote"
+
+  if [ "$NO_NETWORK" = "0" ] && [ "${#REC_PATHS[@]}" -gt 0 ]; then
+    for index in "${!REC_PATHS[@]}"; do
+      [ "${REC_REMOTE[$index]}" = "fetched" ] || continue
+      [ -n "${REC_BEHIND[$index]}" ] && [ "${REC_BEHIND[$index]}" -gt 0 ] || continue
+      pull="${pull:+$pull; }${REC_PATHS[$index]} behind ${REC_BEHIND[$index]}"
+    done
+  fi
+  echo "pull-question: ${pull:-none}"
+
+  [ "$FACT_intent" != "none" ] && reads=$FACT_intent
+  case "$mode" in
+    software) units=("agents/buddy/boot-software.md" "agents/buddy/operational.md") ;;
+    on-demand) units=("agents/buddy/boot-on-demand.md") ;;
+  esac
+  if [ "${#units[@]}" -gt 0 ]; then
+    for path in "${units[@]}"; do
+      reads="${reads:+$reads, }$FRAMEWORK_DIR/$path"
+    done
+  fi
+  [ "$FACT_handoff" != "absent" ] && reads="${reads:+$reads, }$CWD/$FACT_handoff"
+  case "$FACT_session_buffer" in
+    "pending "*) reads="${reads:+$reads, }$CWD/docs/session-buffer.md" ;;
+  esac
+  [ "$FACT_backlog" = "present" ] && reads="${reads:+$reads, }$CWD/docs/backlog.md"
+  [ "$USER_SCOPE_STATE" = "configured" ] \
+    && reads="${reads:+$reads, }$FRAMEWORK_DIR/skills/knowledge_processor/continuous-maintenance.md"
+  echo "read-list: ${reads:-none}"
+
+  case "$USER_SCOPE_STATE" in
+    configured)
+      for arg in python3 "$FRAMEWORK_DIR/scripts/continuity.py" snapshot --scope personal --project-root "$CWD"; do
+        command="${command:+$command }$(shell_quote "$arg")"
+      done
+      echo "profile-read: printf '%s' '{\"schema_version\":1,\"paths\":[\"profile.md\"]}' | $command" ;;
+    none) echo "profile-read: no-user-scope" ;;
+    *) echo "profile-read: unknown" ;;
+  esac
+
+  case "$remote" in
+    "unchecked "*|"not checked (no network)") greet="remote unchecked" ;;
+  esac
+  if [ -n "$OWN_UNCOMMITTED" ] && [ "$OWN_UNCOMMITTED" -gt 0 ]; then
+    greet="${greet:+$greet; }uncommitted $OWN_ROOT ($OWN_UNCOMMITTED)"
+  fi
+  [ "$FACT_pending_project" = "present" ] && greet="${greet:+$greet; }pending recovery: project"
+  [ "$FACT_pending_personal" = "present" ] && greet="${greet:+$greet; }pending recovery: personal"
+  if [ "$USER_SCOPE_STATE" = "configured" ]; then
+    [ -f "$USER_REPO/context/user/profile.md" ] || greet="${greet:+$greet; }user profile missing"
+    [ -f "$USER_REPO/context/user/soul.md" ] || greet="${greet:+$greet; }user soul missing"
+  fi
+  echo "greet: ${greet:-none}"
+}
+
 # Safety: require TMPDIR_BOOT mktemp succeeded (set -u would catch but
 # explicit check is clearer for trap)
 : "${TMPDIR_BOOT:=}"
+
+# The boot probe's per-target record, in TARGETS order (index i is target i):
+# REC_PATHS, REC_REMOTE (fetched | unchecked | offline; empty: no record) and
+# REC_BEHIND (N after a successful fetch and status, else empty). OWN_UNCOMMITTED
+# is the own target's porcelain entry count after a successful status, else
+# empty. Filled from the per-index facts files, or directly by the fallback.
+REC_PATHS=()
+REC_REMOTE=()
+REC_BEHIND=()
+OWN_UNCOMMITTED=""
 
 if [ "$BOOT" = "1" ]; then
   orient_host=$(hostname 2>/dev/null || uname -n 2>/dev/null || echo unknown)
@@ -483,6 +635,10 @@ fi || {
     echo "git-status-check: cannot create temporary directory; fetch skipped, status from cached refs" >&2
   fi
   for repo in "${TARGETS[@]}"; do
+    # No fetch ran: the record says unchecked (offline under --no-network).
+    REC_PATHS+=("$repo")
+    if [ "$NO_NETWORK" = "1" ]; then REC_REMOTE+=("offline"); else REC_REMOTE+=("unchecked"); fi
+    REC_BEHIND+=("")
     harden=()
     untrusted_target "$repo" && harden=("${STATUS_HARDENING[@]}")
     status_command=(git -C "$repo" ${harden[@]+"${harden[@]}"} status --porcelain=v1 --branch --untracked-files=normal)
@@ -492,6 +648,10 @@ fi || {
     if status=$(GIT_OPTIONAL_LOCKS=0 "${status_command[@]}" 2>/dev/null); then
       own=1
       own_target "$repo" || own=0
+      if [ "$own" = "1" ]; then
+        porcelain_counts "$status" "$((1 - NO_NETWORK))"
+        OWN_UNCOMMITTED=$PC_ENTRIES
+      fi
       summary=$(porcelain_summary "$status" "$((1 - NO_NETWORK))" "$own")
       if [ -n "${summary%%$'\n'*}" ]; then
         printf '%s %s\n' "$repo" "$summary"
@@ -508,6 +668,8 @@ for index in "${!TARGETS[@]}"; do
   repo=${TARGETS[$index]}
   (
     error_file="$TMPDIR_BOOT/$index.err"
+    facts_file="$TMPDIR_BOOT/$index.facts"  # key=value lines for boot_derived
+    remote=unchecked
     # Fetch with strict timeout — never block boot on network
     fetch_harden=()
     fetch_options=()
@@ -516,9 +678,18 @@ for index in "${!TARGETS[@]}"; do
       fetch_options=("$FETCH_UPLOAD_PACK")
     fi
     if [ "$NO_NETWORK" = "1" ]; then
-      :
+      remote=offline
     elif timeout 5 git -C "$repo" ${fetch_harden[@]+"${fetch_harden[@]}"} fetch --quiet ${fetch_options[@]+"${fetch_options[@]}"} origin 2>"$TMPDIR_BOOT/$index.fetch"; then
-      :
+      remote=fetched
+      # Only origin was fetched: an upstream on another remote (a local `.` is none)
+      # was not, so its behind count is cached and the target unchecked.
+      harden=()
+      untrusted_target "$repo" && harden=("${STATUS_HARDENING[@]}")
+      if [ "$BOOT" = "1" ] && branch=$(GIT_OPTIONAL_LOCKS=0 git -C "$repo" ${harden[@]+"${harden[@]}"} symbolic-ref -q HEAD 2>/dev/null) \
+          && upstream=$(git -C "$repo" ${harden[@]+"${harden[@]}"} config "branch.${branch#refs/heads/}.remote" 2>/dev/null) \
+          && [ "$upstream" != "origin" ] && [ "$upstream" != "." ]; then
+        remote=unchecked
+      fi
     else
       fetch_exit=$?
       if [ "$fetch_exit" = "124" ]; then
@@ -547,6 +718,13 @@ for index in "${!TARGETS[@]}"; do
       summary=$(porcelain_summary "$status" "$((1 - NO_NETWORK))" "$own")
       groups=${summary%%$'\n'*}
       [ "$summary" != "$groups" ] && entries_line=${summary#*$'\n'}
+      if [ "$BOOT" = "1" ]; then
+        porcelain_counts "$status" "$((1 - NO_NETWORK))"
+        if [ "$remote" = "fetched" ] && [ -n "$PC_BEHIND" ] && [ "${upstream:-}" != "." ]; then
+          printf 'behind=%s\n' "$PC_BEHIND" >> "$facts_file"
+        fi
+        [ "$own" = "1" ] && printf 'uncommitted=%s\n' "$PC_ENTRIES" >> "$facts_file"
+      fi
     else
       status_exit=$?
       printf '%s: status failed (exit %s); divergence and uncommitted counts unavailable\n' "$repo" "$status_exit" >> "$error_file"
@@ -556,9 +734,31 @@ for index in "${!TARGETS[@]}"; do
       printf '%s %s\n' "$repo" "$groups" > "$TMPDIR_BOOT/$index.out"
       [ -n "$entries_line" ] && printf '%s\n' "$entries_line" >> "$TMPDIR_BOOT/$index.out"
     fi
+    [ "$BOOT" = "1" ] && printf 'remote=%s\n' "$remote" >> "$facts_file"
   ) &
 done
 wait
+
+# The boot probe reads each target's record in TARGETS order (a missing facts
+# file leaves its remote empty: not fetched).
+if [ "$BOOT" = "1" ] && [ -n "$TMPDIR_BOOT" ]; then
+  for index in "${!TARGETS[@]}"; do
+    rec_remote=""
+    rec_behind=""
+    if [ -f "$TMPDIR_BOOT/$index.facts" ]; then
+      while IFS='=' read -r key value; do
+        case "$key" in
+          remote) rec_remote=$value ;;
+          behind) rec_behind=$value ;;
+          uncommitted) OWN_UNCOMMITTED=$value ;;
+        esac
+      done < "$TMPDIR_BOOT/$index.facts"
+    fi
+    REC_PATHS+=("${TARGETS[$index]}")
+    REC_REMOTE+=("$rec_remote")
+    REC_BEHIND+=("$rec_behind")
+  done
+fi
 
 # Concatenate output (only non-clean repos).
 # nullglob makes the *.out glob expand to nothing if no files match (all
@@ -581,5 +781,6 @@ if [ ${#error_files[@]} -gt 0 ]; then
 fi
 if [ "$BOOT" = "1" ]; then
   boot_facts
+  boot_derived
 fi
 exit 0
