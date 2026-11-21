@@ -178,6 +178,7 @@ RANGE_TREE_CHECKS=(
   "consistency_check.py --check enforcement-registry"
   "consistency_check.py --check instruction-units"
   "consistency_check.py --check dead-references"
+  "consistency_check.py --check owner-markers"
   "validate_runbook_consistency.py"
 )
 

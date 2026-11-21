@@ -6,8 +6,7 @@ of operational.md.
 
 Buddy reads this file (Read tool call) before starting any of the
 following: context writes, structural changes, life-domain work, or a
-mode switch. operational.md points here at the relevant places via
-`→ context-rules.md §...`.
+mode switch.
 
 ## Consistency cascade on first-principle changes
 

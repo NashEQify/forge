@@ -142,9 +142,9 @@ spec_ref, else `code-domain-logic` working the §3 checklist; L1: the §3
 checklist's AC-coverage item). Coverage
 findings name (a) concrete failure-mode missing tests catch, (b) why
 existing test surface (integration, indirect, contract-pinning)
-doesn't catch it, (c) the smallest change that closes the gap. A finding
-about a test, or a test the added-tests check rejects: read and follow
-`skills/code_review_board/test-findings.md` before dispositioning it. "Coverage at integration level" = valid `accept`.
+doesn't catch it, (c) the smallest change that closes the gap. A test
+finding or a rejected added test is dispositioned in the verdict skeleton's
+findings row (owner: `skills/code_review_board/test-findings.md` §What follows). "Coverage at integration level" = valid `accept`.
 
 **Process discipline:** no "leanest fix" for non-fix-now (`accept`
 = closed); self-introduced narrower than original → `accept`; Buddy

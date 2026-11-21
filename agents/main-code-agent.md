@@ -34,16 +34,8 @@ frontmatter `relevant_for:`. Do NOT edit between the markers — rerun the gener
 - `skills/spec_amendment_verification/SKILL.md` — Read-only cross-spec verification after spec amendments. Checks whether the changes are consistent with the referenced specs. Triggers wh...
 - `skills/spec_authoring/SKILL.md` — Interview-based authoring of a NEW spec or spec section — solution-space exploration + intent_chain / intent alignment. Triggers when a N...
 - `skills/task_status_update/SKILL.md` — Closing or completing a task (status→done), or any other task-status change — start (→in_progress), block, supersede, wontfix, absorbed. ...
-- `skills/transparency_header/SKILL.md` — Prepare a header for a delegation or task start that identifies the actor, scope and intent. The direct-action line in Buddy's operationa...
 
 <!-- AGENT-SKILLS-AUTO-END -->
-
-## Transparency header
-
-Print on every dispatch and task start per
-`skills/transparency_header/SKILL.md`. Intent tree from the
-received `intent_chain`. With no chain, emit a minimal header.
-Tell Buddy about a missing chain on delegated work.
 
 ## Intent alignment validation
 

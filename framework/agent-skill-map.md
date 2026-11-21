@@ -9,12 +9,6 @@ Regenerate via `scripts/generate_agent_skill_map.py`; run
 Agent-Definitionen (`agents/<name>.md`) participate via
 `<!-- AGENT-SKILLS-AUTO-START -->` / `<!-- AGENT-SKILLS-AUTO-END -->` markers — opt-in per agent.
 
-## Wildcard (`relevant_for: ["*"]`)
-
-Injected into ALL participating agent definitions:
-
-- `transparency_header` — Prepare a header for a delegation or task start that identifies the actor, sc...
-
 ## Per-Agent
 
 ### `buddy`

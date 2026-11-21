@@ -111,9 +111,3 @@ agent-confirmed, automatically checked and unverified results. A correct
 pointer can still be misread; independent review checks interpretation.
 Detail: `skills/_protocols/evidence-author-claims.md`.
 
-## Observability
-For state-changing actions, leave a one-liner:
-`{action} → {target} ({reason})` — e.g. `→ main-code-agent (src/-scope)`,
-`Buddy direct (orchestrator-path)`, `task → done`.
-Skip it for analysis or discussion.
-Detail: `skills/transparency_header/SKILL.md` §Boundary.

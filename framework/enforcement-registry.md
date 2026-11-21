@@ -183,8 +183,8 @@ These names appear in historical records (decision logs, review
 artifacts) but have **no live artifact**. The hook paradigm shift
 removed the tool-event hook layer (`PreToolUse` / `PostToolUse` /
 `UserPromptSubmit`); the observability checks they carried are now
-`[DISCIPLINE]` (the one-liner in `framework/invariants.md` §Observability and
-`skills/transparency_header/SKILL.md`) or were dropped. A doc on the active surface that states present-tense
+`[DISCIPLINE]` or were dropped (the observability one-liner and the transparency header were retired by
+Task 524). A doc on the active surface that states present-tense
 enforcement for any of these is a phantom claim — reframe it to the
 honest class above or mark it historical.
 

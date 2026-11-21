@@ -49,6 +49,8 @@ addition the table does not list is dropped, or reported in the return with a pr
 
 <!-- The tests the implementer writes: these and no others (skills/_protocols/mca-brief-template-verification.md
 §Tests the brief orders). -->
+- Limit: one test per behaviour the change promises, one reproduction failing at BASE per defect, none for unchanged
+  behaviour (owner: skills/_protocols/mca-brief-template-verification.md §Tests the brief orders)
 - <test name> — <the behaviour it covers> — relied on by <whom>; cases: <the cases that change an assertion>
 - Unchanged: <behaviour> — guarded by <existing test> | unguarded
 - Run: the selected set (`python3 $FRAMEWORK_DIR/scripts/select_tests.py <changed paths>`), not the whole suite

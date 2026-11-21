@@ -12,8 +12,8 @@ After compaction, reread before continuing every file in the boot entry's
 post-compaction reread list.
 
 ## Framework-wide rules
-Workflow selection, intent-driven work, the invariants (numbered as cited
-elsewhere: "Inv 4" and so on) and observability hold in every project and live
+Workflow selection, intent-driven work and the invariants (numbered as cited
+elsewhere: "Inv 4" and so on) hold in every project and live
 in `framework/invariants.md`; read and follow it before taking up work (the boot
 entry names it). This file adds the host's load list and the rules that apply
 only when the active project is the forge repository itself.

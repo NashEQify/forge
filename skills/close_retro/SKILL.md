@@ -42,9 +42,8 @@ operational checklist.
   new-pattern signal → **skip** with a one-line rationale (the replaced
   `workflow retro` sub-step is already skip-eligible).
 
-A mandated every-close fire is the rote-ritual-thin-why shape that frays
-(`transparency_header/SKILL.md` §Why this exists). Fire on signal-bearing
-work-units only.
+A mandated every-close fire is a rote ritual whose why thins and which frays.
+Fire on signal-bearing work-units only.
 
 ## Inputs (all present at close as a natural consequence of the workflow)
 

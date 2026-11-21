@@ -7,7 +7,7 @@
 | Agent | Rolle | Datei |
 |-------|-------|-------|
 | board-adversary | name: board-adversary description: Spec Board adversary (Opus) — smart-but-wrong scenarios, contradictions, edge cases. | agents/board-adversary.md |
-| board-adversary-2 | name: board-adversary-2 description: Second parallel Spec Board adversary (Opus) — E2E scenarios + first-principles drill, an independent perspective alongside adversary-1. | agents/board-adversary-2.md |
+| board-adversary-2 | name: board-adversary-2 description: Second parallel Spec Board adversary (Opus) — E2E scenarios + tested assumptions, an independent perspective alongside adversary-1. | agents/board-adversary-2.md |
 | board-architect-roots | name: board-architect-roots description: Spec Board specialist — structural-pattern-purity at LD-lock time. | agents/board-architect-roots.md |
 | board-chief | name: board-chief description: Chief reviewer in the Spec Board — consolidator-tool that produces a deduplicated, severity-ranked, theme-clustered consolidation document with convergence prediction. | agents/board-chief.md |
 | board-consumer | name: board-consumer description: Spec consumer in the Spec Board — readability, clarity, developer comprehension from the perspective of a future implementer. | agents/board-consumer.md |
@@ -57,10 +57,10 @@
 | navigation | **Orchestrator-neutral persona definitions** (source of truth). | agents/navigation.md |
 | plan-adversary (stub pointer) | name: plan-adversary description: Plan-review adversary persona — reviews the plan block + self-review BEFORE execution. | agents/plan-adversary.md |
 | security | name: security description: "Offensive security agent — thinks like an attacker, documents vulnerabilities defensively. | agents/security.md |
-| solution-expert | name: solution-expert description: Technical architecture and solution sparring — framework choice, architecture decisions, trade-off analysis with a required first-principles drill. | agents/solution-expert.md |
+| solution-expert | name: solution-expert description: Technical architecture and solution sparring — framework choice, architecture decisions, trade-off analysis with a required checked scope (assumption tested, evidence per position). | agents/solution-expert.md |
 | spec-text-drift-batch | name: spec-text-drift-batch description: > Parallel post-board agent that applies trivial line-level spec- text patches identified by chief verdict's `target: spec_text` entries. | agents/spec-text-drift-batch.md |
 | spec-verification | name: spec-verification description: > Read-only cross-spec consistency verifier — the spec-side mirror of code-verification. | agents/spec-verification.md |
 | test-skeleton-writer | name: test-skeleton-writer description: TDD red phase — writes test skeletons from a test plan. | agents/test-skeleton-writer.md |
-| tester | name: tester description: "Spec-driven test engineer with three modes (design, eval, execution). | agents/tester.md |
+| tester | name: tester description: "Spec-driven test engineer with three working modes (design, eval, execution). | agents/tester.md |
 
-*Status: 2026-10-30*
+*Status: 2026-11-21*

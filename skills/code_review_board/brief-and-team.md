@@ -117,8 +117,8 @@ the guarded branch; record the mutant; a survivor is a finding about
 that test, closed by strengthening it:
 `agents/_protocols/code-reviewer-protocol.md` §Findings about tests).
 
-**L1 trigger lenses** (join only on the named trigger, logged in the
-dispatch header):
+**L1 trigger lenses** (join only on the named trigger, logged on the
+verdict's `review:` line, REFERENCE.md §Verdict file skeleton):
 
 | Lens | Trigger |
 |---|---|
@@ -183,4 +183,4 @@ Hallucinated labels (`code-async`, `code-concurrency`) fall through
 silently — `ls agents/code-*.md` at dispatch-prep to verify. On a
 non-matching name, substitute by risk-area from the §3 table above
 (infra/worker → `code-reliability`; async/race → `code-adversary` +
-`code-architect-roots`); log the substitution in the dispatch header.
+`code-architect-roots`); log the substitution on the verdict's `review:` line.

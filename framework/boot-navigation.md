@@ -54,13 +54,13 @@ development-specific catalogue below. Profile availability does not select work.
 
 ---
 
-## Skills (46 in tree — 44 active + 1 draft + 1 deprecated)
+## Skills (48 in tree — 43 active + 1 draft + 1 deprecated below; boot, setup, instruction_authoring via the plugin listing)
 
 Type legend: **Capability** = multi-phase, callable from workflow steps.
 **Utility** = single function, directly callable by Buddy.
 **Protocol** = rule/format loaded by other skills.
 
-The two tables below enumerate all 44 active skills. The
+The two tables below enumerate the 43 active skills. The
 `spec_board` UX-mode row is the same skill in a different mode, not
 a separate skill. `spec_update` is deprecated (still in tree) —
 see "Retired / deprecated skills" at the end of this section.
@@ -107,7 +107,6 @@ see "Retired / deprecated skills" at the end of this section.
 | `knowledge_capture` (draft) | persist SOTA maps, comparisons, research artifacts | research close, manual |
 | `consistency_check` | structural repo integrity (dead refs, orphan files, adapter drift) | Buddy pre-commit gate, after structural changes |
 | `get_api_docs` | fetch current API docs for external libraries via chub CLI | build specify step 5 SPEC + step 7 EVAL |
-| `transparency_header` | header format for delegation + task start | Buddy on dispatch |
 | `return_summary` | return format; the decisions list of returns and final messages | delegated agents; Buddy at the final message |
 | `python_code_quality_enforcement` | Python conventions, Ruff/Mypy tooling | MCA during coding |
 | `youtube_subtitles` | video summary via subtitles | manual for video research |

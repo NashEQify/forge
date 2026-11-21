@@ -95,7 +95,7 @@ pointer for design-lineage readers.)*
 | DR-2 | independent gate checks per stage | middleware gates, schema validation |
 | DR-3 | read-before-write + delta check (manual) | conflict detection on DB write |
 | DR-4 | boot entropy audit + freshness date | APScheduler + temporal queries |
-| DR-5 | transparency header as paraphrase proof | intent_chain schema with validation |
+| DR-5 | transparency header as paraphrase proof (retired, Task 524) | intent_chain schema with validation |
 | DR-6 | plan-intent check in delegation artifact | runtime check on agent behavior |
 | DR-7 | meta-primitives absorb single rules | harness takes over mechanical rules |
 | DR-8 | 3-level loading + flush before discard | FastAPI context assembler |

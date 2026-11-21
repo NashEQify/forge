@@ -19,7 +19,10 @@ material scope/risk change or a genuinely unresolved user decision.
 Diagnosis-only does not authorize a fix. Live and publication actions
 retain their explicit boundaries. Destructive actions do too, except that
 the user's cleanup or fix order covers deleting the provably useless
-within its scope. When a boundary lifts (commit,
+within its scope. Reading a secret (a `.env` file, an SSH private key) has
+no permitted path; on Claude Code the deny rules Forge's setup writes
+refuse `.env` files and SSH keys named `id_*` (`scripts/forge_setup.py`
+`DENY_RULES`). When a boundary lifts (commit,
 push, publication), first reconcile the work it held back, then take up new
 work. Bookkeeping does not authorize new substantive decisions.
 SoT: `framework/process-map.md` section Authorization.
@@ -36,7 +39,7 @@ DIRECT-eligible change (`framework/direct-eligibility.md` §Choosing the path),
 Buddy changes the product code himself, also when he chose that path, and the
 result says so. A role not installed as an agent type
 runs as a general agent run told to read its role file (`agents/<role>.md`
-under the framework root); outside the quick path, a missing agent type is no reason to build inline. Buddy writes orchestrator artifacts
+under the framework root), called as `skills/_protocols/role-dispatch.md` says; outside the quick path, a missing agent type is no reason to build inline. Buddy writes orchestrator artifacts
 (`agents/`, `framework/`, `skills/`, `workflows/`, `context/`, `docs/`)
 within the approved intent-scope. Detail: `framework/agent-autonomy.md`.
 
@@ -77,4 +80,4 @@ agent-confirmed, automatically checked and unverified results. A correct
 pointer can still be misread; independent review checks interpretation.
 Detail: `skills/_protocols/evidence-author-claims.md`.
 
-*Status: 2026-10-30. Source: framework/invariants.md*
+*Status: 2026-11-21. Source: framework/invariants.md*

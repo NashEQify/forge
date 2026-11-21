@@ -162,7 +162,7 @@ Rules of thumb:
 - MCA-relevant: implementation/fix helper skills
 - tester-relevant: testing methodology
 - solution-expert: decision support skills
-- wildcard: truly universal only (`transparency_header`)
+- wildcard: truly universal only (none at present)
 
 Workflow YAML maintenance remains complementary and mostly mental discipline.
 

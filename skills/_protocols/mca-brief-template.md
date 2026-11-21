@@ -52,9 +52,9 @@ authorization; Buddy retains those judgments. No evidence schema is repurposed.
 
 ## Test/Verification scope, gate cadence, Claim-Verifications, Reviewer Checkpoints, structural-refactor pre-lock
 
-When writing the brief's test list or verification scope (DoD), and before locking a brief that spans several
+When writing the brief's verification scope (DoD), and before locking a brief that spans several
 commits, uses a claim trigger formulation, is reviewed at L2 or touches imports: read and follow
-`skills/_protocols/mca-brief-template-verification.md` (the tests a brief orders; per-fix DoD, bind rule;
+`skills/_protocols/mca-brief-template-verification.md` (per-fix DoD, bind rule;
 gate cadence; the Claim-Verifications table, its triggers and resolved-seam depth; the L2 4-link evidence chain; the
 import-graph pre-lock checklist).
 

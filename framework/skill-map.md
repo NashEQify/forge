@@ -87,7 +87,7 @@ Canonical for `consistency_check` §Skill-Map; sub-sections derived from `invoca
 
 ### Cross-cutting Skills (`cross-cutting`)
 
-`consistency_check`, `instruction_authoring`, `knowledge_processor`, `task_status_update`, `transparency_header`
+`consistency_check`, `instruction_authoring`, `knowledge_processor`, `task_status_update`
 
 ### Hook-triggered Skills (`hook`)
 
@@ -117,7 +117,7 @@ spec_amendment_verification, frame, bedrock_drill, scoping,
 security_and_hardening, frontend_ui_engineering
 
 **Protocols:**
-convergence_loop, transparency_header, return_summary, consistency_check,
+convergence_loop, return_summary, consistency_check,
 python_code_quality_enforcement,
 _protocols/discourse, _protocols/context-isolation,
 _protocols/content-preservation, _protocols/dispatch-template,
@@ -242,7 +242,7 @@ workflow-step call are orphan candidates.
 as orchestrator work, not via workflow steps. That is cross-cutting
 infrastructure and by definition not workflow-embedded.
 `task_creation`, `task_status_update`, `consistency_check`,
-`transparency_header`, `return_summary` are not orphans — they are
+`return_summary` are not orphans — they are
 utility patterns.
 
 ---

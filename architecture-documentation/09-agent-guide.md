@@ -114,8 +114,7 @@ Check consequential claims against the source and current environment. A file
 existing does not establish that a host read it, that a lock excludes external
 writers, or that an installed capability works in a fresh session.
 
-For state-changing actions leave the required concise observability line naming
-the action, target and reason. Preserve other writers' changes. Keep generated
+Preserve other writers' changes. Keep generated
 wrappers and indexes derived from canonical sources, and update live references
 when retiring an artifact.
 

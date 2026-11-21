@@ -48,7 +48,7 @@ spec work) + relevant `decisions.md` entries. The user's `profile.md` (values) i
 tier 1, always present. Intent narrowed to the relevant scope.
 
 **Paused (category: process gates):**
-intake-gate proof output, transparency header, delegation formalia,
+intake-gate proof output, delegation formalia,
 backlog management, planning primitive, hook/handoff writing.
 
 **Still active (category: behavioral primitives):**

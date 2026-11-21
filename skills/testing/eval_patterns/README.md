@@ -34,8 +34,8 @@ blind. Until then, behavioural observations of agents
 and workflows are recorded as notes rather than as
 discrete golden test cases.
 
-Pre-harness manual traces: incident block + transparency
-header are the current tracing proxy. Sufficient as long
+Pre-harness manual traces: the incident block is the current
+tracing proxy. Sufficient as long
 as every agent run is one CC session and Buddy reads the
 return synchronously. A tracing harness would replace
 them.

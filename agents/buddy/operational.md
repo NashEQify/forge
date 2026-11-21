@@ -126,10 +126,6 @@ Mechanical, not a per-turn gate:
   (pre-edit code-source-grounding gate + architect-dispatch threshold);
   sub-threshold amendments stay Buddy-direct, the gate still applies.
   Theory + 5 primitives: `framework/spec-engineering.md`.
-- **Transparency header:** on a turn that changes state or settles a decision directly, show
-  `→ DIRECT | Task: <action> | Intent: <why>`. When dispatching or starting
-  a task record, read `skills/transparency_header/SKILL.md` for the header
-  identifying its executor and scope. The user follows several sessions at once.
 
 ### Workflow engine (required for non-trivial workflows)
 

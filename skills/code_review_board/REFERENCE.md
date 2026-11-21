@@ -124,8 +124,8 @@ cause specialist-set drift — the risk-area they were meant to
 cover ships unreviewed. Run `ls agents/code-*.md` at dispatch-prep
 to verify; if a name does not match, substitute from the canonical
 table in brief-and-team.md §3 (Infra/worker → `code-reliability`, async/race →
-`code-adversary` + `code-architect-roots`). Log substitutions in
-the dispatch transparency-header.
+`code-adversary` + `code-architect-roots`). Log substitutions on
+the verdict's `review:` line (§Verdict file skeleton).
 
 ## code-architect-roots vs code-review Architecture-Axis
 
@@ -223,7 +223,7 @@ Skeleton: verdict 2
 
 # Verdict — task <id>, review pass <n>
 
-review: <light | L0 | L1 | L2>, seats: <names> | waived because <reason>   # owner: agents/buddy/multi-perspective.md
+review: <light | L0 | L1 | L2>, seats: <names; a joined lens: its trigger; a substituted seat: asked → used> | waived because <reason>   # owner: agents/buddy/multi-perspective.md
 re_reviews: <n> of 2 on <mechanism>   # past 2: at-the-cap, or the foundation override with its measured severity drop
 verdict: <PASS | PASS_WITH_RISKS | FAIL | PARTIAL>   # 0C+0H | 0C+<=2H, carry-forward, no blocked live mechanism cell | >=1C, >2H or a blocked live cell | incomplete evidence
 
@@ -231,7 +231,7 @@ verdict: <PASS | PASS_WITH_RISKS | FAIL | PARTIAL>   # 0C+0H | 0C+<=2H, carry-fo
 
 | id | severity (verified) | locator | disposition | cause and answer |
 |---|---|---|---|---|
-| <id> | <critical/high/medium/low> | `<file:line>` | <fix-now / accept / watch / fix-later> | <every fix-now finding, and a blocking one left open: cause-before-answer.md; else "-"> |
+| <id> | <critical/high/medium/low> | `<file:line>` | <fix-now, or the finding's remaining_findings target; a test finding: test-findings.md §What follows> | <every fix-now finding, and a blocking one left open: cause-before-answer.md; else "-"> |
 
 ## Remaining findings
 

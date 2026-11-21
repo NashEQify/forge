@@ -537,6 +537,8 @@ INSTRUCTION_UNIT_BUDGET = 12_000
 LOOKUP_READ_CEILING = 28_000
 
 # Framework-relative globs whose files are read as instruction text at a step.
+# OWNER_MARKER_ROOTS (section Owner markers) is a second root list, the hook's READ_PATH_ROOTS as globs; a parity case
+# in tests/test_consistency_check_owner_markers.py keeps it in step with the hook.
 # Not enumerated: top-level agents/*.md (sub-agent personas, injected by the host as a system prompt) and every
 # workflow.yaml (engine data; the workflow engine prints one step's instruction).
 INSTRUCTION_UNIT_GLOBS = (
@@ -1209,6 +1211,217 @@ def check_spine(spine: Path, project_root: Path | None = None) -> tuple[int, lis
     return 0, [f"OK: spine — {spine} ({decisions} decisions, {inherited} inherited, {deferred} deferred)"]
 
 
+# ---------------------------------------------------------------------------
+# Owner markers (Task 524 AC-3): every `(owner: …)` statement against its owner
+# ---------------------------------------------------------------------------
+
+# Source: the pre-commit hook's READ_PATH_ROOTS (orchestrators/claude-code/hooks/pre-commit.sh), as globs; the parity
+# case in test_live_tree_passes fails when the two differ. Not covered: step text the workflow engine prints from a
+# script's string literals (scripts/workflow_engine.py); a script is code, not an instruction unit under the roots.
+OWNER_MARKER_ROOTS = (
+    "agents/**/*",
+    "framework/**/*",
+    "skills/**/*",
+    "workflows/**/*",
+    "orchestrators/*/rules/**/*",
+    "CLAUDE.md",
+    "AGENTS.md",
+)
+_OWNER_PATH_RE = re.compile(r"^`?([^\s`]+\.(?:md|yaml))`?(?:\s+(.*))?$")
+_OWNER_ANY_PATH_RE = re.compile(r"^`?([^\s`]+)`?")
+_QUALIFIER_OWNER_RE = re.compile(r"§|\.(?:md|yaml)\b")
+_QUALIFIER_OWNER = "qualifier contains a section or owner"
+_TARGET_NUMBER_RE = re.compile(r"^(\d+(?:\.\d+)*[a-z]?)\.?(?:\s+|$)(.*)$")
+_LABEL_RE = re.compile(r"^\s*(?:[-*+]\s+|\d+[.)]\s+)?\*\*(.+?)\*\*")
+_SECTION_RANGE_RE = re.compile(r"^(\d+(?:\.\d+)*[a-z]?)[–-](\d+(?:\.\d+)*[a-z]?)$")
+
+
+def _raise(error: OSError) -> None:
+    raise error
+
+
+def owner_marker_files(root: Path | None = None) -> list[str]:
+    """Framework-relative paths of the `.md` and `.yaml` files under OWNER_MARKER_ROOTS, sorted. Raises OSError on
+    an unreadable directory or a dangling symlink under the roots."""
+    root = root or _FRAMEWORK_ROOT
+    regexes = [_glob_regex(pattern) for pattern in OWNER_MARKER_ROOTS]
+    found = set()
+    for top in sorted({pattern.split("/")[0] for pattern in OWNER_MARKER_ROOTS}):
+        start = root / top
+        if not start.exists() and not start.is_symlink():
+            continue
+        walked = os.walk(start, onerror=_raise) if start.is_dir() else [(str(root), [], [top])]
+        for directory, _, names in walked:
+            for name in names:
+                path = Path(directory) / name
+                rel = path.relative_to(root).as_posix()
+                if not any(regex.match(rel) for regex in regexes):
+                    continue
+                if not path.exists():
+                    raise OSError(f"dangling symlink under the roots: {rel}")
+                if path.suffix in (".md", ".yaml") and path.is_file():
+                    found.add(rel)
+    return sorted(found)
+
+
+def _owner_markers(text: str) -> list[tuple[int, str | None]]:
+    """(line of `(owner:`, body with whitespace runs as one space) per marker, fenced ones included; body None when
+    no `)` closes it."""
+    markers = []
+    for match in re.finditer(r"\(owner:", text):
+        line = text.count("\n", 0, match.start()) + 1
+        depth, end = 1, None
+        for index in range(match.end(), len(text)):
+            if text[index] == "(":
+                depth += 1
+            elif text[index] == ")":
+                depth -= 1
+                if depth == 0:
+                    end = index
+                    break
+        body = None if end is None else " ".join(text[match.end():end].split())
+        markers.append((line, body))
+    return markers
+
+
+def _clean_target(text: str) -> str:
+    text = text.strip()
+    if len(text) > 1 and text.startswith("`") and text.endswith("`"):
+        text = text[1:-1].strip()
+    return text.rstrip(".:").strip()
+
+
+def _owner_targets(text: str) -> tuple[set[str], set[str]]:
+    """(numbers, texts) of an `.md` owner's headings and bold run-in labels, fenced lines and HTML comment blocks
+    ignored."""
+    numbers: set[str] = set()
+    texts: set[str] = set()
+    fence: tuple[str, int] | None = None
+    comment = False
+    for line in text.splitlines():
+        if comment:
+            comment = "-->" not in line
+            continue
+        if fence:
+            if _fence_closes(line, fence):
+                fence = None
+            continue
+        marker = _FENCE_OPEN_RE.match(line)
+        if marker:
+            fence = (marker[1][0], len(marker[1]))
+            continue
+        if "<!--" in line and "-->" not in line.rsplit("<!--", 1)[1]:
+            comment = True
+        heading = _HEADING_RE.match(line)
+        label = None if heading else _LABEL_RE.match(line)
+        raw = heading[2] if heading else label[1] if label else None
+        if raw is None:
+            continue
+        raw = raw.strip()
+        number = _TARGET_NUMBER_RE.match(raw)
+        if number:
+            numbers.add(number[1])
+            raw = number[2]
+        cleaned = _clean_target(raw)
+        if cleaned:
+            texts.add(cleaned)
+    return numbers, texts
+
+
+def _resolve_section(section: str, numbers: set[str], texts: set[str]) -> tuple[bool, str | None]:
+    """(resolved, qualifier): rules (a) to (d) of the owner-marker grammar; the qualifier is rule (d)'s remainder
+    after the longest target text it starts with, and it starts with `and ` or `for `."""
+    wanted = _clean_target(section) or section
+    if wanted in numbers:
+        return True, None
+    span = _SECTION_RANGE_RE.match(wanted)
+    if span and span[1] in numbers and span[2] in numbers:
+        return True, None
+    for target in texts:
+        if target == wanted or (target.startswith(wanted) and target[len(wanted)] in " ():.,"):
+            return True, None
+    longest = max((t for t in texts if section.startswith(t + " ")), key=len, default=None)
+    if longest is not None:
+        qualifier = section[len(longest):].strip()
+        if _QUALIFIER_OWNER_RE.search(qualifier) or qualifier.startswith(("and ", "for ")):
+            return True, qualifier
+    return False, None
+
+
+def check_owner_markers(root: Path | None = None) -> tuple[int, list[str]]:
+    """Every `(owner: …)` marker in the instruction roots names owner paths that exist and `.md` sections that
+    resolve to a heading or bold label there. Raises OSError or UnicodeDecodeError on an unreadable unit or owner;
+    the caller reports that as could-not-run."""
+    root = root or _FRAMEWORK_ROOT
+    targets: dict[Path, tuple[set[str], set[str]]] = {}
+    unresolved: list[str] = []
+    rest: list[str] = []
+    markers = bad = 0
+    for rel in owner_marker_files(root):
+        for line, body in _owner_markers((root / rel).read_text(encoding="utf-8")):
+            markers += 1
+            where = f"{rel}:{line}"
+            if body is None:
+                unresolved.append(f"UNRESOLVED {where} -> (owner: not closed by ')'")
+                bad += 1
+                continue
+            failed = False
+            for part in (p.strip() for p in body.split(";")):
+                if "<" in part:
+                    rest.append(f"PLACEHOLDER {where}")
+                    continue
+                match = _OWNER_PATH_RE.match(part)
+                if not match:
+                    named = _OWNER_ANY_PATH_RE.match(part)
+                    other = named is not None and any(
+                        (base / named[1]).is_file() for base in (root, (root / rel).parent))
+                    unresolved.append(f"UNRESOLVED {where} -> {part}: "
+                                      f"{'unsupported owner type' if other else 'path missing'}")
+                    failed = True
+                    continue
+                path_text, tail = match[1], (match[2] or "").strip()
+                owner = root / path_text
+                if not owner.is_file():
+                    owner = (root / rel).parent / path_text
+                sections = [s.strip() for s in tail[1:].split(", §")] if tail.startswith("§") else []
+                if not owner.is_file():
+                    shown = [f" §{s}" for s in sections] or [f" {tail}" if tail else ""]
+                    unresolved += [f"UNRESOLVED {where} -> {path_text}{s}: path missing" for s in shown]
+                    failed = True
+                    continue
+                if tail and not sections:
+                    if _QUALIFIER_OWNER_RE.search(tail):
+                        unresolved.append(f"UNRESOLVED {where} -> {path_text} {tail}: {_QUALIFIER_OWNER}")
+                        failed = True
+                    else:
+                        rest.append(f"NOTE {where} -> {path_text} {tail}: unchecked qualifier")
+                    continue
+                if not sections:
+                    rest.append(f"OK {where} -> {path_text}")
+                    continue
+                if owner.suffix != ".md":
+                    unresolved += [f"UNRESOLVED {where} -> {path_text} §{s}: section not checkable" for s in sections]
+                    failed = True
+                    continue
+                key = owner.resolve()
+                if key not in targets:
+                    targets[key] = _owner_targets(owner.read_text(encoding="utf-8"))
+                for section in sections:
+                    resolved, qualifier = _resolve_section(section, *targets[key])
+                    if not resolved or (qualifier and _QUALIFIER_OWNER_RE.search(qualifier)):
+                        reason = "section missing" if not resolved else _QUALIFIER_OWNER
+                        unresolved.append(f"UNRESOLVED {where} -> {path_text} §{section}: {reason}")
+                        failed = True
+                    elif qualifier:
+                        named = section[: len(section) - len(qualifier)].rstrip()
+                        rest.append(f"NOTE {where} -> {path_text} §{named} {qualifier}: unchecked qualifier")
+                    else:
+                        rest.append(f"OK {where} -> {path_text} §{section}")
+            bad += failed
+    summary = f"owner-markers: {markers} markers, {bad} unresolved"
+    return (1 if bad else 0), [*unresolved, summary, *rest]
+
+
 def _main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="consistency_check — Repo-Integritaet.",
@@ -1217,7 +1430,7 @@ def _main(argv: list[str] | None = None) -> int:
         "--check",
         choices=(
             "tier1-drift", "tier1-multi-workflow-drift", "enforcement-registry",
-            "instruction-units", "brief-acceptance", "spine", "dead-references",
+            "instruction-units", "brief-acceptance", "spine", "dead-references", "owner-markers",
         ),
         required=True,
         help="Welcher Check ausgefuehrt werden soll.",
@@ -1272,6 +1485,11 @@ def _main(argv: list[str] | None = None) -> int:
         exit_code, warnings = check_brief_acceptance(Path(args.brief))
     elif args.check == "spine":
         exit_code, warnings = check_spine(Path(args.spine))
+    elif args.check == "owner-markers":
+        try:
+            exit_code, warnings = check_owner_markers()
+        except (OSError, UnicodeDecodeError) as exc:
+            exit_code, warnings = 2, [f"ERROR: owner-markers could not run: {exc}"]
     elif args.check == "dead-references":
         try:
             warnings = [
