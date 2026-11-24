@@ -14,8 +14,9 @@ Resolve workflow selection from the active project's intent per
 `framework/workflow-selection.md` before applying Forge
 process requirements. The boot runs in every mode, whatever the request's
 size; the `on-demand` mode starts with `agents/buddy/boot-on-demand.md` and
-uses project-local working and delegation rules; Forge workflows,
-Councils, boards and test chains are available on explicit request.
+uses project-local working and delegation rules. Standalone Council follows
+the on-demand decision trigger in `framework/workflow-selection.md`; other
+Forge methods are available on explicit request.
 This selection governs the process requirements below and in downstream
 instructions; authorization, secrets, evidence and outcome verification remain
 binding.

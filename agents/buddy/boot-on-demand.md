@@ -78,11 +78,13 @@ before this chat commissions a session, read and follow
 Not part of on-demand start: the chub check, plan/workflow probes, the Forge
 skill index, automatic `context/` creation and development `operational.md` (read it only
 for explicitly selected development work). Read the skill index
-`framework/boot-navigation.md` when the user asks for a Forge skill, workflow,
-Council or board, and on Codex before choosing any skill or workflow: routing
-without it misses skills no workflow names. Generic methods use their own contracts. Forge workflows, Councils and boards run
-only on explicit request. Authorization, secrets and the project's own
-approvals stay binding. Before the final message of a turn that changed
+`framework/boot-navigation.md` when selecting a Council under the on-demand
+decision trigger or answering an explicit request for a Forge method, and on
+Codex before choosing any skill or workflow. At a topic change or before
+choosing or acting on a consequential unresolved change, apply the on-demand
+Council trigger in `framework/workflow-selection.md` §On demand. Generic
+methods use their own contracts. Authorization, secrets and local approvals
+stay binding. Before the final message of a turn that changed
 something or delegated work, read and follow `skills/return_summary/SKILL.md`
 §Decisions I took for you and, for each completion claim,
 `skills/_protocols/evidence-author-claims.md` §8.5.

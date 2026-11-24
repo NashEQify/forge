@@ -1,13 +1,11 @@
 ---
 name: council
 description: >
-  Structured architectural / strategic decision-making — context-isolated
-  members + a chief consolidation, you decide (light / standard / full /
-  interactive modes). Use when a decision has more than one viable path AND
-  is hard to reverse AND you're uncertain — spawn it yourself when stuck on
-  an architecture/strategy call, before escalating to the user. NOT for a
-  single-path or easily-reversible choice, or a cross-scope contradiction
-  you can settle in the current scope.
+  Independent perspectives on an unresolved decision, with Chief consolidation.
+  Use when the Council gate fires. Invoke it yourself before asking the user
+  to choose or proceeding with an approved on-demand Apply with unresolved risk.
+  Check hard security or sovereignty constraints across components, viable paths,
+  reversibility, impact and uncertainty. Not for routine reversible work.
 status: active
 verification_tier: 1
 evidence_layout: per_finding

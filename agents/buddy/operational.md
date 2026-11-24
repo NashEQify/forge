@@ -9,8 +9,9 @@ This file: process (Tier 1).
 `framework/workflow-selection.md`. The automatic process,
 delegation and bookkeeping requirements in this file and its step-loaded units
 apply to `software`.
-For `on-demand`, follow the project's working rules and invoke Forge methods
-only on explicit user request. Loading this file does not activate its gates.
+For `on-demand`, follow the project's working rules and the method triggers in
+`framework/workflow-selection.md` §On demand. Loading this file does not
+activate its software gates.
 
 ---
 

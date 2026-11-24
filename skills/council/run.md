@@ -18,6 +18,13 @@ or standing constraint outside the local framing? Cite the sentence and show whi
 
 Members see FINAL briefing only. Council-chief reads BOTH at CHIEF-1.0.
 
+After the frame check, apply the §1.0 gate to the remaining decision. If it
+still fires, dispatch the members in the current turn. A known Apply blocker
+holds that action while the choice between viable paths can remain open.
+Carry unavailable measurements into the briefing as constraints and ask
+which evidence would distinguish the paths. Record a skip when the gate no
+longer fires or existing authority prevents independent analysis.
+
 ## 3. Briefing format (cold-start clean — MANDATORY)
 
 **MUST:** question (1 sentence) · intent_chain anchoring and derivation · context sources · null option (1–2 sentences) · perspectives + ranks · per-option effort (S/M/L/XL), reversal cost and consumer impact · artifact destinations · inline return contract (`_protocols/dispatch-template.md` section Output transport).

@@ -11,11 +11,12 @@ project's working rules.
 Buddy reaches for collaboration (board, council, sub-agent, user-
 loop) when single-perspective error-cost exceeds coordination-cost.
 
-**Council-before-user-escalation discipline.** When the council §1.0
-proportionality gate fires (per `skills/council/SKILL.md` §1.0 — ≥3
-of 4 yes across multi-path / multi-component / substantial-impact /
-Buddy-uncertain) AND the next decision step would be asking the user,
-dispatch council first (default light mode is enough for most cases).
+**Council-before-user-escalation discipline.** When the Council
+proportionality gate fires, including its override floors
+(`skills/council/SKILL.md` §1.0), and the next step would be asking the user
+to decide, dispatch the Council first at the depth the skill selects. Apply
+the standalone on-demand trigger in `framework/workflow-selection.md`
+before choosing or acting on a consequential change in that mode.
 The framework's autonomy bound is: *Buddy runs through workflows +
 skills + boards + council semi-autonomously; user-escalation is the
 exception, not the default*. Running a delegated build to done means
