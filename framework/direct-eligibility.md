@@ -11,6 +11,11 @@ secrets, schema/data migration, public or cross-component contracts, live
 infrastructure, and changes with hidden/racing/unbounded failure effects.
 Size does not cancel a safety floor.
 
+When a second verified finding breaks the same promised behaviour after a repair,
+route the next correction through the fix workflow before editing. Count findings
+from external reviews too. Use its convergence check to cover the mechanism and
+its affected routes in one repair.
+
 Before choosing DIRECT, trace what the producer changes and what each affected
 consumer calls, reads or relies on before and after. Record the deciding fact and
 its source in the sizing facts. A new CLI call or a new value in a versioned
@@ -47,6 +52,9 @@ record is that it does what it should. Choose one path per change:
   defect could pass the builder's tests unseen, so someone who did not build
   it checks.
 
+A still-eligible fix that changes what an existing boundary passes to a downstream
+decision or action takes **reviewed**. Its effect must be tested at the consumer.
+
 In doubt between two paths, ask in one sentence that names both and the
 reason, so a word answers it ("Checked or reviewed? The test covers the
 parser, not the two callers that read its output."). Where the user said to
@@ -64,6 +72,9 @@ one.
 DIRECT is a short complete lifecycle of four steps, in this order:
 
 1. **Record:** in the turn, the sizing facts, path, outcome, scope, success criteria and verification plan.
+   For a defect, state the promised behaviour and what happens on failure before editing.
+   For a boundary fix, plan a reproduction through the normal entry that checks the exact value or
+   disposition the consumer receives and the resulting effect, including an action that must be withheld.
    Ground the scope in the applicable project intent and original local objective. Cite both, show how the
    choice serves both and hold the dependent choice on missing or conflicting intent
    (owner: framework/invariants.md §Intent-driven). This record is the delegation. A commit of the change that touches
@@ -83,7 +94,10 @@ DIRECT is a short complete lifecycle of four steps, in this order:
    implementer. Dispatch either host role form through
    `skills/_protocols/role-dispatch.md` §The call with the record, the implementer's
    return and the diff. The seat independently runs the required reproduction
-   and assigned direct exercises. For equivalent selected-suite execution, it
+   and assigned direct exercises. For a boundary fix, it also derives a counterexample from
+   the recorded guarantee and executes it through the normal entry on the outgoing diff.
+   Hold publication until that check verifies the exact value or disposition and its effect.
+   For equivalent selected-suite execution, it
    runs the applicable set or qualifies its original receipt under
    `skills/testing/run-strategy.md` §Run strategy. The seat returns inline.
    A typo- or format-only change gets a diff check. On checked,

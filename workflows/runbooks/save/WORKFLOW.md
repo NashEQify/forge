@@ -85,6 +85,11 @@ condition in the handoff; no software task system is invented for this purpose.
 
 ## 3. Commit, push and verify where authorized
 
+For a held-back fix that changes input to a downstream decision or action, match the independent counterexample
+to the exact outgoing diff, consumer input and effect before pushing. Hold the push for an independent check if
+the evidence is missing, and record its result with the pending publication. Preserve completed review evidence
+(owner: `framework/process-map.md` §Authorization).
+
 Review diff/staged content for secrets, temporary output and unintended changes; use
 an available secret scanner. Stage concrete authorized paths/hunks, never a blanket
 `git add .` or foreign staged changes. Follow the repository's commit policy. The

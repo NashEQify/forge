@@ -62,6 +62,10 @@ steps:
     category: content
     instruction: >
       Symptoms → hypotheses → drill until root cause. Do NOT patch symptoms.
+      If a second verified finding after a repair breaks the same guarantee,
+      use skills/convergence_loop/simplify-before-patch.md before editing.
+      Record both triggering findings regardless of severity or review source.
+      The class witness must fail on both pre-fix revisions.
       Output: hypothesis + test plan that reproduces the bug.
     skill_ref: skills/root_cause_fix/SKILL.md
     completion:
@@ -72,9 +76,13 @@ steps:
     name: "Failing test reproducing the bug"
     category: content
     instruction: >
-      Write one test that triggers the bug symptom, or strengthen the existing
-      test that reaches its path; several routes to the defect are cases of
-      that test. MUST be RED before the fix.
+      Before editing, record the behaviour the fix must guarantee and its
+      failure outcome. Write one test that reproduces the defect, or strengthen
+      the existing test that reaches it. When a producer passes a value or
+      disposition to another component, enter through the normal caller and
+      assert both the exact input the deciding consumer receives and its
+      resulting effect, including an action that must be withheld. Use cases of
+      the same test for multiple routes. Run it RED before the fix.
     completion:
       type: manual
     on_fail: block
@@ -184,7 +192,11 @@ steps:
       Safety floors precede file counts and other size signals. DIRECT
       eligibility comes from framework/process-map.md; a fix is not
       automatically L1. Consolidation follows the actual reviewer count
-      under the skill's §1.3. Test scope: a fix pass and its re-verify run
+      under the skill's §1.3. When the fix changes what a boundary passes to a downstream
+      decision or action, a reviewer independent of the implementer derives a counterexample
+      from the pre-fix guarantee, executes it through the normal entry on the outgoing diff,
+      and checks the exact consumer input and resulting effect before publication.
+      Test scope: a fix pass and its re-verify run
       the selected set for the fix's changes; a due broad run comes once,
       after the last pass, by the full gate's runner, and no fix brief or
       dispatch tells another actor to run the whole suite
@@ -199,7 +211,12 @@ steps:
       their own; which of them is fixed now, which is carried, and what is
       not such a finding (evidence a rule requires, wrong product behaviour,
       an owner-approved exit criterion):
-      skills/code_review_board/test-findings.md. Before commissioning a fix pass or a re-review: re-reviews are at most two per
+      skills/code_review_board/test-findings.md. When a second verified finding after a
+      repair breaks the same promised behaviour, stop before commissioning another patch.
+      Count findings from external reviews and classify by the violated guarantee, irrespective
+      of the reported severity. Use skills/convergence_loop/simplify-before-patch.md to map
+      all affected routes and record the class witness and repair decision before editing.
+      Re-reviews are at most two per
       mechanism, counted across review owners, workflows and tasks, then
       skills/convergence_loop/at-the-cap.md (owner: skills/code_review_board/verdict.md
       §Re-review); where the
@@ -347,6 +364,14 @@ steps:
     name: "Commit + deploy"
     category: deterministic
     instruction: >
+      Before pushing a held-back boundary fix that changes what a consumer
+      receives for a downstream decision or action, check the independent
+      counterexample against the exact outgoing diff. Reuse evidence when it
+      covers that diff, the exact consumer input and the resulting effect.
+      If it is missing, hold the push and have a fresh reviewer derive and
+      run the counterexample through the normal entry. Record the result with
+      the pending publication. Leave the completed review and its evidence unchanged.
+
       First make sure the tests that exercise the fix ran after the last code
       change (skills/testing/run-strategy.md §Test selection); run them now if
       not. A due broad run is the full gate's runner's: run it here only when

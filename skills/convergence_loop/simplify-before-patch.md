@@ -34,7 +34,7 @@ state file (spec-only review: consolidated file):
 - deciders: {question; every predicate caller and independent decider with location; owner or unresolved candidates; duplicate → delete or delegate} | n/a (same_class: no)
 - simpler_mechanism: yes|no — {named candidate + the cells / invariant locus it removes + the finding ids}
 - spec_is_problem: yes|no — {clause}; open readings: {n} ({RL ids})
-- causes: {id}: wrong-finding|intent|spec|mechanism|stuck|code — {the check that holds}; … one per open blocking finding
+- causes: {id}: wrong-finding|intent|spec|mechanism|stuck|code — {the check that holds}; … each open blocking finding and recurrence trigger
 - decision: per cause group — derive-from ({unit}) | patch ({cells changed}; {cells confirmed intact}) | propose-simplification → {caller / PMO / user} | amend-spec ({§}) → re-derive {unit} | patch | ask → {caller} | fresh-implementer {model} | rule {ids} | accept-limit {ids}
 - class_witness: {command} — red: {open ids} at {HEAD}, {prior ids} at {rev}; sharpened: {what was added for a finding it missed} | table: {command; revisions, affected cells and results} | n/a (same_class: no)
 ```
@@ -52,6 +52,10 @@ mechanism. Unsure counts as `yes` for `same_class` only. `simpler_mechanism: yes
 finding IDs. `spec_is_problem: yes` needs the clause or ≥ 5 open readings (`cause-before-answer.md` §Ruling record).
 Without the evidence, the corresponding answer is `no`.
 
+Two verified failures of one guarantee across a repair are `same_class: yes` regardless of severity or review source.
+Before editing, record the guarantee and affected routes. Include both triggers in `causes`, `decision` and
+`class_witness` with RED on their pre-fix revisions. Keep prior dispositions as history.
+
 After two failed reviews at the same transition between roles, first ask what interface governs the transition and
 who owns it. Record the answer or open question in `why` before choosing the fix.
 
@@ -66,7 +70,7 @@ rule and hold dependent choices until ownership is settled (`ESCALATE` while wai
 In the fix brief carry the inventory, name the one owner, and delete or delegate each duplicate in the same phase.
 A stricter caller keeps its stated difference after delegating the shared decision.
 
-**Decision rule.** Each open blocking finding takes the answer of its
+**Decision rule.** Each open blocking finding or open recurrence trigger takes the answer of its
 cause (`cause-before-answer.md` §Cause before answer). For the findings whose cause is mechanism or
 code, the table decides:
 
@@ -106,9 +110,8 @@ the review history.
 **Code.** Tests per finding cover only the reported routes, so a suite can be green after each pass while the next review finds
 new routes of the same class. The property generator the rows above require therefore exists before the fix brief is
 written, not as part of the fix pass. Its axes are the matrix axes and its oracle is written from the matrix by
-someone other than the fix pass's implementer (`skills/testing/test-design.md` §Derivation from §Mechanism-Lifecycle,
-§Oracle discipline); for a proposed simplification they are the axes of the updated matrix. It must turn red every
-known blocking finding of the class, each on the code before its fix: the open (new) ids at the fix package's HEAD,
+someone other than the implementer (`skills/testing/test-design.md` §Oracle discipline). A simplification uses the updated
+matrix. The witness turns red for every blocking finding and both recurrence triggers: open ids at the fix package's HEAD,
 each prior id at its pre-fix revision or with its fix reverted (`red at {rev}`). When it misses one, sharpen it (the
 axis, value or route the finding needs) and run it again before any code changes; a finding no generator over the
 matrix axes can produce is an empty or missing cell, which the matrix gets first (the `model: written-now` row); for a

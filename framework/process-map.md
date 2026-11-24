@@ -157,6 +157,11 @@ or publish it within the authorization, or give it an entry, before new work
 starts. When a boundary lifts, the entries it held are due: reconcile them
 first, clear them, then take up new work. The boot status check shows such work; the save runbook carries the list.
 
+Before releasing a held-back fix that changes what a consumer receives for a downstream decision or action, match
+the independent counterexample to the exact outgoing diff, consumer input and resulting effect. If missing, hold the
+push and have a fresh reviewer derive and run it through the normal entry. Record the result with the pending publication.
+Keep completed review evidence at its original scope.
+
 ## DIRECT eligibility
 
 Before taking or proposing the DIRECT path, and when a verified known fix is considered for it: read and follow
