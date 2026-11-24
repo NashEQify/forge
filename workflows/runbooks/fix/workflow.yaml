@@ -141,6 +141,13 @@ steps:
       (skills/testing/SKILL.md §Test design from the change). Run the
       tests that exercise the fix's changes before completing
       (skills/testing/run-strategy.md §Test selection).
+      When the fix edits text an agent follows (a skill, role, rules file,
+      workflow step or instruction-bearing template), Buddy writes that text.
+      Before the first such edit, call and follow the instruction_authoring skill
+      so the applicable writing guidance reaches Buddy at the edit. In the Forge
+      repository, this also applies to the instruction paths checked by the
+      commit hook. In a Forge commit, include the four Read-path- lines for each
+      changed rule (owner: skills/_protocols/instruction-form.md §Read-path record).
     skill_ref: skills/root_cause_fix/SKILL.md
     completion:
       type: manual

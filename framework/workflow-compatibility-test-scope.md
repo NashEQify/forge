@@ -127,3 +127,14 @@ unchanged.
 The pair is upgrade-only: the earlier text sends instruction text to main-code-agent, which the current text does not,
 so no reverse allowance. There is no transitive allowance. Any further definition change fails closed until
 separately reviewed.
+
+## Fix instruction delivery transition
+
+The exact `5ee38866…` to `b67deec2…` pair permits upgrade only. At `fix-execute`, Buddy now loads the existing
+instruction-authoring skill before an instruction edit. Ordinary code fixes keep their previous route. The step
+order, gates, completion checks and earlier receipts keep their meaning.
+
+Two saved standard Fix runs, one for an instruction edit and one for a code edit, resumed at `fix-execute`
+with identical state digests, their test plans complete and code review still due. The engine refused the
+reverse direction, a different workflow and an unlisted target. The exercise checked delivered instructions
+and continuation. It did not perform a live instruction edit.

@@ -178,6 +178,13 @@ mappings:
   - upgrade
   review_status: accepted
   preserved_obligations: framework/workflow-compatibility-review-gates.md
+- workflow: fix
+  prior: 5ee388661c17706a324aa99ab29fa1b5f3d4e7451b42f875facdc1e687a05887
+  current: b67deec21e1fdc48de8291aab641fbe03842550e31728928e418ff388add5299
+  allowed_directions:
+  - upgrade
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility-test-scope.md#fix-instruction-delivery-transition
 - workflow: solve
   prior: e23d25a01d7278cab578c344b6e48bb3b23056eeb3477e4991a83633e415b991
   current: b418cc74c5b2c859d795673d8feb452569e68fa24c21146f65a202576af41991
