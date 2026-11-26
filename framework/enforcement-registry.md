@@ -24,7 +24,8 @@ Every enforcement reference carries exactly one:
   from a read-only persona.
 - **`[GATE]`** — a mechanical boundary check that runs *independently of
   whether Buddy chooses to run it*. Today this is exactly the git
-  pre-commit/pre-merge-commit/commit-msg hook and configured SessionStart hooks. They run
+  pre-commit/pre-merge-commit/commit-msg hook, configured SessionStart hooks and the plugin's
+  PostToolUse notice on Claude Code. They run
   only when installed/configured and their invocation conditions match.
   Severity is **BLOCK** (halts the action) or **WARN** (mechanical detection,
   advisory — does not halt); boot injectors supply context on their configured
@@ -63,6 +64,7 @@ Single-path `Artifact` pointers (one backticked path per row, optional
 | SECRET-SCAN | `[GATE]` | WARN | `orchestrators/claude-code/hooks/pre-commit.sh` | gitleaks over staged content (skipped if gitleaks absent) |
 | SOURCE-VERIFICATION | `[GATE]` | WARN | `orchestrators/claude-code/hooks/pre-commit.sh` | Changed board/council/spec reports with `schema_version: 1` cite evidence pointers that resolve in the captured indexed candidate tree, and section cross-references in live Markdown that the commit touches resolve in the same tree (§Indexed related-file input); WARN-only |
 | buddy-boot-inject | `[GATE]` | on the plugin's SessionStart | `orchestrators/claude-code/hooks/buddy-boot-inject.sh` | The plugin's SessionStart hook (`orchestrators/claude-code/plugin-hooks.json`, `--plugin` mode) injects boot: under a project's activation line or the user switch `buddy: every-session`; a machine mode without argument serves the eval harnesses |
+| moved-output-notice | `[GATE]` | notice, never blocks | `orchestrators/claude-code/hooks/moved-output-notice.sh` | The plugin's PostToolUse hook (matcher `Bash`, `orchestrators/claude-code/plugin-hooks.json`) names the file when the host saved a shell command's output there (`tool_response.persistedOutputPath`, observed on Claude Code 2.1.282, not documented) and is silent otherwise. Codex and OpenCode are not covered, and neither is a failed command: the host cuts its output and saves no file. |
 | cross-session resume | `[DISCIPLINE]` | — | `agents/buddy/boot-software.md` step 6 (RESUME) | Buddy runs `plan_engine.py --boot` (open tasks) at boot and `workflow_engine.py --boot-context` (active workflows + `current_step`) on demand; the engine state file `.workflow-state/<id>.json` is the process-position SoT. NOT harness-enforced — the ADR-007 amendment keeps resume `[DISCIPLINE]`, not a hook `[GATE]` |
 | brief-architect read-only | `[STRUCTURAL]` | — | `agents/brief-architect.md` | `disallowedTools` removes Edit/Write/NotebookEdit/ExitPlanMode/Agent (no Write-tool target, cannot sub-delegate — structural); `Bash` is granted for read-only commands, so disk writes via Bash redirection are blocked only by the agent's read-only-Bash `[DISCIPLINE]`, not structurally |
 | reviewer context-isolation | `[DISCIPLINE]` | — | `skills/_protocols/context-isolation.md` | fresh dispatch excludes other findings; shared filesystem access is not isolated; targeted fix verification is a separate assignment |
@@ -184,7 +186,8 @@ artifacts) but have **no live artifact**. The hook paradigm shift
 removed the tool-event hook layer (`PreToolUse` / `PostToolUse` /
 `UserPromptSubmit`); the observability checks they carried are now
 `[DISCIPLINE]` or were dropped (the observability one-liner and the transparency header were retired by
-Task 524). A doc on the active surface that states present-tense
+Task 524); a later change added one `PostToolUse` hook that only names a shell result the host moved to a file
+(row `moved-output-notice`), no write-time check. A doc on the active surface that states present-tense
 enforcement for any of these is a phantom claim — reframe it to the
 honest class above or mark it historical.
 

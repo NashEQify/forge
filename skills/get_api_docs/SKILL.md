@@ -36,7 +36,7 @@ stale interfaces.
 ## Prerequisite
 
 ```bash
-chub --version 2>/dev/null || echo "MISSING: npm install -g @aisuite/chub"
+command -v chub >/dev/null 2>&1 || echo "MISSING: npm install -g @aisuite/chub"
 ```
 
 ## Workflow

@@ -153,8 +153,9 @@ _REREAD_QUALIFIERS = {
     "codex": "on Codex",
 }
 # Files the reread line names beyond ENTRY_UNITS, per qualifier: on Codex no handler re-prints the standing block
-# after compaction, so the line names its source. The Claude Code hook's entries leave it out (block_reread=False):
-# there the block's own start handler runs on compact, and the hook budget has no room for the clause.
+# after compaction, so the line names its source. The Claude Code hook's entries leave out these and the Codex unit
+# (codex_reread=False): there the block's own start handler runs on compact, codex-execution.md is Codex's unit,
+# and the hook budget has room for neither.
 _REREAD_EXTRA = {
     "codex": ["framework/standing-block.md (the lines between its markers)"],
 }
@@ -169,10 +170,12 @@ def _and_join(items: list[str]) -> str:
     return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
 
 
-# The boot's first tool round (agents/buddy/boot.md): one batch of reads plus the boot probe as its own call,
-# before the freshness gate. Framework-relative; round_one_line() names their root first.
-# Rendered into the hook tail (hook_tail), the Codex boot block (generate_codex_agents.boot_instructions) and
-# boot_text(round_one=True); the hook's static fallback restates the line.
+# The boot's first tool round (agents/buddy/boot.md): one read call per unit plus the boot probe as its own call,
+# before the freshness gate. One command over the six units (30,472 bytes) passed Claude Code's per-result limit and
+# came back as a file with a preview. Framework-relative; round_one_line() names their root first.
+# Rendered into the hook tail (hook_tail; claude_code=True only in the Claude Code hook), the boot skill's entry
+# (plugin_boot_entry), the Codex boot block (generate_codex_agents.boot_instructions) and boot_text(round_one=True);
+# the hook's static fallback restates the Claude Code form.
 ROUND_ONE = (
     "agents/buddy/boot.md",
     "agents/buddy/boot-status.md",
@@ -183,20 +186,27 @@ ROUND_ONE = (
 )
 
 
-def round_one_line(framework_root: Path | str) -> str:
+def round_one_line(framework_root: Path | str, claude_code: bool = False) -> str:
     """The Round-1 line of an entry: the root named before the framework-relative reads (as the reread
-    line names it) and again in the probe call."""
+    line names it) and again in the probe call; one call per file, so no result carries more than one unit.
+
+    claude_code=True (the Claude Code hook and its static fallback): the reads go in one response, since
+    Claude Code limits each call's result, not the response. The other carriers (the boot skill's entry
+    on Codex and OpenCode, the Codex boot block) leave the grouping to agents/buddy/codex-execution.md
+    §Instruction output.
+    """
+    when = "one response before the gate" if claude_code else "before the gate"
     return (
-        f"Round 1, one batch before the gate: under the framework root {framework_root} (paths relative to it), "
+        f"Round 1, {when}, one call per file so no result is cut: under the framework root {framework_root} (paths relative to it), "
         "read " + _and_join(list(ROUND_ONE))
         + f", and run `bash {shlex.quote(f'{framework_root}/scripts/git-status-check.sh')} --boot` as its own call."
     )
 
 
-def reread_line(framework_root: Path | str, block_reread: bool = True) -> str:
+def reread_line(framework_root: Path | str, codex_reread: bool = True) -> str:
     """The post-compaction reread line, naming the framework root once.
 
-    block_reread=False (the Claude Code hook's entries) leaves out the Codex reread of the standing block.
+    codex_reread=False (the Claude Code hook's entries) leaves out the Codex rereads: codex-execution.md and the standing block.
 
     framework_root is named as given (callers pass an absolute root, or a
     placeholder such as <FRAMEWORK_ROOT> for portable role templates).
@@ -206,8 +216,9 @@ def reread_line(framework_root: Path | str, block_reread: bool = True) -> str:
     """
     groups: dict[str | None, list[str]] = {}
     for unit in ENTRY_UNITS:
-        groups.setdefault(unit.qualifier, []).append(unit.path)
-    for qualifier, extra in _REREAD_EXTRA.items() if block_reread else ():
+        if codex_reread or unit.qualifier != "codex":
+            groups.setdefault(unit.qualifier, []).append(unit.path)
+    for qualifier, extra in _REREAD_EXTRA.items() if codex_reread else ():
         groups.setdefault(qualifier, []).extend(extra)
     parts = [", ".join(groups.pop(None, []))]
     parts += [f"{_REREAD_QUALIFIERS[q]} {_and_join(files)}" for q, files in groups.items() if q is not None]
@@ -613,7 +624,7 @@ def is_snapshot(framework_root: Path) -> bool:
     return not os.path.exists(Path(os.path.abspath(framework_root)) / ".git")
 
 
-def _unresolved_text(scope: UserScope, framework: Path, round_one: bool = False, block_reread: bool = True) -> str:
+def _unresolved_text(scope: UserScope, framework: Path, round_one: bool = False, codex_reread: bool = True) -> str:
     """PyYAML missing: the setting exists but was not read — state no false facts."""
     buddy = framework / "agents" / "buddy"
     config = scope.config_path or "the machine setting"
@@ -628,7 +639,7 @@ def _unresolved_text(scope: UserScope, framework: Path, round_one: bool = False,
         "framework/user-scope.md",
     ]
     lines += [WARNING_PREFIX + w for w in scope.warnings if w != PYYAML_MISSING]
-    lines.append(reread_line(framework, block_reread))
+    lines.append(reread_line(framework, codex_reread))
     if round_one:
         lines.append(round_one_line(framework))
     return "\n".join(lines) + "\n"
@@ -637,7 +648,7 @@ def _unresolved_text(scope: UserScope, framework: Path, round_one: bool = False,
 def boot_text(
     scope: UserScope, framework_root: Path, profile: str | None = None, *,
     install_time: bool = False, neutral: bool = False, include: Inclusion | None = None,
-    round_one: bool = False, block_reread: bool = True,
+    round_one: bool = False, codex_reread: bool = True,
 ) -> str:
     """Person-specific boot lines.
 
@@ -652,11 +663,11 @@ def boot_text(
     agents/buddy/operational.md. Install-time text includes nothing, whatever
     the policy: a baked copy would go stale on the next light-path edit.
     round_one=True adds the Round-1 line after the reread line (carriers without a hook tail).
-    block_reread=False: the reread line without the Codex standing-block reread (reread_line).
+    codex_reread=False: the reread line without the Codex rereads, codex-execution.md and the standing block (reread_line).
     """
     framework = Path(os.path.abspath(framework_root))
     if profile is None and not neutral and PYYAML_MISSING in scope.warnings:
-        return _unresolved_text(scope, framework, round_one, block_reread)
+        return _unresolved_text(scope, framework, round_one, codex_reread)
     profile = profile or scope.profile
     if profile not in PROFILES and profile != PLUGIN_RENDER:
         raise ValueError(f"unknown profile: {profile}")
@@ -677,7 +688,7 @@ def boot_text(
     lines += [f"- {framework / unit.path}" for unit in ENTRY_UNITS if unit.read_first]
     if neutral:
         lines.append(WHOLE_BOOT)
-        lines.append(reread_line(framework, block_reread))
+        lines.append(reread_line(framework, codex_reread))
         if round_one:
             lines.append(round_one_line(framework))
         return "\n".join(lines) + "\n"
@@ -700,7 +711,7 @@ def boot_text(
         if install_time and warning.startswith(_MISSING_BOOT_FILE):
             continue
         lines.append(WARNING_PREFIX + warning)
-    lines.append(reread_line(framework, block_reread))
+    lines.append(reread_line(framework, codex_reread))
     if round_one:
         lines.append(round_one_line(framework))
     if include is None or install_time:
@@ -712,7 +723,7 @@ def boot_text(
 HOOK_HEAD = "BUDDY-BOOT REQUIRED before answering."
 
 
-def hook_tail(framework: str) -> str:
+def hook_tail(framework: str, claude_code: bool = True) -> str:
     return (
         "Follow boot.md in order before the first answer: orientation, freshness gate, "
         "intent and workflow selection, then the selected mode's boot procedure and "
@@ -720,15 +731,15 @@ def hook_tail(framework: str) -> str:
         "remote-update decision before loading intent or context. Do not run "
         "plan/workflow probes or load the full skill index ahead of workflow selection. "
         "For on-demand use, follow the project's local boot and working rules.\n"
-        + round_one_line(framework) + "\n\n"
+        + round_one_line(framework, claude_code) + "\n\n"
         "Keep the consumer CWD active. The project's CLAUDE.md and local authorization rules apply. "
         f"FRAMEWORK_DIR={framework}."
     )
 
 
-def hook_context(entry: str, framework: str) -> str:
+def hook_context(entry: str, framework: str, claude_code: bool = True) -> str:
     """The SessionStart additionalContext around a rendered boot entry."""
-    return HOOK_HEAD + "\n\n" + entry + "\n" + hook_tail(framework)
+    return HOOK_HEAD + "\n\n" + entry + "\n" + hook_tail(framework, claude_code)
 
 
 def _hook_measure(text: str) -> tuple[int, int]:
@@ -749,7 +760,7 @@ def fits_hook(context: str) -> bool:
 def hook_json(scope: UserScope, framework_root: Path, profile: str | None = None) -> str:
     framework = os.path.abspath(framework_root)
     policy = Inclusion(entry_fits=lambda entry: fits_hook(hook_context(entry, framework)))
-    entry = boot_text(scope, framework_root, profile, include=policy, block_reread=False)
+    entry = boot_text(scope, framework_root, profile, include=policy, codex_reread=False)
     context = hook_context(entry, framework)
     return json.dumps(
         {
@@ -764,10 +775,11 @@ def hook_json(scope: UserScope, framework_root: Path, profile: str | None = None
 
 def plugin_boot_entry(scope: UserScope, framework_root: Path) -> str:
     """The plugin entry as plain text (--boot-entry, the boot skill): the hook's context, Round-1 line in
-    its tail, the soul and operational core included while the shell budget allows."""
+    its tail (no one-response clause: the entry runs on Codex and OpenCode, and on Claude Code when the
+    SessionStart handler did not deliver), the soul and operational core included while the shell budget allows."""
     framework = os.path.abspath(framework_root)
     entry = boot_text(scope, framework_root, PLUGIN_RENDER, include=SHELL_INCLUSION, round_one=False)
-    return hook_context(entry, framework)
+    return hook_context(entry, framework, claude_code=False)
 
 
 STANDING_BLOCK_FILE = "framework/standing-block.md"

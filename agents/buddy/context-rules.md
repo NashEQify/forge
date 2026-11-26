@@ -169,5 +169,5 @@ with the user whether that was the expected completion or a race.
 
 This stays discipline-only: Buddy runs the proof-output check himself
 on agent completion / interrupt detection. A CC-coupled PostToolUse
-hook could automate the trigger, but forge no longer adds
-CC-Terminal-only hooks.
+hook could automate the trigger, but forge adds no Claude-Code-only hook
+for it (its one PostToolUse hook only names a moved command result).

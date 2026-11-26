@@ -171,7 +171,9 @@ They do not intercept each agent write.
 | Secret scan | Advisory; scanner availability affects coverage |
 | Source verification | Advisory evidence-pointer checks |
 
-Forge has no `PreToolUse`, `PostToolUse` or `UserPromptSubmit` tool-event hook layer.
+Forge runs one tool-event hook, on Claude Code: a `PostToolUse` hook on `Bash` that names the file holding a
+command's output when the host moved it there; it checks and blocks nothing. There is no `PreToolUse` or
+`UserPromptSubmit` hook, and Codex and OpenCode are not covered.
 Write-time behavior relies on instructions, protocols and the host's real permissions.
 See the [enforcement registry](../framework/enforcement-registry.md) for distinctions.
 

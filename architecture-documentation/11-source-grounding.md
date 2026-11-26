@@ -72,7 +72,7 @@ synchronizes its files; inspect that consumer's rules before making a transport 
 | Claim or question | Authority |
 |---|---|
 | The entry units the boot names | [User-scope resolver](../scripts/user_scope.py) (`ENTRY_UNITS`) |
-| The plugin package, its hook and its release check | [Manifest](../.claude-plugin/plugin.json), [hook](../orchestrators/claude-code/plugin-hooks.json), [release check](../scripts/plugin_release_check.py) |
+| The plugin package, its hooks and its release check | [Manifest](../.claude-plugin/plugin.json), [hooks](../orchestrators/claude-code/plugin-hooks.json), [moved-output notice](../orchestrators/claude-code/hooks/moved-output-notice.sh), [release check](../scripts/plugin_release_check.py) |
 | The plugin setup's writes, including OpenCode's boot skill | [Setup writer](../scripts/forge_setup.py), its `--help` output |
 | How a source change reaches the hosts | [Installation activation](../framework/installation-activation.md) |
 | Codex roles and boot entries | [Codex generator](../scripts/generate_codex_agents.py) |

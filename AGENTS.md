@@ -37,8 +37,9 @@ SKILL-FM-VALIDATE BLOCK; INSTRUCTION-UNIT-SIZE / READ-PATH-RECORD BLOCK in a For
 framework checkout only; ROUTE-TRAILER BLOCK where the project declares `.forge-product-paths`; SECRET-SCAN / SOURCE-VERIFICATION WARN). The
 plugin's SessionStart hook is Claude-specific and conditional, not a universal Codex
 boot hook. Codex boots through the plugin's `forge:boot` skill, asked for by the
-activation line in `AGENTS.md`; its loading must be checked in a fresh session. The framework runs no tool-event hooks
-(PreToolUse / PostToolUse / UserPromptSubmit); write-time discipline is
+activation line in `AGENTS.md`; its loading must be checked in a fresh session. The framework runs one tool-event hook, on Claude Code only: the plugin's
+PostToolUse hook on Bash names the file when the host saved a command's output there; it
+checks and blocks nothing. Write-time discipline is
 protocol-anchored via protocols + operational.md.
 The same hook script has a range mode (`pre-commit.sh --range <base> <head>`)
 that replays each commit of a range and runs the hook's checks on it; CI uses it after a
@@ -53,5 +54,5 @@ trigger words without a prefix (wakeup, save, checkpoint, think!).
 OpenCode follows the same protocol-based method. Its skill discovery, instruction
 loading, permissions and actually installed Git checks must be verified for
 that host. Shared methodology does not establish identical execution or
-enforcement. There is no tool-event (PreToolUse/PostToolUse) hook layer on
-either harness.
+enforcement. Neither Codex nor OpenCode runs a Forge tool-event hook; a result such a host
+clips or moves is not reported to the session.

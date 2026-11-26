@@ -121,8 +121,9 @@ Generated wrappers forward to canonical files rather than copying policy.
 
 Shared Git hooks provide commit-time checks when installed in the active repository.
 Configured Claude SessionStart scripts support boot; Codex uses managed AGENTS
-instructions and OpenCode uses its launcher. Forge has no tool-event hook layer
-for `PreToolUse`, `PostToolUse` or `UserPromptSubmit`.
+instructions and OpenCode uses its launcher. Forge runs one tool-event hook, on Claude Code:
+a `PostToolUse` hook on `Bash` that names the file holding a command's output when the host moved it there. It
+has no `PreToolUse` or `UserPromptSubmit` hook; Codex and OpenCode run no Forge tool-event hook.
 
 Protocol requirements, mechanically validated structure and observed host behavior
 are different evidence classes. See [host integrations](07-tool-integrations.md)

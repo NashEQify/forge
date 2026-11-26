@@ -67,6 +67,14 @@ SessionStart on Claude Code, from the plugin (`orchestrators/claude-code/plugin-
 - `buddy-boot-inject --plugin --standing-block` — a second handler on the same
   events that injects the Forge standing rules block.
 
+PostToolUse on Claude Code, from the plugin (matcher `Bash`):
+- `moved-output-notice` — after a shell command whose output the host saved to a
+  file, it puts one notice naming that file into the context (it reads
+  `tool_response.persistedOutputPath`, observed on Claude Code 2.1.282, not
+  documented). After any other command it adds nothing; it blocks, refuses and
+  rewrites nothing. Codex and OpenCode have no such hook. A failed command is
+  not covered: the host cuts its output and saves no file.
+
 Codex boots through the plugin's `forge:boot` skill, asked for by the same
 activation line in `AGENTS.md`. Additional-directory access or a Buddy role file
 alone does not establish that framework instructions were loaded.
