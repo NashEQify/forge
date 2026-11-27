@@ -68,6 +68,18 @@ review floors, change-introduced regressions, blocking defects in retained
 required behavior and blocking defects in behavior this change introduces to
 meet an acceptance criterion are never closed as limits; narrow or escalate them.
 
+**Weight by what can break.** Outside the safety floors the default per task
+is one review, a re-review only after a CRITICAL or HIGH finding, and one gate
+run and one deploy per bundle. A follow-up round inside a task joins the open
+pieces into one package unless the user names a reason for one to go live
+earlier. A gate runs when the change touches what the gate protects, not because
+a file is in its fingerprint: a docs-only change goes out without one unless the
+project's rules say otherwise. A brief cuts sections by dependency and
+integration risk, not one per module; it keeps a path runnable between sections
+only when something live consumes it, and otherwise deletes superseded structure
+and the tests whose only subject it is instead of shimming and re-deriving them.
+More than these defaults needs a reason stated in the brief or decision record.
+
 Preserve required independent investigation and review floors. Apply
 `skills/_protocols/dispatch-template.md` before dispatch and
 `skills/_protocols/piebald-budget.md` when assembling its context.

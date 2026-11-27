@@ -1,10 +1,7 @@
 # Protocol: MCA-Brief Implicit-Decisions Template
 
-Mandatory decision-class enumeration in the MCA delegation brief.
-Prevents brief-quality gap → implementation drift when the brief
-stays sketchy and the implementer makes architecture decisions
-without spec authority. Discipline-as-mechanism: structural
-template fields > LLM persona review.
+Decision classes the MCA brief names, so the implementer does not make
+architecture decisions without spec authority.
 
 **Consumed by:** `workflows/runbooks/build/workflow.yaml` step
 `brief-author` / `brief-signoff`; `brief_check` consumes declared structure.
@@ -16,7 +13,8 @@ brief-acceptance check reads. Purpose: carry what a freehand brief drops. It add
 sentence and the brief's bytes with the files it names; past a third of the implementer's window, split by goal, narrow the files to
 read or cut the goal into committed steps (owner: `framework/spec-engineering-implementation-specs.md` §Convention: one goal per change). **Effort budget**,
 the rounds, calls and test runs expected for the task's value and what would justify more (owner:
-`agents/buddy/delegation.md` §Cumulative effort). **Tests**, the tests the implementer writes, these and no others;
+`agents/buddy/delegation.md` §Cumulative effort), with the section cut and review cadence derived from risk (owner:
+`agents/buddy/delegation.md` §Weight by what can break). **Tests**, the tests the implementer writes, these and no others;
 an unchanged behaviour names its guard or `unguarded` (owner: `skills/_protocols/mca-brief-template-verification.md`
 §Tests the brief orders).
 

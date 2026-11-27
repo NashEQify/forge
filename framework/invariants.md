@@ -96,7 +96,11 @@ Effort matches consequences, reversibility and uncertainty. Name the
 consumer and concrete cost a gate, task or test addresses. Vision-named
 product deliverables count even before deployment. Safety floors for
 security/auth/secrets, schema/data migration, public contracts and live
-infrastructure are evaluated before any small-change shortcut.
+infrastructure are evaluated before any small-change shortcut. Live
+infrastructure is a floor where a failure leaves an effect that rolling back
+the deploy does not undo; a live change a redeploy undoes is an ordinary change.
+A gate, step or check outside the safety floors stays only while it catches
+defects in product code or consumer outcomes; adding one names that catch.
 DIRECT eligibility has one source: `framework/direct-eligibility.md`.
 File counts are signals, not substitutes for risk assessment.
 Weigh effort cumulatively: before each further round (fix pass, added

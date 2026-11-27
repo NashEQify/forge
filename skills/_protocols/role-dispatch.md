@@ -51,8 +51,11 @@ file path that resolves against the project instead of the framework, and a read
    protocol (code or spec)
    (§Mandatory envelope and clean output, §Output format: frontmatter first with the captured run, subject and slot
    verbatim, then findings with their `evidence:` pointers); the dispatcher adds no return shape of its own, and
-   `workflow_engine.py --review-persist` refuses a return outside that layout. Purpose: the returner holds the
-   contract in its prompt, and the adopter meets the check in the return.
+   `workflow_engine.py --review-persist` refuses a return outside that layout. A review seat's prompt also tells it
+   to write its draft to a temporary file outside the repository, run
+   `python3 <root>/scripts/validate_evidence_pointers.py --strict <file>` on it and correct what it prints before
+   returning (the validator reads files only, not stdin). Purpose: the returner holds the contract and its check, and the adopter
+   meets the check in the return.
 
 With the plugin, Claude Code lists the roles whose file sets `disallowedTools` and Codex lists none, so every other
 role takes step 3.

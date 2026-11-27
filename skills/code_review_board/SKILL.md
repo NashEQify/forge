@@ -65,13 +65,12 @@ findings as exact history; record verification limits in the current explicit de
 
 Safety floors are evaluated first. Security/auth/secrets, schema/data
 migration and public or cross-component contract changes exclude `light`.
-Live infrastructure is sized by the fix's effect: check §1.0a first; when it
-holds, the level is `light`; when it does not, live infrastructure excludes
-`light` and is the L2 trigger of §1.1. No count or majority can cancel a safety
-floor. Include the actual authorization and impact, not merely LOC.
-Which floor selects L2 is named in §1.1 (L2 triggers), with its roster
-sized in §3; the other floor surfaces run L1 with the matching trigger lens
-(§3).
+Live infrastructure is a floor only where a failure outlasts a rollback (data
+lost, resources spent, actions sent in someone's name, an account at risk);
+a live change a redeploy undoes takes the table like any other. Where it holds:
+check §1.0a; when that holds, `light`; else it is the L2 trigger of §1.1. No
+count cancels a floor; weigh actual impact, not LOC. §1.1 names which floor
+selects L2 (roster §3); other floors run L1 with their trigger lens.
 
 Below those floors, ALL DIRECT criteria in `framework/process-map.md` plus
 an executed regression/behavior check allow `light` (single independent
@@ -107,7 +106,7 @@ L2:      only on a named trigger: new public API or wire (external
          package); security / auth / secrets / consent / crypto; real
          migration doubt (stored data must be read or rewritten under the
          new shape, strict read-path decoders included); new subsystem
-         (§1.2); live infrastructure where §1.0a does not hold → L2 roster per §3 (trigger
+         (§1.2); live infrastructure (§1.0) where §1.0a does not hold → L2 roster per §3 (trigger
          perspective always; Chief at four or more reviewers, §1.3, §4a).
 Unclear: whether an L2 trigger applies → resolve the fact; still
          unclear → L2 for that trigger (its perspective joins the roster).
