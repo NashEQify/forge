@@ -10,6 +10,8 @@ Size: goal: <the one user-facing goal, one sentence>; brief <bytes> bytes (`wc -
 implementer to read <bytes>, against a third of the implementer's window (<window> tokens, about 3 bytes each);
 past it: split by goal, narrow the files to read, or cut the goal into steps that each end in a commit
 Effort budget: <rounds, agent calls and test runs expected for the task's value>; more only if <what would justify it>
+Cut: <n> sections — <each boundary's reason: dependency, integration risk or a live consumer>; runnable between sections: <only if something live consumes the path, else no: superseded structure and its tests are deleted>
+Review: <once at the end of the task | per section because <safety floor>>; this round <joins the open package | goes live alone because <the user's reason>>
 Report: <path of the report file> (skills/_protocols/mca-dispatch.md)
 
 ## Approved acceptance (read-only)

@@ -147,6 +147,12 @@ After state-changing actions:
 - **Context:** learned something new → write it (active context path).
 - **History and backlog:** a task status change runs through `task_status_update`; on a close its
   persist gate (Step 5.5) writes the overview and the close-out before the next task starts.
+- **Task file:** when a task's plan, steps, `Not yet` or intent changes (a user decision, a replan, a Council, a
+  review cut, detailed steps worked out), update the task file in the same turn; build records and the handoff point
+  to it instead of restating it. Its acceptance and exclusions change only with the user's confirmation quoted in the
+  change, then open briefs get the block recopied and reissued (`skills/_protocols/approved-acceptance.md` §Change,
+  resume and re-brief). Purpose: the task file is what the next session resumes from; a change kept only in the
+  chat or a record is lost with it.
 
 After a structural commit: consistency check → `context-rules.md`.
 

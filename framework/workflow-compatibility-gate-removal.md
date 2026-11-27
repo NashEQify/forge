@@ -1,6 +1,6 @@
-# Workflow compatibility — removed review checks (build and fix)
+# Workflow compatibility — removed review checks and task-file upkeep (build and fix)
 
-Edges to build and fix without the removed review checks.
+Edges to build and fix without the removed review checks, and with task-file upkeep.
 
 The build and fix definitions lost obligations that caught no defect. Steps, ids, order,
 routes, variables and the review adoption check are unchanged. Removed:
@@ -20,3 +20,11 @@ routes, variables and the review adoption check are unchanged. Removed:
 | Pending steps | Take the current text. |
 
 The edges are upgrade-only, from each earlier generation that can reach the current definition directly.
+
+## Task file at phase boundaries
+
+The next generation adds to the phase-boundary steps of build (`workflow_phase=` specify, prepare, execute, verify,
+close) and fix (specify, execute, verify, close): bring the task file's steps and `Not yet` up to date with what
+the last phase changed (`agents/buddy/operational.md` §Post-Action Obligations). Nothing else changes. Completed steps
+keep their evidence; a phase step that runs on the current definition updates the task file. Its edges are
+upgrade-only, from each generation above and the one before it.

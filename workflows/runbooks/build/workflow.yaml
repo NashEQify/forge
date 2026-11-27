@@ -120,6 +120,8 @@ steps:
     instruction: >
       task_status_update workflow_phase=specify and create the state file
       docs/build/YYYY-MM-DD-task-NNN-slug.md (Standard / Full only).
+      Bring the task file's steps and Not yet up to date with what intake
+      changed (agents/buddy/operational.md §Post-Action Obligations).
     completion:
       type: manual
     on_fail: block
@@ -279,7 +281,7 @@ steps:
   - id: phase-prepare
     name: "workflow_phase=prepare (engine-internal)"
     category: deterministic
-    instruction: "task_status_update workflow_phase=prepare"
+    instruction: "task_status_update workflow_phase=prepare; then bring the task file's steps and Not yet up to date with what the last phase changed (agents/buddy/operational.md §Post-Action Obligations)"
     completion:
       type: manual
     on_fail: block
@@ -488,7 +490,7 @@ steps:
   - id: phase-execute
     name: "workflow_phase=execute (engine-internal)"
     category: deterministic
-    instruction: "task_status_update workflow_phase=execute"
+    instruction: "task_status_update workflow_phase=execute; then bring the task file's steps and Not yet up to date with what the last phase changed (agents/buddy/operational.md §Post-Action Obligations)"
     completion:
       type: manual
     on_fail: block
@@ -516,7 +518,7 @@ steps:
   - id: phase-verify
     name: "workflow_phase=verify (engine-internal)"
     category: deterministic
-    instruction: "task_status_update workflow_phase=verify"
+    instruction: "task_status_update workflow_phase=verify; then bring the task file's steps and Not yet up to date with what the last phase changed (agents/buddy/operational.md §Post-Action Obligations)"
     completion:
       type: manual
     on_fail: block
@@ -663,7 +665,7 @@ steps:
   - id: phase-close
     name: "workflow_phase=close (engine-internal)"
     category: deterministic
-    instruction: "task_status_update workflow_phase=close"
+    instruction: "task_status_update workflow_phase=close; then bring the task file's steps and Not yet up to date with what the last phase changed (agents/buddy/operational.md §Post-Action Obligations)"
     completion:
       type: manual
     on_fail: block

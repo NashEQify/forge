@@ -1,6 +1,6 @@
 ---
 name: task-status-update
-description: 'Closing or completing a task (status→done), or any other task-status change — start (→in_progress), block, supersede, wontfix, absorbed. The ONLY allowed way to change a task''s `status`: it also runs the cross-task graph closure, plan.yaml ref sweep, atomic archive move + integrity guard, and the persist-gate — all silently lost on a raw YAML edit. Use when a task reaches `done` or any status must change; never hand-edit the `status:` field. NOT for creating a task (use task-creation) and NOT for content edits to an OPEN task''s body (manual) — though the terminal sweep of `blocked_by` / cross-refs on OTHER tasks IS in scope.'
+description: 'Closing or completing a task (status→done), or any other task-status change — start (→in_progress), block, supersede, wontfix, absorbed. The ONLY allowed way to change a task''s `status`: it also runs the cross-task graph closure, plan.yaml ref sweep, atomic archive move + integrity guard, and the persist-gate — all silently lost on a raw YAML edit. Use when a task reaches `done` or any status must change; never hand-edit the `status:` field. NOT for creating a task (use task-creation) and NOT for content edits to an OPEN task''s body (edited directly when the plan changes, `agents/buddy/operational.md` §Post-Action Obligations) — though the terminal sweep of `blocked_by` / cross-refs on OTHER tasks IS in scope.'
 ---
 
 # Skill: task-status-update (Wrapper)

@@ -345,3 +345,66 @@ mappings:
   - upgrade
   review_status: accepted
   preserved_obligations: framework/workflow-compatibility-gate-removal.md
+- workflow: build
+  prior: 7990c2ce28389b8bb73c40a2cecebf42f088cc10f89b7a62771b9d2ffd6932d8
+  current: 81f2f3b7ca1838a853f80565b28e0cc6a9cb21b58bd5b50fb03c09f967febe29
+  allowed_directions:
+  - upgrade
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility-gate-removal.md
+- workflow: build
+  prior: 651d4beeaeb9fed7f1e7ad0f1628ea71b5a508690f0df9bc75f301acd479d02a
+  current: 81f2f3b7ca1838a853f80565b28e0cc6a9cb21b58bd5b50fb03c09f967febe29
+  allowed_directions:
+  - upgrade
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility-gate-removal.md
+- workflow: build
+  prior: 859ed22679157cfa0e2867790df85b944a2f693cb7f567c28eec16ef33e92316
+  current: 81f2f3b7ca1838a853f80565b28e0cc6a9cb21b58bd5b50fb03c09f967febe29
+  allowed_directions:
+  - upgrade
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility-gate-removal.md
+- workflow: fix
+  prior: ffecdf9a7035194500da43bc5f5f9b057a43a3e489e6d1f949bbe6b34f717ee9
+  current: 3b0d19fdc8149cbf54a20b2d0243c5f54ea5f0dfc520b49a6af2bbb53ca75032
+  allowed_directions:
+  - upgrade
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility-gate-removal.md
+- workflow: fix
+  prior: 4c092f8cd46effe47f5d8ad960091450563b4d1a22cbbfda24043f4028ff6266
+  current: 3b0d19fdc8149cbf54a20b2d0243c5f54ea5f0dfc520b49a6af2bbb53ca75032
+  allowed_directions:
+  - upgrade
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility-gate-removal.md
+- workflow: fix
+  prior: b67deec21e1fdc48de8291aab641fbe03842550e31728928e418ff388add5299
+  current: 3b0d19fdc8149cbf54a20b2d0243c5f54ea5f0dfc520b49a6af2bbb53ca75032
+  allowed_directions:
+  - upgrade
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility-gate-removal.md
+- workflow: fix
+  prior: 5ee388661c17706a324aa99ab29fa1b5f3d4e7451b42f875facdc1e687a05887
+  current: 3b0d19fdc8149cbf54a20b2d0243c5f54ea5f0dfc520b49a6af2bbb53ca75032
+  allowed_directions:
+  - upgrade
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility-gate-removal.md
+- workflow: build
+  prior: 673e60f8966ac04b0d47f35bbf099e30928ac3ca42415ba251bac2b47215d2a3
+  current: 81f2f3b7ca1838a853f80565b28e0cc6a9cb21b58bd5b50fb03c09f967febe29
+  allowed_directions:
+  - upgrade
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility-gate-removal.md
+- workflow: fix
+  prior: 6b52d3c5da4b155ad4ba5b57749217f684f5c2f25b52de27cc0d9b2c2f6967cb
+  current: 3b0d19fdc8149cbf54a20b2d0243c5f54ea5f0dfc520b49a6af2bbb53ca75032
+  allowed_directions:
+  - upgrade
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility-gate-removal.md

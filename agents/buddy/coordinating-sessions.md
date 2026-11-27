@@ -100,6 +100,8 @@ Brief contents for a first or further session brief. Before writing, read and fo
 (one goal per brief, including its size budget).
 
 - **Outcome and stop condition.** The outcome the brief serves and the stop condition.
+- **Task file.** Its path, the agreement the session resumes from; a further brief names the task-file change it
+  carries, and the session updates the task file when its work changes plan, steps or `Not yet`.
 - **Model.** Name the session's model (`framework/models.md` §A persistent session's model).
 - **Effort budget.** Label the coordinator's estimate (Cumulative effort).
 - **Checkout.** Name the shared checkout or the assigned worktree and branch (`agents/buddy/concurrent-writers.md`).

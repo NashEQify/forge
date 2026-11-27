@@ -8,7 +8,8 @@ description: >
   and the persist-gate — all silently lost on a raw YAML edit. Use when a
   task reaches `done` or any status must change; never hand-edit the
   `status:` field. NOT for creating a task (use task-creation) and NOT for
-  content edits to an OPEN task's body (manual) — though the terminal sweep
+  content edits to an OPEN task's body (edited directly when the plan changes,
+  `agents/buddy/operational.md` §Post-Action Obligations) — though the terminal sweep
   of `blocked_by` / cross-refs on OTHER tasks IS in scope.
 status: active
 relevant_for: ["main-code-agent", "buddy"]
@@ -216,5 +217,5 @@ so).
   and skip the graph. Open-body content edits go through neither
   task skill; if a scope edit adds or drops a real dependency, run
   the `task_creation` §1b-style pairwise check by hand plus
-  `plan_engine --validate`. The skills fire on create + status —
-  content-edit reconciliation is manual.
+  `plan_engine --validate`. The skills fire on create + status; the
+  content edit itself is due whenever the plan changes (`agents/buddy/operational.md` §Post-Action Obligations).
