@@ -18,10 +18,16 @@ teams remain unchanged; the final consuming attempt selects its applicable sourc
 
 
 After fix in standard mode: 2-agent re-check on delta scope only.
-Trigger (any): ≥10 normative lines changed; ≥3 files touched; ≥1
-MAJOR fixed; fix touches gate composition / severity / enforcement.
-Team: `board-adversary` + `board-implementer` (both deliver the `## Checked scope` section; no chief). Acceptance: 0 new BLOCKER + 0 new
-MAJOR. Max 3 iterations → ESCALATE. Detail: REFERENCE.md.
+Trigger (any): ≥1 MAJOR or BLOCKER fixed; fix touches gate composition /
+severity / enforcement. A fix of MINOR / LOW findings only, a note, or text
+that carries out a decision the user already made does not fire it, whatever
+its line count: Buddy's bounded verification above covers it.
+Team: `board-adversary` + `board-implementer` (both deliver the `## Checked scope` section; no chief), on the
+standard tier unless the delta touches a safety floor (`framework/models.md`, Review by diff size and risk). Acceptance: 0 new BLOCKER + 0 new
+MAJOR. Max 3 review rounds per spec subject within one change, counted across its versions and
+counting every dispatched review round (full pass, delta, own reviewer pairs): at the cap, stop and ESCALATE to
+the user with what is still open; a new version is not a fresh count (intent: the user, not the loop, decides
+whether more review is worth its cost). Detail: REFERENCE.md.
 
 ## 6. Post-pass (NON-NEGOTIABLE)
 

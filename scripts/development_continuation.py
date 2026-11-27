@@ -106,8 +106,6 @@ def _valid_selection(workflow_ids: object, references: object) -> bool:
 def _validate_binding(binding: dict, root: Path) -> None:
     # Tuples, not sets, for the membership tests: a JSON list or object there is bad
     # input to refuse, not an unhashable-type crash.
-    if binding.get("project_root") != str(root):
-        raise ValueError("binding belongs to another project")
     basis = binding.get("selection_basis")
     if (
         not isinstance(basis, dict)

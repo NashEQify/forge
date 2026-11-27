@@ -57,6 +57,11 @@ Default = escalate. Answer 4:
 - **≥3 yes** → council (proceed to §1.1).
 - **≤2 yes** → no council. Document skip: *"Council not needed: <rationale>"*. Decide directly.
 
+**One Council per decision.** A step that carries out an adopted Council decision or a user decision, and a
+sub-choice inside its scope, does not run the gate again: decide it directly and name the decision it serves. Run
+the gate again only when evidence contradicts that decision or the choice leaves its scope (intent: a Council
+settles a decision, not each step of its execution).
+
 **Override floor (forces standard or full regardless of count):** security / sovereignty hard constraint AND multi-component · new state-vocabulary or new public-API contract · new normative cross-spec rule · foundational pattern replacement.
 
 **Anti-pattern (cross-scope vs current-scope):** if the question presents as "spec corpus has multiple representations of X" but current-scope path is internally consistent (producer + consumer + adjacent uses all aligned) and contradictions live in different scopes → **NO council**. Preserve current path; file normalisation as follow-up task. Council on cross-scope when current is decidable wastes a cycle + introduces re-framing risk (Council recommendation adopted autonomously becomes a frame user has to unwind).

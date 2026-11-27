@@ -76,9 +76,8 @@ guarantees (`scripts/development_continuation.py` `_envelope`;
   byte-for-byte. `restore` never writes; an unchanged envelope is a no-op.
 - A second envelope, an unterminated or CRLF fence, any other line that opens a
   `forge-development` fence (backticks or tildes, indented or after `>`, a space
-  before the info string, a variant name), an unsupported schema version or a
-  binding of another project refuses before any write. The adapter never picks one
-  region. A mention of the marker inside a line of prose is not a fence.
+  before the info string, a variant name) or an unsupported schema version refuses
+  before any write. The adapter never picks one region. A mention of the marker inside a line of prose is not a fence.
 - Publication goes through `continuity.publish` against the whole handoff baseline.
   A concurrent correction anywhere in the file, inside or outside the fence, fails
   with `stale_baseline` (exit 3); the caller recaptures and reconciles semantically.

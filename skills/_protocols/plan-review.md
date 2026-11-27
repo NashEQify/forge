@@ -165,8 +165,8 @@ stop.
   where Spec is needed. MCA where Buddy directly is in the
   whitelist path.
 - **Tool over-engineering:** board for a wording fix; council for
-  a reversible decision; Delta-Verify without a normative-line
-  trigger.
+  a reversible decision; Delta-Verify after a MINOR-only fix or a
+  note; a second Council for a step inside an adopted decision.
 - **Bootstrap rationalization:** "we're building the mechanism
   right now, so we can't apply it yet" is often a workaround —
   check whether the mechanism is applicable in its current form.

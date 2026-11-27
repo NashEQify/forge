@@ -55,7 +55,8 @@ the task state file, not into the agents' review files.
 ## Model override
 
 v6.0: standard = all-Opus. Deep pass 1: Adv-3 + Consumer = Sonnet.
-Deep pass 2+: Opus only.
+Deep pass 2+: Opus only. Delta-Verify seats (`post-pass.md` §3a) take the
+standard tier unless the delta touches a safety floor.
 
 ## Extra dimensions (board-specific)
 
@@ -88,22 +89,6 @@ trigger, team, acceptance). This section is **additive detail
 mechanics** for the implementation — no contradiction with
 SKILL.md, no own normative rules. On a conflict, SKILL.md wins.
 
-### Normative-line definition (mechanically checkable)
-
-"Normative" = a line that defines a **rule**, a **trigger
-criterion**, a **required format**, or an **acceptance
-condition**. Count:
-
-- Statements with MUST / MUSS / SHALL / MAY NOT / should / not /
-  all / only / at least.
-- New bullet entries in rule lists.
-- Required output formats (incl. code fences with structure).
-- Trigger criteria with thresholds.
-
-**Don't count:** comments, whitespace, header levels, examples
-without normative content, cross-references, boundary text
-without prohibitions.
-
 ### Scope "direct neighbour sections"
 
 Section level (not file level). A section is a neighbour when:
@@ -118,7 +103,7 @@ between multiple gates at the same slot. "Severity definition"
 = mapping rule between severity names or acceptance thresholds.
 "Enforcement logic" = rule for how / where / who triggers the
 gate. If a fix touches such places, Delta-Verify is required
-**regardless of line count** — even on a 1-line change, because
+**regardless of finding severity** — even on a 1-line change, because
 gate composition has cascading effects.
 
 ### Checked-scope enforcement without a chief
