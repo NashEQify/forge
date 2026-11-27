@@ -1,8 +1,9 @@
 # Reviewed workflow compatibility — test-scope transitions
 
-Step-loaded unit of `framework/workflow-compatibility.md`. Read it when a retained build or fix run is interpreted,
-installed or rolled back under the test-design challenge, fix verification-scope, test-volume, fix test-count
-and review-round or instruction-text branch pairs, and when a change to those definitions is reviewed.
+Step-loaded unit of `framework/workflow-compatibility.md`: test-scope and instruction-text pairs of build and fix.
+
+Read it when a retained run is interpreted, installed or rolled back under them, and when a change to those
+definitions is reviewed.
 
 ## Build test-design challenge transition
 

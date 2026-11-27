@@ -39,7 +39,7 @@ a trigger.
 | Moment | Owner unit | Carrier at the moment |
 |---|---|---|
 | Work of more than one piece arrives; where each piece runs | `delegation.md` §Vehicle choice | the step text naming its executor |
-| An agent call and its model | `framework/models.md` §Naming the model | standing block "Agent call"; the dispatch's first line (`skills/_protocols/role-dispatch.md`) |
+| An agent call and its model | `framework/models.md` §Naming the model | standing block "Agent call"; `skills/_protocols/role-dispatch.md` step 4 |
 | Briefing a session, coordinating, integrating, a second writer | `coordinating-sessions.md`, `concurrent-writers.md` | the paragraph in `operational.md` §Coordinating sessions and writers |
 | A further round: fix pass, re-review, extension | `delegation.md` §Cumulative effort; `architecture-comprehension.md` §B | the review step texts in an engine run; the brief's effort budget |
 | Choosing or waiving a review; about to ask the user | `multi-perspective.md` | the review step texts; standing block "Decision to the user" |

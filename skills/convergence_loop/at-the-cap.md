@@ -8,22 +8,15 @@ checks and answers it reuses are in `skills/convergence_loop/cause-before-answer
 
 ### At the cap
 
-After two failed reviews at one role transition, ask which interface governs it and who owns it before ruling
-(owner: skills/convergence_loop/simplify-before-patch.md §Record). Record the answer or question in the cap ruling.
-For a finding that needs an unanswered question settled, record its ID there and escalate to the caller.
+For a finding that needs an unanswered question settled, record its ID in the cap ruling and escalate to the caller.
 Classify it and fill its `remaining_findings` entry after the answer. Other rulings proceed.
-
-Before accepting or deferring a finding that would change the cut, apply the same two-source comparison
-in the existing ruling, before relying on an earlier disposition. If the proposed cut conflicts with either
-source or lacks governing intent, carry the dependent choice open to the caller
-(owner: skills/convergence_loop/simplify-before-patch.md §Record).
 
 Buddy gives each open finding a class and a ruling instead of a further round; before the limit, each finding takes
 its cause's answer (`cause-before-answer.md` §Cause before answer). Reuse a recorded ruling for the same location and
-claim while its sources and scope still support it. A changed cut goes through the comparison above before reuse. `false` rows and routed `maybe-false` rows
+claim while its sources and scope still support it. `false` rows and routed `maybe-false` rows
 (`skills/_protocols/finding-verification.md` §What follows) are not open. On a mechanism with an owner-approved exit
 criterion, an open part of it goes to the owner as ESCALATE with each part's state, whatever the findings' classes
-(`skills/convergence_loop/derive-and-exit.md` §Exit criterion).
+(§Exit criterion).
 
 Take the checks in this order; the first that holds gives the class and the ruling:
 
@@ -41,6 +34,15 @@ leaves without one of the two. Each ruling taken here gets its entry in the task
 user when that list's two tests hold (`skills/return_summary/SKILL.md` §Decisions I took for you); the verdict holds
 the rest. A workflow-engine retry of the code board step past the engine's iteration cap names this verdict
 (`at-the-cap: <verdict path>`; `framework/workflow-engine-cookbook.md` §Iteration cap and review rounds).
+
+### Exit criterion
+
+When the same class keeps returning on one mechanism at the cap, Buddy proposes an exit criterion to the owner
+instead of a further round: the parts the mechanism needs from killed mutants, an owner-text reference, properties
+over the matrix axes, or one closing review at full breadth. With the owner's approval the loop ends when every part
+holds with its evidence, not when a fresh review finds no HIGH; an open part is the next pass's input, never a
+limit. Record `exit_criterion: {parts} — owner: "{quote}" ({where}); state: {part}: met {evidence} | open` beside
+the gate's record.
 
 ## Source
 

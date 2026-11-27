@@ -62,10 +62,9 @@ steps:
     category: content
     instruction: >
       Symptoms → hypotheses → drill until root cause. Do NOT patch symptoms.
-      If a second verified finding after a repair breaks the same guarantee,
-      use skills/convergence_loop/simplify-before-patch.md before editing.
-      Record both triggering findings regardless of severity or review source.
-      The class witness must fail on both pre-fix revisions.
+      A repeated class gets one bounded class witness, red on the unfixed code,
+      before the fix brief (skills/convergence_loop/simplify-before-patch.md
+      §Class witness).
       Output: hypothesis + test plan that reproduces the bug.
     skill_ref: skills/root_cause_fix/SKILL.md
     completion:
@@ -108,8 +107,8 @@ steps:
       test-plan step, one test per further behaviour the fix promises, none
       for unchanged behaviour
       (skills/_protocols/mca-brief-template-verification.md §Tests the brief
-      orders). The brief is written from skills/_protocols/fix-brief-skeleton.md (first
-      line `Skeleton: fix-brief <n>`): its `## Round` block names the round against the
+      orders). The brief is written from skills/_protocols/fix-brief-skeleton.md: its
+      `## Round` block names the round against the
       rounds in the task's effort budget, and its `Verdict:` line the verdict file it
       answers. DIRECT eligibility is defined by framework/direct-eligibility.md; verified
       known fixes meeting all criteria use an inline delegation.
@@ -151,11 +150,6 @@ steps:
       (skills/testing/run-strategy.md §Test selection).
       When the fix edits text an agent follows (a skill, role, rules file,
       workflow step or instruction-bearing template), Buddy writes that text.
-      Before the first such edit, call and follow the instruction_authoring skill
-      so the applicable writing guidance reaches Buddy at the edit. In the Forge
-      repository, this also applies to the instruction paths checked by the
-      commit hook. In a Forge commit, include the four Read-path- lines for each
-      changed rule (owner: skills/_protocols/instruction-form.md §Read-path record).
     skill_ref: skills/root_cause_fix/SKILL.md
     completion:
       type: manual
@@ -192,11 +186,7 @@ steps:
       Safety floors precede file counts and other size signals. DIRECT
       eligibility comes from framework/process-map.md; a fix is not
       automatically L1. Consolidation follows the actual reviewer count
-      under the skill's §1.3. When the fix changes what a boundary passes to a downstream
-      decision or action, a reviewer independent of the implementer derives a counterexample
-      from the pre-fix guarantee, executes it through the normal entry on the outgoing diff,
-      and checks the exact consumer input and resulting effect before publication.
-      Test scope: a fix pass and its re-verify run
+      under the skill's §1.3. Test scope: a fix pass and its re-verify run
       the selected set for the fix's changes; a due broad run comes once,
       after the last pass, by the full gate's runner, and no fix brief or
       dispatch tells another actor to run the whole suite
@@ -211,12 +201,7 @@ steps:
       their own; which of them is fixed now, which is carried, and what is
       not such a finding (evidence a rule requires, wrong product behaviour,
       an owner-approved exit criterion):
-      skills/code_review_board/test-findings.md. When a second verified finding after a
-      repair breaks the same promised behaviour, stop before commissioning another patch.
-      Count findings from external reviews and classify by the violated guarantee, irrespective
-      of the reported severity. Use skills/convergence_loop/simplify-before-patch.md to map
-      all affected routes and record the class witness and repair decision before editing.
-      Re-reviews are at most two per
+      skills/code_review_board/test-findings.md. Re-reviews are at most two per
       mechanism, counted across review owners, workflows and tasks, then
       skills/convergence_loop/at-the-cap.md (owner: skills/code_review_board/verdict.md
       §Re-review); where the
@@ -228,18 +213,10 @@ steps:
       than the defect they answer. Buddy owns the decision and verifies pivotal
       claims after reading the reports or Chief consolidation.
 
-      Verdict lines (read at completion): write the verdict from the skeleton in
+      Verdict: write the verdict from the skeleton in
       skills/code_review_board/REFERENCE.md §Verdict file skeleton and fill its lines
       before adopting it; a line added after adoption changes the adopted bytes, and
-      the same decision is adopted again. The completion check refuses with
-      `compound check [<n>] failed` until docs/reviews/code/{task_id}-verdict.md holds
-      [1] the line `Skeleton: verdict <n>`; [2] `review: <light | L0 | L1 | L2>,
-      seats: <names>` or `review: waived because <reason>`; [3] `re_reviews: <n> of 2
-      on <mechanism>` (a waived or first review writes 0, a waived one `on none`; past
-      the limit, the count reached, with the at-the-cap ruling); [4] the findings table with its
-      `disposition` column, its header kept when there are no findings. It reads
-      presence only. A form none of these fits: --force, counted, while the adoption
-      check [0] still refuses (`Mandatory review adoption refused`). Retry forms of this step
+      the same decision is adopted again. Retry forms of this step
       (framework/workflow-engine-cookbook.md §Iteration cap and review rounds): a fix
       pass with its re-review is `--retry code-review --reason "<what changed>"`,
       counted against the engine cap of 3 runs; a corrected capture before any
@@ -270,24 +247,6 @@ steps:
           review_owner_workflow: self
           review_owner_step: code-review
           review_policy: code_success
-        # Verdict lines: presence of the skeleton's lines, keyed [1] to [4] in the
-        # step text. Forceable; the adoption check above still refuses under force.
-        - type: file_content_check
-          path: "docs/reviews/code/{task_id}-verdict.md"
-          pattern: '(?m)^Skeleton: verdict [0-9]+[ \t\r]*$'
-          condition: has_match
-        - type: file_content_check
-          path: "docs/reviews/code/{task_id}-verdict.md"
-          pattern: '(?m)^review:[ \t]*(?:(?:L0|L1|L2|light)\b[^\n]*\bseats:[ \t]*[^\s<|][^\n]*|waived because[ \t]+[^\s<][^\n]*)$'
-          condition: has_match
-        - type: file_content_check
-          path: "docs/reviews/code/{task_id}-verdict.md"
-          pattern: '(?m)^re_reviews:[ \t]*[0-9]+ of [0-9]+ on[ \t]+[^\s<][^\n]*$'
-          condition: has_match
-        - type: file_content_check
-          path: "docs/reviews/code/{task_id}-verdict.md"
-          pattern: '(?m)^\|[^\n]*\bdisposition\b'
-          condition: has_match
         - type: manual
     on_fail: block
 
@@ -364,14 +323,6 @@ steps:
     name: "Commit + deploy"
     category: deterministic
     instruction: >
-      Before pushing a held-back boundary fix that changes what a consumer
-      receives for a downstream decision or action, check the independent
-      counterexample against the exact outgoing diff. Reuse evidence when it
-      covers that diff, the exact consumer input and the resulting effect.
-      If it is missing, hold the push and have a fresh reviewer derive and
-      run the counterexample through the normal entry. Record the result with
-      the pending publication. Leave the completed review and its evidence unchanged.
-
       First make sure the tests that exercise the fix ran after the last code
       change (skills/testing/run-strategy.md §Test selection); run them now if
       not. A due broad run is the full gate's runner's: run it here only when

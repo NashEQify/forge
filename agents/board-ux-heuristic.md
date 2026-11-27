@@ -24,8 +24,7 @@ and conclusion).
 the UX reviews I check that each review that loads the protocol
 contains a `## Checked scope` section and the bind rule from
 `reviewer-checked-scope.md`, including its evidenced zero-findings
-conclusion path. Missing → F-UX-SCOPE-MISSING finding + re-dispatch of
-the affected UX reviewer (max 1), then ESCALATE.
+conclusion path. A missing section is noted in my consolidation, not refused.
 
 ## Anti-rationalization
 

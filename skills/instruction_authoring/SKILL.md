@@ -98,12 +98,9 @@ have Forge's units.
    the scenario, each reading verbatim and the result. Purpose: two readings catch a failure that shows in most
    sessions; a reading shows how a text is understood, not how a live session behaves under pressure (owner:
    `skills/_protocols/instruction-form.md` §Reproduce before rewriting).
-8. **Read-path record.** For each rule you changed, four lines: `Read-path-reader:`, `Read-path-moment:`,
-   `Read-path-text:` (what that reader has open then, and how it got there), `Read-path-carrier:` (a letter of step 3,
-   or `on-demand`). Write them by walking the reader's path from its session start or dispatch to that moment. In a
-   Forge checkout they go into the commit message, and the commit-message hook refuses a change under the instruction
-   roots without them; in any other project no hook checks them, so write them into the commit message or the change's
-   record yourself. Purpose: the author is the one who can see before the commit that a rule's actor will not have it
+8. **Read path.** For each rule you changed, answer who reads it, at which decision, what that reader has open
+   then and what carries the rule there (a letter of step 3, or `on-demand`), walking the reader's path from its
+   session start or dispatch. Purpose: the author is the one who can see that a rule's actor will not have it
    (owner: `skills/_protocols/instruction-form.md` §Read-path record).
 
 ## Red Flags
@@ -131,7 +128,7 @@ The text to write or change; the failure or behaviour it addresses; the host it 
 
 ### OUTPUT
 The written text; one line per rule from step 3 (actor, moment, text, carrier); the failure type and form from steps
-2 and 5; the readings when step 7 applies; the read-path record of step 8.
+2 and 5; the readings when step 7 applies; the read path of step 8.
 
 ### DONE
 Every written or changed rule stands in the text its actor has at its moment, or is marked on-demand without a claim
@@ -146,6 +143,6 @@ failure sends you to what the live session had loaded at that moment (step 7), n
 Against the inflation guard (`framework/skill-anatomy.md` §Inflation guard): the methodology (placing each rule by its actor's
 moment, choosing its form from the failure, recording the read path) is not a mode of an existing skill:
 `documentation_and_adrs` writes text for people, `spec_authoring` writes specs; its outputs, the per-rule carrier
-line and the read-path record, belong to no other skill; the writing rules are a protocol a Forge author meets at
+line and the read path, belong to no other skill; the writing rules are a protocol a Forge author meets at
 the commit, and an author in another project has no such path: the skill listing is the only channel that reaches
 them; its cost is one listing line in every session and one read when called.

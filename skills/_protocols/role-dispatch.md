@@ -20,29 +20,12 @@ file path that resolves against the project instead of the framework, and a read
    install is the plugin's installed copy, not a checkout. Without a boot entry (a plugin skill used on its own),
    `<root>` is the directory that holds `.claude-plugin/` above the skill's folder. A relative `agents/<role>.md`
    resolves against the project and misses.
-4. **Model:** name it in the call per `framework/models.md`, in both cases; role files set none.
-5. **First line:** every dispatch prompt (after the role line of step 3, where there is one) starts with
-   `<role> · <model> (<role row>) · <brief path | inline>`; a tier above the row names its reason inside the
-   parentheses, a tier below is not taken (owner: `framework/models.md` §Naming the model). The next call copies the
-   line's form from this one.
-
-   **Review execution:** when a review seat's scope includes executing tests or probes, copy this
-   block into the prompt body for either host role form, after any role and read-only lines and before
-   the return contract:
-
-   > Run the one prescribed gate when you are its runner and equivalent qualified evidence is unavailable.
-   > Run the change's required witnesses, oracle and kill checks and keep independent direct exercises.
-   > Before any further run, record the unresolved claim and the new evidence it will add. Require each
-   > item in an optional batch to contribute its own new evidence so the queue stays bounded.
-   > Before launching that gate on a frozen review copy, run short static tests there with its gate
-   > configuration and exercise the gate's environment dependencies. Report the preflight separately
-   > and hold the gate on an environment blocker until the preflight passes. At round return, account
-   > for each new probe with its retained test or an explicit scratch mark. For a needed test you cannot
-   > write, give Buddy the reproduction for same-round adoption (owner: skills/testing/run-strategy.md §Review execution).
-
-   For either host role form, add: “If role or host limits prevent a required run, give Buddy the exact
-   isolated execution request. Attribute any resulting evidence to the actual runner and keep unperformed
-   independent exercises open.” The prompt grants no extra permission.
+4. **Model:** name it in the call per `framework/models.md`, in both cases; role files set none. A tier above the
+   role's row names its reason, a tier below is not taken (owner: `framework/models.md` §Naming the model).
+5. **Review execution:** when a review seat's scope includes executing tests or probes, the prompt says: "Run the
+   prescribed gate once and the change's witnesses; keep your test runs within <bound>; a further run names the new
+   evidence it adds. If role or host limits prevent a required run, give Buddy the exact execution request." The
+   prompt grants no extra permission.
 
 6. **Return contract:** the prompt ends with what the return must end with: the adoption lines of
    `skills/return_summary/SKILL.md` §Adoption line, quoted; for a role that starts commands or agents, "do not return
@@ -50,8 +33,8 @@ file path that resolves against the project instead of the framework, and a read
    `agents/_protocols/code-reviewer-protocol.md`) and, as the prompt's last part, the evidence layout of its reviewer
    protocol (code or spec)
    (§Mandatory envelope and clean output, §Output format: frontmatter first with the captured run, subject and slot
-   verbatim, then findings with their `evidence:` pointers); the dispatcher adds no return shape of its own, and
-   `workflow_engine.py --review-persist` refuses a return outside that layout. A review seat's prompt also tells it
+   verbatim, then findings with their `evidence:` pointers); the dispatcher adds no return shape of its own. A review
+   seat's prompt also tells it
    to write its draft to a temporary file outside the repository, run
    `python3 <root>/scripts/validate_evidence_pointers.py --strict <file>` on it and correct what it prints before
    returning (the validator reads files only, not stdin). Purpose: the returner holds the contract and its check, and the adopter

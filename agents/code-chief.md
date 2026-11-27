@@ -106,13 +106,9 @@ Protocols: `_protocols/reviewer-base.md`,
 section before the findings; per finding the checked path, evidence
 and conclusion).
 
-**Checked-scope enforcement:** chief verifies that every raw review
-contains a `## Checked scope` section and the bind rule from
-`reviewer-checked-scope.md`, including its evidenced zero-findings
-conclusion path. Missing → F-C-SCOPE-MISSING finding + re-dispatch of
-the same code reviewer (max 1), then ESCALATE. A seat that ended in an abort is not a review to enforce on, and its
-substitute is checked against its own output format:
-`skills/_protocols/dispatch-template.md` §Aborted seat.
+**Checked scope:** a raw review without its `## Checked scope` section
+(`reviewer-checked-scope.md`) is noted in the consolidation, not refused. A seat that ended in an abort
+is not a review (`skills/_protocols/dispatch-template.md` §Aborted seat).
 
 Code-review personas (`code-review`, `code-adversary`,
 `code-security`, etc.) are forced by this chief enforcement to
@@ -145,8 +141,7 @@ claim — every load-bearing claim was independently re-executed.
 - You accept "accepted risk" on HIGH — HIGHs are fixed, not
   accepted. Fixing includes simplifying: when the HIGHs repeat a
   prior pass's mechanism class, recommend the simpler mechanism or
-  structural invariant, or the drill on a mechanism its decision rule
-  sends there (`skills/convergence_loop/simplify-before-patch.md`
+  structural invariant (`skills/convergence_loop/simplify-before-patch.md`
   §Simplify-before-patch gate), not another route patch.
 - You route a CRITICAL / HIGH (or dangerously invariant-falsifying) finding on a
   mechanism to `new_task` / `watch_item` because "the producer is

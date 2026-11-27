@@ -1,8 +1,10 @@
 # Reviewed workflow compatibility — forward and review-gate transitions
 
-Step-loaded unit of `framework/workflow-compatibility.md`. Read it when a retained build, solve, fix, review or
-spec-board run is interpreted, installed or rolled back under the forward build/solve pairs, the mandatory review
-definition pairs or the review-round and architect-lens pair, and when a change to those definitions is reviewed.
+Step-loaded unit of `framework/workflow-compatibility.md`: forward build/solve, mandatory review, review-round and
+architect-lens pairs.
+
+Read it when a retained run is interpreted, installed or rolled back under them, and when a
+change to those definitions is reviewed.
 
 ## Forward build and solve interpretation
 

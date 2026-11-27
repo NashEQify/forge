@@ -100,9 +100,8 @@ L1's decisions that bind separately built components are written as an initiativ
 
 ## Progressive elicitation
 
-**Principle:** each level asks only what the previous level left open. Before settling a scope cut,
-cite the applicable project intent and original local objective in the existing scope and show how it
-serves both. Resolve governing gaps or conflicts with the owner before locking the cut (owner: framework/invariants.md §Intent-driven).
+**Principle:** every level only gets the delta questions — what
+the previous level didn't yet clarify.
 
 | Level | Already known | What is now clarified |
 |-------|---------------|------------------------|

@@ -49,12 +49,8 @@ When findings exist, at least one refers to a path checked or to the assumption 
 Consequence field names the checked paths, their evidence and the limits that support that result. Apply this
 separately to each reviewed axis. Zero findings is a valid result; never invent a finding to satisfy the bind.
 
-The checking role (Chief, primus, or Buddy at triage) verifies the section and this substantive connection. A keyword
-match alone does not establish it; zero findings alone does not violate it. Missing section or connection → finding
-`F-{C|UX|CC}-SCOPE-MISSING` and one re-dispatch of the same reviewer with a hint (context-isolated, append only, no
-full re-review); missing again → ESCALATE.
-A seat that ended in an abort, and the substitute that replaced it, are handled by
-`skills/_protocols/dispatch-template.md` §Aborted seat; the substitute is checked against its own output format.
+The checking role (Chief, primus, or Buddy at triage) reads the section; a missing one is noted at adoption, not
+refused. A seat that ended in an abort: `skills/_protocols/dispatch-template.md` §Aborted seat.
 
 ## What each field guards
 

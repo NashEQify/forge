@@ -11,17 +11,6 @@ secrets, schema/data migration, public or cross-component contracts, live
 infrastructure, and changes with hidden/racing/unbounded failure effects.
 Size does not cancel a safety floor.
 
-When a second verified finding breaks the same promised behaviour after a repair,
-route the next correction through the fix workflow before editing. Count findings
-from external reviews too. Use its convergence check to cover the mechanism and
-its affected routes in one repair.
-
-Before choosing DIRECT, trace what the producer changes and what each affected
-consumer calls, reads or relies on before and after. Record the deciding fact and
-its source in the sizing facts. A new CLI call or a new value in a versioned
-definition can change the contract while the earlier invocation or format still
-works. Resolve consequential gaps before choosing DIRECT.
-
 Otherwise DIRECT requires ALL of:
 - A clear authorized outcome and concrete success criteria.
 - A locally bounded, reversible change following an observed existing pattern.
@@ -75,21 +64,15 @@ DIRECT is a short complete lifecycle of four steps, in this order:
    For a defect, state the promised behaviour and what happens on failure before editing.
    For a boundary fix, plan a reproduction through the normal entry that checks the exact value or
    disposition the consumer receives and the resulting effect, including an action that must be withheld.
-   Ground the scope in the applicable project intent and original local objective. Cite both, show how the
-   choice serves both and hold the dependent choice on missing or conflicting intent
-   (owner: framework/invariants.md §Intent-driven). This record is the delegation. A commit of the change that touches
-   a path in the project's `.forge-product-paths` carries `Route: direct[ <quick|checked|reviewed>], tests: <number of
-   tests run>`; the commit-msg hook refuses it without one.
-2. **Build:** before a substantive deviation from the approach, apply the Record's intent comparison
-   in the existing decision. If a proposed or discovered change alters the producer, its consumers or
+   This record is the delegation.
+2. **Build:** if a proposed or discovered change alters the producer, its consumers or
    their expectations, the builder holds that deviation while Buddy checks eligibility again.
    On checked and reviewed, main-code-agent receives the record in its prompt,
    implements, runs the relevant tests and returns inline (`agents/main-code-agent.md` §Direct path).
    On quick, Buddy makes the change himself and runs the relevant test (the exception in Invariant 4).
 3. **Check:** compare the actual diff with the Record's deciding scope facts before using the planned
    DIRECT check. If a safety floor applies or a consequential fact remains unresolved, hold the affected
-   work until the route is resolved. Use the Record's intent comparison before relying on a result to
-   change the cut. On reviewed, a change to behaviour gets one fresh-context
+   work until the route is resolved. On reviewed, a change to behaviour gets one fresh-context
    `code-verification` seat, started as its own agent run and never the
    implementer. Dispatch either host role form through
    `skills/_protocols/role-dispatch.md` §The call with the record, the implementer's
@@ -104,10 +87,7 @@ DIRECT is a short complete lifecycle of four steps, in this order:
    Buddy reads the diff and reruns the tests himself. On quick, nothing checks
    beyond the builder's own test.
 4. **Report:** Buddy reads the returns and checks the claim the result rests on. Before claiming completion,
-   check the conditions for the same-turn exception below and qualify the remaining evidence duties
-   (owner: framework/agent-autonomy.md §Path precedence). Before closing a reviewed
-   round or starting another, record each new probe's retained test or scratch mark so unsettled probes
-   stay out of later queues (owner: skills/testing/run-strategy.md §Review execution). The final reply, after any boot status the first answer opens with
+   check the conditions for the same-turn exception below. The final reply, after any boot status the first answer opens with
    (`agents/buddy/boot.md` §Restricted user scope), says what the change now
    does in the request's own terms (the behaviour it promised, not only the
    code edit) and the results of the checks. For a test, give the command run after

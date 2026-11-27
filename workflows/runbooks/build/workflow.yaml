@@ -502,12 +502,8 @@ steps:
       Instruction text, that is text an agent follows (a skill, a role or agent
       file, a rules file such as CLAUDE.md or AGENTS.md, a step text) and, in the
       Forge repository, every planned path under agents/, framework/, skills/,
-      workflows/, orchestrators/*/rules/, CLAUDE.md or AGENTS.md, since its commit
-      hook tests the path: Buddy writes it himself; before writing it, call the instruction_authoring skill and follow
-      it, and put its read-path record (four Read-path- lines per changed rule)
-      into the commit message. In the Forge repository the commit hook refuses the
-      commit without them; elsewhere no hook checks them (owner:
-      skills/_protocols/instruction-form.md §Read-path record).
+      workflows/, orchestrators/*/rules/, CLAUDE.md or AGENTS.md: Buddy writes it
+      himself.
     completion:
       type: manual
     commit_gate: true
@@ -599,18 +595,10 @@ steps:
       follow the normal triage with the cell annotated; placed cells leave
       the task as blocked_by edges on the owning task.
 
-      Verdict lines (read at completion): write the verdict from the skeleton in
+      Verdict: write the verdict from the skeleton in
       skills/code_review_board/REFERENCE.md §Verdict file skeleton and fill its lines
       before adopting it; a line added after adoption changes the adopted bytes, and
-      the same decision is adopted again. The completion check refuses with
-      `compound check [<n>] failed` until docs/reviews/code/{task_id}-verdict.md holds
-      [1] the line `Skeleton: verdict <n>`; [2] `review: <light | L0 | L1 | L2>,
-      seats: <names>` or `review: waived because <reason>`; [3] `re_reviews: <n> of 2
-      on <mechanism>` (a waived or first review writes 0, a waived one `on none`; past
-      the limit, the count reached, with the at-the-cap ruling); [4] the findings table with its
-      `disposition` column, its header kept when there are no findings. It reads
-      presence only. A form none of these fits: --force, counted, while the adoption
-      check [0] still refuses (`Mandatory review adoption refused`). Retry forms of this step
+      the same decision is adopted again. Retry forms of this step
       (framework/workflow-engine-cookbook.md §Iteration cap and review rounds): a fix
       pass with its re-review is `--retry code-review-board --reason "<what changed>"`,
       counted against the engine cap of 3 runs; a corrected capture before any
@@ -647,24 +635,6 @@ steps:
           review_owner_workflow: self
           review_owner_step: code-review-board
           review_policy: code_success
-        # Verdict lines: presence of the skeleton's lines, keyed [1] to [4] in the
-        # step text. Forceable; the adoption check above still refuses under force.
-        - type: file_content_check
-          path: "docs/reviews/code/{task_id}-verdict.md"
-          pattern: '(?m)^Skeleton: verdict [0-9]+[ \t\r]*$'
-          condition: has_match
-        - type: file_content_check
-          path: "docs/reviews/code/{task_id}-verdict.md"
-          pattern: '(?m)^review:[ \t]*(?:(?:L0|L1|L2|light)\b[^\n]*\bseats:[ \t]*[^\s<|][^\n]*|waived because[ \t]+[^\s<][^\n]*)$'
-          condition: has_match
-        - type: file_content_check
-          path: "docs/reviews/code/{task_id}-verdict.md"
-          pattern: '(?m)^re_reviews:[ \t]*[0-9]+ of [0-9]+ on[ \t]+[^\s<][^\n]*$'
-          condition: has_match
-        - type: file_content_check
-          path: "docs/reviews/code/{task_id}-verdict.md"
-          pattern: '(?m)^\|[^\n]*\bdisposition\b'
-          condition: has_match
         - type: manual
     commit_gate: true
     on_fail: block

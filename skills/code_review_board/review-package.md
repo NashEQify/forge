@@ -91,21 +91,11 @@ the checkout's own index.
 
 ### Core mechanism search
 
-Before a review's dispatch, when the project's `intent.md` has a `## Core mechanisms` section
-(`framework/intent-tree.md`): for each entry with a PATHS entry at or under one of its code paths, and no line
-`core search: <mechanism>` in the change's verdict (§7) yet, one search runs beside this review. It covers the
-mechanism, not the change: it is no seat of the review's roster, does not count under §1.3 and is no seat for §Small
-fix after a passing review. Without that section or such an entry, nothing here applies.
-
-- **Seat and package:** one `code-spec-fit` per part: each `§Mechanism-Lifecycle` section of the entry's spec section,
-  plus one for its rules outside them. It receives the entry, its part and the entry's code
-  paths at HEAD_SHA, nothing beyond. Where the review has a capture, each part is a slot of it.
-- **Only mandate:** walk each rule and matrix cell of the part against that code, not against the project's
-  oracle or tests; return one row per rule or cell: checked at `path:line`, a finding, or not checked with the reason.
-- **Record:** each part's return is persisted (below) at `{task-id}-core-search-<n>.md`, with `Range:
-  <HEAD_SHA> core search: <mechanism> (<code paths>)`. The verdict adds `core search: <mechanism> at <HEAD7>`, and
-  every later verdict of the change keeps it. Its findings are this review's (§5); those §5 makes fix-now enter the
-  fix pass after it, none goes to `## Deferred`.
+When the project's `intent.md` names `## Core mechanisms` (`framework/intent-tree.md`), the first review of a change
+under one of an entry's code paths also searches the whole mechanism, not only the diff: one `code-spec-fit` walks the
+entry's spec rules and matrix cells against its code at HEAD_SHA and returns a row per rule or cell (checked at
+`path:line`, a finding, or not checked with the reason). Its findings are this review's (§5); the verdict notes
+`core search: <mechanism> at <HEAD7>`, and later reviews of the change do not repeat it.
 
 ### What a re-review decides
 
@@ -137,14 +127,9 @@ value or an oracle, or touches a safety floor (§1).
 
 ### Persisting a seat's return
 
-Persist each return with `python3 "$FRAMEWORK_DIR/scripts/workflow_engine.py" --review-persist <step> --id <workflow>
---slot <slot> --to <path> --from <return file>` before the Chief or Buddy's consolidation reads it. It checks that the
-return echoes the captured run, subject and slot, keeps the path outside the captured subject and new, and runs
-`validate_evidence_pointers.py --strict` (a `WARN` line alone does not refuse); a refusal writes nothing and prints the validator's output. Send the seat
-back with that output verbatim and the instruction to correct only what it names; persist the corrected return beside
-the first under a new name. A seat that cannot answer is replaced by a fresh cold-start seat in the same slot:
-adoption needs a passing return for every captured slot (`skills/_protocols/evidence-review-adoption.md` §9.4). A
-review with no capture runs the validator without `--strict` by hand.
+Buddy saves each return verbatim beside the review before the Chief or Buddy's consolidation reads it. A return
+whose evidence pointers fail `validate_evidence_pointers.py --strict` is noted at adoption; the seat corrects only
+what the validator names when the finding depends on it.
 
 ### The record
 

@@ -1,8 +1,6 @@
 # Reusable workflow for consumer repositories. Forge contributes only its
-# portable checks (commit-message format, gitleaks, and the route trailer on
-# commits that touch the product paths a consumer declares in a root
-# .forge-product-paths; without that file the trailer is not checked),
-# replayed per pushed commit by the shared Git hook's range mode. A consumer's own test, build or
+# portable checks (commit-message format and gitleaks), replayed per pushed
+# commit by the shared Git hook's range mode. A consumer's own test, build or
 # lint steps go in the `commands` input; its own or external workflows are
 # sibling jobs in the consumer's caller file.
 name: forge-consumer-checks
@@ -25,7 +23,7 @@ on:
         type: string
         required: true
       host-commits-format:
-        description: "Commit-message checks (format, and the route trailer where product paths are declared) for host-generated commits (committer noreply@github.com, author ending in [bot]): exempt or strict."
+        description: "Commit-message format check for host-generated commits (committer noreply@github.com, author ending in [bot]): exempt or strict."
         type: string
         required: false
         default: exempt

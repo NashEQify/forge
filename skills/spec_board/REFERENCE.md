@@ -122,10 +122,8 @@ Delta-Verify reviewers:
 A reviewer whose call aborted has no section to check: record and
 handle it per `skills/_protocols/dispatch-template.md` §Aborted seat.
 
-Section OR bind missing on ≥1 reviewer: re-dispatch the
-same reviewer context-isolated with a hint at the missing
-section / bind. No full re-review. Loop bound: max 1
-re-dispatch per reviewer; then ESCALATE.
+Section or bind missing on a reviewer: note it in the consolidation;
+it is not refused.
 
 ## Risk carry-forward (full schema + acceptance scenarios)
 

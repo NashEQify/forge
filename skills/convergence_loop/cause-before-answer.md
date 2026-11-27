@@ -88,7 +88,7 @@ ruling (later records cite it):
 `owner` only when the quoted owner words name this outcome for this case; a ruling applying or interpreting owner text
 is `derived`, the quote in `derived from`. Text carrying a ruling (spec, header, brief, decision list) cites its id and
 origin; a derived ruling is never shown as owner-approved. **Open readings** of a mechanism: its unretired derived
-rulings of class `open` or `new reading` after the RL id its `Derived:` line names (all if none).
+rulings of class `open` or `new reading`.
 
 **Interpretation stop.** When five derived rulings in the log are `class: open` (intent: readings pile up unchecked;
 five fit one check), the task's next fix brief, dispatch or re-review waits. A fresh-context reviewer who took none

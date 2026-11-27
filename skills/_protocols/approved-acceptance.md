@@ -57,11 +57,7 @@ python3 $FRAMEWORK_DIR/scripts/consistency_check.py --check brief-acceptance --b
 It reads the task id from the block, finds the task file under `docs/tasks/` (archive included) and compares both
 lists with it item by item. It exits non-zero when it cannot establish an exact copy: the section missing or given
 twice, not exactly one yaml block in it, keys other than the four above, a missing or blank `approved_by`, no task
-file or a different `id` in it, or any item that differs. A `Skeleton: <kind> <n>` line older than its skeleton
-fails, as does an unknown kind, a version above the current, a malformed or a second line; recopy the slots the
-newer skeleton adds and set the line (no line: a note on a pass). A change that adds, removes or renames a skeleton's
-slot raises the number on its first line. Purpose: a brief copied from an old one is told
-which slots it lacks. On a failure, recopy the block from the task file; do not
+file or a different `id` in it, or any item that differs. On a failure, recopy the block from the task file; do not
 change the task file to match the brief. The check runs when you run it: a brief dispatched without it is unchecked,
 and nothing else catches that.
 

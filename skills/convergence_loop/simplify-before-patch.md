@@ -27,16 +27,15 @@ state file (spec-only review: consolidated file):
 
 ```
 ### Simplify-before-patch check — before fix pass {N}
-- model: present|written-now|n/a — {spec § of the §Mechanism-Lifecycle section, or why no state carrier}; derived: {its Derived: line} | no | n/a (model: n/a)
+- model: present|written-now|n/a — {spec § of the §Mechanism-Lifecycle section, or why no state carrier}
 - inventory: {path} — missing {n}, partial {n}, contradicts {n}, unrequested {n}
 - why: {one sentence: why the earlier passes did not converge, read from the inventory and the prior vs new findings}
-- same_class: yes|no — {mechanism or guiding rule}; prior {ids} vs new {ids}; cells: {matrix cells the findings sit on}; defined_by: {unit, place} | n/a | none | unsure ({candidates})
-- deciders: {question; every predicate caller and independent decider with location; owner or unresolved candidates; duplicate → delete or delegate} | n/a (same_class: no)
+- same_class: yes|no — {mechanism or guiding rule}; prior {ids} vs new {ids}; cells: {matrix cells the findings sit on}
 - simpler_mechanism: yes|no — {named candidate + the cells / invariant locus it removes + the finding ids}
 - spec_is_problem: yes|no — {clause}; open readings: {n} ({RL ids})
 - causes: {id}: wrong-finding|intent|spec|mechanism|stuck|code — {the check that holds}; … each open blocking finding and recurrence trigger
-- decision: per cause group — derive-from ({unit}) | patch ({cells changed}; {cells confirmed intact}) | propose-simplification → {caller / PMO / user} | amend-spec ({§}) → re-derive {unit} | patch | ask → {caller} | fresh-implementer {model} | rule {ids} | accept-limit {ids}
-- class_witness: {command} — red: {open ids} at {HEAD}, {prior ids} at {rev}; sharpened: {what was added for a finding it missed} | table: {command; revisions, affected cells and results} | n/a (same_class: no)
+- decision: per cause group — patch ({cells changed}; {cells confirmed intact}) | propose-simplification → {caller / PMO / user} | amend-spec ({§}) → re-derive {unit} | patch | ask → {caller} | fresh-implementer {model} | rule {ids} | accept-limit {ids}
+- class_witness: {command} — red: {open ids} at {HEAD}, {prior ids} at {rev}; sharpened: {what was added for a finding it missed} | n/a (same_class: no)
 ```
 
 **`model` first.** Cite the `§Mechanism-Lifecycle` section (`skills/_protocols/mechanism-model.md`). On a blocking
@@ -52,23 +51,8 @@ mechanism. Unsure counts as `yes` for `same_class` only. `simpler_mechanism: yes
 finding IDs. `spec_is_problem: yes` needs the clause or ≥ 5 open readings (`cause-before-answer.md` §Ruling record).
 Without the evidence, the corresponding answer is `no`.
 
-Two verified failures of one guarantee across a repair are `same_class: yes` regardless of severity or review source.
-Before editing, record the guarantee and affected routes. Include both triggers in `causes`, `decision` and
-`class_witness` with RED on their pre-fix revisions. Keep prior dispositions as history.
-
-After two failed reviews at the same transition between roles, first ask what interface governs the transition and
-who owns it. Record the answer or open question in `why` before choosing the fix.
-
-Before choosing a changed cut, cite the applicable project intent and the original local objective in
-the existing `decision` rationale. Explain how the cut serves both, and hold a cut that depends on an
-unresolved conflict or missing governing source (owner: framework/invariants.md §Intent-driven).
-
-At `same_class: yes`, fill `deciders` by tracing uses of the predicate and searching for equivalent decisions,
-including fallbacks. Distinguish calls to the owner from duplicate decisions. `derive-and-exit.md` governs uncertainty
-and defects in the defining unit. If competing deciders lack a settled owner, record `ask → caller` before the decision
-rule and hold dependent choices until ownership is settled (`ESCALATE` while waiting), including with `defined_by: n/a`.
-In the fix brief carry the inventory, name the one owner, and delete or delegate each duplicate in the same phase.
-A stricter caller keeps its stated difference after delegating the shared decision.
+Two verified failures of one guarantee across a repair are `same_class: yes` regardless of severity or review
+source; the class witness turns red on both.
 
 **Decision rule.** Each open blocking finding or open recurrence trigger takes the answer of its
 cause (`cause-before-answer.md` §Cause before answer). For the findings whose cause is mechanism or
@@ -76,18 +60,16 @@ code, the table decides:
 
 | Answers | Decision |
 |---|---|
-| `defined_by:` names a unit | **Derive from it** (`derive-and-exit.md` §Derive from the defining unit), the rows below do not apply to the class; no further channel, case or invariant in the copy. |
 | `model: written-now` | Write the section first; re-read every new and prior finding against the matrix before answering the rows below. Cells the matrix shows empty or unspecified are findings of this pass, whether or not a reviewer reported them. |
 | `same_class: yes` AND (`simpler_mechanism: yes` OR `spec_is_problem: yes`) | **Stop route patching.** Propose the simplification to the caller (PMO / user) unprompted: a spec amendment and/or one structural invariant whose checks assert effects, not classifications, plus the applicable class witness below. The proposal names the cells it removes and shows the **whole updated matrix**, not the changed side. |
 | `same_class: yes`, both others `no` | Patch, but the effect-asserting invariant and applicable class witness must stand before the fix brief, the record names why no simpler mechanism exists, and the fix brief carries the `§Mechanism-cells` block (`_protocols/fix-brief-template.md`). |
-| `same_class: yes` in two consecutive checks, `model` not `n/a`, and `derived: no` or five or more open readings | **Drill the mechanism** (`derive-and-exit.md`) instead of a further invariant or patch: its owner-approved axioms go into the spec and the matrix. |
-| `same_class: yes` in two consecutive checks, the drill row not met | **Propose-simplification regardless** of the other answers: the invariant route already failed once. |
+| `same_class: yes` in two consecutive checks | **Propose-simplification regardless** of the other answers: the invariant route already failed once. |
 | `same_class: no` | Patch normally (cells named). |
 
 Recommend one simplification with recurring IDs and cells. Use the existing spec amendment threshold and spec-drift
 check for spec simplifications and edit the matrix in the same change. Deferred cells travel as `blocked_by` edges
 (`_protocols/mechanism-model.md` §Scope and placement). Close every blocking `now` cell in this fix (lower severities:
-§Bind rules, verdict floor). Waiting on a proposal, drill or intent question counts as ESCALATE (`SKILL.md` §Termination).
+§Bind rules, verdict floor). Waiting on a proposal or question counts as ESCALATE (`SKILL.md` §Termination).
 A simplified fix counts as a pass. When the caller is the user, apply the council-before-user rule
 (`agents/buddy/operational.md`) before making the recommendation. A spec remains changeable while no real data (persisted, non-test) or
 shipped consumer depends on it, even if locked.
@@ -99,13 +81,6 @@ witness). Running a delegated build to done means finishing the task,
 not the current design.
 
 ### Class witness (every `same_class: yes` row, before the fix brief)
-
-**State/transition-table specs.** After two review rounds with the same class, use the executable table recomputation
-(`skills/spec_board/SKILL.md` §4.–4b) before the next round, including on the simplification route. Derive the axes from
-the governing rules and operations (§4b in `skills/spec_board/checklist-and-dispatch.md`). Show gaps or contradictions
-for the class's open and prior cells on their pre-fix revisions. Re-run on the revised spec. Record the command,
-revisions, cells and results in `class_witness`; the next seats receive the current output, with earlier results in
-the review history.
 
 **Code.** Tests per finding cover only the reported routes, so a suite can be green after each pass while the next review finds
 new routes of the same class. The property generator the rows above require therefore exists before the fix brief is

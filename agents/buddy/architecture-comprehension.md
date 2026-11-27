@@ -77,10 +77,8 @@ or extension as well, independent of the triggers below.
 **B) Post-return.** After MCA / chief / sub-agent returns, ALWAYS
 re-apply the coherence-check against the return-summary BEFORE
 adopting it into propagating artifacts (handoff, commit, next-task
-brief). Apply the topology check to every return that hit a §A trigger at dispatch.
-Before relying on a return to make a substantive adoption decision, cite the applicable project intent and
-the original local objective, explain the fit in that decision and hold the dependent choice on unresolved
-conflict or missing authority (owner: framework/invariants.md §Intent-driven).
+brief). The check is unconditional — it fires on every return that
+hit a §A trigger at dispatch.
 
 At every fix-pass commission, review-finding adoption and extension request,
 independent of the §A triggers: if returned findings mainly concern machinery

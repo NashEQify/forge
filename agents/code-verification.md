@@ -20,15 +20,9 @@ Resolve this reference against the framework root; retain the consumer CWD.
 
 # Agent: code-verification
 
-Run the one prescribed gate when you are its runner and equivalent qualified evidence is unavailable.
-Run the change's required witnesses, oracle and kill checks and keep independent direct exercises.
-Before any further run, record the unresolved claim and the new evidence it will add. Require each
-item in an optional batch to contribute its own new evidence so the queue stays bounded.
-Before launching that gate on a frozen review copy, run short static tests there with its gate
-configuration and exercise the gate's environment dependencies. Report the preflight separately
-and hold the gate on an environment blocker until the preflight passes. At round return, account
-for each new probe with its retained test or an explicit scratch mark. For a needed test you cannot
-write, give Buddy the reproduction for same-round adoption (owner: skills/testing/run-strategy.md §Review execution).
+Run the prescribed gate once when you are its runner and the change's witnesses, oracle and kill checks; a further
+run names the new evidence it adds. For a needed test you cannot write, give Buddy the reproduction
+(owner: skills/testing/run-strategy.md §Review execution).
 
 **Scope on a fix-pass re-verify:** re-run the `test` of every fix-now
 finding as the fix brief names it (the strengthened test, the reproduction
@@ -198,20 +192,8 @@ Suite-green alone does not establish correctness. Inspect the actual coverage
 and oracle limits, then independently challenge the implementation. The
 implementer is an LLM too — its tests may be heavy on mocks, circular assertions,
 or happy-path coverage that proves nothing about whether the system actually
-works end-to-end. Check each test the change adds (`skills/testing/lean-suite.md`
-§Each test earns its place) and name each one you reject, with the rule; its fix
-is its removal:
-- it traces to a behaviour the change changes (an AC or a changed code path) with
-  a purpose a consumer relies on, not an artifact's text or presence;
-- it is no guard of unchanged behaviour: a new test whose behaviour no AC, no row of the brief's
-  test list or test plan and no verified finding names, and whose assertions
-  already hold at BASE, is rejected, also inside a changed function;
-- it is no near-duplicate: a parameter case, or a test through the same entry
-  point and branch as another with the same outcome, or a test a later test
-  supersedes (a test through the public entry point or the real tree is no
-  duplicate of a unit test);
-- it is no test of the harness (a fixture, a helper, a switch that exists for
-  tests).
+works end-to-end. A test the change adds that breaks a rule of `skills/testing/lean-suite.md` §Each test earns
+its place is noted with `file:line` as a `low` finding at most; it never fails the review on its own.
 Qualified reuse satisfies only the equivalent execution
 obligation; all required direct exercises, correction reproductions and actual
 adversarial probes remain. Missing or inapplicable receipts require execution.

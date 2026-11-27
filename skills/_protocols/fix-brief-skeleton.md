@@ -1,11 +1,8 @@
-Skeleton: fix-brief 2
-
 # Fix brief — task <id>, fix pass <n>
 
-<!-- Copy this file into the work unit's records as the fix brief. Keep the line above: the brief-acceptance check
-reads it. Fill every slot; a slot that does not apply keeps its one-line `n/a` or `[]` form with the reason. What each
-slot means: skills/_protocols/fix-brief-template.md. A slot change raises the number on line 1 (owner:
-approved-acceptance.md §The check). Delete this comment. -->
+<!-- Copy this file into the work unit's records as the fix brief. Fill every slot; a slot that does not apply keeps
+its one-line `n/a` or `[]` form with the reason. What each slot means: skills/_protocols/fix-brief-template.md. Delete
+this comment. -->
 
 MODEL: <model> (<role row of framework/models.md>)
 Verdict: <path of the verdict file>

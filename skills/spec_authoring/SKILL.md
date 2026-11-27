@@ -104,12 +104,11 @@ REQUIRED; mediator pass-through audit; the 5 primitives).
 `framework/intent-tree.md` (SoT). Required on delegation (`framework/invariants.md`
 invariant 3); optional in direct conversation.
 
-**Intent alignment validation** (MUST — receiving agents): before planning and at a substantive
-implementation choice, cite the applicable project intent and the original local
-outcome in the existing plan or deviation. Explain how the choice serves both and stop the dependent action
-on missing or conflicting intent. Escalate to the commissioning Buddy or the owner of a direct request
-(owner: framework/invariants.md §Intent-driven). A direct request can supply its local objective without an
-`intent_chain`; use project sources for project work and supplied intent for standalone work.
+**Intent alignment validation** (MUST — receiving agents): every
+agent that receives an intent_chain validates before its first plan
+step. Distill received intent in one sentence; phrase own plan in
+one sentence; check consistent yes/no; document. Deviation → STOP,
+escalate. Direct user conversation without intent_chain: skip.
 
 ## Brief authoring (separate skill)
 

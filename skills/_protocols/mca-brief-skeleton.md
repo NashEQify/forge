@@ -1,12 +1,9 @@
-Skeleton: implementer-brief 2
-
 # Implementer brief — task <id>: <goal>
 
-<!-- Copy this file into the work unit's records as the brief. Keep the line above: the brief-acceptance check reads
-it; at build signoff the brief opens with the `brief_contract` frontmatter (`---` block, mca-brief-template.md),
-and this line follows the frontmatter's closing `---`. Fill every slot; a slot that does not apply keeps its one-line `n/a` or `None.` form with the reason. What each
-slot means: skills/_protocols/mca-brief-template.md. A slot change raises the number on line 1 (owner:
-approved-acceptance.md §The check). Delete this comment. -->
+<!-- Copy this file into the work unit's records as the brief. At build signoff the brief opens with the
+`brief_contract` frontmatter (`---` block, mca-brief-template.md), and the heading above follows the frontmatter's
+closing `---`. Fill every slot; a slot that does not apply keeps its one-line `n/a` or `None.` form with the reason.
+What each slot means: skills/_protocols/mca-brief-template.md. Delete this comment. -->
 
 MODEL: <model> (<role row of framework/models.md>)
 Size: goal: <the one user-facing goal, one sentence>; brief <bytes> bytes (`wc -c`), with the files it tells the
@@ -54,8 +51,6 @@ addition the table does not list is dropped, or reported in the return with a pr
 - <test name> — <the behaviour it covers> — relied on by <whom>; cases: <the cases that change an assertion>
 - Unchanged: <behaviour> — guarded by <existing test> | unguarded
 - Run: the selected set (`python3 $FRAMEWORK_DIR/scripts/select_tests.py <changed paths>`), not the whole suite
-- Commit trailer: a commit touching a path in `.forge-product-paths` carries `Route: <brief|engine> <this brief's path
-  or the workflow id>, tests: <number of tests run>`; the commit-msg hook refuses it without one
 
 ## Stop limit
 

@@ -13,8 +13,8 @@ when they are useful only for that mode. A short self-contained skill
 does not need a split. Do not fold references back merely because they
 are not automatically loaded.
 
-How a required part reaches its actor at the moment it acts, and the record a
-commit carries for it: `skills/_protocols/instruction-form.md` §Which text the
+How a required part reaches its actor at the moment it acts:
+`skills/_protocols/instruction-form.md` §Which text the
 actor has at the moment, §Read-path record. Keep safety/authorization constraints
 needed to choose the action visible before entering conditional detail.
 

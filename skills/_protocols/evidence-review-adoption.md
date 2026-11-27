@@ -23,11 +23,8 @@ history:                          # optional
     sha256: "<raw-byte digest>"
 ```
 
-The artifact keeps Buddy's risk dispositions, uncertainty, dissent and scope limits. Before deciding the
-verdict or changing its cut, cite the applicable project intent and the approved local objective in the decision
-prose, explain how the disposition serves both, and hold the dependent decision on missing or conflicting
-governing intent (owner: framework/invariants.md §Intent-driven). Keep Chief recommendations distinct from
-Buddy's decision. This comparison is decision prose outside the evidence schema.
+The artifact keeps Buddy's risk dispositions, uncertainty, dissent and scope limits. Keep Chief recommendations
+distinct from Buddy's decision.
 
 After retaining the reports and writing the decision, run `--review-subject-check STEP --id WORKFLOW` on
 the exact owner. Adopt on success. A changed subject requires retry and a fresh capture before applicable

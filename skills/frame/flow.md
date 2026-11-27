@@ -8,9 +8,7 @@ to the steps defined here.
 
 1. **Reformulate the problem** (always). In your own words, more
    precise than the user's wording. Replace surface language with
-   concrete terms. Cite the applicable project goals and constraints and the user’s local objective in the frame.
-   Show how the reframed outcome serves both and flag missing or conflicting intent before using the frame
-   to decide scope (owner: framework/invariants.md §Intent-driven). For standalone work, cite the supplied goals and constraints.
+   concrete terms.
 2. **First-principles drill** (always, even on quick). Decompose
    the assumptions of the reformulated problem down to the
    fundamental point. Runs BEFORE the plan (step 3) so axioms are
@@ -38,7 +36,7 @@ to the steps defined here.
    as context, no bind required. Detail: REFERENCE.md
    §First-Principles-Drill. Skill: `bedrock_drill/SKILL.md`.
 3. **Plan + review** (required for non-trivial; skip for trivial).
-   Plan block (scope derived from the frame’s project and local intent + tool choice + min 2 alternatives + expected
+   Plan block (scope + tool choice + min 2 alternatives + expected
    artifacts) + self-review (scope check, instance-vs-class,
    rationalization reflex) + on non-trivial dispatch to the
    `plan-adversary` persona. **On a mechanism change** (new field

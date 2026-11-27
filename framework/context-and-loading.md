@@ -32,11 +32,6 @@ scoped pending recovery before dependent answers. A statement that context is
 is assumed. Source updates require the coordinated activation procedure; an old
 session is never silently treated as upgraded after a pull.
 
-At the first substantive choice after a resume, cite the applicable project intent and original local objective
-in the existing decision or conversation. Explain how the next step serves both and hold the dependent choice
-on missing or conflicting authority (owner: framework/invariants.md §Intent-driven). A valid restored state
-provides progress evidence. The decision still derives from its governing sources.
-
 ### Buddy coordination refresh
 
 After resuming coordination or a meaningful task/topic change, refresh the

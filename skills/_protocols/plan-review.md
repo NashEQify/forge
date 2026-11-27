@@ -73,8 +73,7 @@ duplication. Skip rationale only for pure wording / docs edits.
 
 ```
 ### Plan block
-**Scope** (all categories). Cite applicable project intent and the original local objective, explain the cut
-against both, and resolve missing or conflicting authority before committing to it (owner: framework/invariants.md §Intent-driven):
+**Scope** (all categories, not just primary):
 - <category A>: <affected>
 - <category B>: <affected>
 **Existing-Primitives-Survey reference:** <link / inline to survey
@@ -216,7 +215,7 @@ Input: <plan block> <self-review block>
 ## Bind rule (plan ↔ execution coupling)
 
 Subsequent phases MUST reference the plan by name OR explicitly
-justify the deviation against the same intent sources before acting (analogous to the analysis-mode-gate bind
+justify the deviation (analogous to the analysis-mode-gate bind
 rule). Without the bind = filler → re-dispatch.
 
 ## Anti-patterns

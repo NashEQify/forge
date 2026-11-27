@@ -138,7 +138,7 @@ mechanism_cells:
   intact:    ["<state> × <op>: <guard that still holds>", ...]  # the cells the fix must leave as they are
   matrix_edit: "same change — <spec>:<lines>"                   # the section is updated with the fix, never only the build log
   class_witness: "<command> — red before each fix: <id> @ <rev>, ..."  # same_class: yes, else n/a (simplify-before-patch.md §Class witness); the fix leaves it unedited
-  exit_criterion: "<parts and their state> — owner-approved <where>"  # drilled mechanism, else n/a (derive-and-exit.md)
+  exit_criterion: "<parts and their state> — owner-approved <where>"  # else n/a (at-the-cap.md §Exit criterion)
 ```
 
 `changed` is the fix's whole effect on the mechanism — a fix that cannot list

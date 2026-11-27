@@ -33,28 +33,10 @@ never describe them as reviewer-executed.
 
 ### Review execution
 
-**Runs.** Apply Test selection below and the existing gate assignment. The assigned runner runs the
-one prescribed gate when due, or records its qualified equivalent receipt. Run the change's required
-witnesses, oracles and kill checks and preserve the independent source, oracle and direct adversarial
-work assigned to the seat. Before any further run, record the specific unresolved claim and the new
-evidence the command will add in the existing review record or return, and apply the cumulative-effort
-rule below. An old probe is a candidate only when it supplies new evidence for that claim. Each item
-in a batch needs its own contribution to the evidence.
-
-**Frozen review copy.** Once the existing rules call for launching a gate, its runner first runs a short
-selection of the project's static tests in the exact frozen copy with the gate's interpreter, tools
-and configuration. Choose tests that exercise the environment dependencies the gate uses there,
-including required local tool or environment links. Record the command, checked copy and result
-separately from the gate. A failed or unavailable preflight holds the gate as an environment blocker.
-Establish a passing preflight on that copy with the corrected gate environment before launch.
-
-**Probe disposition.** In the round's existing return, list each new probe, including inline or
-temporary probes, with the retained test that covers the claim or an explicit scratch mark. For a
-coverage gap that needs a retained test, a read-only seat gives Buddy the reproduction and the
-property it checks. At intake, Buddy has the authorized writer adopt that test and records its
-location, or marks the probe scratch when the evidence supports that disposition. The round stays
-open until each probe is accounted for, even when the review fails. Keep scratch out of later
-execution queues. Independently supported findings keep their evidence and normal disposition.
+The assigned runner runs the prescribed gate once when due, or cites a qualified earlier receipt, and the change's
+required witnesses, oracles and kill checks. Seat test runs stay within the bound the dispatch states; a further run
+names the new evidence it adds. A probe a seat writes that should stay as a test goes to Buddy as a reproduction for
+the authorized writer; other probes are scratch.
 
 ### Test selection
 
@@ -77,8 +59,7 @@ reference the changed files and how you found them.
 **Instruction-only Markdown runs no pytest.** The selector lists Markdown that no test reads
 directly as `light-path: <path>`. Its verification is the light-path checks
 (`framework/installation-activation.md` §Light path). A test that reads the file's content
-directly is selected and runs. Text an outside agent runs on a user's machine (install, setup, removal) also
-needs the live run in `skills/_protocols/evidence-author-claims.md` §8.5 before its acceptance is claimed.
+directly is selected and runs.
 
 **Code selects the tests that exercise it.** For code the selector follows imports, exact
 paths and scripts run by name. A test that only copies the framework tree is not selected

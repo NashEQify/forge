@@ -78,9 +78,8 @@ Owner: `skills/_protocols/instruction-form.md`, the sections named.
   - When a review changes what the new text tells the reader to do, the readings run again on the final text.
   - Two readings catch a failure that shows in most sessions, not a rare one; a later live failure starts the step
     again.
-- **Step 8, the read-path record** (§Read-path record). The review of such a change checks the record against the text
-  the named reader has at the named moment. When the changed sentence is not in that text, the record says `on-demand`
-  or the change moves the sentence to a carrier.
+- **Step 8, the read path** (§Read-path record). When the changed sentence is not in the text the named reader has
+  at the named moment, say `on-demand` or move the sentence to a carrier.
 
 ## Source
 

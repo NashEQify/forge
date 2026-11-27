@@ -1,5 +1,7 @@
 # Fix workflow boundary guarantees transition
 
+Fix edges onto `4c092f8c…` (boundary guarantees).
+
 Two exact upgrade edges land on `4c092f8c…`. From `b67deec2…`, the transition changes the `root-cause`,
 `test-plan`, `code-review` and `commit-deploy` instructions. From `5ee38866…`, it also carries the reviewed
 authoring instruction at `fix-execute`, whose condition is a fix that edits text an agent follows.

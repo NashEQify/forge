@@ -15,8 +15,7 @@ Usage:
       --workflows-root <dir>
   python3 $FRAMEWORK_DIR/scripts/consistency_check.py --check brief-acceptance --brief <path>
       (run from the project root; compares the brief's approved-acceptance block
-      with docs/tasks/<id>.yaml, and checks its `Skeleton: <kind> <n>` line against
-      the framework's skeleton file)
+      with docs/tasks/<id>.yaml)
   python3 $FRAMEWORK_DIR/scripts/consistency_check.py --check spine --spine <path>
       (run from the project root; checks an architecture spine's form, parent paths
       resolved from that root)
@@ -537,8 +536,7 @@ INSTRUCTION_UNIT_BUDGET = 12_000
 LOOKUP_READ_CEILING = 28_000
 
 # Framework-relative globs whose files are read as instruction text at a step.
-# OWNER_MARKER_ROOTS (section Owner markers) is a second root list, the hook's READ_PATH_ROOTS as globs; a parity case
-# in tests/test_consistency_check_owner_markers.py keeps it in step with the hook.
+# OWNER_MARKER_ROOTS (section Owner markers) is a second root list, the instruction roots as globs.
 # Not enumerated: top-level agents/*.md (sub-agent personas, injected by the host as a system prompt) and every
 # workflow.yaml (engine data; the workflow engine prints one step's instruction).
 INSTRUCTION_UNIT_GLOBS = (
@@ -871,70 +869,7 @@ def _list_differences(name: str, task_items: list[str], brief_items: list[str], 
     return out
 
 
-# Skeleton kind -> skeleton file, resolved against _FRAMEWORK_ROOT; the current version is that file's first line.
-SKELETON_FILES = {
-    "fix-brief": Path("skills/_protocols/fix-brief-skeleton.md"),
-    "implementer-brief": Path("skills/_protocols/mca-brief-skeleton.md"),
-}
-_SKELETON_LINE_RE = re.compile(r"Skeleton: ([a-z][a-z0-9-]*) ([1-9][0-9]*)\s*")
-
-
-def _skeleton_version(kind: str) -> tuple[Path, int]:
-    """The skeleton file of `kind` and the version its own first line names; fails closed."""
-    path = _FRAMEWORK_ROOT / SKELETON_FILES[kind]
-    shown = path.relative_to(_FRAMEWORK_ROOT) if path.is_relative_to(_FRAMEWORK_ROOT) else path
-    try:
-        first = path.read_text(encoding="utf-8").splitlines()[:1]
-    except (OSError, UnicodeError) as exc:
-        raise _BriefAcceptanceError(f"cannot read skeleton {shown}: {exc}") from None
-    match = _SKELETON_LINE_RE.fullmatch(first[0]) if first else None
-    if not match or match[1] != kind:
-        raise _BriefAcceptanceError(f"skeleton {shown}: first line is not 'Skeleton: {kind} <n>'")
-    return shown, int(match[2])
-
-
-def _skeleton_status(brief: Path, text: str) -> str:
-    """The info line for the brief's one `Skeleton:` line outside fences; raises on a refused line."""
-    found: list[tuple[int, str]] = []
-    fence: tuple[str, int] | None = None
-    for number, line in enumerate(text.splitlines(), start=1):
-        if fence:
-            if _fence_closes(line, fence):
-                fence = None
-            continue
-        marker = _FENCE_OPEN_RE.match(line)
-        if marker:
-            fence = (marker[1][0], len(marker[1]))
-        elif line.startswith("Skeleton:"):
-            found.append((number, line))
-    if not found:
-        return f"NOTE: brief-acceptance — {brief} has no 'Skeleton: <kind> <n>' line (freehand or pre-skeleton brief)"
-    if len(found) > 1:
-        numbers = ", ".join(str(n) for n, _ in found)
-        raise _BriefAcceptanceError(f"{len(found)} 'Skeleton:' lines (lines {numbers}); exactly one allowed")
-    number, line = found[0]
-    match = _SKELETON_LINE_RE.fullmatch(line)
-    if not match:
-        raise _BriefAcceptanceError(f"line {number}: malformed {line!r}; expected 'Skeleton: <kind> <n>'")
-    kind, version = match[1], int(match[2])
-    if kind not in SKELETON_FILES:
-        raise _BriefAcceptanceError(
-            f"line {number}: unknown skeleton kind {kind!r} (known: {', '.join(sorted(SKELETON_FILES))})"
-        )
-    shown, current = _skeleton_version(kind)
-    if version < current:
-        raise _BriefAcceptanceError(
-            f"line {number}: 'Skeleton: {kind} {version}' is older than {shown} (version {current}); "
-            "recopy the slots the newer skeleton adds and set the line"
-        )
-    if version > current:
-        raise _BriefAcceptanceError(
-            f"line {number}: 'Skeleton: {kind} {version}' is above the current version {current} of {shown}"
-        )
-    return f"OK: brief-acceptance — {brief} line {number}: 'Skeleton: {kind} {version}' is current ({shown})"
-
-
-def _acceptance_result(brief: Path, project_root: Path | None = None) -> tuple[int, list[str]]:
+def check_brief_acceptance(brief: Path, project_root: Path | None = None) -> tuple[int, list[str]]:
     """The brief's `## Approved acceptance (read-only)` block equals the task file's acceptance_criteria and
     out_of_scope item by item. The task file is read, never written. Fails closed on any input it cannot read."""
     project_root = Path.cwd() if project_root is None else project_root
@@ -969,19 +904,6 @@ def _acceptance_result(brief: Path, project_root: Path | None = None) -> tuple[i
         f"OK: brief-acceptance — {brief} matches {task_label} "
         f"({len(task_criteria)} criteria, {len(task_exclusions)} exclusions)"
     ]
-
-
-def check_brief_acceptance(brief: Path, project_root: Path | None = None) -> tuple[int, list[str]]:
-    """The acceptance comparison as reported by _acceptance_result, then the brief's one `Skeleton: <kind> <n>` line:
-    a refused line adds its ERROR and exit 1 in every case; its note or OK line is added only on a pass."""
-    code, messages = _acceptance_result(brief, project_root)
-    try:
-        status = _skeleton_status(Path(brief), Path(brief).read_text(encoding="utf-8"))
-    except (OSError, UnicodeError):
-        return code, messages  # the brief itself is unreadable; the acceptance part has already said so
-    except _BriefAcceptanceError as exc:
-        return 1, messages + [f"ERROR brief-acceptance: {brief}: {exc}"]
-    return code, messages + ([status] if code == 0 else [])
 
 
 # ---------------------------------------------------------------------------
@@ -1215,9 +1137,9 @@ def check_spine(spine: Path, project_root: Path | None = None) -> tuple[int, lis
 # Owner markers (Task 524 AC-3): every `(owner: …)` statement against its owner
 # ---------------------------------------------------------------------------
 
-# Source: the pre-commit hook's READ_PATH_ROOTS (orchestrators/claude-code/hooks/pre-commit.sh), as globs; the parity
-# case in test_live_tree_passes fails when the two differ. Not covered: step text the workflow engine prints from a
-# script's string literals (scripts/workflow_engine.py); a script is code, not an instruction unit under the roots.
+# Reported by --check dead-references: the result never changes its exit code. Not covered: step text the
+# workflow engine prints from a script's string literals (scripts/workflow_engine.py); a script is code, not an
+# instruction unit under the roots.
 OWNER_MARKER_ROOTS = (
     "agents/**/*",
     "framework/**/*",
@@ -1430,7 +1352,7 @@ def _main(argv: list[str] | None = None) -> int:
         "--check",
         choices=(
             "tier1-drift", "tier1-multi-workflow-drift", "enforcement-registry",
-            "instruction-units", "brief-acceptance", "spine", "dead-references", "owner-markers",
+            "instruction-units", "brief-acceptance", "spine", "dead-references",
         ),
         required=True,
         help="Welcher Check ausgefuehrt werden soll.",
@@ -1485,11 +1407,6 @@ def _main(argv: list[str] | None = None) -> int:
         exit_code, warnings = check_brief_acceptance(Path(args.brief))
     elif args.check == "spine":
         exit_code, warnings = check_spine(Path(args.spine))
-    elif args.check == "owner-markers":
-        try:
-            exit_code, warnings = check_owner_markers()
-        except (OSError, UnicodeDecodeError) as exc:
-            exit_code, warnings = 2, [f"ERROR: owner-markers could not run: {exc}"]
     elif args.check == "dead-references":
         try:
             warnings = [
@@ -1499,6 +1416,14 @@ def _main(argv: list[str] | None = None) -> int:
         except ScanIncomplete as exc:  # an uninspected skill root is not a pass
             warnings = [f"ERROR: {problem}" for problem in exc.problems]
         exit_code = int(bool(warnings))
+        # Owner markers are a report: unresolved ones are listed with the count, the exit code stays the wrapper
+        # scan's.
+        try:
+            unresolved, lines = check_owner_markers(Path.cwd())
+            if unresolved:
+                warnings += [line for line in lines if line.startswith(("UNRESOLVED ", "owner-markers: "))]
+        except (OSError, UnicodeDecodeError) as exc:
+            warnings.append(f"NOTE: owner markers not read: {exc}")
     else:
         print(f"ERROR: unknown check {args.check!r}", file=sys.stderr)
         return 2

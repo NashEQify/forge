@@ -214,13 +214,11 @@ remaining_findings:
 
 Copy the block's content (not its surrounding ````markdown fence) into the review's records as the verdict file and
 fill every slot. A mandatory review's verdict opens with the decision frontmatter (`skills/_protocols/evidence-review-adoption.md`
-§9.4); the `Skeleton:` line follows its closing `---`, and the completion check reads it. Keep the `yaml` fence around
+§9.4). Keep the `yaml` fence around
 `remaining_findings`, which the engine reads for an at-the-cap record; quote a compound target (`"closes_with: <id>"`). The rules behind each
 slot: `verdict.md` §5 (verdict, triage, causes, value floor) and this file (schema, enum, §Re-review limit).
 
 ````markdown
-Skeleton: verdict 2
-
 # Verdict — task <id>, review pass <n>
 
 review: <light | L0 | L1 | L2>, seats: <names; a joined lens: its trigger; a substituted seat: asked → used> | waived because <reason>   # owner: agents/buddy/multi-perspective.md
@@ -316,7 +314,7 @@ Default: **max 2 re-reviews**, then `skills/convergence_loop/at-the-cap.md` §At
 - **Buddy decision per pass:** if severity does NOT drop from
   pass N to pass N+1 (e.g. the same convergence cluster shows up
   again) → run the Simplify-before-patch gate (`checklist-and-dispatch.md` §4) and
-  take its decision rule (simplify, invariant or drill), or ESCALATE, instead of continuing. The limit override
+  take its decision rule (simplify or invariant), or ESCALATE, instead of continuing. The limit override
   applies only on measurable progress.
 - **User-override pattern:** the user may say "re-review more than
   2x if needed — your call", which explicitly empowers Buddy without
@@ -324,7 +322,7 @@ Default: **max 2 re-reviews**, then `skills/convergence_loop/at-the-cap.md` §At
 
 Non-foundation tasks: max 2 re-reviews stays strict.
 
-A mechanism with an owner-approved exit criterion (`skills/convergence_loop/derive-and-exit.md`) closes only when
+A mechanism with an owner-approved exit criterion (`skills/convergence_loop/at-the-cap.md` §Exit criterion) closes only when
 every part holds; a PASS with a part open does not close it. When the criterion includes a closing review, it runs at full breadth, with the seat
 set of the widest earlier review on the mechanism, whatever this file's re-review composition would pick.
 

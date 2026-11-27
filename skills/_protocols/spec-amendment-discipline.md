@@ -122,31 +122,9 @@ how they resolve; what is reported; what is not checked).
 
 ## Retiring a capability
 
-When the owner retires a capability (an answer or ruling that drops a feature, a history or a stored-data path), the
-amendment that records the ruling, in a draft or a locked spec, also removes what served it. Before that amendment is committed, its record holds a
-retirement inventory:
-
-1. Name the retired capability in the owner's words. Then list each capability that reads, corrects, exports or
-   restores what the ruling retires (a correction path is one), each with its measured use (a count, or "not
-   measured") and its outcome. A capability is listed whole, over all the data it acts on, retired or not; its part on
-   the retained data is not a capability of its own. Outcomes:
-   - it acts only on what the ruling retires: retired with it;
-   - its measured use is zero: retired unless the owner keeps it; keeping it is an `asked` point
-     (`workflows/runbooks/build/lifecycle.md` §Sizing facts);
-   - otherwise: kept.
-2. One row per mechanism that serves only the retired capabilities, found by the pre-edit gate's grep (above) over the
-   spec and the code for their names.
-
-| Mechanism | Kind | Where | Disposition |
-|---|---|---|---|
-| `<name>` | matrix row, state or field, file, CLI command, migration step, test | spec § or path | `removed` or `kept: <reason>` |
-
-- `removed`: the amendment deletes it from the spec in the same commit; the build's brief names each such row for the
-  code and tests.
-- `kept: <reason>`: the reason names a consumer or rule outside the retired capabilities that still needs it, or the
-  owner's answer that keeps a capability step 1 retired. A mechanism that also serves a capability step 1 kept is not a row.
-- The record is the amendment's §Changelog entry or the build record it links. An inventory with no rows says
-  "none found" and names the grep terms.
+When the owner retires a capability (a feature, a history, a stored-data path), the amendment that records it also
+removes from the spec what served only that capability, and the build's brief deletes the matching code and the tests
+whose only subject it is (`agents/buddy/delegation.md` §Weight by what can break; Invariant 5).
 
 ## Architect-dispatch threshold (spec 306 §14.2 — Variante B)
 

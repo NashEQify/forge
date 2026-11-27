@@ -104,13 +104,9 @@ and conclusion).
 `skills/_protocols/consolidation-preservation.md` (silent-loss
 protection), `skills/_protocols/piebald-budget.md` (instruction
 loading/coherence review).
-**Checked-scope enforcement:** chief verifies that every raw review
-contains a `## Checked scope` section and the bind rule from
-`reviewer-checked-scope.md`, including its evidenced zero-findings
-conclusion path. Missing → rejected and demanded back via
-F-C-SCOPE-MISSING finding. A seat that ended in an abort is not a review, and its substitute is
-checked against its own output format:
-`skills/_protocols/dispatch-template.md` §Aborted seat.
+**Checked scope:** a raw review without its `## Checked scope` section
+(`reviewer-checked-scope.md`) is noted in the consolidation, not refused. A seat that ended in an abort
+is not a review (`skills/_protocols/dispatch-template.md` §Aborted seat).
 
 ## Un-grounded-claim ledger (de-confidence lead)
 

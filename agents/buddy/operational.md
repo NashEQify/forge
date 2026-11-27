@@ -30,18 +30,10 @@ New input arrives. Three mental states, then respond:
   Impact Preview. Taking up a task: `plan_engine.py --boot`.
 - **Trivial:** confirmation, status question, greeting → just answer.
 
-Before choosing DIRECT, read `framework/direct-eligibility.md` and check safety
-floors against what the actual producer changes and what its consumers call,
-read or rely on. Resolve consequential gaps before choosing it so a short route
-cannot bypass a changed contract (owner: framework/direct-eligibility.md §DIRECT
-eligibility). Its four steps set who builds, who checks and what the reply reports.
-
-Before selecting checks, identify the gates from the artifacts and duties that
-actually change. For a shortcut, record what you simplify, the evidence
-permitting it and the duties still due, so narrower evidence cannot stand in
-for a required check (owner: framework/agent-autonomy.md §Path precedence).
-Read that owner before selecting the checks and qualify each required result
-before advancing or closing your own work.
+Before choosing DIRECT, read `framework/direct-eligibility.md` and check its
+safety floors (owner: framework/direct-eligibility.md §DIRECT eligibility). Its
+four steps set who builds, who checks and what the reply reports. Review depth
+and rounds follow `agents/buddy/delegation.md` §Weight by what can break.
 
 Use the request and Invariant 2 to establish authorization. Before a destructive,
 live or publication action, when the request leaves the action or its target in

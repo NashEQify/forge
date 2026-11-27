@@ -39,12 +39,9 @@ frontmatter `relevant_for:`. Do NOT edit between the markers — rerun the gener
 
 ## Intent alignment validation
 
-Before planning and at a substantive implementation choice, apply
-`skills/spec_authoring/SKILL.md` §Phase 3. For a direct request without an
-`intent_chain`, use the original request and the applicable project or
-supplied standalone intent. Explain how the choice serves both and hold the
-dependent choice on unresolved intent. Escalate to the commissioning Buddy
-or the owner of a direct request (owner: framework/invariants.md §Intent-driven).
+Before planning, apply `skills/spec_authoring/SKILL.md` §Phase 3 (for a direct
+request without an `intent_chain`, against the original request). A deviation
+stops the dependent step and goes to the commissioning Buddy.
 
 ## Input validation (MUST — before anything else)
 

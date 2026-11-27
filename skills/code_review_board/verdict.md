@@ -12,9 +12,6 @@ kept finding's trigger-certainty verbatim. The chief supplies no confidence rati
 disposition (a narrow latent HIGH still → `accept`). Verify each kept finding at its cited location
 (`skills/_protocols/finding-verification.md`). Triage once, verify once, then disposition once using the verified grade.
 
-Before closing a round or starting another, Buddy records each new probe's retained test or scratch
-mark so unresolved probes stay out of later queues (owner: skills/testing/run-strategy.md §Review execution).
-
 **Before adopting the verdict**, qualify the current reports of the final
 applicable review under `evidence-pointer-schema.md` §9. Buddy's decision uses PASS / PASS_WITH_RISKS / FAIL / PARTIAL;
 light/reproduction PARTIAL stays incomplete environmental evidence and cannot
@@ -54,10 +51,6 @@ Schema + example: REFERENCE.md.
 Empty `target:` = validation fail. All same `target:` = missed
 triage anti-pattern. `risk-followup-routing` files new_tasks
 mechanically.
-
-After two failed reviews at one role transition, ask which interface governs it and who owns it before triage. Record the
-answer or question in the verdict and escalate dependent open choices to the caller
-(owner: skills/convergence_loop/simplify-before-patch.md §Record).
 
 **Proportionality triage** (every verdict, NON-NEGOTIABLE on FAIL; a `fix-now` finding is fixed on PASS and
 PASS_WITH_RISKS too, checked as `review-package.md` §Small fix after a passing review decides, else by the §4
@@ -165,7 +158,7 @@ Full table: REFERENCE.md.
 The default re-review is the §4 re-verify table; its scoped adversary
 and replaced-mechanism cases use this section's two-phase. Before the fix pass that precedes a pass-2+ re-review,
 the §4 Simplify-before-patch gate runs; a recurring class takes its
-decision rule (derive from the defining unit, simplify, invariant or drill), not another route patch.
+decision rule (simplify or invariant), not another route patch.
 
 Triggers: any re-review with >1 reviewer dispatched
 (multi-reviewer pass-1.5, bundled clusters, pass-2+).

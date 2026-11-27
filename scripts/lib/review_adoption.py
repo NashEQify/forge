@@ -17,7 +17,7 @@ from typing import Any
 
 import yaml
 
-from scripts.lib.evidence_pointers import _FENCE_RE, review_evidence, validate_content
+from scripts.lib.evidence_pointers import _FENCE_RE, review_evidence
 
 POLICIES = frozenset({"evidence", "spec_success", "code_success"})
 OPTION_FIELDS = frozenset(
@@ -217,29 +217,6 @@ def _history(root: Path, value: Any) -> list[dict[str, str]]:
         len({ref["path"] for ref in refs}) == len(refs), "duplicate history reference"
     )
     return sorted(refs, key=lambda item: item["path"])
-
-
-def check_exclusion_prefixes(project_root: Path, request: Any) -> None:
-    """Refuse a code-family exclusion prefix that names no existing directory.
-
-    Capture-time only: adoption and the current check judge a stored capture by
-    subject identity and never call this. Requests that are not code-family or
-    whose shape is malformed are left to ``capture_subject``, which the engine
-    calls first.
-    """
-    if not isinstance(request, dict) or request.get("family") != "code":
-        return
-    code = request.get("code_diff")
-    if not isinstance(code, dict):
-        return
-    root = project_root.resolve()
-    for prefix in _paths(code.get("exclude_prefixes")):
-        _require(
-            _target(root, prefix).is_dir(),
-            f"exclusion prefix names no existing directory: {prefix!r} "
-            "(prefixes match whole path components; name a directory, "
-            "or list single files under exclude_files)",
-        )
 
 
 def capture_subject(
@@ -536,46 +513,6 @@ def _report(
     )
     diagnostics.extend(evidence.diagnostics)
     return evidence.verified, [f"{path}: {item}" for item in diagnostics]
-
-
-def in_captured_subject(request: dict[str, Any], path: str) -> bool:
-    """Whether a project-relative path is a reviewed input of this capture request (files, or a code-diff root
-    path outside the declared exclusions); same component rule as capture."""
-    if path in {str(item) for item in request.get("files", [])}:
-        return True
-    code = request.get("code_diff")
-    if not isinstance(code, dict):
-        return False
-    if path in set(code.get("exclude_files", [])) or any(_under(path, p) for p in code.get("exclude_prefixes", [])):
-        return False
-    return any(root in (".", "") or _under(path, root) for root in code.get("roots", []))
-
-
-def check_return(project_root: Path, capture: dict[str, Any], slot: str, path: str, text: str) -> list[str]:
-    """Check one seat's return before it is persisted, by the rules adoption applies; returns WARN diagnostics.
-
-    Refuses (ReviewRefusal) a slot the capture does not name, a destination inside the captured subject, a return
-    that does not start with its frontmatter, an echo that names another run, subject or slot (every echo line,
-    as at adoption), and evidence that the strict validator refuses.
-    """
-    slots = {entry.get("slot") for entry in capture["request"].get("slots", []) if isinstance(entry, dict)}
-    _require(slot in slots, "--slot must name a captured slot (" + ", ".join(sorted(str(s) for s in slots)) + ")")
-    _path(path)  # the literal-path rule adoption applies to a selected report
-    _require(not in_captured_subject(capture["request"], path),
-             f"{path} lies inside the captured subject; persist under a declared exclusion")
-    _require(text.removeprefix("\ufeff").startswith("---"),
-             "return must start with its '---' frontmatter line (reviewer protocol §Output format)")
-    echo = _echo(text)
-    for field, want in (("review_run_id", capture["review_run_id"]),
-                        ("review_subject_digest", capture["review_subject_digest"]), ("review_slot", slot)):
-        values = echo.get(field, [])
-        _require(bool(values) and all(value == str(want) for value in values),
-                 f"{field} {values!r} does not echo the capture ({want!r})")
-    result = validate_content(text, repo_root=str(project_root), strict=True)
-    _require(result.exit_code == 0,
-             "validate_evidence_pointers --strict refused the return; send the seat back with this output and"
-             " correct only what it names:\n" + "\n".join(result.messages))
-    return [message for message in result.messages if "WARN" in message]
 
 
 def check_subject(project_root: Path, capture: dict[str, Any]) -> dict[str, Any]:

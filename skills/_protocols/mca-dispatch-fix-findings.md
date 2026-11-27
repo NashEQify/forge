@@ -29,10 +29,6 @@ change. Per finding, before making its change:
   not `applied`.
 - **pushed back:** the brief's change is not made. A change is made instead only inside the brief's scope bound and
   out-of-scope list, with its check and undo. Outside those bounds, Instead reads `nothing`.
-  Before a substantive substitute, cite the governing project
-  intent and original repair objective and explain how the substitute serves both in Instead. Hold the
-  dependent change on unresolved intent and record the question as `unclear`, including on a re-dispatched
-  brief (owner: framework/invariants.md §Intent-driven).
 - **unclear:** no change is made for the finding.
 
 Each finding gets its own result; a `pushed back` or `unclear` row does not stop the others. Each such row makes the

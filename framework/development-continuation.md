@@ -35,9 +35,7 @@ do not erase them.
 unpausing or completing anything. Do not call engine `--resume` for session loading:
 that command changes pause status. Valid newer revisions are current evidence,
 never overwritten with the saved revision. Resolve completed archived instances by
-exact unambiguous identity. Revalidate before actual progression. For the first substantive resumed choice,
-identify the applicable project intent and original local objective in the existing decision and check its fit
-before acting (owner: framework/context-and-loading.md §Loading and continuation).
+exact unambiguous identity. Revalidate before actual progression.
 
 Legacy state without binding needs explicit session evidence naming selected runs
 or task-only software work. Ambiguity blocks exact continuation; it is not permission

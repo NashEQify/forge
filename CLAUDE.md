@@ -79,21 +79,14 @@ Codex boots through the plugin's `forge:boot` skill, asked for by the same
 activation line in `AGENTS.md`. Additional-directory access or a Buddy role file
 alone does not establish that framework instructions were loaded.
 
-git pre-commit (8 checks, 6 BLOCK + 2 WARN; CG-CONV, READ-PATH-RECORD and ROUTE-TRAILER run
-in commit-msg, the others once per commit in pre-commit or, for a merge commit
-that `git merge` creates, pre-merge-commit):
+git pre-commit (6 checks, 4 BLOCK + 2 WARN; CG-CONV runs in commit-msg, the others once per
+commit in pre-commit or, for a merge commit that `git merge` creates, pre-merge-commit):
 - BLOCK: PLAN-VALIDATE (plan_engine schema integrity), CG-CONV
   (Conventional-Commits format), SKILL-FM-VALIDATE (Skill frontmatter
   validation; also C3 description trigger-marker WARN — active skills
   must carry `Use when`/`Triggers when`/`Trigger:`), INSTRUCTION-UNIT-SIZE
-  (a staged instruction unit within its byte cap), READ-PATH-RECORD (a
-  change under the instruction roots carries the four `Read-path-*` lines,
-  `skills/_protocols/instruction-form.md` §Read-path record; not on a merge
-  commit). These two run only in a Forge framework checkout. ROUTE-TRAILER
-  (a commit touching a path the parent commit's `.forge-product-paths`
-  declares carries `Route: <direct|brief|engine>[ <reference>], tests: <N>`;
-  not on a merge commit) runs wherever that file exists, also in range mode;
-  its known limits are in the hook's header.
+  (a staged instruction unit within its byte cap, so a host that cuts long
+  results still delivers it whole; Forge framework checkout only).
 - WARN: SECRET-SCAN (gitleaks), SOURCE-VERIFICATION (board/council
   review evidence-pointer schema; section cross-references that the
   commit touches).

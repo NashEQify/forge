@@ -38,9 +38,7 @@ Buddy checklist (§4 in `run.md`) + operational detail.
 
 ## 0. Plan + review (required without a frame)
 
-Without a frame: derive plan scope from project intent (or supplied intent for standalone work) and the local
-objective (owner: framework/invariants.md §Intent-driven). Add tool and alternatives, then self-review and dispatch
-`plan-adversary` on non-trivial plans. With a frame: reference it. Templates + triggers: `_protocols/plan-review.md`.
+Direct council dispatch without prior `frame`: plan block (scope / tool / alternatives) + self-review + (non-trivial) `plan-adversary` dispatch. With existing frame report: reference, don't re-run. Templates + triggers: `_protocols/plan-review.md`.
 
 ## 1. Mode determination
 

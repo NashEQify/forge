@@ -99,9 +99,7 @@ Brief contents for a first or further session brief. Before writing, read and fo
 `framework/spec-engineering-implementation-specs.md` §Convention: one goal per change
 (one goal per brief, including its size budget).
 
-- **Outcome and stop condition.** Cite the project goal and constraints and the original local objective
-  the brief serves, explain how the cut serves both, and state the stop condition. Hold dispatch on unresolved
-  conflicts or missing governing sources (owner: framework/invariants.md §Intent-driven).
+- **Outcome and stop condition.** The outcome the brief serves and the stop condition.
 - **Model.** Name the session's model (`framework/models.md` §A persistent session's model).
 - **Effort budget.** Label the coordinator's estimate (Cumulative effort).
 - **Checkout.** Name the shared checkout or the assigned worktree and branch (`agents/buddy/concurrent-writers.md`).

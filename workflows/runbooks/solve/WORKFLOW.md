@@ -79,14 +79,8 @@ sharpen direction (purely dialogic);
 (b) **council** — invoke ONLY if >1 path AND hard-to-reverse. Output
 under `docs/reviews/council/`. Record a one-line rationale otherwise.
 Both entries reach dialogue and notes independently of the Council decision;
-(c) **refinement notes** — record the chosen approach, rationale
-and open points in the existing "Phase 2" section. Cite the applicable
-project intent (or supplied standing intent for standalone work) and the
-original local objective. Explain how the chosen approach serves both,
-including a choice revised after Council. An unchanged approach still
-supported by both sources may reference the grounded Frame. Record unresolved
-conflicts or missing authority in open points and hold dependent artifact
-writing (owner: framework/invariants.md §Intent-driven).
+(c) **refinement notes** — chosen approach, rationale, open points
+as a "Phase 2" section in the state file.
 
 **3. write-artifact** — create the artefact (spec / workflow /
 protocol / code plan). Keep essential guidance self-contained and conditional

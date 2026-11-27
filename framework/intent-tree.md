@@ -85,8 +85,6 @@ under `## Context` explicitly selects automatic software processes or
 project-owned working rules. Otherwise select from the intent, as defined in
 `framework/workflow-selection.md`.
 
-A newer dated section supersedes older text only where it explicitly says so. The rest of the older text still applies.
-
 Every intent.md — root, workspace, objective, external project — uses
 this format:
 

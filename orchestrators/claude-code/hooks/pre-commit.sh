@@ -9,16 +9,15 @@ set -euo pipefail
 # .git/hooks/commit-msg from any consumer repo. Idempotent installer:
 # scripts/install-git-hooks.sh.
 #
-# Post hook-paradigm-shift (capability-first, hooks-minimal): 8 checks.
-# 6 BLOCK + 2 WARN. Shared Git hook for repositories where installed;
+# Post hook-paradigm-shift (capability-first, hooks-minimal): 6 checks.
+# 4 BLOCK + 2 WARN. Shared Git hook for repositories where installed;
 # runtime prerequisites and actual Git invocation determine coverage.
 # This does not establish equal host loading or enforcement.
 #
 # Each check runs once per commit: pre-commit (git commit) and
 # pre-merge-commit (a merge commit that git merge creates) run checks 1, 3,
-# 4, 5 and 6; commit-msg runs checks 2, 7 and 8 only, except for a merge
-# commit in an install without the pre-merge-commit hook, where it runs every
-# check but 7 and 8 (a merge commit is exempt from 7 and 8).
+# 4, 5 and 6; commit-msg runs check 2 only, except for a merge commit in an
+# install without the pre-merge-commit hook, where it runs every check.
 #
 # Checks (ordered; 1, 3 and 5 share one captured indexed candidate):
 #   1. PLAN-VALIDATE        (BLOCK) — plan_engine.py --validate on the indexed
@@ -45,67 +44,11 @@ set -euo pipefail
 #                                     instruction-units --staged). A commit
 #                                     that removes framework/invariants.md
 #                                     from the index while HEAD holds it
-#                                     blocks (checks 6 and 7 would stop).
-#   7. READ-PATH-RECORD     (BLOCK) — commit-msg: a change under the
-#                                     instruction roots carries read-path
-#                                     records in its message, each with the
-#                                     four Read-path-* lines, above a
-#                                     `# --- >8 ---` scissors line (`#` comment
-#                                     character only). Known
-#                                     limits: `--amend` diffs against the
-#                                     commit being replaced, so it sees only
-#                                     the paths the amend stages (a reword
-#                                     can drop the record); range mode
-#                                     replays against the real parent and
-#                                     closes it. A merge commit is not
-#                                     checked: rule text written during a
-#                                     merge itself (a conflict resolution, a
-#                                     file added before the merge commit) is
-#                                     not checked, locally or in range mode.
-#                                     `git revert` and `cherry-pick` run no
-#                                     commit-msg hook; range mode checks those
-#                                     commits.
-#   8. ROUTE-TRAILER        (BLOCK) — commit-msg: a staged path (either side
-#                                     of a rename) under an entry of
-#                                     HEAD:.forge-product-paths needs a
-#                                     `Route: <direct|brief|engine>[ <ref>],
-#                                     tests: <N>` line. Grammar: one entry per
-#                                     line, `#` comment lines and blank lines
-#                                     ignored; an entry ending in / is a
-#                                     directory prefix, any other an exact file
-#                                     path, matched literally. An entry that
-#                                     starts with / or ./, holds * ? [ or a
-#                                     space before #, or lacks the / but names
-#                                     a directory at HEAD blocks every commit
-#                                     until fixed. Route: lines are checked only
-#                                     when a declared path is touched; then
-#                                     every one must be well formed. A Route:
-#                                     line counts at any line start, body
-#                                     included (not git interpret-trailers),
-#                                     and above a `# --- >8 ---` scissors line.
-#                                     No declaration at HEAD (unborn HEAD
-#                                     included): nothing runs, nothing prints;
-#                                     a declaration that is not a readable blob
-#                                     blocks. Known limits: an entry whose
-#                                     object is missing reads as no
-#                                     declaration; `--amend` reads HEAD, the
-#                                     commit being replaced, for both the
-#                                     declaration and the staged diff, so it
-#                                     sees only the paths the amend stages;
-#                                     range mode replays against the real
-#                                     parent and closes it. A merge commit is
-#                                     not checked: product code written during
-#                                     a merge itself (a conflict resolution, a
-#                                     file added before the merge commit) is
-#                                     not checked, locally or in range mode.
-#                                     `git revert` and `cherry-pick` run no
-#                                     commit-msg hook; range mode checks those
-#                                     commits.
-# Checks 6 and 7 run only in a Forge framework checkout (the index, else
-# HEAD, holds framework/invariants.md and scripts/consistency_check.py; the
-# working tree is not read); in any other repository they do nothing and
-# print nothing. Check 8 runs in any
-# repository whose HEAD holds .forge-product-paths.
+#                                     blocks (check 6 would stop).
+# Check 6 runs only in a Forge framework checkout (the index, else HEAD,
+# holds framework/invariants.md and scripts/consistency_check.py; the working
+# tree is not read); in any other repository it does nothing and prints
+# nothing.
 #
 # Range mode (CI): pre-commit.sh --range [--portable]
 #   [--host-commits-format strict|exempt] [--default-ref REF] BASE HEAD
@@ -131,8 +74,7 @@ set -euo pipefail
 #                               no hook-link warnings; no marker file.
 #   FORGE_HOOK_CHECKS=portable  (--portable; only with FORGE_HOOK_RANGE=1)
 #                               pre-commit runs only check 4, commit-msg only
-#                               checks 2 and 8. Any other non-empty value
-#                               exits 2.
+#                               check 2. Any other non-empty value exits 2.
 #   FORGE_HOOK_GITLEAKS_DIR     (only with FORGE_HOOK_RANGE=1) the driver's
 #                               trusted gitleaks rules: config.toml and
 #                               gitleaksignore exported from merge-base(REF,
@@ -178,7 +120,6 @@ RANGE_TREE_CHECKS=(
   "consistency_check.py --check enforcement-registry"
   "consistency_check.py --check instruction-units"
   "consistency_check.py --check dead-references"
-  "consistency_check.py --check owner-markers"
   "validate_runbook_consistency.py"
 )
 
@@ -417,7 +358,7 @@ PRE_MERGE_HOOK="$(git rev-parse --git-path hooks/pre-merge-commit)"
 BLOCK=0
 WARNINGS=()
 # The Forge-checkout predicate reads the index (HEAD: fallback), not the working
-# tree, so a sparse or moved working copy keeps checks 6 and 7 on. A commit
+# tree, so a sparse or moved working copy keeps check 6 on. A commit
 # that drops the marker from the index while HEAD holds it is refused in
 # pre-commit mode (FORGE_MARKER_REMOVED), so it cannot switch both checks off.
 FORGE_CHECKOUT=0
@@ -432,10 +373,6 @@ if forge_marker framework/invariants.md && forge_marker scripts/consistency_chec
   FORGE_CHECKOUT=1
   if ! forge_indexed framework/invariants.md; then FORGE_MARKER_REMOVED=1; fi
 fi
-# Check 7's instruction roots (the one list).
-READ_PATH_ROOTS='^(agents|framework|skills|workflows)/|^orchestrators/[^/]+/rules/|^(CLAUDE|AGENTS)\.md$'
-READ_PATH_KEYS=(Read-path-reader Read-path-moment Read-path-text Read-path-carrier)
-
 # ---------- Hook-Mode-Detection ----------
 #
 # This script handles three hook events, selected by the $0 basename:
@@ -443,8 +380,8 @@ READ_PATH_KEYS=(Read-path-reader Read-path-moment Read-path-text Read-path-carri
 #   - pre-merge-commit: no args; runs exactly as pre-commit, for the merge
 #                       commit git merge creates (a conflicted merge ends in
 #                       git commit, which fires pre-commit instead)
-#   - commit-msg:       $1 = path to the commit message file; checks 2, 7
-#                       and 8, then exit (merge-commit fallback: see Check 2)
+#   - commit-msg:       $1 = path to the commit message file; check 2,
+#                       then exit (merge-commit fallback: see Check 2)
 # Any other basename runs in pre-commit mode.
 #
 # Root cause: `git commit --amend -m "msg"` doesn't write the new message
@@ -521,171 +458,6 @@ if [ "$HOOK_MODE" = "commit-msg" ]; then
       echo "  OR:   echo \"docs(scope): short description [Task-123]\" > .git/COMMIT_EDITMSG && git commit -F .git/COMMIT_EDITMSG"
       BLOCK=1
     fi
-  fi
-
-  # ---------- Check 7: READ-PATH-RECORD (BLOCK, commit-msg mode) ----------
-  #
-  # A staged path (added, modified, deleted, either side of a rename) under
-  # READ_PATH_ROOTS needs a read-path record in the message, and every record
-  # must be complete and valid. A key line starts with a READ_PATH_KEYS key
-  # and a colon at line start. A record starts at the first key line and ends
-  # where a key line repeats a key the record already holds; that line opens
-  # the next record. Other lines neither open nor end a record. Each record
-  # holds all four keys, each with a valid value: 3+ non-space characters, not
-  # starting with `<`; the carrier starts with (a)..(g), or a..g or on-demand
-  # then space, comma or colon (on-demand also alone). Each bad record is
-  # named in the refusal. Form only: whether the record is true is a
-  # reviewer's question. Outside range mode the message is read down to git's
-  # scissors line (`git commit -v`), below which git strips the text.
-  # A merge commit (MERGE_HEAD) is exempt: its commits passed their own check.
-  # Known limits (header, Check 7): the scissors line is recognised with the
-  # `#` comment character only; `--amend` sees only the paths the amend
-  # stages; rule text written while resolving a merge is not checked, locally
-  # or in range mode; revert and cherry-pick run no commit-msg hook (range
-  # mode checks them).
-  if [ "$FORGE_CHECKOUT" -eq 1 ] && [ "$PORTABLE" -eq 0 ] && [ -n "${COMMIT_MSG_FILE:-}" ] \
-     && [ ! -e "$(git rev-parse --git-path MERGE_HEAD)" ]; then
-    RECORD_LIST="$(mktemp)"
-    if ! git diff --cached --name-only --no-renames -z > "$RECORD_LIST"; then
-      echo "commit-msg: READ-PATH-RECORD BLOCK — check could not run: staged paths not readable."
-      BLOCK=1
-    else
-      RECORD_PATHS=()
-      while IFS= read -r -d '' path; do
-        if [[ "$path" =~ $READ_PATH_ROOTS ]]; then RECORD_PATHS+=("$path"); fi
-      done < "$RECORD_LIST"
-      RECORD_COUNT=0
-      RECORD_BAD=()
-      rec_seen=" "; rec_invalid=" "; rec_first=""
-      # Close the current record; note it when a key is missing or invalid.
-      read_path_close() {
-        local k bad=""
-        [ "$RECORD_COUNT" -gt 0 ] || return 0
-        for k in "${READ_PATH_KEYS[@]}"; do
-          if [[ "$rec_seen" != *" $k "* || "$rec_invalid" == *" $k "* ]]; then bad="${bad:+$bad }$k"; fi
-        done
-        [ -z "$bad" ] || RECORD_BAD+=("$RECORD_COUNT|$rec_first|$bad")
-      }
-      while IFS= read -r line || [ -n "$line" ]; do
-        line="${line%$'\r'}"
-        if [ "$RANGE_RUN" -ne 1 ] && [[ "$line" =~ ^#\ -+\ \>8\ -+$ ]]; then break; fi
-        lkey=""
-        for key in "${READ_PATH_KEYS[@]}"; do
-          if [ "${line#"$key:"}" != "$line" ]; then lkey="$key"; break; fi
-        done
-        [ -n "$lkey" ] || continue
-        if [ "$RECORD_COUNT" -eq 0 ] || [[ "$rec_seen" == *" $lkey "* ]]; then
-          read_path_close
-          RECORD_COUNT=$((RECORD_COUNT + 1))
-          rec_seen=" "; rec_invalid=" "; rec_first="${line:0:80}"
-        fi
-        rec_seen+="$lkey "
-        value="${line#"$lkey:"}"
-        value="${value#"${value%%[![:space:]]*}"}"
-        compact="${value//[[:space:]]/}"
-        if [ "${#compact}" -lt 3 ] || [ "${value:0:1}" = "<" ]; then
-          rec_invalid+="$lkey "
-        elif [ "$lkey" = Read-path-carrier ] \
-             && ! [[ "$value" =~ ^(\([a-g]\)|[a-g]([\ ,:]|$)|on-demand([\ ,:]|$)) ]]; then
-          rec_invalid+="$lkey "
-        fi
-      done < "$COMMIT_MSG_FILE"
-      read_path_close
-      if [ "${#RECORD_PATHS[@]}" -gt 0 ] && [ "$RECORD_COUNT" -eq 0 ]; then
-        echo "commit-msg: READ-PATH-RECORD BLOCK — instruction text changed without a read-path record (missing or invalid: ${READ_PATH_KEYS[*]}):"
-      elif [ "${#RECORD_PATHS[@]}" -gt 0 ] && [ "${#RECORD_BAD[@]}" -gt 0 ]; then
-        echo "commit-msg: READ-PATH-RECORD BLOCK — instruction text changed with an incomplete or invalid read-path record:"
-        for entry in "${RECORD_BAD[@]}"; do
-          n="${entry%%|*}"; rest="${entry#*|}"
-          echo "    record $n of $RECORD_COUNT (${rest%|*}): missing or invalid: ${rest##*|}"
-        done
-      fi
-      if [ "${#RECORD_PATHS[@]}" -gt 0 ] \
-         && { [ "$RECORD_COUNT" -eq 0 ] || [ "${#RECORD_BAD[@]}" -gt 0 ]; }; then
-        for path in "${RECORD_PATHS[@]:0:5}"; do echo "    $path"; done
-        [ "${#RECORD_PATHS[@]}" -le 5 ] || echo "    … and $(( ${#RECORD_PATHS[@]} - 5 )) more"
-        echo "  Add to the commit message, one record per changed rule:"
-        echo "    Read-path-reader: <who acts on the rule>"
-        echo "    Read-path-moment: <the moment it acts>"
-        echo "    Read-path-text: <the text in front of it at that moment>"
-        echo "    Read-path-carrier: <(a)..(g) or on-demand, then the carrier>"
-        echo "  Walk the reader's path from its session start or dispatch to the moment it acts: skills/_protocols/instruction-form.md §Read-path record."
-        BLOCK=1
-      elif [ "${#RECORD_PATHS[@]}" -gt 0 ]; then
-        echo "commit-msg: READ-PATH-RECORD PASS"
-      fi
-    fi
-    rm -f "$RECORD_LIST"
-  fi
-
-  # ---------- Check 8: ROUTE-TRAILER (BLOCK, commit-msg mode) ----------
-  #
-  # A staged path (either side of a rename) under an entry of the parent's
-  # .forge-product-paths (HEAD:, so a commit cannot exempt itself) needs a
-  # Route: line; every Route: line must match ROUTE_RE. Pure bash: runs in
-  # any repository and under portable. Silent without a declaration at HEAD.
-  if [ -n "${COMMIT_MSG_FILE:-}" ] && [ ! -e "$(git rev-parse --git-path MERGE_HEAD)" ] \
-     && git --no-replace-objects cat-file -e HEAD:.forge-product-paths 2>/dev/null; then
-    ROUTE_RE='^Route:[[:space:]]+(direct|brief|engine)([[:space:]]+[^,]*)?,[[:space:]]*tests:[[:space:]]*(0|[1-9][0-9]*)[[:space:]]*$'
-    ROUTE_DECL=""
-    ROUTE_LIST="$(mktemp)"
-    ROUTE_TYPE=$(git --no-replace-objects cat-file -t HEAD:.forge-product-paths 2>/dev/null || true)
-    if [ "$ROUTE_TYPE" != blob ] || ! ROUTE_DECL=$(git --no-replace-objects cat-file blob HEAD:.forge-product-paths 2>/dev/null); then
-      echo "commit-msg: ROUTE-TRAILER BLOCK — check could not run: HEAD:.forge-product-paths is not a readable file."
-      BLOCK=1
-    elif ! git diff --cached --name-only --no-renames -z > "$ROUTE_LIST"; then
-      echo "commit-msg: ROUTE-TRAILER BLOCK — check could not run: staged paths not readable."
-      BLOCK=1
-    else
-      ROUTE_ENTRIES=()
-      ROUTE_INVALID=0
-      while IFS= read -r e || [ -n "$e" ]; do
-        e="${e//$'\r'/}"
-        e="${e#"${e%%[![:space:]]*}"}"
-        e="${e%"${e##*[![:space:]]}"}"
-        [ -n "$e" ] && [ "${e:0:1}" != "#" ] || continue
-        if [ "${e:0:1}" = / ] || [ "${e:0:2}" = ./ ] || [[ "$e" == *[*?[]* || "$e" == *[[:space:]]#* ]] \
-           || { [ "${e: -1}" != / ] && [ "$(git --no-replace-objects cat-file -t "HEAD:$e" 2>/dev/null)" = tree ]; }; then
-          echo "commit-msg: ROUTE-TRAILER BLOCK — check could not run: .forge-product-paths entry '$e' is not a path or a dir/ prefix"
-          BLOCK=1; ROUTE_INVALID=1
-        fi
-        ROUTE_ENTRIES+=("$e")
-      done <<< "$ROUTE_DECL"
-      ROUTE_PATHS=()
-      [ "$ROUTE_INVALID" -eq 0 ] || ROUTE_ENTRIES=()
-      while IFS= read -r -d '' path; do
-        for e in "${ROUTE_ENTRIES[@]}"; do
-          if { [ "${e: -1}" = / ] && [[ "$path" == "$e"* ]]; } || [ "$path" = "$e" ]; then
-            ROUTE_PATHS+=("$path"); break
-          fi
-        done
-      done < "$ROUTE_LIST"
-      ROUTE_COUNT=0
-      ROUTE_BAD=""
-      while IFS= read -r line || [ -n "$line" ]; do
-        line="${line//$'\r'/}"
-        if [ "$RANGE_RUN" -ne 1 ] && [[ "$line" =~ ^#\ -+\ \>8\ -+$ ]]; then break; fi
-        [ "${line#Route:}" != "$line" ] || continue
-        ROUTE_COUNT=$((ROUTE_COUNT + 1))
-        if ! [[ "$line" =~ $ROUTE_RE ]] && [ -z "$ROUTE_BAD" ]; then ROUTE_BAD="${line:0:80}"; fi
-      done < "$COMMIT_MSG_FILE"
-      if [ "${#ROUTE_PATHS[@]}" -gt 0 ] && { [ "$ROUTE_COUNT" -eq 0 ] || [ -n "$ROUTE_BAD" ]; }; then
-        if [ "$ROUTE_COUNT" -eq 0 ]; then
-          echo "commit-msg: ROUTE-TRAILER BLOCK — product code changed without a Route: trailer (missing):"
-        else
-          echo "commit-msg: ROUTE-TRAILER BLOCK — product code changed with a malformed Route: line: '$ROUTE_BAD'"
-        fi
-        for path in "${ROUTE_PATHS[@]:0:5}"; do echo "    $path"; done
-        [ "${#ROUTE_PATHS[@]}" -le 5 ] || echo "    … and $(( ${#ROUTE_PATHS[@]} - 5 )) more"
-        echo "  Add to the commit message, as its own line:"
-        echo "    Route: <direct|brief|engine>[ <reference>], tests: <number of tests run>"
-        echo "  Product paths are declared in .forge-product-paths (read from HEAD)."
-        BLOCK=1
-      elif [ "${#ROUTE_PATHS[@]}" -gt 0 ]; then
-        echo "commit-msg: ROUTE-TRAILER PASS"
-      fi
-    fi
-    rm -f "$ROUTE_LIST"
   fi
 
   # Range mode never takes the fallback: its driver runs pre-commit mode itself.
@@ -824,7 +596,7 @@ fi
 # it BLOCKs here, before the checks would stop for every later commit.
 
 if [ "$FORGE_CHECKOUT" -eq 1 ] && [ "$PORTABLE" -eq 0 ] && [ "$FORGE_MARKER_REMOVED" -eq 1 ]; then
-  echo "pre-commit: INSTRUCTION-UNIT-SIZE BLOCK — Forge marker removed; checks 6 and 7 would stop: framework/invariants.md is at HEAD but not in the index."
+  echo "pre-commit: INSTRUCTION-UNIT-SIZE BLOCK — Forge marker removed; check 6 would stop: framework/invariants.md is at HEAD but not in the index."
   BLOCK=1
 fi
 if [ "$FORGE_CHECKOUT" -eq 1 ] && [ "$PORTABLE" -eq 0 ]; then

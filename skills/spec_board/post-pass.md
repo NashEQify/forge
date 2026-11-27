@@ -31,12 +31,8 @@ whether more review is worth its cost). Detail: REFERENCE.md.
 
 ## 6. Post-pass (NON-NEGOTIABLE)
 
-When a seat returns new probes, Buddy records a retained test or a supported scratch mark for each
-before accepting PASS, closing the round or capturing or dispatching the next review round.
-Current-round finding verification and authorized test retention can proceed while disposition is
-open. If retaining a test changes captured inputs after a failed review, first adopt the current
-negative evidence, then have the authorized writer retain the test and record its location before
-recapture (owner: skills/testing/run-strategy.md §Review execution).
+A probe a seat returns that should stay as a test goes to the authorized writer
+(owner: skills/testing/run-strategy.md §Review execution).
 
 - [ ] Chief consolidated has tracking table.
 - [ ] Verification equation holds (Raw = Kept + Merged + Related + Removed).

@@ -37,9 +37,10 @@ Section numbers are skill-wide: §0, §3, §5 and §7–§10 here, §1–§2 in 
 
 ## 0. Plan + review (required without a frame)
 
-Without a frame: plan scope from project intent and local objective (owner: framework/invariants.md §Intent-driven),
-plus tool and alternatives. Self-review and dispatch `plan-adversary` on non-trivial plans. With a frame: reference it.
-Templates: `_protocols/plan-review.md`.
+Direct board dispatch without prior `frame`: plan block (scope /
+tool / alternatives) + self-review + (non-trivial) `plan-adversary`
+dispatch. With existing frame report: reference, don't re-run.
+Templates + triggers: `_protocols/plan-review.md`.
 
 ## Mandatory adoption ownership
 
@@ -114,10 +115,6 @@ experience contract (`skills/ux_authoring/SKILL.md`), each UX seat's
 prompt names both files with the behaviour spec as the review subject.
 
 ## 4.–4b. Buddy checklist, cross-task ACs and mechanism cells
-
-Before the first board round for a state/transition-table spec, have its author run a small script that derives
-each state × operation result from the invariants using the governing states and operations (§4b). Give seats
-the current output with gaps and contradictions against the table as review input.
 
 When assembling prompts and dispatching reviewers, when the spec carries cross-subsystem ACs or a
 `§Mechanism-Lifecycle` section in scope, and before a fix pass: read and follow

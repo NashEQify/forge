@@ -210,10 +210,8 @@ triage): `## Checked scope` (required section, per
 Apply its bind rule, including an evidenced zero-findings conclusion
 when there are no findings.
 
-Missing → F-C-SCOPE-MISSING from the chief, re-dispatch (max 1), then
-ESCALATE. A seat that ended in an abort is recorded as such, not enforced on, and
-its substitute is checked against its own output format
-(`skills/_protocols/dispatch-template.md` §Aborted seat).
+A missing section is noted by the chief, not refused. A seat that ended in an abort:
+`skills/_protocols/dispatch-template.md` §Aborted seat.
 
 **For code-review (multi-axis persona):** the checked scope is enforced
 **per axis**, including the shared zero-findings conclusion path.

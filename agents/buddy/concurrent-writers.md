@@ -101,9 +101,6 @@ dispatch. Use this wording for a work item that authorizes local commits:
 > checked changes locally in the assigned checkout and return the commit ID, the
 > check results and the selector's result line for your whole range
 > (`select_tests.py --diff <base>..HEAD`), so I know whether a broad run is due.
-> A commit touching a path in the project's `.forge-product-paths` carries
-> `Route: <direct|brief|engine>[ <reference>], tests: <number of tests run>`; the
-> commit-msg hook refuses it without one.
 > If a push or live transfer is due, identify the
 > outgoing commits or exact artifact and its intended destination. I handle
 > integration, push and live transfers from the coordinating chat.

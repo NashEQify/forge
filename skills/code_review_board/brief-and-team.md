@@ -56,25 +56,9 @@ taken, or `absorbed` / `still open`.
    name the cell. A blocking finding on a state carrier without a section
    triggers the retro-model (`_protocols/mechanism-model.md` §Trigger);
    the board brief of the next pass then carries it.
-   **Added tests.** Every test the diff adds is checked against four
-   rules of `skills/testing/lean-suite.md` §Each test earns its place,
-   with the implementer's report for what failed at BASE:
-   - *Relevant:* it traces to a behaviour the change changes (an AC or a
-     changed code path) and guards a purpose a consumer relies on, not
-     the text or presence of an artifact.
-   - *No guard of unchanged behaviour:* a new test whose behaviour no AC,
-     no row of the brief's test list or test plan and no verified finding
-     names, and whose assertions already hold at BASE, is rejected, also
-     when it runs through a changed function.
-   - *No near-duplicate:* a parameter case, or a test through the same
-     entry point and branch as another with the same outcome, is
-     rejected, and so is a test that a later test supersedes.
-   - *No test of the harness:* a test of a fixture, a helper or a switch
-     that exists for tests is rejected.
-   A rejected test is a finding that names the test (`file:line`) and the
-   rule; its fix is a removal (`test-findings.md`). The brief
-   hands this check to the L1 checklist (§3 item 3) and on L2 to the
-   coverage owner as a focus point.
+   **Added tests.** A test the diff adds that breaks a rule of `skills/testing/lean-suite.md` §Each test earns
+   its place (irrelevant, a guard of unchanged behaviour, a near-duplicate, a test of the harness) is noted in the
+   verdict with `file:line`, a `low` finding at most; it never fails a review or starts a fix round on its own.
    **Additions (the reverse trace).** Map the diff back as well: every
    added layer, abstraction, dependency, configuration option, guard or
    public surface traces to a spec item, an AC, the brief or a

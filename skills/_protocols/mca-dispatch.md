@@ -48,10 +48,7 @@ order:
 5. **Report:** the report file's path, and the instruction to write the full return there and reply with the short
    return (`skills/return_summary/SKILL.md` §Short return).
 
-Before a fresh or resumed dispatch, check the final brief and each substantive reading in part 4 against the
-applicable project intent and original local objective. Cite both and explain the final choice in the brief's Fit,
-updating it if the reading changes the remedy. Hold dependent dispatch on unresolved authority
-(owner: framework/invariants.md §Intent-driven). Exact values and boundaries belong in the brief. Recheck acceptance
+Exact values and boundaries belong in the brief. Recheck acceptance
 when they change. Keep part 3 to earlier work this dispatch uses.
 
 Save the dispatch before calling, with `BASE: <sha>` (skills/code_review_board/review-package.md §BASE) followed by

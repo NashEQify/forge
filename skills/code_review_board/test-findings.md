@@ -16,8 +16,8 @@ Checked in this order; the first that holds decides.
    generator that spans it. That rule and §5's triage grade it.
 2. **The product is wrong now.** A run, or a concrete input with expected and actual, shows behaviour behind the gap
    that contradicts the brief or the spec. That behaviour is the finding and is graded as a product finding.
-3. **An open part of an owner-approved exit criterion** (the surviving mutants of a drilled mechanism):
-   `skills/convergence_loop/derive-and-exit.md` §Exit criterion decides. It is the next fix pass's input and never a
+3. **An open part of an owner-approved exit criterion** (for example surviving mutants):
+   `skills/convergence_loop/at-the-cap.md` §Exit criterion decides. It is the next fix pass's input and never a
    limit.
 4. **A test finding.** The code does what is required and a test reaches the path, but no assertion fails without
    the behaviour: a surviving mutant, a guard no test pins, a vacuous assertion. It is at most medium and does not

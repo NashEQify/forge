@@ -132,23 +132,6 @@ wins for permission and routing; review obligations are unioned.
 Example: `src/auth/session.py` is consumer code AND security-relevant —
 MCA writes, code_review_board + security both review.
 
-Before selecting checks, inventory the changed artifacts and their duties.
-For each applicable artifact category above, record the due review family and
-when it must run, using its own criteria for depth. For mixed work, retain
-substantive instruction review for changed operator duties alongside the
-applicable code review. In the existing decision, state what a shortened
-route or check simplifies, the evidence that permits it and the duties it
-retains.
-
-Before advancing or closing, recheck the duties against the delivered change
-and qualify each required result on the exact subject. For a fresh engine-owned
-adoption, check the captured subject, adopt, then check the success policy.
-When relying on an existing adoption, run the exact owner's read-only check
-for the policy required by the dependent action (owner:
-skills/_protocols/evidence-review-adoption.md §9.4–9.5). Hold that action if its
-required proof is missing, stale or refused. Apply the same qualification
-when the executing chat also owns closure.
-
 ### Delegation artifact
 
 CLAUDE.md requires: no agent call without a delegation artifact.

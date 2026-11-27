@@ -160,7 +160,7 @@ that supports a qualified historical attribution; no baseline leaves it unknown.
 
 | Situation | Decision |
 |-----------|----------|
-| Mechanism with an owner-approved exit criterion (before every other row, §Pass-3 termination's too) | **CONVERGED** only when every part holds (`derive-and-exit.md`); zero findings above the threshold is not enough |
+| Mechanism with an owner-approved exit criterion (before every other row, §Pass-3 termination's too) | **CONVERGED** only when every part holds (`at-the-cap.md` §Exit criterion); zero findings above the threshold is not enough |
 | Pass N (pass 1 included) has 0 findings above the threshold | **CONVERGED** — proceed to the next gate |
 | Finding requires an architecture decision | **ESCALATE immediately** — not an iteration problem (any pass) |
 | Pass 3 BLOCKERs | see §Pass-3 termination (and conditional pass-4 extension) |
@@ -179,13 +179,8 @@ For any code-review fix brief (pass 1 included) and when the implementer pushes 
 `skills/convergence_loop/cause-before-answer.md` (causes, rulings, spec gaps and re-deriving). At the re-review limit
 read `skills/convergence_loop/at-the-cap.md` (cause and ruling for each open finding).
 
-After two failed reviews at the same role transition, ask which interface governs it and who owns it before the
-next disposition (owner: skills/convergence_loop/simplify-before-patch.md §Record).
-
 Before a fix brief from pass 2 on, an owner change or an extension, read
 `skills/convergence_loop/simplify-before-patch.md` (counting, inventory, model-first record, decision and witness).
-When the gate answers with a drill or records `same_class: yes`, and on a mechanism with an owner-approved exit
-criterion, read `skills/convergence_loop/derive-and-exit.md`.
 
 ## State format between passes
 

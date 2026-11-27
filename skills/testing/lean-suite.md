@@ -78,9 +78,6 @@ plus the tests that failed before it (`run-strategy.md` §Test selection). It is
 runs at the project's **full gate**, which the project names with its runner and moment: CI before a merge, or without
 CI the role that merges, before a merge whose broad run is due (`run-strategy.md` §Test selection) and before a
 release. The full gate runs every test, the full-gate list included.
-Before launching a gate on a frozen review copy, its runner checks the gate's environment dependencies there
-with short static tests under the gate's configuration. Hold the launch until this separate preflight passes
-(owner: skills/testing/run-strategy.md §Review execution).
 
 ## pytest shape
 
