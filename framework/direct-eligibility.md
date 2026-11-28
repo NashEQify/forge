@@ -8,7 +8,10 @@ work, and when a verified known fix is considered for DIRECT.
 Write the three sizing facts (`workflows/runbooks/build/lifecycle.md` §Sizing facts) and check against them,
 safety floors first. DIRECT excludes changes to authorization/auth,
 secrets, schema/data migration, public or cross-component contracts, live
-infrastructure, and changes with hidden/racing/unbounded failure effects.
+infrastructure where a failure outlasts a rollback (data lost, resources spent,
+actions sent in someone's name, an account at risk), and changes with
+hidden/racing/unbounded failure effects. A live change that a redeploy undoes
+is checked against the criteria below like any other.
 Size does not cancel a safety floor.
 
 Otherwise DIRECT requires ALL of:

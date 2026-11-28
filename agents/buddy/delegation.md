@@ -142,7 +142,8 @@ threshold:
   orchestrator role; a change whose description would take Buddy into
   design or long coding detail needs a brief file.
 - **safety-floor** — no security / auth / schema / public-API /
-  secrets / data migration / live infrastructure / full-path touch
+  secrets / data migration / live infrastructure where a failure outlasts a
+  rollback / full-path touch
   (Inv 9: safety floors precede any shortcut and rule out the light
   review, except a small fix on a live path that meets
   `skills/code_review_board/live-path.md` §1.0a; which floors need L2 is named

@@ -5,7 +5,7 @@ description: >
   adds the edge-case tests the implementer's bias systematically misses (RED
   tests as a required pre-fix gate). Triggers when the change touches a safety
   floor (security/auth/secrets, schema/state-format/data migration, public
-  contract, live infrastructure) and a tester design output exists (build
+  contract, live infrastructure a rollback does not undo) and a tester design output exists (build
   prepare); NOT for post-implementation review (use code_review_board).
 status: active
 relevant_for: ["main-code-agent"]
@@ -43,7 +43,8 @@ studies / full schemas: `REFERENCE.md`.
 **Trigger: the change touches a safety floor.** The floors are
 security/auth/secrets, schema/state-format/data migration (DB, API,
 event or persisted-state schema), a public contract, and live
-infrastructure. This is the one home of the trigger; the build
+infrastructure where a failure outlasts a rollback (`framework/invariants.md`
+§9). This is the one home of the trigger; the build
 `test-design` step and `skills/testing/SKILL.md` point here. The test
 skeleton writer runs under the same trigger. AC count, cross-module
 impact and sub-build are not triggers.

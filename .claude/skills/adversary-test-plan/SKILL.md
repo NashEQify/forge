@@ -1,6 +1,6 @@
 ---
 name: adversary-test-plan
-description: Adversary extension of a test plan BEFORE implementation — a code-adversary adds the edge-case tests the implementer's bias systematically misses (RED tests as a required pre-fix gate). Triggers when the change touches a safety floor (security/auth/secrets, schema/state-format/data migration, public contract, live infrastructure) and a tester design output exists (build prepare); NOT for post-implementation review (use code_review_board).
+description: Adversary extension of a test plan BEFORE implementation — a code-adversary adds the edge-case tests the implementer's bias systematically misses (RED tests as a required pre-fix gate). Triggers when the change touches a safety floor (security/auth/secrets, schema/state-format/data migration, public contract, live infrastructure a rollback does not undo) and a tester design output exists (build prepare); NOT for post-implementation review (use code_review_board).
 ---
 
 # Skill: adversary-test-plan (Wrapper)

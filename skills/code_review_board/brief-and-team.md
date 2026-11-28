@@ -80,7 +80,8 @@ taken, or `absorbed` / `still open`.
    spec-kit (MIT License, © GitHub, Inc.) and BMAD-METHOD (MIT License, © 2025 BMad Code, LLC); Forge's register of adopted methods.
 5. **TEAM COMPOSITION** — risk → agents + focus points. Includes the
    **L2-trigger table**: five rows (public API / wire; security / auth /
-   secrets; real migration doubt; new subsystem; live infrastructure),
+   secrets; real migration doubt; new subsystem; live infrastructure where a
+   failure outlasts a rollback, `SKILL.md` §1.0),
    each `yes | no` with an evidence pointer (file:line, grep or spec
    clause). Copy it into the verdict. A missing row counts as `yes`.
    A live-infrastructure `yes` that meets `live-path.md` §1.0a names (a)–(c)
