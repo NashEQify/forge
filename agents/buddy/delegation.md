@@ -77,8 +77,10 @@ a file is in its fingerprint: a docs-only change goes out without one unless the
 project's rules say otherwise. A brief cuts sections by dependency and
 integration risk, not one per module; it keeps a path runnable between sections
 only when something live consumes it, and otherwise deletes superseded structure
-and the tests whose only subject it is instead of shimming and re-deriving them.
-More than these defaults needs a reason stated in the brief or decision record.
+and the tests whose only subject it is instead of shimming and re-deriving them. Tests run per section only where
+they protect something live at that point; the rest runs once at the package end.
+More than these defaults needs a reason stated for this change; a gate or step taken from an earlier brief, handover
+or record is re-derived, not carried forward.
 
 Preserve required independent investigation and review floors. Apply
 `skills/_protocols/dispatch-template.md` before dispatch and

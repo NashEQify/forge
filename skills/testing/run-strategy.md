@@ -43,7 +43,9 @@ the authorized writer; other probes are scratch.
 This is the single home of the suite-scope rule; other instructions point here.
 
 **Run the tests that exercise the change.** Implementation rounds, fix passes, reviews and
-verification run the test files that exercise the changed paths:
+verification run the test files that exercise the changed paths. Inside a package of several sections the selected
+set runs once, at its end; a section runs its own tests and the checks of what is live at that point
+(`skills/_protocols/mca-brief-template-verification.md` §Verification-gate cadence). The selection:
 `python3 "$FRAMEWORK_DIR/scripts/select_tests.py"`, run from the project root with the
 changes (`--staged`, `--worktree`, `--diff <base>..HEAD` for committed work, or the
 paths), prints `result: targeted` and the files, or `result: broad` with its reasons.
@@ -69,8 +71,10 @@ for a code change unless it also exercises the changed module. A code path no te
 (`lean-suite.md` §Change-scoped runs and the full gate). It is due for a change only when the
 selector returns `broad` (shared test infrastructure, a path no test maps, a cross-cutting
 entry) or when the change touches a safety floor (`skills/adversary_test_plan/SKILL.md` §When
-to call). That due run is the broad run: once, after the last change to the code under test
-and before the merge, by the full gate's runner (without a named runner, the role that merges). A small code change after that run, such as a fix pass, runs only the tests
+to call), or when the project's rule requires its full gate for this change. Imported code is the selector's
+question: its `broad` is the reason. That due run is the broad run: once, after the last change to the code under test
+and before the merge, by the full gate's runner (without a named runner, the role that merges). With no broad run due
+and a project rule that merges a bounded change on targeted tests, the project's gate script does not run. A small code change after that run, such as a fix pass, runs only the tests
 that exercise the changed module directly. The broad run stands when no other code changed
 after it. A small fix after a review in which every seat passed runs only the tests that
 failed before it, until green (`skills/code_review_board/review-package.md` §Small fix after a

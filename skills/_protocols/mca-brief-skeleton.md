@@ -12,6 +12,7 @@ past it: split by goal, narrow the files to read, or cut the goal into steps tha
 Effort budget: <rounds, agent calls and test runs expected for the task's value>; more only if <what would justify it>
 Cut: <n> sections — <each boundary's reason: dependency, integration risk or a live consumer>; runnable between sections: <only if something live consumes the path, else no: superseded structure and its tests are deleted>
 Review: <once at the end of the task | per section because <safety floor>>; this round <joins the open package | goes live alone because <the user's reason>>
+Gate: per section <the section's own tests + the checks of what is live at that point, each with what it protects>; once at the package end <the selected set; the project's full gate only where the selector answers `broad`, a safety floor is touched or the project's rule requires it for this change> (skills/_protocols/mca-brief-template-verification.md §Verification-gate cadence)
 Report: <path of the report file> (skills/_protocols/mca-dispatch.md)
 
 ## Approved acceptance (read-only)
@@ -52,7 +53,8 @@ addition the table does not list is dropped, or reported in the return with a pr
   behaviour (owner: skills/_protocols/mca-brief-template-verification.md §Tests the brief orders)
 - <test name> — <the behaviour it covers> — relied on by <whom>; cases: <the cases that change an assertion>
 - Unchanged: <behaviour> — guarded by <existing test> | unguarded
-- Run: the selected set (`python3 $FRAMEWORK_DIR/scripts/select_tests.py <changed paths>`), not the whole suite
+- Run: as the `Gate:` line says; the selected set (`python3 $FRAMEWORK_DIR/scripts/select_tests.py <changed paths>`),
+  not the whole suite
 
 ## Stop limit
 

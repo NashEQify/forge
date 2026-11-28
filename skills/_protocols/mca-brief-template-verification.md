@@ -26,7 +26,7 @@ none. Each entry names the test, the behaviour it covers and who relies on that 
 
 ## Test/Verification scope (DoD)
 
-Brief encodes the **selected set** per round, not the full repo suite;
+Brief encodes the **selected set** once per package (per pass in a fix brief), not the full repo suite;
 scope and any due broad run follow `skills/testing/run-strategy.md` §Test
 selection. When a broad run is due, the brief says which round carries
 it and that the full gate's runner runs it.
@@ -63,36 +63,19 @@ lines (`skills/_protocols/evidence-author-claims.md` §8.4).
 
 ## Verification-gate cadence
 
-Governs **when** a gate fires — per-commit vs once-at-HEAD. Mandatory
-when brief covers multiple commits (strangler, shape-preserving
-refactor, sequential moves, ≥5 commits). Single-commit briefs:
-implicit (one commit, one gate-set).
+Governs **when** a test run fires in a package of several sections or commits; the brief's `Gate:` line states it
+(`mca-brief-skeleton.md`). The unit of verification is the package, not the section:
 
-**Default cadence:**
+- **Per section:** the tests the section writes or changes, L0 on its touched files, and a check of what something live
+  consumes at that point (a fallback golden, a parity test), each named with what it protects.
+- **Once at the package end, before the merge:** the selected set, any broader subset, and real-container or external
+  gates. A path nothing live consumes may be broken between sections (`agents/buddy/delegation.md` §Weight by what can
+  break), so its tests find nothing a section may not leave behind.
+- **A gate step taken from an earlier brief, handover or record** is re-derived against this rule, not copied.
 
-| Bug-class shape | Per-commit | Once-at-HEAD |
-|---|---|---|
-| In-process (start/stop, dep-order, kwarg, fixture-shape, type-check, lint, scope-suite) | `pytest <scope-suite>` + L0 (`ruff <touched> && mypy <touched>`) | — |
-| Real-container (reverse-stop on SIGTERM, restart, ansible compose-recreate, real-process signals) | — | `make app-e2e` + targeted real-container test |
-| Cross-process / external (Playwright, app-e2e-live, deploy-verify) | — | manual or `make app-e2e-live` post-deploy |
-
-**Rule:** bug-class fully covered by an in-process gate firing per
-commit → the heavy external-system gate belongs ONCE at HEAD, not
-per commit. Per-commit external gates duplicating in-process
-coverage = checklist-tick, no information gain.
-
-**Auto-detection:** `code-architect-lens` axis "over-specified gate
-cadence" flags per-commit external-system gates whose bug-class an
-in-process gate already covers.
-
-**Bind rule:** brief with ≥5 commits MUST name per gate (per-commit
-OR once-at-HEAD) and cite the bug-class shape that justifies the
-cadence. Re-author per-commit gates without a named real-container
-bug-class to once-at-HEAD.
-
-**Reject the unsafe shortcut:** NOT "skip app-e2e entirely on
-strangler refactors". Real-container bug-classes are real; the
-release-valve is cadence (once at HEAD), not coverage.
+Purpose: a run per section costs its time once per section and catches only what the package end catches too.
+`code-architect-lens` flags a per-section run whose protected object is not live at that point. The release valve is
+cadence, not coverage: a real-container bug class still gets its test, once at the end.
 
 ---
 
