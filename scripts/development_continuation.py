@@ -199,7 +199,13 @@ def _check(root: Path, check: dict) -> dict:
     """Evaluate once; the result carries its receipt entry: what was read and decided."""
     import yaml
     path = root / check['path']
-    item: dict[str, Any] = {'kind': 'file', 'path': check['path'], 'exists': path.is_file()}
+    read_path = check['path']
+    if check.get('kind') == 'task' and not path.is_file():
+        # Archive relocation keeps the task's identity: the closing move must not block the close.
+        moved = Path('docs/tasks/archive') / Path(check['path']).name
+        if (root / moved).is_file():
+            path, read_path = root / moved, moved.as_posix()
+    item: dict[str, Any] = {'kind': 'file', 'path': read_path, 'exists': path.is_file()}
     entry: dict[str, Any] = {'check': _check_id(check), 'type': check['kind'], 'result': 'failed',
                              'producer': 'checker', 'input': [item]}
     result: dict[str, Any] = {'check': check, 'status': 'blocked', 'reason': 'required file missing'}
@@ -229,6 +235,9 @@ def _check(root: Path, check: dict) -> dict:
                 if str(data.get('id')) != _check_id(check).split(':', 1)[1]:
                     raise ValueError('task identity disagrees with reference')
                 result['observed_status'] = data['status']
+                if data.get('absorbed_by') is not None:
+                    # Where absorbed work went, so a close receipt shows the work was not dropped.
+                    result['absorbed_by'] = data['absorbed_by']
                 expected = check.get('expected_status')
                 if expected is not None and data['status'] != expected:
                     result['reason'] = 'task status requires reconciliation'
@@ -339,11 +348,18 @@ def _inspect(root: Path, envelope: dict, operation: str) -> dict:
                             "reason": "state revision regressed",
                         }
                     )
-                if not continuation_compatible(
-                    state["state"]["workflow"],
-                    prior.get("definition_fingerprint"),
-                    state["definition_fingerprint"],
-                ):
+                prior_print = prior.get("definition_fingerprint")
+                drift_blocks = not continuation_compatible(
+                    state["state"]["workflow"], prior_print, state["definition_fingerprint"]
+                )
+                if drift_blocks and state["lifecycle"]["terminal"] and isinstance(prior_print, str) \
+                        and re.fullmatch(r"[0-9a-f]{64}", prior_print):
+                    # A terminal run cannot progress, so a changed definition cannot change what it did;
+                    # its evidence stays historical (the engine's own rule). The receipt keeps both prints.
+                    # A missing or malformed baseline is not a changed definition and still blocks.
+                    state["prior_definition_fingerprint"] = prior_print
+                    drift_blocks = False
+                if drift_blocks:
                     problems.append(
                         {
                             "workflow_id": state["workflow_id"],
@@ -579,6 +595,22 @@ def contribute(command: str, root: Path, handoff: str, request: dict) -> dict:
         result['ready_to_close'] = [
             {'command': 'close', 'binding_id': b['binding_id'], 'reason': '<why>', 'evidence': '<path>'}
             for b in result['bindings'] if 'closed' not in b and _close_verdict(result, b)[0]]
+        # Output only: the work ended (every task terminal) but a bound run did not; an explicit abort
+        # with a reason makes it closable. A binding without a task check is never a candidate.
+        result['abort_candidates'] = []
+        for b in result['bindings']:
+            if 'closed' in b or b['blockers']:
+                continue
+            ready, states, checks = _close_verdict(result, b)
+            if ready:
+                continue
+            tasks = [x for x in checks if x['check']['kind'] == 'task']
+            if tasks and all(x['status'] == 'complete' and x.get('observed_status') in TERMINAL_STATUSES
+                             for x in tasks):
+                open_runs = [x['workflow_id'] for x in states if not x['lifecycle']['terminal']]
+                if open_runs:
+                    result['abort_candidates'].append({'binding_id': b['binding_id'], 'workflow_ids': open_runs,
+                        'absorbed_by': [x['absorbed_by'] for x in tasks if 'absorbed_by' in x]})
     released = None
     if command in {'reconcile', 'close'} and not selected_result['blockers']:
         released = {'binding_id': ids[0]}

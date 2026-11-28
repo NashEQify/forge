@@ -60,9 +60,9 @@ silent no-op. Existing checked evidence is not reset or reinterpreted by a new l
 Housekeeping area progress remains readable, while the shared publication journal
 protects actual multi-file mutation.
 
-Installation validates explicitly supplied project runs before activation and before
-rollback, including state created/advanced after upgrade. Incompatible state keeps
-sessions stopped until repair or validated mapping; no blanket state rewrite.
+Installation validates supplied project runs before activation and rollback, including state advanced after
+upgrade; incompatible state keeps sessions stopped until repair or a validated mapping, with no blanket state
+rewrite.
 
 ## Owned envelope region
 
@@ -99,7 +99,7 @@ stale replay.
 
 A required task check has the stable identity `task:<numeric task ID>`; a plan
 check has `plan:docs/plan.yaml`. Task archive relocation retains its identity and
-must agree with the authoritative task file's `id`. Task statuses come from the
+must agree with the authoritative task file's `id` (a gone path is read at `docs/tasks/archive/`, named in the receipt). Task statuses come from the
 plan/task owner. Rebinding adds obligations; changing an existing expectation
 requires explicit `reconcile`, which replaces that identity's expectation while
 retaining every other obligation. The binding keeps only the current expectation; output
@@ -111,16 +111,12 @@ carries them. Reconcile cannot remove an obligation or invent a successful task 
 owner's task-status process first, then submit the observed authoritative status:
 
 ```json
-{"binding_id":"selected-work","reason":"Task owner completed and archived work",
- "evidence":"docs/tasks/archive/<NNN>.yaml",
- "required_checks":[{"kind":"task","path":"docs/tasks/archive/<NNN>.yaml",
-                     "expected_status":"done"}]}
+{"binding_id":"w","reason":"Task owner completed the work","evidence":"docs/tasks/<NNN>.yaml",
+ "required_checks":[{"kind":"task","path":"docs/tasks/<NNN>.yaml","expected_status":"done"}]}
 ```
 
-Use the same project/handoff CLI arguments with `reconcile`. Failed target checks
-leave accepted expectations, compatibility baselines and closure unchanged; the
-command output names the failing check. Other bindings retain their independent
-status and work.
+`reconcile` takes the same CLI arguments. A failed target check changes nothing (§Check receipts); other
+bindings keep their own status and work.
 
 Task-only work remains unfinished until explicit `close` with `binding_id`,
 `reason`, and `evidence`. Close evaluates every selected obligation once for its decision: workflows must
@@ -128,12 +124,12 @@ be terminal according to the engine; tasks must have an owner-recognized termina
 status; every required task/plan check must pass its supported predicate. Use that
 same qualified result in the closure receipt. Failed or unknown required results
 cannot pass merely because workflow/task terminality passed. Plan validity alone and an empty selection cannot prove completion.
-Failed close preserves all obligations. A successful close removes the binding and returns its verified
-receipt for the caller to keep at its evidence owner; if publication is interrupted, the error output still
-carries that record. `export` outputs `ready_to_close`: each open binding that close would verify now, as
+Failed close preserves all obligations; an interrupted publication's error output still carries the closed
+record (§Check receipts). `export` outputs `ready_to_close`: each open binding that close would verify now, as
 `{"command": "close", "binding_id": "<id>", "reason": "<why>", "evidence": "<path>"}` to fill;
-it closes nothing and stores no `ready_to_close`; a stored check blocker keeps only identity and root-relative reason. A binding closed under the earlier contract stays historical, and export/restore preserve
-its receipt without reopening completed checks.
+it closes nothing and stores no `ready_to_close`; a stored check blocker keeps only identity and root-relative reason.
+It also lists `abort_candidates` (every task check, at least one, terminal; a bound run open) with any
+`absorbed_by`; the save runs the closes and asks about those (`save/WORKFLOW.md` §3).
 
 The engine exports `lifecycle: {status, terminal}` for each selected workflow
 according to `workflow-engine-closure.md` §Mechanism-Lifecycle: local workflow
@@ -166,6 +162,8 @@ permitted direction; omitted direction infers it from the exact pair. The manife
 records workflow, prior/current hashes, allowed directions, acceptance and the
 preserved-obligation review pointer. That pointer is review provenance, not a runtime
 requirement to install private review documents. There is no name/step-count bypass.
+A terminal run with a well-formed baseline is exempt (it cannot progress) and its closed record keeps
+`prior_definition_fingerprint`; an active run stays blocked.
 The reviewed save/housekeeping pairs cover only their exact definitions;
 any further instruction or execution change requires another reviewed transition.
 

@@ -60,6 +60,8 @@ obligation). The removal applies to these notes only: a one-line change or closu
 note an earlier session wrote leaves the handoff at this save, whoever wrote it; so do
 superseded facts. A longer closed section leaves the same way, after
 its result went to its owner (the history for a course, a decision or an obligation).
+That other chats share the handoff is no reason to keep a closed section: its open remainder stays, as a pointer to
+its owner while an open item depends on it.
 Open topics, coordination, the held-back list, standing approvals and watch items
 stay. Keep a one-line pointer only while an open item still depends on it. No nine
 compulsory headings.
@@ -109,7 +111,12 @@ the save completes. In Git run
 Report actual knowledge/handoff/history outcome, commit/push or reason omitted, and
 concrete partial-persistence/domain blockers. Foreign untouched diffs are not failures.
 Do not represent a successful local save as a successful push.
-The report names each binding the development export lists under `ready_to_close`, with its close request; the save closes nothing.
+Bindings whose work ended leave at the save. After the development export and before the commit, the save runs
+`close` for each binding the export lists under `ready_to_close`, with the reason "work ended" plus the observed task
+statuses and the task file as evidence; the commit message carries each closed binding's ID, reason and verified
+checks. The report names each entry under `abort_candidates` (work ended, a bound run did not) with its runs and
+`absorbed_by`, as one question to the user or coordinator whether to abort them; an abort needs that answer and a
+reason, and the next save closes the binding. Every other blocked binding is named as open work.
 
 ## Compatibility
 
