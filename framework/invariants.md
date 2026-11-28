@@ -1,118 +1,54 @@
 # Framework invariants
 
-Tier 0: the rules that hold in every project. Every boot reads this file before the first answer (the
-boot entry names it); process detail is in `agents/buddy/operational.md` (Tier 1). Rules that apply only to the forge
-repository itself (its commit policy, hooks, frozen zones, language policy, host constraints) stay in its
-`CLAUDE.md` and `AGENTS.md`.
-
-Read and follow `framework/work-principle.md` before taking up work.
-Resolve this reference against the framework root; retain the consumer CWD.
-Reread it after compaction.
+The rules that hold in every session, every project. Process detail lives at its owner; the forge repository's own
+rules stay in its `CLAUDE.md` and `AGENTS.md`. Read and follow `framework/work-principle.md` before taking up work;
+resolve it against the framework root, keep the consumer CWD, and reread it after compaction.
 
 ## Workflow selection
-Resolve workflow selection from the active project's intent per
-`framework/workflow-selection.md` before applying Forge
-process requirements. The boot runs in every mode, whatever the request's
-size; the `on-demand` mode starts with `agents/buddy/boot-on-demand.md` and
-uses project-local working and delegation rules. Standalone Council follows
-the on-demand decision trigger in `framework/workflow-selection.md`; other
-Forge methods are available on explicit request.
-This selection governs the process requirements below and in downstream
-instructions; authorization, secrets, evidence and outcome verification remain
-binding.
+The active project's intent selects software or on-demand mode (`framework/workflow-selection.md`); software process
+requirements apply only in software mode. Authorization, secrets, evidence and outcome verification bind in both.
 
 ## Intent-driven
-forge's contract: a sharp intent in, a coherent result out. Every agent reasons
-**from the active `intent.md`** — the repo's goal is the load-bearing input to
-scope / build / defer / proportionality calls, so work serves the goal end-to-end
-rather than a locally-coherent-but-globally-wrong frame. The `intent.md` is the
-central enabler: keep it well-formed (created with the user at `boot.md` RESOLVE,
-formatted per `framework/intent-tree.md` — state the goal as **extractable facts**,
-not only argued) and actually consulted. Framing mechanics: `agents/buddy/architecture-comprehension.md`. Cold review seats receive the standing `intent_chain`
-anchor, not decision-curated intent (the author-separability line — a standing
-standardized anchor is not the proposer's per-decision framing; a curated slice is).
+Reason from the active `intent.md`: the project's goal decides scope, build, defer and proportionality calls
+(format: `framework/intent-tree.md`).
 
 ## Invariants
 
 ### 1. Board/Council: responsibility and evidence
-Reviewers investigate independently; a Chief consolidates where the
-selected review mode calls for one. Buddy owns the decision and verifies
-load-bearing claims against their sources. Buddy may inspect relevant
-findings to resolve contradictions, but does not routinely repeat every
-review. Read-only reviewers return complete artifacts inline; Buddy
-persists them verbatim with provenance before Chief consumption.
-Platform instructions and effective permissions are never overridden.
+Reviewers investigate independently; Buddy owns the decision and checks load-bearing claims at their sources.
+Read-only reviewers return inline; Buddy saves the return verbatim before it is consumed.
 
 ### 2. Authorization
-Discuss when the requested outcome or a consequential decision is unclear.
-A clear implementation instruction authorizes work within its stated scope.
-Existing authorization survives phase transitions; ask again only for a
-material scope/risk change or a genuinely unresolved user decision.
-Diagnosis-only does not authorize a fix. Live and publication actions
-retain their explicit boundaries. Destructive actions do too, except that
-the user's cleanup or fix order covers deleting the provably useless
-within its scope. Reading a secret (a `.env` file, an SSH private key) has
-no permitted path; on Claude Code the deny rules Forge's setup writes
-refuse `.env` files and SSH keys named `id_*` (`scripts/forge_setup.py`
-`DENY_RULES`). When a boundary lifts (commit,
-push, publication), first reconcile the work it held back, then take up new
-work. Bookkeeping does not authorize new substantive decisions.
-SoT: `framework/process-map.md` section Authorization.
+A clear instruction authorizes work within its scope; diagnosis alone does not authorize a fix. Live, publication
+and destructive actions keep their explicit boundaries (a cleanup or fix order covers deleting the provably useless
+within its scope). Reading a secret (a `.env` file, an SSH private key) has no permitted path. SoT:
+`framework/process-map.md` §Authorization.
 
 ### 3. Pre-Delegation
-No agent call without a delegation artifact. DIRECT: scope, goal, agent
-and success criteria in the turn suffice. Other paths use a persisted
-brief. Do not request another routine signoff for an already approved
-scope. Routing: `framework/process-map.md` and the selected runbook.
+No agent call without a delegation artifact: on DIRECT, scope, goal, agent and success criteria in the turn; else a
+persisted brief.
 
 ### 4. Code delegation
-Product code goes to main-code-agent. One exception: on the quick path for a
-DIRECT-eligible change (`framework/direct-eligibility.md` §Choosing the path),
-Buddy changes the product code himself, also when he chose that path, and the
-result says so. A role not installed as an agent type
-runs as a general agent run told to read its role file (`agents/<role>.md`
-under the framework root), called as `skills/_protocols/role-dispatch.md` says; outside the quick path, a missing agent type is no reason to build inline. Buddy writes orchestrator artifacts
-(`agents/`, `framework/`, `skills/`, `workflows/`, `context/`, `docs/`)
-within the approved intent-scope. Detail: `framework/agent-autonomy.md`.
+Product code goes to main-code-agent, except a quick-path DIRECT change Buddy makes himself and says so. Detail:
+`framework/agent-autonomy.md`.
 
 ### 5. Stale cleanup
-Retiring or replacing an artifact includes its live references in the same
-change. Search names and enumerate the relevant live inventory; neither a
-name search nor a confident summary alone proves completeness. Preserve
-frozen history. Detail: `skills/_protocols/evidence-author-claims.md`
-section 8.2 and `skills/deprecation_and_migration/migration.md`.
+Retiring or replacing an artifact removes its live references in the same change; a name search alone does not prove
+completeness.
 
 ### 6. Deployment verification
-Verify the actual user/service outcome after deployment; HTTP 200 or
-process liveness alone is insufficient. If verification is unavailable,
-report the unverified boundary instead of claiming verified deployment.
-Incident recovery follows `workflows/runbooks/fix/WORKFLOW.md` section
-Incident recovery before final RCA; authorization is not relaxed.
+After a deployment, verify the actual user or service outcome; HTTP 200 or a live process is not enough. If you
+cannot verify, say so instead of claiming it.
 
 <!-- Numbers 7/8 remain in intent.md; retain stable 9/10 references. -->
 
 ### 9. Proportionality of effort
-Effort matches consequences, reversibility and uncertainty. Name the
-consumer and concrete cost a gate, task or test addresses. Vision-named
-product deliverables count even before deployment. Safety floors for
-security/auth/secrets, schema/data migration, public contracts and live
-infrastructure are evaluated before any small-change shortcut. Live
-infrastructure is a floor where a failure leaves an effect that rolling back
-the deploy does not undo; a live change a redeploy undoes is an ordinary change.
-A gate, step or check outside the safety floors stays only while it catches
-defects in product code or consumer outcomes; adding one names that catch.
-DIRECT eligibility has one source: `framework/direct-eligibility.md`.
-File counts are signals, not substitutes for risk assessment.
-Weigh effort cumulatively: before each further round (fix pass, added
-review, new review owner, extension) compare total effort and remaining
-risk with the stated expectation, then close with a recorded limit, narrow,
-or escalate (`agents/buddy/delegation.md` §Delegation hygiene).
+Effort matches consequences, reversibility and uncertainty. Safety floors (security/auth/secrets, data migration,
+public contracts, live infrastructure where a failure outlasts a rollback) come before any shortcut. A gate, step or
+check outside them stays only while it catches defects in product code or consumer outcomes; adding one names that
+catch. Before each further round, weigh the total effort against the remaining risk (`agents/buddy/delegation.md`
+§Cumulative effort).
 
 ### 10. Verify mechanical claims
-Verify file existence, counts, versions, code behavior and command results
-against actual files or executed checks before asserting them. Consequential
-artifacts carry evidence pointers or commands beside the claim. Distinguish
-agent-confirmed, automatically checked and unverified results. A correct
-pointer can still be misread; independent review checks interpretation.
-Detail: `skills/_protocols/evidence-author-claims.md`.
-
+Check file existence, counts, versions, code behaviour and command results against the files or a run before
+asserting them, and say which results are confirmed, checked automatically or unverified.

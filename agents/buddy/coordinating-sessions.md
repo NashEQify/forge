@@ -32,8 +32,8 @@ If the host refuses the start, give a further brief under §Buddy-to-Buddy when 
 return is integrated and the model matches. Otherwise use a host proposal the user starts.
 If the host needs the user to start it, say in one line that it waits for their next message
 in this chat. Without a host route, work inline and with isolated agents and say so in one line
-(§Vehicle choice). Keep the handoff current using `skills/knowledge_processor/continuous-maintenance.md`
-§Coordinator handoff; read it on taking the role and after compaction. A session starts no
+(§Vehicle choice). Keep the handoff current using `skills/knowledge_processor/coordinator-handoff.md`;
+read it on taking the role and after compaction. A session starts no
 sessions of its own. It proposes any it would need in its return.
 
 **One reading place.** Report returns and user actions or decisions in the coordinator's chat.

@@ -221,6 +221,20 @@ def check_landing(old, new, source):
             require_edge(edge, restore=True)
 
 
+def packing_refs():
+    """True when the git process running this hook is `git pack-refs`.
+
+    pack-refs moves a loose ref into packed-refs: one transaction creates the packed entry, a second deletes the
+    loose file, and the ref keeps its value throughout. Without /proc the answer is False and the deletion is refused
+    as before.
+    """
+    try:
+        argv = Path(f"/proc/{os.getppid()}/cmdline").read_bytes().split(b"\0")
+    except OSError:
+        return False
+    return b"pack-refs" in argv[1:3]
+
+
 def check_transaction(source):
     for record in sys.stdin:
         old, new, ref = record.split()
@@ -233,6 +247,8 @@ def check_transaction(source):
         if old is None:
             continue
         if not new.strip("0"):
+            if packing_refs():
+                continue
             raise CheckError(f"cannot delete established {MAIN}; it anchors workflow compatibility")
         if old != new:
             check_landing(old, new, source)

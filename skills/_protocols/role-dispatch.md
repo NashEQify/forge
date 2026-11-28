@@ -2,7 +2,8 @@
 
 Read it before dispatching a Forge role (a file under `agents/` of the framework root) to an agent: an implementer, a
 tester, a code review seat or chief, a board seat or chief, a council member, adversary or chief. It says how the call
-is written when the host lists the role as an agent type and when it does not (`framework/invariants.md` Invariant 4).
+is written when the host lists the role as an agent type and when it does not; a missing agent type is no reason to
+build or review inline.
 The consumer is the dispatching agent. The cost it prevents: a call to an agent type the host does not have, a role
 file path that resolves against the project instead of the framework, and a read-only role that edits.
 
@@ -29,7 +30,8 @@ file path that resolves against the project instead of the framework, and a read
 
 6. **Return contract:** the prompt ends with what the return must end with: the adoption lines of
    `skills/return_summary/SKILL.md` §Adoption line, quoted; for a role that starts commands or agents, "do not return
-   while one of them runs"; for a review seat, its severity scale (critical, high, medium, low:
+   while one of them runs"; for a review seat, the standing `intent_chain` anchor of the task, never a slice of intent curated for the decision,
+   and its severity scale (critical, high, medium, low:
    `agents/_protocols/reviewer-base.md`) and, as the prompt's last part, the evidence layout of its reviewer
    protocol (code or spec)
    (§Mandatory envelope and clean output, §Output format: frontmatter first with the captured run, subject and slot
