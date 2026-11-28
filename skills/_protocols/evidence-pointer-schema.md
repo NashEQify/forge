@@ -59,8 +59,8 @@ Existence check + range check + `grep -F "$quote" $path`.
 ```yaml
 - kind: file_range
   path: agents/_protocols/reviewer-base.md
-  lines: 24-27
-  quote: "A finding WITHOUT evidence (a concrete pointer into the review target)"
+  lines: 36-36
+  quote: "A finding without an evidence pointer into the reviewed bytes is a guess: leave it out. Each finding gives its"
 ```
 
 - `path` is repo-relative (no `./` prefix).

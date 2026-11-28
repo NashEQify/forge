@@ -51,7 +51,7 @@ graded too low being parked.
    Such a check is not run again here. Buddy's pivotal-claim check before the verdict still re-executes a claim only its asserter ran.
 3. Give exactly one verdict:
    - **`critical`, `high`, `medium` or `low`:** the outcome occurs. Grade it by the harm on the scale of the
-     reviewer protocols (`agents/_protocols/code-reviewer-protocol.md` and
+     reviewer protocols (`agents/_protocols/reviewer-base.md` and
      `agents/_protocols/spec-reviewer-protocol.md`, §Output format), without regard to the reviewer's or the chief's
      grade. The evidence names the harm the grade rests on; a harm only to maintainers names where it causes trouble
      (which caller diverges, which rule breaks). When the harm is real and its size unclear, take the higher grade.

@@ -113,7 +113,7 @@ Delta-Verify reviewers:
 
 1. **Section existence:** `grep -l "## Checked scope"` to confirm
    both review files contain the section.
-2. **Bind rule:** apply `agents/_protocols/reviewer-checked-scope.md`.
+2. **Bind rule:** apply `agents/_protocols/reviewer-base.md` §Checked scope.
    Check the substantive connection of findings to a path checked or the
    assumption tested or, when none exist, the evidenced conclusion and
    its limits. A keyword count is not proof. Zero findings is valid;

@@ -37,11 +37,7 @@ This persona covers the **three generic quality axes**. Domain
 specialists join an L2 roster (`code_review_board/brief-and-team.md` §3) or as L1 trigger
 lenses.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/code-reviewer-protocol.md`,
-`_protocols/code-reviewer-base-extended.md`,
-`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
-per axis).
+Protocols: `_protocols/reviewer-base.md`.
 
 **Checked scope per axis required:** cover each axis with a concrete
 check and its result. Apply the shared protocol's bind rule, including
@@ -165,7 +161,7 @@ extend the review merely to meet a quota.
 
 **Output per axis:** one `## Checked scope — Axis
 [Correctness|Architecture|Performance]` section each, per
-`_protocols/reviewer-checked-scope.md`. Apply its bind rule per axis:
+`_protocols/reviewer-base.md` §Checked scope. Apply its bind rule per axis:
 findings when present, otherwise an evidenced conclusion.
 
 ## Check focus

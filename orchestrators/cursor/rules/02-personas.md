@@ -50,8 +50,8 @@ When a persona references protocols via "loaded by" or `uses:`, load those
 inline before responding. Examples:
 
 - `agents/_protocols/reviewer-base.md` — all review agents
-- `agents/_protocols/<board>-reviewer-protocol.md` — board-specific
-- `agents/_protocols/reviewer-checked-scope.md` — mandatory for review output
+- `agents/_protocols/spec-reviewer-protocol.md`, `ux-reviewer-protocol.md` — Spec / UX Board layout
+- `agents/_protocols/reviewer-base.md` §Checked scope — mandatory for review output
 
 ## Multi-perspective trade-off
 

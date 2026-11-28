@@ -13,9 +13,7 @@ Resolve this reference against the framework root; retain the consumer CWD.
 Code adversary in the Code Review Board. Smart-but-wrong, race
 conditions, silent data corruption.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/code-reviewer-protocol.md`,
-`_protocols/code-reviewer-base-extended.md`.
+Protocols: `_protocols/reviewer-base.md`.
 
 ## Anti-rationalization
 

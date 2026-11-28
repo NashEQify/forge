@@ -17,7 +17,7 @@ Protocols: `_protocols/reviewer-base.md`,
 `_protocols/spec-reviewer-protocol.md`.
 
 **Intentional protocol exception:** the consumer does **not**
-load `reviewer-checked-scope.md`, although the other Spec Board
+load `reviewer-base.md §Checked scope`, although the other Spec Board
 personas do. The consumer simulates a **first reader** who
 consumes the spec without prior knowledge (see constraints
 below: "MUST NOT: do NOT follow references in the spec"). A structured check record would disturb the first-reader naivety —

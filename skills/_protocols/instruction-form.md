@@ -13,7 +13,7 @@ instead.
 - A fact update (a path, a name, a count) or a split of a unit at a step boundary keeps the form of the text it
   corrects or moves.
 - Sections a Forge template requires keep their required form: a skill's Red Flags and Common Rationalizations
-  (`framework/skill-anatomy.md`), a persona's anti-rationalization list (`agents/_protocols/reviewer-base.md`).
+  (`framework/skill-anatomy.md`), a persona's anti-rationalization list (`agents/_protocols/code-reviewer-base-extended.md`).
 - Existing wording the change does not target stays as it is.
 
 Everything else a change writes takes its form from the sections below.

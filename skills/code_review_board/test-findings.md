@@ -2,7 +2,7 @@
 
 Step-loaded unit of `skills/code_review_board/SKILL.md`. Read it at the verdict (§5) before dispositioning a finding
 whose subject is a test or a test the added-tests check rejects, and before a fix brief that carries one. The
-reviewers' side is `agents/_protocols/code-reviewer-protocol.md` §Findings about tests; the rules for tests are
+reviewers' side is `agents/_protocols/reviewer-base.md` §Findings about tests; the rules for tests are
 `skills/testing/lean-suite.md` §Each test earns its place. The consumer is Buddy at the verdict; the cost it prevents
 is a review round, or a new test function, for a gap that a stronger assertion closes, and a rejected test that stays.
 

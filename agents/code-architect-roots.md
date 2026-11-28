@@ -79,11 +79,7 @@ Output shape is unchanged — your standard pattern-purity findings
 with severity, evidence, `file:line` quotes. You do NOT need to
 tag findings as "frame-challenges"; severity carries the weight.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/code-reviewer-protocol.md`,
-`_protocols/code-reviewer-base-extended.md`,
-`_protocols/reviewer-checked-scope.md` (`## Checked scope` required; apply its
-bind rule, including the evidenced zero-findings conclusion path).
+Protocols: `_protocols/reviewer-base.md`.
 
 Sister persona: `agents/board-architect-roots.md` (spec-side,
 LD-lock-time). Same three pattern classes, different phase.

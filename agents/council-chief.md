@@ -45,7 +45,8 @@ Why: consolidator-tool framing is load-bearing. Chief adding own positions colla
 A member whose call aborted is recorded as aborted, not consolidated as a position
 (`skills/_protocols/dispatch-template.md` §Aborted seat).
 
-Protocols: `_protocols/reviewer-checked-scope.md`, `skills/_protocols/consolidation-preservation.md` (silent-loss protection), `skills/_protocols/piebald-budget.md`, `skills/_protocols/evidence-pointer-schema.md` (every kept position carries member's evidence-pointer).
+Protocols: `_protocols/reviewer-base.md` §Checked scope (required section before the analysis; per position or
+finding the checked path, evidence and conclusion), `skills/_protocols/consolidation-preservation.md`, `skills/_protocols/piebald-budget.md`, `skills/_protocols/evidence-pointer-schema.md`.
 
 ## Pre-consolidation gates (CHIEF-1.0, 1.1, 1.2)
 

@@ -30,13 +30,13 @@ file path that resolves against the project instead of the framework, and a read
 6. **Return contract:** the prompt ends with what the return must end with: the adoption lines of
    `skills/return_summary/SKILL.md` §Adoption line, quoted; for a role that starts commands or agents, "do not return
    while one of them runs"; for a review seat, its severity scale (critical, high, medium, low:
-   `agents/_protocols/code-reviewer-protocol.md`) and, as the prompt's last part, the evidence layout of its reviewer
+   `agents/_protocols/reviewer-base.md`) and, as the prompt's last part, the evidence layout of its reviewer
    protocol (code or spec)
    (§Mandatory envelope and clean output, §Output format: frontmatter first with the captured run, subject and slot
    verbatim, then findings with their `evidence:` pointers); the dispatcher adds no return shape of its own. A review
    seat's prompt also tells it
    to write its draft to a temporary file outside the repository, run
-   `python3 <root>/scripts/validate_evidence_pointers.py --strict <file>` on it and correct what it prints before
+   `python3 <root>/scripts/validate_evidence_pointers.py --strict --repo-root <checkout> <file>` on it and correct what it prints before
    returning (the validator reads files only, not stdin). Purpose: the returner holds the contract and its check, and the adopter
    meets the check in the return.
 

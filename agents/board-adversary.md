@@ -13,11 +13,7 @@ Resolve this reference against the framework root; retain the consumer CWD.
 Adversary reviewer in the Spec Board. Smart-but-wrong scenarios,
 contradictions, edge cases.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/spec-reviewer-protocol.md`,
-`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
-section before the findings; per finding the checked path, evidence
-and conclusion).
+Protocols: `_protocols/reviewer-base.md`, `_protocols/spec-reviewer-protocol.md`.
 
 ## Anti-rationalization
 
@@ -59,7 +55,7 @@ stop. Your job is to find weaknesses, not praise the spec.
 4. FIRST PRINCIPLES: **Output artifact (not a pure reasoning
                      step)** — the Assumption tested field of
                      `## Checked scope` via
-                     `_protocols/reviewer-checked-scope.md`,
+                     `_protocols/reviewer-base.md` §Checked scope,
                      with its bind rule (including a zero-findings conclusion).
 5. IMPACT:           Which sections contradict each other?
                      What happens at the boundaries?

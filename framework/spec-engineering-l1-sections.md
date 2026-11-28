@@ -125,8 +125,7 @@ added in the same commit as a §module-decomposition-add strand.
 - **NOT** spec-per-output-file. One spec per contract; multiple
   modules per spec.
 - **NOT** a LOC budget per module. Judgment over mechanics — module
-  size is a code-review judgment per `agents/_protocols/reviewer-base.md`
-  §Cumulative file totals.
+  size is a code-review judgment.
 - **NOT** a hook-layer check. No pre-commit enforcement of section
   presence; spec_board's pre-gate FAIL is the only enforcement.
 - **NOT** a replacement for the implementation-surface bullet list in

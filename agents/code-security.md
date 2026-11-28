@@ -15,9 +15,7 @@ validation, secrets, injection.
 Boundary: `agents/security.md` = offensive pentests. You = static
 code review.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/code-reviewer-protocol.md`,
-`_protocols/code-reviewer-base-extended.md`.
+Protocols: `_protocols/reviewer-base.md`.
 
 ## Anti-rationalization
 

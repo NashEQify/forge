@@ -22,10 +22,7 @@ Loaded in:
   previously-flagged structural pattern. Detail:
   `skills/spec_board/depth-and-team.md` §2a.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/spec-reviewer-protocol.md`,
-`_protocols/reviewer-checked-scope.md` (`## Checked scope` required; apply its
-bind rule, including the evidenced zero-findings conclusion path).
+Protocols: `_protocols/reviewer-base.md`, `_protocols/spec-reviewer-protocol.md`.
 
 Sister persona: `agents/code-architect-roots.md` (code-side,
 post-implementation). Same three pattern classes, different

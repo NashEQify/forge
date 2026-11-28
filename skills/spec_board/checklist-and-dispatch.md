@@ -17,7 +17,7 @@ are skill-wide: §0, §3, §5 and §7–§10 in `SKILL.md`, §1–§2 in `depth-
 6. Read SPEC-MAP; identify neighbour specs for impact.
 7. Agent selection (base + specialists; document rationale).
 8. Name by path for the seat to read: reviewer-base +
-   spec-reviewer-protocol + reviewer-checked-scope + persona; follow
+   spec-reviewer-protocol + persona; follow
    dispatch-template. Chief additionally: consolidation-preservation
    + piebald-budget.
 9. Dispatch parallel (context-isolated) → spawn chief, each seat and the chief

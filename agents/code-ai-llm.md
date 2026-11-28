@@ -13,9 +13,7 @@ Resolve this reference against the framework root; retain the consumer CWD.
 AI / LLM reviewer in the Code Review Board. Prompt quality,
 model selection, token budget, LLM patterns.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/code-reviewer-protocol.md`,
-`_protocols/code-reviewer-base-extended.md`.
+Protocols: `_protocols/reviewer-base.md`.
 
 ## Anti-rationalization
 

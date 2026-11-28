@@ -15,9 +15,7 @@ Request/response contracts, the schema pipeline from server
 models to client types (for example Pydantic → OpenAPI → Zod),
 event streams (for example SSE), versioning.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/code-reviewer-protocol.md`,
-`_protocols/code-reviewer-base-extended.md`.
+Protocols: `_protocols/reviewer-base.md`.
 
 ## Anti-rationalization
 

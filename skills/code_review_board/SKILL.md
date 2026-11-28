@@ -24,7 +24,7 @@ Without Buddy (plugin): if this session holds no Buddy boot entry, run `python3 
 # Skill: code-review-board
 
 Buddy checklist. Detail: REFERENCE.md. Protocols:
-`agents/_protocols/reviewer-base.md` + `code-reviewer-protocol.md`.
+`agents/_protocols/reviewer-base.md`.
 
 Section numbers are skill-wide: §1 and §6–§10 here (§1.0a in `live-path.md`), §2–§3 in `brief-and-team.md`, §4–§4a in
 `checklist-and-dispatch.md`, §5–§5a in `verdict.md`, §11 in `review-package.md` (the stubs below say when to read each).

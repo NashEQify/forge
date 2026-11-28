@@ -1,18 +1,7 @@
-# Code Reviewer Base Extended
+# Code reviewer persona conventions
 
-**Loaded by:** all Code Review Board personas (`code-review`,
-`code-adversary`, `code-security`, `code-data`, `code-reliability`,
-`code-domain-logic`, `code-api-contract`, `code-ai-llm`,
-`code-docs-consumer`, `code-spec-fit`, `code-spec-drift`,
-`code-chief`).
-
-**Position:** extends `_protocols/reviewer-base.md` (generic) and
-`_protocols/code-reviewer-protocol.md` (code-specific) with the
-code-reviewer persona conventions. Loaded in addition to both.
-
-**Purpose:** code-reviewer persona standard pattern as a single
-source of truth — pattern replication in persona files reduced,
-consistency centralized.
+Read it when writing or changing a code-reviewer persona (`agents/code-*.md`). Review seats do not load it; they read
+`_protocols/reviewer-base.md` and their persona.
 
 ---
 
@@ -33,11 +22,7 @@ description: <core role in 1 sentence, with "Use when ..." trigger>
 
 <1-2 sentences for role + boundary where needed>
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/code-reviewer-protocol.md`,
-`_protocols/code-reviewer-base-extended.md` (this file).
-[Plus optional: `_protocols/reviewer-checked-scope.md` when the
-checked scope is required.]
+Protocols: `_protocols/reviewer-base.md`.
 
 ## Anti-rationalization
 <persona-specific phrases — see convention below>
@@ -66,15 +51,7 @@ in bullet form. Pattern:
 
 > "You say X — [counter-question / context-specific sharpening]"
 
-Generic anti-rat patterns (defined in
-`_protocols/reviewer-base.md`, do NOT replicate them in personas):
-- "Well structured" — structure isn't correctness
-- "Otherwise solid" — did you actually check everything?
-- "Can be changed later" — is it really reversible?
-- Vague phrasing ("if needed", "as appropriate") — every hedge is
-  a hole
-
-Persona-specific anti-rat extends these with domain patterns.
+Generic ones ("well structured", "otherwise solid", "can be changed later", accepting a hedge) need no repeat.
 
 **Closing sentence (convention):** *"If you're writing an
 explanation instead of a counter-argument: stop."* OR an equivalent
@@ -96,9 +73,7 @@ board — domain bleed is the standard anti-pattern.
 
 ## Review questions — convention
 
-The 5 steps are filled in **role-specifically**. The generic
-5-step frame is defined in `_protocols/code-reviewer-protocol.md`.
-The persona fills each step with domain sharpening:
+The persona fills five steps with domain sharpening:
 
 ```markdown
 ## Review questions (role-specific)
@@ -110,12 +85,8 @@ The persona fills each step with domain sharpening:
 5. IMPACT:           <domain-specific IMPACT question>
 ```
 
-**Output** (from `_protocols/code-reviewer-protocol.md`): the answers
-go into the `## Checked scope` section (via
-`_protocols/reviewer-checked-scope.md`): step 1 → Purpose, steps 2 and 3
-→ Paths checked, step 4 → Assumption tested, step 5 → Consequence. Apply
-its bind rule, including an evidenced zero-findings conclusion when there
-are no findings.
+The answers go into the `## Checked scope` section of `_protocols/reviewer-base.md`: step 1 → Purpose, steps 2
+and 3 → Paths checked, step 4 → Assumption tested, step 5 → Consequence.
 
 ---
 
@@ -199,53 +170,3 @@ consolidated to F-CR (code-review). Axis marker in the finding body
 (`Axis: Correctness | Architecture | Performance`).
 
 ---
-
-## Checked-scope convention
-
-**Whenever a Chief consolidates (four or more reviewers):** code-chief
-enforces on every raw reviewer (with three or fewer, Buddy does at §1.3
-triage): `## Checked scope` (required section, per
-`_protocols/reviewer-checked-scope.md`).
-
-Apply its bind rule, including an evidenced zero-findings conclusion
-when there are no findings.
-
-A missing section is noted by the chief, not refused. A seat that ended in an abort:
-`skills/_protocols/dispatch-template.md` §Aborted seat.
-
-**For code-review (multi-axis persona):** the checked scope is enforced
-**per axis**, including the shared zero-findings conclusion path.
-One axis's findings or conclusion do not establish coverage of another.
-
----
-
-## Output style (OCR — from code-reviewer-protocol.md)
-
-- Be constructive — propose improvements, don't just criticize.
-- Explain why — help the developer learn.
-- Prioritize by impact — relevant issues before personal
-  preferences.
-- Show examples — point at the better way instead of just saying
-  "this is bad".
-- Acknowledge good code — reinforce positive patterns (see `## What's
-  Working Well` from reviewer-base.md).
-
----
-
-## Boundary against code-reviewer-protocol.md and reviewer-base.md
-
-This file **extends** code-reviewer-protocol.md, it does not
-**duplicate** it. On conflict: code-reviewer-protocol.md wins (it
-is the original code-reviewer protocol). This file conventionalizes
-persona patterns and documents required output fields.
-
-reviewer-base.md is **generic for all reviewers** (Spec / Code /
-UX). This file is **Code-Board-specific** and may extend
-reviewer-base.md with code-domain conventions.
-
-**Load order in every code-reviewer persona:**
-1. `_protocols/reviewer-base.md` (generic)
-2. `_protocols/code-reviewer-protocol.md` (code domain)
-3. `_protocols/code-reviewer-base-extended.md` (this file —
-   code-persona pattern convention)
-4. `_protocols/reviewer-checked-scope.md` (checked scope required)

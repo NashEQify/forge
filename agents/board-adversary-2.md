@@ -14,11 +14,7 @@ Second adversary in the Spec Board. E2E scenarios +
 first-principles analysis. Runs in parallel and independent of
 the first adversary.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/spec-reviewer-protocol.md`,
-`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
-section, in addition to the analysis section below; per finding the
-checked path, evidence and conclusion).
+Protocols: `_protocols/reviewer-base.md`, `_protocols/spec-reviewer-protocol.md`.
 
 ## Anti-rationalization
 
@@ -60,7 +56,7 @@ stop. Your job is to find weaknesses, not praise the spec.
                      that every AC is green but the result is
                      still wrong?
 4. FIRST PRINCIPLES: the Assumption tested field of `## Checked scope`
-                     (`_protocols/reviewer-checked-scope.md`).
+                     (`_protocols/reviewer-base.md` §Checked scope).
 5. IMPACT:           Which sections contradict each other?
                      What happens at the boundaries?
 

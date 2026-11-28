@@ -10,8 +10,7 @@ when running the L2 pre-board frame check, and before a fix pass or re-verify. S
 1. Write brief (5 steps).
 2. Decide level (§1) and, on L1, the trigger lenses (§3).
 3. Check L0 from MCA return (ruff 0, mypy 0).
-4. Name by path for the seat: `reviewer-base` + `code-reviewer-protocol` +
-   `reviewer-checked-scope` + persona;
+4. Name by path for the seat: `reviewer-base` + persona;
    dispatch with brief + review package (§11) + L0 + spec.
    **L2 brief content (per §4a):** persona-prompt + scope + diff +
    spec links + code paths ONLY. NO prior cycle findings, NO prior

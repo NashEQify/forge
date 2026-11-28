@@ -99,7 +99,7 @@ types, bounds and error paths match the spec) and test vacuity (does
 the guarding test of each HIGH-risk AC go red on a one-line mutant of
 the guarded branch; record the mutant; a survivor is a finding about
 that test, closed by strengthening it:
-`agents/_protocols/code-reviewer-protocol.md` §Findings about tests).
+`agents/_protocols/reviewer-base.md` §Findings about tests).
 
 **L1 trigger lenses** (join only on the named trigger, logged on the
 verdict's `review:` line, REFERENCE.md §Verdict file skeleton):

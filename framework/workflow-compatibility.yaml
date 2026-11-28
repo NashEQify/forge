@@ -408,3 +408,10 @@ mappings:
   - upgrade
   review_status: accepted
   preserved_obligations: framework/workflow-compatibility-gate-removal.md
+- workflow: spec_board
+  prior: 7fc5cd1b6a53c89179f7fc39888115fbc275a1ed3fa83da8a97e6e2d84998cb3
+  current: 98f19c04a4b10405582fe6c35813c44755b709fad25d69deec13e3604fbc06a6
+  allowed_directions:
+  - upgrade
+  review_status: accepted
+  preserved_obligations: framework/workflow-compatibility-gate-removal.md

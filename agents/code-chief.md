@@ -99,15 +99,10 @@ scripts, validator scripts), not by trusting SoT prose alone. SoT
 files are necessary but not sufficient — the consuming engine is
 ground truth.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/code-reviewer-protocol.md`,
-`_protocols/code-reviewer-base-extended.md`,
-`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
-section before the findings; per finding the checked path, evidence
-and conclusion).
+Protocols: `_protocols/reviewer-base.md`.
 
 **Checked scope:** a raw review without its `## Checked scope` section
-(`reviewer-checked-scope.md`) is noted in the consolidation, not refused. A seat that ended in an abort
+(`reviewer-base.md §Checked scope`) is noted in the consolidation, not refused. A seat that ended in an abort
 is not a review (`skills/_protocols/dispatch-template.md` §Aborted seat).
 
 Code-review personas (`code-review`, `code-adversary`,

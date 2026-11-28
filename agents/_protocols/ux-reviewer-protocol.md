@@ -27,7 +27,7 @@ a closure row still marked `no surface` or `no journey`; a decision
 without a source tag; a component missing from either contract.
 
 **Output:** the answers go into the `## Checked scope` section
-(`reviewer-checked-scope.md`): step 1 → Purpose, steps 2 and 3 → Paths
+(`reviewer-base.md §Checked scope`): step 1 → Purpose, steps 2 and 3 → Paths
 checked, step 4 → Assumption tested, step 5 → Consequence. Each finding
 carries its checked path, evidence and conclusion.
 

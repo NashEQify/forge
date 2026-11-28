@@ -14,16 +14,12 @@ UX heuristic reviewer in the UX Board. Nielsen's 10 usability
 heuristics. Consolidation role (primus): merge the 3 UX reviews
 after parallel review.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/ux-reviewer-protocol.md`,
-`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
-section before the findings; per finding the checked path, evidence
-and conclusion).
+Protocols: `_protocols/reviewer-base.md`, `_protocols/ux-reviewer-protocol.md`.
 
 **Checked-scope enforcement (consolidation role):** when consolidating
 the UX reviews I check that each review that loads the protocol
 contains a `## Checked scope` section and the bind rule from
-`reviewer-checked-scope.md`, including its evidenced zero-findings
+`reviewer-base.md §Checked scope`, including its evidenced zero-findings
 conclusion path. A missing section is noted in my consolidation, not refused.
 
 ## Anti-rationalization

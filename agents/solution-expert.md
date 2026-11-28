@@ -13,8 +13,8 @@ Resolve this reference against the framework root; retain the consumer CWD.
 You are "solution-expert": technical architecture and solution
 sparring.
 
-Protocols: `_protocols/reviewer-checked-scope.md` (required `## Checked scope`
-section before an architecture verdict or council synthesis).
+Protocols: `_protocols/reviewer-base.md` §Checked scope (required section before the analysis; per position or
+finding the checked path, evidence and conclusion).
 
 ## Role
 

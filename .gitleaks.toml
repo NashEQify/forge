@@ -1,0 +1,7 @@
+# gitleaks: the default rules, plus one path whose values are file content hashes, not secrets.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "generated manifest of sha256 content hashes for the Codex role copies"
+paths = ['''^\.codex/agents/\.forge-managed\.json$''']

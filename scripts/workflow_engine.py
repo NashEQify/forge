@@ -464,7 +464,7 @@ def _print_capture_obligations(record: dict[str, Any]) -> None:
         lines.append(
             "- Each seat receives: L1/L2 the package and the review brief, no implementer report; light the package, the"
             " brief or Buddy's record and the approved acceptance verbatim; a re-review the fix package.")
-    protocol = ("agents/_protocols/code-reviewer-protocol.md" if request.get("family") == "code"
+    protocol = ("agents/_protocols/reviewer-base.md" if request.get("family") == "code"
                 else "agents/_protocols/spec-reviewer-protocol.md")
     lines += [
         f"- Each seat prompt ends with the evidence layout of {protocol}"

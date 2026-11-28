@@ -163,9 +163,7 @@ anchor mode), assess four properties:
 | **interface-width** | How much does a caller have to learn to use this module correctly? Narrow / wide / leaky-wide (caller has to know internals)? |
 | **responsibility-purity** | Does the module have a single coherent responsibility, or has it accreted unrelated concerns? |
 
-Severity is YOUR judgment per-axis (matches the
-`agents/_protocols/reviewer-base.md` §Cumulative file totals
-discipline at review-time: mechanical reporting, judgment severity).
+Severity is YOUR judgment per axis.
 
 **State-bearing scope:** when the owning spec has a
 `§Mechanism-Lifecycle` section (`skills/_protocols/mechanism-model.md`),

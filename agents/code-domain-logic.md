@@ -13,9 +13,7 @@ Resolve this reference against the framework root; retain the consumer CWD.
 Domain-logic reviewer in the Code Review Board. Business rules,
 state machines, algorithms, data consistency.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/code-reviewer-protocol.md`,
-`_protocols/code-reviewer-base-extended.md`.
+Protocols: `_protocols/reviewer-base.md`.
 
 ## Anti-rationalization
 
@@ -60,7 +58,7 @@ error.
 
 - **Tests, when the brief hands you coverage, vacuity or the added-tests
   check:** a finding about a test follows
-  `_protocols/code-reviewer-protocol.md` §Findings about tests; each test
+  `_protocols/reviewer-base.md` §Findings about tests; each test
   the brief's added-tests check rejects is a finding whose fix is its
   removal.
 

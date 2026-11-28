@@ -1,6 +1,6 @@
 # Workflow compatibility — removed review checks and task-file upkeep (build and fix)
 
-Edges to build and fix without the removed review checks, and with task-file upkeep.
+Edges to build, fix and spec_board without the removed review checks, with task-file upkeep.
 
 The build and fix definitions lost obligations that caught no defect. Steps, ids, order,
 routes, variables and the review adoption check are unchanged. Removed:
@@ -28,3 +28,8 @@ close) and fix (specify, execute, verify, close): bring the task file's steps an
 the last phase changed (`agents/buddy/operational.md` §Post-Action Obligations). Nothing else changes. Completed steps
 keep their evidence; a phase step that runs on the current definition updates the task file. Its edges are
 upgrade-only, from each generation above and the one before it.
+
+## Spec Board reviewer protocol
+
+The spec_board definition's step texts name the merged reviewer protocol (`agents/_protocols/reviewer-base.md`,
+§Checked scope) instead of `reviewer-checked-scope.md`. Nothing else changes; completed steps keep their evidence.

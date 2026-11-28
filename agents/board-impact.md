@@ -13,11 +13,7 @@ Resolve this reference against the framework root; retain the consumer CWD.
 Impact analyst in the Spec Board. Cross-spec blast radius,
 interface breaks, dependency chains.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/spec-reviewer-protocol.md`,
-`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
-section before the findings; per finding the checked path, evidence
-and conclusion).
+Protocols: `_protocols/reviewer-base.md`, `_protocols/spec-reviewer-protocol.md`.
 
 ## Anti-rationalization
 
@@ -59,7 +55,7 @@ rationalization.
                      chains get activated?
 4. FIRST PRINCIPLES: the Assumption tested field of
                      `## Checked scope` via
-                     `_protocols/reviewer-checked-scope.md`,
+                     `_protocols/reviewer-base.md` §Checked scope,
                      its bind rule (including a zero-findings conclusion). Plus an
                      interface-assumptions question.
 5. IMPACT:           Blast radius: how many other specs need

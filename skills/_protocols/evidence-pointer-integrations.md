@@ -12,7 +12,7 @@ Three live files (edit locations documented in
 
 - `agents/_protocols/spec-reviewer-protocol.md` — output-format
   block.
-- `agents/_protocols/code-reviewer-protocol.md` — output-format
+- `agents/_protocols/reviewer-base.md` — output-format
   block.
 - `agents/_protocols/ux-reviewer-protocol.md` — output-format
   block.

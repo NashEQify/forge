@@ -134,8 +134,8 @@ protocol count, same membership as `intent.md` and
 `architecture-documentation/11-source-grounding.md`.)
 
 **Agent protocols (in `agents/_protocols/`):**
-reviewer-base, spec-reviewer-protocol, code-reviewer-protocol,
-ux-reviewer-protocol, reviewer-checked-scope
+reviewer-base, spec-reviewer-protocol,
+ux-reviewer-protocol
 
 **Utilities:**
 knowledge_processor, knowledge_capture, task_creation, task_status_update,

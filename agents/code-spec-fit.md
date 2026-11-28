@@ -44,7 +44,7 @@ coverage-gap finding MUST name:
 
 A gap in a test that exists (a surviving mutant, a vacuous assertion,
 a guard no test pins) is a test finding: at most medium, no FAIL
-(`_protocols/code-reviewer-protocol.md` §Findings about tests, which
+(`_protocols/reviewer-base.md` §Findings about tests, which
 also says what is not one). A missing TC for an AC keeps its severity
 (§Check focus, Test coverage).
 
@@ -60,9 +60,7 @@ unit tests" without a named failure-mode the existing suite can't
 catch is exactly the over-fire pattern the value-floor exists to
 catch.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/code-reviewer-protocol.md`,
-`_protocols/code-reviewer-base-extended.md`.
+Protocols: `_protocols/reviewer-base.md`.
 
 ## Anti-rationalization
 

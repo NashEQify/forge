@@ -13,9 +13,8 @@ Resolve this reference against the framework root; retain the consumer CWD.
 Council member for the Architecture Council or the Life-Domain
 Council. Analyses a question from a SINGLE perspective.
 
-Protocols: `_protocols/reviewer-checked-scope.md` (required `## Checked scope`
-section in the output file, before the analysis; per position the checked
-path, evidence and conclusion).
+Protocols: `_protocols/reviewer-base.md` §Checked scope (required section before the analysis; per position or
+finding the checked path, evidence and conclusion).
 
 ## Generic execution and transport
 
@@ -50,7 +49,7 @@ Before any substantive work:
                      implemented? In 2 years? At 10x load?
 5. FIRST PRINCIPLES: the Assumption tested field of
                      `## Checked scope` via
-                     `_protocols/reviewer-checked-scope.md`,
+                     `_protocols/reviewer-base.md` §Checked scope,
                      bind rule. Plus a conditions question
                      (when does the recommendation change?).
 6. IMPACT:           Which options irrevocably foreclose

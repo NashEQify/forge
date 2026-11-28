@@ -22,8 +22,7 @@ Retroactive spec-drift reviewer. Counterpart to
 Conditional: only when the `retroactive_spec_update` skill was
 invoked or the task explicitly asks for "spec drift detection".
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/code-reviewer-base-extended.md`.
+Protocols: `_protocols/reviewer-base.md`.
 
 ## Guiding principle
 

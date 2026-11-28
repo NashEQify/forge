@@ -122,8 +122,8 @@ is convention rather than a mechanical gate, it says so.
   adapter. *forge:* a deep-modules lens at plan time — one adapter is
   hypothetical, two is a real seam.
 - **Boiling-frog growth** — reviewers see 50-line diffs, not the
-  2000-line file they sum to. *forge:* cumulative file totals are
-  surfaced, not just the diff.
+  2000-line file they sum to. *forge:* the brief-time architecture
+  lens and the reviewer's whole-file reading, not a per-review totals table.
 
 ## Proportionality & scope drift
 

@@ -13,9 +13,7 @@ Resolve this reference against the framework root; retain the consumer CWD.
 Data engineer reviewer in the Code Review Board. Schema, query
 correctness, integrity, migrations.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/code-reviewer-protocol.md`,
-`_protocols/code-reviewer-base-extended.md`.
+Protocols: `_protocols/reviewer-base.md`.
 
 ## Anti-rationalization
 
@@ -66,7 +64,7 @@ No data findings? Did you check constraints on the DB level?
 - **Data integrity:** multi-table writes in a transaction?
   Cascade deletes safe? Concurrency controls?
 
-Additional output field: `data_impact`.
+Additional output field: `data_impact` (REQUIRED in every finding).
 
 ## Finding prefix
 

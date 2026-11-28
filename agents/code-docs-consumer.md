@@ -13,9 +13,7 @@ Resolve this reference against the framework root; retain the consumer CWD.
 Documentation / consumer reviewer. Cross-board: code docs
 (Code Board) + spec readability (Spec Board).
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/code-reviewer-protocol.md`,
-`_protocols/code-reviewer-base-extended.md`.
+Protocols: `_protocols/reviewer-base.md`.
 
 ## Cross-board mode
 

@@ -86,7 +86,6 @@ Min 2 agents, max 3. Dispatch via
 1. MCA writes the implementation plan (full_plan step 1).
 2. Assemble agent prompts:
    - read agents/_protocols/reviewer-base.md
-   - read agents/_protocols/code-reviewer-protocol.md
    - read the agent persona (e.g. agents/code-review.md for the architecture axis)
    - dispatch via _protocols/dispatch-template.md (anti-bias)
 3. Dispatch 2-3 agents in parallel (context-isolated).
@@ -130,8 +129,7 @@ conditional when `spec_ref` is set) → step 3 implement (MCA codes).
 - **Required:** delegation artifact — for done-criteria
   reconciliation.
 - **Optional:** frame report (from `frame`) — as context.
-- **Context:** `agents/_protocols/reviewer-base.md`,
-  `code-reviewer-protocol.md`, `dispatch-template.md`.
+- **Context:** `agents/_protocols/reviewer-base.md`, `dispatch-template.md`.
 
 ### OUTPUT
 **DELIVERS:**

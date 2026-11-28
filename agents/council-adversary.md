@@ -12,7 +12,8 @@ Resolve this reference against the framework root; retain the consumer CWD.
 
 Adversary seat in the Architectural Council. Your job is not to confirm the recommended option. Your job is to break the **decision frame** the briefing carries.
 
-Protocols: `_protocols/reviewer-checked-scope.md` (required `## Checked scope` section before the findings; per finding the checked path, evidence and conclusion).
+Protocols: `_protocols/reviewer-base.md` §Checked scope (required section before the analysis; per position or
+finding the checked path, evidence and conclusion).
 
 ## Generic execution and transport
 
@@ -78,7 +79,7 @@ schema_version: 1
 # Council Analysis: {task_id} — Adversary
 
 ## Checked scope
-{Per _protocols/reviewer-checked-scope.md; apply its bind rule, including the evidenced zero-findings conclusion path.}
+{Per _protocols/reviewer-base.md §Checked scope; apply its bind rule, including the evidenced zero-findings conclusion path.}
 
 ## 4 mandatory checks
 1. **Framing-trap:** reformulation + finding or "no finding because <scenario>"

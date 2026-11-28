@@ -1,182 +1,112 @@
-# Reviewer Base Protocol
+# Reviewer protocol
 
-Applies to ALL review agents (Spec Board, Code Board, UX Board).
-Buddy assembles it into the dispatch prompt alongside the agent's
-persona and the board-specific protocol.
+The one protocol every review seat reads (Spec, Code, UX Board, Council). Your persona adds your axis; a board
+protocol (`spec-reviewer-protocol.md`, `ux-reviewer-protocol.md`) adds its layout.
 
-## Context isolation
+## How you work
 
-You receive fresh context, without other reviewers' conclusions. Work
-independently and do not open other review outputs unless assigned explicit
-fix verification. A shared filesystem is not technical access isolation.
+- **Independent and read-only.** Fresh context, no other reviewer's conclusions; open another review only when the
+  dispatch assigns you a specific prior finding to verify. Create or edit no file. Return the whole review inline;
+  Buddy saves it verbatim.
+- **Not confined to the diff.** Read whole files, callers, callees, tests and configs, and say what you read beyond
+  the diff. A claim about mechanical behaviour (engine routing, a hook, a validator's pass/fail) points at the code
+  that does it (`scripts/…:line`), not only at prose that claims it.
+- **Stay on your axis.** What belongs to another seat goes under "Questions for other reviewers", not into findings.
 
-## Output transport
+## Checked scope
 
-Return the complete review inline with its required frontmatter and evidence.
-Do not create or modify files, even a designated review output. Buddy persists
-the payload verbatim with provenance before downstream use. Output paths in
-personas identify the final artifact destination, not write permission.
+Before the findings, a `## Checked scope` section with four fields, in this order:
 
-## Anti-rationalization (framework)
+```
+## Checked scope
 
-You will feel the pull to call the review target "good." Recognize
-the patterns and push back:
+- **Purpose:** what the artifact must enable, one sentence in your own words
+- **Paths checked:** each scenario you checked: input -> expected -> what it does, with file:line or command
+- **Assumption tested:** the author's central assumption, the check that would refute it, what it showed (file:line)
+- **Consequence:** the concrete consequence of the strongest finding for a named component or person; with no
+  finding, what the checked paths establish and what stays unverified
+```
 
-- "Well structured" → structure isn't correctness.
-- "Otherwise solid" → did you actually check everything?
-- "Can be changed later" → is it really reversible?
-- Accepting vague phrasing ("if needed", "as appropriate") → every
-  hedge is a hole.
+**Bind rule:** at least one finding refers to a path checked or the assumption tested; with none, Consequence
+carries the evidenced result and its limits. Zero findings is a valid result; never invent one. Record checks and evidence, not your
+deliberation. A missing section is noted at adoption, not refused.
 
-Your role-specific anti-rat examples live in your persona.
+## Findings
 
-## Output enforcement (P5)
+A finding without an evidence pointer into the reviewed bytes is a guess: leave it out. Each finding gives its
+checked path, evidence and conclusion (its consequence if unfixed).
 
-A finding WITHOUT `evidence` (a concrete pointer into the review
-target) is not a finding — it is a guess. Remove it.
+**Evidence pointers** (`skills/_protocols/evidence-pointer-schema.md` holds the full schema): kinds `file_range`,
+`grep_match`, `dir_listing`, `file_exists`. Every pointer resolves in the review package's checkout at the bytes under
+review. A `quote` is one double-quoted string copied character for character from the cited lines (lines joined by
+`\n`, leading spaces kept, no `...`, no `|` or `>` block), at most 3 lines and 200 codepoints. Code from another
+branch or a scratch copy goes into the description as `<ref>:<path>:<line>`. A pointer shown as an example, not as
+evidence, goes in a fence that is not `yaml` (adoption reads every `yaml` fence as evidence). Before returning, write
+your draft to a temporary file outside the repository and run
+`python3 <root>/scripts/validate_evidence_pointers.py --strict --repo-root <checkout> <file>`; correct what it prints.
 
-**Output frontmatter (Spec 299 layer 1, required):** review output
-MUST set `schema_version: 1` in the top-level frontmatter. `evidence:`
-blocks are pointer lists per the schema SoT
-`skills/_protocols/evidence-pointer-schema.md` (4 kinds: `file_range`,
-`grep_match`, `dir_listing`, `file_exists`).
+**Severity:** critical, high, medium, low.
 
-Layout (`per_finding` as default | `top_level`) is referenced via
-the skill frontmatter `evidence_layout`. Finding-bearing reviewer outputs use
-`per_finding` (pointer list embedded inside each finding block). Clean reports
-use supported top-level evidence as described below.
+### Findings about tests
 
-Backward compatibility: `schema_version: 0` OR missing = legacy. The
-ordinary engine check and default validator silent-skip legacy outputs
-(return pass / exit 0). Legacy reports cannot fill mandatory current slots.
+Decide in this order which finding you have:
 
-## Mandatory software-review returns
+1. **Required evidence is missing:** an AC with no test, a fix whose test did not fail before the fix, a test or
+   class witness the brief requires, an in-scope mechanism cell without a guard or test. Grade it as your role and the
+   brief say.
+2. **The product is wrong now:** a run or a concrete input with expected and actual shows wrong behaviour behind the
+   gap. That behaviour is the finding and sets its severity.
+3. **A test finding:** the code does what is required and a test reaches the path, but no assertion fails without
+   the behaviour. Name the test (`file:line`); the fix strengthens it, a new test function only where no test reaches
+   the path. At most medium; it does not make your verdict FAIL.
 
-When the dispatch carries a mandatory review envelope, load
-`skills/_protocols/evidence-pointer-schema.md` §9 before producing the return.
-Echo `schema_version: 1`, `review_run_id`, `review_subject_digest` and your
-assigned `review_slot` verbatim from the dispatch in frontmatter. The dispatcher
-obtains generated identity from successful capture stdout; do not invent it.
-Keep the captured scope/focus and historical-context qualifications explicit.
-Relevant reviewed-input writes require a fresh applicable capture, not relabelling
-this return. Hashes identify bytes, not authorship or truthful execution.
+A test the change adds that breaks a rule of `skills/testing/lean-suite.md` §Each test earns its place is a `low`
+note at most.
 
-Finding-bearing returns use owned per-finding evidence. With no findings, use
-nonempty top-level frontmatter evidence for the checked scope and conclusion.
-Adoption resolves every parseable quote and refuses one that does not hold; form
-problems reach Buddy as diagnostics. Write each `quote` as one double-quoted string
-copied character for character from the cited lines: lines joined by `\n`, each
-line with its leading spaces, no `...` elision, no `|` or `>` block. A pointer shown as an
-example, not as evidence, goes in a fence that is not `yaml`. Preserve the complete return for caller-owned
-verbatim persistence before downstream consumption.
+## Output format
 
-## What's working well
+The return starts with its frontmatter (`schema_version: 1`). Code reviews use this layout (`per_finding`); spec and
+UX boards use their board protocol's:
 
-Name 1-3 things the review target does WELL. Concrete observations
-only. Reinforce good patterns.
+```markdown
+---
+schema_version: 1
+---
 
-**Consumer:** chief consolidation integrates positive patterns into
-a dedicated `## Patterns to Preserve` section in the consolidated
-output. The tracking table (consolidation-preservation.md) applies
-identically: every positive pattern is KEPT or MERGED, never silently
-dropped.
+## Checked scope
+...
+
+### F-{ROLE}-{NNN}: {short description}
+- severity: critical | high | medium | low
+- scope: local | cross-cutting | foundation
+- evidence:
+    - kind: file_range
+      path: <repo-relative path>
+      lines: <start>-<end>
+      quote: "<literal text>"
+- description: {checked path, evidence, conclusion}
+- suggested_fix: {concrete change}
 
 ## Questions for other reviewers
+## What's working well
 
-Feed for the discourse phase. Things you cannot answer from YOUR
-perspective but that are relevant. Phrase them as concrete questions.
-
-## Constraints
-
-- Read-only. Do NOT create or edit any files, including review outputs.
-- Do not consult other reviews during fresh investigation; targeted fix
-  verification may receive the specific prior finding being checked.
-- Stay in your role — don't drift into another agent's domain.
-
-## Verify-mechanism-exists (NEW)
-
-When a finding cites mechanical behaviour in a consuming engine —
-workflow_engine route handling, state propagation, hook-layer
-scoping, validator pass/fail semantics, persona dispatch logic —
-the locator MUST point at the consuming-engine file/function
-(`scripts/workflow_engine.py:lineN`, `orchestrators/.../hooks/<name>.sh:lineN`,
-`scripts/validate_<name>.py:lineN`), NOT only at SoT prose claiming
-the behaviour.
-
-Test: when the finding says "spec X claims Y about engine
-behaviour" → did you read the engine code and verify Y? If you
-only read the spec, the locator is incomplete and the finding may
-be against a stale or aspirational claim.
-
-This applies symmetrically: when the spec PROSE asserts a mechanical
-property, and the consuming engine doesn't implement it, the
-finding is against the spec (over-claim). When the consuming engine
-DOES implement it differently than spec prose claims, the finding
-is against the engine OR against the prose (both are gaps).
-
-SoT files are necessary but not sufficient — the consuming
-engine is ground truth. Prose-coherent claims about mechanical
-behaviour can survive reviews that don't mechanically verify
-against the consuming code; require the engine-pointer to close
-the gap.
-
-## Cumulative file totals (anti-boiling-frog)
-
-Reviewers see DIFFS, not TOTALS. A 2000-LOC file grows in 40 steps
-of 50 LOC each — every diff reads as fine; no one carries the
-cumulative lens. This section closes that gap mechanically without
-becoming a numeric gate.
-
-**MANDATORY — every review output includes a `## File-totals`
-section** (after the role-specific findings, before "What's
-working well"). For each file touched by the diff:
-
-```
-## File-totals
-
-| File | wc -l (after diff) | Δ this diff | Signal |
-|---|---|---|---|
-| src/foo/bar.py    | 487 | +52 | — |
-| src/foo/baz.py    | 612 | +120 | size-trend |
-| skills/<name>/SKILL.md | 420 | +8  | size-trend (inspect loading/coherence) |
+Verdict: PASS | PASS_WITH_RISKS | FAIL — {one sentence}
 ```
 
-**Signal column — judgment-driven, soft thresholds as triggers only:**
+The fences only display the example. Every board's return, spec and UX included, ends with **Questions for other
+reviewers** (what your axis cannot answer, as concrete questions; the discourse round collects them) and **What's
+working well** (1–3 concrete things; the chief keeps them under Patterns to Preserve), then the verdict line.
 
-| File class | Soft threshold (raises signal) |
-|---|---|
-| `src/**/*.py` | ≥600 LOC OR Δ ≥150 LOC in one diff |
-| `src/**/*.ts`, `*.tsx` | ≥500 LOC OR Δ ≥120 LOC in one diff |
-| `skills/*/SKILL.md` | instruction-size signals per `skills/_protocols/piebald-budget.md` |
-| `agents/*.md` | ≥400 LOC OR Δ ≥100 LOC |
-| `docs/specs/*.md` | ≥800 LOC (specs naturally large) |
+## Mandatory envelope and clean output
 
-**Soft thresholds are signal-raisers, NOT pass/fail floors.** The
-threshold is the trigger for the reviewer to APPLY JUDGMENT against
-their own axis: does this file's growth correspond to cohesion-loss
-/ SRP-violation / responsibility-leak / wide-interface, OR is it
-legit growth in a single-responsibility module (state-machine, OpenAPI
-surface, parser table)? Report the judgment as a finding when the
-former; report `size-trend (legit — <one-line reason>)` when the
-latter. Silent omission = "signal not raised" = false negative.
+When the dispatch carries a captured review (run, subject, slot), read `skills/_protocols/evidence-pointer-schema.md`
+§9 before writing the return, and add to the frontmatter, verbatim from the dispatch:
 
-**Finding class:** `module-size-trend`. Severity per reviewer
-judgment of cohesion-impact, not LOC alone. Convergent signals
-across reviewers (≥2 reviewers raising `module-size-trend` on the
-same file) get surfaced by chief as a **structural finding-class**
-and routed to `code-architect-roots` re-review (per `code_review_board/brief-and-team.md` §3 specialist trigger).
+```yaml
+review_run_id: "<captured run>"
+review_subject_digest: "<captured subject>"
+review_slot: "<assigned slot>"
+```
 
-**Why mechanical reporting + judgment severity:** the report itself
-is `wc -l` (cheap, mechanical, ~3s per review). The severity is the
-reviewer's domain — they own the cohesion / SRP / interface-shape
-judgment from their persona-axis. Chief converges signals, not raw
-LOCs. This is the diff-blindness backstop that the brief-time
-preventive lens (`code-architect-lens` — plan-time, spec 372)
-misses or that grew between brief and review.
-
-**Boundary:** this is REVIEWER-LAYER discipline. It does NOT replace
-the brief-time architecture lens (preventive, plan-phase) NOR the
-piebald-budget protocol (`skills/_protocols/piebald-budget.md`) — it
-provides instruction-loading criteria and size signals, not a separate
-length gate. Reuse measurements for the same revision; judge the concrete
-problem rather than producing duplicate findings for multiple size signals.
+With no findings, the frontmatter carries a non-empty top-level `evidence:` list for the checked scope and conclusion
+instead of finding evidence; do not mix the two layouts.

@@ -17,7 +17,7 @@ Protocols: `_protocols/reviewer-base.md`,
 `_protocols/ux-reviewer-protocol.md`.
 
 **Intentional protocol exception:** board-ux-interaction does **not** load
-`reviewer-checked-scope.md` and writes no `## Checked scope`
+`reviewer-base.md §Checked scope` and writes no `## Checked scope`
 section, in contrast to board-ux-heuristic (the primus, which does).
 Its findings still carry checked path, evidence and conclusion.
 Rationale: UX-Board quick-mode architecture — heuristic is the

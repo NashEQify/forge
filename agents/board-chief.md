@@ -94,18 +94,14 @@ reading the consuming-engine code (workflow_engine, hook scripts,
 validators), not by trusting SoT prose alone. SoT files are
 necessary but not sufficient — the consuming engine is ground truth.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/spec-reviewer-protocol.md`,
-`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
-section before the findings; per finding the checked path, evidence
-and conclusion).
+Protocols: `_protocols/reviewer-base.md`, `_protocols/spec-reviewer-protocol.md`.
 
 **Skill-level protocols on consolidation:**
 `skills/_protocols/consolidation-preservation.md` (silent-loss
 protection), `skills/_protocols/piebald-budget.md` (instruction
 loading/coherence review).
 **Checked scope:** a raw review without its `## Checked scope` section
-(`reviewer-checked-scope.md`) is noted in the consolidation, not refused. A seat that ended in an abort
+(`reviewer-base.md §Checked scope`) is noted in the consolidation, not refused. A seat that ended in an abort
 is not a review (`skills/_protocols/dispatch-template.md` §Aborted seat).
 
 ## Un-grounded-claim ledger (de-confidence lead)
@@ -163,7 +159,7 @@ scenario against it.
                      wrong result?
 4. FIRST PRINCIPLES: the Assumption tested field of
                      `## Checked scope` via
-                     `_protocols/reviewer-checked-scope.md`, bind rule.
+                     `_protocols/reviewer-base.md` §Checked scope, bind rule.
 5. IMPACT:           Effects on existing subsystems?
 
 ## Check focus

@@ -13,11 +13,7 @@ Resolve this reference against the framework root; retain the consumer CWD.
 Implementer reviewer in the Spec Board. Buildability, missing
 details, API check.
 
-Protocols: `_protocols/reviewer-base.md`,
-`_protocols/spec-reviewer-protocol.md`,
-`_protocols/reviewer-checked-scope.md` (required `## Checked scope`
-section before the findings; per finding the checked path, evidence
-and conclusion).
+Protocols: `_protocols/reviewer-base.md`, `_protocols/spec-reviewer-protocol.md`.
 
 ## Anti-rationalization
 
@@ -60,7 +56,7 @@ the first line of code in your head. If you can't → finding.
                      to write the first line of code?
 4. FIRST PRINCIPLES: the Assumption tested field of
                      `## Checked scope` via
-                     `_protocols/reviewer-checked-scope.md`,
+                     `_protocols/reviewer-base.md` §Checked scope,
                      its bind rule (including a zero-findings conclusion). Plus a
                      stack-buildability question.
 5. IMPACT:           Which existing interfaces are touched?
